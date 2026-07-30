@@ -1,0 +1,753 @@
+/*
+ * PyMOL web client -- global stylesheet.
+ *
+ * One stylesheet, no framework, no component library. Every colour below is either
+ * taken from the PyMOL source (the C++ blocks specify float RGB triples) or chosen to
+ * sit with them.
+ *
+ *   name button enabled   {0.5,0.5,0.5}   layer3/Executive.cpp:16121-16127
+ *   name button disabled  {0.25,0.25,0.25}
+ *   name button cloaked   {0.35,0.35,0.35}  (enabled, ancestor group disabled)
+ *   name button pressed   {0.7,0.7,0.7}
+ *   caption               {0.3,0.9,0.3}   layer3/Executive.cpp:16467-16487
+ *   A button              {0.5,0.5,1.0}   layer3/Executive.cpp:16261-16334
+ *   S button              {0.6,0.6,0.8}
+ *   H button              {0.4,0.4,0.6}
+ *   L button              {0.5,0.5,1.0}
+ *   C button              4-colour rainbow quad, layer3/Executive.cpp:16074-16090
+ *   M button              spec-level dependent {0.4,0.4,0.6}/{0.6,0.6,0.8}/{0.9,0.9,1.0}
+ *   mouse mode name       {1.0,0.5,0.5}   layer1/ButMode.cpp
+ *   control lit           {0.65,0.65,0.65} layer1/Control.cpp:645-649
+ *   control pressed       {0.8,0.8,0.8}    layer1/Control.cpp:545
+ *
+ * Metrics come from the same place:
+ *   internal_gui_width          220px  layer1/Ortho.h:24
+ *   internal_gui_control_size   18px   layer1/SettingInfo.h:411  (row height)
+ *   ExecToggleWidth             17px   layer3/Executive.cpp:3267-3273
+ *   cOrthoLineHeight            12px   layer1/Ortho.h:26
+ *   cControlBoxSize             17px   layer1/Control.cpp:36-42
+ */
+
+:root {
+  --pm-bg: #17181a;
+  --pm-bg-viewport: #000000;
+  --pm-panel: #1d1f21;
+  --pm-panel-alt: #232629;
+  --pm-edge: #0d0e0f;
+  --pm-line: #34383c;
+  --pm-text: #c8ccd0;
+  --pm-text-dim: #8a9095;
+  --pm-text-bright: #eef1f4;
+  --pm-accent: #7f7fff;
+
+  /* Executive block */
+  --pm-btn-enabled: #808080;
+  --pm-btn-disabled: #404040;
+  --pm-btn-cloaked: #595959;
+  --pm-btn-pressed: #b3b3b3;
+  --pm-caption: #4de54d;
+
+  /* A S H L C M */
+  --pm-op-a: #8080ff;
+  --pm-op-s: #9999cc;
+  --pm-op-h: #666699;
+  --pm-op-l: #8080ff;
+  --pm-op-m: #666699;
+
+  /* ButMode / Control */
+  --pm-mouse-mode: #ff8080;
+  --pm-control-lit: #a6a6a6;
+  --pm-control-idle: #4a4d50;
+
+  --pm-row-h: 18px;
+  --pm-toggle-w: 17px;
+  --pm-line-h: 12px;
+
+  --pm-font-ui: -apple-system, 'Segoe UI', 'DejaVu Sans', sans-serif;
+  --pm-font-mono: Monaco, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+  --pm-fs: 11px;
+  --pm-fs-mono: 11.5px;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--pm-bg);
+  color: var(--pm-text);
+  font-family: var(--pm-font-ui);
+  font-size: var(--pm-fs);
+  -webkit-font-smoothing: antialiased;
+}
+
+body.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: default;
+}
+
+code {
+  font-family: var(--pm-font-mono);
+}
+
+/* ------------------------------------------------------------------ */
+/* Shell                                                               */
+/* ------------------------------------------------------------------ */
+
+.shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto auto;
+  height: 100%;
+  min-height: 0;
+}
+
+.shell__main {
+  display: flex;
+  min-height: 0;
+  background: var(--pm-bg-viewport);
+}
+
+/* ------------------------------------------------------------------ */
+/* Menu bar                                                            */
+/* ------------------------------------------------------------------ */
+
+.menubar {
+  display: flex;
+  align-items: stretch;
+  height: 24px;
+  background: linear-gradient(#2a2d30, #232629);
+  border-bottom: 1px solid var(--pm-edge);
+  user-select: none;
+  position: relative;
+  z-index: 50;
+}
+
+.menubar__item-wrap {
+  position: relative;
+  display: flex;
+}
+
+.menubar__item {
+  padding: 0 9px;
+  color: var(--pm-text);
+  letter-spacing: 0.01em;
+}
+
+.menubar__item:hover,
+.menubar__item.is-open {
+  background: var(--pm-accent);
+  color: #ffffff;
+}
+
+.menubar__spacer {
+  flex: 1;
+}
+
+.menubar__title {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  letter-spacing: 0.08em;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 210px;
+  padding: 3px 0;
+  background: #26292c;
+  border: 1px solid #101214;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  z-index: 60;
+}
+
+.menu--sub {
+  top: -4px;
+  left: 100%;
+}
+
+.menu__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 19px;
+  padding: 0 8px 0 4px;
+  white-space: nowrap;
+}
+
+.menu__row:hover {
+  background: var(--pm-accent);
+  color: #ffffff;
+}
+
+.menu__row.is-disabled {
+  color: var(--pm-text-dim);
+}
+
+.menu__row.is-disabled:hover {
+  background: none;
+  color: var(--pm-text-dim);
+}
+
+.menu__label {
+  flex: 1;
+}
+
+.menu__mark {
+  display: inline-block;
+  width: 11px;
+  text-align: center;
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+}
+
+.menu__row:hover .menu__mark {
+  color: #d5d8ff;
+}
+
+.menu__arrow {
+  color: var(--pm-text-dim);
+  font-size: 10px;
+}
+
+.menu__sep {
+  height: 1px;
+  margin: 3px 6px;
+  background: var(--pm-line);
+}
+
+/* ------------------------------------------------------------------ */
+/* Viewport                                                            */
+/* ------------------------------------------------------------------ */
+
+.viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: var(--pm-bg-viewport);
+  overflow: hidden;
+}
+
+.viewport__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.viewport__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: none;
+  color: #4a4f55;
+  font-family: var(--pm-font-mono);
+}
+
+.viewport__placeholder-title {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.viewport__placeholder-sub {
+  font-size: 11px;
+  color: #383c41;
+}
+
+/* ------------------------------------------------------------------ */
+/* Splitters                                                           */
+/* ------------------------------------------------------------------ */
+
+.splitter {
+  background: var(--pm-edge);
+  flex: 0 0 auto;
+}
+
+.splitter--v {
+  width: 4px;
+  cursor: col-resize;
+}
+
+.splitter--h {
+  height: 4px;
+  cursor: row-resize;
+}
+
+.splitter:hover {
+  background: var(--pm-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Internal GUI column (Executive + ButMode + Control)                 */
+/* ------------------------------------------------------------------ */
+
+.internal-gui {
+  display: flex;
+  flex-direction: column;
+  min-width: 5px;
+  background: var(--pm-panel);
+  border-left: 1px solid var(--pm-edge);
+  overflow: hidden;
+}
+
+.objpanel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.objpanel__rows {
+  padding: 1px 0;
+}
+
+.objrow {
+  display: flex;
+  align-items: center;
+  height: var(--pm-row-h);
+  gap: 1px;
+  padding-right: 1px;
+}
+
+.objrow__group {
+  width: 15px;
+  flex: 0 0 15px;
+  height: 14px;
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  line-height: 14px;
+  text-align: center;
+}
+
+.objrow__group:hover {
+  color: var(--pm-text-bright);
+}
+
+.objrow__group--empty {
+  visibility: hidden;
+}
+
+.objrow__name {
+  flex: 1;
+  min-width: 0;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 4px;
+  background: var(--pm-btn-disabled);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-right: 1px solid rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+  color: #101112;
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  overflow: hidden;
+}
+
+.objrow.is-enabled .objrow__name {
+  background: var(--pm-btn-enabled);
+}
+
+.objrow__name:hover {
+  background: var(--pm-btn-pressed);
+}
+
+.objrow--all .objrow__name {
+  font-weight: 600;
+}
+
+.objrow__name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.objrow__caption {
+  margin-left: auto;
+  color: var(--pm-caption);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+  font-size: 10px;
+}
+
+.objrow__ops {
+  display: flex;
+  gap: 1px;
+  flex: 0 0 auto;
+}
+
+.objrow__op {
+  width: var(--pm-toggle-w);
+  height: 16px;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  color: #0e0f11;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+  border-right: 1px solid rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.objrow__op:hover {
+  filter: brightness(1.35);
+}
+
+.objrow__op--a {
+  background: var(--pm-op-a);
+}
+.objrow__op--s {
+  background: var(--pm-op-s);
+}
+.objrow__op--h {
+  background: var(--pm-op-h);
+}
+.objrow__op--l {
+  background: var(--pm-op-l);
+}
+.objrow__op--m {
+  background: var(--pm-op-m);
+}
+/* C is drawn as a 4-colour rainbow quad in the C++ block */
+.objrow__op--c {
+  background: linear-gradient(135deg, #ff4d4d 0%, #ffe14d 33%, #4dff8f 66%, #4d9bff 100%);
+}
+
+/* ButMode block */
+
+.butmode {
+  border-top: 1px solid var(--pm-line);
+  padding: 3px 4px 4px;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  color: var(--pm-text-dim);
+  user-select: none;
+}
+
+.butmode__title {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: var(--pm-text-dim);
+  line-height: var(--pm-line-h);
+}
+
+.butmode__mode {
+  color: var(--pm-mouse-mode);
+}
+
+.butmode__grid {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2px 0;
+  table-layout: fixed;
+}
+
+.butmode__grid th,
+.butmode__grid td {
+  height: var(--pm-line-h);
+  padding: 0;
+  font-weight: 400;
+  text-align: center;
+  color: var(--pm-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.butmode__grid thead th {
+  color: #6f757a;
+}
+
+.butmode__grid tbody th {
+  text-align: left;
+  color: #6f757a;
+}
+
+.butmode__grid td {
+  color: var(--pm-text);
+}
+
+.butmode__selmode {
+  display: block;
+  width: 100%;
+  text-align: left;
+  line-height: var(--pm-line-h);
+  color: var(--pm-text);
+}
+
+.butmode__frame {
+  line-height: var(--pm-line-h);
+  white-space: pre;
+  color: #6f757a;
+}
+
+/* Control block (movie/frame buttons) */
+
+.control {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  border-top: 1px solid var(--pm-line);
+  background: var(--pm-panel-alt);
+}
+
+.control__nub {
+  width: 8px;
+  height: 100%;
+  flex: 0 0 8px;
+  background: repeating-linear-gradient(90deg, var(--pm-line) 0 1px, transparent 1px 3px);
+  cursor: col-resize;
+}
+
+.control__buttons {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.control__btn {
+  width: 17px;
+  height: 17px;
+  line-height: 17px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--pm-control-idle);
+  border: 1px solid transparent;
+}
+
+.control__btn:hover {
+  color: #cccccc;
+  border-color: var(--pm-line);
+}
+
+.control__btn.is-lit {
+  color: var(--pm-control-lit);
+}
+
+/* ------------------------------------------------------------------ */
+/* External GUI (feedback + command line + quick buttons)              */
+/* ------------------------------------------------------------------ */
+
+.extgui {
+  display: flex;
+  min-height: 60px;
+  background: var(--pm-panel);
+  border-top: 1px solid var(--pm-edge);
+  overflow: hidden;
+}
+
+.extgui__console {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.feedback {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 3px 6px;
+  background: #121415;
+  color: var(--pm-text);
+  font-family: var(--pm-font-mono);
+  font-size: var(--pm-fs-mono);
+  line-height: 14px;
+  user-select: text;
+  white-space: pre-wrap;
+}
+
+.feedback__line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cmdline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 6px;
+  background: var(--pm-panel-alt);
+  border-top: 1px solid var(--pm-edge);
+}
+
+.cmdline__label {
+  color: var(--pm-mouse-mode);
+  font-family: var(--pm-font-mono);
+  font-size: var(--pm-fs-mono);
+  user-select: none;
+}
+
+.cmdline__input {
+  flex: 1;
+  min-width: 0;
+  height: 18px;
+  padding: 0 4px;
+  background: #0d0f10;
+  border: 1px solid var(--pm-line);
+  color: var(--pm-text-bright);
+  font-family: var(--pm-font-mono);
+  font-size: var(--pm-fs-mono);
+  outline: none;
+}
+
+.cmdline__input:focus {
+  border-color: var(--pm-accent);
+}
+
+/* Quick buttons */
+
+.quickbuttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px;
+  border-left: 1px solid var(--pm-edge);
+  background: var(--pm-panel);
+}
+
+.quickbuttons__row {
+  display: flex;
+  gap: 2px;
+}
+
+.quickbutton {
+  min-width: 62px;
+  height: 19px;
+  padding: 0 6px;
+  background: linear-gradient(#3a3e42, #2c3033);
+  border: 1px solid #141618;
+  color: var(--pm-text);
+  font-size: 10px;
+}
+
+.quickbutton:hover {
+  background: linear-gradient(#474c51, #34383c);
+}
+
+.quickbutton:active {
+  background: #24272a;
+}
+
+.quickbutton--abort {
+  min-width: 0;
+  background: #ff0000;
+  color: #ffffff;
+}
+
+.quickbuttons__progress {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: auto;
+}
+
+.progressbar {
+  flex: 1;
+  height: 10px;
+  background: #0d0f10;
+  border: 1px solid var(--pm-line);
+}
+
+.progressbar__fill {
+  height: 100%;
+  background: var(--pm-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Status strip (web-client addition -- Qt PyMOL has no status bar)    */
+/* ------------------------------------------------------------------ */
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 18px;
+  padding: 0 8px;
+  background: #101213;
+  border-top: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.statusbar__spacer {
+  flex: 1;
+}
+
+.statusbar__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6f757a;
+}
+
+/* ConnectionState from @tenmol/client: idle | connecting | open | reconnecting | closed */
+.statusbar__dot--open {
+  background: #4de54d;
+}
+.statusbar__dot--connecting,
+.statusbar__dot--reconnecting {
+  background: #ffe14d;
+}
+.statusbar__dot--idle {
+  background: #6f757a;
+}
+.statusbar__dot--closed {
+  background: #ff4d4d;
+}
+
+/* ------------------------------------------------------------------ */
+/* Scrollbars -- thin and dark, like the C++ blocks draw them          */
+/* ------------------------------------------------------------------ */
+
+::-webkit-scrollbar {
+  width: 13px;
+  height: 13px;
+}
+
+::-webkit-scrollbar-track {
+  background: #131516;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3c4045;
+  border: 3px solid #131516;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4c5157;
+}

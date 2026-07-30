@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tenmol-bridge"
+version = "0.1.0"
+description = "PyMOL <-> tenmol web client bridge (WebSocket, protocol v1)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "See repository LICENSE" }
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "websockets>=12",
+]
+
+# NOTE: "pymol" is deliberately NOT a dependency. It is built from this repo
+# (docs/webclient/spikes/00-build.md) and installed into the same venv; pip
+# cannot resolve it from an index. The bridge degrades gracefully when it is
+# missing so the front-end stays developable - see README.md.
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+]
+
+[project.scripts]
+tenmol-bridge = "tenmol_bridge.__main__:main"
+
+[tool.setuptools]
+packages = ["tenmol_bridge"]

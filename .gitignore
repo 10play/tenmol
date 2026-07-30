@@ -3,3 +3,14 @@
 generated
 build
 .vscode
+
+# --- web client (pnpm monorepo) ---------------------------------------------
+node_modules
+dist
+.turbo
+*.tsbuildinfo
+
+# --- python (bridge / venvs) ------------------------------------------------
+.venv
+__pycache__
+*.egg-info

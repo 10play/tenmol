@@ -1,0 +1,35 @@
+{
+  "name": "tenmol",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "React web front-end for the PyMOL engine in this repository (monorepo root).",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others --names bridge,web --prefix-colors cyan,green \"pnpm run dev:bridge\" \"pnpm run dev:web\"",
+    "dev:bridge": "bash scripts/dev-bridge.sh",
+    "dev:web": "pnpm --filter @tenmol/web dev",
+    "build": "pnpm -r run build",
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml \"apps/**/*\" \"packages/**/*\" docs/webclient/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
+    "format:check": "prettier --check --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml \"apps/**/*\" \"packages/**/*\" docs/webclient/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
+    "clean": "rm -rf .turbo *.tsbuildinfo apps/*/dist apps/*/.turbo apps/*/*.tsbuildinfo apps/*/node_modules packages/*/dist packages/*/.turbo packages/*/*.tsbuildinfo packages/*/node_modules node_modules"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^22.20.1",
+    "concurrently": "^9.2.4",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
+    "prettier": "^3.9.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.65.0"
+  }
+}

@@ -1,0 +1,27 @@
+# pnpm workspace for the tenmol web client.
+#
+# The upstream PyMOL tree (layer*/, modules/, data/, ov/, setup.py) is NOT part of this
+# workspace and must never be touched by JS tooling. Only the two globs below are workspaces.
+#
+# The Python bridge is deliberately absent: it is a Python package, driven by
+# scripts/dev-bridge.sh, not a pnpm workspace project.
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Shared dependency versions. A workspace package may write "catalog:" as the version
+# specifier for any key below and pnpm will substitute the pinned range at install time.
+# Using the catalog is optional -- a package may also pin its own range.
+catalog:
+  react: ^19.1.0
+  react-dom: ^19.1.0
+  "@types/react": ^19.1.0
+  "@types/react-dom": ^19.1.0
+  three: ^0.171.0
+  "@types/three": ^0.171.0
+  zustand: ^5.0.3
+  "@msgpack/msgpack": ^3.0.0
+  typescript: ^5.9.3
+  vite: ^6.0.0
+  vitest: ^2.1.8
+  "@vitejs/plugin-react": ^4.3.4

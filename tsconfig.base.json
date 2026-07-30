@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": true,
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@tenmol/protocol": ["packages/protocol/src/index.ts"],
+      "@tenmol/protocol/*": ["packages/protocol/src/*"],
+      "@tenmol/client": ["packages/client/src/index.ts"],
+      "@tenmol/client/*": ["packages/client/src/*"],
+      "@tenmol/ui": ["packages/ui/src/index.ts"],
+      "@tenmol/ui/*": ["packages/ui/src/*"],
+      "@tenmol/viewport": ["packages/viewport/src/index.ts"],
+      "@tenmol/viewport/*": ["packages/viewport/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build", "**/generated/**/*.js"]
+}
