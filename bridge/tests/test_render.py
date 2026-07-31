@@ -1139,10 +1139,18 @@ def test_mode_g_reports_whether_the_accessor_landed(render, gl_bridge):
     caps = render.geometry.capabilities(gl_bridge.pump.engine)
     print("Mode G capabilities:", json.dumps(caps, sort_keys=True))
     assert caps["symbol"] == "_cmd.web_get_rep_geometry"
-    assert caps["exactInvalidation"] is False, (
-        "plan §4 task 6 (ReprVersion counters) did not land; claiming exact "
-        "invalidation would be a lie"
-    )
+    # plan §4 task 6 (ReprVersion counters) landed in the wave-2 native work:
+    # _cmd.web_get_versions exposes exact per-(object, rep, state) versions, so
+    # the bridge is now entitled to claim exact invalidation. If this build has
+    # no counters the bridge must fall back and say so.
+    if caps["exactInvalidation"]:
+        assert caps["invalidationSources"][0] == "rep-version-counters", (
+            "exactInvalidation is claimed but the first source is not the "
+            f"counters: {caps['invalidationSources']!r}"
+        )
+        assert caps.get("versionSymbol") == "_cmd.web_get_versions"
+    else:
+        assert "rep-version-counters" not in caps["invalidationSources"]
     if not caps["accessor"]:
         pytest.skip("this PyMOL build has no web_get_rep_geometry (WP-26)")
 

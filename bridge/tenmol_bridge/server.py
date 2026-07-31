@@ -73,7 +73,7 @@ class BridgeServer:
             blobs=self.blobs,
             on_shutdown=self.request_shutdown,
             on_dangerous=lambda symbol, why: log("dangerous: %s (%s)" % (symbol, why)),
-            bridge_routes=self.render.route,
+            bridge_routes=self.bridge_route,
         )
         self.sessions: List[ClientSession] = []
         self.shutdown_requested = False
@@ -98,15 +98,21 @@ class BridgeServer:
         elif self.pump.state == EngineState.HEADLESS:
             log(
                 "RUNNING HEADLESS - no offscreen GL. Picking, Mode P and the "
-                "deferred draw queue are unavailable."
+                "deferred draw queue are unavailable; Mode G, cmd.ray and the "
+                "whole RPC surface are NOT."
             )
         else:
             # The shims need a live pump and a live PyMOL.
             self.pump.call(lambda _engine: self.shims.install(), label="shims")
         self.pump.status_poller.add_sink(self._on_status)
-        if self.pump.state == EngineState.RUNNING:
+        if self.pump.state in (EngineState.RUNNING, EngineState.HEADLESS):
+            # HEADLESS attaches MODE G ONLY. Mode P is glReadPixels on an FBO
+            # and genuinely needs a context; the geometry accessor and the
+            # version counters are CPU walks and do not. Gating both on GL was
+            # the reason a `--no-gl` bridge served an EMPTY viewport, which is
+            # the exact configuration the cross-platform bet depends on.
             try:
-                self.render.attach()
+                self.render.attach(pixels=self.pump.state == EngineState.RUNNING)
             except Exception as exc:  # noqa: BLE001 - the server stays up
                 log("render service failed to attach: %r" % (exc,))
         else:
@@ -148,10 +154,104 @@ class BridgeServer:
                 session.emit_soon(TOPIC_PROGRESS, {"value": progress})
 
     def _emit_topic(self, topic: str, payload: Dict[str, Any]) -> None:
-        """RenderService -> subscribed clients.  Called on the ENGINE thread."""
+        """RenderService -> subscribed clients.  Called on the ENGINE thread.
+
+        This is the BROADCAST path and it stays a broadcast: ``objects``,
+        ``view``, ``frame``, ``feedback``, ``progress`` and the Mode-G
+        *invalidation* notice are shared state — every client that subscribed
+        genuinely needs to hear about them.  What must NOT come through here is
+        the answer to one client's request; see :meth:`_geometry_route`.
+        """
         for session in list(self.sessions):
             if topic in session.subs:
                 session.emit_soon(topic, payload)
+
+    # -- _bridge.* routing (D4: address the answer to the caller) ----------
+
+    #: ``_bridge.*`` symbols whose answer is a bulk binary frame belonging to
+    #: exactly one client.  ``sources.ts:40`` calls the second one positionally.
+    UNICAST_ROUTES = ("_bridge.get_geometry", "_bridge.pull_geometry")
+
+    def bridge_route(
+        self,
+        symbol: str,
+        args: Any = None,
+        kwargs: Any = None,
+        session: Optional[ClientSession] = None,
+    ) -> Any:
+        """The dispatcher's ``_bridge.*`` table, with the caller threaded in.
+
+        Everything except the geometry pull is genuinely process-wide state
+        (stream parameters, the render-mode policy, stats) and goes straight to
+        :meth:`RenderService.route`.  The geometry pull is the one route whose
+        result is a payload *for the caller*, so this file — which owns the
+        session objects — resolves it instead.
+        """
+        if symbol in self.UNICAST_ROUTES:
+            return self._geometry_route(args, kwargs, session)
+        return self.render.route(symbol, args, kwargs)
+
+    def _geometry_route(
+        self,
+        args: Any = None,
+        kwargs: Any = None,
+        session: Optional[ClientSession] = None,
+    ) -> Any:
+        """``_bridge.pull_geometry(object, rep, state)`` -> ONE client (D4).
+
+        ``RenderService._geometry_call`` sends ``result.frame`` to every
+        ``geometry`` subscriber, because the render service is not told who
+        asked.  Measured cost of that on a 1tii cartoon: every extra connected
+        client received the same 360 KB frame it had not requested and could not
+        use, and the browser decoded it before discarding it.
+
+        The fix is not to stop registering geometry clients — the tick scan and
+        the ``invalidated`` notice still need that set — it is to answer the
+        *request* on the requester's own socket.  The metadata still comes back
+        in the ordinary ``ok`` frame, so a caller that only wants the status
+        (``unchanged`` / ``not-built`` / ``unsupported``) needs no binary frame
+        at all.
+        """
+        argv = list(args or ())
+        params = dict(kwargs or {})
+        for name, value in zip(("object", "rep", "state"), argv):
+            params.setdefault(name, value)
+        object_name = params.get("object") or ""
+        rep = params.get("rep")
+        if not object_name or rep is None:
+            raise BadMessage("pull_geometry needs `object` and `rep`")
+        state = int(params.get("state", -1))
+        update = bool(params.get("update", True))
+        have = params.get("have")
+        # A client cannot name another client: `session` is the connection the
+        # frame arrived on, and any `session` key in the client's kwargs is
+        # ignored (the dispatcher passes the real one separately).
+        target = session
+
+        def body(engine: Any) -> Dict[str, Any]:
+            result = self.render.geometry.fetch(
+                engine, object_name, rep, state=state, update=update, have=have
+            )
+            if result.frame:
+                self._deliver_geometry(target, result.frame)
+            return result.to_json()
+
+        return self.pump.submit(body, label="render:pull_geometry")
+
+    def _deliver_geometry(self, target: Optional[ClientSession], frame: Any) -> None:
+        """Engine thread -> one socket.  ``send_soon`` is thread-safe."""
+        if target is None:
+            # No caller identity (an internal or replayed call). Fall back to
+            # the old fan-out rather than dropping the payload on the floor,
+            # and say so, because it is the thing D4 exists to prevent.
+            log("geometry frame has no requesting session; broadcasting")
+            for session in list(self.sessions):
+                if TOPIC_GEOMETRY in session.subs:
+                    session.send_soon(frame)
+            return
+        if target.closed:
+            return
+        target.send_soon(frame)
 
     # -- guards ------------------------------------------------------------
 
@@ -208,6 +308,10 @@ def create_app(config: Optional[BridgeConfig] = None) -> FastAPI:
             return denied
         status = server.pump.status()
         status["clients"] = len(server.sessions)
+        # Per-session counters, so "did client B pay for client A's geometry
+        # pull?" is answerable from the server rather than inferred from a
+        # client's own bookkeeping (D4).
+        status["sessions"] = [session.stats() for session in list(server.sessions)]
         status["blobs"] = server.blobs.stats()
         status["shims"] = server.shims.info()
         status["shutdownRequested"] = server.shutdown_requested
@@ -313,7 +417,7 @@ async def _handle(
     try:
         if kind == T_CALL:
             future = server.dispatcher.call(
-                msg.get("fn"), msg.get("args"), msg.get("kwargs")
+                msg.get("fn"), msg.get("args"), msg.get("kwargs"), session=session
             )
             session.spawn(_reply(session, msg_id, future))
         elif kind == T_DO:

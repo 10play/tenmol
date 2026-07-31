@@ -37,24 +37,45 @@ TWO THINGS THAT ARE EASY TO GET WRONG AND ARE NOT NEGOTIABLE
    so the skipped slot is re-inserted as ``N`` zero floats.  Get that wrong and
    every sub-array after the pick block is silently shifted.
 
-INVALIDATION, HONESTLY
+INVALIDATION — NOW EXACT (defect D1)
+------------------------------------
+Plan §4 task 6 landed in wave 2: ``_cmd.web_get_versions``
+(``layer4/CmdWebGeometry.cpp:2145``) returns a monotonic version and an
+``active`` flag per ``(object, rep, state)``, backed by four counters on
+``struct CExecutive``.  :meth:`GeometryService.scan` polls it on the engine
+thread and diffs it in :mod:`tenmol_bridge.state.repversions`, which is where
+the semantics (and the measurements) are documented.
+
+Three channels, in descending order of reliability:
+
+* **rep-version counters** — exact.  Names the key AND says whether it is still
+  drawn, which is the half the old fingerprint could not express: ``hide
+  everything`` now emits ``{rep: cartoon, active: false, reason: 'hidden'}`` and
+  the client DROPS the buffers instead of leaving them on screen.  Measured on
+  1UBQ in this tree: 1.0 µs per idle poll, 0 changes over 300 idle polls,
+  ``color red, resi 1-20`` reported as a version bump that ``get_vis()`` cannot
+  see at all.
+* :meth:`GeometryService.invalidate` — the *command echo* channel of plan §1.5,
+  still wired, still exact for the objects a command touched.
+* the ``get_vis()`` fingerprint — kept ONLY as the fallback for a PyMOL build
+  without ``web_get_versions``, and it still cannot see a recolour.  When it is
+  in use ``capabilities()['exactInvalidation']`` is ``False``, as before.
+
+Content hashing at fetch time is unchanged and is now a second line of defence
+rather than the primary signal: a re-fetch of an unchanged rep still answers
+``status='unchanged'`` with no payload.
+
+HOW THE CLIENT SEES IT
 ----------------------
-Plan §4 task 6 (``ReprVersion`` change counters in ``layer3/Executive.cpp``) did
-**not** land, so there is no cheap "this rep changed" counter in the C++.  What
-this module does instead, in descending order of reliability:
+Two routes, because the viewport package cannot reach topic events today (its
+``ViewportTransport`` has no ``onTopic``):
 
-* :meth:`GeometryService.invalidate` — the *command echo* channel of plan §1.5.
-  The dispatcher already computes an ``invalidates`` list per executed command;
-  wiring it here is exact and free.
-* :meth:`GeometryService.scan` — a 0.03 ms fingerprint of ``cmd.get_vis()`` +
-  ``cmd.get_state()`` + ``cmd.get_names()`` polled on the engine thread.  It
-  catches show/hide/enable/delete/state changes and nothing else.
-* content hashing at fetch time — a re-fetch of an unchanged rep answers
-  ``status='unchanged'`` with no payload, so a false-positive invalidation costs
-  the accessor call and not 42 MB on the wire.
-
-That is a real limitation and it is reported rather than papered over:
-:meth:`GeometryService.capabilities` returns ``exactInvalidation: False``.
+* push — :meth:`scan` returns the diff and ``RenderService._on_tick`` emits it
+  on the ``geometry`` topic;
+* pull — :meth:`versions_payload` puts the WHOLE current table (compact rows)
+  plus an ``epoch`` into ``_bridge.render_stats``, so a client diffs it itself.
+  Stateless per client, so it is also immune to the D4 fan-out bug: two clients
+  each get the truth rather than each other's events.
 """
 
 from __future__ import annotations
@@ -68,6 +89,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 from ..config import log
 from ..errors import BridgeError, PyMOLUnavailable
 from ..session import encode_binary_frame
+from ..state import repversions
 
 __all__ = [
     "REP_NAMES",
@@ -489,6 +511,21 @@ class GeometryService:
         self.last_error: Optional[str] = None
         self._accessor_checked = False
         self._accessor: Optional[Any] = None
+        # -- exact invalidation (D1) --------------------------------------
+        self._versions_checked = False
+        self._versions_fn: Optional[Any] = None
+        #: ``{geometry key: RepVersion}`` as of the last successful poll.
+        self._table: Dict[str, repversions.RepVersion] = {}
+        self._table_primed = False
+        #: Bumps ONLY when :attr:`_table` changed in a way a client cares
+        #: about, so a polling client can skip the diff entirely.
+        self._epoch = 0
+        self._version_serial = 0
+        self._version_polls = 0
+        self._version_walks = 0
+        self._version_changes = 0
+        self._version_error: Optional[str] = None
+        self._last_changes: List[Dict[str, Any]] = []
 
     # -- capability --------------------------------------------------------
 
@@ -511,6 +548,32 @@ class GeometryService:
                 )
         return self._accessor
 
+    def versions_fn(self) -> Optional[Any]:
+        """``_cmd.web_get_versions`` or ``None`` on a wave-1 PyMOL build.
+
+        Cheap and thread-safe (one ``getattr`` on an already-imported module),
+        so :meth:`capabilities` may call it from the WebSocket thread.  Calling
+        the returned function is NOT thread-safe — that is engine-thread only,
+        see :meth:`poll_versions`.
+        """
+        if not self._versions_checked:
+            self._versions_checked = True
+            try:
+                from pymol import _cmd  # noqa: WPS433 - only exists with PyMOL
+
+                self._versions_fn = getattr(_cmd, "web_get_versions", None)
+            except Exception as exc:  # noqa: BLE001
+                self._versions_fn = None
+                self._version_error = repr(exc)
+            if self._versions_fn is None:
+                log(
+                    "Mode G invalidation is INEXACT: this PyMOL build has no "
+                    "_cmd.web_get_versions (layer4/CmdWebGeometry.cpp); falling "
+                    "back to the get_vis() fingerprint, which cannot see a "
+                    "recolour and cannot say which rep to DROP (defect D1)"
+                )
+        return self._versions_fn
+
     def capabilities(self, engine: Any = None) -> Dict[str, Any]:
         engine = engine if engine is not None else getattr(self.pump, "engine", None)
         # BOTH conditions matter.  ``from pymol import _cmd`` succeeds in a
@@ -522,6 +585,9 @@ class GeometryService:
             and getattr(engine, "cmd", None) is not None
             and self.accessor(engine) is not None
         )
+        exact = available and self.versions_fn() is not None
+        sources = ["command-echo", "content-hash"]
+        sources.insert(0, "rep-version-counters" if exact else "vis-fingerprint")
         return {
             "accessor": available,
             "symbol": "_cmd.web_get_rep_geometry",
@@ -529,10 +595,12 @@ class GeometryService:
                 {"rep": index, "name": REP_NAMES[index]}
                 for index in MODE_G_CAPABLE_REPS
             ],
-            # Plan §4 task 6 (ReprVersion counters) is NOT implemented, so the
-            # bridge cannot say "only the colours changed" from the C++ side.
-            "exactInvalidation": False,
-            "invalidationSources": ["command-echo", "vis-fingerprint", "content-hash"],
+            # True only when `_cmd.web_get_versions` is present: then every
+            # invalidation names a key AND says whether it is still drawn, so a
+            # client can DROP as well as REFETCH (defect D1).
+            "exactInvalidation": exact,
+            "versionSymbol": "_cmd.web_get_versions",
+            "invalidationSources": sources,
             "maxFrameBytes": self.max_frame_bytes,
             "fallbackReason": None if available else FALLBACK_NO_ACCESSOR,
         }
@@ -592,6 +660,42 @@ class GeometryService:
                 "this PyMOL build has no _cmd.web_get_rep_geometry",
                 fallback=FALLBACK_NO_ACCESSOR,
             )
+
+        # A DISABLED OBJECT MUST NOT BE SERVED.  `cmd.hide('everything')` does
+        # NOT clear the reps of a disabled object -- measured:
+        #
+        #   fetch 1ejg, e ; disable e ; hide everything
+        #   -> _cmd.web_get_versions row ('e','cartoon|0', version 1,
+        #      rep_active TRUE, enabled FALSE)
+        #   -> _cmd.web_get_rep_geometry('e', 'cartoon') = status 'ok',
+        #      266,592 bytes of a perfectly good cartoon
+        #
+        # so the accessor answers a rep the version table already calls
+        # inactive, and Mode G drew a molecule Mode P was not drawing.  Seen in
+        # a browser: 1UBQ's cartoon plus a stale cyan 1EJG floating beside it,
+        # IoU against Mode P 0.704.  `state/repversions.py` already folds
+        # `enabled` into the wire `active`, so this is just making the fetch
+        # path agree with the invalidation path.  `not-built` is the existing
+        # "nothing to draw, not an error" status and the client already drops
+        # on it (`EMPTY_STATUSES` in modeG/sources.ts).
+        try:
+            # Only for an object that EXISTS and is disabled.  A name that does
+            # not exist at all must keep falling through to the accessor, which
+            # answers `unsupported` -- "disabled" and "no such object" are
+            # different facts and the client acts on them differently.
+            if str(object_name) in cmd.get_names("objects") and str(
+                object_name
+            ) not in cmd.get_names("objects", enabled_only=1):
+                return GeometryResult(
+                    key,
+                    object_name,
+                    index,
+                    state,
+                    "not-built",
+                    "object is disabled; Mode P is not drawing it either",
+                )
+        except Exception:  # noqa: BLE001 - a missing object is handled below
+            pass
 
         self.fetches += 1
         t0 = time.perf_counter()
@@ -1029,12 +1133,19 @@ class GeometryService:
         count = int(bucket.get("n", 0) or 0)
         if not count:
             return None
-        # ellipsoid = center[3] m[9] rgba[4] = 16.  The accessor's xyzr carries
-        # a 4th component (the bounding radius) that the wire layout has no slot
-        # for; the 3x3 in `axes` already encodes the semi-axes.
+        # ellipsoid = center[3] m[9] rgba[4] = 16.  The 4th component of `xyzr`
+        # is NOT redundant: `CGOSimpleEllipsoid` (layer1/CGO.cpp:6355-6376)
+        # places the surface at ``v + r * (u0*n0 + u1*n1 + u2*n2)``, so the
+        # semi-axes are ``r * |n_i|`` -- and RepEllipsoid hands us axes that are
+        # NORMALISED so the longest is exactly 1.0 (measured on 1EJG: max |n_i|
+        # == 1.000000 for all 367 instances, while r ranges 0.218..0.862).
+        # Dropping r therefore drew every ellipsoid at the same size, ~2.8x too
+        # large (IoU against Mode P 0.215; folding r in takes it to 0.910).
+        # Folded into the axes here so the wire layout is unchanged.
         centers = _drop_fourth(bucket.get("xyzr"), count)
+        axes = _scale_axes_by_radius(bucket.get("axes"), bucket.get("xyzr"), count)
         data = _interleave_f32(
-            [(centers, 3), (bucket.get("axes"), 9), (bucket.get("rgba"), 4)], count
+            [(centers, 3), (axes, 9), (bucket.get("rgba"), 4)], count
         )
         return self._instance(packer, "ellipsoid", count, data, bucket.get("pick"))
 
@@ -1110,14 +1221,135 @@ class GeometryService:
             )
         return out
 
-    def scan(self, engine: Any) -> List[Dict[str, Any]]:
-        """Poll the cheap scene fingerprint.  Engine thread only.
+    # -- exact invalidation (defect D1) ------------------------------------
 
-        ``cmd.get_vis()`` is 0.0007 ms and changes on show/hide/enable/delete;
-        ``cmd.get_state()`` catches a state change.  It is NOT a complete dirty
-        signal — see the module docstring — and that is what
-        ``capabilities()['exactInvalidation'] = False`` is telling the client.
+    def poll_versions(
+        self, engine: Any, update: bool = True, force: bool = False
+    ) -> Optional[Dict[str, Any]]:
+        """One ``_cmd.web_get_versions`` call.  **Engine thread only.**
+
+        Returns ``None`` when this build has no counters (the caller then falls
+        back to the fingerprint) and raises nothing: a transient refusal
+        (``modal draw in progress``) is recorded and reported as an empty poll,
+        because turning it into a fingerprint scan would produce exactly the
+        false positives this replaced.
+
+        ``update`` runs ``SceneUpdate`` — but only inside the C++, and only when
+        a counter actually moved, so an idle poll never rebuilds anything.
+        Measured on 1UBQ: 1.0 µs when nothing changed.
         """
+        fn = self.versions_fn()
+        if fn is None:
+            return None
+        cmd = engine.cmd
+        if cmd is None:
+            return None
+        self._version_polls += 1
+        # Same "the _cmd entry point assumes the API lock is held" contract as
+        # the accessor (spike 06 §7): engine thread, lock held, BLOCKED entry.
+        cmd.lock(_self=cmd)
+        try:
+            raw = fn(cmd._COb, 1 if update else 0, 1 if force else 0)
+        except Exception as exc:  # noqa: BLE001
+            self._version_error = repr(exc)
+            return {"changed": False, "objects": {}, "_error": repr(exc)}
+        finally:
+            cmd.unlock(-1, _self=cmd)
+        if raw.get("recomputed"):
+            self._version_walks += 1
+        return raw
+
+    def _scan_versions(self, engine: Any) -> Optional[List[Dict[str, Any]]]:
+        """The exact path.  ``None`` means "no counters, use the fingerprint"."""
+        raw = self.poll_versions(engine)
+        if raw is None:
+            return None
+        if raw.get("_error"):
+            return []
+        self._version_serial = int(raw.get("serial", 0) or 0)
+        # THE FAST PATH.  `changed` is False whenever all four CExecutive
+        # counters are unchanged OR the full walk re-hashed every built rep and
+        # found nothing different.  Either way there is nothing to tell anyone,
+        # and we must not allocate a table to discover that.
+        if not raw.get("changed") and self._table_primed:
+            return []
+
+        table = repversions.build_table(raw, REP_IDS)
+        with self._lock:
+            if not self._table_primed:
+                # First poll of the session.  The client has fetched nothing
+                # yet, so announcing the whole scene would be N pulls of
+                # geometry nobody asked for.  Prime silently; the client's own
+                # first request is what populates its cache.
+                self._table = table
+                self._table_primed = True
+                self._epoch += 1
+                return []
+            previous = self._table
+            sizes = {key: int(e.get("bytes", 0)) for key, e in self._cache.items()}
+
+        changes = repversions.diff_tables(previous, table, sizes)
+
+        with self._lock:
+            self._table = table
+            if not changes:
+                return []
+            self._epoch += 1
+            self._version_changes += len(changes)
+            self._last_changes = changes[-64:]
+            for change in changes:
+                key = self.key(change["object"], change["state"], change["rep"])
+                if change["active"]:
+                    self._dirty[key] = int(change["level"])
+                else:
+                    # Hidden / deleted: forget the server-side bookkeeping too,
+                    # or a later `show` would be answered `unchanged` against a
+                    # hash whose buffers the client has already thrown away —
+                    # and nothing would ever be drawn again.
+                    self._cache.pop(key, None)
+                    self._dirty.pop(key, None)
+        return changes
+
+    def versions_payload(self) -> Dict[str, Any]:
+        """The whole table, for a client that polls instead of listening.
+
+        Safe from any thread.  ``reps`` is the compact
+        :data:`~tenmol_bridge.state.repversions.ROW_FORMAT` row form; a client
+        keeps its own copy and diffs it, which makes this stateless per client
+        and therefore immune to the D4 fan-out defect.
+        """
+        with self._lock:
+            rows = repversions.table_rows(self._table)
+            payload = {
+                "exact": self._versions_fn is not None,
+                "symbol": "_cmd.web_get_versions",
+                "epoch": self._epoch,
+                "serial": self._version_serial,
+                "primed": self._table_primed,
+                "polls": self._version_polls,
+                "walks": self._version_walks,
+                "changes": self._version_changes,
+                "rowFormat": list(repversions.ROW_FORMAT),
+                "reps": rows,
+                "lastChanges": list(self._last_changes),
+            }
+        if self._version_error:
+            payload["lastError"] = self._version_error
+        return payload
+
+    def scan(self, engine: Any) -> List[Dict[str, Any]]:
+        """Poll for changed geometry.  Engine thread only.
+
+        Prefers the exact ``_cmd.web_get_versions`` counters; falls back to the
+        old ``cmd.get_vis()`` fingerprint on a PyMOL build without them.  The
+        fingerprint is 0.0007 ms and changes on show/hide/enable/delete, but it
+        is object-level: it cannot see a recolour and it cannot name the rep to
+        DROP, which is why ``capabilities()['exactInvalidation']`` is ``False``
+        whenever it is the one running.
+        """
+        exact = self._scan_versions(engine)
+        if exact is not None:
+            return exact
         cmd = engine.cmd
         if cmd is None:
             return []
@@ -1152,6 +1384,13 @@ class GeometryService:
             if key is None:
                 self._cache.clear()
                 self._dirty.clear()
+                # The version table is a MIRROR of the C++, not a cache of our
+                # own, so a full forget must re-prime rather than diff against
+                # a table whose companion cache is gone.
+                self._table = {}
+                self._table_primed = False
+                self._last_changes = []
+                self._epoch += 1
             else:
                 self._cache.pop(key, None)
                 self._dirty.pop(key, None)
@@ -1173,6 +1412,9 @@ class GeometryService:
             "dirtyKeys": dirty,
             "seq": self._seq,
             "capabilities": self.capabilities(),
+            # D1: the pull half of invalidation.  A Mode-G client polls this,
+            # compares `epoch`, and only then looks at `reps`.
+            "versions": self.versions_payload(),
         }
 
 
@@ -1219,6 +1461,42 @@ def _i32_to_f32(data: Any, count: int) -> bytes:
         values_a = array.array("i")
         values_a.frombytes(bytes(memoryview(data).cast("B")))
         return array.array("f", [float(v) for v in values_a[:count]]).tobytes()
+
+
+def _scale_axes_by_radius(axes: Any, xyzr: Any, count: int) -> bytes:
+    """Fold ``xyzr[3]`` into the three ellipsoid axis vectors.
+
+    RepEllipsoid normalises its axes and keeps the scale in the 4th component
+    of ``xyzr``; the wire layout has three axis vectors and no scalar, so the
+    two are multiplied here. See ``_ellipsoids`` for the source citation.
+    """
+    if not axes:
+        return _const_f32(0.0, count * 9)
+    if not xyzr:
+        return bytes(memoryview(axes).cast("B"))[: count * 36]
+    try:
+        import numpy  # noqa: WPS433
+
+        a = numpy.frombuffer(bytes(memoryview(axes).cast("B")), dtype="<f4")[
+            : count * 9
+        ].reshape(-1, 9)
+        r = numpy.frombuffer(bytes(memoryview(xyzr).cast("B")), dtype="<f4")[
+            : count * 4
+        ].reshape(-1, 4)[:, 3:4]
+        return numpy.ascontiguousarray(a * r, dtype="<f4").tobytes()
+    except Exception:  # noqa: BLE001
+        import array
+
+        a_a = array.array("f")
+        a_a.frombytes(bytes(memoryview(axes).cast("B")))
+        r_a = array.array("f")
+        r_a.frombytes(bytes(memoryview(xyzr).cast("B")))
+        out = array.array("f")
+        for index in range(count):
+            radius = r_a[index * 4 + 3]
+            for slot in range(9):
+                out.append(a_a[index * 9 + slot] * radius)
+        return out.tobytes()
 
 
 def _drop_fourth(data: Any, count: int) -> bytes:

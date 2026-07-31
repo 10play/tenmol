@@ -12,6 +12,16 @@ asyncio side awaits:
                             unimplementable.
 ``input(msg)``              mouse/keyboard, forwarded 1:1 and drawn immediately.
 
+Every one of them takes the **calling session**, and every one of them passes it
+on to the ``_bridge.*`` routes.  That is not decoration: a ``_bridge.*`` route
+may answer with an out-of-band *binary* frame (Mode G geometry), and without the
+caller's identity the only thing it can do with that frame is broadcast it —
+which is defect D4, N clients each paying for one client's 360 KB pull.  A route
+that answers out of band must be able to address the answer, so the identity has
+to survive the whole way down.  Genuinely shared state (``objects``, ``view``,
+``frame``, ``feedback``) keeps fanning out through the topic subscriptions; it
+never travels this path.
+
 Two invariants worth stating out loud:
 
 * **Encoding happens on the engine thread**, in the same task as the call, so
@@ -26,6 +36,7 @@ Two invariants worth stating out loud:
 from __future__ import annotations
 
 import concurrent.futures
+import inspect
 from typing import Any, Callable, Dict, Mapping, Optional
 
 from .blobs import BlobStore, EngineBlobWriter
@@ -67,11 +78,16 @@ class Dispatcher:
         self.blobs = blobs or BlobStore()
         self.on_shutdown = on_shutdown
         self.on_dangerous = on_dangerous
-        #: ``fn(symbol, args, kwargs) -> value | Future`` for the ``_bridge.*``
-        #: namespace, which is served by the process itself and never reaches
-        #: ``pymol``.  The policy would (correctly) refuse it as an
-        #: un-addressable namespace, so it is checked FIRST.
+        #: ``fn(symbol, args, kwargs, session) -> value | Future`` for the
+        #: ``_bridge.*`` namespace, which is served by the process itself and
+        #: never reaches ``pymol``.  The policy would (correctly) refuse it as
+        #: an un-addressable namespace, so it is checked FIRST.
+        #:
+        #: ``session`` is optional in the callable's signature: a route table
+        #: that does not care (and every three-argument test double) still
+        #: works, because :meth:`_bridge_call` introspects it once, here.
         self.bridge_routes = bridge_routes
+        self._routes_take_session = _accepts_session(bridge_routes)
 
     # ------------------------------------------------------------------ call
 
@@ -80,13 +96,14 @@ class Dispatcher:
         fn: Any,
         args: Any = None,
         kwargs: Any = None,
+        session: Any = None,
     ) -> "concurrent.futures.Future[CallResult]":
         if (
             self.bridge_routes is not None
             and isinstance(fn, str)
             and fn.startswith("_bridge.")
         ):
-            return self._bridge_call(fn, args, kwargs)
+            return self._bridge_call(fn, args, kwargs, session)
         decision = self.policy.check(fn)
         try:
             decision.raise_if_denied()
@@ -271,18 +288,25 @@ class Dispatcher:
     # -------------------------------------------------------------- routing
 
     def _bridge_call(
-        self, symbol: str, args: Any, kwargs: Any
+        self, symbol: str, args: Any, kwargs: Any, session: Any = None
     ) -> "concurrent.futures.Future[CallResult]":
         """``_bridge.*`` -> the in-process service (today: RenderService).
 
         The handler may return a plain value (answer immediately) or a
         ``Future`` from ``pump.submit`` (answer when the engine gets to it).
-        Either way the client sees an ordinary ``ok`` frame.
+        Either way the client sees an ordinary ``ok`` frame — and, for routes
+        that answer with bulk data, a binary frame addressed to ``session``.
+
+        ``session`` is never taken from the client's ``kwargs``: it is the
+        connection the frame arrived on.  A client cannot name another client.
         """
         assert self.bridge_routes is not None
         future: "concurrent.futures.Future[CallResult]" = concurrent.futures.Future()
         try:
-            outcome = self.bridge_routes(symbol, args, kwargs)
+            if self._routes_take_session:
+                outcome = self.bridge_routes(symbol, args, kwargs, session)
+            else:
+                outcome = self.bridge_routes(symbol, args, kwargs)
         except BaseException as exc:  # noqa: BLE001
             future.set_exception(exc)
             return future
@@ -323,6 +347,32 @@ class Dispatcher:
             CallResult(result={"routed": symbol, "shutdown": True}, invalidates=[])
         )
         return future
+
+
+def _accepts_session(route: Optional[Callable[..., Any]]) -> bool:
+    """Does ``route`` take a fourth, positional, session argument?
+
+    Introspected ONCE at construction.  ``bridge_routes`` is a bound method in
+    the product and a lambda in the tests, and neither should have to be
+    rewritten in lockstep with the other; guessing per call with ``TypeError``
+    would also swallow a genuine ``TypeError`` raised *inside* a route.
+    """
+    if route is None:
+        return False
+    try:
+        signature = inspect.signature(route)
+    except (TypeError, ValueError):  # C callables have no signature
+        return False
+    positional = 0
+    for parameter in signature.parameters.values():
+        if parameter.kind is inspect.Parameter.VAR_POSITIONAL:
+            return True  # *args swallows anything
+        if parameter.kind in (
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        ):
+            positional += 1
+    return positional >= 4
 
 
 def _failed(exc: BaseException) -> "concurrent.futures.Future[Any]":

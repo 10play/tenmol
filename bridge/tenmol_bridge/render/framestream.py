@@ -47,17 +47,112 @@ TRANSPORT POLICY (plan §1.3, verbatim)
   being skipped.
 * ``cmd.ray`` is an explicit high-quality mode, not something the stream ever
   does on its own.
+
+DEFECT D2 — MODE P AND MODE G MUST NOT BOTH DRAW THE SAME REP
+-------------------------------------------------------------
+``PixelFrameHeader.reps`` is the contract: *these are the reps that are in this
+bitmap*.  Anything not in that list is the client's to draw.  It used to be
+absent on every frame, which by the protocol's own rule ("absent means the
+whole scene") meant Mode G was compositing a second copy of geometry PyMOL had
+already rasterised — invisible on opaque cartoon, wrong on anything with
+alpha, and a complete waste of Mode G.
+
+This module now populates it, and where it can, stops drawing the masked reps
+at all.  Three things were measured before choosing the mechanism, all on this
+tree with a real GL context (transcripts in the WP report):
+
+1. ``cmd.hide(rep)`` — the obvious per-rep mask — **destroys the geometry Mode
+   G renders**.  With ``cartoon`` hidden, ``_cmd.web_get_rep_geometry`` returns
+   ``status='not-built'``: PyMOL frees the ``Rep`` and there is nothing left to
+   serialise.  Hiding a rep server-side to let the client draw it is therefore
+   self-defeating.
+2. Applying ``hide``/``show`` transiently around each readback (so the user's
+   state is never observable) forces a full rep REBUILD every frame: measured
+   **85.8 ms/frame** for ``cartoon`` and **512.5 ms/frame** for ``surface`` on
+   1AON, against 0.043 ms for an unmasked tick.  Not a trade-off, a non-starter.
+3. ``cmd.disable(object)`` **keeps every Rep built** (the accessor still answers
+   ``ok``) and removes the object from the render.  Measured cost of
+   ``disable + draw + enable`` on 1AON, 58,870 atoms: **0.023 ms**, against
+   0.037 ms for the bare draw it replaces.  Free.
+
+So the render-time mask is **transient and object-granular**:
+
+    disable the objects the client is drawing  ->  draw  ->  glReadPixels
+    ->  enable them again
+
+all between two statements on the engine thread, which is the only thread
+allowed to touch PyMOL (plan §1.1).  No observer can see it: the status thread
+calls only ``get_progress`` / ``_get_feedback`` / ``get_setting_updates``, none
+of which read visibility, and every client command is drained at the top of the
+NEXT tick.  ``cmd.ray``, the backend pick pass and session save all run outside
+that window and always see the full scene.  **The user's show/hide state is
+never written.**
+
+An object is masked only when EVERY rep it is currently drawing is one the
+client declared (``geometryReps``), because ``disable`` is all-or-nothing per
+object.  A partially covered object stays in the bitmap in full and the client
+suppresses its Mode-G copy instead — same end state (drawn exactly once), just
+drawn by the server.  ``plan_mask`` runs a small fixed point so that the set of
+reps in the bitmap and the set of reps the client draws are always DISJOINT,
+which is what makes a single flat ``reps`` list sufficient.
+
+DEPTH: THE COMPOSITION RULE, AND WHY THERE IS NO DEPTH CHANNEL
+--------------------------------------------------------------
+A Mode-P frame is a flat bitmap.  The client blits it to a 2-D canvas and
+draws Mode G over it, so composition is **painter's order: every Mode-G object
+is in front of every Mode-P object**.  Because the mask is per object and the
+fixed point keeps the two rep sets disjoint, nothing is ever drawn twice and
+nothing is ever lost — but a Mode-P object cannot occlude a Mode-G one.
+
+Shipping a depth channel would fix that.  Measured here at 1280x960 on 1AON,
+against a 3.4 ms colour frame:
+
+===========================  =========  ==========  ==============================
+channel                      readback   compress    bytes
+===========================  =========  ==========  ==============================
+colour RGBA (the baseline)   0.481 ms   1.7 ms      182,717  (jpeg q80)
+depth ``GL_UNSIGNED_SHORT``  0.667 ms   7.9 ms      439,158  (zlib L1, lossless)
+depth 8-bit (high byte)      0.667 ms   3.0 ms      122,735  (zlib L1)
+===========================  =========  ==========  ==============================
+
+i.e. +2.5x to +4x frame time and +0.7x to +2.4x bytes, for correct occlusion in
+the one configuration (a Mode-P object interpenetrating a Mode-G object) that
+the object-granular mask makes rare.  **Not shipped.**  The stated limitation is
+cheaper, and the real fix is to move the remaining reps to Mode G, which is the
+direction the product is going anyway.
+
+THE GL-FREE SHORT CIRCUIT
+-------------------------
+When the client's declaration covers every rep in the scene there is nothing
+left for PyMOL to rasterise.  The stream then sends **one** background-only
+frame (produced by the same mask path, with every object disabled, so gradients
+and ``bg_rgb`` are exactly PyMOL's) and after that emits nothing at all: no
+draw, no ``glReadPixels``, no encode.  That is the state the product owner is
+betting on — with picking client-side, a backend in this state never touches
+GL.  :meth:`FrameStream.stats` reports it as ``mask.rasterizing = false``.
 """
 
 from __future__ import annotations
 
+import collections.abc
+import contextlib
 import ctypes
 import json
 import sys
 import threading
 import time
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from dataclasses import dataclass, field
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    FrozenSet,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 from ..config import log
 from ..errors import BridgeError, NoOffscreenGL, PyMOLUnavailable
@@ -71,7 +166,13 @@ __all__ = [
     "PixelReadback",
     "Subscriber",
     "FrameStream",
+    "SceneCoverage",
+    "CoverageProbe",
+    "MaskPlan",
+    "plan_mask",
+    "normalise_reps",
     "pixel_frame_header",
+    "REP_COUNT",
     "TOPIC_PIXELS",
 ]
 
@@ -84,6 +185,303 @@ _GL_UNSIGNED_BYTE = 0x1401
 _GL_COLOR_ATTACHMENT0 = 0x8CE0
 _GL_PACK_ALIGNMENT = 0x0D05
 _GL_FRAMEBUFFER = 0x8D40
+
+
+# --------------------------------------------------------------------------- #
+# Rep identity (a local mirror so this module stays importable without PyMOL)
+# --------------------------------------------------------------------------- #
+
+#: ``cRepCnt``, ``layer1/Rep.h:73``.  Mirrored, not imported, so ``encode.py``'s
+#: "no PyMOL, no GL" property holds for this module's pure parts too.
+REP_COUNT = 21
+
+#: Legal values of :attr:`StreamParams.mask_mode`.
+MASK_MODES = ("object", "off")
+
+
+def _rep_id(value: Any) -> int:
+    """``5`` / ``'cartoon'`` -> ``5``.  Raises for anything else."""
+    if isinstance(value, bool):  # bool is an int; a bool rep id is a bug
+        raise BridgeError("rep must be an index or a name, not a bool")
+    if isinstance(value, int):
+        return int(value)
+    from .modeg import rep_id  # local: keeps the import graph acyclic
+
+    return int(rep_id(value))
+
+
+def normalise_reps(values: Any) -> Tuple[int, ...]:
+    """Sorted, de-duplicated, in-range ``cRep_t`` indices.
+
+    Out-of-range values are DROPPED rather than clamped: a rep this build does
+    not have is a rep the client cannot be drawing, and silently turning it
+    into rep 0 (``sticks``) would mask the wrong thing.
+    """
+    if values is None:
+        return ()
+    if isinstance(values, (str, bytes)) or not isinstance(
+        values, collections.abc.Iterable
+    ):
+        values = [values]
+    out: set = set()
+    for value in values:
+        try:
+            index = _rep_id(value)
+        except Exception:  # noqa: BLE001 - a bad entry must not kill the stream
+            log("ignoring unrecognised rep %r in geometryReps" % (value,))
+            continue
+        if 0 <= index < REP_COUNT:
+            out.add(index)
+        else:
+            log("ignoring out-of-range rep %r in geometryReps" % (value,))
+    return tuple(sorted(out))
+
+
+# --------------------------------------------------------------------------- #
+# Scene coverage: which reps is each enabled object actually drawing?
+# --------------------------------------------------------------------------- #
+
+
+@dataclass(frozen=True)
+class SceneCoverage:
+    """``{object name: the reps it is currently drawing}``, enabled objects only.
+
+    ``exact`` is False when the probe could not run (no PyMOL, an exception).
+    An inexact coverage disables masking entirely and reports the bitmap as the
+    whole scene, which is the safe direction: the client then draws nothing in
+    Mode G and sees a correct, if server-rendered, picture.
+    """
+
+    objects: Dict[str, FrozenSet[int]] = field(default_factory=dict)
+    exact: bool = False
+    source: str = "none"
+    cost_ms: float = 0.0
+    at: float = 0.0
+
+    def visible_reps(self) -> FrozenSet[int]:
+        out: set = set()
+        for reps in self.objects.values():
+            out |= reps
+        return frozenset(out)
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "exact": self.exact,
+            "source": self.source,
+            "costMs": round(self.cost_ms, 3),
+            "objects": {name: sorted(reps) for name, reps in self.objects.items()},
+            "visibleReps": sorted(self.visible_reps()),
+        }
+
+
+class CoverageProbe:
+    """Reads the scene's per-object rep visibility.  Engine thread only.
+
+    WHY NOT ``_cmd.web_get_versions``.  It reports exactly this, per
+    ``(object, rep, state)``, in 1.5 us — but its ``changed`` flag is
+    **one-shot**, measured::
+
+        poll #1 after `show sticks`   changed=True
+        poll #2 after `show sticks`   changed=False
+        poll #3 after `show sticks`   changed=False
+
+    ``render/modeg.py`` gates the whole of defect D1 on that flag, so a second
+    consumer here would silently eat its invalidations — the same hazard plan
+    §1.2 documents for ``_get_feedback`` / ``getRedisplay`` / setting updates.
+    This probe therefore uses only non-destructive calls:
+
+    * ``cmd.get_vis()`` — 0.001 ms — gives the enabled flag and the OBJECT-level
+      ``visRep`` (``ExecutiveGetVisAsPyDict``, ``layer3/Executive.cpp:4496``),
+      which is where ``cell``/``extent`` live for a molecule and where the whole
+      rep set lives for a distance/angle/CGO object;
+    * one ``cmd.iterate('enabled', ...)`` OR-ing the per-atom ``visRep`` per
+      object — 8.1 ms on 58,870 atoms, 0.2 ms on 1,435.
+
+    The iterate is the expensive half, so it runs only when the scene is dirty
+    and at most every :attr:`StreamParams.coverage_scan_ms`.
+    """
+
+    #: `cmd.get_vis()` gives a 4-list per record; index 2 is the rep index list
+    #: and is ``None`` for anything that is not a cExecObject (i.e. selections).
+    _VIS_REPS = 2
+    _VIS_ENABLED = 0
+
+    def __init__(self) -> None:
+        self.last = SceneCoverage()
+        self.probes = 0
+        self.errors = 0
+        self.last_error: Optional[str] = None
+        self.total_ms = 0.0
+
+    def stale(self, now: float, scan_ms: float) -> bool:
+        if not self.last.exact:
+            return True
+        return (now - self.last.at) * 1000.0 >= scan_ms
+
+    def probe(self, engine: Any) -> SceneCoverage:
+        cmd = getattr(engine, "cmd", None)
+        if cmd is None:
+            self.last = SceneCoverage(source="no-pymol", at=time.monotonic())
+            return self.last
+        t0 = time.perf_counter()
+        try:
+            vis = cmd.get_vis() or {}
+            atom_reps: Dict[str, int] = {}
+            cmd.iterate(
+                "enabled",
+                "acc[model] = acc.get(model, 0) | reps",
+                space={"acc": atom_reps},
+            )
+        except Exception as exc:  # noqa: BLE001 - never take the pump down
+            self.errors += 1
+            self.last_error = repr(exc)
+            log("coverage probe raised %r" % (exc,))
+            self.last = SceneCoverage(source="error", at=time.monotonic())
+            return self.last
+
+        objects: Dict[str, FrozenSet[int]] = {}
+        for name, entry in vis.items():
+            try:
+                if not isinstance(entry, (list, tuple)) or len(entry) <= self._VIS_REPS:
+                    continue
+                object_reps = entry[self._VIS_REPS]
+                if object_reps is None:
+                    continue  # a selection record, not an object
+                if not entry[self._VIS_ENABLED]:
+                    continue  # disabled: it draws nothing, mask or no mask
+                reps = {int(r) for r in object_reps if 0 <= int(r) < REP_COUNT}
+            except Exception:  # noqa: BLE001 - one odd record must not lose all
+                continue
+            bits = int(atom_reps.get(name, 0))
+            reps.update(index for index in range(REP_COUNT) if (bits >> index) & 1)
+            objects[str(name)] = frozenset(reps)
+
+        cost = (time.perf_counter() - t0) * 1000.0
+        self.probes += 1
+        self.total_ms += cost
+        self.last = SceneCoverage(
+            objects=objects,
+            exact=True,
+            source="get_vis+iterate",
+            cost_ms=cost,
+            at=time.monotonic(),
+        )
+        return self.last
+
+    def stats(self) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "probes": self.probes,
+            "errors": self.errors,
+            "avgMs": round(self.total_ms / self.probes, 3) if self.probes else 0.0,
+        }
+        payload.update(self.last.to_json())
+        if self.last_error:
+            payload["lastError"] = self.last_error
+        return payload
+
+
+# --------------------------------------------------------------------------- #
+# The mask plan
+# --------------------------------------------------------------------------- #
+
+
+@dataclass(frozen=True)
+class MaskPlan:
+    """What to disable before the readback, and what the frame then contains.
+
+    ``reps is None`` means "do not put ``reps`` in the header at all", i.e. the
+    protocol's "absent == the whole scene".  That is what a client that has not
+    declared anything gets, and it is byte-identical to the pre-D2 header.
+    """
+
+    masked: Tuple[str, ...] = ()
+    reps: Optional[Tuple[int, ...]] = None
+    visible: Tuple[int, ...] = ()
+    raster: bool = True
+    reason: str = "no-declaration"
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "maskedObjects": list(self.masked),
+            "reps": None if self.reps is None else list(self.reps),
+            "visibleReps": list(self.visible),
+            "rasterizing": self.raster,
+            "reason": self.reason,
+        }
+
+
+def plan_mask(
+    coverage: SceneCoverage,
+    geometry_reps: Sequence[int],
+    mask_mode: str = "object",
+    allow_no_raster: bool = True,
+) -> MaskPlan:
+    """Decide the render-time mask.  Pure — no PyMOL, no GL, fully unit-tested.
+
+    The fixed point at the bottom is the whole reason a flat ``reps`` list is
+    enough.  Consider ``A`` showing {cartoon, sticks} and ``B`` showing
+    {cartoon}, with the client declaring {cartoon}:  ``B`` is fully covered so
+    it is a mask candidate, but ``A`` is not, so ``cartoon`` is in the bitmap
+    anyway — and a client told "cartoon is in the bitmap" would suppress its
+    Mode-G cartoon and lose ``B`` entirely.  Dropping ``B`` from the mask makes
+    the two sets disjoint and the picture whole.  It costs at most one pass per
+    object and in the common case never loops at all.
+    """
+    declared = frozenset(int(r) for r in geometry_reps)
+    visible = tuple(sorted(coverage.visible_reps()))
+
+    if not declared:
+        # Nothing declared: unchanged behaviour, and `reps` stays absent so an
+        # old client sees exactly the header it saw before D2.
+        return MaskPlan(visible=visible, raster=True, reason="no-declaration")
+    if not coverage.exact:
+        # We cannot see the scene, so we cannot promise anything about it.
+        return MaskPlan(visible=visible, raster=True, reason="coverage-unknown")
+
+    drawing = {name for name, reps in coverage.objects.items() if reps}
+    covered = {name for name in drawing if coverage.objects[name] <= declared}
+
+    if allow_no_raster and covered == drawing:
+        # Nothing in the scene is the server's to draw.  This is the GL-free
+        # state and it does NOT depend on `mask_mode`: `mask_mode` only governs
+        # whether a PARTIALLY covered scene is worth masking.  The object list
+        # still comes back so the one background-only frame can be produced.
+        return MaskPlan(
+            masked=tuple(sorted(covered)),
+            reps=(),
+            visible=visible,
+            raster=False,
+            reason="fully-covered",
+        )
+
+    candidates: set = set(covered) if mask_mode == "object" else set()
+
+    while True:
+        drawn: set = set()
+        for name, reps in coverage.objects.items():
+            if name not in candidates:
+                drawn |= reps
+        conflicting = {n for n in candidates if coverage.objects[n] & drawn}
+        if not conflicting:
+            break
+        candidates -= conflicting
+
+    raster = bool(drawn) or not allow_no_raster
+    if not raster:
+        reason = "fully-covered"
+    elif mask_mode != "object":
+        reason = "mask-off"
+    elif candidates:
+        reason = "partial"
+    else:
+        reason = "nothing-maskable"
+    return MaskPlan(
+        masked=tuple(sorted(candidates)),
+        reps=tuple(sorted(drawn)),
+        visible=visible,
+        raster=raster,
+        reason=reason,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -133,6 +531,51 @@ class StreamParams:
     #: Stop emitting entirely (tab hidden, or every rep moved to Mode G).
     paused: bool = False
 
+    # -- defect D2: per-rep composition ------------------------------------
+    #: ``cRep_t`` indices the CLIENT has declared it is drawing itself in Mode
+    #: G.  The bridge never infers this: a rep it was not told about is a rep
+    #: it must keep rasterising, because the alternative is a hole in the
+    #: picture.  Empty (the default) reproduces the pre-D2 behaviour exactly —
+    #: the whole scene is rasterised and ``PixelFrameHeader.reps`` is absent.
+    geometry_reps: Tuple[int, ...] = ()
+    #: ``"object"`` — in a PARTIALLY covered scene, disable the objects whose
+    #: every drawn rep is declared (see the module docstring).  ``"off"`` —
+    #: never touch PyMOL in that case; the bitmap stays the whole scene and the
+    #: client suppresses its Mode-G copy instead.  Either way the double draw
+    #: is gone; this only decides who does the drawing.
+    #:
+    #: It does NOT affect the fully-covered short circuit, which always fires.
+    #:
+    #: THE TRADE, MEASURED (1AON, 58,870 atoms, 1280x960, two objects, one
+    #: masked, three seconds of continuous ``turn``):
+    #:
+    #:   * saving — the masked object is out of the draw.  But a Mode-P frame
+    #:     is 3.19 ms readback + 2.12 ms encode + ~0.35 ms draw, and readback
+    #:     and encode are RESOLUTION-bound, not scene-bound.  Masking can only
+    #:     ever return the draw: ~7 % of the frame on this GPU.
+    #:   * cost — ``cmd.disable``/``cmd.enable`` bump ``CExecutive``'s object
+    #:     counter, so the next ``_cmd.web_get_versions`` poll re-walks every
+    #:     built rep: the Mode-G scan went from **0.01 ms median to 47.80 ms
+    #:     median** in that run (4 Hz x 47.8 ms = 19 % of the engine thread).
+    #:
+    #: So on a fast GPU this is a wash at best on huge structures.  It is a
+    #: clear win wherever the DRAW is the bottleneck instead of the readback —
+    #: which is exactly Linux software rendering: spike 07 measured a 320x240
+    #: cartoon draw at **140-158 ms** on Mesa llvmpipe, 40x the readback.
+    #: Left ON by default because that is the platform the product is trying to
+    #: reach; set ``maskMode:'off'`` on a workstation with a real GPU.
+    mask_mode: str = "object"
+    #: Allow the "nothing left to rasterise" short circuit.  Turning this off
+    #: keeps a live pixel stream running under a fully Mode-G client, which is
+    #: useful when comparing the two renderers side by side.
+    allow_no_raster: bool = True
+    #: Floor on how often the scene-coverage probe may run.  The probe is
+    #: ``cmd.get_vis()`` (0.001 ms) plus one ``cmd.iterate`` over enabled atoms
+    #: (8.1 ms on 58,870 atoms, ~0.2 ms on a 1,435-atom structure), and it only
+    #: runs at all when the client has declared something AND the scene is
+    #: dirty.  250 ms matches ``RenderService.scan_every``.
+    coverage_scan_ms: float = 250.0
+
     def clamp(self) -> "StreamParams":
         self.quality = max(1, min(100, int(self.quality)))
         self.dpr = max(0.1, min(8.0, float(self.dpr)))
@@ -142,6 +585,13 @@ class StreamParams:
         self.max_in_flight = max(1, min(16, int(self.max_in_flight)))
         self.ack_timeout_s = max(0.05, min(30.0, float(self.ack_timeout_s)))
         self.max_outbox = max(1, min(1024, int(self.max_outbox)))
+        self.geometry_reps = normalise_reps(self.geometry_reps)
+        if self.mask_mode not in MASK_MODES:
+            raise BridgeError(
+                "maskMode must be one of %s" % (", ".join(MASK_MODES),),
+                maskMode=self.mask_mode,
+            )
+        self.coverage_scan_ms = max(0.0, min(10_000.0, float(self.coverage_scan_ms)))
         return self
 
     def to_payload(self, **extra: Any) -> Dict[str, Any]:
@@ -156,6 +606,13 @@ class StreamParams:
             "settleScale": self.settle_scale,
             "maxFps": self.max_fps,
             "maxInFlight": self.max_in_flight,
+            # -- D2.  A client reads `geometryReps` back to confirm the bridge
+            # understood the declaration, and `maskMode` to know whether the
+            # bridge can actually stop drawing what it declared.
+            "geometryReps": list(self.geometry_reps),
+            "maskMode": self.mask_mode,
+            "allowNoRaster": self.allow_no_raster,
+            "perRepComposition": True,
         }
         payload.update(extra)
         return payload
@@ -586,6 +1043,24 @@ class FrameStream:
         self._settle_sent = True
         self._resize_pending: Optional[Tuple[int, int]] = None
 
+        # -- defect D2: composition ---------------------------------------
+        self.coverage = CoverageProbe()
+        #: The plan the LAST frame was rendered with.  Read by ``describe()``
+        #: and ``stats()``, which run on the asyncio thread, so it is only ever
+        #: rebound (never mutated) and ``MaskPlan`` is frozen.
+        self._plan = MaskPlan()
+        #: The declaration ``self._plan`` was computed against, so a change of
+        #: mind by the client re-plans immediately instead of at the next scan.
+        self._planned_for: Tuple[Any, ...] = ()
+        #: One background-only frame is owed whenever the stream stops
+        #: rasterising, so the client has something correct under its Mode-G
+        #: canvas instead of the last stale bitmap.
+        self._blank_sent = False
+        self.masked_frames = 0
+        self.blank_frames = 0
+        self.mask_ms = 0.0
+        self.raster_skipped = 0
+
         # -- telemetry (all milliseconds unless named otherwise)
         self.frames_emitted = 0
         self.stills_emitted = 0
@@ -696,6 +1171,14 @@ class FrameStream:
             "maxInFlight": "max_in_flight",
             "ackTimeout": "ack_timeout_s",
             "serverFlip": "server_flip",
+            # -- D2.  `geometryReps` is the client saying "I am drawing these
+            # myself".  It rides the EXISTING `_bridge.set_pixel_stream` route,
+            # deliberately: a new route would need the dispatcher to grow a
+            # session-threading it does not have yet (the same gap D4 has).
+            "geometryReps": "geometry_reps",
+            "maskMode": "mask_mode",
+            "allowNoRaster": "allow_no_raster",
+            "coverageScanMs": "coverage_scan_ms",
         }
         resize: Optional[Tuple[int, int]] = None
         width = changes.pop("width", None)
@@ -723,6 +1206,10 @@ class FrameStream:
         self.quality.set_base(params.quality)
         if resize is not None:
             self._resize_pending = resize
+        # A new declaration invalidates the plan and, if the stream had stopped
+        # rasterising, re-owes the background frame.
+        self._planned_for = ()
+        self._blank_sent = False
         self.gate.mark("set_params")
         self.request_frame()
         return self.describe()
@@ -739,6 +1226,7 @@ class FrameStream:
         for sub in subs:
             if sub.in_flight() >= self.params.max_in_flight:
                 blocked += 1
+        plan = self._plan
         return self.params.to_payload(
             width=width,
             height=height,
@@ -746,7 +1234,15 @@ class FrameStream:
             awaitingAck=blocked > 0,
             clients=len(subs),
             effectiveQuality=self.quality.quality,
-            reps=[],
+            # `reps` here is the LAST PLANNED bitmap content, not a promise
+            # about the next frame: `describe()` is answered on the asyncio
+            # thread and may not touch PyMOL.  The authority is always
+            # `PixelFrameHeader.reps` on the frame itself.
+            reps=[] if plan.reps is None else list(plan.reps),
+            repsKnown=plan.reps is not None,
+            maskedObjects=list(plan.masked),
+            rasterizing=plan.raster,
+            maskReason=plan.reason,
         )
 
     # -- the tick ----------------------------------------------------------
@@ -790,9 +1286,24 @@ class FrameStream:
             if dirty:
                 self._owed = True
             return
+        # -- D2: what is this frame supposed to contain? --------------------
+        # Before the rate cap and before the settle logic, because a plan that
+        # flips to "nothing to rasterise" owes the client one background frame
+        # and a plan that flips back owes it a real one.
+        plan = self._refresh_plan(engine, dirty=dirty, now=now)
         forced = self._forced > 0
         owed = self._owed or forced
         quiet = (now - self._last_dirty) * 1000.0 >= self.params.settle_ms
+
+        if not plan.raster and self._blank_sent and not forced:
+            # Every rep in the scene is being drawn by the client.  No draw, no
+            # glReadPixels, no encode — this is the GL-free state.  A dirty bit
+            # here belongs to geometry the client is fetching for itself, so it
+            # does NOT leave a pixel frame owed.
+            self.raster_skipped += 1
+            self._owed = False
+            self._settle_sent = True
+            return
 
         if not dirty and not owed:
             # Quiescent.  One lossless still, then nothing at all until
@@ -819,6 +1330,104 @@ class FrameStream:
         self._owed = False
         if self._emit(engine, still=still) is not None and still is not None:
             self._settle_sent = True
+
+    # -- D2: the plan and the mask -----------------------------------------
+
+    def _refresh_plan(self, engine: Any, dirty: bool, now: float) -> MaskPlan:
+        """Recompute :attr:`_plan` when it could have changed.  Engine thread.
+
+        Cost discipline, in order of how often each case fires:
+
+        * client declared nothing (today's default, and every Mode-P-only
+          client): **zero** PyMOL calls, forever;
+        * declared, scene static: zero — the probe only runs on a dirty tick;
+        * declared, scene moving: one probe per ``coverage_scan_ms``.
+        """
+        params = self.params
+        signature = (params.geometry_reps, params.mask_mode, params.allow_no_raster)
+        changed_declaration = signature != self._planned_for
+        if not params.geometry_reps:
+            if changed_declaration:
+                self._planned_for = signature
+                self._plan = plan_mask(self.coverage.last, (), params.mask_mode)
+                self._blank_sent = False
+            return self._plan
+        if not (
+            changed_declaration
+            or (dirty and self.coverage.stale(now, params.coverage_scan_ms))
+        ):
+            return self._plan
+
+        self._planned_for = signature
+        coverage = self.coverage.probe(engine)
+        plan = plan_mask(
+            coverage,
+            params.geometry_reps,
+            mask_mode=params.mask_mode,
+            allow_no_raster=params.allow_no_raster,
+        )
+        previous = self._plan
+        self._plan = plan
+        if plan.raster != previous.raster or plan.reps != previous.reps:
+            # The client's compositing rule just changed.  Owe it a frame: on
+            # the way down that is the one background-only bitmap it will ever
+            # get, on the way up it is the first bitmap containing the rep it
+            # must stop drawing.
+            self._blank_sent = False
+            self.request_frame()
+            self.gate.mark("mask-plan")
+            self._emit_event(self.describe())
+            log(
+                "pixel mask: rasterizing=%s reps=%s masked=%s (%s)"
+                % (plan.raster, plan.reps, plan.masked, plan.reason)
+            )
+        return plan
+
+    @contextlib.contextmanager
+    def _masked(self, engine: Any, names: Sequence[str]) -> Iterator[bool]:
+        """Disable ``names``, yield, enable them again.  Engine thread only.
+
+        Everything between the two halves runs on this thread with no chance to
+        yield to a client command, so the mask is never observable.  The
+        ``finally`` is unconditional: an exception in the readback must not
+        leave the user's objects switched off.
+        """
+        cmd = getattr(engine, "cmd", None)
+        if not names or cmd is None:
+            yield False
+            return
+        t0 = time.perf_counter()
+        disabled: List[str] = []
+        try:
+            for name in names:
+                cmd.disable(name)
+                disabled.append(name)
+            engine.p.draw()
+            self.masked_frames += 1
+            self.mask_ms += (time.perf_counter() - t0) * 1000.0
+            yield True
+        finally:
+            t1 = time.perf_counter()
+            for name in reversed(disabled):
+                try:
+                    cmd.enable(name)
+                except Exception as exc:  # noqa: BLE001 - keep going, log loud
+                    log(
+                        "FrameStream could not re-enable %r after a masked "
+                        "frame: %r — the user's scene may be missing an object"
+                        % (name, exc)
+                    )
+            try:
+                # `disable`/`enable` dirtied PyMOL; that dirt is ours and the
+                # frame we just produced already accounts for it.  Nothing else
+                # can have run in this window, so swallowing it here cannot eat
+                # a user change.
+                engine.p.getRedisplay(1)
+            except Exception:  # noqa: BLE001
+                pass
+            # Only the mask's own two halves; the readback happened in the
+            # `yield` and is accounted for by `last_readback_ms`.
+            self.mask_ms += (time.perf_counter() - t1) * 1000.0
 
     # -- emission ----------------------------------------------------------
 
@@ -865,15 +1474,26 @@ class FrameStream:
 
         self._frame_id += 1
         self._seq += 1
+        plan = self._plan
         header = pixel_frame_header(
             image,
             frame_id=self._frame_id,
             seq=self._seq,
             dpr=self.params.dpr,
             view=self._safe_view(engine),
+            # THE D2 CONTRACT.  `reps` is what is IN this bitmap; the client
+            # draws in Mode G exactly what is not listed.  `None` keeps the key
+            # out of the header entirely, which the protocol reads as "the
+            # whole scene" — the correct answer when nothing was declared.
+            reps=plan.reps,
             still=still,
         )
+        if plan.masked:
+            header["maskedObjects"] = list(plan.masked)
         frame = encode_binary_frame(header, image.data)
+        if not plan.raster:
+            self._blank_sent = True
+            self.blank_frames += 1
 
         for sub in ready:
             try:
@@ -910,7 +1530,10 @@ class FrameStream:
         if scale > 1.0:
             return self._render_scaled_still(engine, encoding, scale)
         width, height = self.viewport()
-        buf, read_ms = self._readback.read(width, height)
+        # D2: disable -> draw -> read -> enable.  With nothing to mask this is
+        # the bare readback it has always been; `_masked` short-circuits.
+        with self._masked(engine, self._plan.masked):
+            buf, read_ms = self._readback.read(width, height)
         self.last_readback_ms = read_ms
         return _encode.encode_rgba(
             buf,
@@ -937,7 +1560,8 @@ class FrameStream:
             engine.resize(big_w, big_h)
             engine.p.draw()
             assert self._readback is not None
-            buf, read_ms = self._readback.read(big_w, big_h)
+            with self._masked(engine, self._plan.masked):
+                buf, read_ms = self._readback.read(big_w, big_h)
             self.last_readback_ms = read_ms
             return _encode.encode_rgba(
                 buf,
@@ -1019,7 +1643,14 @@ class FrameStream:
             quality=None,
             encode_ms=png_ms,
         )
-        frame_id = self._push_still(image, still="ray")
+        # `cmd.ray` traverses the scene itself; the transient mask lives only
+        # inside `_render_frame`, so a ray is ALWAYS the full scene however
+        # much of it the client is drawing.  Say so in the header, or the
+        # client composites its Mode-G copy on top of a ray that already
+        # contains it — the very double draw D2 is about.
+        frame_id = self._push_still(
+            image, still="ray", reps=self._plan.visible or None
+        )
         # PyMOL keeps showing the ray image until the scene changes, exactly as
         # the desktop does, so the next readback would just be the same picture.
         self._settle_sent = True
@@ -1039,7 +1670,12 @@ class FrameStream:
             label="render:ray",
         )
 
-    def _push_still(self, image: EncodedImage, still: str) -> int:
+    def _push_still(
+        self,
+        image: EncodedImage,
+        still: str,
+        reps: Optional[Sequence[int]] = None,
+    ) -> int:
         now = time.monotonic()
         self._frame_id += 1
         self._seq += 1
@@ -1048,6 +1684,7 @@ class FrameStream:
             frame_id=self._frame_id,
             seq=self._seq,
             dpr=self.params.dpr,
+            reps=reps,
             still=still,
         )
         frame = encode_binary_frame(header, image.data)
@@ -1106,6 +1743,19 @@ class FrameStream:
             "renderFailures": self.render_failures,
             "owed": self._owed,
             "lastError": self.last_error,
+            # -- defect D2 ------------------------------------------------
+            "mask": dict(
+                self._plan.to_json(),
+                maskedFrames=self.masked_frames,
+                blankFrames=self.blank_frames,
+                # Ticks on which the whole readback+encode+GL path was skipped
+                # because the client is drawing the entire scene itself.  This
+                # is the GL-free counter.
+                rasterSkipped=self.raster_skipped,
+                maskMsTotal=round(self.mask_ms, 3),
+                blankSent=self._blank_sent,
+            ),
+            "coverage": self.coverage.stats(),
             "gate": self.gate.stats(),
             "quality": self.quality.stats(),
             "encoder": _encode.capabilities(),

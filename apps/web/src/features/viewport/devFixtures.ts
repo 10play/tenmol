@@ -8,6 +8,21 @@
  *        `packages/protocol/python/tenmol_wire.py` via
  *        `packages/viewport/tools/pull_geometry.py`. Nothing is synthesised.
  *
+ *   ?viewportHandle=1
+ *        Publish the live `ViewportHandle` on `window.__tenmolViewport`, so a
+ *        headless browser can drive `setRepMode`/`requestGeometry` for the reps
+ *        that have no HUD toggle (mesh, dots, nonbonded, cell, ellipsoids,
+ *        CGO). Read-only diagnostics otherwise; nothing in the app uses it.
+ *
+ *   ?viewportPull=off
+ *        Do not use the dev PNG pull source as a fallback. It matters for
+ *        testing a GL-FREE bridge: without it, `withFallback` quietly switches
+ *        to the pull source, `cmd.png(ray=0)` on a context-free PyMOL silently
+ *        RAY-TRACES instead (measured: 188 ms for 400x300), and the app looks
+ *        like it is working when what it is really doing is CPU ray tracing at
+ *        a few frames a second while Mode G stays suppressed. A production
+ *        build has no pull source at all, so this switch makes dev match it.
+ *
  *   ?viewportModeP=off
  *        Do not start a Mode-P source, so Mode G is on a black canvas and any
  *        gap in it is visible rather than covered by the server-rendered image.
@@ -39,6 +54,14 @@ export function fixtureGeometrySource(): GeometrySource | null {
   return createStaticGeometrySource({ urls });
 }
 
+export function pullDisabled(): boolean {
+  return params().get('viewportPull') === 'off';
+}
+
+export function handleExposed(): boolean {
+  return params().get('viewportHandle') === '1';
+}
+
 export function modePDisabled(): boolean {
   return params().get('viewportModeP') === 'off';
 }
@@ -46,6 +69,10 @@ export function modePDisabled(): boolean {
 /** A source that produces nothing, for `?viewportModeP=off`. */
 export const NULL_PIXEL_SOURCE: PixelSource = {
   name: 'disabled',
+  // Nothing will ever arrive, so the compositor must not wait for a
+  // `PixelFrameHeader.reps` to tell it what the server is drawing: with no
+  // stream the server draws NOTHING and Mode G owns the whole scene.
+  rasterizes: false,
   start(): void {},
   stop(): void {},
 };

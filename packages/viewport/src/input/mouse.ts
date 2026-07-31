@@ -16,7 +16,10 @@
  * * Coalescing drags is safe and reordering is not: `SceneDrag` only ever reads
  *   the current position against the press position, so dropping an
  *   intermediate position loses nothing. We keep the LAST position of each
- *   animation frame and flush it before any button event.
+ *   budget window and flush it before any button event.
+ * * The coalescer is driven by a CLOCK, not by `requestAnimationFrame`
+ *   (`./coalescer.ts`): rAF stops dead in a hidden or occluded tab, and the
+ *   old rAF-driven flush turned a whole drag into one jump at `pointerup`.
  * * `when` is taken from the event, not from send time (`./coords.ts`).
  *
  * Wheel is two frames — DOWN then UP with the same coordinates — exactly as
@@ -29,6 +32,7 @@
 import { ButtonState, Modifier, MouseButton, modifierMask } from '@tenmol/protocol';
 
 import type { ViewportTransport } from '../types';
+import { createDragCoalescer, type DragSample } from './coalescer';
 import { toPymolPoint, whenOf, type PymolPoint, type SurfaceGeometry } from './coords';
 
 export { Modifier, MouseButton, ButtonState, modifierMask };
@@ -54,6 +58,32 @@ export interface InputControllerOptions {
   onHover?: (point: PymolPoint, ev: PointerEvent) => void;
   pinch?: PinchTarget;
   onError?: (error: Error) => void;
+  /**
+   * Minimum spacing between forwarded drag messages, in ms. Default 1000/60.
+   * This is a BUDGET, not a schedule: it is measured against a real clock, so
+   * it holds whether or not the page is being presented.
+   */
+  dragBudgetMs?: number;
+  /** Injectable clock/timers for tests. Default `performance.now`/`setTimeout`. */
+  now?: () => number;
+  setTimer?: (callback: () => void, ms: number) => unknown;
+  clearTimer?: (handle: unknown) => void;
+}
+
+export interface InputControllerStats {
+  buttons: number;
+  drags: number;
+  wheels: number;
+  /** Drag positions superseded before they could be sent. */
+  coalesced: number;
+  /** Drags flushed from inside a pointer handler (works with rAF stopped). */
+  dragEventFlushes: number;
+  /** Drags flushed by the trailing timer (the resting position). */
+  dragTimerFlushes: number;
+  /** Drags flushed by an ordering barrier: a button message, or gesture end. */
+  dragForcedFlushes: number;
+  /** Longest gap between two drags of the last gesture, in ms. */
+  dragMaxGapMs: number;
 }
 
 export interface InputController {
@@ -61,7 +91,7 @@ export interface InputController {
   /** Sends button-up for any held button. Used on blur / unmount. */
   cancel(): void;
   /** Counters for tests and the HUD. */
-  readonly stats: { buttons: number; drags: number; wheels: number; coalesced: number };
+  readonly stats: InputControllerStats;
   /** `performance.now()` of the last forwarded input, or 0. */
   readonly lastInputAt: number;
 }
@@ -85,24 +115,19 @@ const PINCH_IDLE_MS = 250;
 export function createInputController(options: InputControllerOptions): InputController {
   const { element, transport, geometry } = options;
 
-  const stats = { buttons: 0, drags: 0, wheels: 0, coalesced: 0 };
+  const counters = { buttons: 0, drags: 0, wheels: 0 };
   let lastInputAt = 0;
 
   /** The button currently held, or null. PyMOL tracks exactly one. */
   let activeButton: number | null = null;
   let activePointerId: number | null = null;
-  /** Latest un-flushed drag. */
-  let pendingDrag: { x: number; y: number; mod: number; when: number } | null = null;
-  let rafHandle: number | null = null;
-
-  const raf = (cb: () => void): number =>
-    typeof requestAnimationFrame === 'function'
-      ? requestAnimationFrame(() => cb())
-      : (setTimeout(cb, 16) as unknown as number);
-  const cancelRaf = (handle: number): void => {
-    if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(handle);
-    else clearTimeout(handle as unknown as ReturnType<typeof setTimeout>);
-  };
+  /**
+   * The last position we forwarded, and the modifier mask that came with it.
+   * `cancel()` releases THERE (see below); a synthetic release at the origin
+   * would be read by `SceneButton` as a drag of the full window diagonal.
+   */
+  let lastPoint: PymolPoint | null = null;
+  let lastMod: number = Modifier.None;
 
   const activity = (): void => {
     lastInputAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
@@ -118,34 +143,32 @@ export function createInputController(options: InputControllerOptions): InputCon
     }
   };
 
-  const flushDrag = (): void => {
-    if (rafHandle !== null) {
-      cancelRaf(rafHandle);
-      rafHandle = null;
-    }
-    const drag = pendingDrag;
-    if (drag === null) return;
-    pendingDrag = null;
-    stats.drags++;
-    send({ t: 'input', kind: 'drag', x: drag.x, y: drag.y, mod: drag.mod, when: drag.when });
-  };
+  /**
+   * The clock-driven coalescer. NOT rAF: see `./coalescer.ts` for why, and for
+   * the four invariants (order, `when`, final position, one flush per budget).
+   */
+  const coalescer = createDragCoalescer({
+    flush: (drag: DragSample): void => {
+      counters.drags++;
+      send({ t: 'input', kind: 'drag', x: drag.x, y: drag.y, mod: drag.mod, when: drag.when });
+    },
+    ...(options.dragBudgetMs === undefined ? {} : { budgetMs: options.dragBudgetMs }),
+    ...(options.now === undefined ? {} : { now: options.now }),
+    ...(options.setTimer === undefined ? {} : { setTimer: options.setTimer }),
+    ...(options.clearTimer === undefined ? {} : { clearTimer: options.clearTimer }),
+  });
 
-  const scheduleDrag = (drag: { x: number; y: number; mod: number; when: number }): void => {
-    if (pendingDrag !== null) stats.coalesced++;
-    pendingDrag = drag;
-    if (rafHandle !== null) return;
-    rafHandle = raf(() => {
-      rafHandle = null;
-      flushDrag();
-    });
-  };
+  /** Ordering barrier: nothing may overtake a drag that is already pending. */
+  const flushDrag = (): void => coalescer.flush();
 
   const pointOf = (ev: { clientX: number; clientY: number }): PymolPoint =>
     toPymolPoint(ev, element.getBoundingClientRect(), geometry());
 
   const sendButton = (button: number, state: number, point: PymolPoint, ev: MouseEvent): void => {
     flushDrag();
-    stats.buttons++;
+    counters.buttons++;
+    lastPoint = point;
+    lastMod = modifierMask(ev);
     send({
       t: 'input',
       kind: 'button',
@@ -169,6 +192,9 @@ export function createInputController(options: InputControllerOptions): InputCon
     ev.preventDefault();
     activeButton = button;
     activePointerId = ev.pointerId;
+    // Open a budget window at the press, so the first move of a gesture is
+    // coalesced with its neighbours instead of racing ahead of them.
+    coalescer.begin();
     try {
       element.setPointerCapture(ev.pointerId);
     } catch {
@@ -186,7 +212,9 @@ export function createInputController(options: InputControllerOptions): InputCon
     }
     if (activePointerId !== null && ev.pointerId !== activePointerId) return;
     const point = pointOf(ev);
-    scheduleDrag({ x: point.x, y: point.y, mod: modifierMask(ev), when: whenOf(ev) });
+    lastPoint = point;
+    lastMod = modifierMask(ev);
+    coalescer.push({ x: point.x, y: point.y, mod: lastMod, when: whenOf(ev) });
   };
 
   const onPointerUp = (ev: PointerEvent): void => {
@@ -201,7 +229,10 @@ export function createInputController(options: InputControllerOptions): InputCon
       /* already released */
     }
     ev.preventDefault();
+    // `sendButton` flushes the pending position first, so the release can never
+    // overtake it; `end()` then closes the budget window.
     sendButton(button, ButtonState.Up, pointOf(ev), ev);
+    coalescer.end();
   };
 
   /* --------------------------------------------------------------- wheel */
@@ -247,7 +278,7 @@ export function createInputController(options: InputControllerOptions): InputCon
     if (delta === 0) return;
     const button = delta < 0 ? MouseButton.ScrollForward : MouseButton.ScrollBackward;
     const point = pointOf(ev);
-    stats.wheels++;
+    counters.wheels++;
     sendButton(button, ButtonState.Down, point, ev);
     sendButton(button, ButtonState.Up, point, ev);
   };
@@ -263,24 +294,69 @@ export function createInputController(options: InputControllerOptions): InputCon
     cancel();
   };
 
+  /**
+   * Release whatever is held, without a DOM event to read a position from
+   * (`lostpointercapture`, blur, unmount).
+   *
+   * The release goes to the LAST position we forwarded, not to the origin.
+   * `SceneButton` classifies the release by distance from the press
+   * (`abs(x - LastX) > 4` / `> 10`, `layer1/Scene.cpp:4113-4155`), so a
+   * synthetic up at (0, 0) turns whatever the user was doing into a drag of
+   * the full window diagonal: a click on an atom becomes a violent rotation,
+   * and `mouse_selection_mode` never sees the click at all. `when` IS `now`,
+   * because the release genuinely happens now — it is the coordinates that
+   * must not be invented.
+   */
   function cancel(): void {
-    flushDrag();
+    coalescer.end();
     if (activeButton === null) return;
     const button = activeButton;
     activeButton = null;
     activePointerId = null;
-    stats.buttons++;
+    counters.buttons++;
     send({
       t: 'input',
       kind: 'button',
       button,
       state: ButtonState.Up,
-      x: 0,
-      y: 0,
-      mod: Modifier.None,
+      x: lastPoint?.x ?? 0,
+      y: lastPoint?.y ?? 0,
+      mod: lastMod,
       when: Date.now() / 1000,
     });
   }
+
+  /**
+   * Live view: the drag counters live in the coalescer, so they cannot drift
+   * from what was actually sent. Getters are enumerable, so `{...stats}` (what
+   * the HUD does) snapshots values, not accessors.
+   */
+  const stats: InputControllerStats = {
+    get buttons(): number {
+      return counters.buttons;
+    },
+    get drags(): number {
+      return counters.drags;
+    },
+    get wheels(): number {
+      return counters.wheels;
+    },
+    get coalesced(): number {
+      return coalescer.stats.coalesced;
+    },
+    get dragEventFlushes(): number {
+      return coalescer.stats.eventFlushes;
+    },
+    get dragTimerFlushes(): number {
+      return coalescer.stats.timerFlushes;
+    },
+    get dragForcedFlushes(): number {
+      return coalescer.stats.forcedFlushes;
+    },
+    get dragMaxGapMs(): number {
+      return coalescer.stats.maxGapMs;
+    },
+  };
 
   element.addEventListener('pointerdown', onPointerDown);
   element.addEventListener('pointermove', onPointerMove);
@@ -300,8 +376,7 @@ export function createInputController(options: InputControllerOptions): InputCon
       element.removeEventListener('wheel', onWheel);
       element.removeEventListener('contextmenu', onContextMenu);
       if (pinchTimer !== null) clearTimeout(pinchTimer);
-      if (rafHandle !== null) cancelRaf(rafHandle);
-      pendingDrag = null;
+      coalescer.destroy();
     },
     cancel,
     stats,

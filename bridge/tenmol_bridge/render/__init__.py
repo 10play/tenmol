@@ -121,20 +121,34 @@ class RenderService:
         self._lock = threading.Lock()
         self._ticks = 0
         self._attached = False
+        self._pixels_attached = False
         self._geometry_clients: Dict[Any, Any] = {}
 
     # -- lifecycle ---------------------------------------------------------
 
-    def attach(self) -> "RenderService":
+    def attach(self, pixels: bool = True) -> "RenderService":
+        """Attach the service.  ``pixels=False`` attaches MODE G ONLY.
+
+        THE WHOLE POINT OF THE SPLIT.  Mode P is ``p.draw()`` +
+        ``glReadPixels`` and cannot run without a GL context; Mode G is
+        ``_cmd.web_get_rep_geometry`` + ``_cmd.web_get_versions``, which are
+        pure CPU walks over Reps that PyMOL built on the CPU.  Attaching the
+        two together meant that a bridge with no context served NO geometry
+        either -- so ``--no-gl`` produced an empty viewport and the
+        cross-platform story could not even be tested, let alone shipped.
+        """
         if self._attached:
             return self
-        self.stream.attach()
+        self._pixels_attached = bool(pixels)
+        if self._pixels_attached:
+            self.stream.attach()
         self.pump.add_tick_hook(self._on_tick)
         self._attached = True
         log(
-            "render service attached: gate=%s encoder=%s modeG=%s"
+            "render service attached: pixels=%s gate=%s encoder=%s modeG=%s"
             % (
-                self.stream.gate.mode,
+                self._pixels_attached,
+                self.stream.gate.mode if self._pixels_attached else "none (no GL)",
                 ",".join(encode.supported_encodings()),
                 self.geometry.capabilities()["accessor"],
             )
@@ -147,7 +161,9 @@ class RenderService:
         try:
             self.pump.remove_tick_hook(self._on_tick)
         finally:
-            self.stream.detach()
+            if self._pixels_attached:
+                self.stream.detach()
+            self._pixels_attached = False
             self._attached = False
 
     def __enter__(self) -> "RenderService":
@@ -161,6 +177,11 @@ class RenderService:
     def add_client(self, session: Any, topic: str = TOPIC_PIXELS) -> None:
         """A client subscribed to ``pixels`` or ``geometry``."""
         if topic == TOPIC_PIXELS:
+            if not self._pixels_attached:
+                # No GL: there is no pixel producer, and saying so lets the
+                # client stop waiting for a `reps` header and hand the whole
+                # scene to Mode G (see PixelSource.rasterizes in the viewport).
+                return
             self.stream.add_client(session)
         elif topic == TOPIC_GEOMETRY:
             with self._lock:
@@ -169,7 +190,8 @@ class RenderService:
             raise BadMessage("render service does not serve topic %r" % (topic,))
 
     def remove_client(self, session: Any) -> None:
-        self.stream.remove_client(session)
+        if self._pixels_attached:
+            self.stream.remove_client(session)
         with self._lock:
             self._geometry_clients.pop(id(session), None)
 
@@ -221,6 +243,27 @@ class RenderService:
         args = list(args or ())
         kwargs = dict(kwargs or {})
         if symbol == "_bridge.set_pixel_stream":
+            if not self._pixels_attached:
+                # NO GL: there is no pixel producer and there never will be in
+                # this process.  This is answered as a CAPABILITY, not as an
+                # exception, and the distinction is load-bearing: the viewport
+                # has to be able to conclude "the server rasterises nothing" and
+                # hand the whole scene to Mode G, and an ok-with-a-flag is the
+                # one shape that is guaranteed to reach every caller.  (An
+                # exception was tried first.  Measured: the bridge answered
+                # `{"t":"err","kind":"NoOffscreenGL"}` to all six calls and the
+                # client's `.catch` never ran, so the compositor sat at
+                # `rasterizing: true` and Mode G drew nothing while four pulls
+                # were answered ok.  A black viewport with no error at all.)
+                return {
+                    "available": False,
+                    "rasterizing": False,
+                    "reason": "no-gl",
+                    "message": (
+                        "this bridge has no GL context; Mode P is unavailable. "
+                        "Use Mode G (_bridge.pull_geometry) or cmd.ray."
+                    ),
+                }
             return self.stream.set_params(**kwargs)
         if symbol == "_bridge.request_frame":
             self.stream.request_frame(int(kwargs.get("count", 1)))

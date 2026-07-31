@@ -321,6 +321,20 @@ class Engine:
             return False
         from . import glcontext
 
+        if not self.config.require_gl:
+            # `--no-gl` / TENMOL_BRIDGE_NO_GL=1. Not "skip the check" — this is
+            # the deliberate simulation of a box with no EGL/WGL at all, so
+            # that the GL-free thesis can be MEASURED rather than argued. Any
+            # code path that silently depended on a context now fails the same
+            # way it would on that box.
+            self.context = None
+            self.gl_info = {
+                "available": False,
+                "reason": "--no-gl: offscreen GL deliberately disabled",
+            }
+            log("--no-gl: running with NO GL CONTEXT (no Mode P, no backend picking)")
+            return False
+
         try:
             self.context = glcontext.create_context(self.width, self.height)
         except NoOffscreenGL as exc:

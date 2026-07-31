@@ -12,9 +12,19 @@ pixel format set, and the only universally-available ``HDC`` that yields an
 *accelerated* (ICD) format is a window's.  ``WGL_ARB_pbuffer`` also exists, but
 it is itself obtained through ``wglGetProcAddress``, which needs a context,
 which needs a window - so the window is unavoidable either way.  We therefore
-create one ``WS_OVERLAPPEDWINDOW`` that is **never shown** (no ``WS_VISIBLE``,
-no ``ShowWindow``), take its DC, and render exclusively into an FBO.  The
-window is a handle-holder; nothing is ever drawn to it.
+create one ``WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN`` window that is
+**never shown** (no ``WS_VISIBLE``, no ``ShowWindow``), take its DC, and render
+exclusively into an FBO.  The window is a handle-holder; nothing is ever drawn
+to it.  ``WS_POPUP`` rather than ``WS_OVERLAPPEDWINDOW`` on purpose: an
+overlapped window carries a caption, border and system menu that we would only
+be paying for and hiding, and its non-client area is what makes a stray
+``ShowWindow`` visible on the user's desktop.
+
+No message loop is pumped.  That is safe **only** because nothing is ever drawn
+to the window and it is never shown: ``WM_PAINT`` is never generated for a
+window that was not made visible, and ``wglMakeCurrent`` / FBO rendering do not
+require message dispatch.  If this window is ever shown, a pump becomes
+mandatory or the process will be flagged as hung.
 
 ``CS_OWNDC`` is required: without it ``GetDC`` hands back a DC from the common
 pool, the pixel format set on it is not guaranteed to persist, and
@@ -42,14 +52,38 @@ confusingly.  We detect it up front and raise ``NoOffscreenGL`` with
 ``reason="gdi-generic"``.
 
 .. warning::
-   **NOT EXECUTED.**  The author of this module was on macOS.  Verified here:
-   the module imports cleanly on a non-Windows host (every ``WinDLL`` /
-   ``WINFUNCTYPE`` reference is lazy - those attributes do not exist on
-   macOS/Linux at all), the ``ctypes`` struct layouts and prototypes are
-   well-formed, every Win32 constant matches the mingw-w64 headers, and
-   ``create_context`` raises ``NoOffscreenGL`` off-Windows.  The Windows
-   acceptance test is in ``docs/webclient/spikes/07-cross-platform-gl.md`` §4
-   and must be run on real hardware before this is called done.
+   **STILL NOT EXECUTED ON WINDOWS.**  No Windows host was available.  Do not
+   describe this module as working.
+
+   What *is* verified, portably, and re-verified after the review pass in
+   spike 07 §4 (``bridge/.venv/bin/python``, macOS):
+
+   * the module imports on a non-Windows host -- every ``WinDLL`` reference is
+     looked up lazily, so it does not explode at import;
+   * ``ctypes.sizeof(PIXELFORMATDESCRIPTOR) == 40`` with every field at the
+     mingw-w64 ``wingdi.h`` offset (``dwLayerMask`` at 28, ``dwVisibleMask`` at
+     32, ``dwDamageMask`` at 36), and ``ctypes.sizeof(WNDCLASSW) == 72`` with
+     the x64 pointer offsets;
+   * every Win32 constant matches the mingw-w64 headers;
+   * ``create_context`` and ``probe`` degrade to a typed ``NoOffscreenGL`` /
+     ``ok: False`` off-Windows.
+
+   Six defects were found by review and fixed without being able to run them (the
+   authoritative list is spike 07 §4.2; the load-bearing ones are):
+   ``DescribePixelFormat``'s return value was ignored (a failure would have
+   silently reclassified the GDI-generic software rasteriser as a hardware
+   ICD), ``release()`` deleted its FBO objects against whatever context was
+   current rather than its own (the same bug, *measured*, on the EGL twin),
+   ``RegisterClassW`` treated ``ERROR_CLASS_ALREADY_EXISTS`` as fatal, and --
+   the one that would only ever have bitten win32 -- every entry point resolved
+   through ``wglGetProcAddress`` was being called through a **cdecl** pointer
+   although ``APIENTRY`` is ``__stdcall``.  See :func:`egl._functype`: it is
+   invisible on x64 (one calling convention) and stack-corrupting on 32-bit x86,
+   and it covered the entire framebuffer group, because ``opengl32.dll`` exports
+   only OpenGL 1.1 and everything else comes from ``wglGetProcAddress``.
+
+   The manual Windows acceptance procedure is
+   ``docs/webclient/spikes/07-cross-platform-gl.md`` §4.
 """
 
 from __future__ import annotations
@@ -376,6 +410,13 @@ class WGLContext:
         self._hdc: Optional[int] = None
         self._hglrc: Optional[int] = None
         self._class_name: Optional[str] = None
+        self._class_registered = False
+        # DestroyWindow/UnregisterClassW have Win32 *thread* affinity, which is
+        # stricter than wglMakeCurrent's: they must run on the thread that
+        # called CreateWindowExW, whatever thread happens to hold the GL
+        # context at the time.  Recorded separately from owner_thread, which
+        # tracks the GL context and moves with make_current().
+        self.creator_thread = threading.get_ident()
         self._hinstance: Optional[int] = None
         self._fb: Optional[GLFramebuffer] = None
         self._gl: Optional[GLFunctions] = None
@@ -416,12 +457,25 @@ class WGLContext:
 
         if not w.user32.RegisterClassW(byref(wc)):
             err = _last_error()
-            self._class_name = None
-            raise _fail(
-                "RegisterClassW failed: %s" % _win_error_text(err),
-                reason="register-class-failed",
-                winError=err,
+            # A class name can survive a torn-down process image (a hard kill
+            # between CreateWindowExW and UnregisterClassW leaves the atom
+            # registered until the module unloads).  The class is then already
+            # exactly what we want, so treat it as success rather than
+            # refusing to start.
+            if err != ERROR_CLASS_ALREADY_EXISTS:
+                self._class_name = None
+                raise _fail(
+                    "RegisterClassW failed: %s" % _win_error_text(err),
+                    reason="register-class-failed",
+                    winError=err,
+                )
+            self._class_registered = False
+            self.warnings.append(
+                "window class %r was already registered; reusing it"
+                % self._class_name
             )
+        else:
+            self._class_registered = True
 
         hwnd = w.user32.CreateWindowExW(
             0,
@@ -547,9 +601,20 @@ class WGLContext:
         actual = PIXELFORMATDESCRIPTOR()
         actual.nSize = ctypes.sizeof(PIXELFORMATDESCRIPTOR)
         actual.nVersion = 1
-        w.gdi32.DescribePixelFormat(
+        if not w.gdi32.DescribePixelFormat(
             self._hdc, chosen, ctypes.sizeof(PIXELFORMATDESCRIPTOR), byref(actual)
-        )
+        ):
+            # DescribePixelFormat returns 0 on failure and leaves `actual`
+            # untouched.  Left unchecked, dwFlags would read back as 0, which
+            # has PFD_GENERIC_FORMAT clear -- i.e. a *software* format would be
+            # misreported as a hardware ICD and the gdi-generic guard below
+            # would never fire.  Refuse instead of guessing.
+            err = _last_error()
+            raise _fail(
+                "DescribePixelFormat(%d) failed: %s" % (chosen, _win_error_text(err)),
+                reason="describe-pixel-format-failed",
+                winError=err,
+            )
         self.pixel_format = int(chosen)
         self.pfd_flags = int(actual.dwFlags)
         self.pfd = {
@@ -596,8 +661,37 @@ class WGLContext:
 
     # -- Context protocol ---------------------------------------------------
 
+    def is_current(self) -> bool:
+        """True if this context is current on the **calling** thread.
+
+        ``wglGetCurrentContext`` is per-thread, so this is False on a thread
+        that does not hold the context even while another thread does.
+        """
+        if self._released or not self._hglrc:
+            return False
+        cur = self._w.opengl32.wglGetCurrentContext()
+        return bool(cur) and int(cur) == int(self._hglrc)
+
+    def release_current(self) -> bool:
+        """Unbind this context from the **calling** thread.
+
+        ``wglMakeCurrent`` documents that a rendering context is current to at
+        most one thread, so the owning thread must unbind before another may
+        bind -- the same rule :meth:`EGLContext.release_current` exists for
+        (that one is measured; this one is from the WGL docs and is UNVERIFIED
+        on real hardware).
+        """
+        if self._released:
+            return False
+        return bool(self._w.opengl32.wglMakeCurrent(None, None))
+
     def make_current(self) -> None:
         self._assert_live()
+        if self.is_current():
+            self.owner_thread = threading.get_ident()
+            if self._fb is not None:
+                self._fb.bind()
+            return
         if not self._w.opengl32.wglMakeCurrent(self._hdc, self._hglrc):
             err = _last_error()
             raise _fail(
@@ -632,8 +726,21 @@ class WGLContext:
             return
         self._released = True
         w = getattr(self, "_w", None)
+        # glDeleteFramebuffers acts on the CURRENT context, not on the context
+        # that owns the names.  Deleting while a *different* context is current
+        # destroys that context's objects instead -- reproduced on the EGL twin
+        # (Mesa/llvmpipe), where the victim's next draw returned
+        # GL_INVALID_FRAMEBUFFER_OPERATION.  Bind ourselves first; if we
+        # cannot, skip the deletes, because wglDeleteContext reclaims every
+        # object in the context anyway.
         if self._fb is not None:
-            self._fb.destroy()
+            bound = True
+            if w is not None and self._hdc and self._hglrc:
+                cur = w.opengl32.wglGetCurrentContext()
+                if not cur or int(cur) != int(self._hglrc):
+                    bound = bool(w.opengl32.wglMakeCurrent(self._hdc, self._hglrc))
+            if bound:
+                self._fb.destroy()
             self._fb = None
         self.fbo = 0
         if w is None:
@@ -645,10 +752,22 @@ class WGLContext:
             if self._hdc and self._hwnd:
                 w.user32.ReleaseDC(self._hwnd, self._hdc)
             if self._hwnd:
-                # Win32 windows have thread affinity: this must run on the
-                # thread that created the window.
+                # Win32 windows have thread affinity: DestroyWindow only works
+                # on the thread that called CreateWindowExW.  From any other
+                # thread it fails with ERROR_ACCESS_DENIED and the window (and
+                # its DC) leak for the life of the process.
+                if threading.get_ident() != self.creator_thread:
+                    self.warnings.append(
+                        "release() ran on thread %s but the window was created "
+                        "on thread %s; DestroyWindow will fail and the HWND "
+                        "will leak. Release on the engine thread."
+                        % (threading.get_ident(), self.creator_thread)
+                    )
                 w.user32.DestroyWindow(self._hwnd)
-            if self._class_name:
+            if self._class_name and self._class_registered:
+                # Only unregister a class we actually registered, and only
+                # after DestroyWindow: UnregisterClassW fails while any window
+                # of the class still exists.
                 w.user32.UnregisterClassW(self._class_name, self._hinstance)
         except Exception:  # noqa: BLE001 - teardown must never raise
             pass
@@ -725,9 +844,12 @@ def _angle_context(width: int, height: int):
 
 def create_context(width: int, height: int) -> Any:
     """Create an offscreen desktop-GL context, current on the CALLING thread."""
+    # Before the ANGLE branch, not after: libEGL.dll/libGLESv2.dll only exist
+    # on Windows, so honouring TENMOL_WGL_BACKEND=angle elsewhere would trade a
+    # clear "wrong platform" error for an obscure "cannot load libEGL".
+    _require_windows()
     if os.environ.get("TENMOL_WGL_BACKEND", "").strip().lower() == "angle":
         return _angle_context(width, height)
-    _require_windows()
     return WGLContext(width, height)
 
 

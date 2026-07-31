@@ -54,13 +54,28 @@ Constants in this file were taken from the Khronos registry, not from memory:
 ``EGL/egl.h``, ``EGL/eglext.h``, ``xml/gl.xml``.  See
 ``docs/webclient/spikes/07-cross-platform-gl.md`` §"Provenance".
 
-.. warning::
-   **NOT EXECUTED.**  The author of this module was on macOS, which has no
-   ``libEGL``.  What has been verified here is: the module imports cleanly, the
-   ``ctypes`` prototypes are well-formed, every enum matches the registry, and
-   the "no libEGL" path raises ``NoOffscreenGL``.  The Linux acceptance test is
-   in ``docs/webclient/spikes/07-cross-platform-gl.md`` §3 and must be run on
-   real hardware before this is called done.
+Status
+------
+**EXECUTED AND VERIFIED ON LINUX.**  Ran in a ``debian:bookworm-slim`` container
+(linux/arm64, no GPU, no ``/dev/dri``, no X) with Mesa 22.3.6: the surfaceless
+platform gave a desktop **OpenGL 4.5 (Compatibility Profile)** llvmpipe context,
+FBO id 1, ``glReadPixels`` returned the cleared colour, and a real PyMOL draw of
+``test/dat/1tii.pdb`` (5,684 atoms, cartoon) rendered a non-blank image through
+it -- 13,578 of 76,800 pixels non-black at 320x240 -- while the backend pick
+pass selected a CA atom on 3 of 3 clicks.  Three defects found
+by that run are fixed here: ``eglTerminate`` is now reference-counted per
+``EGLDisplay`` (it is a process-global singleton and is *not* refcounted by the
+driver), and cross-thread hand-off now has an explicit
+:meth:`EGLContext.release_current`, because EGL -- unlike WGL -- refuses
+``eglMakeCurrent`` with ``EGL_BAD_ACCESS`` while another thread holds the
+context.  Full transcript: ``docs/webclient/spikes/07-cross-platform-gl.md``
+§2.7 (the defects) and §2.8 (the run); §2.9 is an independent re-run by a second
+session that was told to distrust this notice, and reproduced it.
+Reproduce with ``bash scripts/test-gl-linux.sh``.
+
+Note that :func:`_functype` -- the ``__stdcall`` fix -- is a **Windows** concern
+living in this module only because ``wgl.py`` shares :class:`GLFunctions`.  It is
+a no-op here; see §8.3.
 """
 
 from __future__ import annotations
@@ -237,6 +252,37 @@ EGL_LIB_NAMES: Tuple[str, ...] = ("libEGL.so.1", "libEGL.so")
 _load_lock = threading.Lock()
 _egl_singletons: Dict[str, "_EGL"] = {}
 
+#: ``EGLDisplay`` pointer value -> number of live :class:`EGLContext` objects.
+#:
+#: EGL displays are **process-global singletons**: ``eglGetPlatformDisplayEXT``
+#: with the same platform+native display returns the same ``EGLDisplay`` to
+#: every caller, and ``eglTerminate`` does *not* reference-count -- the EGL 1.5
+#: spec says it marks *all* resources associated with the display for deletion.
+#: So a naive ``release()`` that always terminates kills every other context on
+#: the same display.  Measured on Mesa 22.3.6 / llvmpipe (Debian bookworm,
+#: container): with two contexts open, ``a.release()`` made ``b.make_current()``
+#: fail with ``EGL_BAD_DISPLAY``.  See spikes/07-cross-platform-gl.md §3.4.
+_display_refs: Dict[int, int] = {}
+_display_lock = threading.Lock()
+
+
+def _display_retain(dpy: c_void_p) -> int:
+    key = int(dpy.value or 0)
+    with _display_lock:
+        _display_refs[key] = _display_refs.get(key, 0) + 1
+        return key
+
+
+def _display_release(key: int) -> bool:
+    """Drop one reference; True when the caller must ``eglTerminate``."""
+    with _display_lock:
+        n = _display_refs.get(key, 0) - 1
+        if n > 0:
+            _display_refs[key] = n
+            return False
+        _display_refs.pop(key, None)
+        return True
+
 
 def _env_flag(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
@@ -258,6 +304,39 @@ def _fail(message: str, **detail: Any) -> "NoOffscreenGL":
     return NoOffscreenGL(message, **detail)
 
 
+def _functype(restype: Any, *argtypes: Any) -> Any:
+    """``WINFUNCTYPE`` on Windows, ``CFUNCTYPE`` everywhere else.
+
+    Calling convention, not cosmetics.  ``gl.xml`` declares every GL entry point
+    ``APIENTRY``, and ``eglplatform.h`` declares every EGL one ``EGLAPIENTRY``;
+    both expand to ``__stdcall`` on Windows.  On **x86-64 there is only one**
+    convention, so ``CFUNCTYPE`` and ``WINFUNCTYPE`` are identical and the
+    distinction is invisible -- which is exactly why this is easy to get wrong.
+    On **32-bit x86 Windows** they differ in who pops the arguments, so calling a
+    ``__stdcall`` function through a ``cdecl`` pointer corrupts the stack on
+    every single call.
+
+    This matters for :meth:`GLFunctions._bind` and :meth:`_EGL._proc` and *only*
+    for them: functions taken straight off a ``WinDLL`` already get ``__stdcall``
+    from ctypes, but these two build their pointers from a raw address returned
+    by ``wglGetProcAddress`` / ``eglGetProcAddress``, and a raw address carries
+    no convention with it.  Since that is precisely how the whole framebuffer
+    group is resolved on Windows (``opengl32.dll`` exports only OpenGL 1.1), a
+    cdecl pointer here would break every ``glGenFramebuffers`` /
+    ``glBindFramebuffer`` call on win32.
+
+    UNVERIFIED on Windows like the rest of :mod:`wgl` -- but it is the correct
+    reading of the ABI, and it is a no-op on the x64 builds PyMOL actually ships.
+    """
+    factory = ctypes.CFUNCTYPE
+    if _is_win():
+        # Looked up, not referenced: ctypes.WINFUNCTYPE does not exist
+        # off-Windows, so a mis-reported sys.platform degrades to cdecl (which
+        # is correct on every non-Windows platform) instead of AttributeError.
+        factory = getattr(ctypes, "WINFUNCTYPE", ctypes.CFUNCTYPE)
+    return factory(restype, *argtypes)
+
+
 # ---------------------------------------------------------------------------
 # Shared GL plumbing (imported by wgl.py too - it is API-agnostic)
 # ---------------------------------------------------------------------------
@@ -267,9 +346,16 @@ class GLFunctions:
     """Desktop-GL entry points resolved through a caller-supplied loader.
 
     ``loader(name) -> int | None`` returns the address of a GL function, or
-    ``None``.  On Linux that is ``dlsym(libGL)`` then ``eglGetProcAddress``; on
-    Windows it must be ``wglGetProcAddress`` then ``GetProcAddress(opengl32)``,
-    because ``opengl32.dll`` only exports OpenGL 1.1.
+    ``None``.  On Linux that is ``dlsym(libGL)`` then ``eglGetProcAddress``.
+
+    On Windows the order is the other way round -- ``GetProcAddress(opengl32)``
+    **first**, ``wglGetProcAddress`` second (:meth:`wgl.WGLContext._gl_loader`).
+    That is not a style choice: ``wglGetProcAddress`` is documented to return
+    NULL for OpenGL 1.1 entry points, which is every name in :data:`_CORE`, and
+    ``opengl32.dll`` exports *only* OpenGL 1.1, which is none of the names in
+    :data:`_FBO_GROUP`.  The two sources are disjoint, so each name is found by
+    exactly one of them either way -- but querying the DLL first is the order
+    that never asks a function for something it is specified to refuse.
 
     The framebuffer entry points are resolved as an all-or-nothing *group*:
     ARB/core first, ``EXT`` only if the whole ARB group is missing.  Mixing
@@ -347,6 +433,12 @@ class GLFunctions:
         # scripts in docs/webclient/spikes/07-cross-platform-gl.md can prove
         # "render then glReadPixels" without booting PyMOL.
         self.glGetStringi = self._bind("glGetStringi", c_char_p, (c_uint, c_uint))
+        # render/framestream.py:PixelReadback looks these two up on ctx.gl and
+        # degrades silently when they are missing; supplying them lets Mode P
+        # pin GL_PACK_ALIGNMENT and read GL_COLOR_ATTACHMENT0 explicitly instead
+        # of trusting the driver default.
+        self.glPixelStorei = self._bind("glPixelStorei", None, (c_uint, c_int))
+        self.glReadBuffer = self._bind("glReadBuffer", None, (c_uint,))
         self.glClear = self._bind("glClear", None, (c_uint,))
         self.glClearColor = self._bind(
             "glClearColor",
@@ -358,7 +450,7 @@ class GLFunctions:
         addr = self._loader(name)
         if not addr:
             return None
-        proto = ctypes.CFUNCTYPE(restype, *argtypes)
+        proto = _functype(restype, *argtypes)
         return proto(addr)
 
     # -- convenience --------------------------------------------------------
@@ -575,7 +667,7 @@ class _EGL:
         addr = self.eglGetProcAddress(name.encode("ascii"))
         if not addr:
             return None
-        return ctypes.CFUNCTYPE(restype, *argtypes)(addr)
+        return _functype(restype, *argtypes)(addr)
 
     # -- helpers ------------------------------------------------------------
 
@@ -869,11 +961,19 @@ def _choose_config(
 class EGLContext:
     """A windowless EGL context owning exactly one FBO.
 
-    Thread affinity: ``eglMakeCurrent`` binds to the calling thread, exactly
-    like ``CGLSetCurrentContext``.  Construct on the engine thread.  Note that
-    releasing on a *different* thread than the one holding it current leaves
-    the context current on the original thread - :meth:`release` therefore
-    calls ``eglMakeCurrent(NO_SURFACE, NO_SURFACE, NO_CONTEXT)`` first.
+    Thread affinity is **stricter than CGL's**, and this was measured, not
+    assumed (Mesa 22.3.6/llvmpipe, spikes/07-cross-platform-gl.md §3.4):
+
+    * ``eglMakeCurrent`` binds to the calling thread, so construct on the
+      engine thread.
+    * A *second* thread calling :meth:`make_current` while the first still
+      holds the context gets ``EGL_BAD_ACCESS``.  There is no "steal"; the
+      owning thread must call :meth:`release_current` first.  (``wglMakeCurrent``
+      documents the same one-thread-at-a-time rule, so this is not an EGL
+      quirk to route around -- but only the EGL half is measured.  Keep PyMOL
+      pinned to one thread and it never bites.)
+    * :meth:`release` unbinds before destroying, and only ``eglTerminate``s the
+      display when it is the last context on it (see :data:`_display_refs`).
     """
 
     backend = "egl"
@@ -912,8 +1012,13 @@ class EGLContext:
         self._egl = egl
         self._gl_lib = _load_gl(gl_libs)
 
+        self._dpy_key: Optional[int] = None
+
         dpy, plat, device_label, egl_version = _open_display(egl, platform_name)
         self._dpy = dpy
+        # Retain BEFORE anything can throw, so the release() in the except
+        # block below balances exactly one reference.
+        self._dpy_key = _display_retain(dpy)
         self.platform_name = plat
         self.device_label = device_label
         self.egl_version = egl_version
@@ -1094,18 +1199,64 @@ class EGLContext:
 
     # -- Context protocol ---------------------------------------------------
 
+    def is_current(self) -> bool:
+        """True if this context is current on the **calling** thread.
+
+        ``eglGetCurrentContext`` is per-thread, so this returns False on a
+        thread that does not hold the context even while another thread does.
+        """
+        if self._released or self._ctx is None:
+            return False
+        cur = self._egl.eglGetCurrentContext()
+        return bool(cur) and int(cur) == int(self._ctx.value or 0)
+
     def make_current(self) -> None:
         self._assert_live()
+        if self.is_current():
+            # Already ours on this thread.  Re-binding is legal but pointless,
+            # and skipping it keeps the per-frame path free of a driver call.
+            self.owner_thread = threading.get_ident()
+            if self._fb is not None:
+                self._fb.bind()
+            return
         surf = self._surface  # None == EGL_NO_SURFACE
         if not self._egl.eglMakeCurrent(self._dpy, surf, surf, self._ctx):
+            err = self._egl.eglGetError()
+            hint = ""
+            if err == EGL_BAD_ACCESS:
+                # Reproduced on Mesa 22.3.6/llvmpipe: binding from thread B
+                # while thread A still holds it gives EGL_BAD_ACCESS.  The EGL
+                # spec requires the *owning* thread to unbind first; unlike
+                # wglMakeCurrent there is no way for B to steal it.
+                hint = (
+                    " -- this context is still current on thread %s. EGL "
+                    "forbids stealing a context from another thread: the "
+                    "owning thread must call release_current() first."
+                    % self.owner_thread
+                )
             raise _fail(
-                "eglMakeCurrent failed: %s"
-                % _egl_error_name(self._egl.eglGetError()),
+                "eglMakeCurrent failed: %s%s" % (_egl_error_name(err), hint),
                 reason="make-current-failed",
+                eglError=_egl_error_name(err),
+                ownerThread=self.owner_thread,
             )
         self.owner_thread = threading.get_ident()
         if self._fb is not None:
             self._fb.bind()
+
+    def release_current(self) -> bool:
+        """Unbind this context from the **calling** thread.
+
+        Required before another thread may :meth:`make_current` it -- see the
+        ``EGL_BAD_ACCESS`` note there.  Safe to call when nothing is current.
+        Returns True if the unbind call succeeded.
+        """
+        if self._released or self._dpy is None:
+            return False
+        ok = bool(self._egl.eglMakeCurrent(self._dpy, None, None, None))
+        if not ok:
+            self._egl.eglGetError()  # swallow, this is a best-effort unbind
+        return ok
 
     def resize(self, width: int, height: int) -> None:
         """Re-storage the SAME FBO. Never regenerate it (see package docstring).
@@ -1124,8 +1275,23 @@ class EGLContext:
             return
         self._released = True
         egl = getattr(self, "_egl", None)
+        # glDeleteFramebuffers acts on whatever context is CURRENT, not on the
+        # context that owns the names.  Releasing context A while context B was
+        # current therefore deleted B's FBO name out from under it -- measured:
+        # B's next draw returned GL_INVALID_FRAMEBUFFER_OPERATION (0x0506).  So
+        # bind ourselves first, and if we cannot, skip the deletes entirely:
+        # eglDestroyContext reclaims every object in the context anyway.
         if self._fb is not None:
-            self._fb.destroy()
+            bound = True
+            if egl is not None and self._dpy and self._ctx:
+                cur = egl.eglGetCurrentContext()
+                if not cur or int(cur) != int(self._ctx.value or 0):
+                    surf = self._surface
+                    bound = bool(egl.eglMakeCurrent(self._dpy, surf, surf, self._ctx))
+                    if not bound:
+                        egl.eglGetError()
+            if bound:
+                self._fb.destroy()
             self._fb = None
         self.fbo = 0
         if egl is None:
@@ -1137,8 +1303,15 @@ class EGLContext:
                     egl.eglDestroyContext(self._dpy, self._ctx)
                 if self._surface:
                     egl.eglDestroySurface(self._dpy, self._surface)
-                egl.eglTerminate(self._dpy)
-            egl.eglReleaseThread()
+                # Only the LAST context on this EGLDisplay may terminate it:
+                # eglTerminate is not reference-counted and tears down every
+                # other context sharing the display.  Same reasoning for
+                # eglReleaseThread, which unbinds whatever this thread holds.
+                key = getattr(self, "_dpy_key", None)
+                if key is None or _display_release(key):
+                    egl.eglTerminate(self._dpy)
+                    egl.eglReleaseThread()
+                self._dpy_key = None
         except Exception:  # noqa: BLE001 - teardown must never raise
             pass
         self._ctx = None

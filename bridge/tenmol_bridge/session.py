@@ -21,6 +21,7 @@ Transport: one WebSocket at ``ws://127.0.0.1:<port>/ws``.
 from __future__ import annotations
 
 import asyncio
+import itertools
 import json
 import struct
 from typing import Any, Dict, Iterable, Mapping, Optional, Set, Tuple
@@ -275,21 +276,39 @@ class Subscriptions:
 # -- one connected client ---------------------------------------------------
 
 
+_SESSION_SEQ = itertools.count(1)
+
+
 class ClientSession:
     """Outbound bookkeeping for one WebSocket.
 
     Any thread may call :meth:`send_soon` (the status thread does); only the
     asyncio loop runs :meth:`writer`.  The outbox is bounded — a client that
     stops reading must not grow the server without limit.
+
+    Every session has a small monotonic :attr:`id`.  It is the addressing unit:
+    a route that answers with an out-of-band binary frame (Mode G geometry)
+    sends it to the session that asked, and ``/healthz`` reports per-session
+    counters so "did client B pay for client A's pull?" is answerable from the
+    SERVER side rather than inferred from a client's own bookkeeping.  Do not
+    use ``id(session)`` for this — CPython reuses addresses after a GC, and two
+    sessions that never overlapped can share one.
     """
 
     def __init__(self, ws: Any, outbox_size: int = 2048) -> None:
         self.ws = ws
+        self.id = next(_SESSION_SEQ)
         self.subs = Subscriptions()
         self.outbox: "asyncio.Queue[Any]" = asyncio.Queue(maxsize=outbox_size)
         self.loop = asyncio.get_running_loop()
         self.dropped = 0
         self.sent = 0
+        #: server -> client binary frames and their total size.  Mode P pixel
+        #: frames and Mode G geometry frames are the only binary traffic in
+        #: protocol v1, and both are bulk, so this is the number that says
+        #: whether a client was made to pay for somebody else's request.
+        self.binary_sent = 0
+        self.binary_bytes = 0
         self._closed = False
         self._tasks: Set[asyncio.Task] = set()
 
@@ -337,6 +356,8 @@ class ClientSession:
             try:
                 if isinstance(frame, (bytes, bytearray)):
                     await self.ws.send_bytes(bytes(frame))
+                    self.binary_sent += 1
+                    self.binary_bytes += len(frame)
                 else:
                     await self.ws.send_json(frame)
             except Exception:  # noqa: BLE001 - the socket died mid-write
@@ -365,8 +386,11 @@ class ClientSession:
 
     def stats(self) -> Dict[str, Any]:
         return {
+            "id": self.id,
             "topics": list(self.subs),
             "sent": self.sent,
+            "binarySent": self.binary_sent,
+            "binaryBytes": self.binary_bytes,
             "dropped": self.dropped,
             "queued": self.outbox.qsize(),
         }

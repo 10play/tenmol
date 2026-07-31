@@ -110,6 +110,18 @@ export interface PixelSource {
   invalidate?(): void;
   /** Pause/resume (document.hidden, or every rep moved to Mode G). */
   setPaused?(paused: boolean): void;
+  /**
+   * False when this source will NEVER produce a frame — a null source, or a
+   * backend with no GL context at all.
+   *
+   * It matters because the compositor waits for `PixelFrameHeader.reps` before
+   * it lets Mode G draw anything (D2: without that header the server is still
+   * rasterising everything and drawing on top would double-draw). A source that
+   * never sends a header would leave Mode G waiting for ever, i.e. a black
+   * viewport — which is exactly the GL-free configuration this whole design is
+   * aiming at. Undefined means "a stream is expected", the historical default.
+   */
+  readonly rasterizes?: boolean;
 }
 
 export interface PixelSink {
@@ -199,6 +211,32 @@ export interface ViewportStats {
   modes: readonly RepRenderState[];
   /** Set when Mode G was requested but the bridge has no accessor. */
   awaitingAccessor: boolean;
+  /**
+   * D3b/D3c. True while THIS client is dropping Mode-P frames before the
+   * presenter (and therefore before the ack). `pauseReasons` lists every reason
+   * that currently holds — the stream resumes only when the last one clears.
+   */
+  paused: boolean;
+  pauseReasons: readonly string[];
+  /**
+   * Mode G drew the rep, but knowingly differently from Mode P (order-dependent
+   * surface alpha, today). NOT a fallback trigger — see `viewport.ts`.
+   */
+  geometryWarnings: readonly string[];
+  /**
+   * D2. Who is drawing what, right now: `declared` is what this client told the
+   * bridge it would draw, `drawing` is what Mode G is actually allowed to draw
+   * (they differ while a declaration is in flight), `suppressed` is what Mode G
+   * is holding back because the server is still painting it, and `rasterizing`
+   * is false when the backend has stopped rendering altogether — which is the
+   * machine-readable form of "this process is not using GL right now".
+   */
+  composition: {
+    declared: readonly RepId[];
+    drawing: readonly RepId[];
+    suppressed: readonly RepId[];
+    rasterizing: boolean;
+  };
 }
 
 export interface ViewportHandle {

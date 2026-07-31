@@ -11,6 +11,11 @@
     "./input": "./src/input/index.ts",
     "./modeP": "./src/modeP/index.ts",
     "./modeG": "./src/modeG/index.ts",
+    "./stream": "./src/stream/index.ts",
+    "./webgl": "./src/webgl/index.ts",
+    "./picking": "./src/picking/index.ts",
+    "./materials": "./src/materials/index.ts",
+    "./compositor": "./src/compositor/index.ts",
     "./package.json": "./package.json"
   },
   "files": [

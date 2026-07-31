@@ -312,6 +312,11 @@ bool ExecutiveIsObjectType(const SpecRec& rec, int cObjectType)
 
 static void ReportEnabledChange(PyMOLGlobals* G, SpecRec* rec)
 {
+  /* tenmol web client -- BEGIN
+   * The plan named ExecutiveSpecEnable (:15376); this is its single choke point
+   * and, unlike ExecutiveSpecEnable, it also covers *disable* (14 call sites). */
+  ++G->Executive->m_web_enable_version;
+  /* tenmol web client -- END */
 #ifdef _PYMOL_LIB
   if (G->CallbackObject && G->enabledCallback) {
     G->enabledCallback(G->CallbackObject, rec->name, rec->visible);
@@ -1513,6 +1518,9 @@ static void ExecutiveUpdateGridSlots(PyMOLGlobals* G, int force)
 void ExecutiveInvalidatePanelList(PyMOLGlobals* G)
 {
   CExecutive* I = G->Executive;
+  /* tenmol web client -- BEGIN */
+  ++I->m_web_panel_version;
+  /* tenmol web client -- END */
   I->Panel.clear();
   ExecutiveInvalidateGridSlots(G);
 }
@@ -1920,6 +1928,10 @@ void ExecutiveUpdateCoordDepends(PyMOLGlobals* G, ObjectMolecule* mol)
 { /* nasty, ugly, inefficient hack */
 
   CExecutive* I = G->Executive;
+  /* tenmol web client -- BEGIN
+   * coordinates moved (load_coords / update / editor drag) */
+  ++I->m_web_rep_version;
+  /* tenmol web client -- END */
   SpecRec* rec = nullptr;
   ObjectGadget* gadget;
   int done_inv_all = false;
@@ -3671,6 +3683,9 @@ pymol::Result<std::vector<DiscardedRec>> ExecutiveSetName(PyMOLGlobals* G,
       }
       ExecutiveInvalidateGroups(G, false);
     }
+    /* tenmol web client -- BEGIN */
+    ++I->m_web_name_version;
+    /* tenmol web client -- END */
   }
   ColorRenameExt(G, old_name_view, new_name_view);
   return discarded;
@@ -7677,6 +7692,9 @@ int ExecutiveGetObjectTTT(
 pymol::Result<> ExecutiveTransformSelection(PyMOLGlobals* G, int state,
     const char* s1, int log, const float* ttt, int homogenous)
 {
+  /* tenmol web client -- BEGIN (translate / rotate / transform_selection) */
+  ++G->Executive->m_web_rep_version;
+  /* tenmol web client -- END */
   SETUP_SELE_DEFAULT(1);
 
   auto vla = pymol::vla_take_ownership(SelectorGetObjectMoleculeVLA(G, sele1));
@@ -7695,6 +7713,10 @@ pymol::Result<> ExecutiveTransformObjectSelection2(PyMOLGlobals* G,
     const float* matrix, int homogenous, int global)
 {
   int ok = true;
+
+  /* tenmol web client -- BEGIN (transform_object / matrix_copy / align) */
+  ++G->Executive->m_web_rep_version;
+  /* tenmol web client -- END */
 
   switch (obj->type) {
   case cObjectMolecule: {
@@ -12920,6 +12942,21 @@ bool ExecutiveObjMolSeleOp(PyMOLGlobals* G, int sele, ObjectMoleculeOpRec* op)
   ObjectMolecule* obj = nullptr;
   int update_table = true;
 
+  /* tenmol web client -- BEGIN
+   * Per-atom colour (`color`), per-atom rep visibility and `alter` reach the
+   * reps through this dispatcher, not through ExecutiveInvalidateRep.  Only the
+   * mutating op codes bump; read-only ops (OMOP_CountAtoms, ...) must not, or
+   * cmd.count_atoms() would look like a change. */
+  switch (op->code) {
+  case OMOP_COLR:
+  case OMOP_VISI:
+  case OMOP_ALTR:
+  case OMOP_INVA:
+    ++G->Executive->m_web_rep_version;
+    break;
+  }
+  /* tenmol web client -- END */
+
   /* if we're given a valid selection */
   if (sele >= 0) {
     /* iterate over all the objects in the global list */
@@ -13868,6 +13905,13 @@ pymol::Result<> ExecutiveSetRepVisMask(
   PRINTFD(G, FB_Executive)
   " ExecutiveSetRepVisib: entered.\n" ENDFD;
 
+  /* tenmol web client -- BEGIN
+   * show/hide does NOT go through ExecutiveInvalidateRep (it drives OMOP_VISI +
+   * OMOP_INVA / ObjectSetRepVisMask directly), so the plan's five sites would
+   * have missed the single most common change of all. */
+  ++G->Executive->m_web_rep_version;
+  /* tenmol web client -- END */
+
   {
     CExecutive* I = G->Executive;
     CTracker* I_Tracker = I->Tracker;
@@ -14005,6 +14049,13 @@ pymol::Result<> ExecutiveInvalidateRep(
   ObjectMoleculeOpRec op;
   SpecRec* rec = nullptr;
   const char* name = "";
+
+  /* tenmol web client -- BEGIN
+   * Also reached from layer1/Setting.cpp (113 call sites) so this one bump
+   * covers every setting side effect that rebuilds a rep -- which is why
+   * SettingRec::setChanged() (layer1/Setting.h:67-70) is NOT patched. */
+  ++I->m_web_rep_version;
+  /* tenmol web client -- END */
 
   SelectorTmp2 s1;
   if (str1 && !WordMatchExact(G, str1, "all", true)) {
@@ -17756,3 +17807,21 @@ pymol::Result<pymol::usalign::TMAlignResult> ExecutiveUSalign(PyMOLGlobals* G,
 
   return result;
 }
+
+/* tenmol web client -- BEGIN (impl plan 03 s4 Task 6)
+ *
+ * Read the change counters declared in layer3/ExecutiveDef.h.  Defined here (not
+ * in Executive.h) so the only upstream header we touch is ExecutiveDef.h itself;
+ * layer4/CmdWebGeometry.cpp forward-declares this prototype.
+ *
+ * out[0] panel, out[1] enable, out[2] name, out[3] rep.
+ */
+void ExecutiveWebGetChangeCounters(PyMOLGlobals* G, unsigned* out)
+{
+  CExecutive* I = G->Executive;
+  out[0] = I->m_web_panel_version;
+  out[1] = I->m_web_enable_version;
+  out[2] = I->m_web_name_version;
+  out[3] = I->m_web_rep_version;
+}
+/* tenmol web client -- END */

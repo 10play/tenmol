@@ -152,8 +152,11 @@ class BridgeConfig:
     #: passed through to ``invocation.options.quiet``; NEVER forced to 1
     #: (critique C4 — several parity rows need quiet=0 output).
     quiet: bool = False
-    #: run without a GL context (degraded: no picking, no Mode P). Only for
-    #: environments where :func:`glcontext.create_context` cannot succeed.
+    #: False = never even try to make a GL context (``--no-gl`` /
+    #: ``TENMOL_BRIDGE_NO_GL=1``).  Mode P and backend picking are then
+    #: unavailable; ``cmd.ray``, the whole RPC surface and Mode-G geometry
+    #: extraction are not affected.  This is what a Linux/Windows box with no
+    #: EGL/WGL looks like, made reproducible on any machine.
     require_gl: bool = True
 
     # -- lifecycle ----------------------------------------------------------
@@ -166,6 +169,8 @@ class BridgeConfig:
             self.force_no_pymol = os.environ.get(
                 "TENMOL_BRIDGE_FORCE_NO_PYMOL", ""
             ) in ("1", "true", "yes")
+        if os.environ.get("TENMOL_BRIDGE_NO_GL", "") in ("1", "true", "yes"):
+            self.require_gl = False
         if self.token == "":
             self.token = mint_token()
 

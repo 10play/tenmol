@@ -81,6 +81,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="run without PyMOL so the front-end is developable",
     )
+    parser.add_argument(
+        "--no-gl",
+        action="store_true",
+        help=(
+            "start with NO offscreen GL context, as if this box had no "
+            "EGL/WGL/CGL at all. Mode P and backend picking are disabled; "
+            "cmd.ray, the RPC surface and Mode G geometry extraction are not. "
+            "This is the cross-platform thesis, made runnable."
+        ),
+    )
     parser.add_argument("--log-level", default="info")
     parser.add_argument(
         "--version", action="version", version="tenmol-bridge " + __version__
@@ -115,6 +125,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         token=None if args.no_token else (args.token or ""),
         token_path=args.token_file,
         force_no_pymol=args.no_pymol,
+        require_gl=not args.no_gl,
         log_level=args.log_level,
     )
 

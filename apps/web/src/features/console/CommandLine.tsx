@@ -11,6 +11,21 @@
  *   Down      -> history forward
  *   Enter     -> submit (deliberately NOT `returnPressed`, `:432-434`)
  *
+ * Tab is PyMOL's own completion, one round trip, and the handler is a literal
+ * translation of `modules/pymol/_gui.py:899-903`:
+ *
+ *     st = self.cmd._parser.complete(self.command_get())
+ *     if st:
+ *         self.command_set(st); self.command_set_cursor(len(st))
+ *
+ * `Parser.complete` (`modules/pymol/parser.py:524-596`) returns the completed
+ * LINE or None, and *prints* the candidate list through `colorprinting.suggest`
+ * (`parser.py:63-67`). Those printed lines are console output like any other:
+ * `pcatch` puts them in PyMOL's line buffer and they arrive on the `feedback`
+ * topic, which `FeedbackLog` already renders. So " parser: matching commands:"
+ * showing up in the log is the FEATURE, not a leak — it is exactly what the Qt
+ * and Tk consoles show.
+ *
  * Submit is `{t:'do'}`, which is where console parity lives: `cmd.do` emits both
  * the `PyMOL>` echo and the C-origin summary into the same line buffer (spike 02
  * §8 — `cmd.fragment('ala')` produces nothing, `cmd.do('fragment ala')`
@@ -24,12 +39,26 @@ import { useRef, useState } from 'react';
 import { useSession, useStore } from '../../app';
 import { useCommandHistory } from './useCommandHistory';
 
+/**
+ * `cmd._parser.complete` — granted by `bridge/tenmol_bridge/policy/grants/
+ * wp-11-console.py`. `@tenmol/client` exports the same constant as
+ * `COMPLETE_FN`, but `packages/client/src/index.ts` does not re-export it yet,
+ * so it is spelled out here.
+ */
+const COMPLETE_FN = 'cmd._parser.complete';
+
 export function CommandLine() {
   const session = useSession();
   const history = useCommandHistory(session.stores.ui);
   const phase = useStore(session.stores.connection, (s) => s.phase);
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  /**
+   * One completion in flight at a time. Tab autorepeats when held, and PyMOL's
+   * completion takes the API lock and can glob the filesystem; queueing those
+   * would apply a stale answer to a line the user has since edited.
+   */
+  const completing = useRef(false);
 
   const setLineAndCursorToEnd = (value: string) => {
     setText(value);
@@ -37,6 +66,26 @@ export function CommandLine() {
       const el = inputRef.current;
       if (el) el.setSelectionRange(value.length, value.length);
     });
+  };
+
+  const complete = (line: string) => {
+    if (completing.current) return;
+    completing.current = true;
+    void session
+      .call<string | null>(COMPLETE_FN, [line])
+      .then((completed) => {
+        // Apply only if the user has not typed since; `_gui.py` cannot race
+        // this because its completion is synchronous and ours is a round trip.
+        if (typeof completed !== 'string' || completed === '') return;
+        if (inputRef.current !== null && inputRef.current.value !== line) return;
+        setLineAndCursorToEnd(completed);
+      })
+      .catch(() => {
+        // `session.call` has already put the error in the console.
+      })
+      .finally(() => {
+        completing.current = false;
+      });
   };
 
   const submit = () => {
@@ -47,6 +96,8 @@ export function CommandLine() {
     void session.run(line);
   };
 
+  const offline = phase !== 'open';
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -54,20 +105,18 @@ export function CommandLine() {
       return;
     }
     if (e.key === 'Tab') {
+      // Always swallow Tab, connected or not: PyMOL's handler returns 'break'
+      // (`_gui.py:903`) so Tab never moves focus out of the command line.
       e.preventDefault();
-      // TODO(completion, WP-11/WP-02): `cmd._parser.complete(text)` is the real
-      // implementation (`modules/pymol/parser.py:524-604`) and it cannot run in
-      // the browser — it needs `cmd.kwhash`, `cmd.auto_arg` and the local
-      // filesystem. It is currently REFUSED by the bridge policy: measured,
-      //   -> {"t":"call","fn":"_parser.complete","args":["frag"]}
-      //   <- {"t":"err","error":{"kind":"NotAllowed","message":"'_parser' is
-      //      not an addressable namespace"}}
-      // A grant file (policy/grants/wp-11.py) adding `_parser` is all it needs.
-      session.stores.feedback.appendClient(
-        " tab completion is not wired yet: the bridge policy refuses 'cmd._parser.complete'" +
-          ' (needs a policy grant — see features/console/CommandLine.tsx)',
-        'warning',
-      );
+      if (offline) {
+        session.stores.feedback.appendClient(
+          ' tab completion needs the bridge: it is PyMOL that owns the keyword table,' +
+            ' the name lists and the filesystem.',
+          'warning',
+        );
+        return;
+      }
+      complete(text);
       return;
     }
     if (e.key === 'ArrowUp') {
@@ -82,8 +131,6 @@ export function CommandLine() {
       if (next !== null) setLineAndCursorToEnd(next);
     }
   };
-
-  const offline = phase !== 'open';
 
   return (
     <div className="cmdline">

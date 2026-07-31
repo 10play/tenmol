@@ -78,6 +78,26 @@ struct CExecutive : public Block {
 
   std::vector<PanelRec> Panel{};
 
+  /* tenmol web client -- BEGIN (impl plan 03 s4 Task 6: change counters)
+   *
+   * Monotonic "something changed" counters.  They are *hints*, not content
+   * hashes: the web accessor (layer4/CmdWebGeometry.cpp) uses them purely to
+   * decide whether it is worth re-deriving the exact per-(object,rep,state)
+   * versions it hands to the browser.  A poll that sees all four unchanged can
+   * return its cached answer without touching a single Rep.
+   *
+   * m_web_panel_version  object list / order / group structure changed
+   * m_web_enable_version an object was enabled or disabled
+   * m_web_name_version   an object was renamed
+   * m_web_rep_version    a representation was invalidated (show/hide/colour/
+   *                      setting side effect/coordinate edit)
+   */
+  unsigned m_web_panel_version{0};
+  unsigned m_web_enable_version{0};
+  unsigned m_web_name_version{0};
+  unsigned m_web_rep_version{0};
+  /* tenmol web client -- END */
+
 #ifdef _WEBGL
 #endif
   int CaptureFlag {};

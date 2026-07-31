@@ -397,6 +397,11 @@ export const CGOOp = {
  * are `INSTANCE_ITEM_SIZE` below, which additionally carry colour (the C ops
  * inherit colour from the preceding `CGO_COLOR`, which a GPU instance buffer
  * cannot).
+ *
+ * NOT A CONTRADICTION: `CGO_OP_SIZE.cone` is 16 and `INSTANCE_ITEM_SIZE.cone`
+ * is 18. Different things — 16 is `CGO_CONE_SZ`, the operand count of the C
+ * opcode; 18 is the wire instance, which carries both end colours explicitly.
+ * Reconciling them by making one match the other would corrupt one of the two.
  */
 export const CGO_OP_SIZE: Readonly<Record<string, number>> = {
   sphere: 4, // CGO_SPHERE_SZ,                       layer1/CGO.h:100
@@ -688,12 +693,69 @@ export interface PixelFrameHeader extends BinaryFrameCommon {
    */
   view?: readonly number[];
   /**
-   * Reps drawn by PyMOL into this bitmap. When Mode G is active for some reps,
-   * the bridge hides them server-side and lists only what remains here, so the
-   * client can composite Mode-P and Mode-G output without double-drawing.
-   * Absent means "the whole scene".
+   * THE COMPOSITION CONTRACT (defect D2). Reps that ARE in this bitmap.
+   *
+   *   draw a rep in Mode G  <=>  that rep is NOT in `reps`
+   *
+   * Use {@link pixelFrameDrawsRep} rather than testing by hand — the absent
+   * case is the one that is easy to get wrong.
+   *
+   * - absent  — "the whole scene". Either the client never declared a Mode-G
+   *             rep set, or the bridge predates D2. Mode G must draw NOTHING,
+   *             because everything is already in the bitmap. Drawing anyway is
+   *             precisely the double-draw defect: invisible on opaque cartoon,
+   *             wrong on anything with alpha (two 50 %-alpha copies composite
+   *             to 75 %), and a waste of the entire point of Mode G.
+   * - `[]`    — the bitmap is background only: the bridge has stopped
+   *             rasterising because the client declared every rep in the
+   *             scene. Exactly one such frame is sent, and then no frames at
+   *             all until the scene stops being fully covered. It is the
+   *             correct background (PyMOL drew it, gradients and all), so
+   *             leave it on the canvas rather than clearing to a guess.
+   * - a list  — mixed mode. Those reps are the server's; the rest are yours.
+   *
+   * DEPTH. A Mode-P frame is flat: there is no depth buffer, so a client
+   * cannot interleave its Mode-G geometry with the bitmap in Z. Composition is
+   * painter's order — **every Mode-G object is in front of every Mode-P
+   * object**. The bridge keeps that from being wrong by masking at OBJECT
+   * granularity and guaranteeing the two rep sets are disjoint; the visible
+   * consequence is that a Mode-P object can never occlude a Mode-G one. A
+   * depth channel was measured (+0.67 ms readback and +3.0 to +7.9 ms compress
+   * for +123 to +439 KB per frame at 1280x960, against a 3.4 ms colour frame)
+   * and rejected.
    */
   reps?: readonly RepId[];
+  /**
+   * Objects the bridge disabled for this readback, purely diagnostic — the
+   * composition decision is `reps`, which is already the union over everything
+   * still in the picture.
+   */
+  maskedObjects?: readonly string[];
+}
+
+/**
+ * Does this bitmap already contain `rep`? If it does, Mode G must not draw it.
+ *
+ * `header === null` (no frame yet) answers `true`: until the bridge has said
+ * otherwise, assume it is drawing everything. Starting from "the server draws
+ * nothing" would show an empty viewport against any bridge that never sends a
+ * pixel frame at all.
+ */
+export function pixelFrameDrawsRep(
+  header: { reps?: readonly RepId[] | undefined } | null | undefined,
+  rep: RepId,
+): boolean {
+  if (header === null || header === undefined) return true;
+  const reps = header.reps;
+  if (reps === undefined) return true; // absent == the whole scene
+  return reps.includes(rep);
+}
+
+/** True when the bridge has stopped rasterising: the bitmap is background only. */
+export function isBackgroundOnlyFrame(
+  header: { reps?: readonly RepId[] | undefined } | null | undefined,
+): boolean {
+  return header !== null && header !== undefined && header.reps?.length === 0;
 }
 
 /* ------------------------------------------------------------------ *

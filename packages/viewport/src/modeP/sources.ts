@@ -72,7 +72,23 @@ export function createStreamPixelSource(options: StreamPixelSourceOptions): Pixe
     };
     void transport
       .call(PIXEL_STREAM_FN, [], request)
-      .then(() => {
+      .then((result: unknown) => {
+        // `{available: false}` is the bridge saying it has NO GL CONTEXT and
+        // will never produce a frame. It is answered as a value rather than an
+        // error on purpose (see render/__init__.py), so it must be handled on
+        // the success path.
+        if ((result as { available?: unknown } | null)?.available === false) {
+          if (!unavailable) {
+            unavailable = true;
+            const reason = String(
+              (result as { message?: unknown }).message ?? 'the bridge has no pixel producer',
+            );
+            const error = new Error(reason);
+            options.onUnavailable?.(error);
+            sink?.error(error);
+          }
+          return;
+        }
         configured = true;
       })
       .catch((cause: unknown) => {
@@ -110,6 +126,17 @@ export function createStreamPixelSource(options: StreamPixelSourceOptions): Pixe
 
   return {
     name: 'websocket-pixel-stream',
+    /**
+     * False once the bridge has told us it has no pixel producer — which on a
+     * GL-free backend is `_bridge.set_pixel_stream` raising `NoOffscreenGL`.
+     * The viewport re-reads this whenever the sink sees an error, because the
+     * answer only arrives one round trip after `start()`, and because an app
+     * may pass its own `onUnavailable` (the shipping one passes a no-op) and
+     * that must not be the only way the compositor can find out.
+     */
+    get rasterizes(): boolean {
+      return !unavailable;
+    },
     start(next: PixelSink): void {
       sink = next;
       if (transport.onBinaryFrame) unsubscribe = transport.onBinaryFrame(onFrame);

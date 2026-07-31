@@ -24,7 +24,13 @@ import {
 } from '@tenmol/protocol';
 
 import { isOrthoscopic, modelViewMatrix, projectionMatrix, type ViewMatrix } from '../camera';
-import { buildGeometry, type BuiltGeometry } from './frames';
+// D6. `../webgl/builder.ts` is a drop-in replacement for `./frames.ts`'s
+// `buildGeometry` — same signature, same `BuiltGeometry` — and is the one that
+// honours the surface `Vis` buffer, expands `RepMesh` line strips, draws
+// radius-0 dots as screen-space points, and has cone/ellipsoid impostors.
+// `./frames.ts` keeps `isEmptyGeometryFrame` and the shared types.
+import { buildGeometry, unmappedCensus } from '../webgl';
+import { isEmptyGeometryFrame, type BuiltGeometry } from './frames';
 
 /** `cSetting_fog_start` default (`layer1/SettingInfo.h`). */
 export const FOG_START = 0.45;
@@ -52,6 +58,11 @@ export interface GeometryRenderer {
   readonly stats: GeometryRendererStats;
   readonly canvas: HTMLCanvasElement;
   readonly available: boolean;
+  /**
+   * Framebuffer pixels per CSS pixel. Only the dots rep uses it: `dot_width` is
+   * a CSS-pixel setting, so without this a HiDPI dots rep draws at half size.
+   */
+  setPixelRatio(dpr: number): void;
   setSize(width: number, height: number): void;
   /**
    * The SCENE rectangle inside the canvas, in device pixels, anchored top-left
@@ -63,9 +74,19 @@ export interface GeometryRenderer {
   setBackground(background: readonly [number, number, number] | null): void;
   /** Returns the problems the build reported (empty means fully drawn). */
   apply(frame: GeometryFrame): string[];
+  /**
+   * Warnings from the LAST `apply()`: drawn, but knowingly divergent from Mode
+   * P. Deliberately not returned by `apply` so that no caller can mistake one
+   * for a fallback trigger.
+   */
+  readonly lastWarnings: readonly string[];
   remove(key: GeometryKey | string): void;
   /** Drop every object/state built for one rep (the per-rep toggle went off). */
   removeRep(rep: RepId): void;
+  /** Drop every rep/state built for one object (`delete`, `set_name`). */
+  removeObject(object: string): void;
+  /** The `object|state|rep` keys currently holding GPU buffers. */
+  keys(): string[];
   clear(): void;
   render(): void;
   dispose(): void;
@@ -124,6 +145,13 @@ export function createGeometryRenderer(options: GeometryRendererOptions): Geomet
   let scene3d = { width: 1, height: 1 };
   let view: ViewMatrix | null = null;
   let background: readonly [number, number, number] | null = options.background ?? null;
+  /**
+   * Framebuffer pixels per CSS pixel. The renderer is handed DEVICE pixels
+   * (`setPixelRatio(1)` below), so nothing else needs this — except the dots
+   * rep, whose point size is a CSS-pixel setting (`dot_width`) that has to be
+   * scaled up by hand or a HiDPI dots rep draws at half size.
+   */
+  let pixelRatio = 1;
 
   if (renderer) {
     renderer.setPixelRatio(1); // we hand it device pixels already
@@ -169,6 +197,20 @@ export function createGeometryRenderer(options: GeometryRendererOptions): Geomet
     }
   }
 
+  /**
+   * The single removal path: out of the scene graph, disposed, out of the map.
+   * Both `remove()`/`removeRep()` and the tombstone branch of `apply()` go
+   * through here so there is exactly one place that can leak a buffer.
+   */
+  function removeKey(id: string): boolean {
+    const entry = built.get(id);
+    if (!entry) return false;
+    scene.remove(entry.object);
+    entry.dispose();
+    built.delete(id);
+    return true;
+  }
+
   function recount(): void {
     stats.keys = built.size;
     stats.drawCalls = 0;
@@ -183,11 +225,20 @@ export function createGeometryRenderer(options: GeometryRendererOptions): Geomet
     }
   }
 
+  let lastWarnings: readonly string[] = [];
+
   return {
     stats,
     canvas,
+    get lastWarnings(): readonly string[] {
+      return lastWarnings;
+    },
     get available(): boolean {
       return renderer !== null;
+    },
+
+    setPixelRatio(dpr: number): void {
+      pixelRatio = Number.isFinite(dpr) && dpr > 0 ? dpr : 1;
     },
 
     setSize(width: number, height: number): void {
@@ -242,54 +293,77 @@ export function createGeometryRenderer(options: GeometryRendererOptions): Geomet
     apply(frame: GeometryFrame): string[] {
       const started = now();
       const key = geometryKey(frame.header);
-      const previous = built.get(key);
+
+      // A frame with nothing drawable is a REMOVAL, not an empty build. This is
+      // the client half of defect D1: `hide everything` produces a tombstone
+      // (`./cache.ts`) and the cartoon's buffers are disposed here. Building an
+      // empty Group instead would leave the previous build on screen whenever
+      // nothing else replaced it, and leak one dead node per key.
+      if (isEmptyGeometryFrame(frame.header)) {
+        removeKey(key);
+        stats.frames++;
+        stats.lastBuildMs = now() - started;
+        recount();
+        // D6. A tombstone and "the bridge filled a bucket it has no packer for"
+        // are BOTH empty frames, and telling them apart is the difference
+        // between a correct removal and a silently black viewport with a green
+        // Mode-G badge. `lines`, `ribbon`, `nonbonded`, `extent`, `dashes` and
+        // `angles` all arrive as payloadBytes 0 with a non-empty census; that
+        // must degrade the rep, whereas a `hide` must not.
+        const census = unmappedCensus(frame.header);
+        return census === null
+          ? []
+          : [`frame carried no drawable geometry; the bridge did not pack: ${census}`];
+      }
+
+      lastWarnings = [];
       let entry: BuiltGeometry;
       try {
-        entry = buildGeometry(frame);
+        entry = buildGeometry(frame, { pixelRatio });
       } catch (cause) {
         options.onError?.(cause instanceof Error ? cause : new Error(String(cause)));
         return [`build failed: ${String(cause)}`];
       }
-      if (previous) {
-        scene.remove(previous.object);
-        previous.dispose();
-      }
+      removeKey(key);
       built.set(key, entry);
       scene.add(entry.object);
       pushUniforms(entry.materials);
       stats.frames++;
       stats.lastBuildMs = now() - started;
       recount();
+      lastWarnings = entry.warnings ?? [];
       return entry.problems;
     },
 
     remove(key: GeometryKey | string): void {
-      const id = typeof key === 'string' ? key : geometryKey(key);
-      const entry = built.get(id);
-      if (!entry) return;
-      scene.remove(entry.object);
-      entry.dispose();
-      built.delete(id);
-      recount();
+      if (removeKey(typeof key === 'string' ? key : geometryKey(key))) recount();
     },
 
     removeRep(rep: RepId): void {
-      for (const [id, entry] of [...built.entries()]) {
+      for (const id of [...built.keys()]) {
         const parsed = parseGeometryKey(id);
         if (parsed === null || parsed.rep !== rep) continue;
-        scene.remove(entry.object);
-        entry.dispose();
-        built.delete(id);
+        removeKey(id);
       }
       recount();
     },
 
-    clear(): void {
-      for (const entry of built.values()) {
-        scene.remove(entry.object);
-        entry.dispose();
+    /** Drop every state and rep built for one object (`delete`, rename). */
+    removeObject(object: string): void {
+      for (const id of [...built.keys()]) {
+        const parsed = parseGeometryKey(id);
+        if (parsed === null || parsed.object !== object) continue;
+        removeKey(id);
       }
-      built.clear();
+      recount();
+    },
+
+    keys(): string[] {
+      return [...built.keys()];
+    },
+
+    clear(): void {
+      for (const id of [...built.keys()]) removeKey(id);
       recount();
     },
 

@@ -34,9 +34,16 @@ What is left for the policy to do:
 
 1. **Shape** — reject anything that is not a 1..3 segment dotted identifier
    path, and reject ``__dunder__`` segments so no ``__globals__`` walk exists.
-2. **Namespace** — a dotted name's root must be a known PyMOL namespace.
+2. **Namespace** — a dotted name's root must be a known PyMOL namespace, and a
+   private *interior* segment (``cmd._parser.complete``) must be granted by
+   name.  Interior segments used to be unchecked, which meant the whole private
+   attribute surface of every allowed root was reachable by accident; that hole
+   is closed and the one capability that needed it (tab completion) is now an
+   explicit grant instead.
 3. **Grants** — work packages add symbols/roots through
    ``policy/grants/wp-NN.py``; nobody edits a shared file (plan §5.2).
+   ``Grant.symbols`` names a *whole dotted path* and is the only way to reach a
+   private interior segment.
 4. **Confirmation** — the handful of calls that get a one-time client
    confirmation (``cmd.system``), and the calls that are *routed* rather than
    executed (``quit``).
@@ -234,6 +241,10 @@ class Grant:
     wp: str
     note: str = ""
     roots: Set[str] = field(default_factory=set)
+    #: Whole dotted paths, e.g. ``cmd._parser.complete``.  A granted symbol
+    #: satisfies the namespace-root check and the private-segment check (both
+    #: the leaf and any interior segment); it does NOT bypass the shape rules,
+    #: the dunder rule or :data:`EXCLUSIVE_TO_BRIDGE`.
     symbols: Set[str] = field(default_factory=set)
     private: Set[str] = field(default_factory=set)
     dangerous: Dict[str, str] = field(default_factory=dict)
@@ -312,13 +323,33 @@ class Policy:
                     reason="dunder segment %r is never addressable" % segment,
                 )
         leaf = segments[-1]
-        if len(segments) > 1 and segments[0] not in self.roots:
+        #: An exact dotted grant (``Grant.symbols``) is the capability itself:
+        #: it answers the namespace question and the private-segment question
+        #: for this one path, and nothing wider.
+        granted = symbol in self.symbols
+        if not granted and len(segments) > 1 and segments[0] not in self.roots:
             return Decision(
                 symbol=symbol,
                 allowed=False,
                 reason="%r is not an addressable namespace" % segments[0],
             )
-        if leaf.startswith("_") and leaf not in self.private:
+        # Interior segments: `cmd._parser.complete` reaches a private attribute
+        # of an allowed root.  Leaving that unchecked made every `_`-prefixed
+        # attribute of `cmd`, `util`, `editor`, ... addressable for free, which
+        # is a hole, not a capability.  DEFAULT_PRIVATE is a list of *leaf*
+        # commands and deliberately does not apply here.
+        for segment in segments[1:-1]:
+            if segment.startswith("_") and not granted:
+                return Decision(
+                    symbol=symbol,
+                    allowed=False,
+                    reason=(
+                        "private interior segment %r needs an explicit grant "
+                        "for the whole path %r (policy/grants/wp-NN.py, "
+                        "Grant.symbols)" % (segment, symbol)
+                    ),
+                )
+        if leaf.startswith("_") and leaf not in self.private and not granted:
             return Decision(
                 symbol=symbol,
                 allowed=False,

@@ -40,6 +40,8 @@ import {
   type IndexedMeshHeader,
 } from '@tenmol/protocol';
 
+import type { GeometryFrameHeader } from '@tenmol/protocol';
+
 import { buildInstancedDraw, isDrawableInstanceKind } from './instances';
 import { createCylinderMaterial } from './materials/cylinder';
 import { createSphereMaterial } from './materials/sphere';
@@ -51,8 +53,19 @@ export interface BuiltGeometry {
   /** Every material this build owns, so the renderer can push uniforms. */
   materials: Material[];
   stats: { drawCalls: number; instances: number; triangles: number; vertices: number };
-  /** Non-fatal gaps: anything in the frame we could not draw. */
+  /**
+   * Anything in the frame we could NOT draw. A non-empty `problems` hands the
+   * rep back to Mode P, so only put things here that make the picture wrong by
+   * omission.
+   */
   problems: string[];
+  /**
+   * Drawn, but knowingly divergent from Mode P (currently: order-dependent
+   * surface alpha where PyMOL uses OIT). Reported, never a fallback — falling
+   * back for a bounded divergence keeps the backend's GL context load-bearing
+   * for a case the client nearly handles, which is the opposite of the point.
+   */
+  warnings?: string[];
   dispose(): void;
 }
 
@@ -243,6 +256,35 @@ function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): {
   object.frustumCulled = false;
   object.matrixAutoUpdate = false;
   return { object, material, triangles, vertices: header.counts.verts };
+}
+
+/* ------------------------------------------------------------------ *
+ * Emptiness
+ * ------------------------------------------------------------------ */
+
+/**
+ * True when the frame carries nothing drawable.
+ *
+ * Two things arrive this way and both mean the same to the renderer:
+ *
+ *   * a TOMBSTONE minted by `./cache.ts` when the bridge says a key is hidden,
+ *     disabled, deleted or renamed (defect D1);
+ *   * an honestly empty rep — `ellipsoids` on a structure with no ANISOU
+ *     records builds fine and produces zero instances.
+ *
+ * `renderer.apply()` turns both into a REMOVAL: dispose the buffers and delete
+ * the key. Building an empty `Group` instead (which is what happened before)
+ * leaves one dead node per key in the scene graph for the life of the tab, and
+ * — the actual defect — leaves the PREVIOUS build for that key on screen if
+ * nothing replaces it.
+ */
+export function isEmptyGeometryFrame(header: GeometryFrameHeader): boolean {
+  if (isIndexedMeshHeader(header)) return header.counts.verts === 0;
+  if (isCgoDrawArraysHeader(header)) {
+    if (header.blocks.some((block) => block.nverts > 0)) return false;
+    return !header.instances.some((buffer) => buffer.count > 0);
+  }
+  return false;
 }
 
 /* ------------------------------------------------------------------ *

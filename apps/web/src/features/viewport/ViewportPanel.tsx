@@ -28,7 +28,13 @@ import {
 
 import { useSession, useShallowStore } from '../../app';
 import { createDevPullSource, pullSourceAvailable } from './devFrames';
-import { NULL_PIXEL_SOURCE, fixtureGeometrySource, modePDisabled } from './devFixtures';
+import {
+  NULL_PIXEL_SOURCE,
+  fixtureGeometrySource,
+  handleExposed,
+  modePDisabled,
+  pullDisabled,
+} from './devFixtures';
 import { createSessionTransport } from './transport';
 import './viewport.css';
 
@@ -64,7 +70,7 @@ export function ViewportPanel(): React.JSX.Element {
       // and the moment the producer lands this becomes the primary source.
       onUnavailable: () => {},
     });
-    const pull = createDevPullSource(transport);
+    const pull = pullDisabled() ? null : createDevPullSource(transport);
     const fixtures = fixtureGeometrySource();
 
     const viewport = createViewport({
@@ -82,6 +88,10 @@ export function ViewportPanel(): React.JSX.Element {
       onError: (error) => console.warn('[viewport]', error.message),
     });
     viewportRef.current = viewport;
+    // `?viewportHandle=1` only; see devFixtures.ts.
+    if (handleExposed()) {
+      (window as unknown as { __tenmolViewport?: ViewportHandle }).__tenmolViewport = viewport;
+    }
 
     // The HUD does not need 60 Hz; React re-rendering at 60 Hz would be the
     // most expensive thing on the page.
@@ -155,6 +165,16 @@ export function ViewportPanel(): React.JSX.Element {
               {stats.geometryInstances} instances · {stats.geometryTriangles} tris
               {stats.awaitingAccessor ? ' — awaiting accessor' : ''}
             </div>
+            {stats.paused && (
+              <div className="viewport__hud-line">
+                Mode P PAUSED (this client only) — {stats.pauseReasons.join(', ')}
+              </div>
+            )}
+            {stats.geometryWarnings.length > 0 && (
+              <div className="viewport__hud-line viewport__hud-line--warn">
+                Mode G drawn with a known divergence: {stats.geometryWarnings.join('; ')}
+              </div>
+            )}
             <div className="viewport__hud-reps">
               {TOGGLE_REPS.map((rep) => {
                 const state = modeOf(rep);

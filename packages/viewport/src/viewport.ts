@@ -27,14 +27,20 @@ import type {
   RepRenderState,
 } from '@tenmol/protocol';
 
+import { repName } from '@tenmol/protocol';
+
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
+import { createCompositor } from './compositor';
 import { createInputController } from './input/mouse';
+import type { GeometryCache } from './modeG/cache';
+import { isEmptyGeometryFrame } from './modeG/frames';
 import { createGeometryRenderer, isWebGL2Available } from './modeG/renderer';
 import { createStreamGeometrySource } from './modeG/sources';
 import { createPixelPresenter } from './modeP/presenter';
 import { createStreamPixelSource } from './modeP/sources';
 import { DEFAULT_POLICY, createRenderPolicy } from './renderPolicy';
 import { createResizeNegotiator } from './resize';
+import { createStreamPauseController } from './stream';
 import { createSurface } from './surface';
 import type { PixelFramePayload, ViewportHandle, ViewportOptions, ViewportStats } from './types';
 
@@ -89,6 +95,10 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     geometryTriangles: 0,
     modes: [],
     awaitingAccessor: false,
+    paused: false,
+    pauseReasons: [],
+    geometryWarnings: [],
+    composition: { declared: [], drawing: [], suppressed: [], rasterizing: true },
   };
 
   let size = { width: 1, height: 1, dpr: 1 };
@@ -114,12 +124,35 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     onError,
   });
 
-  const pixelSource =
+  const rawPixelSource =
     options.pixelSource ??
     createStreamPixelSource({
       transport,
-      onUnavailable: (error) => onError(new Error(`Mode P stream unavailable: ${error.message}`)),
+      onUnavailable: (error) => {
+        // No pixel producer at all. That is the GL-free backend, not a broken
+        // one: tell the compositor the server rasterises nothing, or Mode G
+        // waits forever for a `reps` header that will never arrive.
+        compositor.setStreamAvailable(false);
+        onError(new Error(`Mode P stream unavailable: ${error.message}`));
+      },
     });
+
+  // D3b/D3c. The gate sits IN FRONT of the presenter and therefore in front of
+  // the ack, so a paused client stops acking and self-throttles through the
+  // bridge's existing per-subscriber flow control — without touching the
+  // process-wide `StreamParams.paused` flag unless it is provably safe.
+  // Constructing the controller reads `document.visibilityState` synchronously,
+  // which is the half of D3b that an `addEventListener` can never cover: a tab
+  // that was ALREADY hidden at mount never fires a `visibilitychange`.
+  const pause = createStreamPauseController({
+    source: rawPixelSource,
+    transport,
+    onChange: (paused, reasons) => {
+      stats.paused = paused;
+      stats.pauseReasons = [...reasons];
+    },
+  });
+  const pixelSource = pause.source;
 
   /* ----------------------------------------------------------- Mode G */
 
@@ -143,6 +176,122 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     }
   };
 
+  /**
+   * Forget everything the Mode-G source thinks we hold for `rep`.
+   *
+   * MEASURED, IN A BROWSER: without this, flipping `surface` to Mode G left the
+   * viewport BLANK. The sequence is a trap and it is worth spelling out.
+   * `sources.ts` sends the cached content hash as `have`, and the bridge answers
+   * an unchanged rep with `status:'unchanged'` and NO payload. So when the
+   * compositor suppressed a rep we dropped its GPU buffers with `removeRep`,
+   * the source's cache still believed we had them, and the re-pull that was
+   * supposed to bring them back was answered "you already have it" — for ever.
+   * Mode P had stopped drawing the rep, Mode G never started, and the user got
+   * a black canvas. Dropping the cache entries too makes the re-pull a full one.
+   */
+  const forgetGeometryFor = (rep: RepId): void => {
+    const cache = (geometrySource as { cache?: GeometryCache }).cache;
+    if (cache === undefined) return;
+    for (const entry of cache.entries()) {
+      if (entry.rep !== rep) continue;
+      const state = entry.resolvedState ?? entry.requestedState;
+      cache.dropped({ object: entry.object, state, rep: entry.rep });
+    }
+  };
+
+  /* ------------------------------------------------------ D2 composition */
+
+  /** Reps that currently have live Mode-G buffers. Drives the watchdog below. */
+  const drawnReps = new Set<RepId>();
+  const drawWatch = new Map<RepId, ReturnType<typeof setTimeout>>();
+  /** Long enough for a loopback pull of a 20k-triangle surface, short enough to feel like a glitch rather than a hang. */
+  const GEOMETRY_GRACE_MS = 800;
+  const GEOMETRY_TRIES = 4;
+
+  /**
+   * NEVER LEAVE THE VIEWPORT BLANK.
+   *
+   * Once the bridge stops rasterising a rep, this client is the only thing
+   * drawing it — so "we asked for the geometry and nothing came" is no longer a
+   * cosmetic miss, it is an empty screen. Seen in a browser: after a
+   * `delete all` + reload the pull raced the compositor and the surface never
+   * arrived, leaving Mode P showing sticks and Mode G showing nothing. Retry a
+   * few times, then hand the rep back to the server, which re-declares and
+   * restarts the raster. Slower is fine; blank is not.
+   */
+  const watchDraw = (rep: RepId, tries = 0): void => {
+    const existing = drawWatch.get(rep);
+    if (existing !== undefined) clearTimeout(existing);
+    drawWatch.set(
+      rep,
+      setTimeout(() => {
+        drawWatch.delete(rep);
+        if (destroyed || drawnReps.has(rep) || !compositor.shouldDraw(rep)) return;
+        if (tries + 1 >= GEOMETRY_TRIES) {
+          policy.degrade(rep, 'extraction-failed');
+          onError(
+            new Error(
+              `Mode G (${repName(rep)}): no geometry arrived after ${GEOMETRY_TRIES} pulls; ` +
+                'handing the rep back to Mode P',
+            ),
+          );
+          return;
+        }
+        forgetGeometryFor(rep);
+        requestGeometryFor([rep]);
+        watchDraw(rep, tries + 1);
+      }, GEOMETRY_GRACE_MS),
+    );
+  };
+
+  /**
+   * The double-draw fix. `PixelFrameHeader.reps` says what is already in the
+   * bitmap; the compositor turns that into "draw this rep / do not". Every
+   * `renderer.apply` below is gated on it, so nothing can be drawn twice even
+   * while a declaration is in flight or against a bridge that ignores it.
+   */
+  const compositor = createCompositor({
+    transport,
+    draw: (rep) => {
+      // The renderer has no non-destructive hide, so a rep that comes back has
+      // to be re-fetched — and it has to be a FULL fetch, or the `have` hash
+      // gets it answered `unchanged` and nothing is ever drawn.
+      forgetGeometryFor(rep);
+      requestGeometryFor([rep]);
+      watchDraw(rep);
+      dirty = true;
+    },
+    suppress: (rep) => {
+      renderer.removeRep(rep);
+      forgetGeometryFor(rep);
+      drawnReps.delete(rep);
+      const timer = drawWatch.get(rep);
+      if (timer !== undefined) clearTimeout(timer);
+      drawWatch.delete(rep);
+      dirty = true;
+    },
+    onChange: () => {
+      dirty = true;
+    },
+    onError,
+  });
+
+  // A source that says up front it will never rasterise (a null source, or a
+  // bridge with no GL context) must not leave the compositor waiting for a
+  // `PixelFrameHeader.reps` that is never coming: `currentFrame()` returns null
+  // until either a frame arrives or this is called, and a null frame means
+  // "assume the server draws everything", i.e. Mode G draws nothing. Without
+  // this, `?viewportModeP=off` — and every GL-free backend — is a black
+  // viewport with a green Mode-G badge. MEASURED: Mode G reported 0 frames and
+  // 0 draws with `_bridge.pull_geometry` answered ok, because every frame was
+  // dropped by `compositor.shouldDraw`.
+  const syncStreamAvailability = (): void => {
+    if (pixelSource.rasterizes === false || rawPixelSource.rasterizes === false) {
+      compositor.setStreamAvailable(false);
+    }
+  };
+  syncStreamAvailability();
+
   /* ---------------------------------------------------------- policy */
 
   const policy = createRenderPolicy({
@@ -152,10 +301,11 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       stats.modes = states;
       stats.awaitingAccessor = states.some((s) => s.fallbackReason === 'no-accessor');
       options.onModeChange?.(states);
-      // Tell the bridge which reps it no longer has to draw server-side. WP-04
-      // honours this through `PixelFrameHeader.reps`; a bridge that does not
-      // simply keeps drawing everything, which is correct, only redundant.
-      pixelSource.resize?.(size.width, size.height, size.dpr);
+      // D2: tell the bridge which reps it no longer has to draw server-side,
+      // and re-derive who draws what. Before this the only thing sent was a
+      // `resize`, which told the bridge nothing at all — which is why
+      // `PixelFrameHeader.reps` was always absent and both modes drew.
+      compositor.setPolicy(states);
     },
   });
 
@@ -271,6 +421,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       stats.height = next.height;
       stats.dpr = next.dpr;
       surface.resize(next.width, next.height);
+      renderer.setPixelRatio(next.dpr);
       renderer.setSize(next.width, next.height);
       if (view !== null) renderer.setView(view);
       presenter.redraw();
@@ -286,8 +437,25 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   /* ---------------------------------------------------------- sources */
 
   pixelSource.start({
-    frame: (frame) => presenter.present(frame),
-    error: onError,
+    frame: (frame) => {
+      // D2: the header is the authority on who draws what. Observe it BEFORE
+      // presenting, so the bitmap and the Mode-G scene never disagree for even
+      // one composited frame.
+      compositor.observeFrame(frame);
+      presenter.present(frame);
+    },
+    error: (error) => {
+      // A source error is also how "this bridge has no pixel producer" reaches
+      // us. It has to be checked HERE and not only at construction, because
+      // the answer is one round trip away and because an app is free to supply
+      // its own `pixelSource` with its own `onUnavailable` — the shipping one
+      // passes a no-op, and that is exactly how a GL-free bridge ended up with
+      // a black viewport: Mode G had 4 pulls answered `ok` and dropped every
+      // frame, because the compositor was still waiting to be told what the
+      // server was drawing.
+      syncStreamAvailability();
+      onError(error);
+    },
   });
 
   geometrySource.start({
@@ -298,14 +466,43 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       // a second tab open: an unrequested cyan cartoon composited on top of the
       // rainbow pixel stream. A frame for a rep this viewport is not running in
       // Mode G is therefore evidence the accessor works, and nothing else.
-      const requested = policy.state(frame.header.rep).requested;
+      const rep = frame.header.rep;
+      const requested = policy.state(rep).requested;
       policy.setCaps({ accessor: true });
       if (requested !== 'geometry') {
+        renderer.removeRep(rep);
+        return;
+      }
+
+      // DRAWABLE GEOMETRY ARRIVING IS PROOF THAT AN `extraction-failed`
+      // FALLBACK IS STALE, so clear it BEFORE asking the compositor.
+      //
+      // MEASURED, IN A BROWSER, AND IT IS WHY THIS IS HERE. Toggle sticks to
+      // Mode G while sticks is HIDDEN: every pull is legitimately answered
+      // `not-built`, the watchdog below counts four of those as "no geometry
+      // arrived", and degrades the rep permanently. Then `show sticks` pulls,
+      // the bridge sends a perfectly good 718-cylinder frame — and it was
+      // dropped, because `shouldDraw` is derived from the EFFECTIVE mode and
+      // the rep had been handed back to Mode P. HUD read
+      // `sticks P G extraction-failed` with 0 draws for ever.
+      if (!isEmptyGeometryFrame(frame.header) && policy.state(rep).effective !== 'geometry') {
+        policy.clear(rep);
+      }
+
+      // D2: the server is still rasterising this rep, so drawing it here is
+      // the double draw. Drop the frame rather than build buffers we must not
+      // show; `compositor.draw()` re-requests it the moment that changes.
+      if (!compositor.shouldDraw(rep)) {
         renderer.removeRep(frame.header.rep);
+        forgetGeometryFor(frame.header.rep);
         return;
       }
       const problems = renderer.apply(frame);
       stats.geometryFrames++;
+      drawnReps.add(frame.header.rep);
+      const watching = drawWatch.get(frame.header.rep);
+      if (watching !== undefined) clearTimeout(watching);
+      drawWatch.delete(frame.header.rep);
       policy.clear(frame.header.rep);
       if (problems.length > 0) {
         // Partially drawable is still a fallback: the user must not be shown
@@ -313,6 +510,12 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
         policy.degrade(frame.header.rep, 'extraction-failed');
         onError(new Error(`Mode G (${frame.header.object}): ${problems.join('; ')}`));
       }
+      // A WARNING IS NOT A FALLBACK. Measured: a 50%-transparent surface is
+      // drawn with order-dependent alpha where PyMOL uses OIT — IoU 0.998 and
+      // mean colour error 11.6 against Mode P. Degrading on that handed every
+      // transparent surface straight back to the server, which is precisely the
+      // GL dependency this design exists to remove. Reported, kept on screen.
+      stats.geometryWarnings = [...renderer.lastWarnings];
       dirty = true;
     },
     unavailable: (key, reason) => {
@@ -340,14 +543,60 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     stats.geometryDrawCalls = renderer.stats.drawCalls;
     stats.geometryInstances = renderer.stats.instances;
     stats.geometryTriangles = renderer.stats.triangles;
+    // Read every tick rather than on the compositor's `onChange`: that only
+    // fires when `drawing`/`rasterizing` move, so `declared` (which changes on
+    // its own whenever a declaration is in flight) was reported as permanently
+    // empty. A HUD that lies about the composition is worse than no HUD.
+    const composition = compositor.state;
+    stats.composition = {
+      declared: composition.declared,
+      drawing: composition.drawing,
+      suppressed: composition.suppressed,
+      rasterizing: composition.rasterizing,
+    };
     options.onStats?.(stats);
   };
   if (typeof requestAnimationFrame === 'function') raf = requestAnimationFrame(loop);
 
-  const onVisibility = (): void => {
-    pixelSource.setPaused?.(typeof document !== 'undefined' && document.hidden);
-  };
-  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibility);
+  /**
+   * KEEP THE MODE-G CAMERA ALIVE WHEN NOTHING ELSE DOES.
+   *
+   * `refreshView()` is otherwise driven by input, by a resize and by one call
+   * at construction. That was survivable only because Mode P was always on and
+   * a server-rendered image already carried PyMOL's camera. With Mode P off —
+   * `?viewportModeP=off`, and every GL-free backend — nothing re-polls it, so a
+   * `zoom`/`orient`/`turn` typed at the command line moves PyMOL's camera and
+   * the client never hears about it.
+   *
+   * MEASURED: `?viewportModeP=off`, load 1UBQ, `show cartoon` in Mode G. The
+   * HUD read `135 draws · 6454 tris` and the canvas was BLACK, because the
+   * camera was still the empty-scene view from before the load and the whole
+   * molecule was off-screen.
+   *
+   * A LIVE MODE-P STREAM IS NOT A SUBSTITUTE, and assuming it was cost an hour:
+   * Mode-P frames carry the camera baked into PIXELS, not as numbers, so they
+   * update the server image and tell this client nothing. MEASURED with Mode P
+   * streaming happily at 30 fps: `show surface, skin` in Mode G reported
+   * `1 draws · 10472 tris` and the Mode-G canvas was ENTIRELY BLACK, because
+   * `view` was still the empty-scene matrix captured before the structure was
+   * loaded. The only real condition is "we have Mode-G content on screen".
+   *
+   * `cmd.get_view()` is 2.0 us backend-side and touches no GL, so 4 Hz is
+   * close to free; it does not run at all for a Mode-P-only viewport.
+   */
+  const VIEW_POLL_MS = 250;
+  const viewPoll = setInterval(() => {
+    if (destroyed) return;
+    if (renderer.keys().length === 0) return; // nothing of ours on screen
+    refreshView();
+  }, VIEW_POLL_MS);
+
+  // NOTE: the Page-Visibility wiring used to live here as a bare
+  // `document.addEventListener('visibilitychange', ...)` that forwarded
+  // `document.hidden` straight to the PROCESS-WIDE `StreamParams.paused`.
+  // That was both halves of D3b/D3c. It is now `createStreamPauseController`
+  // above, constructed with the pixel source so it can read the mount-time
+  // visibility state and gate locally.
 
   // First measurement + the initial reshape, then the first camera read.
   stats.modes = policy.states();
@@ -394,9 +643,14 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     },
     refreshView,
     pushPixelFrame(frame: PixelFramePayload | PixelFrame): void {
-      presenter.present(asPayload(frame));
+      const payload = asPayload(frame);
+      compositor.observeFrame(payload);
+      presenter.present(payload);
     },
     pushGeometryFrame(frame: GeometryFrame): void {
+      // Deliberately NOT gated on the compositor: this is the explicit
+      // "draw exactly this" escape hatch used by tests and by an app driving
+      // the renderer by hand. The stream path above is the gated one.
       renderer.apply(frame);
       stats.geometryFrames++;
       stats.geometryDrawCalls = renderer.stats.drawCalls;
@@ -418,9 +672,11 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     destroy(): void {
       destroyed = true;
       if (raf !== null && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(raf);
-      if (typeof document !== 'undefined') {
-        document.removeEventListener('visibilitychange', onVisibility);
-      }
+      pause.destroy();
+      clearInterval(viewPoll);
+      for (const timer of drawWatch.values()) clearTimeout(timer);
+      drawWatch.clear();
+      compositor.destroy();
       input.destroy();
       resizer.destroy();
       pixelSource.stop();

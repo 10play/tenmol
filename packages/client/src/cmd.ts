@@ -66,8 +66,16 @@ export function splitArgs(argv: readonly unknown[]): {
  * Structural types
  * ------------------------------------------------------------------ */
 
-/** Any PyMOL symbol, called dynamically. */
-export type CmdCallable = (...args: any[]) => Promise<any>;
+/**
+ * Any PyMOL symbol, called dynamically.
+ *
+ * `unknown[]` in and `Promise<unknown>` out, NOT `any`: the proxy really does
+ * accept anything JSON-encodable and really does return whatever the bridge
+ * decoded, and `unknown` says that without disabling the type checker for
+ * callers. The convenient-but-unsound `any` lives in exactly one place —
+ * {@link CmdNamespace}'s index signature — and this type is not it.
+ */
+export type CmdCallable = (...args: unknown[]) => Promise<unknown>;
 
 /**
  * The untyped half of the facade: every property is a callable that is also a
@@ -103,7 +111,28 @@ export interface CmdInternals {
   ): Promise<T>;
   /** Raw PyMOL command line via `cmd.do`; always resolves to null. */
   $do(line: string): Promise<null>;
+  /**
+   * Tab completion — PyMOL's own, over the wire.
+   *
+   * `cmd._parser.complete(line)` (`modules/pymol/parser.py:524-596`) returns
+   * the COMPLETED LINE, or `null` when it could not complete. Callers should do
+   * exactly what every PyMOL front end does (`modules/pymol/_gui.py:899-903`):
+   * if the answer is a non-empty string, replace the line and put the cursor at
+   * the end; otherwise leave the line alone.
+   *
+   * The candidate list is not returned — PyMOL *prints* it
+   * (`colorprinting.suggest`, `parser.py:63-67`), so it arrives on the
+   * `feedback` topic as ` parser: matching commands:` and the lines under it.
+   * That is the parity behaviour, not a limitation of this method.
+   *
+   * It cannot be done in the browser: it reads `cmd.kwhash`, `cmd.auto_arg`,
+   * `cmd.get_names` and the SERVER's filesystem.
+   */
+  $complete(line: string): Promise<string | null>;
 }
+
+/** The symbol `$complete` calls. Granted by `policy/grants/wp-11-console.py`. */
+export const COMPLETE_FN = 'cmd._parser.complete';
 
 /* ------------------------------------------------------------------ *
  * Hand-written typed surface (~15 commands)
@@ -315,6 +344,12 @@ function makeNode(conn: PymolConnection, path: string): CmdCallable & CmdNamespa
           ) => conn.call(fn, args, kwargs);
         }
         if (prop === '$do') return (line: string) => conn.do(line);
+        if (prop === '$complete') {
+          return async (line: string): Promise<string | null> => {
+            const done = await conn.call(COMPLETE_FN, [line], {});
+            return typeof done === 'string' && done.length > 0 ? done : null;
+          };
+        }
       }
 
       const cached = children.get(prop);

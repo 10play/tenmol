@@ -33,12 +33,35 @@
  *     status "layout-mismatch" instead of reading garbage.
  *
  * Method-table registration lives in layer4/Cmd.cpp inside a sentinel-marked block.
+ *
+ * ---------------------------------------------------------------------------
+ * Wave 2 additions (see docs/webclient/spikes/08-native-changes.md)
+ *
+ *  A. web_get_versions()  - plan s4 Task 6.  Exact per-(object, rep, state)
+ *     change detection so the bridge stops hashing content at 4 Hz.  Backed by
+ *     four monotonic counters on struct CExecutive (layer3/ExecutiveDef.h),
+ *     bumped from sentinel-marked sites in layer3/Executive.cpp.  When all four
+ *     are unchanged the call short-circuits and touches no Rep at all, so an
+ *     idle poll can never produce a false positive.
+ *
+ *  B. web_resolve_pick() - plan s4 Task 3.  The CGO_PICK_COLOR (index, bond)
+ *     pairs already emitted next to every vertex/instance are *stable atom and
+ *     bond indices*, not pick colours (pick colours are a per-frame draw-order
+ *     counter, PickColorManager::colorNext, and are unshippable).  This entry
+ *     point turns (object, index, bond) back into a PyMOL selection, an atom
+ *     description and a transformed coordinate, with no GL context.
+ *
+ *  C. More reps: cell + extent (line boxes), dashes/angles/dihedrals (ObjectDist
+ *     raw float vertex arrays) and standalone CGO objects.
+ * ---------------------------------------------------------------------------
  */
 
 #include "os_python.h"
 
+#include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -50,6 +73,9 @@
 #include "Err.h"
 #include "Executive.h"
 #include "ObjectMolecule.h"
+#include "ObjectDist.h"
+#include "ObjectCGO.h"
+#include "DistSet.h"
 #include "CoordSet.h"
 #include "Rep.h"
 #include "CGO.h"
@@ -58,10 +84,17 @@
 #include "Setting.h"
 #include "RepSphere.h"
 #include "RepDot.h"
+#include "MemoryDebug.h"
 
 /* Declared here (rather than in a header we do not own) so that layer4/Cmd.cpp
  * needs only a one-line forward declaration next to its method table. */
 PyObject* CmdWebGetRepGeometry(PyObject* self, PyObject* args);
+PyObject* CmdWebGetVersions(PyObject* self, PyObject* args);
+PyObject* CmdWebResolvePick(PyObject* self, PyObject* args);
+
+/* Defined in layer3/Executive.cpp inside a sentinel-marked block; reads the four
+ * change counters declared on struct CExecutive (layer3/ExecutiveDef.h). */
+void ExecutiveWebGetChangeCounters(PyMOLGlobals* G, unsigned* out);
 
 namespace
 {
@@ -183,6 +216,19 @@ struct RepMesh : ::Rep {
   int* LastColor;
   float max_vdw;
   cIsomeshMode mesh_type;
+  CGO* shaderCGO;
+};
+
+/// mirror of layer2/RepDistDash.cpp:40-55, layer2/RepAngle.cpp:36-51 and
+/// layer2/RepDihedral.cpp:35-48.  All three share the same prefix; RepAngle
+/// declares `pymol::vla<float> V`, which holds exactly one `float*`
+/// (layer0/vla.h:42), so one mirror covers all three.  `ds` is the strongest
+/// validator we have: it must equal the DistSet we reached the rep through.
+struct RepDistLines : ::Rep {
+  float* V;
+  int N;
+  DistSet* ds;
+  float linewidth, radius;
   CGO* shaderCGO;
 };
 
@@ -969,6 +1015,86 @@ PyObject* harvestToPyDict(const CgoHarvest& h)
 }
 
 /* ------------------------------------------------------------------------- *
+ * Content signatures  (plan s4 Task 6)
+ *
+ * A signature is a 64-bit FNV-1a over the *meaningful* bytes of a rep's CPU
+ * geometry.  It must be:
+ *   - deterministic: identical geometry must produce an identical value, or an
+ *     idle poll would report a phantom change (the whole point of Task 6);
+ *   - pointer-free: `Rep*` is recycled by the allocator across a rebuild and a
+ *     CGO's out-of-line `floatdata` blocks move, so neither may be hashed.
+ * ------------------------------------------------------------------------- */
+
+constexpr uint64_t kFnvOffset = 1469598103934665603ULL;
+constexpr uint64_t kFnvPrime = 1099511628211ULL;
+
+void hashBytes(uint64_t& h, const void* p, size_t n)
+{
+  auto b = static_cast<const unsigned char*>(p);
+  for (size_t i = 0; i < n; ++i) {
+    h = (h ^ b[i]) * kFnvPrime;
+  }
+}
+
+void hashU64(uint64_t& h, uint64_t v)
+{
+  hashBytes(h, &v, sizeof(v));
+}
+
+void hashFloats(uint64_t& h, const float* p, size_t n)
+{
+  hashU64(h, n);
+  if (p && n) {
+    hashBytes(h, p, n * sizeof(float));
+  }
+}
+
+void hashInts(uint64_t& h, const int* p, size_t n)
+{
+  hashU64(h, n);
+  if (p && n) {
+    hashBytes(h, p, n * sizeof(int));
+  }
+}
+
+/// Signature of a CGO.  Mirrors CGOArrayAsPyList (layer1/CGO.cpp:241-287): the
+/// op code plus exactly `CGO_sz[op]` payload floats, and for CGO_DRAW_ARRAYS the
+/// out-of-line data block instead of the (unstable) pointer that holds it.
+uint64_t cgoSignature(const CGO* cgo, uint64_t h = kFnvOffset)
+{
+  if (!cgo) {
+    hashU64(h, 0xF01);
+    return h;
+  }
+  hashBytes(h, &cgo->alpha, sizeof(cgo->alpha));
+  for (auto it = cgo->begin(); !it.is_stop(); ++it) {
+    const unsigned op = it.op_code();
+    if (op >= CGO_sz_size()) { // corrupt; cgoLooksSane() will have caught it
+      hashU64(h, 0xBAD);
+      break;
+    }
+    const float* pc = it.data();
+    size_t sz = CGO_sz[op];
+    hashU64(h, op);
+
+    if (op == CGO_DRAW_ARRAYS) {
+      auto sp = reinterpret_cast<const cgo::draw::arrays*>(pc);
+      hashU64(h, static_cast<uint64_t>(sp->mode));
+      hashU64(h, static_cast<uint64_t>(sp->arraybits));
+      hashU64(h, static_cast<uint64_t>(sp->nverts));
+      pc = sp->get_data();
+      sz = pc ? static_cast<size_t>(sp->get_data_length()) : 0;
+    } else if (isVboOp(op)) {
+      // Contains GPU handles and out-of-line pointers; nothing stable to hash.
+      // The rep is reported "vbo-only" anyway, so an identity signature is fine.
+      continue;
+    }
+    hashFloats(h, pc, sz);
+  }
+  return h;
+}
+
+/* ------------------------------------------------------------------------- *
  * Per-rep extraction
  * ------------------------------------------------------------------------- */
 
@@ -1198,6 +1324,177 @@ PyObject* extractMesh(::Rep* rep, PyMOLGlobals* G)
   return d;
 }
 
+/* ------------------------------------------------------------------------- *
+ * Measurement objects (ObjectDist): dashes / angles / dihedrals.
+ *
+ * RepDistDash / RepAngle / RepDihedral each keep a plain `float* V` of `N`
+ * vertices that are consumed strictly in PAIRS as GL_LINES (see e.g.
+ * layer2/RepDistDash.cpp:456-461 `CGOVertexv(v); CGOVertexv(v+3)`).  The dash
+ * pattern is already baked into V by the rep builder, so the client draws the
+ * segments verbatim - no dash_gap arithmetic client-side.
+ * ------------------------------------------------------------------------- */
+PyObject* extractDistLines(
+    ::Rep* rep, PyMOLGlobals* G, DistSet* ds, const char* kind)
+{
+  auto I = reinterpret_cast<mirror::RepDistLines*>(rep);
+
+  const bool layout_ok = I->ds == ds && I->N >= 0 && (I->N % 2) == 0 &&
+                         (I->N == 0 || I->V != nullptr) &&
+                         std::isfinite(I->radius) && std::isfinite(I->linewidth) &&
+                         I->radius >= 0.f && I->linewidth >= 0.f &&
+                         cgoLooksSane(I->shaderCGO, G);
+  if (!layout_ok) {
+    return makeResult("layout-mismatch",
+        "Rep{DistDash,Angle,Dihedral} layout mirror failed validation - the "
+        "upstream Rep struct changed; refusing to read");
+  }
+  if (I->N == 0) {
+    return makeResult("empty", "measurement rep is built but has 0 vertices");
+  }
+
+  int color = SettingGet_color(
+      G, nullptr, ds->Obj ? ds->Obj->Setting.get() : nullptr, cSetting_dash_color);
+  if (color < 0 && rep->getObj()) {
+    color = rep->getObj()->Color;
+  }
+  const float* rgb = ColorGet(G, color < 0 ? 0 : color);
+
+  /* Reuse the `lines` bucket so the client needs one line primitive for the
+   * lines / nonbonded / cell / extent / dash / angle / dihedral reps together. */
+  CgoHarvest h;
+  const size_t nseg = static_cast<size_t>(I->N) / 2;
+  h.line_vertex.assign(I->V, I->V + size_t(I->N) * 3);
+  for (size_t i = 0; i < nseg; ++i) {
+    pushRGBA(h.line_rgba1, rgb, 1.f);
+    pushRGBA(h.line_rgba2, rgb, 1.f);
+    pushPick(h.line_pick1, 0, cPickableNoPick);
+    pushPick(h.line_pick2, 0, cPickableNoPick);
+  }
+
+  PyObject* d = makeResult("ok", "");
+  dictSetStr(d, "kind", "cgo");
+  dictSetStr(d, "source", kind);
+  dictSetFloat(d, "nonbonded_size", 0.0);
+  /* RepDistDash/RepAngle/RepDihedral only assign their own `radius`/`linewidth`
+   * members inside render() (e.g. layer2/RepDistDash.cpp:340), so on a
+   * never-rendered rep - which is the GL-free case this accessor exists for -
+   * they are still 0.  Read the two settings those lines read instead, and
+   * report the raw members separately so a layout drift stays visible. */
+  auto* oset = ds->Obj ? ds->Obj->Setting.get() : nullptr;
+  dictSetFloat(d, "radius", SettingGet_f(G, nullptr, oset, cSetting_dash_radius));
+  dictSetFloat(d, "linewidth", SettingGet_f(G, nullptr, oset, cSetting_dash_width));
+  dictSetFloat(d, "rep_radius", I->radius);
+  dictSetFloat(d, "rep_linewidth", I->linewidth);
+  dictSet(d, "rgb", rgbList(rgb));
+  PyObject* payload = harvestToPyDict(h);
+  PyObject *k, *v;
+  Py_ssize_t pos = 0;
+  while (PyDict_Next(payload, &pos, &k, &v)) {
+    PyDict_SetItem(d, k, v);
+  }
+  Py_DECREF(payload);
+  return d;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Extent: the axis-aligned bounding box that `show extent` draws.  Twelve
+ * segments built from CObject::ExtentMin/ExtentMax (layer1/PyMOLObject.h:81),
+ * emitted through the same `lines` bucket as everything else.
+ * ------------------------------------------------------------------------- */
+PyObject* extractExtent(pymol::CObject* base, PyMOLGlobals* G)
+{
+  float mn[3], mx[3];
+  const float* lo = base->ExtentMin;
+  const float* hi = base->ExtentMax;
+
+  if (!base->ExtentFlag) {
+    /* ObjectMolecule never latches CObject::ExtentFlag (only map / mesh /
+     * surface / CGO / callback objects do), so fall back to the same AABB
+     * cmd.get_extent() reports. */
+    if (!ExecutiveGetExtent(G, base->Name, mn, mx, /*transformed*/ true,
+            /*state*/ -1, /*weighted*/ false)) {
+      return makeResult("empty", "object has no computable extent");
+    }
+    lo = mn;
+    hi = mx;
+  }
+  float corner[8][3];
+  for (int i = 0; i < 8; ++i) {
+    corner[i][0] = (i & 1) ? hi[0] : lo[0];
+    corner[i][1] = (i & 2) ? hi[1] : lo[1];
+    corner[i][2] = (i & 4) ? hi[2] : lo[2];
+  }
+  static const int kEdge[12][2] = {{0, 1}, {2, 3}, {4, 5}, {6, 7}, {0, 2}, {1, 3},
+      {4, 6}, {5, 7}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
+
+  const float* rgb = ColorGet(G, base->Color < 0 ? 0 : base->Color);
+
+  CgoHarvest h;
+  for (const auto& e : kEdge) {
+    pushVec(h.line_vertex, corner[e[0]], 3);
+    pushVec(h.line_vertex, corner[e[1]], 3);
+    pushRGBA(h.line_rgba1, rgb, 1.f);
+    pushRGBA(h.line_rgba2, rgb, 1.f);
+    pushPick(h.line_pick1, 0, cPickableNoPick);
+    pushPick(h.line_pick2, 0, cPickableNoPick);
+  }
+
+  PyObject* d = makeResult("ok", "");
+  dictSetStr(d, "kind", "cgo");
+  dictSetStr(d, "source", "CObject::ExtentMin/ExtentMax");
+  dictSetFloat(d, "nonbonded_size", 0.0);
+  dictSet(d, "rgb", rgbList(rgb));
+  PyObject* payload = harvestToPyDict(h);
+  PyObject *k, *v;
+  Py_ssize_t pos = 0;
+  while (PyDict_Next(payload, &pos, &k, &v)) {
+    PyDict_SetItem(d, k, v);
+  }
+  Py_DECREF(payload);
+  return d;
+}
+
+/// Harvest a bare CGO (unit cell, ObjectCGO state, ...) that is not owned by a Rep.
+PyObject* extractBareCGO(const CGO* cgo, PyMOLGlobals* G, const char* which)
+{
+  if (!cgo) {
+    return makeResult("not-built",
+        "no CPU-side CGO for this rep/state (is it shown? try update=1)");
+  }
+  if (!cgoLooksSane(cgo, G)) {
+    return makeResult("layout-mismatch", "CGO failed structural validation");
+  }
+
+  CgoHarvest h;
+  harvestCGO(cgo, h);
+
+  PyObject* d = makeResult("ok", "");
+  dictSetStr(d, "kind", "cgo");
+  dictSetStr(d, "source", which);
+  dictSetFloat(d, "nonbonded_size", 0.0);
+  PyObject* payload = harvestToPyDict(h);
+  PyObject *k, *v;
+  Py_ssize_t pos = 0;
+  while (PyDict_Next(payload, &pos, &k, &v)) {
+    PyDict_SetItem(d, k, v);
+  }
+  Py_DECREF(payload);
+
+  const bool any = h.sphere_xyzr.size() || h.cyl_origin_axis_r.size() ||
+                   h.cone_v1v2_r1r2.size() || h.ell_xyzr.size() ||
+                   h.tri_vertex.size() || h.line_vertex.size() ||
+                   h.cross_xyz.size() || h.draw_arrays.size() ||
+                   h.begin_end.size();
+  if (!any) {
+    dictSetStr(d, "status", h.vbo_ops ? "vbo-only" : "empty");
+    dictSetStr(d, "message",
+        h.vbo_ops ? "CGO contains only VBO-backed draw ops; the CPU copy is gone"
+                  : "CGO contains no geometry ops we can extract");
+    dictSet(d, "ok", PyBool_FromLong(0));
+  }
+  return d;
+}
+
 PyObject* extractCGORep(::Rep* rep, PyMOLGlobals* G)
 {
   bool have_mirror = false;
@@ -1291,6 +1588,321 @@ void webAPIExitBlocked(PyMOLGlobals* G)
   }
 }
 
+/* ------------------------------------------------------------------------- *
+ * Per-rep signature dispatch  (plan s4 Task 6)
+ * ------------------------------------------------------------------------- */
+
+uint64_t repSignature(::Rep* rep, PyMOLGlobals* G)
+{
+  uint64_t h = kFnvOffset;
+  hashU64(h, static_cast<unsigned>(rep->type()));
+
+  switch (rep->type()) {
+
+  case cRepSurface: {
+    auto I = reinterpret_cast<mirror::RepSurface*>(rep);
+    if (!checkSurfaceMirror(I)) {
+      hashU64(h, 0xBAD5u);
+      break;
+    }
+    hashU64(h, static_cast<unsigned>(I->N));
+    hashU64(h, static_cast<unsigned>(I->NT));
+    hashFloats(h, I->V.data(), I->V.size());
+    hashFloats(h, I->VN.data(), I->VN.size());
+    hashFloats(h, I->VC.data(), I->VC.size());
+    hashFloats(h, I->VA.data(), I->VA.size());
+    hashFloats(h, I->VAO.data(), I->VAO.size());
+    hashInts(h, I->T.data(), I->T.size());
+    hashInts(h, I->AT.data(), I->AT.size());
+    hashInts(h, I->Vis.data(), I->Vis.size());
+    hashU64(h, I->oneColorFlag ? 1u : 0u);
+    // RepSurface::recolor() mutates in place and returns `this`, so the colour
+    // has to be in the signature or a recolour would be invisible to the poll.
+    hashFloats(h, ColorGet(G, I->oneColor), 3);
+  } break;
+
+  case cRepMesh: {
+    auto I = reinterpret_cast<mirror::RepMesh*>(rep);
+    if (I->NTot < 0 || (I->NTot > 0 && (!I->V || !I->N))) {
+      hashU64(h, 0xBADEu);
+      break;
+    }
+    long total = 0;
+    long nstrip = 0;
+    for (const int* n = I->N; *n; ++n) {
+      if (*n < 0 || total + *n > I->NTot || ++nstrip > I->NTot + 1) {
+        total = -1;
+        break;
+      }
+      total += *n;
+    }
+    if (total < 0) {
+      hashU64(h, 0xBADFu);
+      break;
+    }
+    hashU64(h, static_cast<uint64_t>(total));
+    hashFloats(h, I->V, size_t(total) * 3);
+    hashU64(h, I->oneColorFlag ? 1u : 0u);
+    // RepMesh::recolor() also mutates in place (layer2/RepMesh.cpp:571).
+    hashFloats(h, ColorGet(G, I->oneColor), 3);
+    if (!I->oneColorFlag) {
+      hashFloats(h, I->VC, size_t(total) * 3);
+    }
+  } break;
+
+  case cRepDot: {
+    auto I = static_cast<RepDot*>(rep);
+    hashU64(h, static_cast<unsigned>(I->N));
+    hashBytes(h, &I->dotSize, sizeof(I->dotSize));
+    hashBytes(h, &I->Width, sizeof(I->Width));
+    if (I->N > 0 && I->V) {
+      if (I->VN) {
+        hashFloats(h, I->V, size_t(I->N) * 3);
+        hashFloats(h, I->VN, size_t(I->N) * 3);
+      } else {
+        /* run-length stream; walk it exactly as extractDots() does so we never
+         * read past RepDot::N */
+        const float* v = I->V;
+        long emitted = 0;
+        while (emitted < I->N) {
+          const long run = static_cast<long>(*(v++));
+          if (run <= 0 || emitted + run > I->N) {
+            hashU64(h, 0xBADDu);
+            break;
+          }
+          hashFloats(h, v, 3);      // colour of this run
+          v += 3;
+          hashFloats(h, v, size_t(run) * 6); // (normal, vertex) pairs
+          v += run * 6;
+          emitted += run;
+        }
+      }
+    }
+    hashInts(h, I->Atom, I->Atom ? size_t(I->N) : 0);
+  } break;
+
+  case cRepDash:
+  case cRepAngle:
+  case cRepDihedral: {
+    auto I = reinterpret_cast<mirror::RepDistLines*>(rep);
+    if (I->N < 0 || (I->N > 0 && !I->V)) {
+      hashU64(h, 0xBAD1u);
+      break;
+    }
+    hashFloats(h, I->V, size_t(I->N) * 3);
+    /* I->radius / I->linewidth are only written by render(); hash the settings
+     * they are written FROM so `set dash_radius` is visible to the poll. */
+    auto* oset = rep->getObj() ? rep->getObj()->Setting.get() : nullptr;
+    const float dr = SettingGet_f(G, nullptr, oset, cSetting_dash_radius);
+    const float dw = SettingGet_f(G, nullptr, oset, cSetting_dash_width);
+    hashBytes(h, &dr, sizeof(dr));
+    hashBytes(h, &dw, sizeof(dw));
+    int dc = SettingGet_color(G, nullptr, oset, cSetting_dash_color);
+    if (dc < 0 && rep->getObj()) {
+      dc = rep->getObj()->Color;
+    }
+    hashFloats(h, ColorGet(G, dc < 0 ? 0 : dc), 3);
+  } break;
+
+  default: {
+    bool have_mirror = false;
+    bool layout_ok = false;
+    const char* which = "";
+    const CGO* cgo = primitiveCGOForRep(rep, G, have_mirror, layout_ok, &which);
+    if (!have_mirror) {
+      /* No CPU accessor (labels, slice, volume, callback).  The signature can
+       * only track "is it there at all"; the poll still sees show/hide. */
+      hashU64(h, 0xAC0Eu);
+      break;
+    }
+    if (!layout_ok) {
+      hashU64(h, 0xBAD0u);
+      break;
+    }
+    h = cgoSignature(cgo, h);
+  } break;
+  }
+
+  return h;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Version cache  (plan s4 Task 6)
+ *
+ * The invariant the bridge relies on:
+ *   - if nothing changed, every version is byte-identical to the previous call
+ *     AND no Rep is touched at all (the four CExecutive counters gate the walk);
+ *   - if something changed, exactly the (object, rep, state) triples whose CPU
+ *     geometry differs get a bumped version.
+ * ------------------------------------------------------------------------- */
+
+struct WebRepVersion {
+  unsigned version = 0;
+  bool active = false;
+  uint64_t sig = 0;
+};
+
+struct WebObjectVersion {
+  unsigned version = 0;
+  int type = 0;
+  int n_atom = 0;
+  int n_state = 0;
+  int enabled = 0;
+  uint64_t obj_sig = 0;
+  bool seen = false;
+  std::map<unsigned, WebRepVersion> reps; // key = state * cRepCnt + rep
+};
+
+struct WebVersionCache {
+  bool primed = false;
+  unsigned counters[4] = {0, 0, 0, 0};
+  unsigned serial = 0;
+  unsigned walks = 0;
+  std::map<std::string, WebObjectVersion> objects;
+};
+
+std::map<PyMOLGlobals*, WebVersionCache> g_web_versions;
+
+/// Fold one (state, rep) observation into the cache; @return true if it changed.
+bool noteRep(
+    WebObjectVersion& O, int state, int rep, bool active, uint64_t sig)
+{
+  const unsigned key = static_cast<unsigned>(state) * cRepCnt + rep;
+  auto it = O.reps.find(key);
+  if (it == O.reps.end()) {
+    if (!active) {
+      return false; // never seen, still absent: say nothing
+    }
+    O.reps[key] = WebRepVersion{1, true, sig};
+    return true;
+  }
+  if (it->second.active == active && it->second.sig == sig) {
+    return false;
+  }
+  it->second.active = active;
+  it->second.sig = sig;
+  it->second.version++;
+  return true;
+}
+
+/* `deep` = re-hash every built Rep's CPU geometry.  See kDeepCounterMask below:
+ * when only the *panel* counter moved (which `count_atoms`, `iterate`, `select`
+ * and every other SelectorTmp user does on every call) nothing about an existing
+ * object's rep geometry can have changed, so the object-level pass alone is run
+ * and a 58,870-atom structure costs microseconds instead of 47 ms.  A brand-new
+ * object is always walked deep (`O.version == 0`). */
+void walkObject(PyMOLGlobals* G, pymol::CObject* base, WebObjectVersion& O,
+    bool& changed, bool deep)
+{
+  const int type = static_cast<int>(base->type);
+  uint64_t osig = kFnvOffset;
+  hashU64(osig, static_cast<unsigned>(base->Color));
+  hashU64(osig, static_cast<unsigned>(base->visRep));
+  hashU64(osig, base->ExtentFlag ? 1u : 0u);
+  if (base->ExtentFlag) {
+    hashFloats(osig, base->ExtentMin, 3);
+    hashFloats(osig, base->ExtentMax, 3);
+  }
+  hashU64(osig, base->TTTFlag ? 1u : 0u);
+  if (base->TTTFlag) {
+    hashFloats(osig, base->TTT, 16);
+  }
+
+  /* Atom/state counts are read before the `deep` gate and are part of the
+   * object-level change test in their own right: `remove` can drop an atom that
+   * no built rep was drawing, which leaves every rep signature identical. */
+  int n_atom = 0;
+  int n_state = 0;
+  if (auto om = dynamic_cast<ObjectMolecule*>(base)) {
+    n_atom = om->NAtom;
+    n_state = om->NCSet;
+  } else if (auto od = dynamic_cast<ObjectDist*>(base)) {
+    n_state = static_cast<int>(od->DSet.size());
+  } else if (auto oc = dynamic_cast<ObjectCGO*>(base)) {
+    n_state = static_cast<int>(oc->State.size());
+  }
+
+  if (O.type != type || O.enabled != base->Enabled || O.obj_sig != osig ||
+      O.n_atom != n_atom || O.n_state != n_state) {
+    O.type = type;
+    O.enabled = base->Enabled;
+    O.obj_sig = osig;
+    O.n_atom = n_atom;
+    O.n_state = n_state;
+    changed = true;
+  }
+
+  /* extent is derived straight from the AABB, no Rep involved */
+  {
+    const bool active = (base->visRep & cRepExtentBit) != 0;
+    uint64_t sig = kFnvOffset;
+    if (active && base->ExtentFlag) {
+      hashFloats(sig, base->ExtentMin, 3);
+      hashFloats(sig, base->ExtentMax, 3);
+      hashFloats(sig, ColorGet(G, base->Color < 0 ? 0 : base->Color), 3);
+    }
+    changed |= noteRep(O, 0, cRepExtent, active, sig);
+  }
+
+  if (!deep) {
+    return;
+  }
+
+  if (auto obj = dynamic_cast<ObjectMolecule*>(base)) {
+    for (int s = 0; s < obj->NCSet; ++s) {
+      CoordSet* cs = obj->CSet[s];
+      if (!cs) {
+        continue;
+      }
+      for (int r = 0; r < cRepCnt; ++r) {
+        if (r == cRepCell || r == cRepExtent) {
+          continue;
+        }
+        ::Rep* rep = cs->Rep[r];
+        const bool active = rep && cs->Active[r] && rep->type() == r;
+        changed |= noteRep(
+            O, s, r, active, active ? repSignature(rep, G) : kFnvOffset);
+      }
+      /* the unit cell hangs off the CoordSet, not off a Rep slot */
+      const bool cell_active =
+          (obj->visRep & cRepCellBit) && cs->UnitCellCGO.get();
+      changed |= noteRep(O, s, cRepCell, cell_active,
+          cell_active ? cgoSignature(cs->UnitCellCGO.get()) : kFnvOffset);
+    }
+    return;
+  }
+
+  if (auto od = dynamic_cast<ObjectDist*>(base)) {
+    for (size_t s = 0; s < od->DSet.size(); ++s) {
+      DistSet* ds = od->DSet[s].get();
+      if (!ds) {
+        continue;
+      }
+      for (int r : {int(cRepDash), int(cRepAngle), int(cRepDihedral)}) {
+        ::Rep* rep = ds->Rep[r].get();
+        const bool active = rep && rep->type() == r;
+        changed |= noteRep(O, static_cast<int>(s), r, active,
+            active ? repSignature(rep, G) : kFnvOffset);
+      }
+    }
+    return;
+  }
+
+  if (auto oc = dynamic_cast<ObjectCGO*>(base)) {
+    for (size_t s = 0; s < oc->State.size(); ++s) {
+      const CGO* cgo = oc->State[s].origCGO.get();
+      const bool active = cgo != nullptr;
+      changed |= noteRep(O, static_cast<int>(s), cRepCGO, active,
+          active ? cgoSignature(cgo) : kFnvOffset);
+    }
+    return;
+  }
+
+  /* Any other object type (map, mesh, surface, volume, group, ...): the
+   * object-level signature above is all we track.  Documented in
+   * docs/webclient/spikes/08-native-changes.md. */
+}
+
 } // anonymous namespace
 
 /* ------------------------------------------------------------------------- *
@@ -1378,17 +1990,85 @@ PyObject* CmdWebGetRepGeometry(PyObject* self, PyObject* args)
       result = makeResult("unsupported", "no such object");
       break;
     }
-    obj = dynamic_cast<ObjectMolecule*>(base);
-    if (!obj) {
-      result = makeResult("unsupported",
-          "only molecular objects are supported by this accessor");
-      break;
-    }
 
     /* Build the reps if asked.  SceneUpdate() is exactly what the exporters and
      * cmd.refresh() use, and it works with no GL context (spike 03 s2). */
     if (do_update) {
       SceneUpdate(G, false);
+    }
+
+    /* --- measurement objects: dashes / angles / dihedrals --------------- */
+    if (auto od = dynamic_cast<ObjectDist*>(base)) {
+      if (resolved_state < 0) {
+        resolved_state = od->getCurrentState();
+      }
+      if (resolved_state < 0 ||
+          static_cast<size_t>(resolved_state) >= od->DSet.size() ||
+          !od->DSet[resolved_state]) {
+        result = makeResult("not-built", "no distance set for this state");
+        break;
+      }
+      DistSet* ds = od->DSet[resolved_state].get();
+      if (rep_index != cRepDash && rep_index != cRepAngle &&
+          rep_index != cRepDihedral) {
+        result = makeResult("unsupported",
+            "measurement objects only carry the dashes/angles/dihedrals reps");
+        break;
+      }
+      ::Rep* rep = ds->Rep[rep_index].get();
+      if (!rep) {
+        result = makeResult("not-built",
+            "measurement rep is not built for this object/state");
+        break;
+      }
+      if (rep->type() != rep_index) {
+        result = makeResult("layout-mismatch",
+            "Rep::type() disagrees with its slot in DistSet::Rep");
+        break;
+      }
+      result = extractDistLines(rep, G, ds,
+          rep_index == cRepDash
+              ? "RepDistDash::V"
+              : (rep_index == cRepAngle ? "RepAngle::V" : "RepDihedral::V"));
+      break;
+    }
+
+    /* --- standalone CGO objects ---------------------------------------- */
+    if (auto oc = dynamic_cast<ObjectCGO*>(base)) {
+      if (rep_index != cRepCGO && rep_index != cRepExtent) {
+        result = makeResult("unsupported",
+            "CGO objects only carry the cgo and extent reps");
+        break;
+      }
+      if (rep_index == cRepExtent) {
+        result = extractExtent(base, G);
+        break;
+      }
+      if (resolved_state < 0) {
+        resolved_state = oc->getCurrentState();
+      }
+      if (resolved_state < 0 ||
+          static_cast<size_t>(resolved_state) >= oc->State.size()) {
+        result = makeResult("not-built", "no CGO state");
+        break;
+      }
+      result = extractBareCGO(
+          oc->State[resolved_state].origCGO.get(), G, "ObjectCGO::origCGO");
+      break;
+    }
+
+    obj = dynamic_cast<ObjectMolecule*>(base);
+    if (!obj) {
+      result = makeResult("unsupported",
+          "no CPU-side geometry accessor for this object type (molecular, "
+          "measurement and CGO objects are supported)");
+      break;
+    }
+
+    /* --- extent: an AABB, no Rep involved ------------------------------ */
+    if (rep_index == cRepExtent) {
+      result = extractExtent(base, G);
+      break;
     }
 
     if (resolved_state < 0) {
@@ -1397,6 +2077,17 @@ PyObject* CmdWebGetRepGeometry(PyObject* self, PyObject* args)
     cs = obj->getCoordSet(resolved_state);
     if (!cs) {
       result = makeResult("not-built", "no coordinate set for this state");
+      break;
+    }
+
+    /* --- unit cell: CoordSet::UnitCellCGO, not a Rep slot --------------- */
+    if (rep_index == cRepCell) {
+      if (!(obj->visRep & cRepCellBit)) {
+        result = makeResult("not-built", "cell rep is not shown for this object");
+      } else {
+        result =
+            extractBareCGO(cs->UnitCellCGO.get(), G, "CoordSet::UnitCellCGO");
+      }
       break;
     }
 
@@ -1446,6 +2137,317 @@ PyObject* CmdWebGetRepGeometry(PyObject* self, PyObject* args)
     snprintf(key, sizeof(key), "%s|%s|%d", obj_name, repIndexToName(rep_index),
         resolved_state);
     dictSetStr(result, "key", key);
+  }
+  return result;
+}
+
+/* ------------------------------------------------------------------------- *
+ * _cmd.web_get_versions(_self._COb, update=1, force=0)
+ *
+ * Exact change detection for Mode G (implementation plan 03 s4 Task 6).
+ *
+ * Returns:
+ *   {
+ *     "counters":   [panel, enable, name, rep]   # struct CExecutive, monotonic
+ *     "serial":     N        # bumps iff some version below bumped
+ *     "recomputed": bool     # false = fast path, not one Rep was touched
+ *     "walks":      N        # how many full walks this instance has ever done
+ *     "objects": {
+ *        "<name>": {
+ *            "version": N, "type": int, "enabled": bool,
+ *            "n_atom": int, "n_state": int,
+ *            "reps": { "<rep>|<state>": {"version": N, "active": bool}, ... }
+ *        }, ...
+ *     }
+ *   }
+ *
+ * A rep entry appears once it has ever been active; when it goes away it stays
+ * in the map with active=false and a bumped version, which is exactly the signal
+ * defect D1 needs ("hide everything; show sticks" must drop the stale cartoon).
+ *
+ * Cost model: if the four counters are unchanged the call returns the cached
+ * answer and dereferences no Rep pointer, so an idle poll cannot report a
+ * phantom change.  When they have changed the walk hashes the CPU geometry of
+ * every built rep - which is the same moment the client is about to refetch it.
+ * ------------------------------------------------------------------------- */
+PyObject* CmdWebGetVersions(PyObject* self, PyObject* args)
+{
+  int do_update = 1;
+  int force = 0;
+
+  if (!PyArg_ParseTuple(args, "O|ii", &self, &do_update, &force)) {
+    return nullptr;
+  }
+
+  PyMOLGlobals* G = globalsFromSelf(self);
+  if (!G) {
+    PyErr_SetString(P_CmdException ? P_CmdException : PyExc_Exception,
+        "web_get_versions: missing PyMOL instance");
+    return nullptr;
+  }
+  if (PyMOL_GetModalDraw(G->PyMOL)) {
+    PyErr_SetString(P_CmdException ? P_CmdException : PyExc_Exception,
+        "web_get_versions: modal draw in progress");
+    return nullptr;
+  }
+
+  webAPIEnterBlocked(G);
+
+  WebVersionCache& C = g_web_versions[G];
+
+  unsigned counters[4] = {0, 0, 0, 0};
+  ExecutiveWebGetChangeCounters(G, counters);
+
+  bool need_walk = force || !C.primed;
+  for (int i = 0; i < 4 && !need_walk; ++i) {
+    need_walk = counters[i] != C.counters[i];
+  }
+
+  /* MEASURED AND REJECTED: gating the per-Rep hashing on counters 1..3 only
+   * (skipping it when just the *panel* counter moved, which count_atoms /
+   * iterate / select / get_model all do) turned a 47 ms walk on 1AON into
+   * microseconds.  A differential harness - 400 random commands, one instance
+   * gated and one forced - diverged 8 times, always after `create <name>` onto
+   * an EXISTING object name, whose atom count changed with no counter but the
+   * panel one moving.  That is precisely a D1-class stale-geometry hole, so the
+   * conservative "any counter -> full re-hash" rule stands.  See
+   * docs/webclient/spikes/08-native-changes.md s2.5. */
+  const bool deep = true;
+
+  /* SceneUpdate() is what actually rebuilds an invalidated rep.  Run it only
+   * when a counter says something is pending, so an idle poll stays free. */
+  if (need_walk && do_update) {
+    SceneUpdate(G, false);
+    /* the rebuild itself can bump counters (side-effect settings); re-read so
+     * the next poll compares against a post-update baseline */
+    ExecutiveWebGetChangeCounters(G, counters);
+  }
+
+  bool changed = false;
+  if (need_walk) {
+    C.walks++;
+    for (auto& kv : C.objects) {
+      kv.second.seen = false;
+    }
+    for (ObjectIterator iter(G); iter.next();) {
+      pymol::CObject* base = iter.getObject();
+      if (!base) {
+        continue;
+      }
+      WebObjectVersion& O = C.objects[base->Name];
+      const bool fresh = O.version == 0;
+      O.seen = true;
+      bool obj_changed = fresh;
+      walkObject(G, base, O, obj_changed, deep || fresh);
+      if (obj_changed) {
+        O.version++;
+        changed = true;
+      }
+    }
+    for (auto it = C.objects.begin(); it != C.objects.end();) {
+      if (!it->second.seen) {
+        it = C.objects.erase(it);
+        changed = true;
+      } else {
+        ++it;
+      }
+    }
+    if (changed) {
+      C.serial++;
+    }
+    std::memcpy(C.counters, counters, sizeof(counters));
+    C.primed = true;
+  }
+
+  webAPIExitBlocked(G);
+
+  PyObject* d = PyDict_New();
+  {
+    PyObject* l = PyList_New(4);
+    for (int i = 0; i < 4; ++i) {
+      PyList_SetItem(l, i, PyLong_FromUnsignedLong(C.counters[i]));
+    }
+    dictSet(d, "counters", l);
+  }
+  dictSetInt(d, "serial", C.serial);
+  dictSet(d, "recomputed", PyBool_FromLong(need_walk));
+  dictSet(d, "rehashed", PyBool_FromLong(need_walk && deep));
+  dictSet(d, "changed", PyBool_FromLong(changed));
+  dictSetInt(d, "walks", C.walks);
+
+  PyObject* objects = PyDict_New();
+  for (const auto& kv : C.objects) {
+    const WebObjectVersion& O = kv.second;
+    PyObject* od = PyDict_New();
+    dictSetInt(od, "version", O.version);
+    dictSetInt(od, "type", O.type);
+    dictSet(od, "enabled", PyBool_FromLong(O.enabled));
+    dictSetInt(od, "n_atom", O.n_atom);
+    dictSetInt(od, "n_state", O.n_state);
+
+    PyObject* reps = PyDict_New();
+    for (const auto& rkv : O.reps) {
+      const int state = static_cast<int>(rkv.first / cRepCnt);
+      const int rep = static_cast<int>(rkv.first % cRepCnt);
+      char key[64];
+      snprintf(key, sizeof(key), "%s|%d", repIndexToName(rep), state);
+      PyObject* rd = PyDict_New();
+      dictSetInt(rd, "version", rkv.second.version);
+      dictSet(rd, "active", PyBool_FromLong(rkv.second.active));
+      PyDict_SetItemString(reps, key, rd);
+      Py_DECREF(rd);
+    }
+    dictSet(od, "reps", reps);
+    PyDict_SetItemString(objects, kv.first.c_str(), od);
+    Py_DECREF(od);
+  }
+  dictSet(d, "objects", objects);
+  return d;
+}
+
+/* ------------------------------------------------------------------------- *
+ * _cmd.web_resolve_pick(_self._COb, object, index, bond, state=-1)
+ *
+ * Implementation plan 03 s4 Task 3, the client-side-picking half.
+ *
+ * The geometry payload already carries, per vertex and per instance, the
+ * (index, bond) pair that sat behind CGO_PICK_COLOR (layer1/CGO.h:150-151).
+ * `index` is the 0-based atom index inside the object -- the SAME value the GL
+ * pick pass ends up putting in Picking::src.index, which layer1/SceneMouse.cpp
+ * turns into a selection with `"%s`%d" % (obj->Name, index + 1)` (:245).
+ * `bond` is cPickableAtom / cPickableNoPick or a 0-based bond index.
+ *
+ * The pick COLOUR is deliberately NOT shipped: PickColorManager::colorNext
+ * (layer1/Picking.cpp:150-186) is a per-frame draw-order counter whose reverse
+ * map holds raw CObject* and is invalidated on every rebuild.
+ *
+ * This call is the client's resolver and needs no GL context at all.
+ * ------------------------------------------------------------------------- */
+PyObject* CmdWebResolvePick(PyObject* self, PyObject* args)
+{
+  const char* obj_name = nullptr;
+  int index = -1;
+  int bond = cPickableAtom;
+  int state = -1;
+
+  if (!PyArg_ParseTuple(
+          args, "Osi|ii", &self, &obj_name, &index, &bond, &state)) {
+    return nullptr;
+  }
+
+  PyMOLGlobals* G = globalsFromSelf(self);
+  if (!G) {
+    PyErr_SetString(P_CmdException ? P_CmdException : PyExc_Exception,
+        "web_resolve_pick: missing PyMOL instance");
+    return nullptr;
+  }
+
+  webAPIEnterBlocked(G);
+
+  PyObject* result = nullptr;
+
+  do {
+    auto base = ExecutiveFindObjectByName(G, obj_name);
+    if (!base) {
+      result = makeResult("unsupported", "no such object");
+      break;
+    }
+    auto obj = dynamic_cast<ObjectMolecule*>(base);
+    if (!obj) {
+      result = makeResult("unsupported",
+          "web_resolve_pick only resolves picks on molecular objects");
+      break;
+    }
+    if (bond == cPickableNoPick) {
+      result = makeResult("no-pick",
+          "this vertex was emitted with cPickableNoPick (masked atom); it "
+          "blocks the pick but selects nothing");
+      break;
+    }
+    if (index < 0 || index >= obj->NAtom) {
+      result = makeResult("unsupported", "atom index out of range");
+      break;
+    }
+
+    if (state < 0) {
+      state = obj->getCurrentState();
+    }
+
+    result = makeResult("ok", "");
+    dictSetStr(result, "object", obj->Name);
+    dictSetInt(result, "index", index);
+    dictSetInt(result, "bond", bond);
+    dictSetInt(result, "state", state);
+
+    /* Exactly what layer1/SceneMouse.cpp:245 builds for a real backend pick. */
+    {
+      char sele[WordLength + 24];
+      snprintf(sele, sizeof(sele), "%s`%d", obj->Name, index + 1);
+      dictSetStr(result, "selection", sele);
+    }
+
+    {
+      auto desc = obj->describeElement(index);
+      dictSetStr(result, "describe", desc.c_str());
+    }
+
+    const AtomInfoType* ai = obj->AtomInfo + index;
+    PyObject* atom = PyDict_New();
+    dictSetStr(atom, "name", LexStr(G, ai->name));
+    dictSetStr(atom, "resn", LexStr(G, ai->resn));
+    {
+      char resi[8] = "";
+      AtomResiFromResv(resi, sizeof(resi), ai);
+      dictSetStr(atom, "resi", resi);
+    }
+    dictSetInt(atom, "resv", ai->resv);
+    dictSetStr(atom, "chain", LexStr(G, ai->chain));
+    dictSetStr(atom, "segi", LexStr(G, ai->segi));
+    dictSetStr(atom, "elem", ai->elem);
+    dictSetInt(atom, "rank", ai->rank);
+    dictSetInt(atom, "id", ai->id);
+    dictSetInt(atom, "index1", index + 1);
+    dictSet(atom, "masked", PyBool_FromLong(ai->masked));
+    dictSetFloat(atom, "b", ai->b);
+    dictSetFloat(atom, "q", ai->q);
+    dictSet(result, "atom", atom);
+
+    float v[3];
+    if (ObjectMoleculeGetAtomTxfVertex(obj, state, index, v)) {
+      PyObject* c = PyList_New(3);
+      for (int i = 0; i < 3; ++i) {
+        PyList_SetItem(c, i, PyFloat_FromDouble(v[i]));
+      }
+      dictSet(result, "coord", c);
+    } else {
+      Py_INCREF(Py_None);
+      dictSet(result, "coord", Py_None);
+    }
+
+    /* A half-bond pick: report both ends so the client can highlight the bond
+     * rather than a single atom. */
+    if (bond >= 0 && bond < obj->NBond) {
+      const BondType* b = obj->Bond + bond;
+      PyObject* pair = PyList_New(2);
+      PyList_SetItem(pair, 0, PyLong_FromLong(b->index[0]));
+      PyList_SetItem(pair, 1, PyLong_FromLong(b->index[1]));
+      dictSet(result, "bond_atoms", pair);
+      char sele[WordLength * 2 + 48];
+      snprintf(sele, sizeof(sele), "(%s`%d or %s`%d)", obj->Name,
+          b->index[0] + 1, obj->Name, b->index[1] + 1);
+      dictSetStr(result, "bond_selection", sele);
+    } else {
+      Py_INCREF(Py_None);
+      dictSet(result, "bond_atoms", Py_None);
+    }
+    dictSetStr(result, "pick_kind",
+        (bond == cPickableAtom) ? "atom" : (bond >= 0 ? "bond" : "other"));
+  } while (false);
+
+  webAPIExitBlocked(G);
+
+  if (!result) {
+    result = makeResult("unsupported", "no result produced");
   }
   return result;
 }

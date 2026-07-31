@@ -1,0 +1,154 @@
+# Linux offscreen GL validation for the web client bridge.
+#
+# The one thing docs/webclient/spikes/07-cross-platform-gl.md could not do for a
+# long time: actually RUN bridge/tenmol_bridge/glcontext/egl.py. It is now run
+# for real, both in a local container (`bash scripts/test-gl-linux.sh`) and here
+# on ubuntu-latest, which has no GPU and no X server -- which is the point.
+#
+# Mesa's EGL_MESA_platform_surfaceless + llvmpipe needs neither. It gives a
+# desktop OpenGL 4.x COMPATIBILITY context, which is what PyMOL requires:
+# layer1/ScenePicking.cpp:283,306 call glPushMatrix/glPopMatrix and :234,272
+# call glShadeModel, none of which exist in GLES.
+#
+# Separate from webclient-ci.yml on purpose: that one's real job is macOS/CGL,
+# this one is the Linux half of the cross-platform story and it is allowed to
+# be slow (it builds PyMOL from this tree).
+#
+# The validator itself lives in scripts/test-gl-linux.sh so that a developer
+# runs byte-for-byte what CI runs.
+name: webclient-gl-linux
+
+on:
+  push:
+    branches: [master, web-client, "wp-*"]
+    paths:
+      - "bridge/tenmol_bridge/glcontext/**"
+      - "bridge/tenmol_bridge/render/**"
+      - "scripts/test-gl-linux.sh"
+      - "scripts/bootstrap.sh"
+      - ".github/workflows/webclient-gl-linux.yml"
+      - "layer0/**"
+      - "layer1/**"
+      - "layer5/**"
+      - "setup.py"
+  pull_request:
+    paths:
+      - "bridge/tenmol_bridge/glcontext/**"
+      - "scripts/test-gl-linux.sh"
+      - ".github/workflows/webclient-gl-linux.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: gl-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Force the software rasteriser even if the runner image ever grows a GPU:
+  # we are validating the no-hardware path, so a GPU appearing would silently
+  # stop testing the thing this workflow exists to test.
+  LIBGL_ALWAYS_SOFTWARE: "1"
+  GALLIUM_DRIVER: llvmpipe
+
+jobs:
+  # -------------------------------------------------------------------------
+  # ~2 minutes: EGL, the FBO, glReadPixels and the thread/display rules.
+  # No PyMOL build, so this is the gate that must never go red.
+  # -------------------------------------------------------------------------
+  egl-surfaceless:
+    name: EGL surfaceless (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # Two Mesa generations. 22.04 ships Mesa 23.x, 24.04 ships Mesa 24.x;
+        # the surfaceless platform and EGL_OPENGL_API support differ between
+        # them often enough to be worth both.
+        os: [ubuntu-22.04, ubuntu-24.04]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Mesa (EGL + llvmpipe, no GPU, no X)
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            libegl1 libegl-mesa0 libgl1 libglx-mesa0 libgl1-mesa-dri \
+            libopengl0 libglvnd0 mesa-utils-bin
+
+      - name: what EGL/Mesa did we actually get
+        continue-on-error: true
+        run: |
+          echo "DISPLAY=${DISPLAY:-<unset>}  WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-<unset>}"
+          ls -la /dev/dri 2>&1 || echo "no /dev/dri (expected)"
+          dpkg -l | grep -E 'mesa|libegl|libglvnd' || true
+          eglinfo -B 2>&1 | head -40 || true
+
+      - name: egl.probe() -- diagnostics before any assertion
+        run: |
+          PYTHONPATH=bridge python3 -c "
+          import json
+          from tenmol_bridge.glcontext import egl
+          print(json.dumps(egl.probe(), indent=2))"
+
+      - name: acceptance -- scripts/test-gl-linux.sh --native --quick
+        run: |
+          bash scripts/test-gl-linux.sh \
+            --native --quick \
+            --python "$(command -v python3)" \
+            --out "$RUNNER_TEMP/gl-out"
+
+  # -------------------------------------------------------------------------
+  # The real thing: build PyMOL from this tree, render a structure through the
+  # EGL FBO, read it back, and prove the pick pass works.
+  # -------------------------------------------------------------------------
+  egl-pymol:
+    name: EGL + a real PyMOL render
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Mesa + PyMOL build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            libegl1 libegl-mesa0 libgl1 libglx-mesa0 libgl1-mesa-dri \
+            libopengl0 libglvnd0 mesa-utils-bin \
+            cmake libfreetype6-dev libglew-dev libglm-dev libmsgpack-dev \
+            libnetcdf-dev libpng-dev libxml2-dev
+
+      - name: cache vendored mmtf-cpp headers
+        uses: actions/cache@v4
+        with:
+          path: .deps
+          key: mmtf-cpp-${{ runner.os }}-v1
+
+      - name: bootstrap (builds PyMOL from this tree into bridge/.venv)
+        run: bash scripts/bootstrap.sh --skip-node --python "$(command -v python)"
+
+      - name: the build did not dirty the tree
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain)" || {
+            echo "::error::the PyMOL build dirtied the working tree"
+            exit 1
+          }
+
+      - name: acceptance -- scripts/test-gl-linux.sh --native
+        run: |
+          bash scripts/test-gl-linux.sh --native --out "$RUNNER_TEMP/gl-out"
+
+      - name: what the EGL context rendered
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-egl-render
+          path: ${{ runner.temp }}/gl-out/*.png
+          if-no-files-found: warn
+
+      - name: bridge pytest suite (no regressions from the GL work)
+        run: bridge/.venv/bin/python -m pytest bridge/tests -q
