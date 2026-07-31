@@ -9,7 +9,7 @@
  * `geometry:frame`). Topics contain no ':' so the two spaces cannot collide.
  */
 
-import type { GeometryFrame, HelloMessage, TopicPayloads } from '@tenmol/protocol';
+import type { BinaryFrame, GeometryFrame, HelloMessage, PixelFrame, TopicPayloads } from '@tenmol/protocol';
 
 export type Listener<T> = (payload: T) => void;
 export type Unsubscribe = () => void;
@@ -24,6 +24,14 @@ export interface ConnectionEvents {
   'server:hello': HelloMessage;
   /** A decoded binary geometry frame. */
   'geometry:frame': GeometryFrame;
+  /** A decoded binary Mode-P pixel frame. */
+  'pixels:frame': PixelFrame;
+  /**
+   * EVERY decoded binary frame, geometry and pixels alike, before the
+   * per-kind split above. The viewport subscribes here so one listener sees
+   * both modes in arrival order.
+   */
+  'binary:frame': BinaryFrame;
 }
 
 /**

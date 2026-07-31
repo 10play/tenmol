@@ -1,58 +1,79 @@
-"""tenmol-bridge - the PyMOL side of the tenmol web client.
+"""tenmol-bridge — the PyMOL side of the tenmol web client.
 
-A single process that owns one PyMOL engine on one dedicated thread and exposes
-it to exactly one local browser over a WebSocket (protocol v1, see
-:mod:`tenmol_bridge.topics`).
+One process.  One PyMOL engine.  One thread that owns a real offscreen OpenGL
+context, the engine, every ``cmd`` call **and** a ``draw()``-driven pump.  One
+local browser over one WebSocket.
+
+::
+
+    browser ──ws://127.0.0.1:8765/ws──▶ uvicorn / asyncio thread
+                                            │ FIFO + futures
+                                            ▼
+                                    ENGINE THREAD  (60 Hz)
+                                    CGL context + FBO
+                                    pymol2.SingletonPyMOL
+                                    p.idle(); p.draw()   ◀── mandatory
+                                            ▲
+                                    STATUS THREAD (10 Hz)
+                                    get_progress / _get_feedback /
+                                    get_setting_updates   (lock-ATTEMPTING only)
 
 Module map
 ----------
-``topics``    protocol constants, frame builders, binary framing, subscriptions
-``pump``      the PyMOL thread, the task queue, THE per-tick draw/refresh call
-``feedback``  the single consume-once feedback drain and its fan-out
-``dispatch``  ``fn`` -> callable resolution, allow-list policy, JSON coercion
-``server``    FastAPI app + ``/ws`` endpoint
-``__main__``  ``python -m tenmol_bridge``
+``config``          :class:`BridgeConfig`, the token, and :func:`log` (stderr only)
+``errors``          the wire error kinds
+``glcontext``       offscreen GL, platform-dispatched (``cgl`` today)
+``engine``          the §1.1 boot sequence and the per-tick draw
+``pump``            the engine thread, the FIFO, the 10 Hz status thread
+``codec``           the typed return table + copy-before-unlock
+``policy``          capability grants (NOT a deny-list)
+``incentive_only``  the ``IncentiveOnlyException`` manifest
+``shims``           the five GUI seams PyMOL leaves for a front-end
+``blobs``           out-of-band payloads behind ``GET /blob/{id}``
+``session``         protocol v1 vocabulary + one connected client
+``dispatch``        ``fn`` -> callable, policy, invalidation echo
+``server``          FastAPI app: ``/healthz``, ``/ws``, ``/blob/{id}``
+``panels``          FROZEN barrel: internal-GUI data feeds (WP-12/13/20/21)
+``state``           FROZEN barrel: the polled state tick (WP-03)
 
-Import order matters: ``server`` imports ``BridgeConfig`` from here, so this
-module must not import ``server``.
+The one rule everything else follows: **the bridge logs to stderr only.**  After
+``pcatch._install()`` a ``print()`` in this process lands in the user's PyMOL
+console (plan §1.1).  Use :func:`tenmol_bridge.config.log`.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from .config import (
+    DEFAULT_HEIGHT,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_WIDTH,
+    BridgeConfig,
+    log,
+)
+from .errors import (
+    BridgeError,
+    IncentiveOnly,
+    NoOffscreenGL,
+    NotAllowed,
+    NotSerializable,
+    PyMOLUnavailable,
+)
 
 __version__ = "0.1.0"
 
-DEFAULT_HOST = "127.0.0.1"
-DEFAULT_PORT = 8765
-
-
-@dataclass
-class BridgeConfig:
-    """Everything the bridge can be told at startup."""
-
-    host: str = DEFAULT_HOST
-    port: int = DEFAULT_PORT
-    #: pump tick rate; the engine's idle work and feedback drain run this often
-    tick_hz: float = 60.0
-    #: name from ``pump.TICK_STRATEGIES`` - see the TODO(spike-01) banner there
-    tick_strategy: str = "idle"
-    width: int = 640
-    height: int = 480
-    quiet: bool = False
-    #: pmgui=1 (no_gui=0): console feedback works, viewport input does not.
-    #: pmgui=0 (no_gui=1): viewport input works (with tick_strategy="draw"),
-    #: console feedback is silent.  See the banner in pump.py - spike 01/02.
-    pmgui: bool = True
-    #: local desktop app: dangerous-by-nature commands (run/system/cd/quit/...)
-    #: are permitted by default and marked.  See dispatch.py and README.md.
-    allow_dangerous: bool = True
-    log_level: str = "info"
-
-
 __all__ = [
+    "__version__",
     "BridgeConfig",
     "DEFAULT_HOST",
     "DEFAULT_PORT",
-    "__version__",
+    "DEFAULT_WIDTH",
+    "DEFAULT_HEIGHT",
+    "log",
+    "BridgeError",
+    "NotAllowed",
+    "NotSerializable",
+    "IncentiveOnly",
+    "NoOffscreenGL",
+    "PyMOLUnavailable",
 ]

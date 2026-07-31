@@ -6366,6 +6366,10 @@ static PyObject* CmdMoveOnCurve(PyObject* self, PyObject* args)
   return APIResult(G, result);
 }
 
+/* tenmol web client -- BEGIN (WP-26; impl in layer4/CmdWebGeometry.cpp) */
+PyObject* CmdWebGetRepGeometry(PyObject* self, PyObject* args);
+/* tenmol web client -- END */
+
 static PyMethodDef Cmd_methods[] = {
   {"glViewport", Cmd_glViewport, METH_VARARGS},
   {"_new", Cmd_New, METH_VARARGS},
@@ -6461,6 +6465,9 @@ static PyMethodDef Cmd_methods[] = {
   {"get_editor_scheme", CmdGetEditorScheme, METH_VARARGS},
   {"get_frame", CmdGetFrame, METH_VARARGS},
   {"get_feedback", CmdGetFeedback, METH_VARARGS},
+  /* tenmol web client -- BEGIN */
+  {"web_get_rep_geometry", CmdWebGetRepGeometry, METH_VARARGS},
+  /* tenmol web client -- END */
   {"get_idtf", CmdGetIdtf, METH_VARARGS},
   {"get_legal_name", CmdGetLegalName, METH_VARARGS},
   {"get_m2io_first_block_properties", CmdM2ioFirstBlockProperties, METH_VARARGS},

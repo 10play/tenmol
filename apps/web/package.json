@@ -13,6 +13,7 @@
   "dependencies": {
     "@tenmol/client": "workspace:*",
     "@tenmol/protocol": "workspace:*",
+    "@tenmol/stores": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

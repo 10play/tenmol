@@ -13,6 +13,10 @@ dependencies = [
     "fastapi>=0.110",
     "uvicorn>=0.29",
     "websockets>=12",
+    # Mode P's motion codec. encode.py ships a stdlib zlib PNG fallback so the
+    # stream still produces a LOSSLESS still without Pillow, but jpeg/webp -
+    # i.e. everything under 25 ms/frame - need it.
+    "pillow>=10",
 ]
 
 # NOTE: "pymol" is deliberately NOT a dependency. It is built from this repo
@@ -30,4 +34,23 @@ dev = [
 tenmol-bridge = "tenmol_bridge.__main__:main"
 
 [tool.setuptools]
-packages = ["tenmol_bridge"]
+packages = [
+    "tenmol_bridge",
+    "tenmol_bridge.render",
+    "tenmol_bridge.glcontext",
+    "tenmol_bridge.policy",
+    "tenmol_bridge.panels",
+    "tenmol_bridge.state",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# -s (capture=no) is MANDATORY, not a preference.  pytest's global capture
+# re-assigns sys.stdout around every test phase, which silently un-installs
+# pcatch (it IS sys.stdout after pcatch._install(), layer1/P.cpp:2667) and the
+# Python half of the PyMOL console vanishes.  conftest.py enforces it too.
+addopts = "-ra -s"
+markers = [
+    "gl: needs a real offscreen GL context (on macOS, a logged-in user session with WindowServer). Gate these the way the ray image-diff tests are gated.",
+    "engine: boots the one and only SingletonPyMOL in this process",
+]

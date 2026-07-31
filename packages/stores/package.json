@@ -1,0 +1,32 @@
+{
+  "name": "@tenmol/stores",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Client state for the tenmol PyMOL web client: a tiny observable store, the topic binding, the state poller, and the stores themselves.",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./createStore": "./src/createStore.ts",
+    "./bridgeBinding": "./src/bridgeBinding.ts",
+    "./poll": "./src/poll.ts",
+    "./connection": "./src/connection.ts",
+    "./feedback": "./src/feedback.ts",
+    "./objects": "./src/objects.ts",
+    "./ui": "./src/ui.ts",
+    "./*": "./src/*.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "cd ../.. && node node_modules/vitest/vitest.mjs run packages/stores/test"
+  },
+  "dependencies": {
+    "@tenmol/protocol": "workspace:*"
+  },
+  "devDependencies": {}
+}

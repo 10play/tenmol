@@ -32,10 +32,16 @@
       "@tenmol/protocol/*": ["packages/protocol/src/*"],
       "@tenmol/client": ["packages/client/src/index.ts"],
       "@tenmol/client/*": ["packages/client/src/*"],
+      "@tenmol/stores": ["packages/stores/src/index.ts"],
+      "@tenmol/stores/*": ["packages/stores/src/*"],
       "@tenmol/ui": ["packages/ui/src/index.ts"],
       "@tenmol/ui/*": ["packages/ui/src/*"],
       "@tenmol/viewport": ["packages/viewport/src/index.ts"],
-      "@tenmol/viewport/*": ["packages/viewport/src/*"]
+      "@tenmol/viewport/*": ["packages/viewport/src/*"],
+      "@tenmol/menu-data": ["packages/menu-data/src/index.ts"],
+      "@tenmol/menu-data/*": ["packages/menu-data/src/*"],
+      "@tenmol/testing": ["packages/testing/src/index.ts"],
+      "@tenmol/testing/*": ["packages/testing/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", "build", "**/generated/**/*.js"]

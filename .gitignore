@@ -1,16 +1,74 @@
+# ---------------------------------------------------------------------------
+# Upstream PyMOL patterns. Order matters: git evaluates patterns top to bottom
+# and the LAST match wins, so every re-inclusion below must stay below these.
+# ---------------------------------------------------------------------------
 *.pyc
 *.d
 generated
 build
 .vscode
 
-# --- web client (pnpm monorepo) ---------------------------------------------
+# ---------------------------------------------------------------------------
+# Re-include committed codegen output (WP-00 (e)).
+#
+# The bare pattern "generated" above has no slash, so git matches it at ANY
+# depth -- it swallows packages/<pkg>/src/generated/, which is codegen output
+# that IS committed (tools/gen-api, WP-05) so a fresh clone typechecks without
+# running codegen first. Verified before this block existed:
+#
+#   $ git check-ignore -v packages/client/src/generated/cmd.ts
+#   .gitignore:3:generated	packages/client/src/generated/cmd.ts
+#
+# A file cannot be re-included while its parent directory is excluded, so the
+# directory itself must be un-excluded first, then its contents.
+# ---------------------------------------------------------------------------
+!packages/*/src/generated/
+!packages/*/src/generated/**
+!tools/*/generated/
+!tools/*/generated/**
+
+# ---------------------------------------------------------------------------
+# web client (pnpm monorepo)
+# ---------------------------------------------------------------------------
 node_modules
 dist
 .turbo
 *.tsbuildinfo
+coverage
+.vite
+vite.config.ts.timestamp-*
+.eslintcache
 
-# --- python (bridge / venvs) ------------------------------------------------
+# ---------------------------------------------------------------------------
+# python (bridge / venvs)
+# ---------------------------------------------------------------------------
 .venv
 __pycache__
 *.egg-info
+.pytest_cache
+.ruff_cache
+
+# ---------------------------------------------------------------------------
+# scripts/bootstrap.sh work areas (never committed)
+#   .deps/  vendored out-of-tree C++ headers (mmtf-cpp) -- see spikes/00-build.md
+#           section 2.2. They must NOT go into include/, which is upstream.
+# ---------------------------------------------------------------------------
+/.deps/
+/.tenmol-bootstrap.log
+
+# ---------------------------------------------------------------------------
+# build turds that PyMOL's own build drops into the upstream tree.
+# scripts/bootstrap.sh also appends these to .git/info/exclude, which is
+# local-only and therefore survives an upstream merge; they are listed here as
+# well so a contributor who never ran bootstrap still gets a clean status.
+# ---------------------------------------------------------------------------
+modules/pymol.egg-info/
+modules/pymol/_cmd*.so
+modules/chempy/champ/_champ*.so
+testing/timings.tab
+
+# ---------------------------------------------------------------------------
+# os / editor
+# ---------------------------------------------------------------------------
+.DS_Store
+*.swp

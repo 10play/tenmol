@@ -1,0 +1,174 @@
+/*
+ * Object panel additions. The row anatomy (.objrow, .objrow__name,
+ * .objrow__op--a..m) is in src/styles/global.css, straight from the C++ colour
+ * triples in layer3/Executive.cpp:16121-16127 and :16261-16334.
+ */
+
+.objpanel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.objpanel__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 17px;
+  padding: 0 5px;
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  user-select: none;
+}
+
+.objpanel__head-title {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.objpanel__head-note {
+  margin-left: auto;
+  color: #5b6167;
+}
+
+.objpanel__rows {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1px 0;
+}
+
+.objpanel__empty,
+.objpanel__error {
+  padding: 8px 6px;
+  color: #5b6167;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  text-align: center;
+}
+
+.objpanel__error {
+  color: #ff6b6b;
+  text-align: left;
+  word-break: break-word;
+}
+
+.objpanel__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 5px;
+  border-top: 1px solid var(--pm-line);
+  color: #4a4f55;
+  font-family: var(--pm-font-mono);
+  font-size: 9.5px;
+}
+
+/* cloaked = enabled but an ancestor group is disabled, {0.35,0.35,0.35} */
+.objrow.is-cloaked .objrow__name {
+  background: var(--pm-btn-cloaked);
+}
+
+.objrow__caption {
+  margin-left: auto;
+  padding-left: 6px;
+  color: var(--pm-caption);
+  font-size: 9.5px;
+}
+
+/* Popup menu ----------------------------------------------------------- */
+
+.rowmenu {
+  position: fixed;
+  z-index: 300;
+  min-width: 190px;
+  max-width: 260px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: #26292c;
+  border: 1px solid #101214;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.6);
+  font-family: var(--pm-font-mono);
+  font-size: 10.5px;
+}
+
+.rowmenu__head {
+  padding: 3px 8px;
+  background: #1c1f21;
+  border-bottom: 1px solid #101214;
+  color: var(--pm-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowmenu__body {
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.rowmenu__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 17px;
+  padding: 0 8px;
+  color: var(--pm-text);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.rowmenu__row:hover {
+  background: var(--pm-accent);
+  color: #ffffff;
+}
+
+.rowmenu__row.is-todo {
+  color: #565b60;
+  cursor: default;
+}
+
+.rowmenu__row.is-todo:hover {
+  background: none;
+  color: #565b60;
+}
+
+.rowmenu__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowmenu__owner {
+  padding: 0 3px;
+  border: 1px solid #34383c;
+  color: #4a4f55;
+  font-size: 9px;
+}
+
+.rowmenu__swatch {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+}
+
+.rowmenu__title {
+  padding: 3px 8px 1px;
+  color: #6f757a;
+  letter-spacing: 0.06em;
+}
+
+.rowmenu__sep {
+  height: 1px;
+  margin: 3px 6px;
+  background: var(--pm-line);
+}

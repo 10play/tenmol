@@ -15,6 +15,9 @@ const IGNORES = [
   '**/.turbo/**',
   '**/generated/**',
   '**/*.d.ts',
+  // bootstrap work areas (venv, vendored C++ headers) - never source
+  '**/.venv/**',
+  '.deps/**',
   // upstream PyMOL tree - do not touch
   'build/**',
   '_custom_build/**',

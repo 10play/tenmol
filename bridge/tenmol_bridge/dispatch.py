@@ -1,359 +1,331 @@
-"""Resolve ``{"t":"call","fn":"..."}`` to a PyMOL callable, and run it on the pump.
+"""Resolve a wire ``fn`` to a PyMOL callable and run it on the engine thread.
 
-Security posture (read ``bridge/README.md`` §Security before changing this)
----------------------------------------------------------------------------
-This is a **local desktop replacement**: one PyMOL process, one browser, bound
-to 127.0.0.1, driven by the user who already owns the shell that launched it.
-Anything the bridge can do, that user can already do by typing it into PyMOL's
-own command line.  So the goal of this module is *not* sandboxing - it is
-(a) surface control, so a stray/hostile page cannot reach arbitrary Python by
-accident, and (b) honesty about which calls are dangerous by nature.
+Three entry points, all of which return a ``concurrent.futures.Future`` that the
+asyncio side awaits:
 
-Why a deny-list would be wrong (critique A6, 02-completeness-critique.md:100-116)
---------------------------------------------------------------------------------
-``01-architecture.md:357-364`` proposed denying ``system``, ``run``, ``spawn``,
-``quit``, ``_quit``, ``cd``, everything starting with ``_``, and declaring
-``t:'do'`` console-only.  Each of those denials removes a feature that
-``00-parity-inventory.md`` requires:
+``call(fn, args, kwargs)``   the typed API — ``cmd.fragment``, ``util.cbc``, ...
+``do(cmdline)``             a raw command line.  **Allowed from the UI** (plan
+                            §A6): every ``pymol.menu`` popup leaf and every
+                            wizard button returns a *command string*
+                            (``layer4/PopUp.cpp:471-475``), so declaring
+                            ``t:'do'`` console-only made WP-13 and WP-16
+                            unimplementable.
+``input(msg)``              mouse/keyboard, forwarded 1:1 and drawn immediately.
 
-===========================  ==================================================
-Denied                       Feature it breaks
-===========================  ==================================================
-``cmd.run`` / ``do('@f')``   File > Run Script (00:61, modules/pymol/_gui.py:118);
-                             the demo wizard runs ``run $PYMOL_DATA/demo/cgo03.py``
-                             (modules/pymol/wizard/demo.py:195)
-``cmd.cd``                   File > Working Directory > Change (00:61)
-``cmd.system``               File > Working Directory > File Browser (00:61)
-``cmd.quit``                 File > Quit (00:61)
-``cmd._ctrl/_alt/_ctsh``     ortho CLI chord fallback (00:110,
-                             modules/pymol/internal.py:488,494,509,
-                             registered in modules/pymol/keywords.py:46)
-``t:'do'``                   EVERY pymol.menu popup leaf and wizard button - the
-                             menu system returns *command strings*
-                             (layer4/PopUp.cpp:471-475, modules/pymol/menu.py:824)
-===========================  ==================================================
+Two invariants worth stating out loud:
 
-So: allow-list by **namespace and shape**, permit the dangerous commands, and
-mark them.  :data:`DANGEROUS` is the marking; ``Policy.allow_dangerous``
-(default ``True``) is the switch a paranoid deployment can flip; every
-dangerous invocation is reported through ``Dispatcher.on_dangerous`` so the UI
-and the log can show it.
-
-The allow-list rule
--------------------
-1. ``fn`` is a dotted path of 1..3 identifier segments.
-2. No segment may start with ``__`` (blocks ``__globals__``/``__class__`` walks).
-3. A bare name resolves against the ``pymol.cmd`` module - i.e. the same
-   namespace the PyMOL command line has.
-4. A dotted name's first segment must be in :data:`ALLOWED_ROOTS`; it resolves
-   against ``pymol.<root>``.
-5. A leading-underscore leaf is allowed only if it is in :data:`ALLOWED_PRIVATE`.
-6. The result must be callable and must not be a module/class/type.
+* **Encoding happens on the engine thread**, in the same task as the call, so
+  the copy-before-unlock rule of plan §B8 holds: ``cmd.get_coordset(copy=0)``
+  hands back a live view onto C++ memory (``layer2/CoordSet.cpp:326-361``).
+* **Every executed command reports its invalidation classes** with the result.
+  That is the command-echo channel of plan §1.5 — the only mechanism that can
+  see per-atom colour and per-atom reps, which polling provably cannot
+  (``cmd.get_vis()`` is object-level only).
 """
 
 from __future__ import annotations
 
-import math
-import traceback
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+import concurrent.futures
+from typing import Any, Callable, Dict, Mapping, Optional
 
-from .pump import Engine, PyMOLPump
+from .blobs import BlobStore, EngineBlobWriter
+from .codec import encode_result
+from .config import log
+from .engine import Engine
+from .errors import BadMessage, NotAllowed
+from .incentive_only import describe as describe_incentive
+from .policy import Policy, build_policy
+from .pump import Pump
+from .session import INPUT_BUTTON, INPUT_DRAG, INPUT_KINDS, INPUT_RESHAPE
 
-MAX_SEGMENTS = 3
+__all__ = ["Dispatcher", "CallResult"]
 
-#: Dotted roots the client may address, e.g. ``util.cbc``, ``preset.pretty``.
-#: ``cmd`` is included so ``cmd.fragment`` and bare ``fragment`` both work.
-ALLOWED_ROOTS: frozenset = frozenset(
-    {
-        "cmd",
-        "util",  # modules/pymol/util.py - cbc, protein_vacuum_esp, ...
-        "editor",  # modules/pymol/editor.py - builder actions
-        "preset",  # modules/pymol/preset.py - preset menu
-        "movie",  # modules/pymol/movie.py - movie menu / produce
-        "menu",  # modules/pymol/menu.py - popup content providers
-        "wizard",  # modules/pymol/wizard/ - wizard classes and helpers
-        "plugins",  # modules/pymol/plugins/ - plugin manager (critique B2)
-        "invocation",  # modules/pymol/invocation.py - option introspection
-    }
-)
-
-#: Private leaf names the client is explicitly allowed to call.  Everything
-#: else starting with ``_`` is refused.  Symbols verified in
-#: ``modules/pymol/internal.py`` and ``modules/pymol/cmd.py:159-190``.
-ALLOWED_PRIVATE: frozenset = frozenset(
-    {
-        "_alt",  # internal.py:494  - chord fallback (00:110)
-        "_ctrl",  # internal.py:488
-        "_ctsh",  # internal.py:509
-        "_special",  # internal.py    - function/arrow keys
-        "_do",  # internal.py     - raw command line
-        "_get_feedback",  # SEE feedback.py: consume-once; pump owns it
-        "_refresh",  # internal.py:544
-        "_copy_image",  # internal.py    - needed by WP-18
-        "_quit",  # shutdown
-    }
-)
-
-#: Names that are dangerous *by nature*.  Permitted (see module docstring), but
-#: always marked, always reported.  value = why.
-DANGEROUS: Dict[str, str] = {
-    "system": "runs an arbitrary shell command (File > Working Directory > Browser)",
-    "run": "executes an arbitrary Python file (File > Run Script)",
-    "spawn": "executes an arbitrary Python file on a new thread",
-    "cd": "changes the process working directory",
-    "quit": "terminates the PyMOL process",
-    "_quit": "terminates the PyMOL process",
-    "load": "reads an arbitrary path from the filesystem",
-    "save": "writes an arbitrary path on the filesystem",
-    "png": "writes an arbitrary path on the filesystem",
-    "alias": "binds a command name to arbitrary text (insecure per keywords.py:19)",
-    "alter": "evaluates a Python expression per atom (insecure per keywords.py:21)",
-    "alter_state": "evaluates a Python expression per atom (keywords.py:23)",
-    "iterate": "evaluates a Python expression per atom",
-    "iterate_state": "evaluates a Python expression per atom",
-    "set_key": "binds a key to an arbitrary callable/command",
-    "extend": "registers an arbitrary callable as a command",
+#: ``root`` -> module path under ``pymol``.  A root not listed here resolves to
+#: ``pymol.<root>``; this table exists for the two that do not follow the rule.
+_ROOT_MODULES: Dict[str, str] = {
+    "cmd": "pymol.cmd",
+    "chempy": "chempy",
 }
 
-#: Raw command lines are ALSO dangerous by nature - ``do`` is how every menu
-#: leaf and wizard button is expressed (critique A6).  This is not a block list;
-#: it decides which ``t:"do"`` messages get marked.
-DANGEROUS_DO_PREFIXES: Tuple[str, ...] = (
-    "run ", "@", "system ", "cd ", "quit", "_quit", "spawn ", "alias ",
-)
+
+class CallResult(dict):
+    """``{"result": ..., "invalidates": [...], "dangerous": bool}``."""
 
 
-class DispatchError(Exception):
-    """Base class for refusals that are the client's fault (not PyMOL's)."""
-
-    type_name = "DispatchError"
-
-
-class UnknownFunction(DispatchError):
-    type_name = "UnknownFunction"
-
-
-class NotAllowed(DispatchError):
-    type_name = "NotAllowed"
-
-
-class BadMessage(DispatchError):
-    type_name = "BadMessage"
-
-
-@dataclass
-class Policy:
-    allowed_roots: frozenset = ALLOWED_ROOTS
-    allowed_private: frozenset = ALLOWED_PRIVATE
-    #: local desktop app -> dangerous commands are ON by default
-    allow_dangerous: bool = True
-    max_segments: int = MAX_SEGMENTS
-
-    def check_path(self, fn: str) -> List[str]:
-        if not isinstance(fn, str) or not fn:
-            raise BadMessage("'fn' must be a non-empty string")
-        segments = fn.split(".")
-        if len(segments) > self.max_segments:
-            raise NotAllowed(
-                "%r has %d segments; at most %d are allowed"
-                % (fn, len(segments), self.max_segments)
-            )
-        for seg in segments:
-            if not seg.isidentifier():
-                raise BadMessage("%r is not a valid dotted identifier" % fn)
-            if seg.startswith("__"):
-                raise NotAllowed(
-                    "%r: dunder attribute access is never allowed" % fn
-                )
-        if len(segments) > 1 and segments[0] not in self.allowed_roots:
-            raise NotAllowed(
-                "%r: root %r is not an allowed namespace (allowed: %s)"
-                % (fn, segments[0], ", ".join(sorted(self.allowed_roots)))
-            )
-        leaf = segments[-1]
-        if leaf.startswith("_") and leaf not in self.allowed_private:
-            raise NotAllowed(
-                "%r: private symbol %r is not on the allow-list "
-                "(see dispatch.ALLOWED_PRIVATE)" % (fn, leaf)
-            )
-        return segments
-
-    def danger(self, fn: str) -> Optional[str]:
-        return DANGEROUS.get(fn.split(".")[-1])
-
-
-def resolve(engine: Engine, fn: str, policy: Policy) -> Callable[..., Any]:
-    """Resolve a dotted path to a callable.  Pump thread only."""
-    segments = policy.check_path(fn)
-    if len(segments) == 1:
-        base: Any = engine.cmd
-        rest: Iterable[str] = segments
-    elif segments[0] == "cmd":
-        base = engine.cmd
-        rest = segments[1:]
-    else:
-        base = getattr(engine.pymol, segments[0], None)
-        if base is None:
-            try:
-                import importlib
-
-                base = importlib.import_module("pymol." + segments[0])
-            except Exception as exc:  # noqa: BLE001
-                raise UnknownFunction(
-                    "cannot import namespace pymol.%s (%s)" % (segments[0], exc)
-                ) from None
-        rest = segments[1:]
-
-    obj = base
-    for seg in rest:
-        try:
-            obj = getattr(obj, seg)
-        except AttributeError:
-            raise UnknownFunction("%r: no attribute %r" % (fn, seg)) from None
-    if not callable(obj):
-        raise NotAllowed("%r resolves to %r which is not callable" % (fn, type(obj).__name__))
-    if isinstance(obj, type):
-        raise NotAllowed("%r resolves to a class; only functions are callable" % fn)
-    return obj
-
-
-# --------------------------------------------------------------------------
-# Result serialisation
-# --------------------------------------------------------------------------
-#
-# TODO(WP-04 / critique B8): several ``cmd`` functions return objects JSON
-# cannot express - ``get_model()`` -> chempy.models.Indexed,
-# ``get_session()`` -> nested dict containing binary, ``get_coords``/
-# ``get_coordset`` -> numpy arrays and, with ``copy=0``, a LIVE VIEW onto C++
-# memory (layer2/CoordSet.cpp:326-361).  The view MUST be copied before it
-# leaves the pump thread; ``_ndarray`` below does that via ``.tolist()``.
-# A typed codec table belongs here once WP-04 exists; until then the fallback is
-# a marked ``{"__repr__": ...}`` so nothing silently disappears.
-
-_JSON_SCALARS = (str, bool, int)
-
-
-def to_jsonable(value: Any, _depth: int = 0) -> Any:
-    if value is None or isinstance(value, _JSON_SCALARS):
-        return value
-    if isinstance(value, float):
-        if math.isnan(value) or math.isinf(value):
-            return {"__float__": repr(value)}
-        return value
-    if _depth > 32:
-        return {"__truncated__": type(value).__name__}
-    if isinstance(value, (bytes, bytearray, memoryview)):
-        import base64
-
-        return {"__bytes__": base64.b64encode(bytes(value)).decode("ascii")}
-    if isinstance(value, dict):
-        return {str(k): to_jsonable(v, _depth + 1) for k, v in value.items()}
-    if isinstance(value, (list, tuple, set, frozenset)):
-        return [to_jsonable(v, _depth + 1) for v in value]
-    tolist = getattr(value, "tolist", None)  # numpy scalars and arrays
-    if callable(tolist):
-        try:
-            return to_jsonable(tolist(), _depth + 1)
-        except Exception:  # noqa: BLE001
-            pass
-    return {"__repr__": repr(value)[:4096], "__type__": type(value).__name__}
-
-
-# --------------------------------------------------------------------------
-# Dispatcher
-# --------------------------------------------------------------------------
-
-
-@dataclass
 class Dispatcher:
-    pump: PyMOLPump
-    policy: Policy = field(default_factory=Policy)
-    #: called (from the pump thread) with (fn, reason) whenever a dangerous
-    #: symbol is invoked - wire it to the log and/or a UI banner.
-    on_dangerous: Optional[Callable[[str, str], None]] = None
+    def __init__(
+        self,
+        pump: Pump,
+        policy: Optional[Policy] = None,
+        blobs: Optional[BlobStore] = None,
+        on_shutdown: Optional[Callable[[], None]] = None,
+        on_dangerous: Optional[Callable[[str, str], None]] = None,
+        bridge_routes: Optional[Callable[[str, Any, Any], Any]] = None,
+    ) -> None:
+        self.pump = pump
+        self.policy = policy or build_policy()
+        self.blobs = blobs or BlobStore()
+        self.on_shutdown = on_shutdown
+        self.on_dangerous = on_dangerous
+        #: ``fn(symbol, args, kwargs) -> value | Future`` for the ``_bridge.*``
+        #: namespace, which is served by the process itself and never reaches
+        #: ``pymol``.  The policy would (correctly) refuse it as an
+        #: un-addressable namespace, so it is checked FIRST.
+        self.bridge_routes = bridge_routes
 
-    # -- t:"call" ----------------------------------------------------------
-    def call(self, fn: str, args: Optional[List[Any]] = None,
-             kwargs: Optional[Dict[str, Any]] = None):
-        args = list(args or [])
-        kwargs = dict(kwargs or {})
-        if not all(isinstance(k, str) for k in kwargs):
-            raise BadMessage("'kwargs' keys must be strings")
-        # Fail fast on the asyncio thread for shape/policy errors so a typo
-        # never occupies a pump slot.
-        self.policy.check_path(fn)
+    # ------------------------------------------------------------------ call
 
-        def _run(engine: Engine) -> Any:
-            target = resolve(engine, fn, self.policy)
-            reason = self.policy.danger(fn)
-            if reason:
-                if not self.policy.allow_dangerous:
-                    raise NotAllowed(
-                        "%r is marked dangerous (%s) and allow_dangerous is off"
-                        % (fn, reason)
-                    )
-                if self.on_dangerous:
-                    self.on_dangerous(fn, reason)
-            return to_jsonable(target(*args, **kwargs))
+    def call(
+        self,
+        fn: Any,
+        args: Any = None,
+        kwargs: Any = None,
+    ) -> "concurrent.futures.Future[CallResult]":
+        if (
+            self.bridge_routes is not None
+            and isinstance(fn, str)
+            and fn.startswith("_bridge.")
+        ):
+            return self._bridge_call(fn, args, kwargs)
+        decision = self.policy.check(fn)
+        try:
+            decision.raise_if_denied()
+        except NotAllowed as exc:
+            return _failed(exc)
+        if decision.dangerous and self.on_dangerous is not None:
+            self.on_dangerous(decision.symbol, decision.danger_reason)
 
-        return self.pump.submit(_run, label="call:" + fn)
+        call_args = list(args or ())
+        call_kwargs = dict(kwargs or {})
+        if not all(isinstance(key, str) for key in call_kwargs):
+            return _failed(BadMessage("kwargs keys must be strings"))
 
-    # -- t:"do" ------------------------------------------------------------
-    def do(self, cmdline: str):
-        """Run a raw PyMOL command line.
+        if decision.routed:
+            return self._route(decision.symbol)
 
-        NOT console-only: every popup-menu leaf and wizard button in PyMOL is
-        literally a command string (layer4/PopUp.cpp:471-475,
-        modules/pymol/menu.py:824), so the UI must be able to send these.
-        ``cmd.do`` swallows return values and exceptions
-        (modules/pymol/commanding.py:441-461) - the result of the command shows
-        up on the ``feedback`` topic, not in the ``ok`` frame.
+        symbol = decision.symbol
+        invalidates = list(decision.invalidates)
+
+        def body(engine: Engine) -> CallResult:
+            engine.require_pymol()
+            target = self.resolve(engine, symbol)
+            value = target(*call_args, **call_kwargs)
+            wire = encode_result(
+                symbol, value, blob_writer=EngineBlobWriter(self.blobs, engine)
+            )
+            return CallResult(
+                result=wire,
+                invalidates=invalidates,
+                dangerous=decision.dangerous,
+            )
+
+        return self.pump.submit(body, label="call:%s" % symbol)
+
+    # -------------------------------------------------------------------- do
+
+    def do(self, cmdline: Any, echo: bool = True) -> "concurrent.futures.Future[CallResult]":
+        if not isinstance(cmdline, str) or not cmdline:
+            return _failed(BadMessage("do requires a non-empty command string"))
+        decision = self.policy.check("cmd.do")
+        try:
+            decision.raise_if_denied()
+        except NotAllowed as exc:
+            return _failed(exc)
+        if self.on_dangerous is not None:
+            self.on_dangerous("cmd.do", cmdline)
+
+        def body(engine: Engine) -> CallResult:
+            cmd = engine.require_pymol()
+            # cmd.do is where console parity lives: it emits the "PyMOL>" echo
+            # and the C-origin summary into the same line buffer (spike 02 §8).
+            # A direct API call is deliberately silent.
+            cmd.do(cmdline, echo=1 if echo else 0)
+            return CallResult(
+                result=None,
+                # A command line can do anything at all, including `run` and
+                # `@script`, so it forces a full resync (plan §1.5).
+                invalidates=["resync"],
+                dangerous=True,
+            )
+
+        return self.pump.submit(body, tick_after=True, label="do")
+
+    # ----------------------------------------------------------------- input
+
+    def input(self, msg: Mapping[str, Any]) -> "concurrent.futures.Future[CallResult]":
+        """Mouse/viewport input, forwarded 1:1 (plan §1.4).
+
+        Coordinates are **PyMOL window coordinates: bottom-left origin**.  The
+        client flips the browser's ``clientY``; WP-10 owns that transform.
+        ``modifiers`` is the ``cOrtho`` bitmask ``SHIFT=1 CTRL=2 ALT=4``;
+        buttons are ``P_GLUT_LEFT/MIDDLE/RIGHT = 0/1/2`` and states
+        ``DOWN/UP = 0/1`` (``layer0/os_gl_glut_pretend.h:11-26``).
+
+        ``tick_after=True`` on every one of these: click/drag/release only
+        *enqueue* through ``OrthoDefer`` (``layer1/Scene.cpp:4113-4155``) and
+        the queue is drained by ``OrthoExecDeferred``, reachable only from a
+        real draw.
         """
-        if not isinstance(cmdline, str):
-            raise BadMessage("'cmd' must be a string")
-        stripped = cmdline.lstrip()
-
-        def _run(engine: Engine) -> Any:
-            if stripped.startswith(DANGEROUS_DO_PREFIXES):
-                if not self.policy.allow_dangerous:
-                    raise NotAllowed(
-                        "raw command %r is marked dangerous and "
-                        "allow_dangerous is off" % (stripped.split(" ")[0],)
-                    )
-                if self.on_dangerous:
-                    self.on_dangerous("do", stripped[:200])
-            engine.cmd.do(cmdline)
-            return None
-
-        return self.pump.submit(_run, label="do")
-
-    # -- t:"input" ---------------------------------------------------------
-    def input(self, msg: Dict[str, Any]):
         kind = msg.get("kind")
-        if kind == "button":
-            return self.pump.button(
-                int(msg["button"]), int(msg["state"]),
-                int(msg["x"]), int(msg["y"]), int(msg.get("mod", 0)),
+        if kind not in INPUT_KINDS:
+            return _failed(BadMessage("unknown input kind %r" % (kind,)))
+
+        if kind == INPUT_BUTTON:
+            button = int(msg.get("button", 0))
+            state = int(msg.get("state", 0))
+            x = int(msg.get("x", 0))
+            y = int(msg.get("y", 0))
+            mod = int(msg.get("mod", msg.get("modifiers", 0)))
+
+            def body(engine: Engine) -> CallResult:
+                engine.require_pymol()
+                engine.button(button, state, x, y, mod)
+                return CallResult(result=None, invalidates=[], dangerous=False)
+
+        elif kind == INPUT_DRAG:
+            x = int(msg.get("x", 0))
+            y = int(msg.get("y", 0))
+            mod = int(msg.get("mod", msg.get("modifiers", 0)))
+
+            def body(engine: Engine) -> CallResult:  # type: ignore[misc]
+                engine.require_pymol()
+                engine.drag(x, y, mod)
+                return CallResult(result=None, invalidates=[], dangerous=False)
+
+        elif kind == INPUT_RESHAPE:
+            width = int(msg.get("width", 0))
+            height = int(msg.get("height", 0))
+
+            def body(engine: Engine) -> CallResult:  # type: ignore[misc]
+                engine.require_pymol()
+                engine.resize(width, height)
+                return CallResult(
+                    result={"width": engine.width, "height": engine.height},
+                    invalidates=[],
+                    dangerous=False,
+                )
+
+        else:
+            # key / scroll are WP-10 and WP-23; the vocabulary is reserved here
+            # so the client can be written against it, but the bridge answers
+            # honestly instead of silently doing nothing.
+            return _failed(
+                BadMessage("input kind %r is not implemented by WP-02" % (kind,))
             )
-        if kind == "drag":
-            return self.pump.drag(
-                int(msg["x"]), int(msg["y"]), int(msg.get("mod", 0))
+
+        return self.pump.submit(body, tick_after=True, label="input:%s" % kind)
+
+    # --------------------------------------------------------------- confirm
+
+    def confirm(self, symbol: Any) -> "concurrent.futures.Future[CallResult]":
+        if not isinstance(symbol, str):
+            return _failed(BadMessage("confirm requires a symbol name"))
+        self.policy.confirm(symbol.rsplit(".", 1)[-1])
+        future: "concurrent.futures.Future[CallResult]" = concurrent.futures.Future()
+        future.set_result(CallResult(result={"confirmed": symbol}, invalidates=[]))
+        return future
+
+    # -------------------------------------------------------------- resolve
+
+    def resolve(self, engine: Engine, symbol: str) -> Callable[..., Any]:
+        """Dotted name -> callable, inside the engine's own PyMOL instance."""
+        segments = symbol.split(".")
+        if len(segments) == 1:
+            root_obj: Any = engine.cmd
+            attrs = segments
+        else:
+            root = segments[0]
+            module_path = _ROOT_MODULES.get(root, "pymol.%s" % root)
+            if root == "cmd":
+                root_obj = engine.cmd
+            else:
+                try:
+                    root_obj = __import__(module_path, fromlist=["__name__"])
+                except ImportError as exc:
+                    raise NotAllowed(
+                        "namespace %r is not importable: %s" % (root, exc),
+                        symbol=symbol,
+                    ) from exc
+            attrs = segments[1:]
+
+        target: Any = root_obj
+        for attr in attrs:
+            try:
+                target = getattr(target, attr)
+            except AttributeError as exc:
+                raise NotAllowed(
+                    "%s: no such symbol (%s)" % (symbol, exc), symbol=symbol
+                ) from exc
+        if not callable(target):
+            raise NotAllowed("%s is not callable" % symbol, symbol=symbol)
+        if isinstance(target, type):
+            raise NotAllowed("%s is a class, not a function" % symbol, symbol=symbol)
+        incentive = describe_incentive(symbol)
+        if incentive is not None:
+            # Not an error yet — the call is allowed to proceed and raise
+            # IncentiveOnlyException so the message the user sees is PyMOL's
+            # own.  We only annotate the log.
+            log("calling Incentive-only symbol %s (%s)" % (symbol, incentive.site))
+        return target
+
+    # -------------------------------------------------------------- routing
+
+    def _bridge_call(
+        self, symbol: str, args: Any, kwargs: Any
+    ) -> "concurrent.futures.Future[CallResult]":
+        """``_bridge.*`` -> the in-process service (today: RenderService).
+
+        The handler may return a plain value (answer immediately) or a
+        ``Future`` from ``pump.submit`` (answer when the engine gets to it).
+        Either way the client sees an ordinary ``ok`` frame.
+        """
+        assert self.bridge_routes is not None
+        future: "concurrent.futures.Future[CallResult]" = concurrent.futures.Future()
+        try:
+            outcome = self.bridge_routes(symbol, args, kwargs)
+        except BaseException as exc:  # noqa: BLE001
+            future.set_exception(exc)
+            return future
+        if isinstance(outcome, concurrent.futures.Future):
+            wrapped: "concurrent.futures.Future[CallResult]" = (
+                concurrent.futures.Future()
             )
-        if kind == "reshape":
-            return self.pump.reshape(
-                int(msg["width"]), int(msg["height"]), bool(msg.get("force", False))
-            )
-        raise BadMessage("unknown input kind %r" % (kind,))
+
+            def _done(done: "concurrent.futures.Future[Any]") -> None:
+                exc = done.exception()
+                if exc is not None:
+                    wrapped.set_exception(exc)
+                else:
+                    wrapped.set_result(
+                        CallResult(result=done.result(), invalidates=[])
+                    )
+
+            outcome.add_done_callback(_done)
+            return wrapped
+        future.set_result(CallResult(result=outcome, invalidates=[]))
+        return future
+
+    def _route(self, symbol: str) -> "concurrent.futures.Future[CallResult]":
+        """``quit`` / ``_quit`` -> bridge shutdown, never the C ``exit()`` path.
+
+        ``spikes/00-build.md`` §6.2: PyMOL tears the process down with C
+        ``exit()``, skipping ``atexit`` and ``Py_FinalizeEx``; the browser would
+        see the socket vanish with no explanation and nothing would be flushed.
+        """
+        future: "concurrent.futures.Future[CallResult]" = concurrent.futures.Future()
+        if self.on_shutdown is not None:
+            try:
+                self.on_shutdown()
+            except Exception as exc:  # noqa: BLE001
+                future.set_exception(exc)
+                return future
+        future.set_result(
+            CallResult(result={"routed": symbol, "shutdown": True}, invalidates=[])
+        )
+        return future
 
 
-def error_payload(exc: BaseException) -> Dict[str, str]:
-    """Build the ``err.error`` object for any exception."""
-    type_name = getattr(exc, "type_name", None) or type(exc).__name__
-    return {
-        "type": str(type_name),
-        "message": str(exc) or type(exc).__name__,
-        "traceback": "".join(
-            traceback.format_exception(type(exc), exc, exc.__traceback__)
-        ),
-    }
+def _failed(exc: BaseException) -> "concurrent.futures.Future[Any]":
+    future: "concurrent.futures.Future[Any]" = concurrent.futures.Future()
+    future.set_exception(exc)
+    return future

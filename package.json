@@ -10,15 +10,23 @@
     "pnpm": ">=9"
   },
   "scripts": {
+    "bootstrap": "bash scripts/bootstrap.sh",
+    "doctor": "node scripts/doctor.mjs",
+    "preflight": "node scripts/doctor.mjs",
     "dev": "concurrently --kill-others --names bridge,web --prefix-colors cyan,green \"pnpm run dev:bridge\" \"pnpm run dev:web\"",
     "dev:bridge": "bash scripts/dev-bridge.sh",
     "dev:web": "pnpm --filter @tenmol/web dev",
     "build": "pnpm -r run build",
     "typecheck": "pnpm -r run typecheck",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:bridge": "bash -c 'if [ -d bridge/tests ]; then bash scripts/dev-bridge.sh --exec python -m pytest bridge/tests -q; else echo \"no bridge/tests yet (WP-02 owns them) - skipping\"; fi'",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml \"apps/**/*\" \"packages/**/*\" docs/webclient/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
-    "format:check": "prettier --check --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml \"apps/**/*\" \"packages/**/*\" docs/webclient/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
+    "ownership": "node scripts/ownership.mjs",
+    "parity": "node scripts/parity.mjs",
+    "format": "prettier --write --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml vitest.workspace.ts \"scripts/*.mjs\" \"apps/**/*\" \"packages/**/*\" docs/webclient/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
+    "format:check": "prettier --check --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml vitest.workspace.ts \"scripts/*.mjs\" \"apps/**/*\" \"packages/**/*\" docs/webclient/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
     "clean": "rm -rf .turbo *.tsbuildinfo apps/*/dist apps/*/.turbo apps/*/*.tsbuildinfo apps/*/node_modules packages/*/dist packages/*/.turbo packages/*/*.tsbuildinfo packages/*/node_modules node_modules"
   },
   "devDependencies": {
@@ -28,8 +36,10 @@
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.5.0",
+    "jsdom": "^25.0.1",
     "prettier": "^3.9.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.65.0",
+    "vitest": "catalog:"
   }
 }

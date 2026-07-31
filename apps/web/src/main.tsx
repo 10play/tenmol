@@ -1,8 +1,17 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App';
+import App from './app/App';
 import './styles/global.css';
 
+/**
+ * Entry point.
+ *
+ * StrictMode is on: the session is a module singleton (`app/session.ts`), so the
+ * deliberate double-mount opens exactly one socket, sends exactly one `sub` per
+ * topic and starts exactly one poll loop. If that ever stops being true,
+ * StrictMode is the thing that will catch it in development instead of a user
+ * catching it in production.
+ */
 const container = document.getElementById('root');
 if (!container) throw new Error('#root not found in index.html');
 

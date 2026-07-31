@@ -1,29 +1,40 @@
 /**
- * @tenmol/protocol — wire message types.
+ * @tenmol/protocol — the message envelope.
  *
- * v1 of the tenmol web-client wire protocol. ONE WebSocket at
- * `ws://127.0.0.1:8765/ws`, JSON text frames for control, binary frames for
- * geometry (see ./geometry.ts).
+ * WP-01, plan §6. Migrated from the pre-WP `src/messages.ts`.
  *
- * This file is the single normative TypeScript encoding of the protocol. It is
- * intentionally minimal: do not add message types or fields without bumping
- * PROTOCOL_VERSION and updating the bridge in lockstep.
+ * ONE WebSocket at `ws://127.0.0.1:8765/ws` (loopback only, plan §A6):
  *
- * Zero runtime dependencies. Everything exported here is either a type, a
- * `const`, or a pure function.
+ *   * TEXT frames   — JSON control envelope, defined here.
+ *                     client -> server: call | do | input | sub | unsub | ack
+ *                     server -> client: hello | ok | err | event | feedback
+ *   * BINARY frames — geometry (Mode G) and pixels (Mode P), `./geometry.ts`.
+ *
+ * The envelope is deliberately small and closed. Adding a message type is a
+ * `PROTOCOL_VERSION` bump plus a bridge change in the same commit. Adding a
+ * *topic* is not — topics are the extension point (`./topics/`).
+ *
+ * Zero runtime dependencies. Types, consts and pure functions only.
  */
 
+import type { WireError } from './errors';
+import { isWireError } from './errors';
 import type { Topic, TopicPayloads } from './topics';
 import { isTopic } from './topics';
 
-/** Bumped whenever a frame shape changes incompatibly. Server echoes it in `hello`. */
+/** Bumped whenever an envelope frame shape changes incompatibly. Echoed in `hello`. */
 export const PROTOCOL_VERSION = 1;
 
-/** Loopback only, never 0.0.0.0 (01-architecture.md:303). */
+/** Loopback only, never 0.0.0.0 (plan §A6: the boundary is the transport). */
 export const DEFAULT_HOST = '127.0.0.1';
 export const DEFAULT_PORT = 8765;
 export const WS_PATH = '/ws';
 export const DEFAULT_WS_URL = `ws://${DEFAULT_HOST}:${DEFAULT_PORT}${WS_PATH}`;
+
+/** Blob upload/download endpoints (plan §B8: sessions and volumes are never inline). */
+export const UPLOAD_PATH = '/upload';
+export const BLOB_PATH = '/blob';
+export const HEALTH_PATH = '/healthz';
 
 /* ------------------------------------------------------------------ *
  * JSON
@@ -36,9 +47,9 @@ export type JsonObject = { [key: string]: Json };
 /* ------------------------------------------------------------------ *
  * Input constants
  *
- * These mirror the values the PyMOL C core expects through
+ * Mirrors of the values the PyMOL C core expects through
  * `_cmd._button(COb, button, state, x, y, mod)` and
- * `_cmd._drag(COb, x, y, mod)` (modules/pymol2/__init__.py:46-50).
+ * `_cmd._drag(COb, x, y, mod)` (`modules/pymol2/__init__.py:46-50`).
  * ------------------------------------------------------------------ */
 
 /** `layer0/os_gl_glut_pretend.h:24-26`, `layer0/os_gl_glut.h:21-22`. */
@@ -95,6 +106,9 @@ export function modifierMask(ev: {
  * `fn` is a dotted path resolved against the `cmd` namespace by the bridge:
  * `'fragment'`, `'util.cbc'`, `'movie.produce'` — the same namespace modules
  * exported at `modules/pymol/api.py:487-489`.
+ *
+ * `quiet` is NOT forced (plan §A6 / critique C4): several parity rows depend on
+ * `quiet=0` output reaching the console.
  */
 export interface CallMessage {
   id: number;
@@ -109,8 +123,8 @@ export interface CallMessage {
  *
  * `cmd.do` returns None and prints exceptions instead of raising
  * (`modules/pymol/commanding.py:441-461`), so `ok.result` is always null.
- * Needed by the console AND by every `pymol.menu` leaf, which returns command
- * *strings* (`layer4/PopUp.cpp:471-475`) — see 02-completeness-critique.md:114.
+ * Allowed from the UI (plan §A6): every `pymol.menu` popup leaf and every
+ * wizard button returns a *command string* (`layer4/PopUp.cpp:471-475`).
  */
 export interface DoMessage {
   id: number;
@@ -124,6 +138,7 @@ export interface InputButtonMessage {
   kind: 'button';
   button: number;
   state: number;
+  /** Viewport pixels, BOTTOM-LEFT origin (plan §1.4 — the client flips Y). */
   x: number;
   y: number;
   mod: number;
@@ -168,7 +183,18 @@ export interface UnsubMessage {
   topic: Topic;
 }
 
-export type ClientMessage = CallMessage | DoMessage | InputMessage | SubMessage | UnsubMessage;
+/**
+ * Flow control for Mode P (plan §6 WP-04: "at-most-one-unacked-frame").
+ * Fire-and-forget; `frameId` echoes `PixelFrameHeader.frameId`.
+ */
+export interface AckMessage {
+  t: 'ack';
+  what: 'pixels';
+  frameId: number;
+}
+
+export type ClientMessage =
+  CallMessage | DoMessage | InputMessage | SubMessage | UnsubMessage | AckMessage;
 
 /** Client messages that carry an id and get exactly one terminal ok/err. */
 export type ClientRequest = CallMessage | DoMessage | SubMessage | UnsubMessage;
@@ -179,37 +205,32 @@ export type ClientMessageType = ClientMessage['t'];
  * Server -> Client
  * ------------------------------------------------------------------ */
 
-/**
- * Error payload. `type` is the Python exception class name, e.g.
- * `CmdException` (`modules/pymol/__init__.py:468`),
- * `IncentiveOnlyException` (`:482`),
- * `QuietException` (`modules/pymol/parsing.py:71`),
- * or a bridge-level rejection such as `NotAllowed`.
- * The `(string & {})` member keeps the known names as completions without
- * closing the union — the bridge may surface any Python exception type.
- */
-export type WireErrorType =
-  | 'CmdException'
-  | 'QuietException'
-  | 'IncentiveOnlyException'
-  | 'NotAllowed'
-  | 'TypeError'
-  | 'ValueError'
-  | (string & {});
-
-export interface WireError {
-  type: WireErrorType;
-  message: string;
-  /** Full Python traceback as one string; may be '' when unavailable. */
-  traceback: string;
-}
-
 /** Terminal success for request `id`. */
 export interface OkMessage {
   id: number;
   t: 'ok';
   result: Json;
+  /**
+   * Command-echo invalidation classes (plan §1.5). The ONLY mechanism that
+   * covers per-atom colour, per-atom reps, `alter` and coordinate edits —
+   * polling cannot see them (`cmd.get_vis()` is object-level only, measured).
+   */
+  inval?: readonly InvalidationClass[];
 }
+
+/**
+ * Plan §1.5. `resync` is emitted for `cmd.do`, `cmd.run` and `@script`, whose
+ * effects the bridge cannot classify.
+ */
+export const INVALIDATION_CLASSES = [
+  'color',
+  'reps',
+  'geometry',
+  'coords',
+  'names',
+  'resync',
+] as const;
+export type InvalidationClass = (typeof INVALIDATION_CLASSES)[number];
 
 /** Terminal failure for request `id`. */
 export interface ErrMessage {
@@ -220,7 +241,7 @@ export interface ErrMessage {
 
 /**
  * Topic push. `seq` is monotonic per topic so a client can detect a gap and
- * force a resync.
+ * force a resync (plan §6 WP-08).
  */
 export interface EventMessage<T extends Topic = Topic> {
   t: 'event';
@@ -234,7 +255,8 @@ export type AnyEventMessage = { [K in Topic]: EventMessage<K> }[Topic];
 
 /**
  * Console output drained from `cmd._get_feedback()`
- * (`modules/pymol/internal.py:593-606`). Append-only, never coalesced.
+ * (`modules/pymol/internal.py:596-606`). Append-only, never coalesced: reading
+ * the queue destroys it, so a dropped frame is a permanently lost line.
  */
 export interface FeedbackMessage {
   t: 'feedback';
@@ -246,6 +268,12 @@ export interface HelloMessage {
   t: 'hello';
   pymolVersion: string;
   protocolVersion: number;
+  /**
+   * Whether this bridge build has the Mode-G geometry accessor
+   * (`layer4/CmdWebGeometry.cpp`, plan §4 Task 1). When false the client must
+   * stay in Mode P for every rep.
+   */
+  modeG?: boolean;
 }
 
 export type ServerMessage =
@@ -274,15 +302,6 @@ export function isOkMessage(v: unknown): v is OkMessage {
 
 export function isErrMessage(v: unknown): v is ErrMessage {
   return isRecord(v) && v['t'] === 'err' && isInt(v['id']) && isWireError(v['error']);
-}
-
-export function isWireError(v: unknown): v is WireError {
-  return (
-    isRecord(v) &&
-    typeof v['type'] === 'string' &&
-    typeof v['message'] === 'string' &&
-    typeof v['traceback'] === 'string'
-  );
 }
 
 export function isResponseMessage(v: unknown): v is ServerResponse {
@@ -367,9 +386,18 @@ export function isUnsubMessage(v: unknown): v is UnsubMessage {
   return isRecord(v) && v['t'] === 'unsub' && isInt(v['id']) && isTopic(v['topic']);
 }
 
+export function isAckMessage(v: unknown): v is AckMessage {
+  return isRecord(v) && v['t'] === 'ack' && v['what'] === 'pixels' && isInt(v['frameId']);
+}
+
 export function isClientMessage(v: unknown): v is ClientMessage {
   return (
-    isCallMessage(v) || isDoMessage(v) || isInputMessage(v) || isSubMessage(v) || isUnsubMessage(v)
+    isCallMessage(v) ||
+    isDoMessage(v) ||
+    isInputMessage(v) ||
+    isSubMessage(v) ||
+    isUnsubMessage(v) ||
+    isAckMessage(v)
   );
 }
 
@@ -381,11 +409,6 @@ export function isClientRequest(v: unknown): v is ClientRequest {
 /* ------------------------------------------------------------------ *
  * Small helpers (pure)
  * ------------------------------------------------------------------ */
-
-/** One-line human form of a WireError, for consoles and toasts. */
-export function formatWireError(e: WireError): string {
-  return e.message ? `${e.type}: ${e.message}` : e.type;
-}
 
 /** Epoch seconds as a float — the `when` field of input messages. */
 export function nowEpochSeconds(): number {

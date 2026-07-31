@@ -1,0 +1,155 @@
+# Web client CI (WP-00).
+#
+# Separate from .github/workflows/build.yml, which is upstream PyMOL's own CI and
+# must not be touched. This one runs the bootstrap the docs promise, then the JS
+# gates and the bridge's pytest suite.
+#
+# macOS is the primary job: offscreen GL is CGL there (spikes/04-picking.md), and
+# it is the only platform the v1 viewport is verified on. GitHub's macOS runners
+# have no logged-in window server, so hardware CGL context creation can fail --
+# GL-dependent steps are therefore reported but not fatal, exactly like the ray
+# image-diff suites (WP-27).
+name: webclient-ci
+
+on:
+  push:
+    branches: [master, web-client, "wp-*"]
+    paths-ignore: ["docs/**", "**/*.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "**/*.md"]
+  workflow_dispatch:
+
+concurrency:
+  group: webclient-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PNPM_VERSION: 9.15.4
+  NODE_VERSION: "22"
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Fast gates that need no PyMOL build: ~1 minute.
+  # -------------------------------------------------------------------------
+  static:
+    name: lint / typecheck / build / unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: gitignore does not swallow committed codegen
+        run: |
+          mkdir -p packages/client/src/generated
+          echo 'export const _probe = 1;' > packages/client/src/generated/_ci_probe.ts
+          if git check-ignore -q packages/client/src/generated/_ci_probe.ts; then
+            echo "::error::packages/*/src/generated/ is git-ignored again -- see .gitignore"
+            git check-ignore -v packages/client/src/generated/_ci_probe.ts
+            exit 1
+          fi
+          rm -f packages/client/src/generated/_ci_probe.ts
+
+      - run: pnpm lint
+
+      - run: pnpm typecheck
+
+      - run: pnpm -r run build
+
+      - run: pnpm test
+
+      - name: parity coverage (informational)
+        run: pnpm parity
+
+      - name: ownership lint
+        # The WP is inferred from the branch name (wp-07-shell -> WP-07). On
+        # master/web-client there is nothing to attribute, so it is skipped.
+        if: startsWith(github.ref_name, 'wp-')
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: pnpm ownership --base "origin/$DEFAULT_BRANCH"
+
+  # -------------------------------------------------------------------------
+  # The real thing: bootstrap builds PyMOL from this tree and the bridge boots.
+  # -------------------------------------------------------------------------
+  bootstrap-macos:
+    name: bootstrap + bridge (macOS)
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: native deps (Homebrew)
+        run: |
+          brew list --versions cmake libpng freetype glew glm netcdf msgpack-cxx libxml2 || true
+          brew install cmake libpng freetype glew glm netcdf msgpack-cxx libxml2
+
+      - name: cache vendored mmtf-cpp headers
+        uses: actions/cache@v4
+        with:
+          path: .deps
+          key: mmtf-cpp-${{ runner.os }}-v1
+
+      - name: bootstrap
+        run: bash scripts/bootstrap.sh
+
+      - name: repo is still clean after the build
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain)" || {
+            echo "::error::bootstrap dirtied the working tree"
+            exit 1
+          }
+
+      - name: doctor
+        # GL context creation needs a window server the runner does not have;
+        # report it, do not fail the job on it.
+        continue-on-error: true
+        run: pnpm run doctor
+
+      - name: bridge pytest suite
+        run: |
+          if [ -d bridge/tests ] && ls bridge/tests/test_*.py >/dev/null 2>&1; then
+            bash scripts/dev-bridge.sh --exec python -m pytest bridge/tests -q
+          else
+            echo "no bridge/tests yet (WP-02 owns them) -- skipping"
+          fi
+
+      - name: acceptance -- bridge answers /healthz
+        run: |
+          bash scripts/dev-bridge.sh --port 8765 > bridge.log 2>&1 &
+          for i in $(seq 1 60); do
+            sleep 1
+            if curl -sf --max-time 2 http://127.0.0.1:8765/healthz > health.json; then break; fi
+          done
+          cat health.json; echo
+          grep -q '"state":[[:space:]]*"running"' health.json || {
+            echo "::error::/healthz did not report state=running"
+            exit 1
+          }
+          echo "healthz OK"
+        # Same caveat as `doctor`: on a runner with no window server the pump can
+        # come up degraded. Keep the evidence, do not red-flag the branch.
+        continue-on-error: true
+
+      - name: bridge log
+        if: always()
+        run: tail -50 bridge.log || true

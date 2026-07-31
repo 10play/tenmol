@@ -1,8 +1,8 @@
-"""``python -m tenmol_bridge`` - run the bridge.
+"""``python -m tenmol_bridge`` — run the bridge.
 
-Binds 127.0.0.1 by default and refuses anything else unless
-``--allow-remote`` is passed, matching PyMOL's own HTTP bridge, which hard-
-rejects non-loopback peers (``modules/pymol/pymolhttpd.py:61-68``).
+Binds ``127.0.0.1`` and refuses anything else unless ``--allow-remote`` is
+passed.  WP-28 owns the full ``pymol --web`` entry point and the invocation-flag
+mapping table (§C6); this is the developer entry point.
 """
 
 from __future__ import annotations
@@ -11,50 +11,81 @@ import argparse
 import sys
 from typing import List, Optional
 
-from . import DEFAULT_HOST, DEFAULT_PORT, BridgeConfig, __version__
+from .config import (
+    DEFAULT_HEIGHT,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_WIDTH,
+    BridgeConfig,
+    coerce_origins,
+    log,
+    set_log_enabled,
+    write_token_file,
+)
+from . import __version__
 
 
 def build_parser() -> argparse.ArgumentParser:
-    from .pump import TICK_STRATEGIES
-
-    p = argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         prog="python -m tenmol_bridge",
-        description="PyMOL <-> web client bridge (protocol v1)",
+        description="PyMOL <-> tenmol web client bridge (protocol v1)",
     )
-    p.add_argument("--host", default=DEFAULT_HOST)
-    p.add_argument("--port", type=int, default=DEFAULT_PORT)
-    p.add_argument("--tick-hz", type=float, default=60.0)
-    p.add_argument(
-        "--tick",
-        default="idle",
-        choices=sorted(TICK_STRATEGIES),
-        help="per-tick draw/refresh strategy; see the TODO(spike-01) banner in "
-        "pump.py. 'idle' is safe but leaves viewport input queued.",
+    parser.add_argument("--host", default=DEFAULT_HOST)
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    parser.add_argument("--width", type=int, default=DEFAULT_WIDTH)
+    parser.add_argument("--height", type=int, default=DEFAULT_HEIGHT)
+    parser.add_argument(
+        "--tick-hz",
+        type=float,
+        default=60.0,
+        help="draw pump rate; must stay well under the 150 ms single-click "
+        "floor (layer1/SceneMouse.cpp:1152)",
     )
-    p.add_argument("--width", type=int, default=640)
-    p.add_argument("--height", type=int, default=480)
-    p.add_argument("--quiet", action="store_true")
-    p.add_argument(
-        "--no-pmgui",
+    parser.add_argument("--status-hz", type=float, default=10.0)
+    parser.add_argument(
+        "--splash", action="store_true", help="keep PyMOL's splash banner"
+    )
+    parser.add_argument(
+        "--pymol-quiet",
         action="store_true",
-        help="start PyMOL with no_gui=1. Makes p.draw() safe and viewport "
-        "input work (--tick draw), but silences console feedback "
-        "(layer1/Ortho.cpp:493). See the banner in pump.py.",
+        help="invocation.options.quiet=1. NOTE: this is NOT -c; -c/-cq would "
+        "set no_gui=1 and kill the feedback queue permanently (spike 02 §2a).",
     )
-    p.add_argument(
-        "--no-dangerous",
+    parser.add_argument(
+        "--quiet", action="store_true", help="silence the bridge's own stderr log"
+    )
+    parser.add_argument(
+        "--origin",
+        action="append",
+        default=None,
+        help="extra allowed Origin (repeatable)",
+    )
+    parser.add_argument(
+        "--token", default=None, help="use this session token instead of minting one"
+    )
+    parser.add_argument(
+        "--token-file", default=None, help="write the token here with mode 0600"
+    )
+    parser.add_argument(
+        "--no-token",
         action="store_true",
-        help="refuse run/system/cd/quit/alter/... instead of marking them "
-        "(breaks File>Run Script and most menu leaves - see README Security)",
+        help="disable token checking (loopback only; development)",
     )
-    p.add_argument(
+    parser.add_argument(
         "--allow-remote",
         action="store_true",
         help="permit a non-loopback --host (you almost certainly do not want this)",
     )
-    p.add_argument("--log-level", default="info")
-    p.add_argument("--version", action="version", version="tenmol-bridge " + __version__)
-    return p
+    parser.add_argument(
+        "--no-pymol",
+        action="store_true",
+        help="run without PyMOL so the front-end is developable",
+    )
+    parser.add_argument("--log-level", default="info")
+    parser.add_argument(
+        "--version", action="version", version="tenmol-bridge " + __version__
+    )
+    return parser
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -63,39 +94,54 @@ def main(argv: Optional[List[str]] = None) -> int:
     if not args.allow_remote and args.host not in ("127.0.0.1", "localhost", "::1"):
         sys.stderr.write(
             "refusing to bind %r: this bridge gives the browser full local "
-            "filesystem and shell reach through PyMOL. Pass --allow-remote if "
-            "you really mean it.\n" % args.host
+            "filesystem and shell reach through PyMOL, by design. Pass "
+            "--allow-remote if you really mean it.\n" % args.host
         )
         return 2
+
+    if args.quiet:
+        set_log_enabled(False)
 
     config = BridgeConfig(
         host=args.host,
         port=args.port,
-        tick_hz=args.tick_hz,
-        tick_strategy=args.tick,
         width=args.width,
         height=args.height,
-        quiet=args.quiet,
-        pmgui=not args.no_pmgui,
-        allow_dangerous=not args.no_dangerous,
+        tick_hz=args.tick_hz,
+        status_hz=args.status_hz,
+        splash=args.splash,
+        quiet=args.pymol_quiet,
+        origins=coerce_origins(args.origin),
+        token=None if args.no_token else (args.token or ""),
+        token_path=args.token_file,
+        force_no_pymol=args.no_pymol,
         log_level=args.log_level,
     )
 
+    if config.token and config.token_path:
+        write_token_file(config.token_path, config.token)
+        log("token written to %s (mode 0600)" % config.token_path)
+    elif config.token:
+        log("session token: %s" % config.token)
+    else:
+        log("TOKEN CHECKING DISABLED (--no-token)")
+
     import uvicorn
 
-    from .server import create_app, log
+    from .server import create_app
 
     log(
-        "starting on ws://%s:%d/ws (tick=%s @%.0fHz, pmgui=%d, dangerous=%s)"
-        % (config.host, config.port, config.tick_strategy, config.tick_hz,
-           1 if config.pmgui else 0,
-           "allowed" if config.allow_dangerous else "refused")
+        "starting on ws://%s:%d/ws (%dx%d, tick %.0f Hz, status %.0f Hz)"
+        % (
+            config.host,
+            config.port,
+            config.width,
+            config.height,
+            config.tick_hz,
+            config.status_hz,
+        )
     )
-    try:
-        app = create_app(config)
-    except ValueError as exc:
-        sys.stderr.write("%s\n" % exc)
-        return 2
+    app = create_app(config)
     uvicorn.run(
         app,
         host=config.host,

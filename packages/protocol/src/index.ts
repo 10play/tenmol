@@ -1,22 +1,33 @@
 /**
- * @tenmol/protocol
+ * @tenmol/protocol — the tenmol web-client wire contract.
  *
- * The tenmol web-client wire protocol, v1. Pure types, constants and pure
- * functions — zero runtime dependencies, no I/O, importable from the browser,
- * from Node, from a worker, or from a test.
+ * WP-01 (plan §6, wave 0). Pure types, constants and pure functions — zero
+ * runtime dependencies, no I/O, importable from the browser, from Node, from a
+ * worker, or from a test.
  *
- * Transport: ONE WebSocket at ws://127.0.0.1:8765/ws.
- *   * JSON text frames      -> ./messages.ts  (call / do / input / sub / unsub
- *                                              -- ok / err / event / feedback / hello)
- *   * binary frames         -> ./geometry.ts  (uint32 LE header length + JSON
- *                                              header + typed-array payload)
- *   * topics                -> ./topics.ts    (objects, view, frame, selection,
- *                                              settings, feedback, geometry)
+ * Transport: ONE WebSocket at `ws://127.0.0.1:8765/ws`.
  *
- * v1 is intentionally minimal and CLOSED: no extra topics, no extra message
- * types. Anything else is a protocol version bump.
+ *   ./envelope.ts   TEXT frames: call | do | input | sub | unsub | ack
+ *                              -- hello | ok | err | event | feedback
+ *   ./errors.ts     the six error kinds:
+ *                   CmdException | QuietException | IncentiveOnly
+ *                   | NotAllowed | NotSerializable | PythonError
+ *   ./codec.ts      the msgpack / NdArray / blob configuration (plan §B8)
+ *   ./geometry.ts   BINARY frames: Mode G geometry AND Mode P pixels, with a
+ *                   4-byte-aligned header so `viewOf()` is zero-copy
+ *   ./topics/       19 one-owner-each topic modules behind a FROZEN barrel
+ *
+ * The envelope is closed: adding a message type is a `PROTOCOL_VERSION` bump.
+ * Topics are the extension point, and `topics/index.ts` is frozen — a work
+ * package fills in its own module and edits nothing shared.
+ *
+ * A Python reference implementation of the binary-frame codec lives in
+ * `python/tenmol_wire.py` in this package; `test/roundtrip.test.ts` encodes
+ * with it and decodes here.
  */
 
-export * from './messages';
-export * from './topics';
+export * from './errors';
+export * from './envelope';
+export * from './codec';
 export * from './geometry';
+export * from './topics';

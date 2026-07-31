@@ -13,12 +13,14 @@
 
 import {
   DEFAULT_WS_URL,
-  decodeGeometryFrame,
+  decodeBinaryFrame,
   isErrMessage,
   isEventMessage,
   isFeedbackMessage,
+  isGeometryFrame,
   isHelloMessage,
   isOkMessage,
+  isPixelFrame,
   nowEpochSeconds,
   type ClientMessage,
   type HelloMessage,
@@ -356,6 +358,17 @@ export class PymolConnection {
     return this.sendInput(message);
   }
 
+  /**
+   * `{t:'ack'}` — Mode-P flow control (plan §1.3). The bridge keeps at most one
+   * unacked frame in flight; without this the stream falls back to its 0.75 s
+   * ack timeout and stutters. Fire and forget, dropped when closed.
+   */
+  ack(frameId: number, what: 'pixels' | 'geometry' = 'pixels'): boolean {
+    if (!this.isOpen || !this.socket) return false;
+    this.socket.send(JSON.stringify({ t: 'ack', what, frameId }));
+    return true;
+  }
+
   /** Viewport resize. */
   reshape(width: number, height: number, force = false): boolean {
     const message: InputReshapeMessage = {
@@ -601,8 +614,13 @@ export class PymolConnection {
 
   private handleBinary(bytes: Uint8Array): void {
     try {
-      const frame = decodeGeometryFrame(bytes);
-      this.emitter.emit('geometry:frame', frame);
+      // decodeBinaryFrame, NOT decodeGeometryFrame: the latter throws on a
+      // Mode-P pixel frame by design, which used to turn every streamed frame
+      // into a connection error.
+      const frame = decodeBinaryFrame(bytes);
+      this.emitter.emit('binary:frame', frame);
+      if (isPixelFrame(frame)) this.emitter.emit('pixels:frame', frame);
+      else if (isGeometryFrame(frame)) this.emitter.emit('geometry:frame', frame);
     } catch (cause) {
       this.emitError(cause instanceof Error ? cause : new Error(String(cause)));
     }

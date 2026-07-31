@@ -1,0 +1,230 @@
+/*
+ * Shell chrome. Everything shared (the PyMOL palette, .shell, .menubar,
+ * .internal-gui, .extgui, .statusbar, .objrow, .feedback, .cmdline) lives in
+ * src/styles/global.css, which is owned by another work package; this file adds
+ * only what the shell introduces and never redefines a token.
+ *
+ * Colours here that are not from global.css are all derived from the same
+ * PyMOL source triples documented at the top of it.
+ */
+
+/* Feature slots ------------------------------------------------------- */
+
+.shell__viewport {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  background: var(--pm-bg-viewport);
+  overflow: hidden;
+}
+
+.feature-absent {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 22px;
+  padding: 6px 8px;
+  color: #4a4f55;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.feature-absent__owner {
+  padding: 0 4px;
+  border: 1px solid #2b2f33;
+  color: #5b6167;
+}
+
+.feature-loading {
+  padding: 6px 8px;
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.feature-failed {
+  padding: 8px;
+  border: 1px solid #5a2222;
+  background: #241416;
+  color: #ff9c9c;
+  font-family: var(--pm-font-mono);
+  font-size: 10.5px;
+}
+
+.feature-failed__title {
+  color: #ff6b6b;
+  margin-bottom: 3px;
+}
+
+.feature-failed__message {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.feature-failed__retry {
+  margin-top: 6px;
+  padding: 1px 8px;
+  border: 1px solid #5a2222;
+  color: #ffc9c9;
+}
+
+/* Shell chrome in the menu-bar strip ----------------------------------- */
+
+.shell-chrome__note {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: #5b6167;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.shell-chrome__warn {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: #ffb84d;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.menubar__item {
+  display: flex;
+  align-items: center;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  white-space: pre;
+}
+
+/* Status bar additions -------------------------------------------------- */
+
+.statusbar__sep {
+  color: #3a3e42;
+}
+
+.statusbar__text--dim {
+  color: #6f757a;
+}
+
+.statusbar__dot--unauthorized,
+.statusbar__dot--forbidden {
+  background: #ff8c1a;
+}
+
+.statusbar__progress {
+  position: relative;
+  display: inline-block;
+  width: 90px;
+  height: 7px;
+  background: #0d0f10;
+  border: 1px solid var(--pm-line);
+}
+
+.statusbar__progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--pm-accent);
+}
+
+/* Connection overlay ---------------------------------------------------- */
+
+.connpanel {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 11, 12, 0.72);
+}
+
+.connpanel__box {
+  width: 560px;
+  max-width: calc(100vw - 40px);
+  padding: 16px 18px;
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-edge);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+}
+
+.connpanel__title {
+  margin-bottom: 10px;
+  color: var(--pm-mouse-mode);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.connpanel__facts {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 2px 10px;
+  margin: 0 0 10px;
+}
+
+.connpanel__facts dt {
+  color: #6f757a;
+}
+
+.connpanel__facts dd {
+  margin: 0;
+  color: var(--pm-text-bright);
+  word-break: break-all;
+}
+
+.connpanel__hint {
+  margin: 0 0 10px;
+  color: var(--pm-text-dim);
+  line-height: 1.5;
+}
+
+.connpanel__hint code {
+  padding: 0 3px;
+  background: #0d0f10;
+  border: 1px solid var(--pm-line);
+  color: var(--pm-text);
+}
+
+.connpanel__row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.connpanel__input {
+  flex: 1;
+  min-width: 0;
+  height: 19px;
+  padding: 0 5px;
+  background: #0d0f10;
+  border: 1px solid var(--pm-line);
+  color: var(--pm-text-bright);
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  outline: none;
+}
+
+.connpanel__input:focus {
+  border-color: var(--pm-accent);
+}
+
+.connpanel__health {
+  margin-top: 10px;
+  padding: 6px;
+  background: #0d0f10;
+  border: 1px solid var(--pm-line);
+  color: var(--pm-text);
+  word-break: break-word;
+}
+
+.quickbutton:disabled {
+  color: #55595d;
+  background: #24272a;
+}
