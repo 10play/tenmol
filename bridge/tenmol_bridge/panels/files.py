@@ -236,9 +236,9 @@ REFUSED_FORMATS: Dict[str, str] = {"pwg": PWG_REFUSAL}
 #: not supported in this PyMOL build." and returns ``nullptr`` — always.
 #:
 #: The trap: ``cmd.map_generate`` **still returns the map name**
-#: (``modules/pymol/creating.py:288`` is a bare ``return name``, reached on both
+#: (``modules/pymol/creating.py:289`` is a bare ``return name``, reached on both
 #: paths), so the return value is NOT a success signal.  ``PyMOLMapLoad.run``
-#: tests exactly that value (``PyMOLMapLoad.py:262``, ``if r==None or r=="None"
+#: tests exactly that value (``PyMOLMapLoad.py:288``, ``if r==None or r=="None"
 #: or r==""``) and therefore goes on to build an isosurface/isomesh/volume on a
 #: map object that was never created.  Anything porting this dialog must check
 #: ``cmd.get_names()`` instead.
@@ -246,11 +246,11 @@ MAP_GENERATE_BUILD_NOTE = (
     "cmd.map_generate needs MMLIBS: layer3/Executive.cpp:6929-6935 compiles the "
     "generator out under NO_MMLIBS and prints 'Error: MTZ map loading not "
     "supported in this PyMOL build.'. cmd.map_generate nevertheless returns the "
-    "map name on failure (creating.py:288), so the return value cannot be used "
+    "map name on failure (creating.py:289), so the return value cannot be used "
     "as a success test -- check cmd.get_names()."
 )
 
-#: ``PyMOLMapLoad.py:270-276``, verbatim including the ``at\nleastone`` typo.
+#: ``PyMOLMapLoad.py:260-266``, verbatim including the ``at\nleastone`` typo.
 MISSING_AMPLITUDES_HELP = """
 To synthesize a map from reflection data you need to specify at
 leastone column for amplitudes and one column for phases. The
@@ -259,7 +259,7 @@ the map.  Please select an amplitude column name from the file and try
 again.
                """
 
-#: ``PyMOLMapLoad.py:281-287``.
+#: ``PyMOLMapLoad.py:271-277``.
 MISSING_PHASES_HELP = """
 To synthesize a map from reflection data you need to specify at least
 one column for amplitudes and one column for phases. The phases column
@@ -278,7 +278,7 @@ MAP_HEADER_CLASSES: Dict[str, str] = {
 
 
 def map_generate_prefix(amplitudes: str, name_prefix: str = "") -> str:
-    """``PyMOLMapLoad.run``'s prefix rule (``PyMOLMapLoad.py:243-253``).
+    """``PyMOLMapLoad.run``'s prefix rule (``PyMOLMapLoad.py:245-254``).
 
     Blank "New Map Name Prefix" falls back to the *dataset* element of a fully
     qualified amplitudes column: ``crystal/dataset/COL`` -> ``dataset``
@@ -296,7 +296,7 @@ def map_generate_prefix(amplitudes: str, name_prefix: str = "") -> str:
 
 
 def map_rep_plan(rep: str, base: str, fofc: bool) -> List[Dict[str, Any]]:
-    """The representation ``PyMOLMapLoad.run`` builds (``PyMOLMapLoad.py:271-317``).
+    """The representation ``PyMOLMapLoad.run`` builds (``PyMOLMapLoad.py:295-331``).
 
     ``rep`` is ``default_fofc_map_rep`` or ``default_2fofc_map_rep`` (both
     default to ``volume``); ``base`` is the *unused* map name, which the Tk code
@@ -307,7 +307,7 @@ def map_rep_plan(rep: str, base: str, fofc: bool) -> List[Dict[str, Any]]:
     if fofc:
         if rep == "isosurface":
             # NOTE: the FoFc isosurface branch is the ONE branch that never
-            # colours its object (`:276-278`).
+            # colours its object (`:299-301`).
             return [{"op": "isosurface", "stem": base + "-srf", "level": 1.0,
                      "color": None}]
         if rep == "isomesh":
@@ -1480,8 +1480,8 @@ class FilesAPI:
             "headerClass": None,
             "amplitudes": [],
             "phases": [],
-            # `WCols = ["None"]` FIRST, then W then Q columns (`:102-105`), and
-            # "None" is the selected item (`:113`).
+            # `WCols = ["None"]` FIRST, then W then Q columns (`:104-107`), and
+            # "None" is the selected item (`:115`).
             "weights": ["None"],
             "guessAmplitudes": None,
             "guessPhases": None,
@@ -1511,7 +1511,7 @@ class FilesAPI:
             # (`creating.py:236`) with a "TODO: work for CIF, MTZ, and CNS" —
             # so anything but .mtz cannot reach the generator at all.
             info["error"] = (
-                "cmd.map_generate reads MTZ only (creating.py:235-236 'TODO: "
+                "cmd.map_generate reads MTZ only (creating.py:234-236 'TODO: "
                 "work for CIF, MTZ, and CNS'); %s is not an MTZ" % filename
             )
             return info
@@ -1530,7 +1530,7 @@ class FilesAPI:
             info["phases"] = phases or [""]
             info["weights"] = ["None"] + weights
 
-            # `:70-79` / `:91-99`: 2FoFc's guess wins, FoFc is the fallback, and
+            # `:71-80` / `:92-100`: 2FoFc's guess wins, FoFc is the fallback, and
             # each is used ONLY if it is actually in the list.
             f2, p2, _ = header.guessCols("2FoFc")
             f1, p1, _ = header.guessCols("FoFc")
@@ -1554,7 +1554,7 @@ class FilesAPI:
         name_prefix: str = "",
         fofc: bool = False,
     ) -> Dict[str, Any]:
-        """``PyMOLMapLoad.run("OK")`` (``PyMOLMapLoad.py:239-321``).
+        """``PyMOLMapLoad.run("OK")`` (``PyMOLMapLoad.py:240-341``).
 
         Order preserved exactly: derive the prefix, ``get_unused_name`` it,
         validate the two required columns (returning the dialog's own help text,
@@ -1564,8 +1564,8 @@ class FilesAPI:
 
         ONE DELIBERATE DIVERGENCE, and it is the point of the port: the Tk code
         tests ``cmd.map_generate``'s **return value** for success
-        (``:262``), and that value is the map name on failure as well
-        (``creating.py:288``) — so upstream goes on to isomesh a map object that
+        (``:288``), and that value is the map name on failure as well
+        (``creating.py:289``) — so upstream goes on to isomesh a map object that
         does not exist.  Here success is ``prefix in cmd.get_names()``.
         """
         report: Dict[str, Any] = {
@@ -1591,10 +1591,20 @@ class FilesAPI:
             report["help"] = MISSING_PHASES_HELP
             return report
 
+        # AFTER the two column checks, because that is the Pmw dialog's order
+        # (`:259-278` pops the help text first), and before the call, because
+        # `cmd.map_generate` reports a missing file to the CONSOLE and raises a
+        # bare `CmdException` — MEASURED over the socket, `str(exc)` is
+        # ``' Error: '`` and nothing else, so a client that shows the error has
+        # nothing to show (`creating.py:230-232`).
+        if not os.path.isfile(self.expand(filename)):
+            report["error"] = "no such file: %s" % filename
+            return report
+
         prefix = self.cmd.get_unused_name(map_generate_prefix(amplitudes, name_prefix))
         report["prefix"] = prefix
 
-        # `:255-260`: min/max come straight out of the (string) entry fields.
+        # `:281-283`: min/max come straight out of the (string) entry fields.
         low, high = _reso_float(min_res), _reso_float(max_res)
         try:
             report["returned"] = self.cmd.map_generate(
@@ -1633,7 +1643,7 @@ class FilesAPI:
                 if step["color"]:
                     self.cmd.color(step["color"], name)
                 report["reps"].append({"name": name, "op": step["op"]})
-        except Exception as exc:  # noqa: BLE001 - `:319-320` is a bare except
+        except Exception as exc:  # noqa: BLE001 - `:332-333` is a bare except
             report["error"] = str(exc)
         finally:
             self.cmd.set("suspend_updates", 0)
@@ -1653,6 +1663,18 @@ class FilesAPI:
         Measured defaults in this bridge: ``reuse_helper`` 0 and
         ``auto_reinitialize`` 0, so a Finder open with any object loaded would
         take the ``new_window`` branch upstream.
+
+        ONE DELIBERATE DIVERGENCE, measured: upstream asks
+        ``ev.file().endswith('.psw')`` (``:1154``), which is narrower than every
+        other definition of a PyMOL Show file in the same program.  Qt's own
+        open filter is ``PyMOL Show File (*.psw *.pzw *.psw.gz)``
+        (``pymol_qt_gui.py:660``) and ``filename_to_format`` maps BOTH ``.pzw``
+        and ``.psw.gz`` to format ``psw`` (``importing.py:63-65,43-47``) — so
+        the engine starts the presentation for those two (``load_pse`` runs
+        ``rewind`` + ``scene auto start`` under ``presentation_auto_start``,
+        ``importing.py:843-852``, observed) while the Finder handler leaves the
+        window in normal mode.  This asks the parsed format instead, so all
+        three PyMOL Show extensions get the same preset.
         """
         from pymol import invocation
 
@@ -1661,7 +1683,8 @@ class FilesAPI:
         auto_reinitialize = bool(getattr(options, "auto_reinitialize", 0))
         names = list(self.cmd.get_names() or [])
         new_window = (not reuse_helper) and bool(names)
-        is_psw = str(filename).endswith(".psw")
+        classification = classify_filename(filename)
+        is_show_file = classification["format"] == "psw"
         return {
             "filename": filename,
             "reuseHelper": reuse_helper,
@@ -1670,9 +1693,9 @@ class FilesAPI:
             # `:1145-1147` — the ONLY case that spawns another process.
             "action": "new-window" if new_window else "load-here",
             "reinitialize": (not new_window) and auto_reinitialize,
-            "presentation": (not new_window) and is_psw,
+            "presentation": (not new_window) and is_show_file,
             "presetSteps": [dict(step) for step in PSW_PRESET_STEPS],
-            "classification": classify_filename(filename),
+            "classification": classification,
         }
 
     def presentation_preset(self, full_screen: bool = True) -> Dict[str, Any]:

@@ -24,6 +24,24 @@
  * (`layer1/Control.cpp:263-276`). A splitter that wrote an unclamped width back
  * would hand PyMOL a scene wider than the canvas.
  *
+ * WHAT WAS MEASURED IN WAVE 7 (`bridge/tests/test_f7_layout.py`, same window).
+ * The block heights below used to be transcription; they are now readings, off
+ * two instruments `cmd` does not have — the framebuffer (`PixelReadback`) and
+ * the input path (which block answers a click IS that block's rectangle):
+ *
+ *     column, drawn                 x 580..799, exactly 220 columns
+ *     Control band                  y   0..19        20 px
+ *     ButMode band, mouse_grid 0    y  20..59        40 px
+ *     ButMode band, mouse_grid 1    y  20..143      124 px
+ *     Wizard band, 2 rows, size 18  y  60..99        40 px = 18*2 + 4
+ *     Wizard band, 2 rows, size 40  y  60..143       84 px = 40*2 + 4
+ *     Wizard band, no wizard        0 px, block inactive
+ *
+ * AND THE RULE THAT IS NOT ARITHMETIC AT ALL. See `LAYOUT_SETTINGS`: writing
+ * any of the seven layout settings does NOT relayout. PyMOL queues `viewport`
+ * and waits for a windowing system the bridge does not have, so the change
+ * lands on the next canvas resize and not before.
+ *
  * UNITS. PyMOL stores these in DIP and multiplies by `_gScaleFactor` (setting
  * `display_scale_factor`, default 1) at use. A CSS pixel IS a DIP, and the
  * browser applies `devicePixelRatio` itself, so nothing here scales: the number
@@ -98,8 +116,9 @@ export interface OrthoPanelInput {
  * internal_gui_control_size`, `features/mouse` sizes the ButMode grid from
  * `--butmode-line`, and `features/movie` sets no fixed height at all. So the
  * column is CSS flow, and only the WIDTH (`internal_gui_width`) and the ORDER
- * are parity-exact today. Reported; the totals are transcribed and tested here
- * so the numbers exist for whoever closes that gap, and so a future change to
+ * are parity-exact today. Reported; the totals are MEASURED against the real
+ * engine in `bridge/tests/test_f7_layout.py` and tested here so the numbers
+ * exist for whoever closes that gap, and so a future change to
  * `ButModeGetHeight` is caught.
  */
 export interface OrthoPanelLayout {
@@ -127,6 +146,56 @@ export function layoutInternalGui(input: OrthoPanelInput): OrthoPanelLayout {
   // fixed blocks collapses Executive, it does not overlap them.
   const executive = Math.max(0, input.height - control - butMode - wizard);
   return { executive, wizard, butMode, control };
+}
+
+/* ------------------------------------------------------------------ *
+ * The relayout rule (rows 88 and 209)
+ * ------------------------------------------------------------------ */
+
+/**
+ * The settings whose ONLY side effect is `OrthoCommandIn(G, "viewport")`
+ * (`layer1/Setting.cpp:2824-2833`), and what that is worth to a browser.
+ *
+ * `SettingGenerateSideEffects` runs after every write and is a ~500-line switch
+ * over the setting index. These seven share one branch, and that branch queues
+ * the `viewport` command — which with no arguments ends in `PyMOL_NeedReshape`
+ * (`layer5/PyMOL.cpp:2511-2536`), a request to the WINDOWING SYSTEM to resize
+ * the window. The bridge is not a windowing system, so nothing happens.
+ *
+ * MEASURED (`bridge/tests/test_f7_layout.py`), and both halves matter:
+ *
+ *     set mouse_grid, 1         -> not one pixel of the column moves, and a
+ *                                  click at y=100 still misses the ButMode
+ *                                  block. One reshape later, both change.
+ *     set internal_feedback, 3  -> cmd.get_viewport() still answers 800x600.
+ *                                  One reshape later, 800x558.
+ *
+ * The second is the dangerous one and it is not the shell's setting: a user who
+ * types `set internal_feedback, 3` at the web prompt keeps a viewport that
+ * agrees with the canvas until the next window resize, and then silently stops
+ * agreeing by 42 px — every forwarded mouse coordinate with it. Whoever owns
+ * the canvas (`features/viewport`) is the only code that can re-drive
+ * `{t:'input',kind:'reshape'}`; this list is here so that fix has a name to
+ * hang off, and so `internal_gui` (below) is not treated as a special case.
+ *
+ * NOT in the list, and measured to behave differently:
+ * `internal_gui_control_size` relayouts INLINE (`WizardRefresh` ->
+ * `OrthoReshapeWizard`, `Setting.cpp:2153-2156`) — its block rectangles move
+ * with no reshape at all.
+ */
+export const LAYOUT_SETTINGS: readonly string[] = [
+  'internal_gui_mode',
+  'internal_gui_width',
+  'internal_gui',
+  'internal_feedback',
+  'mouse_grid',
+  'movie_panel_row_height',
+  'movie_panel',
+];
+
+/** True when a write to `name` needs a client-driven reshape to take effect. */
+export function needsReshape(name: string): boolean {
+  return LAYOUT_SETTINGS.includes(name);
 }
 
 /**
@@ -335,6 +404,33 @@ export function adoptShellSettings(
   }
 
   return { patch, remote };
+}
+
+/**
+ * What the shell must WRITE BACK after adopting a patch, and why there is one.
+ *
+ * `internal_gui` is the one setting where adopting the user's intent is not the
+ * end of the job. Typing `set internal_gui, 1` at the web prompt means "show me
+ * the block column", and the React column is what shows it — but the write also
+ * leaves PyMOL's own copy armed. MEASURED (`bridge/tests/test_f7_layout.py`):
+ * the write changes nothing at all on its own, because it only queues
+ * `viewport` (see `LAYOUT_SETTINGS`); the damage lands on the NEXT CANVAS
+ * RESIZE, when `OrthoReshape` takes 220 px off the scene and the browser's
+ * canvas keeps its own size. From that moment PyMOL draws its column over the
+ * right-hand 220 px of the Mode-P image and every forwarded mouse coordinate is
+ * 220 px out — with no event in between to blame it on.
+ *
+ * So the shell answers a non-zero `internal_gui` with an immediate 0. The UI
+ * store still turns the column on, which is what the user asked for; only
+ * PyMOL's duplicate is refused. A 0 needs no correction, and neither does the
+ * absence of a change — the write must not repeat on every poll.
+ */
+export function shellSettingWriteBacks(
+  patch: Partial<ShellSettings>,
+): Partial<ShellSettings> {
+  const out: Partial<ShellSettings> = {};
+  if (patch.internal_gui !== undefined && patch.internal_gui !== 0) out.internal_gui = 0;
+  return out;
 }
 
 /* ------------------------------------------------------------------ *

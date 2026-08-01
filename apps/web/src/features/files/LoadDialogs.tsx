@@ -14,6 +14,7 @@ import type {
   MaeDialogInfo,
   MapDialogInfo,
   MapGenerateInfo,
+  MapGenerateResult,
   MtzDialogInfo,
   PartialGate,
   TrajDialogInfo,
@@ -472,6 +473,42 @@ export function MtzDialog({
 /* --------------------------------------------------------- map generate */
 
 /**
+ * What OK on the map dialog does once the bridge has answered.
+ *
+ * Pure, because the branch is a SETTING and not a preference of this client:
+ * `PyMOLMapLoad.run` calls `self.quit()` only `if
+ * get_setting_boolean("autoclose_dialogs")` (`PyMOLMapLoad.py:338-340`), and
+ * leaves the form up otherwise so a second map can be generated from the same
+ * reflection file without re-picking it. Measured on this build,
+ * `autoclose_dialogs` is ON, which is why the difference is easy to miss.
+ *
+ * NO MAP, NO CLOSE, whatever the setting says — and that is upstream's rule
+ * too, reached by a different route: every failure before the map exists is an
+ * early `return None` (`:268`, `:278`, `:286`, `:292`) that never gets near
+ * `self.quit()`. Those are the errors the user fixes in the form (a column
+ * that is not in the file — ` Error: no dataset found` from `creating.py:247`
+ * — a blank amplitudes/phases entry, a path that has gone away), so closing
+ * would throw the fix away. A rep that fails AFTER the map was created does
+ * not hold the dialog open, because upstream swallows those in a bare `except`
+ * (`:332-333`) and closes anyway; the bridge reports them instead of hiding
+ * them, which is why `ok` and `error` can both be set.
+ */
+export function mapGenerateOutcome(result: MapGenerateResult): {
+  line: string;
+  kind: 'error' | undefined;
+  close: boolean;
+} {
+  const reps = result.reps.map((rep) => rep.name).join(', ');
+  return {
+    line: result.error
+      ? ` map_generate: ${result.error}`
+      : ` map_generate: created ${result.prefix}` + (reps ? ` and ${reps}` : ''),
+    kind: result.error ? 'error' : undefined,
+    close: result.ok && result.autoclose,
+  };
+}
+
+/**
  * `PyMOLMapLoad` (`modules/pmg_tk/PyMOLMapLoad.py:10-345`) — the legacy Tk
  * "PyMOL Map Generation" dialog, rebuilt.
  *
@@ -484,7 +521,7 @@ export function MtzDialog({
  * TWO THINGS THE ORIGINAL GETS WRONG, both measured and both fixed here:
  *
  *  1. `cmd.map_generate` returns the map name whether or not it worked
- *     (`creating.py:288`), so `PyMOLMapLoad.py:262`'s success test never fires
+ *     (`creating.py:289`), so `PyMOLMapLoad.py:288`'s success test never fires
  *     and the Tk dialog goes on to isomesh an object that does not exist. The
  *     bridge answers with `created`, read back from `cmd.get_names()`.
  *  2. This tree compiles the generator out (`NO_MMLIBS`,
@@ -517,7 +554,7 @@ export function MapGenerateDialog({
     info.guessAmplitudes ?? info.amplitudes[0] ?? '',
   );
   const [phases, setPhases] = useState(info.guessPhases ?? info.phases[0] ?? '');
-  // `self._wt_chooser.selectitem("None")` (`PyMOLMapLoad.py:113`).
+  // `self._wt_chooser.selectitem("None")` (`PyMOLMapLoad.py:115`).
   const [weights, setWeights] = useState('None');
   const [minRes, setMinRes] = useState<number | ''>(info.minRes);
   const [maxRes, setMaxRes] = useState<number | ''>(info.maxRes);
@@ -593,7 +630,7 @@ export function MapGenerateDialog({
       </Field>
       <Field
         label="New Map Name Prefix"
-        hint="Blank uses the dataset name from the amplitudes column (PyMOLMapLoad.py:245-249)"
+        hint="Blank uses the dataset name from the amplitudes column (PyMOLMapLoad.py:245-254)"
       >
         <input value={namePrefix} onChange={(e) => setNamePrefix(e.target.value)} />
       </Field>

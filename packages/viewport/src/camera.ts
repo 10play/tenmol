@@ -185,11 +185,141 @@ export function pinchZoom(view: ViewMatrix, startZ: number, totalScaleFactor: nu
   return next as unknown as ViewMatrix;
 }
 
-/** True when two views differ enough to be worth a redraw. */
+/**
+ * True when two views differ enough to be worth a redraw.
+ *
+ * NOT A SETTLE DETECTOR. `false` here means "these two samples are equal", and
+ * during a camera sweep two samples taken less than one key frame apart are
+ * ALWAYS equal — see `createSettleDetector` below for why that matters.
+ */
 export function viewChanged(a: ViewMatrix | null, b: ViewMatrix | null, eps = 1e-6): boolean {
   if (a === null || b === null) return a !== b;
   for (let i = 0; i < VIEW_MATRIX_LENGTH; i++) {
     if (Math.abs((a[i] as number) - (b[i] as number)) > eps) return true;
   }
   return false;
+}
+
+/* ==========================================================================
+ * Camera ANIMATION — when the backend camera actually arrives.
+ *
+ * `00-parity-inventory.md:337`, measured over the socket in
+ * `bridge/tests/test_f7_camera.py`. Everything below is the client-side half of
+ * those measurements; none of it is guesswork.
+ *
+ * THE THREE FACTS:
+ *
+ * 1. `cmd.zoom/center/orient/set_view` with `animate != 0` return in ~0.3 ms
+ *    with the camera BYTE-IDENTICAL to where it started — `SceneLoadAnimation`
+ *    ends by putting the camera back on key frame 0 (`layer1/Scene.cpp:420`).
+ *    Reading `get_view()` in the `.then()` of such a call reads the OLD camera.
+ *    `turn`, `move`, `clip`, `origin` and `reset` take no `animate` at all and
+ *    land before the reply.
+ *
+ * 2. The sweep is `int(duration * 30)` DISCRETE key frames (`Scene.cpp:401`,
+ *    capped at `MAX_ANI_ELEM` 300) and `SceneUpdateAnimation` SNAPS to the
+ *    current one (`:4523-4531`) instead of blending. Measured distinct
+ *    `view[11]` values while polling at ~4 kHz: 4 / 16 / 31 for 0.1 / 0.5 /
+ *    1.0 s — exactly `int(d*30) + 1`.
+ *
+ * 3. So "poll until two consecutive reads agree" is WRONG. A `get_view` round
+ *    trip is 0.24 ms; the second read of a freshly started sweep is inside the
+ *    same 33 ms key frame and therefore identical. Measured: that detector
+ *    reports "settled" on its FIRST poll, 161 A from the target.
+ *
+ * Two more consequences a caller has to know:
+ *   * `cmd.turn`/`cmd.move` issued during a sweep are silently discarded — the
+ *     next key frame restores all 18 floats. A drag on top of a toolbar
+ *     `zoom animate=1.0` does nothing.
+ *   * A second animated command ABANDONS the first where it stands
+ *     (`ScenePrimeAnimation`, `Scene.cpp:326-328`); the first target is never
+ *     reached and nothing reports it. There is no `cmd.is_animating`.
+ * ========================================================================== */
+
+/** Key frames per second: `int(duration * 30)` in `SceneLoadAnimation`. */
+export const ANI_ELEM_HZ = 30;
+
+/** `layer1/SceneDef.h:39` — the key-frame array is this long, so a sweep
+ * longer than `MAX_ANI_ELEM / ANI_ELEM_HZ` = 10 s simply gets coarser. */
+export const MAX_ANI_ELEM = 300;
+
+/** Milliseconds between key frames: 33.33 at 30 Hz. */
+export const KEY_FRAME_MS = 1000 / ANI_ELEM_HZ;
+
+/** `animation_duration` default (`layer1/SettingInfo.h:484`). */
+export const DEFAULT_ANIMATION_DURATION = 0.75;
+
+/** How many key frames a sweep of `duration` seconds is cut into. */
+export function animationKeyFrames(duration: number): number {
+  if (!(duration > 0)) return 0;
+  return Math.min(MAX_ANI_ELEM, Math.max(1, Math.floor(duration * ANI_ELEM_HZ)));
+}
+
+/**
+ * The seconds a camera command will actually sweep for.
+ *
+ * `animate < 0` means "ask the settings": `animation ? animation_duration : 0`.
+ * That resolution is repeated verbatim in `ExecutiveWindowZoom`
+ * (`layer3/Executive.cpp:13433-13438`), `ExecutiveCenter` (`:13494`),
+ * `ExecutiveOrient` (`:10065`) and `SceneSetView` (`layer1/Scene.cpp:924-929`).
+ * Returns 0 for "lands instantly".
+ *
+ * NOTE the different setting pair for scenes: `cmd.scene(...)` resolves through
+ * `scene_animation` / `scene_animation_duration` (2.25 s), not these.
+ */
+export function resolveAnimate(
+  animate: number,
+  animationOn: boolean,
+  animationDuration: number = DEFAULT_ANIMATION_DURATION,
+): number {
+  if (animate < 0) return animationOn ? Math.max(0, animationDuration) : 0;
+  return Math.max(0, animate);
+}
+
+/** A poll-based "has the backend camera stopped moving?" test. */
+export interface SettleDetector {
+  /**
+   * Feed one `get_view()` sample. Returns true once the view has been
+   * unchanged for at least the quiet window.
+   */
+  push(view: ViewMatrix | null, nowMs: number): boolean;
+  /** Forget everything — call when a new command is issued. */
+  reset(): void;
+}
+
+/**
+ * The settle detector fact (3) above says you need.
+ *
+ * `quietMs` must exceed one key frame or the detector is the broken two-sample
+ * one again; the default is two key frames, which tolerates a missed draw.
+ * Feeding `null` (no sample yet) never settles.
+ */
+export function createSettleDetector(quietMs: number = KEY_FRAME_MS * 2): SettleDetector {
+  if (!(quietMs > KEY_FRAME_MS)) {
+    throw new RangeError(
+      `quiet window ${quietMs} ms is not longer than one key frame (${KEY_FRAME_MS} ms); ` +
+        'two samples inside one key frame are always equal, so this would settle instantly',
+    );
+  }
+  let last: ViewMatrix | null = null;
+  let stillSince: number | null = null;
+  return {
+    push(view: ViewMatrix | null, nowMs: number): boolean {
+      if (view === null) {
+        last = null;
+        stillSince = null;
+        return false;
+      }
+      if (last === null || viewChanged(last, view, 0)) {
+        last = view;
+        stillSince = nowMs;
+        return false;
+      }
+      return nowMs - (stillSince as number) >= quietMs;
+    },
+    reset(): void {
+      last = null;
+      stillSince = null;
+    },
+  };
 }

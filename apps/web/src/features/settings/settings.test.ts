@@ -30,6 +30,7 @@ import fixture from './__fixtures__/catalogue.json';
 import { SETTING_MENU, menuSettingNames, type MenuItem } from './menuData';
 import { valuesEqual } from './SettingMenu';
 import { LIGHTING_PRESETS, LIGHTING_SECTIONS } from './LightingPanel';
+import { getSettingsService } from './service';
 
 const GUI_MENU_SETTINGS: readonly string[] = [
   'antialias',
@@ -635,5 +636,64 @@ describe('bond-level settings are the ones cmd.set cannot reach', () => {
     expect(bond).not.toContain('atom');
     expect(canWriteAt(meta({ name: 'stick_radius', level: 'bond' }), 'bond')).toBe(true);
     expect(canWriteAt(meta({ name: 'sphere_scale', level: 'atom' }), 'bond')).toBe(false);
+  });
+});
+
+/* ------------------------------------------------------------------ row 209 */
+
+describe('a setting write is not cosmetic (row 209)', () => {
+  /** A session with just the four members `getSettingsService` touches. */
+  function fakeSession(backend: ReturnType<typeof fakeBackend>) {
+    return {
+      call: backend.call as never,
+      conn: { do: backend.run, isOpen: true },
+      poller: { kick: vi.fn() },
+      stores: {},
+    } as unknown as Parameters<typeof getSettingsService>[0];
+  }
+
+  it('kicks the object poller on every drain that reports a change', async () => {
+    // `SettingGenerateSideEffects` (`layer1/Setting.cpp:1872-2400`) invalidates
+    // reps, reloads shaders and rebuilds scene members after EVERY write. The
+    // bridge's own answer to that is content-addressed and arrives on the
+    // `geometry` topic — MEASURED (bridge/tests/test_f7_layout.py): a
+    // `stick_radius` write produced `{rep 0, level 100, reason 'changed'}`
+    // within one 4 Hz scan, while seven layout settings produced nothing at
+    // all. The object panel has no such channel, so the drain is its only
+    // signal that what PyMOL thinks has moved.
+    const backend = fakeBackend();
+    const session = fakeSession(backend);
+    const service = getSettingsService(session);
+    await service.ensure();
+
+    const kick = (session as unknown as { poller: { kick: ReturnType<typeof vi.fn> } }).poller.kick;
+    kick.mockClear();
+
+    backend.drains.push({ cursor: 3, indices: [155], full: false });
+    await service.source.poll();
+    expect(kick).toHaveBeenCalledTimes(1);
+
+    // A quiet drain is not a change and must not cost a re-read: the poll runs
+    // at 5 Hz and the object poller at 30.
+    backend.drains.push({ cursor: 3, indices: [], full: false });
+    await service.source.poll();
+    expect(kick).toHaveBeenCalledTimes(1);
+
+    // `reinitialize settings` reports `full` with no indices at all, and that
+    // IS a change — everything moved.
+    backend.drains.push({ cursor: 4, indices: [], full: true });
+    await service.source.poll();
+    expect(kick).toHaveBeenCalledTimes(2);
+  });
+
+  it('is one service per session, so mounting the panel twice bootstraps once', async () => {
+    const backend = fakeBackend();
+    const session = fakeSession(backend);
+    expect(getSettingsService(session)).toBe(getSettingsService(session));
+    await Promise.all([
+      getSettingsService(session).ensure(),
+      getSettingsService(session).ensure(),
+    ]);
+    expect(backend.run.mock.calls.filter(([line]) => line === SETTINGS_BOOTSTRAP)).toHaveLength(1);
   });
 });

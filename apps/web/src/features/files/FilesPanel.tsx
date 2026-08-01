@@ -55,6 +55,7 @@ import {
   PartialDialog,
   TrajDialog,
   baseName,
+  mapGenerateOutcome,
   type AlnInfo,
 } from './LoadDialogs';
 import { refusalFor } from './globalDrop';
@@ -793,19 +794,15 @@ export function FilesPanel() {
             void api
               .mapGenerateRun({ filename: dialog.filename, ...args })
               .then((result) => {
-                if (result.error) say(` map_generate: ${result.error}`, 'error');
-                else
-                  say(
-                    ` map_generate: created ${result.prefix}` +
-                      (result.reps.length
-                        ? ` and ${result.reps.map((r) => r.name).join(', ')}`
-                        : ''),
-                  );
                 // `autoclose_dialogs` decides whether OK closes the form
-                // (`PyMOLMapLoad.py:323-325`); a failure keeps it open either
-                // way so the user can fix a column and retry.
-                if (result.ok && result.autoclose) finish();
-                else if (result.ok) setDialog({ kind: 'none' });
+                // (`PyMOLMapLoad.py:338-340`) and a failed generate never
+                // closes it, so the user can fix a column and press OK again.
+                // Both decisions are `mapGenerateOutcome`, which is pure and
+                // tested; this used to close the dialog on success either way,
+                // which made the setting do nothing.
+                const outcome = mapGenerateOutcome(result);
+                say(outcome.line, outcome.kind);
+                if (outcome.close) finish();
               })
               .catch((e: unknown) => say(` map_generate failed: ${String(e)}`, 'error'));
           }}

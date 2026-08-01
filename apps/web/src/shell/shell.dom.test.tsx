@@ -304,7 +304,7 @@ describe('internal GUI column (row 88)', () => {
     );
   });
 
-  it('never writes internal_gui to PyMOL, whatever the client toggle says', async () => {
+  it('never writes internal_gui to PyMOL from the client toggle', async () => {
     // MEASURED: with internal_gui 1 an 800x600 window reports a 580x600 scene,
     // so every forwarded mouse coordinate would be 220px out. The column is our
     // DOM; PyMOL's own copy must stay off.
@@ -316,6 +316,32 @@ describe('internal GUI column (row 88)', () => {
     expect(q('.internal-gui')).toBeNull();
     expect(calls.filter((c) => c.fn === 'cmd.set' && c.args[0] === 'internal_gui')).toEqual([]);
   });
+
+  it('pushes internal_gui back to 0 when PyMOL reports it ON, exactly once', async () => {
+    // Someone typed `set internal_gui, 1` at the prompt. Our column obeys; the
+    // engine's duplicate does not get to exist. MEASURED
+    // (bridge/tests/test_f7_layout.py): the write is inert until the next
+    // canvas resize and only THEN takes 220px off the scene, so there is no
+    // event at the point of damage to diagnose it by — the correction has to
+    // happen when the value is first seen.
+    settings.internal_gui = 1;
+    await waitFor(
+      () => calls.some((c) => c.fn === 'cmd.set' && c.args[0] === 'internal_gui'),
+    );
+    expect(calls.filter((c) => c.fn === 'cmd.set' && c.args[0] === 'internal_gui')).toEqual([
+      { fn: 'cmd.set', args: ['internal_gui', 0] },
+    ]);
+    expect(q('.internal-gui')).not.toBeNull();
+
+    // ...and the 0 that comes back on the next poll is NOT read as the user
+    // turning the column off again, nor does it re-trigger the write.
+    settings.internal_gui = 0;
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1400));
+    });
+    expect(q('.internal-gui')).not.toBeNull();
+    expect(calls.filter((c) => c.fn === 'cmd.set' && c.args[0] === 'internal_gui')).toHaveLength(1);
+  }, 10_000);
 
   it('reads internal_gui and internal_gui_width back from the engine', () => {
     const names = calls

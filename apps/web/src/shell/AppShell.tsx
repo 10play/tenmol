@@ -27,12 +27,17 @@
  * state machine is `shell/extGuiDock.ts` and is a transcription of
  * `toggle_ext_window_dockable`, Ctrl+E and all.
  *
- * WHAT THE SHELL NEVER WRITES: `internal_gui`. MEASURED
+ * THE ONE VALUE THE SHELL WRITES TO `internal_gui` IS 0. MEASURED
  * (`bridge/tests/test_wf_shell.py`) — with `internal_gui 1` and the default
  * width, an 800x600 window reports a 580x600 scene, and every mouse coordinate
  * the browser forwards is then wrong by 220 px. The column is OUR DOM; PyMOL's
- * own copy of it must stay off. `internal_gui_width` IS written back, so a
- * `.pse` and a headless `pymol -c` see the width the browser is showing.
+ * own copy of it must stay off. The client toggle therefore never writes the
+ * setting at all, and a non-zero value arriving FROM PyMOL (someone typed `set
+ * internal_gui, 1`) turns our column on and is pushed straight back to 0 — see
+ * `shellSettingWriteBacks`, and note that the damage it prevents is delayed:
+ * MEASURED, the write changes nothing until the next canvas resize.
+ * `internal_gui_width` IS written back as-is, so a `.pse` and a headless
+ * `pymol -c` see the width the browser is showing.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -50,6 +55,7 @@ import {
   gutterClick,
   gutterDrag,
   internalGuiOrder,
+  shellSettingWriteBacks,
   windowTitle,
   type GutterState,
   type ShellSettings,
@@ -439,6 +445,16 @@ function useShellSettings(session: Session): void {
       if (patch.internal_gui !== undefined) ui.set({ internalGui: patch.internal_gui !== 0 });
       if (patch.internal_gui_width !== undefined) {
         ui.set({ panelWidth: clampInternalGuiWidth(patch.internal_gui_width) });
+      }
+
+      // `set internal_gui, 1` typed at the prompt turns OUR column on and then
+      // has to be refused in PyMOL, or the next canvas resize hands the engine
+      // a scene 220 px narrower than the canvas. `remote` is updated in the
+      // same breath so the poll that observes the 0 does not read it as the
+      // user turning the column back off.
+      for (const [name, value] of Object.entries(shellSettingWriteBacks(patch))) {
+        void session.call('cmd.set', [name, value]).catch(() => undefined);
+        remote[name as keyof ShellSettings] = value;
       }
     };
 
