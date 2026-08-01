@@ -224,6 +224,12 @@ export interface ViewportStats {
    */
   geometryWarnings: readonly string[];
   /**
+   * Camera RPCs issued by the GL-free driver. All zero on a normal backend —
+   * and the only way to tell "the GL-free camera engaged" from "raw input was
+   * forwarded and silently dropped", which look identical from outside.
+   */
+  cameraRpc?: { turns: number; moves: number; zooms: number; errors: number };
+  /**
    * D2. Who is drawing what, right now: `declared` is what this client told the
    * bridge it would draw, `drawing` is what Mode G is actually allowed to draw
    * (they differ while a declaration is in flight), `suppressed` is what Mode G

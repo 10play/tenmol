@@ -31,6 +31,7 @@ import { repName } from '@tenmol/protocol';
 
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
 import { createCompositor } from './compositor';
+import { createCameraDriver } from './input/camera';
 import { createInputController } from './input/mouse';
 import type { GeometryCache } from './modeG/cache';
 import { isEmptyGeometryFrame } from './modeG/frames';
@@ -372,8 +373,27 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   /* ------------------------------------------------------------ input */
 
   let pinchStartZ: number | null = null;
+  /**
+   * GL-free camera. Raw `{t:'input'}` is accepted and silently never applied
+   * when the backend has no context: `OrthoDefer`'s queue is drained by
+   * `ExecutiveDrawNow`, which needs a flag only `PyMOL_Draw` sets. Measured on
+   * `--no-gl` — a 20-step drag left `get_view()` unchanged while `cmd.turn`
+   * moved it at once.
+   *
+   * Created eagerly but only CONSULTED when the compositor has been told the
+   * server rasterises nothing, so a normal GL backend keeps the faithful input
+   * path (which can pick, and which honours the ButMode table).
+   */
+  const cameraDriver = createCameraDriver({
+    call: (fn, args = []) => transport.call(fn, [...args]),
+    onError,
+  });
+
   const input = createInputController({
     element: surface.glCanvas,
+    get cameraDriver() {
+      return compositor.state.rasterizing ? undefined : cameraDriver;
+    },
     transport,
     geometry: () => ({ cssWidth: cssSize.width, cssHeight: cssSize.height, dpr: size.dpr }),
     onActivity: () => {
@@ -516,6 +536,9 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       // transparent surface straight back to the server, which is precisely the
       // GL dependency this design exists to remove. Reported, kept on screen.
       stats.geometryWarnings = [...renderer.lastWarnings];
+      // Camera-driver counters: the only way to tell "GL-free camera engaged"
+      // from "raw input forwarded and silently dropped" from outside.
+      stats.cameraRpc = { ...cameraDriver.counters };
       dirty = true;
     },
     unavailable: (key, reason) => {

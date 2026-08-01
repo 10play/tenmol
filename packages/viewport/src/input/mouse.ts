@@ -77,7 +77,7 @@ export interface InputControllerOptions {
    * Buttons, clicks and wheel-as-button still forward normally, so picking and
    * selection keep whatever behaviour the backend can give them.
    */
-  cameraDriver?: CameraDriver;
+  cameraDriver?: CameraDriver | undefined;
   /** Injectable clock/timers for tests. Default `performance.now`/`setTimeout`. */
   now?: () => number;
   setTimer?: (callback: () => void, ms: number) => unknown;
