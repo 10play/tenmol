@@ -242,6 +242,7 @@ export function buildGeometry(frame: GeometryFrame, options: BuildOptions = {}):
       stats.vertices += built.vertices;
     }
     const pointSize = (header as unknown as { pointSize?: number }).pointSize;
+    const nonbondedSize = (header as unknown as { nonbondedSize?: number }).nonbondedSize;
     for (const buffer of header.instances) {
       if (!isDrawableInstanceKind(buffer.kind)) {
         problems.push(`instance kind '${buffer.kind}' has no impostor material yet`);
@@ -251,6 +252,7 @@ export function buildGeometry(frame: GeometryFrame, options: BuildOptions = {}):
       const draw = buildInstancedDraw(buffer, data, {
         ...(pointSize === undefined ? {} : { pointSize }),
         ...(options.pixelRatio === undefined ? {} : { pixelRatio: options.pixelRatio }),
+        ...(nonbondedSize === undefined ? {} : { nonbondedSize }),
       });
       if (draw === null) {
         problems.push(`instance buffer '${buffer.kind}' is malformed`);

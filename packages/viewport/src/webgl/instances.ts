@@ -30,6 +30,8 @@ import {
   InstancedInterleavedBuffer,
   InterleavedBuffer,
   InterleavedBufferAttribute,
+  LineBasicMaterial,
+  LineSegments,
   Mesh,
   Points,
   Sphere,
@@ -52,7 +54,16 @@ export const DRAWABLE_INSTANCE_KINDS: readonly InstanceKind[] = [
   'cylinder2',
   'cone',
   'ellipsoid',
+  'line',
+  'cross',
 ];
+
+/**
+ * Half-length of a nonbonded cross arm when the frame carries no
+ * `nonbondedSize`. Matches `cSetting_nonbonded_size`'s 0.25 default; PyMOL
+ * draws arms of +/- that along each axis (`RepNonbonded`).
+ */
+const DEFAULT_NONBONDED_SIZE = 0.25;
 
 export function isDrawableInstanceKind(kind: InstanceKind): boolean {
   return DRAWABLE_INSTANCE_KINDS.includes(kind);
@@ -117,6 +128,8 @@ export interface InstanceDrawOptions {
   pointSize?: number;
   /** Framebuffer pixels per CSS pixel. */
   pixelRatio?: number;
+  /** `nonbonded_size` from the frame header; the cross arm half-length. */
+  nonbondedSize?: number;
 }
 
 /** Largest `w` in a sphere buffer. 0 means "these are dots, not spheres". */
@@ -144,6 +157,8 @@ export function buildInstancedDraw(
   if (buffer.kind === 'sphere' && maxSphereRadius(data, buffer.count) === 0) {
     return buildPointCloud(buffer, data, options);
   }
+  if (buffer.kind === 'line') return buildLineSegments(buffer, data);
+  if (buffer.kind === 'cross') return buildCrosses(buffer, data, options);
 
   const geometry =
     buffer.kind === 'sphere' || buffer.kind === 'ellipsoid' ? quadGeometry() : boxGeometry();
@@ -201,6 +216,86 @@ export function buildInstancedDraw(
   mesh.frustumCulled = false;
   mesh.matrixAutoUpdate = false;
   return { object: mesh, material, count: buffer.count, kind: buffer.kind, points: false };
+}
+
+/**
+ * `line` (14): v1[3], v2[3], rgba1[4], rgba2[4] -> GL_LINES, which is exactly
+ * what PyMOL draws for `CGO_LINE`/`CGO_SPLITLINE`. Expanded to two vertices per
+ * segment with per-vertex colour so a split line keeps both of its colours.
+ *
+ * One segment per instance, so this takes `lines`, `ribbon`, `cell`, `extent`,
+ * `dashes`, `angles` and `dihedrals` off the Mode-P fallback list at once.
+ *
+ * KNOWN DIVERGENCE: `line_width` cannot be honoured. WebGL2 core clamps
+ * `lineWidth` to 1.0, so a `set line_width, 3` scene is thinner in Mode G than
+ * in Mode P. Matching it needs instanced quad lines, the same fix `mesh_width`
+ * is waiting on.
+ */
+function buildLineSegments(buffer: InstanceBuffer, data: Float32Array): InstancedDraw {
+  const n = buffer.count;
+  const positions = new Float32Array(n * 6);
+  const colors = new Float32Array(n * 8);
+  for (let i = 0; i < n; i++) {
+    const o = i * 14;
+    positions.set(data.subarray(o, o + 6), i * 6);
+    colors.set(data.subarray(o + 6, o + 10), i * 8);
+    colors.set(data.subarray(o + 10, o + 14), i * 8 + 4);
+  }
+  return lineDraw(positions, colors, n * 2, 'line');
+}
+
+/**
+ * `cross` (7): centre[3], rgba[4] -> three axis-aligned segments per centre,
+ * which is how `RepNonbonded` draws a nonbonded atom. Expanded here rather than
+ * on the wire: it keeps the payload at a third the size, and the arm length
+ * follows `nonbonded_size` without refetching geometry.
+ */
+function buildCrosses(
+  buffer: InstanceBuffer,
+  data: Float32Array,
+  options: InstanceDrawOptions,
+): InstancedDraw {
+  const n = buffer.count;
+  const h = options.nonbondedSize ?? DEFAULT_NONBONDED_SIZE;
+  const positions = new Float32Array(n * 18); // 3 segments * 2 verts * 3
+  const colors = new Float32Array(n * 24); // 6 verts * 4
+  for (let i = 0; i < n; i++) {
+    const o = i * 7;
+    const x = data[o] ?? 0;
+    const y = data[o + 1] ?? 0;
+    const z = data[o + 2] ?? 0;
+    const p = i * 18;
+    // -x/+x, -y/+y, -z/+z
+    positions.set([x - h, y, z, x + h, y, z], p);
+    positions.set([x, y - h, z, x, y + h, z], p + 6);
+    positions.set([x, y, z - h, x, y, z + h], p + 12);
+    for (let v = 0; v < 6; v++) colors.set(data.subarray(o + 3, o + 7), i * 24 + v * 4);
+  }
+  return lineDraw(positions, colors, n * 6, 'cross');
+}
+
+function lineDraw(
+  positions: Float32Array,
+  colors: Float32Array,
+  vertexCount: number,
+  kind: InstanceKind,
+): InstancedDraw {
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new BufferAttribute(colors, 4));
+  geometry.computeBoundingSphere();
+  const material = new LineBasicMaterial({ vertexColors: true, transparent: true });
+  const segments = new LineSegments(geometry, material);
+  segments.matrixAutoUpdate = false;
+  // `count` is instances-on-the-wire, not vertices, so the HUD keeps counting
+  // segments the way the bridge does.
+  return {
+    object: segments,
+    material,
+    count: vertexCount / 2,
+    kind,
+    points: false,
+  };
 }
 
 /** Radius-0 spheres: PyMOL draws GL_POINTS of `dot_width` pixels. */

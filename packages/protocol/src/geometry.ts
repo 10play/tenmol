@@ -416,7 +416,15 @@ export const CGO_OP_SIZE: Readonly<Record<string, number>> = {
  * Instance buffers — NEVER tessellated (plan §1.3 constraint 1)
  * ------------------------------------------------------------------ */
 
-export const INSTANCE_KINDS = ['sphere', 'cylinder', 'cylinder2', 'cone', 'ellipsoid'] as const;
+export const INSTANCE_KINDS = [
+  'sphere',
+  'cylinder',
+  'cylinder2',
+  'cone',
+  'ellipsoid',
+  'line',
+  'cross',
+] as const;
 export type InstanceKind = (typeof INSTANCE_KINDS)[number];
 
 /**
@@ -434,6 +442,16 @@ export type InstanceKind = (typeof INSTANCE_KINDS)[number];
  *                (`cgo::draw::cone`, `layer1/CGO.h:719-731`)
  *   ellipsoid 16: center[3], m[9] (column-major 3x3), r,g,b,a
  *                (`CGO_ELLIPSOID`, `layer1/CGO.h:125-126`)
+ *   line     14: v1[3], v2[3], rgba1[4], rgba2[4]
+ *                (`CGO_LINE` / `CGO_SPLITLINE`, `layer1/CGO.h:212-216`. The
+ *                 accessor funnels lines, ribbon, nonbonded, cell, extent,
+ *                 dashes, angles and dihedrals through this one bucket, so a
+ *                 single line primitive covers eight reps.)
+ *   cross     7: center[3], rgba[4]
+ *                (`CGO_VERTEX_CROSS`. Centre only — the client expands it into
+ *                 three axis-aligned segments of length `nonbondedSize`, which
+ *                 is what `RepNonbonded` draws. Expanding server-side would
+ *                 triple the wire cost for data the GPU can generate.)
  */
 export const INSTANCE_ITEM_SIZE: Readonly<Record<InstanceKind, number>> = {
   sphere: 8,
@@ -441,6 +459,8 @@ export const INSTANCE_ITEM_SIZE: Readonly<Record<InstanceKind, number>> = {
   cylinder2: 16,
   cone: 18,
   ellipsoid: 16,
+  line: 14,
+  cross: 7,
 };
 
 /**

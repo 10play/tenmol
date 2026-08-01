@@ -169,6 +169,12 @@ INSTANCE_ITEM_SIZE: Dict[str, int] = {
     "cylinder2": 16,
     "cone": 18,
     "ellipsoid": 16,
+    # `line` carries both endpoint colours because CGO_SPLITLINE bicolours a
+    # single segment.  The accessor funnels lines / ribbon / nonbonded / cell /
+    # extent / dashes / angles / dihedrals through this one bucket, so these two
+    # packers are what take eight reps off the Mode-P fallback list.
+    "line": 14,
+    "cross": 7,
 }
 
 #: ``CGOArrayBit``, ``layer1/CGO.h:272-277``.
@@ -992,6 +998,8 @@ class GeometryService:
             self._cylinders,
             self._cones,
             self._ellipsoids,
+            self._lines,
+            self._crosses,
         ):
             built = builder(packer, raw)
             if built is not None:
@@ -1009,7 +1017,7 @@ class GeometryService:
         # kind for.  Carried as counts so the client can say WHY something is
         # missing instead of drawing a partial molecule silently.
         extras = {}
-        for bucket in ("triangles", "lines", "crosses"):
+        for bucket in ("triangles",):
             entry = raw.get(bucket) or {}
             if int(entry.get("n", 0) or 0):
                 extras[bucket] = int(entry["n"])
@@ -1148,6 +1156,42 @@ class GeometryService:
             [(centers, 3), (axes, 9), (bucket.get("rgba"), 4)], count
         )
         return self._instance(packer, "ellipsoid", count, data, bucket.get("pick"))
+
+    def _lines(self, packer: _Packer, raw: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        bucket = raw.get("lines") or {}
+        count = int(bucket.get("n", 0) or 0)
+        if not count:
+            return None
+        # line = v1[3] v2[3] rgba1[4] rgba2[4] = 14.  `vertex` arrives as 6
+        # floats per segment (both endpoints already paired by the accessor),
+        # so it is one part, not two.
+        data = _interleave_f32(
+            [
+                (bucket.get("vertex"), 6),
+                (bucket.get("rgba1"), 4),
+                (bucket.get("rgba2"), 4),
+            ],
+            count,
+        )
+        return self._instance(
+            packer, "line", count, data, bucket.get("pick1"), bucket.get("pick2")
+        )
+
+    def _crosses(
+        self, packer: _Packer, raw: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        bucket = raw.get("crosses") or {}
+        count = int(bucket.get("n", 0) or 0)
+        if not count:
+            return None
+        # cross = center[3] rgba[4] = 7.  Deliberately NOT expanded into three
+        # segments here: the client builds them from `nonbondedSize`, which
+        # keeps the wire at 1/3 the size and lets the arm length follow the
+        # setting without a refetch.
+        data = _interleave_f32(
+            [(bucket.get("xyz"), 3), (bucket.get("rgba"), 4)], count
+        )
+        return self._instance(packer, "cross", count, data, bucket.get("pick"))
 
     def _instance(
         self,
