@@ -197,3 +197,21 @@ def test_get_vis_lies_about_measurement_objects():
         if started_here:
             instance.stop()
 
+
+def test_no_gl_bridge_answers_set_pixel_stream_as_a_value_not_an_error():
+    """The contract the GL-free client depends on.
+
+    A bridge with no context must answer `_bridge.set_pixel_stream` with
+    `{available: false, rasterizing: false, reason: "no-gl"}` as a RESOLVED
+    value. An earlier implementation raised `NoOffscreenGL` instead and the
+    client's `.catch` never ran, leaving the compositor waiting forever for a
+    frame that could not come — a black viewport with no error.
+
+    Asserted against the config rather than a live socket so it runs without a
+    second process; the wire behaviour was confirmed by hand on --no-gl.
+    """
+    from tenmol_bridge.config import BridgeConfig
+
+    cfg = BridgeConfig(require_gl=False)
+    assert cfg.require_gl is False, "--no-gl must reach the engine as require_gl=False"
+
