@@ -57,7 +57,16 @@ export function FeatureSlot({ id, className }: { id: string; className?: string 
       }
     >
       <Suspense fallback={<div className={`feature-loading ${className ?? ''}`}>loading…</div>}>
-        <Panel />
+        {/*
+         * `data-feature` marks a slot that actually MOUNTED. Without it the
+         * three states a slot can be in — mounted, absent, crashed — are not
+         * distinguishable from outside, so a slot that ships a directory but
+         * fails to wire up its `register.ts` looks identical to unbuilt work.
+         * `apps/web/e2e` asserts on this.
+         */}
+        <div data-feature={id} style={{ display: 'contents' }}>
+          <Panel />
+        </div>
       </Suspense>
     </ErrorBoundary>
   );

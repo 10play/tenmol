@@ -11,7 +11,10 @@
  * screen.
  */
 
-import { openApp } from './harness.mjs';
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { REPO, openApp } from './harness.mjs';
 
 const PDB = 'test/dat/1tii.pdb';
 
@@ -25,9 +28,16 @@ const PDB = 'test/dat/1tii.pdb';
  */
 const CMDLINE = 'input.cmdline__input';
 
-/** Type into the command line and let PyMOL settle. */
+/**
+ * Type into the command line and let PyMOL settle.
+ *
+ * Waits for the input rather than trusting a fixed delay after `goto`. The
+ * fixed-delay version passed in isolation and failed intermittently in the full
+ * suite, where seven pages load in sequence against one dev server.
+ */
 async function run(page, command, waitMs = 900) {
   const input = page.locator(CMDLINE);
+  await input.waitFor({ state: 'visible', timeout: 20_000 });
   await input.fill(command);
   await input.press('Enter');
   await page.waitForTimeout(waitMs);
@@ -169,6 +179,66 @@ export const tests = [
         hidden.pixelFrames > shown.pixelFrames,
         `disable produced no new frame (${shown.pixelFrames} -> ${hidden.pixelFrames})`,
       );
+      await page.close();
+    },
+  },
+  {
+    /**
+     * The integration check a 13-slot wave needs and that no single slot owner
+     * can write: every feature that shipped a directory must actually MOUNT.
+     *
+     * Three states are distinguishable in the DOM, which is what makes this
+     * assertable rather than a guess:
+     *   .feature-failed  — the panel threw and the error boundary caught it
+     *   .feature-absent  — no directory; the registry renders its "not built" note
+     *   anything else    — mounted
+     *
+     * A slot with a directory but no working `register.ts` shows up as ABSENT,
+     * silently looking like unbuilt work rather than a wiring mistake. That is
+     * the failure this catches.
+     */
+    name: 'every shipped feature slot mounts without throwing',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.waitForTimeout(3500);
+
+      const dom = await page.evaluate(() => ({
+        failed: Array.from(document.querySelectorAll('.feature-failed')).map((el) => ({
+          title: el.querySelector('.feature-failed__title')?.textContent ?? '?',
+          message: el.querySelector('.feature-failed__message')?.textContent ?? '',
+        })),
+        absentOwners: Array.from(document.querySelectorAll('.feature-absent__owner')).map(
+          (el) => el.textContent ?? '',
+        ),
+      }));
+
+      assert(
+        dom.failed.length === 0,
+        `slots threw: ${dom.failed.map((f) => `${f.title}: ${f.message}`).join(' | ')}`,
+      );
+
+      // A directory on disk is a promise that the slot is installed.
+      const featuresDir = join(REPO, 'apps/web/src/features');
+      const shipped = readdirSync(featuresDir, { withFileTypes: true })
+        .filter((d) => d.isDirectory() && existsSync(join(featuresDir, d.name, 'register.ts')))
+        .map((d) => d.name);
+      assert(shipped.length > 0, 'no feature directories found at all');
+
+      const mounted = await page.evaluate(
+        (ids) => ids.filter((id) => document.querySelector(`[data-feature="${id}"]`) !== null),
+        shipped,
+      );
+      // Hard failure, not a skip. An earlier version gated this on
+      // `mounted.length > 0`, which made the whole check vacuous the moment the
+      // `data-feature` tag was missing — it reported green while proving
+      // nothing. If the tag disappears, this must go red.
+      assert(
+        mounted.length > 0,
+        `no slot carries data-feature; the mount check proves nothing ` +
+          `(${shipped.length} shipped on disk)`,
+      );
+      const missing = shipped.filter((id) => !mounted.includes(id));
+      assert(missing.length === 0, `shipped but not mounted: ${missing.join(', ')}`);
       await page.close();
     },
   },
