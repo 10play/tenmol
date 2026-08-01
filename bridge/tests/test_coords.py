@@ -95,9 +95,16 @@ def test_get_coordset_answers_for_both_copy_modes(loaded: WSClient) -> None:
 
 
 def test_a_moved_object_reports_moved_coordinates(loaded: WSClient) -> None:
-    """Not a snapshot of something stale: the numbers track the model."""
+    """Not a snapshot of something stale: the numbers track the model.
+
+    `camera=0` IS THE TEST, not a detail. `cmd.translate` defaults to
+    `camera=1`, i.e. the vector is in CAMERA space — so this assertion used to
+    depend on the camera happening to be at its default orientation, and it
+    broke the moment another test in the shared process ran `orient` (measured:
+    +10 became +2.88). In model space the answer is +10 whatever the view.
+    """
     before = decode(loaded.call("cmd.get_coords", "zc_coords"))[:, 0].mean()
-    loaded.call("cmd.translate", [10.0, 0.0, 0.0], "zc_coords")
+    loaded.call("cmd.translate", [10.0, 0.0, 0.0], "zc_coords", -1, 0)
     after = decode(loaded.call("cmd.get_coords", "zc_coords"))[:, 0].mean()
     assert after - before == pytest.approx(10.0, abs=1e-2)
 
