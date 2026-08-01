@@ -1,0 +1,132 @@
+/*
+ * Plugin Manager (read-only). Uses the shared panel tokens from
+ * src/styles/global.css so it reads as part of the same tool rather than a
+ * bolted-on dialog.
+ */
+
+.plugmgr {
+  display: flex;
+  flex-direction: column;
+  min-width: 520px;
+  max-height: 70vh;
+  font-size: 11px;
+  color: var(--pm-text);
+}
+
+.plugmgr__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 4px;
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-edge);
+}
+
+.plugmgr__spacer {
+  flex: 1;
+}
+
+.plugmgr__tab,
+.plugmgr__btn {
+  padding: 2px 8px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font: inherit;
+  cursor: pointer;
+}
+
+.plugmgr__tab.is-on {
+  background: var(--pm-btn-pressed);
+  color: var(--pm-text);
+}
+
+.plugmgr__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.plugmgr__body {
+  overflow: auto;
+  padding: 6px 8px;
+}
+
+.plugmgr__error {
+  padding: 4px 8px;
+  background: var(--pm-panel-alt);
+  color: var(--pm-caption);
+}
+
+.plugmgr__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.plugmgr__table th {
+  text-align: left;
+  font-weight: normal;
+  color: var(--pm-text-dim);
+  border-bottom: 1px solid var(--pm-edge);
+  padding: 2px 4px;
+}
+
+.plugmgr__table td {
+  padding: 2px 4px;
+  vertical-align: top;
+}
+
+.plugmgr__name {
+  white-space: nowrap;
+}
+
+/* Paths are long and the interesting end is the right-hand one. */
+.plugmgr__path {
+  font-family: var(--pm-font-mono);
+  color: var(--pm-text-dim);
+  direction: rtl;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 380px;
+}
+
+.plugmgr__empty {
+  padding: 8px 4px;
+  color: var(--pm-text-dim);
+  font-style: italic;
+}
+
+.plugmgr__prefs {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 12px;
+  margin: 0 0 8px;
+}
+
+.plugmgr__prefs dt {
+  font-family: var(--pm-font-mono);
+  color: var(--pm-text-dim);
+}
+
+.plugmgr__prefs dd {
+  margin: 0;
+  font-family: var(--pm-font-mono);
+}
+
+.plugmgr__paths {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+
+.plugmgr__note {
+  margin: 8px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  line-height: 1.45;
+}
+
+.plugmgr__note code {
+  font-family: var(--pm-font-mono);
+}

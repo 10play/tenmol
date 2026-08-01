@@ -15,7 +15,7 @@ import { buildInstancedDraw, isDrawableInstanceKind } from './instances';
 /** `LineSegments` narrowed to what these assertions read. */
 type LineObject = { geometry: BufferGeometry };
 
-const ref = { byteOffset: 0, byteLength: 0, kind: 'f32' as const, itemSize: 1 };
+const ref = { byteOffset: 0, byteLength: 0, dtype: 'f32' as const, itemSize: 1 };
 
 function lineBuffer(count: number): InstanceBuffer {
   return { kind: 'line', count, itemSize: INSTANCE_ITEM_SIZE.line, data: ref };
@@ -97,8 +97,9 @@ describe('cross instances', () => {
     const data = new Float32Array([0, 0, 0, 1, 1, 1, 1]);
     const draw = buildInstancedDraw(crossBuffer(1), data, { nonbondedSize: 2 });
     const geometry = (draw!.object as unknown as LineObject).geometry;
-    expect(geometry.boundingSphere).not.toBeNull();
-    expect(geometry.boundingSphere.radius).toBeGreaterThanOrEqual(2);
-    expect(Number.isFinite(geometry.boundingSphere.radius)).toBe(true);
+    const bs = geometry.boundingSphere;
+    expect(bs).not.toBeNull();
+    expect(bs!.radius).toBeGreaterThanOrEqual(2);
+    expect(Number.isFinite(bs!.radius)).toBe(true);
   });
 });

@@ -12,6 +12,10 @@ set -uo pipefail
 ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd "$ROOT" 2>/dev/null || exit 0
 
+# Installed in USER settings so it loads without a session restart, which means
+# it fires in every project. Inert anywhere that is not this repo.
+[ -f "scripts/parity.mjs" ] && [ -f "docs/webclient/00-parity-inventory.md" ] || exit 0
+
 STATE_DIR=".claude/.state"
 COUNT_FILE="$STATE_DIR/keep-going-count"
 mkdir -p "$STATE_DIR" 2>/dev/null || exit 0
