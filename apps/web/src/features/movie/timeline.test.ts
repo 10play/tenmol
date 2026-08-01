@@ -109,12 +109,14 @@ describe('classifyGesture — MovieClick', () => {
       target: 6,
       source: 3,
       count: 1,
+      object: 'none',
     });
     expect(classifyGesture({ ...base, button: 2, shift: true })).toEqual({
       kind: 'copy',
       target: 6,
       source: 3,
       count: 1,
+      object: 'none',
     });
   });
 
@@ -122,6 +124,8 @@ describe('classifyGesture — MovieClick', () => {
     expect(classifyGesture({ ...base, button: 2, travel: 2, to: 2 })).toEqual({
       kind: 'menu',
       frame: 2,
+      object: '',
+      column: false,
     });
   });
 
@@ -130,11 +134,13 @@ describe('classifyGesture — MovieClick', () => {
       kind: 'insert',
       count: 3,
       frame: 3,
+      object: 'none',
     });
     expect(classifyGesture({ ...base, ctrl: true, from: 5, to: 2 })).toEqual({
       kind: 'delete',
       count: 3,
       frame: 3,
+      object: 'none',
     });
     expect(classifyGesture({ ...base, ctrl: true, from: 4, to: 4 })).toBeNull();
   });
@@ -144,6 +150,7 @@ describe('classifyGesture — MovieClick', () => {
       kind: 'clear',
       first: 4,
       last: 8,
+      object: 'none',
     });
   });
 

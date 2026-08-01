@@ -200,3 +200,77 @@
   font-size: 10px;
   pointer-events: auto;
 }
+
+/* ------------------------------------------------------------------ *
+ * The busy box (BusyOverlay)
+ *
+ * `OrthoBusyDraw` (layer1/Ortho.cpp:645-660): a black quad from (0, Height)
+ * to (cBusyWidth, Height - cBusyHeight) — i.e. flush into the TOP-LEFT corner,
+ * 240x60, with a 10 px margin and white contents. The sizes are inline styles
+ * so the C constants live in exactly one place (`orthoOverlays.ts`).
+ *
+ * It is drawn straight into GL_FRONT, over everything including the console
+ * text, which is why it sits above `.ortho` in the stack.
+ * ------------------------------------------------------------------ */
+
+.ortho-busy {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  background: #000;
+  color: #fff;
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  line-height: 15px; /* cBusySpacing */
+  pointer-events: none;
+  z-index: 4;
+}
+
+.ortho-busy__message {
+  white-space: pre;
+  overflow: hidden;
+}
+
+/* `glBegin(GL_LINE_LOOP)` around the bar, then a filled strip inside it
+   (`layer1/Ortho.cpp:668-687`). */
+.ortho-busy__bar {
+  box-sizing: border-box;
+  border: 1px solid #fff;
+}
+
+.ortho-busy__fill {
+  height: 100%;
+  background: #fff;
+}
+
+/* ------------------------------------------------------------------ *
+ * The rubber band (OrthoLoopRect)
+ *
+ * `OrthoDrawLoop` (layer1/Ortho.cpp:1695-1745) draws four 1 px strips in
+ * `cColorFront`, which is `1 - bg_rgb` (`layer1/Color.cpp:1758-1762`). The
+ * viewport background is black here, so that is white — the same reasoning
+ * `.ortho__line--overlay` already uses.
+ * ------------------------------------------------------------------ */
+
+.ortho-loop {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid #fff;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Not in PyMOL, which draws all three the same: a hint of WHICH box action is
+   running, since the web client has no ButMode block in the corner by default. */
+.ortho-loop--add {
+  border-style: solid;
+}
+
+.ortho-loop--subtract {
+  border-style: dashed;
+}
+
+.ortho-loop--set {
+  border-style: dotted;
+}

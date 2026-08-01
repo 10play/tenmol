@@ -124,12 +124,20 @@
   padding: 4px 5px;
 }
 
+/*
+ * The label gutter is on the RIGHT and 64 px wide, because that is what
+ * `CMovie::LabelIndent = DIP2PIXEL(8 * 8)` reserves (`layer1/Movie.cpp:1867`)
+ * and every hit test in `MovieClick` subtracts it from `rect.right` before
+ * converting x to a frame. Its width is set inline from `panel.labelIndent`
+ * so presentation mode (indent 0) collapses it.
+ */
 .mvtl__labels {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 44px;
-  flex: 0 0 44px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .mvtl__label {

@@ -128,6 +128,20 @@ export interface FileClassification {
   cmsTraj: string | null;
   /** Non-null when the format RAISES in this open-source build. */
   unavailable: string | null;
+  /**
+   * Non-null when the client REFUSES the format on purpose — a different thing
+   * from `unavailable` ("this build cannot"). Today that is `.pwg` alone: a
+   * `.pwg` is a script that can open a listening port, publish a document
+   * root, `__import__` an arbitrary module and call its `__launch__`, launch a
+   * browser, report the port to a remote URL, delete itself, and start a second
+   * HTTP server in the process the bridge already serves from
+   * (`modules/pymol/importing.py:516-615`).
+   *
+   * MEASURED (`bridge/tests/test_wf_files.py`): handing `cmd.load` a file whose
+   * only content is the word `delete` deleted that file, with no prompt. The
+   * refusal is a real gate, not a label.
+   */
+  refused: string | null;
   /** Only on `plan_open` steps: 0 for the first file, 1 for the rest. */
   partial?: 0 | 1;
 }
@@ -202,6 +216,135 @@ export interface MtzDialogInfo {
   guessPhases: string | null;
   prefix: string;
   error: string | null;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Map generation — the legacy Tk dialog `pmg_tk/PyMOLMapLoad.py`
+ * -------------------------------------------------------------------------- */
+
+/**
+ * `PyMOLMapLoad`'s form, as data (`modules/pmg_tk/PyMOLMapLoad.py:10-175`).
+ *
+ * Distinct from {@link MtzDialogInfo}, which serves the OTHER MTZ dialog
+ * (`load_mtz`, Incentive-only): this one carries the Pmw `"None"` weights
+ * entry, the `%3.5f` resolution defaults and the two `default_*_map_rep`
+ * settings that decide what gets built once a map exists.
+ */
+export interface MapGenerateInfo {
+  filename: string;
+  /** 'MTZHeader' | 'CIFHeader' | 'CNSHeader' | null — from the last 3 chars. */
+  headerClass: string | null;
+  amplitudes: string[];
+  phases: string[];
+  /** `"None"` FIRST (`PyMOLMapLoad.py:102`), then the W and Q columns. */
+  weights: string[];
+  guessAmplitudes: string | null;
+  guessPhases: string | null;
+  /** `float("%3.5f" % v)`, or `''` when the header has no value. */
+  minRes: number | '';
+  maxRes: number | '';
+  prefix: string;
+  fofc: boolean;
+  /** `default_fofc_map_rep` — 'volume' | 'isomesh' | 'isosurface'. */
+  fofcRep: string;
+  twoFofcRep: string;
+  autocloseDialogs: boolean;
+  /**
+   * `null` until something has tried. Nothing static can answer it: this tree
+   * compiles `ExecutiveMapGenerate` out under `NO_MMLIBS`
+   * (`layer3/Executive.cpp:6929-6935`) and the Python wrapper cannot see that.
+   */
+  supported: boolean | null;
+  buildNote: string;
+  missingAmplitudesHelp: string;
+  missingPhasesHelp: string;
+  error: string | null;
+}
+
+export interface MapGenerateResult {
+  ok: boolean;
+  prefix: string;
+  /**
+   * What `cmd.map_generate` returned. **Not a success signal**: `creating.py:288`
+   * returns the name unconditionally, so it is the same on failure. `created`
+   * is the real answer and comes from `cmd.get_names()`.
+   */
+  returned: string | null;
+  created: boolean;
+  reps: { name: string; op: string }[];
+  rep: string;
+  error: string | null;
+  /** The Pmw help text for a blank amplitudes/phases column, verbatim. */
+  help: string | null;
+  autoclose: boolean;
+  buildNote: string;
+}
+
+/* -------------------------------------------------------------------------- *
+ * macOS Finder "Open With" — `pymol_qt_gui.py:1136-1160`
+ * -------------------------------------------------------------------------- */
+
+export interface OpenWithPlan {
+  filename: string;
+  reuseHelper: boolean;
+  autoReinitialize: boolean;
+  names: string[];
+  /** `new-window` is the only branch that would need a second OS process. */
+  action: 'new-window' | 'load-here';
+  reinitialize: boolean;
+  /** True for a `.psw`: apply the presentation preset before loading. */
+  presentation: boolean;
+  presetSteps: { kind: string; name: string; value: number | string }[];
+  classification: FileClassification;
+}
+
+export interface PresentationPreset {
+  previous: Record<string, string>;
+  current: Record<string, string>;
+  /**
+   * `cmd.full_screen` ALWAYS raises — `CmdFullScreen`
+   * (`layer4/Cmd.cpp:5352-5362`) returns an `ok` flag it never assigns. So
+   * `ok` here is false on every platform and every build.
+   */
+  fullScreen: { attempted: boolean; ok: boolean; error: string | null };
+}
+
+/* -------------------------------------------------------------------------- *
+ * Blocking plugin file dialogs — the tkinter shim
+ * -------------------------------------------------------------------------- */
+
+/** The `tkFileDialog` entry points `mimic_tk.py:36-90` implements. */
+export const PLUGIN_DIALOG_KINDS = [
+  'askopenfilename',
+  'askopenfilenames',
+  'asksaveasfilename',
+  'askdirectory',
+] as const;
+export type PluginDialogKind = (typeof PLUGIN_DIALOG_KINDS)[number];
+
+/**
+ * One legacy plugin blocked inside `tkinter.filedialog`, waiting for a path.
+ *
+ * The plugin's Python thread is parked in `DialogBroker.ask`; answering with
+ * `cmd.tenmol_files.dialog_answer(dialogId, value)` unblocks it. `value` is a
+ * string, a list of strings for `askopenfilenames`, or `null` for Cancel —
+ * which the shim turns back into tkinter's `''` / `[]`.
+ */
+export interface PluginDialogRequest {
+  dialogId: number;
+  kind: PluginDialogKind;
+  options: {
+    title: string;
+    initialdir: string;
+    initialfile: string;
+    /** Qt's `';;'`-joined filter string, exactly as `mimic_tk` builds it. */
+    filter: string;
+    /** The same thing split, because the path picker takes a list. */
+    filters: string[];
+    multiple: boolean;
+  };
+  /** Seconds the plugin has been blocked. */
+  waitingFor: number;
 }
 
 /* -------------------------------------------------------------------------- *
@@ -434,6 +577,8 @@ export interface FilesHello {
   encoders: Record<string, string | null>;
   /** Extension -> why it raises in this build (`incentive_only.py`). */
   unavailable: Record<string, string>;
+  /** Format -> why the client declines to load it at all (today: `pwg`). */
+  refused: Record<string, string>;
   loadFormats: string[];
   saveFormats: string[];
 }

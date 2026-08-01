@@ -108,11 +108,18 @@ export interface MovieCell {
 }
 
 /**
- * One row of `ExecutiveMotionDraw` (`layer3/Executive.cpp:692`).
+ * One row of `ExecutiveMotionDraw` (`layer3/Executive.cpp:697`).
  * `object === ''` is the camera row (`cExecAll`).
  */
 export interface MovieRow {
   object: string;
+  /**
+   * The gutter label `ViewElemDraw` is given: `'camera'` for the camera row,
+   * the object name for an object row, and `'states'` for the synthetic row
+   * `ExecutiveCountMotions` invents when there are no motions at all but the
+   * scene has more than one frame (`layer1/Movie.cpp:1845`).
+   */
+  label: string;
   spec: SpecLevel[];
   scenes: (string | null)[];
 }
@@ -121,14 +128,29 @@ export interface MoviePanel {
   nframes: number;
   cells: MovieCell[];
   rows: MovieRow[];
-  /** `movie_panel` setting. */
+  /** `movie_panel` setting. The bridge forces it to 0 — see `panelActive`. */
   visible: boolean;
   /** `movie_panel_row_height`. */
   rowHeight: number;
-  /** `movie_panel_row_height * rows.length` (`MovieGetPanelHeight`). */
+  /** `rowHeight * rows.length` — the height the DOM timeline should be. */
   height: number;
   /** `CMovie::MatrixFlag` — a programmed initial orientation exists. */
   matrix: boolean;
+  /** `ExecutiveCountMotions()` (`layer3/Executive.cpp:664`) === `rows.length`. */
+  motions: number;
+  /** `presentation` setting: the C panel collapses to the camera row alone. */
+  presentation: boolean;
+  /** `rows[0].label`, or `'states'` when there are no rows. */
+  label: string;
+  /** `CMovie::LabelIndent`, `DIP2PIXEL(8*8)` = 64 px of right-hand gutter. */
+  labelIndent: number;
+  /**
+   * What `MovieGetPanelHeight` would report — which is always `false`/`0` in
+   * the bridge, because `engine.py` sets `movie_panel 0` so `OrthoReshape`
+   * never subtracts a panel from the viewport the web canvas is sized to.
+   */
+  panelActive: boolean;
+  panelHeight: number;
 }
 
 /* ------------------------------------------------------------------ *
@@ -190,6 +212,63 @@ export interface MovieEncoders {
   ffmpeg: string | null;
   convert: string | null;
   mpeg_encode: string | null;
+}
+
+/**
+ * `cmd.get_movie_produce_plan(...)` — every decision `movie.produce` makes
+ * before it renders a frame, which it otherwise only prints.
+ *
+ * `movie.produce` returns `DEFAULT_SUCCESS` (`None`) whether ffmpeg wrote two
+ * megabytes or exited non-zero, so the dialog needs the plan up front (to grey
+ * out a format, show the resolved size, name the encoder) and `MovieProduceResult`
+ * afterwards (to say what actually happened) — neither is available from the
+ * upstream call.
+ */
+export interface MovieProducePlan {
+  /** `filename` with the extension `produce` resolved (`''` -> `.mpg`). */
+  filename: string;
+  ext: string;
+  /** `<stem>.tmp`, where the numbered frames go. */
+  tmpdir: string;
+  framePrefix: string;
+  /** `.ppm` for mpeg_encode, `.png` for everything else. */
+  frameExt: string;
+  frameGlob: string;
+  encoder: string;
+  /** True when the encoder came from the extension rather than the caller. */
+  encoderGuessed: boolean;
+  encoderPath: string | null;
+  /** `encoder in ('ffmpeg','convert','mpeg_encode')`. */
+  known: boolean;
+  available: boolean;
+  quality: number;
+  /** Already even for `.mp4`/`.mov`/`.webm`; `0` means "use the viewport". */
+  width: number;
+  height: number;
+  viewport: [number, number];
+  fps: number;
+  /** `1+(100-q)*29/100`, mpeg_encode's inverted 1..30 scale. */
+  mpegQuality: number;
+  fpsLegal: number;
+  fpsAdjusted: boolean;
+  /** ffmpeg `-crf`: webm is `65-quality/2`, others 10/15/20 by quality. */
+  crf: string;
+  /** `convert -delay`, in 1/100 s. */
+  convertDelay: string | null;
+  twoPassPalette: boolean;
+}
+
+export interface MovieProduceResult extends MovieProducePlan {
+  ok: boolean;
+  bytes: number;
+  /** `mpng`'s `modal`; the bridge pins 0 so the call returns after the write. */
+  modal: number;
+  preserve: number;
+  tmpdirExists: boolean;
+  /** Contents of `tmpdir` — only non-empty when `preserve` kept them. */
+  frames: string[];
+  /** True when the filename was empty and nothing was rendered. */
+  skipped?: boolean;
 }
 
 /* ------------------------------------------------------------------ *

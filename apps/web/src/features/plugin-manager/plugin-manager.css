@@ -79,6 +79,18 @@
   white-space: nowrap;
 }
 
+/* The autoload checkbox column: as narrow as its header. */
+.plugmgr__enabled {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.plugmgr__enabled input {
+  margin: 0;
+  vertical-align: middle;
+}
+
 /* Paths are long and the interesting end is the right-hand one. */
 .plugmgr__path {
   font-family: var(--pm-font-mono);

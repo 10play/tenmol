@@ -48,6 +48,7 @@ import fnmatch
 import glob as _glob
 import os
 import re
+import sys
 import threading
 import time
 from typing import Any, Dict, List, Optional, Sequence
@@ -70,6 +71,21 @@ __all__ = [
     "MOVIE_FILTERS",
     "PNG_RENDERING_MODES",
     "MAE_MULTIPLEX_CHOICES",
+    # WP-18 wave 6 — rows 259 / 293 / 295 / 298 of the parity inventory
+    "REFUSED_FORMATS",
+    "PWG_REFUSAL",
+    "MAP_GENERATE_BUILD_NOTE",
+    "MISSING_AMPLITUDES_HELP",
+    "MISSING_PHASES_HELP",
+    "map_rep_plan",
+    "map_generate_prefix",
+    "PSW_PRESET_STEPS",
+    "DialogBroker",
+    "BridgeFileDialog",
+    "engine_thread",
+    "install_tk_filedialog",
+    "uninstall_tk_filedialog",
+    "tk_filedialog_installed",
 ]
 
 #: Attribute name on ``pymol.cmd``.  Deliberately namespaced: the client
@@ -179,6 +195,161 @@ LOAD_FILTERS: Sequence[str] = (
 )
 
 
+# --------------------------------------------------------------------------
+# Formats the web client REFUSES on purpose (inventory row 298).
+# --------------------------------------------------------------------------
+
+#: MEASURED, not inferred.  ``testing/data``-free reproduction, run over the
+#: real socket in ``bridge/tests/test_wf_files.py``: a file containing the
+#: single word ``delete`` was handed to ``cmd.load`` and **the file was gone
+#: afterwards** — ``_processPWG`` ran ``os.unlink(fname)``
+#: (``modules/pymol/importing.py:597-598``) and ``cmd.load`` returned ``-1``
+#: without raising.  Nothing about ``.pwg`` is inert: the same parser can set a
+#: listening port, add HTTP response headers, publish a document root,
+#: ``__import__`` an arbitrary module name and call its ``__launch__``, open a
+#: system web browser, ``urlretrieve`` a remote "report" URL with the port in
+#: it, and finally start ``pymol.pymolhttpd.PymolHttpd`` — a SECOND HTTP server
+#: inside the process the bridge is already serving from
+#: (``importing.py:516-615``, ``pymolhttpd.py:441-520``).
+PWG_REFUSAL = (
+    "'.pwg' is refused by the web client. A .pwg file is a script that can open "
+    "a listening port, add HTTP headers, publish a document root, import and "
+    "run an arbitrary Python module, launch a web browser, report the port to a "
+    "remote URL, delete itself, and start a second HTTP server inside this "
+    "process (modules/pymol/importing.py:516-615). Run it from a desktop PyMOL "
+    "if you trust it."
+)
+
+#: format (and extension) -> why the client must not load it.  Distinct from
+#: ``incentive_only.UNAVAILABLE_FORMATS``, which is "this build cannot", not
+#: "we decline".
+REFUSED_FORMATS: Dict[str, str] = {"pwg": PWG_REFUSAL}
+
+
+# --------------------------------------------------------------------------
+# The legacy Tk map-generation dialog (inventory row 259).
+# --------------------------------------------------------------------------
+
+#: MEASURED on this tree, and the single most important fact about the whole
+#: dialog: ``ExecutiveMapGenerate`` is compiled with ``NO_MMLIBS``
+#: (``layer3/Executive.cpp:6929-6935``), so it prints " Error: MTZ map loading
+#: not supported in this PyMOL build." and returns ``nullptr`` — always.
+#:
+#: The trap: ``cmd.map_generate`` **still returns the map name**
+#: (``modules/pymol/creating.py:288`` is a bare ``return name``, reached on both
+#: paths), so the return value is NOT a success signal.  ``PyMOLMapLoad.run``
+#: tests exactly that value (``PyMOLMapLoad.py:262``, ``if r==None or r=="None"
+#: or r==""``) and therefore goes on to build an isosurface/isomesh/volume on a
+#: map object that was never created.  Anything porting this dialog must check
+#: ``cmd.get_names()`` instead.
+MAP_GENERATE_BUILD_NOTE = (
+    "cmd.map_generate needs MMLIBS: layer3/Executive.cpp:6929-6935 compiles the "
+    "generator out under NO_MMLIBS and prints 'Error: MTZ map loading not "
+    "supported in this PyMOL build.'. cmd.map_generate nevertheless returns the "
+    "map name on failure (creating.py:288), so the return value cannot be used "
+    "as a success test -- check cmd.get_names()."
+)
+
+#: ``PyMOLMapLoad.py:270-276``, verbatim including the ``at\nleastone`` typo.
+MISSING_AMPLITUDES_HELP = """
+To synthesize a map from reflection data you need to specify at
+leastone column for amplitudes and one column for phases. The
+amplitudes column name was blank, and therefore PyMOL cannot create
+the map.  Please select an amplitude column name from the file and try
+again.
+               """
+
+#: ``PyMOLMapLoad.py:281-287``.
+MISSING_PHASES_HELP = """
+To synthesize a map from reflection data you need to specify at least
+one column for amplitudes and one column for phases. The phases column
+name was blank, and therefore PyMOL cannot create the map.  Please
+select an amplitude column name from the file and try again.
+               """
+
+#: ``PyMOLMapLoad.__init__`` (``PyMOLMapLoad.py:28-33``) picks the header class
+#: off the LAST THREE CHARACTERS of the name, case-sensitively per entry.
+MAP_HEADER_CLASSES: Dict[str, str] = {
+    "mtz": "MTZHeader",
+    "cif": "CIFHeader",
+    "cns": "CNSHeader",
+    "hkl": "CNSHeader",
+}
+
+
+def map_generate_prefix(amplitudes: str, name_prefix: str = "") -> str:
+    """``PyMOLMapLoad.run``'s prefix rule (``PyMOLMapLoad.py:243-253``).
+
+    Blank "New Map Name Prefix" falls back to the *dataset* element of a fully
+    qualified amplitudes column: ``crystal/dataset/COL`` -> ``dataset``
+    (``split('/')[1]``, not the column name), and to the raw text when the
+    column carries no ``/``.  ``cmd.get_unused_name`` is applied by the caller,
+    because it takes the API lock.
+    """
+    if name_prefix:
+        return name_prefix
+    if "/" in amplitudes:
+        parts = amplitudes.split("/")
+        if len(parts) >= 2:
+            return parts[1]
+    return amplitudes
+
+
+def map_rep_plan(rep: str, base: str, fofc: bool) -> List[Dict[str, Any]]:
+    """The representation ``PyMOLMapLoad.run`` builds (``PyMOLMapLoad.py:271-317``).
+
+    ``rep`` is ``default_fofc_map_rep`` or ``default_2fofc_map_rep`` (both
+    default to ``volume``); ``base`` is the *unused* map name, which the Tk code
+    uses for both the map argument and the suffix stem because
+    ``cmd.map_generate`` handed it back.  Names carry a ``get_unused_name``
+    marker rather than a resolved name so this stays pure.
+    """
+    if fofc:
+        if rep == "isosurface":
+            # NOTE: the FoFc isosurface branch is the ONE branch that never
+            # colours its object (`:276-278`).
+            return [{"op": "isosurface", "stem": base + "-srf", "level": 1.0,
+                     "color": None}]
+        if rep == "isomesh":
+            return [
+                {"op": "isomesh", "stem": base + "-msh3", "level": 3.0,
+                 "color": "green"},
+                {"op": "isomesh", "stem": base + "-msh-3", "level": -3.0,
+                 "color": "red"},
+            ]
+        return [{"op": "volume", "stem": base + "-vol", "ramp": "fofc",
+                 "color": None}]
+    if rep == "isosurface":
+        return [{"op": "isosurface", "stem": base + "-srf", "level": 1.0,
+                 "color": "blue"}]
+    if rep == "isomesh":
+        return [{"op": "isomesh", "stem": base + "-msh", "level": 1.0,
+                 "color": "blue"}]
+    return [{"op": "volume", "stem": base + "-vol", "ramp": "2fofc",
+             "color": None}]
+
+
+# --------------------------------------------------------------------------
+# macOS Finder "Open With" (inventory row 293).
+# --------------------------------------------------------------------------
+
+#: ``PyMOLApplication.handle_file_open_active`` (``pymol_qt_gui.py:1152-1157``)
+#: — the four things a ``.psw`` drop does before ``load_dialog``.
+#:
+#: MEASURED: step four cannot succeed anywhere.  ``CmdFullScreen``
+#: (``layer4/Cmd.cpp:5352-5362``) declares ``int ok = false``, never assigns it,
+#: and returns ``APIResultOk(G, ok)`` — which raises ``CmdException`` on false.
+#: ``cmd.full_screen('on')`` therefore ALWAYS raises, in this build and in the
+#: Qt build, after ``ExecutiveFullScreen`` has already run.  Observed over the
+#: socket: ``CmdException: ' Error: '`` from ``viewing.py:1356``.
+PSW_PRESET_STEPS: Sequence[Dict[str, Any]] = (
+    {"kind": "set", "name": "presentation", "value": 1},
+    {"kind": "set", "name": "internal_gui", "value": 0},
+    {"kind": "set", "name": "internal_feedback", "value": 0},
+    {"kind": "full_screen", "name": "full_screen", "value": "on"},
+)
+
+
 def _re_ext_from_filter(filter_text: str) -> Optional[str]:
     """``getSaveFileNameWithExt``'s regex (``pymol/Qt/utils.py:240-244``)."""
     match = re.search(r"\*(\.[\w\.]+)", filter_text or "")
@@ -262,6 +433,9 @@ def classify_filename(fname: str) -> Dict[str, Any]:
         "alnFormat": None,
         "cmsTraj": None,
         "unavailable": None,
+        # Row 298: refused BY POLICY, which is a different thing from
+        # `unavailable` ("this build cannot"). The client must check both.
+        "refused": None,
     }
 
     # `file_dialogs.py:46` tests the last four characters, NOT the parsed
@@ -289,6 +463,13 @@ def classify_filename(fname: str) -> Dict[str, Any]:
 
     if fname.endswith(".cms"):
         info["cmsTraj"] = _cms_traj_file(fname)
+
+    # Row 298. Keyed on BOTH the parsed format and the raw extension: a URL
+    # (`http://host/app.pwg`) parses the same way, and `filename_to_format`
+    # lower-cases neither consistently across the zipped branch.
+    info["refused"] = REFUSED_FORMATS.get(fmt) or REFUSED_FORMATS.get(
+        (ext or "").lower()
+    )
 
     # Honest about the formats that raise in this open-source build
     # (`incentive_only.py`): mae, mtz, stl, gltf/glb.
@@ -371,6 +552,374 @@ class _RecentDB:
         self.recent_filenames_add(filename)  # type: ignore[attr-defined]
 
 
+# --------------------------------------------------------------------------
+# Blocking plugin file dialogs (inventory row 295).
+# --------------------------------------------------------------------------
+
+
+def engine_thread() -> Optional[int]:
+    """The thread ident of PyMOL's draw pump, or ``None``.
+
+    ``EngineState`` publishes it as ``pymol.glutThread``
+    (``bridge/tenmol_bridge/engine.py:170``), which is also where a desktop
+    PyMOL puts its GLUT thread — so this works without importing any bridge
+    internals and without a circular import.  MEASURED: over the socket,
+    ``pymol.glutThread`` and ``threading.get_ident()`` inside a ``{t:'do'}``
+    are the same number, confirming the dispatcher runs on that thread.
+    """
+    try:
+        import pymol
+
+        ident = getattr(pymol, "glutThread", None)
+        return int(ident) if ident else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+class _Cancelled:
+    """Sentinel: the user dismissed the dialog (tkinter's ``''`` / ``None``)."""
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+        return "<cancelled>"
+
+
+CANCELLED = _Cancelled()
+
+
+class DialogBroker:
+    """A blocking Python dialog, answered by the browser.
+
+    WHY THIS IS A POLL AND NOT A PUSH.  ``packages/protocol/src/topics/dialog.ts``
+    describes a ``dialog`` topic whose answer arrives as
+    ``{t:'call', fn:'_bridge.answer_dialog'}``.  ``_bridge.*`` is routed inside
+    ``server.py`` and the topic would have to be emitted through
+    ``BridgeServer._emit_topic`` — both frozen files this work package must not
+    edit.  So the rendezvous is inverted: the blocked thread parks a request
+    here, the client picks it up with ``dialog_pending`` and posts the answer
+    with ``dialog_answer``.  Same shape, same blocking semantics, no shared file
+    touched.  Making it a push is a one-line change in each frozen file and is
+    reported rather than applied.
+
+    THE HARD RULE (plan §6 WP-18), enforced with an exception rather than a
+    comment: **the request must never be made from the engine thread.**  The
+    dispatcher submits ``cmd`` calls to the draw pump, so a plugin that called
+    ``askopenfilename`` from there would stop the 60 Hz pump — the viewport
+    would freeze, and the very dialog it is waiting for could never be drawn or
+    answered, because answering also goes through the pump.  That is a deadlock,
+    not a slow dialog, so it is refused up front with a message that says what
+    to do instead.
+    """
+
+    #: How long a blocked plugin thread waits before it gives up and behaves as
+    #: if the user pressed Cancel.  Generous: a person is choosing a file.
+    DEFAULT_TIMEOUT = 300.0
+
+    def __init__(self) -> None:
+        self._cv = threading.Condition(threading.Lock())
+        self._next_id = 1
+        self._open: Dict[int, Dict[str, Any]] = {}
+        self._answers: Dict[int, Any] = {}
+        self._log: List[Dict[str, Any]] = []
+
+    # -- the blocked side ---------------------------------------------------
+
+    def ask(
+        self, kind: str, options: Dict[str, Any], timeout: Optional[float] = None
+    ) -> Any:
+        """Block this thread until the browser answers.  Returns :data:`CANCELLED`."""
+        ident = engine_thread()
+        if ident is not None and threading.get_ident() == ident:
+            raise RuntimeError(
+                "tenmol: a blocking file dialog (%s) was requested from PyMOL's "
+                "engine thread, which also runs the draw pump -- blocking it "
+                "would freeze the viewport AND the dialog that is supposed to "
+                "answer it. Run the plugin's dialog from a worker thread "
+                "(threading.Thread(target=...).start()), which is what the Qt "
+                "front-end effectively does by running its event loop "
+                "elsewhere." % kind
+            )
+
+        limit = self.DEFAULT_TIMEOUT if timeout is None else float(timeout)
+        with self._cv:
+            dialog_id = self._next_id
+            self._next_id += 1
+            request = {
+                "dialogId": dialog_id,
+                "kind": kind,
+                "options": dict(options),
+                "created": time.time(),
+            }
+            self._open[dialog_id] = request
+            self._log.append({"dialogId": dialog_id, "kind": kind, "state": "open"})
+            del self._log[:-64]
+            self._cv.notify_all()
+
+            deadline = time.monotonic() + limit
+            while dialog_id not in self._answers:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    self._open.pop(dialog_id, None)
+                    self._log.append(
+                        {"dialogId": dialog_id, "kind": kind, "state": "timeout"}
+                    )
+                    print(
+                        " tenmol: no answer to file dialog %d (%s) after %.0fs; "
+                        "treating it as Cancel" % (dialog_id, kind, limit)
+                    )
+                    return CANCELLED
+                self._cv.wait(remaining)
+            answer = self._answers.pop(dialog_id)
+            self._open.pop(dialog_id, None)
+        return CANCELLED if answer is None else answer
+
+    # -- the client side (all non-blocking, all engine-thread safe) ---------
+
+    def pending(self) -> List[Dict[str, Any]]:
+        with self._cv:
+            return [
+                {
+                    "dialogId": req["dialogId"],
+                    "kind": req["kind"],
+                    "options": dict(req["options"]),
+                    "waitingFor": round(time.time() - req["created"], 3),
+                }
+                for req in sorted(self._open.values(), key=lambda r: r["dialogId"])
+            ]
+
+    def answer(self, dialog_id: int, value: Any) -> Dict[str, Any]:
+        dialog_id = int(dialog_id)
+        with self._cv:
+            if dialog_id not in self._open:
+                return {"answered": False, "error": "no open dialog %d" % dialog_id}
+            self._answers[dialog_id] = value
+            self._log.append({"dialogId": dialog_id, "state": "answered"})
+            del self._log[:-64]
+            self._cv.notify_all()
+        return {"answered": True, "error": None}
+
+    def cancel(self, dialog_id: int) -> Dict[str, Any]:
+        return self.answer(dialog_id, None)
+
+    def history(self) -> List[Dict[str, Any]]:
+        with self._cv:
+            return list(self._log)
+
+
+class BridgeFileDialog:
+    """``_qtFileDialog`` (``modules/pmg_qt/mimic_tk.py:36-90``), web edition.
+
+    Same seven entry points, same argument names, same **return shapes** —
+    ``str``, ``list[str]``, an open file object, a list of open file objects,
+    ``None`` — because every legacy plugin's Open/Save is written against
+    ``tkFileDialog`` and does ``if not filename: return`` or ``for line in
+    handle``.  Anything else and the plugins break silently.
+
+    The only behavioural difference is where the picker is drawn: Qt calls
+    ``QFileDialog.getOpenFileName`` (native, blocking), we park a request on a
+    :class:`DialogBroker` and block on the same thread until React answers.
+    """
+
+    def __init__(self, broker: DialogBroker) -> None:
+        self._broker = broker
+
+    # -- filter translation, byte-identical to mimic_tk --------------------
+
+    @staticmethod
+    def _getfilter(filetypes: Any) -> str:
+        """``_qtFileDialog._getfilter`` (``mimic_tk.py:37-48``), verbatim.
+
+        tkinter's ``filetypes`` is ``[(label, '.ext'), ...]``; repeated labels
+        accumulate their extensions and the result is Qt's ``';;'``-joined
+        filter string.  Kept because the *filter string* is what the picker
+        shows and what ``getSaveFileNameWithExt`` parses.
+        """
+        import collections
+
+        extensions: Dict[str, List[str]] = collections.defaultdict(list)
+        names: List[str] = []
+        for name, ext in filetypes or ():
+            if ext.startswith("."):
+                ext = "*" + ext
+            extensions[name].append(ext)
+            if name not in names:
+                names.append(name)
+        return ";;".join(
+            "%s (%s)" % (name, " ".join(extensions[name])) for name in names
+        )
+
+    def _payload(self, options: Dict[str, Any], multiple: bool) -> Dict[str, Any]:
+        joined = self._getfilter(options.get("filetypes", ""))
+        return {
+            "title": options.get("title", ""),
+            "initialdir": options.get("initialdir", ""),
+            "initialfile": options.get("initialfile", ""),
+            # `filter` is exactly what Qt would have been handed; `filters` is
+            # the same thing split, because the React picker takes a list.
+            "filter": joined,
+            "filters": [part for part in joined.split(";;") if part],
+            "multiple": bool(multiple),
+        }
+
+    # -- the seven tkFileDialog entry points -------------------------------
+
+    def askopenfilename(self, **options: Any) -> Any:
+        multiple = bool(options.get("multiple"))
+        answer = self._broker.ask(
+            "askopenfilenames" if multiple else "askopenfilename",
+            self._payload(options, multiple),
+        )
+        if answer is CANCELLED:
+            return [] if multiple else ""
+        if multiple:
+            return [str(item) for item in answer] if isinstance(answer, list) else [
+                str(answer)
+            ]
+        return str(answer[0]) if isinstance(answer, list) else str(answer)
+
+    def askopenfilenames(self, **options: Any) -> List[str]:
+        options["multiple"] = 1
+        return self.askopenfilename(**options)
+
+    def askopenfile(self, mode: str = "r", **options: Any) -> Any:
+        r = self.askopenfilename(**options)
+        if options.get("multiple"):
+            return [open(f, mode) for f in r]
+        if not r:
+            return None
+        return open(r, mode)
+
+    def askopenfiles(self, mode: str = "r", **options: Any) -> Any:
+        options["multiple"] = 1
+        return self.askopenfile(mode, **options)
+
+    def asksaveasfilename(self, **options: Any) -> str:
+        answer = self._broker.ask("asksaveasfilename", self._payload(options, False))
+        if answer is CANCELLED:
+            return ""
+        return str(answer[0]) if isinstance(answer, list) else str(answer)
+
+    def asksaveasfile(self, mode: str = "w", **options: Any) -> Any:
+        r = self.asksaveasfilename(**options)
+        if not r:
+            return None
+        return open(r, mode)
+
+    def askdirectory(self, **options: Any) -> str:
+        answer = self._broker.ask("askdirectory", self._payload(options, False))
+        if answer is CANCELLED:
+            return ""
+        return str(answer[0]) if isinstance(answer, list) else str(answer)
+
+
+class _TkFileDialogFinder:
+    """``MimicTkImporter`` (``mimic_tk.py:110-127``) for one module name.
+
+    ``sys.modules['tkinter.filedialog'] = obj`` alone is not enough — ``import
+    tkinter.filedialog`` resolves the attribute on the parent package, which is
+    why upstream uses a ``meta_path`` hook.  Same trick, one entry, removable.
+    """
+
+    def __init__(self, module: Any) -> None:
+        self.module = module
+        self.names = ("tkinter.filedialog", "tkFileDialog")
+
+    def find_spec(self, fullname: str, path: Any = None, target: Any = None) -> Any:
+        if fullname in self.names:
+            from importlib.machinery import ModuleSpec
+
+            return ModuleSpec(fullname, self)
+        return None
+
+    def create_module(self, spec: Any) -> Any:
+        return self.module
+
+    def exec_module(self, module: Any) -> None:
+        return None
+
+    def load_module(self, fullname: str) -> Any:  # pragma: no cover - legacy path
+        sys.modules[fullname] = self.module
+        return self.module
+
+
+_TK_STATE: Dict[str, Any] = {"shim": None, "saved": {}, "finder": None,
+                             "had_attr": False, "saved_attr": None}
+
+
+def install_tk_filedialog(broker: DialogBroker) -> Dict[str, Any]:
+    """Put :class:`BridgeFileDialog` where every legacy plugin looks for it.
+
+    Idempotent, and reversible — which matters more here than usual, because
+    ``sys.modules`` and ``sys.meta_path`` are process-global and this process is
+    shared by everything else in the bridge.
+    """
+    if _TK_STATE["shim"] is not None:
+        return {"installed": True, "already": True}
+
+    shim = BridgeFileDialog(broker)
+    saved = {name: sys.modules.get(name) for name in
+             ("tkFileDialog", "tkinter.filedialog")}
+
+    # `tkFileDialog` has no parent package, so seeding sys.modules is both
+    # sufficient and immediate -- and it is the name the Python-2-era plugins
+    # still use, which is why mimic_tk seeds it too (`mimic_tk.py:98-99`).
+    sys.modules["tkFileDialog"] = shim
+
+    # `tkinter.filedialog` is NOT seeded unless the real module is already
+    # loaded.  MEASURED: pre-filling `sys.modules['tkinter.filedialog']`
+    # short-circuits the import machinery, which then never sets the submodule
+    # as an ATTRIBUTE of the package -- so `import tkinter.filedialog` raised
+    # "AttributeError: module 'tkinter' has no attribute 'filedialog'".  Left
+    # empty, the import runs the meta_path finder below, and `_bootstrap._load`
+    # does the `setattr(parent, child, module)` for us.  This is the same reason
+    # mimic_tk needs a meta_path hook at all (`mimic_tk.py:101-104`).
+    if saved["tkinter.filedialog"] is not None:
+        sys.modules["tkinter.filedialog"] = shim
+
+    tk = sys.modules.get("tkinter")
+    had_attr = tk is not None and hasattr(tk, "filedialog")
+    saved_attr = getattr(tk, "filedialog", None) if tk is not None else None
+    if tk is not None:
+        setattr(tk, "filedialog", shim)
+
+    finder = _TkFileDialogFinder(shim)
+    sys.meta_path.insert(0, finder)
+
+    _TK_STATE.update(
+        {"shim": shim, "saved": saved, "finder": finder,
+         "had_attr": had_attr, "saved_attr": saved_attr}
+    )
+    return {"installed": True, "already": False}
+
+
+def uninstall_tk_filedialog() -> bool:
+    if _TK_STATE["shim"] is None:
+        return False
+    finder = _TK_STATE["finder"]
+    if finder in sys.meta_path:
+        sys.meta_path.remove(finder)
+    for name, saved in (_TK_STATE["saved"] or {}).items():
+        if saved is None:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = saved
+    tk = sys.modules.get("tkinter")
+    if tk is not None:
+        if _TK_STATE["had_attr"]:
+            setattr(tk, "filedialog", _TK_STATE["saved_attr"])
+        else:
+            try:
+                delattr(tk, "filedialog")
+            except AttributeError:
+                pass
+    _TK_STATE.update({"shim": None, "saved": {}, "finder": None,
+                      "had_attr": False, "saved_attr": None})
+    return True
+
+
+def tk_filedialog_installed() -> bool:
+    return _TK_STATE["shim"] is not None
+
+
 class FilesAPI:
     """The ``cmd.tenmol_files`` namespace.
 
@@ -392,6 +941,8 @@ class FilesAPI:
         self._recent = _RecentDB()
         self._pdbe: Dict[str, Dict[str, Any]] = {}
         self._pdbe_lock = threading.Lock()
+        #: Row 295 — the rendezvous every blocking plugin dialog parks on.
+        self.broker = DialogBroker()
 
     # ------------------------------------------------------------ meta
 
@@ -420,6 +971,7 @@ class FilesAPI:
             "encoderSupport": {k: dict(v) for k, v in MOVIE_ENCODER_SUPPORT.items()},
             "encoders": self.encoders(),
             "unavailable": self.unavailable(),
+            "refused": self.refused(),
             "loadFormats": self.load_formats(),
             "saveFormats": self.save_formats(),
         }
@@ -429,6 +981,10 @@ class FilesAPI:
         from ..incentive_only import UNAVAILABLE_FORMATS
 
         return dict(UNAVAILABLE_FORMATS)
+
+    def refused(self) -> Dict[str, str]:
+        """Formats the client declines to load at all (row 298)."""
+        return dict(REFUSED_FORMATS)
 
     def load_formats(self) -> List[str]:
         """``importing.loadfunctions`` keys — the python-handled loaders."""
@@ -901,6 +1457,311 @@ class FilesAPI:
         except Exception as exc:  # noqa: BLE001
             info["error"] = str(exc)
         return info
+
+    # -------------------------------------------------- map generation (259)
+
+    def map_generate_info(self, filename: str) -> Dict[str, Any]:
+        """Everything ``PyMOLMapLoad`` reads when it opens (``PyMOLMapLoad.py:10-175``).
+
+        Deliberately a superset of :meth:`mtz_dialog_info`, which serves the
+        *other* MTZ dialog (``load_mtz``, Incentive-only): this one adds the Pmw
+        dialog's ``"None"`` weights entry, its ``%3.5f`` resolution defaults,
+        the two ``default_*_map_rep`` settings that decide what gets built after
+        the map appears, and ``autoclose_dialogs``.
+
+        ``supported`` is deliberately ``None`` until something has actually
+        tried: nothing static distinguishes an ``NO_MMLIBS`` build from a full
+        one (``layer3/Executive.cpp:6929``), and :meth:`map_generate_run`
+        answers it from ``cmd.get_names()``.  ``buildNote`` states what was
+        measured on this tree.
+        """
+        info: Dict[str, Any] = {
+            "filename": filename,
+            "headerClass": None,
+            "amplitudes": [],
+            "phases": [],
+            # `WCols = ["None"]` FIRST, then W then Q columns (`:102-105`), and
+            # "None" is the selected item (`:113`).
+            "weights": ["None"],
+            "guessAmplitudes": None,
+            "guessPhases": None,
+            "minRes": "",
+            "maxRes": "",
+            "prefix": "",
+            "fofc": False,
+            "fofcRep": self.cmd.get_setting_text("default_fofc_map_rep"),
+            "twoFofcRep": self.cmd.get_setting_text("default_2fofc_map_rep"),
+            "autocloseDialogs": bool(
+                self.cmd.get_setting_boolean("autoclose_dialogs")
+            ),
+            "supported": _MAP_GENERATE_STATUS["works"],
+            "buildNote": MAP_GENERATE_BUILD_NOTE,
+            "missingAmplitudesHelp": MISSING_AMPLITUDES_HELP,
+            "missingPhasesHelp": MISSING_PHASES_HELP,
+            "error": None,
+        }
+        full = self.expand(filename)
+        info["headerClass"] = MAP_HEADER_CLASSES.get(full[-3:].lower())
+        if not os.path.isfile(full):
+            info["error"] = "no such file: %s" % filename
+            return info
+        if info["headerClass"] != "MTZHeader":
+            # `PyMOLMapLoad` builds a CIFHeader/CNSHeader here, but
+            # `cmd.map_generate` hard-codes `headering.MTZHeader`
+            # (`creating.py:236`) with a "TODO: work for CIF, MTZ, and CNS" —
+            # so anything but .mtz cannot reach the generator at all.
+            info["error"] = (
+                "cmd.map_generate reads MTZ only (creating.py:235-236 'TODO: "
+                "work for CIF, MTZ, and CNS'); %s is not an MTZ" % filename
+            )
+            return info
+        try:
+            from pymol import headering
+
+            header = headering.MTZHeader(full)
+            amps = list(header.getColumnsOfType("F")) + list(
+                header.getColumnsOfType("G")
+            )
+            phases = list(header.getColumnsOfType("P"))
+            weights = list(header.getColumnsOfType("W")) + list(
+                header.getColumnsOfType("Q")
+            )
+            info["amplitudes"] = amps or [""]
+            info["phases"] = phases or [""]
+            info["weights"] = ["None"] + weights
+
+            # `:70-79` / `:91-99`: 2FoFc's guess wins, FoFc is the fallback, and
+            # each is used ONLY if it is actually in the list.
+            f2, p2, _ = header.guessCols("2FoFc")
+            f1, p1, _ = header.guessCols("FoFc")
+            info["guessAmplitudes"] = _first_in(info["amplitudes"], f2, f1)
+            info["guessPhases"] = _first_in(info["phases"], p2, p1)
+            # `:124-131`: "%3.5f" of the header value, or "" when it is None.
+            info["minRes"] = _reso_default(getattr(header, "reso_min", None))
+            info["maxRes"] = _reso_default(getattr(header, "reso_max", None))
+        except Exception as exc:  # noqa: BLE001
+            info["error"] = str(exc)
+        return info
+
+    def map_generate_run(
+        self,
+        filename: str,
+        amplitudes: str,
+        phases: str,
+        weights: str = "None",
+        min_res: Any = "",
+        max_res: Any = "",
+        name_prefix: str = "",
+        fofc: bool = False,
+    ) -> Dict[str, Any]:
+        """``PyMOLMapLoad.run("OK")`` (``PyMOLMapLoad.py:239-321``).
+
+        Order preserved exactly: derive the prefix, ``get_unused_name`` it,
+        validate the two required columns (returning the dialog's own help text,
+        which is what Pmw would have popped in a ``TextDialog``), call
+        ``cmd.map_generate``, then build the representation inside
+        ``suspend_updates``.
+
+        ONE DELIBERATE DIVERGENCE, and it is the point of the port: the Tk code
+        tests ``cmd.map_generate``'s **return value** for success
+        (``:262``), and that value is the map name on failure as well
+        (``creating.py:288``) — so upstream goes on to isomesh a map object that
+        does not exist.  Here success is ``prefix in cmd.get_names()``.
+        """
+        report: Dict[str, Any] = {
+            "ok": False,
+            "prefix": "",
+            "returned": None,
+            "created": False,
+            "reps": [],
+            "rep": "",
+            "error": None,
+            "help": None,
+            "autoclose": bool(self.cmd.get_setting_boolean("autoclose_dialogs")),
+            "buildNote": MAP_GENERATE_BUILD_NOTE,
+        }
+        amplitudes = amplitudes or ""
+        phases = phases or ""
+        if not len(amplitudes):
+            report["error"] = "Missing Amplitudes Column Name"
+            report["help"] = MISSING_AMPLITUDES_HELP
+            return report
+        if not len(phases):
+            report["error"] = "Missing Phases Column Name"
+            report["help"] = MISSING_PHASES_HELP
+            return report
+
+        prefix = self.cmd.get_unused_name(map_generate_prefix(amplitudes, name_prefix))
+        report["prefix"] = prefix
+
+        # `:255-260`: min/max come straight out of the (string) entry fields.
+        low, high = _reso_float(min_res), _reso_float(max_res)
+        try:
+            report["returned"] = self.cmd.map_generate(
+                prefix, self.expand(filename), amplitudes, phases,
+                weights or "None", low, high, 1, 1,
+            )
+        except Exception as exc:  # noqa: BLE001 - Pmw prints and returns None
+            report["error"] = str(exc)
+            _MAP_GENERATE_STATUS.update({"tried": True, "works": False})
+            return report
+
+        created = prefix in (self.cmd.get_names() or [])
+        report["created"] = created
+        _MAP_GENERATE_STATUS.update({"tried": True, "works": created})
+        if not created:
+            report["error"] = (
+                "map_generate returned %r but created no object: %s"
+                % (report["returned"], MAP_GENERATE_BUILD_NOTE)
+            )
+            return report
+
+        rep = self.cmd.get_setting_text(
+            "default_fofc_map_rep" if fofc else "default_2fofc_map_rep"
+        )
+        report["rep"] = rep
+        self.cmd.set("suspend_updates", 1)
+        try:
+            for step in map_rep_plan(rep, prefix, bool(fofc)):
+                name = self.cmd.get_unused_name(step["stem"])
+                if step["op"] == "isosurface":
+                    self.cmd.isosurface(name, prefix, level=step["level"])
+                elif step["op"] == "isomesh":
+                    self.cmd.isomesh(name, prefix, level=step["level"])
+                else:
+                    self.cmd.volume(name, prefix, step["ramp"])
+                if step["color"]:
+                    self.cmd.color(step["color"], name)
+                report["reps"].append({"name": name, "op": step["op"]})
+        except Exception as exc:  # noqa: BLE001 - `:319-320` is a bare except
+            report["error"] = str(exc)
+        finally:
+            self.cmd.set("suspend_updates", 0)
+        report["ok"] = True
+        return report
+
+    # ------------------------------------------- Finder "Open With" (293)
+
+    def open_with_plan(self, filename: str) -> Dict[str, Any]:
+        """``PyMOLApplication.handle_file_open_active`` (``pymol_qt_gui.py:1140-1160``).
+
+        Returned as DATA rather than performed, because the first branch —
+        "open it in a new PyMOL instance" — is a second OS process, and in a web
+        client that decision belongs to whoever owns the process model, not to a
+        file panel.
+
+        Measured defaults in this bridge: ``reuse_helper`` 0 and
+        ``auto_reinitialize`` 0, so a Finder open with any object loaded would
+        take the ``new_window`` branch upstream.
+        """
+        from pymol import invocation
+
+        options = getattr(invocation, "options", None)
+        reuse_helper = bool(getattr(options, "reuse_helper", 0))
+        auto_reinitialize = bool(getattr(options, "auto_reinitialize", 0))
+        names = list(self.cmd.get_names() or [])
+        new_window = (not reuse_helper) and bool(names)
+        is_psw = str(filename).endswith(".psw")
+        return {
+            "filename": filename,
+            "reuseHelper": reuse_helper,
+            "autoReinitialize": auto_reinitialize,
+            "names": names,
+            # `:1145-1147` — the ONLY case that spawns another process.
+            "action": "new-window" if new_window else "load-here",
+            "reinitialize": (not new_window) and auto_reinitialize,
+            "presentation": (not new_window) and is_psw,
+            "presetSteps": [dict(step) for step in PSW_PRESET_STEPS],
+            "classification": classify_filename(filename),
+        }
+
+    def presentation_preset(self, full_screen: bool = True) -> Dict[str, Any]:
+        """The four ``.psw`` statements (``pymol_qt_gui.py:1152-1156``).
+
+        Returns the PREVIOUS values, which upstream throws away — a browser tab
+        that switched itself to presentation mode has to be able to switch back,
+        and there is no window manager here to do it for the user.
+
+        ``full_screen`` is reported, never assumed: ``CmdFullScreen``
+        (``layer4/Cmd.cpp:5352-5362``) never assigns its ``ok`` flag, so
+        ``cmd.full_screen`` raises ``CmdException`` on every platform and every
+        build *after* the C++ side has already run.  Measured over the socket:
+        ``pymol.CmdException: ' Error: '`` from ``viewing.py:1356``.
+        """
+        previous = {
+            "presentation": self.cmd.get("presentation"),
+            "internal_gui": self.cmd.get("internal_gui"),
+            "internal_feedback": self.cmd.get("internal_feedback"),
+        }
+        self.cmd.set("presentation")  # `cmd.set(name)` defaults value to 1
+        self.cmd.set("internal_gui", 0)
+        self.cmd.set("internal_feedback", 0)
+        result: Dict[str, Any] = {
+            "previous": previous,
+            "current": {
+                "presentation": self.cmd.get("presentation"),
+                "internal_gui": self.cmd.get("internal_gui"),
+                "internal_feedback": self.cmd.get("internal_feedback"),
+            },
+            "fullScreen": {"attempted": bool(full_screen), "ok": False,
+                           "error": None},
+        }
+        if full_screen:
+            try:
+                self.cmd.full_screen("on")
+                result["fullScreen"]["ok"] = True
+            except Exception as exc:  # noqa: BLE001
+                result["fullScreen"]["error"] = (
+                    "%s -- cmd.full_screen always raises: CmdFullScreen "
+                    "(layer4/Cmd.cpp:5352-5362) returns APIResultOk(G, ok) with "
+                    "ok never assigned" % (str(exc).strip() or "CmdException")
+                )
+        return result
+
+    def presentation_restore(self, previous: Dict[str, Any]) -> Dict[str, Any]:
+        """Undo :meth:`presentation_preset`.  Upstream has no such thing."""
+        for name in ("presentation", "internal_gui", "internal_feedback"):
+            if name in (previous or {}):
+                self.cmd.set(name, previous[name])
+        return {
+            "presentation": self.cmd.get("presentation"),
+            "internal_gui": self.cmd.get("internal_gui"),
+            "internal_feedback": self.cmd.get("internal_feedback"),
+        }
+
+    # ------------------------------------ blocking plugin dialogs (295)
+
+    def install_tk_dialogs(self) -> Dict[str, Any]:
+        """Install the ``tkFileDialog`` / ``tkinter.filedialog`` shim."""
+        state = install_tk_filedialog(self.broker)
+        state["engineThread"] = engine_thread()
+        state["timeout"] = DialogBroker.DEFAULT_TIMEOUT
+        return state
+
+    def uninstall_tk_dialogs(self) -> Dict[str, Any]:
+        return {"removed": uninstall_tk_filedialog()}
+
+    def tk_dialogs_status(self) -> Dict[str, Any]:
+        return {
+            "installed": tk_filedialog_installed(),
+            "engineThread": engine_thread(),
+            "timeout": DialogBroker.DEFAULT_TIMEOUT,
+            "pending": self.broker.pending(),
+        }
+
+    def dialog_pending(self) -> List[Dict[str, Any]]:
+        """Blocking dialogs waiting for the browser, oldest first."""
+        return self.broker.pending()
+
+    def dialog_answer(self, dialog_id: int, value: Any) -> Dict[str, Any]:
+        """Unblock one dialog.  ``value`` is a path, a list of paths, or null."""
+        return self.broker.answer(dialog_id, value)
+
+    def dialog_cancel(self, dialog_id: int) -> Dict[str, Any]:
+        return self.broker.cancel(dialog_id)
+
+    def dialog_history(self) -> List[Dict[str, Any]]:
+        return self.broker.history()
 
     # ------------------------------------------------------------ saving
 
@@ -1446,6 +2307,38 @@ class FilesAPI:
         return {"ok": True, "error": None, "path": full, "dir": target_dir}
 
 
+#: One-shot memo of whether ``cmd.map_generate`` has ever produced an object in
+#: this process.  ``None`` until something tries; see
+#: :data:`MAP_GENERATE_BUILD_NOTE` for why nothing static can answer it.
+_MAP_GENERATE_STATUS: Dict[str, Any] = {"tried": False, "works": None}
+
+
+def _first_in(haystack: Sequence[str], *candidates: Optional[str]) -> Optional[str]:
+    """``PyMOLMapLoad``'s "be nice and choose the most appropriate col"."""
+    for candidate in candidates:
+        if candidate and candidate in haystack:
+            return candidate
+    return None
+
+
+def _reso_default(value: Any) -> Any:
+    """``float("%3.5f" % float(v))`` or ``""`` (``PyMOLMapLoad.py:124-131``)."""
+    if value is None:
+        return ""
+    try:
+        return float("%3.5f" % float(value))
+    except (TypeError, ValueError):
+        return ""
+
+
+def _reso_float(value: Any) -> float:
+    """An empty Pmw entry field is ``''``; ``cmd.map_generate`` wants a float."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _entry(full: str, name: str, is_dir: bool) -> Dict[str, Any]:
     size = 0
     mtime = 0.0
@@ -1533,6 +2426,10 @@ def uninstall(cmd: Any = None) -> bool:
         cmd = pymol.cmd
     if getattr(cmd, ATTR, None) is None:
         return False
+    # The tkinter shim is process-global; dropping the service without removing
+    # it would leave `sys.modules['tkinter.filedialog']` pointing at a broker
+    # nobody can answer any more.
+    uninstall_tk_filedialog()
     delattr(cmd, ATTR)
     return True
 

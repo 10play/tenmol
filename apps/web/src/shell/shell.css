@@ -229,6 +229,110 @@
   background: #24272a;
 }
 
+/* Internal GUI column: the OrthoLayoutPanel stack order ------------------
+ *
+ * NOT HERE, ON PURPOSE. `OrthoLayoutPanel` (layer1/Ortho.cpp:2261-2340) stacks
+ * bottom-up Control, ButMode, Wizard, Executive, so top-down the column is
+ * Executive, Wizard, ButMode, Control — but the ButMode block is PORTALLED in
+ * by `features/shortcuts` (the registry is frozen and declares no slot for it)
+ * and lands last. The shell fixes the order by stamping `style.order` from
+ * `INTERNAL_GUI_ORDER` (`shell/orthoPanel.ts`). A rule here would work in the
+ * browser and be untestable: vitest stubs CSS imports and jsdom implements no
+ * computed `order`.
+ */
+
+/* External GUI dock ------------------------------------------------------
+ *
+ * `QDockWidget` with `toggle_ext_window_dockable`. Four presentations:
+ * docked bottom (the default), docked left/right (Qt's `BottomToTop`
+ * re-orientation), floating, hidden (not rendered at all).
+ */
+
+.extgui {
+  flex-direction: column;
+}
+
+.extgui__body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.extgui__titlebar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-edge);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  cursor: default;
+  user-select: none;
+}
+
+.extgui__title {
+  color: var(--pm-text-dim);
+  letter-spacing: 0.06em;
+}
+
+.extgui__spacer {
+  flex: 1;
+}
+
+.extgui__btn {
+  padding: 0 5px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font: inherit;
+  font-size: 10px;
+  line-height: 12px;
+  cursor: pointer;
+}
+
+.extgui__btn.is-on {
+  background: var(--pm-btn-pressed);
+  color: var(--pm-text-bright);
+}
+
+/* Docked left/right: Qt flips the box layout to BottomToTop and drops the
+ * quickbutton stretch (pymol_qt_gui.py:196-204). The console and the
+ * quickbutton column are DOM siblings in that order, so BottomToTop is
+ * column-reverse — quickbuttons above the console, exactly as Qt renders it. */
+.extgui.extgui--side {
+  width: 320px;
+  min-height: 0;
+  border-top: none;
+}
+
+.extgui.extgui--left {
+  border-right: 1px solid var(--pm-edge);
+}
+
+.extgui.extgui--right {
+  border-left: 1px solid var(--pm-edge);
+}
+
+.extgui--side .extgui__body {
+  flex-direction: column-reverse;
+}
+
+.extgui.extgui--float {
+  position: fixed;
+  right: 24px;
+  bottom: 48px;
+  z-index: 300;
+  width: 640px;
+  max-width: calc(100vw - 48px);
+  height: 260px;
+  min-height: 0;
+  border: 1px solid var(--pm-edge);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+}
+
 /* Overlay panels ---------------------------------------------------------
  * Closed until opened. Rendering every installed overlay unconditionally put
  * ten panels in the document flow and pushed the viewport off screen.

@@ -18,7 +18,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import type { MovieEncoders, MovieStatus } from '@tenmol/protocol/topics/movie';
+import type { MovieEncoders, MovieProducePlan, MovieStatus } from '@tenmol/protocol/topics/movie';
 import type { MovieSource } from './movieSource';
 
 interface Props {
@@ -29,7 +29,7 @@ interface Props {
   log: (line: string) => void;
 }
 
-const FORMATS = ['png', 'mp4', 'mpg', 'mov', 'gif'] as const;
+const FORMATS = ['png', 'mp4', 'webm', 'mpg', 'mov', 'gif'] as const;
 type Format = (typeof FORMATS)[number];
 
 /** `file_dialogs.py` presets: clamp to <= 16:9, keep the aspect. */
@@ -40,12 +40,24 @@ export function presetSize(height: number, current: [number, number]): [number, 
   return [Math.round(height * clamped), height];
 }
 
-/** `movie.produce` picks the encoder from the extension (`movie.py:846`). */
+/**
+ * `movie.produce`'s encoder guess (`movie.py:915-933`), plus the availability
+ * check it makes right afterwards.
+ *
+ * `.mpg`/`.mpeg` go to `mpeg_encode` UNCONDITIONALLY — `produce` never falls
+ * back to ffmpeg for them, it just fails inside `_encode` with
+ * `produce-error: Unable to validate pymol.mpeg_encode` (measured: the frames
+ * are still rendered, as `.ppm`, and then thrown away). So a missing
+ * `mpeg_encode` has to grey `.mpg` out here rather than silently redirect it.
+ *
+ * `convert` is only ever reached when ffmpeg is absent, and it is not
+ * gif-specific: `_encode`'s convert branch runs for any extension.
+ */
 export function encoderFor(format: Format, encoders: MovieEncoders | null): string | null {
   if (format === 'png') return null;
   if (format === 'mpg') return encoders?.mpeg_encode ? 'mpeg_encode' : null;
   if (encoders?.ffmpeg) return 'ffmpeg';
-  if (format === 'gif' && encoders?.convert) return 'convert';
+  if (encoders?.convert) return 'convert';
   return null;
 }
 
@@ -56,6 +68,7 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
   const [ray, setRay] = useState(false);
   const [prefix, setPrefix] = useState('/tmp/tenmol-movie/frame');
   const [encoders, setEncoders] = useState<MovieEncoders | null>(null);
+  const [plan, setPlan] = useState<MovieProducePlan | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
@@ -90,6 +103,26 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
 
   const encoder = encoderFor(format, encoders);
   const supported = format === 'png' || encoder !== null;
+  const filename = `${prefix}.${format}`;
+
+  // The plan is what `produce` will decide, fetched before the button is
+  // pressed so the form can show the resolved (even) size and the exact `-crf`
+  // rather than describing an export that has not happened yet.
+  useEffect(() => {
+    if (format === 'png') {
+      setPlan(null);
+      return;
+    }
+    let alive = true;
+    void seed.current.source
+      .producePlan(filename, { width: size[0], height: size[1], quality })
+      .then((value) => {
+        if (alive) setPlan(value);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [filename, format, size, quality]);
 
   const doExport = async () => {
     setBusy(true);
@@ -109,8 +142,7 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
           setResult('export endpoint unavailable');
         }
       } else {
-        const filename = `${prefix}.${format}`;
-        await call('cmd.movie.produce', [filename], {
+        const out = await source.produce(filename, {
           mode: ray ? 'ray' : 'draw',
           quality,
           width: size[0],
@@ -118,7 +150,11 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
           quiet: 0,
           ...(encoder ? { encoder } : {}),
         });
-        setResult(`wrote ${filename}`);
+        setResult(
+          out.ok
+            ? `wrote ${out.filename} (${out.bytes.toLocaleString()} bytes, ${out.encoder})`
+            : `${out.encoder} produced nothing — see the console for its stderr`,
+        );
         log(`cmd.movie.produce("${filename}", encoder="${encoder ?? ''}")`);
       }
     } catch (error) {
@@ -196,6 +232,15 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
             encoder: {encoder ?? (format === 'png' ? 'n/a' : 'MISSING')}
           </span>
         </div>
+
+        {plan && (
+          <p className="mvedit__note">
+            {plan.width || plan.height ? `${plan.width}x${plan.height}` : 'viewport'} ·{' '}
+            {plan.frameGlob} · {plan.encoder === 'mpeg_encode' ? `q${plan.mpegQuality}` : `crf ${plan.crf}`}
+            {plan.twoPassPalette ? ' · two-pass palette' : ''}
+            {plan.fpsAdjusted ? ` · fps snapped ${plan.fps} -> ${plan.fpsLegal}` : ` · ${plan.fps} fps`}
+          </p>
+        )}
 
         <div className="mvedit__row">
           <input

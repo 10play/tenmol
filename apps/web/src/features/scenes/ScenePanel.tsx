@@ -23,6 +23,7 @@ import type { SceneRecord } from '@tenmol/protocol/topics/movie';
 import { useSession } from '../../app';
 import { useScenes } from './useScenes';
 import { SceneMenu } from './SceneMenu';
+import { ViewList } from './ViewList';
 import { renameProblem, reorder, sceneActions } from './sceneActions';
 import './scenes.css';
 
@@ -349,6 +350,14 @@ export function ScenePanel() {
           </div>
         ))}
       </div>
+
+      {/*
+        * Named views (`cmd.view`) live here rather than in their own slot: the
+        * user's question is "where is my saved camera", and the answer for
+        * scenes and for views is the same place. They are NOT the same feature
+        * — see `viewActions.ts`.
+        */}
+      <ViewList />
 
       <SceneMenu
         current={payload.current}

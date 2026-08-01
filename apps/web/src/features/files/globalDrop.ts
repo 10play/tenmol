@@ -74,6 +74,33 @@ export function dialogNeededFor(info: Pick<FileClassification, 'dialog'>): strin
 }
 
 /**
+ * Must this file be turned away before anything is sent to `cmd.load`?
+ *
+ * TWO independent reasons, and the drop path used to check NEITHER:
+ *
+ *  * `refused` — the client declines on purpose. Today that is `.pwg`, and it
+ *    is not a theoretical worry: `cmd.load` on a file whose whole content is
+ *    the word `delete` DELETES THAT FILE, measured over the socket in
+ *    `bridge/tests/test_wf_files.py`. The same parser opens ports, imports
+ *    arbitrary modules and starts a second HTTP server
+ *    (`modules/pymol/importing.py:516-615`). A drag-and-drop is exactly how a
+ *    hostile `.pwg` would arrive.
+ *  * `unavailable` — the loader raises in this build (`.stl`, `.vis`, `.mae`…).
+ *    `FilesPanel` already refuses these; the drop handler did not, so a dropped
+ *    `.stl` produced a raw `IncentiveOnlyException` in the console.
+ *
+ * Returns the message to show, or null to proceed.
+ */
+export function refusalFor(
+  info: Pick<FileClassification, 'refused' | 'unavailable'>,
+  name: string,
+): string | null {
+  if (info.refused) return ` ${name} was not loaded. ${info.refused}`;
+  if (info.unavailable) return ` ${name}: ${info.unavailable}`;
+  return null;
+}
+
+/**
  * The console line for a drop that cannot be completed here.
  *
  * Named rather than generic: "this needs the trajectory dialog" tells the user

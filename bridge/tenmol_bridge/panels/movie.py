@@ -86,6 +86,14 @@ __all__ = [
     "scene_thumbnail_png",
     "movie_export_png",
     "movie_encoders",
+    "movie_produce",
+    "produce_plan",
+    "LABEL_CAMERA",
+    "LABEL_STATES",
+    "LABEL_INDENT",
+    "MPEG_EXTENSIONS",
+    "EVEN_EXTENSIONS",
+    "FPS_LEGAL_VALUES",
     "SPEC_NONE",
     "SPEC_INTERPOLATED",
     "SPEC_KEY",
@@ -154,6 +162,18 @@ STORE_BITS: Tuple[Tuple[int, str], ...] = (
 #: ``MovieScene::THUMBNAIL_WIDTH/HEIGHT`` (``layer3/MovieScene.h:100-101``).
 THUMBNAIL_WIDTH = 220
 THUMBNAIL_HEIGHT = 124
+
+#: Gutter labels.  ``MovieDrawViewElem`` (``layer1/Movie.cpp:1727``) passes
+#: ``"camera"``; ``CMovie::draw`` (``:1845``) overlays ``"states"`` instead when
+#: ``CMovie::ViewElem`` is null, because then the strip is the state axis of a
+#: multi-state object and there is no camera track at all.
+LABEL_CAMERA = "camera"
+LABEL_STATES = "states"
+
+#: ``CMovie::LabelIndent = DIP2PIXEL(8 * 8)`` (``layer1/Movie.cpp:1867``): the
+#: right-hand gutter the label is drawn in, and the amount every hit test
+#: subtracts from ``rect.right`` before converting x to a frame (``:1495``).
+LABEL_INDENT = 64
 
 #: Settings the movie/scene UI binds to.  ``kind`` picks the getter so a float
 #: setting is never truncated and a string setting never becomes ``0``.
@@ -326,6 +346,9 @@ def _object_rows(session: Dict[str, Any], nframes: int) -> List[Dict[str, Any]]:
         rows.append(
             {
                 "object": str(name),
+                # ``ObjectDrawViewElem`` (``layer1/PyMOLObject.cpp``) passes
+                # ``obj->Name`` to ``ViewElemDraw`` as the gutter label.
+                "label": str(name),
                 "spec": _spec_levels(view_elem, nframes),
                 "scenes": [_scene_at(_elem(view_elem, i)) for i in range(nframes)],
             }
@@ -338,10 +361,28 @@ def movie_panel(
 ) -> Dict[str, Any]:
     """The movie timeline: cells, spec levels, per-frame commands and rows.
 
-    ``rows[0]`` is always the camera row (``cExecAll`` in
-    ``ExecutiveMotionDraw``); the rest are objects with motions.  ``height`` is
-    ``movie_panel_row_height * len(rows)``, the same arithmetic as
-    ``MovieGetPanelHeight`` (``layer1/Movie.cpp:1701``).
+    ROW SET = ``ExecutiveMotionDraw`` (``layer3/Executive.cpp:697``), which is
+    *not* "camera plus objects" unconditionally:
+
+    * the camera row exists only when ``MovieGetSpecLevel(G,0) >= 0``, i.e. when
+      ``CMovie::ViewElem`` is allocated — one ``mview store`` is enough;
+    * every object whose ``ObjectGetSpecLevel >= 0`` adds a row;
+    * if that yields **nothing** and ``SceneGetNFrame() > 1``,
+      ``ExecutiveCountMotions`` (``:684``) forces the count to 1 and
+      ``CMovie::draw`` (``layer1/Movie.cpp:1845``) labels that single strip
+      ``states`` instead of ``camera``, because it is the state axis of a
+      multi-state object, not a camera track;
+    * ``presentation`` collapses the panel to the camera row alone
+      (``Executive.cpp:711-720`` sets ``expected = 1`` and ``goto done``;
+      ``MovieGetPanelHeight`` returns one ``row_height``).
+
+    ``height`` is the LAYOUT height the web timeline uses,
+    ``movie_panel_row_height * len(rows)``.  It is deliberately **not**
+    ``MovieGetPanelHeight``: the bridge sets ``movie_panel 0`` at startup
+    (``engine.py:183``) so the C panel never steals viewport pixels from
+    ``OrthoReshape``, which makes the real ``MovieGetPanelHeight`` permanently
+    0.  ``panelActive`` reports that C answer separately, so nothing has to
+    guess which of the two it is looking at.
     """
     cmd = _resolve(cmd)
     nframes = int(cmd.count_frames())
@@ -374,21 +415,44 @@ def movie_panel(
             }
         )
 
-    rows: List[Dict[str, Any]] = [
-        {
-            "object": "",
-            "spec": _spec_levels(view_elem, nframes),
-            "scenes": [_scene_at(_elem(view_elem, i)) for i in range(nframes)],
-        }
-    ]
+    camera_row: Dict[str, Any] = {
+        "object": "",
+        "label": LABEL_CAMERA,
+        "spec": _spec_levels(view_elem, nframes),
+        "scenes": [_scene_at(_elem(view_elem, i)) for i in range(nframes)],
+    }
+    has_camera = bool(view_elem)
+
+    rows: List[Dict[str, Any]] = [camera_row] if has_camera else []
     if int(objects):
         rows.extend(_object_rows(session, nframes))
+
+    presentation = bool(cmd.get_setting_boolean("presentation"))
+    if not rows:
+        # ``ExecutiveCountMotions``' floor, and the ``states`` label that goes
+        # with it (``layer1/Movie.cpp:1845``: ``if (!ViewElem)``).
+        if nframes > 1:
+            rows = [dict(camera_row, label=LABEL_STATES)]
+    elif presentation and has_camera:
+        rows = rows[:1]
 
     row_height = 0
     try:
         row_height = int(cmd.get_setting_int("movie_panel_row_height"))
     except Exception:  # noqa: BLE001
         row_height = 0
+
+    # ``MovieGetPanelHeight`` (``layer1/Movie.cpp:1701``): the setting is an
+    # int, and a non-zero setting still yields nothing unless there is a movie
+    # program or a multi-frame scene.
+    panel_setting = 0
+    try:
+        panel_setting = int(cmd.get_setting_int("movie_panel"))
+    except Exception:  # noqa: BLE001
+        panel_setting = 0
+    panel_active = bool(panel_setting) and (
+        bool(int(cmd.get_movie_length())) or nframes > 1
+    )
 
     return {
         "nframes": nframes,
@@ -398,6 +462,15 @@ def movie_panel(
         "rowHeight": row_height,
         "height": row_height * len(rows),
         "matrix": bool(movie[MV_MATRIX_FLAG]) if len(movie) > MV_MATRIX_FLAG else False,
+        # -- ``MovieDraw``/``ExecutiveCountMotions`` parity ------------------
+        "motions": len(rows),
+        "presentation": presentation,
+        "label": rows[0]["label"] if rows else LABEL_STATES,
+        "labelIndent": LABEL_INDENT,
+        "panelActive": panel_active,
+        "panelHeight": (row_height if presentation else row_height * len(rows))
+        if panel_active
+        else 0,
     }
 
 
@@ -583,6 +656,298 @@ def movie_encoders(cmd: Optional[Any] = None) -> Dict[str, Any]:
 
 
 # --------------------------------------------------------------------------
+# encoded export -- `movie.produce`
+# --------------------------------------------------------------------------
+
+#: Extensions ``movie.produce`` hands to ``mpeg_encode``
+#: (``modules/pymol/movie.py:916``).
+MPEG_EXTENSIONS: Tuple[str, ...] = (".mpeg", ".mpg")
+
+#: Extensions whose dimensions ``produce`` forces even (``:939``).  H.264 and
+#: VP9 both need a macroblock-aligned frame; an odd width silently fails inside
+#: ffmpeg instead of inside PyMOL.
+EVEN_EXTENSIONS: Tuple[str, ...] = (".mp4", ".mov", ".webm")
+
+#: ``_encode``'s legal MPEG-1 frame rates (``modules/pymol/movie.py:736``).
+FPS_LEGAL_VALUES: Tuple[float, ...] = (23.976, 24, 25, 29.97, 30, 50, 59.94, 60)
+
+
+def produce_plan(
+    cmd: Optional[Any] = None,
+    filename: str = "",
+    encoder: str = "",
+    quality: int = -1,
+    width: int = 0,
+    height: int = 0,
+) -> Dict[str, Any]:
+    """Everything ``movie.produce`` decides before it renders a single frame.
+
+    ``produce`` makes six decisions and reports none of them: it returns
+    ``DEFAULT_SUCCESS`` (``None``) and prints.  A browser form has to know all
+    six *before* the button is pressed — which encoder will be picked, whether
+    it exists, what the frames will be called, and what the output dimensions
+    will actually be — so this reproduces the arithmetic of
+    ``modules/pymol/movie.py:906-951``, with the line numbers:
+
+    ``:906-910``  ``splitext``; an empty extension becomes ``.mpg``
+    ``:915-925``  encoder guess: ``.mpg``/``.mpeg`` -> mpeg_encode, else
+                  ffmpeg, else convert, else ``CmdException``
+    ``:928-933``  mpeg_encode -> ``.ppm`` frames, anything else -> ``.png``
+    ``:939-951``  ``.mp4``/``.mov``/``.webm`` -> even, aspect-preserving size
+    ``:901-904``  ``quality < 0`` -> ``movie_quality``, clamped to 100
+
+    and the two per-encoder mappings out of ``_encode`` (``:732``, ``:779``,
+    ``:783``, ``:799``) so the dialog can show the command it is about to run.
+
+    ONE DELIBERATE DIVERGENCE, in ``:943-947``.  When exactly one of
+    width/height is given, upstream derives the other with true division and
+    keeps the FLOAT — ``201 * 600 / 800`` is ``150.75``, ``150.75 % 2`` is
+    truthy, so it "evens" it to ``149.75`` and ``mpng`` renders an **odd**
+    200x149 frame that ffmpeg then refuses.  MEASURED: ``cmd.movie.produce(f,
+    mode='ray', width=201)`` writes 200x149 PNGs, ffmpeg exits 187 and the
+    ``.mp4`` is 0 bytes; the same request here truncates with ``int()`` first,
+    renders 200x150 and encodes.  Pinned by
+    ``bridge/tests/test_wf_movieverify.py``.
+    """
+    cmd = _resolve(cmd)
+    import pymol.movie as pymol_movie  # noqa: WPS433
+
+    stem, ext = os.path.splitext(str(filename))
+    if ext == "":
+        ext = ".mpg"
+    resolved_name = stem + ext
+    tmp_path = stem + ".tmp"
+
+    quality = int(quality)
+    if quality < 0:
+        quality = int(cmd.get_setting_int("movie_quality"))
+    if quality > 100:
+        quality = 100
+
+    encoder = str(encoder)
+    guessed = False
+    if not encoder:
+        guessed = True
+        if ext in MPEG_EXTENSIONS:
+            encoder = "mpeg_encode"
+        elif pymol_movie.find_exe("ffmpeg"):
+            encoder = "ffmpeg"
+        elif pymol_movie.find_exe("convert"):
+            encoder = "convert"
+        else:
+            encoder = ""
+
+    img_ext = ".ppm" if encoder == "mpeg_encode" else ".png"
+    known = encoder in ("ffmpeg", "convert", "mpeg_encode")
+    exe = pymol_movie.find_exe(encoder) if known else None
+    if encoder == "mpeg_encode":
+        # ``_encode`` does not use ``find_exe`` here: it asks the bundled
+        # ``pymol.mpeg_encode`` shim to validate itself (``:726``).
+        try:
+            from pymol import mpeg_encode as _mpeg  # noqa: WPS433
+
+            exe = _mpeg.validate()
+        except Exception:  # noqa: BLE001
+            exe = None
+
+    width, height = int(width), int(height)
+    viewport = [int(v) for v in cmd.get_viewport()]
+    if ext in EVEN_EXTENSIONS:
+        if width < 1 or height < 1:
+            w, h = viewport
+            if width > 0:
+                height = int(width * h / w)
+            elif height > 0:
+                width = int(height * w / h)
+            else:
+                width, height = w, h
+        if width % 2:
+            width -= 1
+        if height % 2:
+            height -= 1
+
+    fps = float(pymol_movie.get_movie_fps(cmd))
+    fps_legal = min(FPS_LEGAL_VALUES, key=lambda v: abs(v - fps))
+
+    return {
+        "filename": resolved_name,
+        "ext": ext,
+        "tmpdir": tmp_path,
+        "framePrefix": pymol_movie._prefix,
+        "frameExt": img_ext,
+        "frameGlob": "%s%%04d%s" % (pymol_movie._prefix, img_ext),
+        "encoder": encoder,
+        "encoderGuessed": guessed,
+        "encoderPath": exe,
+        "known": known,
+        "available": bool(exe),
+        "quality": quality,
+        "width": width,
+        "height": height,
+        "viewport": viewport,
+        "fps": fps,
+        # ``_encode:732`` - mpeg_encode's own 1..30 scale, inverted.
+        "mpegQuality": 1 + int(((100 - quality) * 29) / 100),
+        "fpsLegal": fps_legal,
+        "fpsAdjusted": fps_legal != round(fps, 3),
+        # ``_encode:779`` webm / ``:783`` everything else through ffmpeg.
+        "crf": (
+            "%.0f" % (65 - (quality / 2))
+            if ext == ".webm"
+            else ("10" if quality > 90 else "15" if quality > 80 else "20")
+        ),
+        # ``_encode:799`` convert's inter-frame delay, in 1/100 s.
+        "convertDelay": "%.3f" % (100.0 / fps) if fps else None,
+        "twoPassPalette": ext == ".gif" and encoder == "ffmpeg",
+    }
+
+
+class _ModalOverride:
+    """``pymol.cmd`` with ``mpng``'s ``modal`` argument pinned.
+
+    ``produce`` hard-codes ``modal=-1`` (``modules/pymol/movie.py:973``) and
+    ``MoviePNG`` treats any non-zero ``modal`` as "install ``MovieModalDraw``"
+    (``layer1/Movie.cpp:836-865``) unless the mode is ray.  **Measured over the
+    socket:** after a plain ``cmd.movie.produce('x.mp4', mode='draw')`` the very
+    next call raised ``Error: APIEnterNotModal(G)`` — the same blocker-A2
+    window ``movie_export_png`` already refuses to open for the PNG path.
+
+    ``produce`` takes ``_self``, so the fix needs no monkey-patching and no
+    fork of the 90-line function: hand it a proxy whose only difference is the
+    ``modal`` it passes on.  With ``modal=0`` ``MoviePNG`` runs its own
+    ``while(!M->complete)`` loop inside this one pump task, ``produce`` then
+    sees ``get_modal_draw() == 0`` and runs ``_encode`` inline instead of on a
+    daemon thread (``:982-987``) -- so when the call returns the file is on
+    disk and the temp directory is already gone.
+
+    The cost is honest and stated: the pump is busy for the whole export
+    instead of for none of it.  ``modal=1`` restores upstream's fire-and-forget
+    behaviour for callers that would rather have the window.
+    """
+
+    def __init__(self, cmd: Any, modal: int) -> None:
+        self._cmd = cmd
+        self._modal = int(modal)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._cmd, name)
+
+    def mpng(self, *args: Any, **kwargs: Any) -> Any:
+        kwargs["modal"] = self._modal
+        return self._cmd.mpng(*args, **kwargs)
+
+
+def movie_produce(
+    cmd: Optional[Any] = None,
+    filename: str = "",
+    mode: str = "",
+    first: int = 0,
+    last: int = 0,
+    preserve: int = 0,
+    encoder: str = "",
+    quality: int = -1,
+    quiet: int = 0,
+    width: int = 0,
+    height: int = 0,
+    modal: int = 0,
+) -> Dict[str, Any]:
+    """``cmd.movie.produce`` with a plan, no modal window, and a real answer.
+
+    Three things ``produce`` itself will not give a browser:
+
+    1. **A result.**  It returns ``DEFAULT_SUCCESS`` (``None``) whether ffmpeg
+       wrote 2 MB or exited 1; the only evidence is console text.  This returns
+       the plan plus ``ok``/``bytes``, so the dialog can say "wrote 2,023 bytes"
+       or "compression failed" without scraping the feedback stream.
+    2. **No ``APIEnterNotModal`` window** -- see :class:`_ModalOverride`.
+    3. **Resolved dimensions.**  The even-forcing of ``:948-951`` happens
+       inside ``produce`` and is never reported; here the plan computes it,
+       the already-even numbers are what gets passed down, and the caller is
+       told what they were.
+
+    Everything else is upstream's, unchanged: the encoder guess, the ``.ppm``
+    vs ``.png`` frames, ``set opaque_background``, ``set keep_alive`` for the
+    duration, the temp directory and its removal unless ``preserve``.
+    ``CmdException`` for an unknown or missing encoder is left to propagate,
+    because that is the message the user should see.
+    """
+    cmd = _resolve(cmd)
+    import pymol.movie as pymol_movie  # noqa: WPS433
+
+    plan = produce_plan(
+        cmd, filename=filename, encoder=encoder, quality=quality,
+        width=width, height=height,
+    )
+
+    # An empty filename is a DRY RUN, not `.mpg` in the current directory.
+    # ``produce`` would happily take ``os.path.splitext('') -> ('', '')``, turn
+    # it into ``.mpg``, create a ``.tmp`` directory beside the process cwd and
+    # render the whole movie into it before failing; a capability probe that
+    # calls every exported symbol with no arguments must not do that.
+    if not str(filename):
+        return dict(
+            plan,
+            ok=False,
+            bytes=0,
+            modal=int(modal),
+            preserve=int(preserve),
+            tmpdirExists=False,
+            frames=[],
+            skipped=True,
+        )
+
+    directory = os.path.dirname(plan["filename"]) or "."
+    try:
+        os.makedirs(directory, exist_ok=True)
+    except OSError:
+        pass
+
+    proxy = _ModalOverride(cmd, modal)
+    try:
+        pymol_movie.produce(
+            plan["filename"],
+            mode=mode,
+            first=int(first),
+            last=int(last),
+            preserve=int(preserve),
+            # Pass the RESOLVED encoder: with an empty string produce would
+            # guess again, and a guess that disagreed with the plan would make
+            # every number reported here a lie.
+            encoder=plan["encoder"],
+            quality=plan["quality"],
+            quiet=int(quiet),
+            width=plan["width"],
+            height=plan["height"],
+            _self=proxy,
+        )
+    finally:
+        # ``_encode:811`` is the only ``unset("keep_alive")`` there is, and it
+        # is not reached if ``mpng`` raises -- which would leave the engine
+        # pinned awake for the rest of the session.  Only safe to force when
+        # the export was synchronous; with ``modal=1`` the encode is still
+        # running on its own thread and owns the setting.
+        if not int(modal):
+            try:
+                cmd.unset("keep_alive")
+            except Exception:  # noqa: BLE001
+                pass
+
+    out = dict(plan)
+    exists = os.path.exists(plan["filename"])
+    out.update(
+        {
+            "ok": exists and os.path.getsize(plan["filename"]) > 0,
+            "bytes": os.path.getsize(plan["filename"]) if exists else 0,
+            "modal": int(modal),
+            "preserve": int(preserve),
+            "tmpdirExists": os.path.isdir(plan["tmpdir"]),
+            "frames": sorted(_listdir(plan["tmpdir"])),
+        }
+    )
+    return out
+
+
+# --------------------------------------------------------------------------
 # installation
 # --------------------------------------------------------------------------
 
@@ -596,6 +961,8 @@ EXPORTS: Dict[str, Any] = {
     "get_scene_thumbnail_png": scene_thumbnail_png,
     "movie_export_png": movie_export_png,
     "get_movie_encoders": movie_encoders,
+    "get_movie_produce_plan": produce_plan,
+    "movie_produce": movie_produce,
 }
 
 

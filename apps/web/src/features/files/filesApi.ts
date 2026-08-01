@@ -30,10 +30,15 @@ import {
   type LogStatus,
   type MaeDialogInfo,
   type MapDialogInfo,
+  type MapGenerateInfo,
+  type MapGenerateResult,
   type MovieDialogInfo,
   type MtzDialogInfo,
   type AlnDialogInfo,
   type OpenPlan,
+  type OpenWithPlan,
+  type PluginDialogRequest,
+  type PresentationPreset,
   type PartialGate,
   type PdbeLookup,
   type RecentEntry,
@@ -85,6 +90,34 @@ export interface FilesApi {
   mtzInfo(filename: string): Promise<MtzDialogInfo>;
   alnInfo(filename: string, format: string): Promise<AlnDialogInfo>;
   loadAln(filename: string, mapping: Record<string, string>): Promise<unknown>;
+
+  /** `PyMOLMapLoad`, rebuilt: Generate Map from Reflections. */
+  mapGenerateInfo(filename: string): Promise<MapGenerateInfo>;
+  mapGenerateRun(args: {
+    filename: string;
+    amplitudes: string;
+    phases: string;
+    weights: string;
+    minRes: number | '';
+    maxRes: number | '';
+    namePrefix: string;
+    fofc: boolean;
+  }): Promise<MapGenerateResult>;
+
+  /** macOS Finder "Open With", as a decision the caller can act on. */
+  openWithPlan(filename: string): Promise<OpenWithPlan>;
+  presentationPreset(fullScreen?: boolean): Promise<PresentationPreset>;
+  presentationRestore(previous: Record<string, string>): Promise<Record<string, string>>;
+
+  /** Blocking `tkinter.filedialog` calls from legacy plugins. */
+  installTkDialogs(): Promise<{ installed: boolean; already: boolean }>;
+  uninstallTkDialogs(): Promise<{ removed: boolean }>;
+  dialogPending(): Promise<PluginDialogRequest[]>;
+  dialogAnswer(
+    dialogId: number,
+    value: string | string[] | null,
+  ): Promise<{ answered: boolean; error: string | null }>;
+  dialogCancel(dialogId: number): Promise<{ answered: boolean; error: string | null }>;
 
   saveCheck(filename: string, filter?: string): Promise<SaveCheck>;
   saveMoleculeInfo(): Promise<SaveMoleculeInfo>;
@@ -187,6 +220,33 @@ export function createFilesApi(transport: FilesTransport): FilesApi {
     mtzInfo: (filename) => call<MtzDialogInfo>('mtz_dialog_info', [filename]),
     alnInfo: (filename, format) => call<AlnDialogInfo>('aln_dialog_info', [filename, format]),
     loadAln: (filename, mapping) => call('load_aln', [filename, mapping]),
+
+    mapGenerateInfo: (filename) => call<MapGenerateInfo>('map_generate_info', [filename]),
+    mapGenerateRun: (args) =>
+      call<MapGenerateResult>('map_generate_run', [
+        args.filename,
+        args.amplitudes,
+        args.phases,
+        args.weights,
+        args.minRes,
+        args.maxRes,
+        args.namePrefix,
+        args.fofc,
+      ]),
+
+    openWithPlan: (filename) => call<OpenWithPlan>('open_with_plan', [filename]),
+    presentationPreset: (fullScreen = false) =>
+      call<PresentationPreset>('presentation_preset', [fullScreen]),
+    presentationRestore: (previous) =>
+      call<Record<string, string>>('presentation_restore', [previous]),
+
+    installTkDialogs: () => call<{ installed: boolean; already: boolean }>('install_tk_dialogs'),
+    uninstallTkDialogs: () => call<{ removed: boolean }>('uninstall_tk_dialogs'),
+    dialogPending: () => call<PluginDialogRequest[]>('dialog_pending'),
+    dialogAnswer: (dialogId, value) =>
+      call<{ answered: boolean; error: string | null }>('dialog_answer', [dialogId, value]),
+    dialogCancel: (dialogId) =>
+      call<{ answered: boolean; error: string | null }>('dialog_cancel', [dialogId]),
 
     saveCheck: (filename, filter = '') => call<SaveCheck>('save_check', [filename, filter]),
     saveMoleculeInfo: () => call<SaveMoleculeInfo>('save_molecule_info'),

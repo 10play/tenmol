@@ -103,7 +103,16 @@ export function VolumeCanvas(props: VolumeCanvasProps) {
     point: -1,
     dragged: false,
     constraint: null as DragConstraint,
-    initX: 0,
+    /**
+     * `self.init_pos` — null until a press is ACCEPTED, i.e. lands inside the
+     * plot rect grown by DOT_RADIUS (`volume.py:311-316`). Upstream leaves the
+     * previous press in `init_pos` forever, so a ctrl+R-drag that begins
+     * outside the rect zooms from a stale anchor; that is an upstream bug and
+     * is not reproduced. What IS reproduced is upstream's behaviour before any
+     * press has ever been accepted (`init_pos is None` -> `mouseReleaseEvent`'s
+     * `if self.init_pos and self.zoom_pos` is false): no band, no zoom.
+     */
+    initX: null as number | null,
     initY: 0,
     button: -1,
     mods: 0,
@@ -152,7 +161,16 @@ export function VolumeCanvas(props: VolumeCanvasProps) {
       boxFill: '#ffffff',
       textColor: '#333333',
     });
-  }, [view, points, props.path, props.originalVmin, props.originalVmax, hoverPoint, zoomFrom, zoomTo]);
+  }, [
+    view,
+    points,
+    props.path,
+    props.originalVmin,
+    props.originalVmax,
+    hoverPoint,
+    zoomFrom,
+    zoomTo,
+  ]);
 
   /* --------------------------------------------------------------- wheel */
 
@@ -212,7 +230,16 @@ export function VolumeCanvas(props: VolumeCanvasProps) {
       }
     }
 
-    if (!inPlotArea(view, x, y)) return;
+    if (!inPlotArea(view, x, y)) {
+      // The press never became a drag: forget the anchor, or the next
+      // ctrl+R-drag would paint its band from wherever the LAST accepted press
+      // happened to be. (Measured before this guard: pressing at x=10, left of
+      // the axis, then ctrl+R-dragging to x=300 zoomed from the ref's initial
+      // 0 — a band the user never saw.)
+      drag.current.initX = null;
+      drag.current.point = -1;
+      return;
+    }
 
     event.currentTarget.setPointerCapture(event.pointerId);
     const point = findPoint(view, points, x, y);
@@ -249,6 +276,7 @@ export function VolumeCanvas(props: VolumeCanvasProps) {
     if (leftOnly || rightOnly) {
       const mods = maskOf(event);
       if (rightOnly && mods === MOD_CTRL) {
+        if (state.initX === null) return; // no accepted press: no anchor
         setZoomFrom(state.initX);
         setZoomTo(x);
         return;
@@ -256,7 +284,7 @@ export function VolumeCanvas(props: VolumeCanvasProps) {
       if (state.point >= 0) {
         state.dragged = true;
         if (rightOnly && !state.constraint) {
-          const dx = x - state.initX;
+          const dx = x - (state.initX ?? x);
           const dy = y - state.initY;
           state.constraint = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
         }
@@ -283,7 +311,6 @@ export function VolumeCanvas(props: VolumeCanvasProps) {
     event.preventDefault();
     const state = drag.current;
     const mods = maskOf(event);
-    const { x } = localPos(event);
     setTooltip(null);
 
     if (!state.dragged && state.point >= 0) {
@@ -304,9 +331,21 @@ export function VolumeCanvas(props: VolumeCanvasProps) {
 
     state.point = -1;
     state.constraint = null;
+    // Qt keeps `init_pos` forever and gets away with it because a QWidget has
+    // an implicit mouse grab: after a release, no further move events reach the
+    // widget unless a new press did. The DOM has no such rule — a button
+    // pressed on another element and dragged across this canvas delivers
+    // pointermove here — so the anchor is dropped with the grab.
+    state.initX = null;
     setHoverPoint(-1);
 
-    if (zoomFrom !== null && zoomTo !== null && zoomFrom !== x) {
+    // `if self.init_pos.x() != self.zoom_pos.x()` (volume.py:358-362): the
+    // comparison is ANCHOR vs LAST MOVE, not anchor vs the release coordinate.
+    // Reading the release x instead threw away a real band whenever pointerup
+    // happened to arrive back at the anchor with no pointermove there (the
+    // browser is free to deliver a fresh coordinate on pointerup alone), and
+    // Qt in that case zooms to the band the user actually saw painted.
+    if (zoomFrom !== null && zoomTo !== null && zoomFrom !== zoomTo) {
       const a = xToData(view, convertX(view, zoomFrom));
       const b = xToData(view, convertX(view, zoomTo));
       const [vmin, vmax] = a <= b ? [a, b] : [b, a];

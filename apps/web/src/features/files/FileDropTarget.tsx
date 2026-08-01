@@ -14,6 +14,7 @@ import {
   dialogNeededFor,
   dialogRequiredMessage,
   planFromDataTransfer,
+  refusalFor,
   windowAccelerator,
 } from './globalDrop';
 import type { FileClassification } from '@tenmol/protocol/topics/files';
@@ -29,6 +30,45 @@ export function FileDropTarget() {
     const say = (line: string, kind?: 'error' | 'warning') =>
       session.stores.feedback.appendClient(line, kind);
 
+    /*
+     * ROW 295 — INSTALL THE PLUGIN FILE-DIALOG SHIM, AND DO IT HERE.
+     *
+     * `panels/files.py::BridgeFileDialog` only reaches a plugin once
+     * `install_tk_dialogs` has run: `files.install()` deliberately does NOT
+     * install it (that would put `tkFileDialog` in `sys.modules` for every
+     * bridge process, which `bridge/tests/test_wf_plugins.py` asserts against).
+     * Nothing was calling it, so `import tkinter.filedialog` inside PyMOL still
+     * resolved to the REAL module — and that is not a cosmetic difference:
+     * MEASURED on macOS, a plugin worker thread calling the real
+     * `askopenfilename()` inside this process aborts it outright
+     * ("NSInternalInconsistencyException ... NSWindow should only be
+     *  instantiated on the main thread", `Fatal Python error: Aborted`,
+     * exit 134). Upstream has the same requirement and meets it by importing
+     * `pmg_qt.mimic_tk` at GUI start (`mimic_tk.py:96-127`).
+     *
+     * It lives in this component because this is the only part of the files
+     * feature that is ALWAYS mounted: `FilesPanel` is an overlay slot
+     * (`registry.ts` region 'overlay'), so anything hung off it exists only
+     * while the user has the File dialogs panel open — the same bug the drop
+     * handler had. Retried a few times because the socket may not be up on the
+     * first tick; it stops on the first success.
+     */
+    let installTimer: number | undefined;
+    let disposed = false;
+    let attempts = 0;
+    const armPluginDialogs = async (): Promise<void> => {
+      if (disposed) return;
+      attempts += 1;
+      try {
+        await api.ensure();
+        await api.installTkDialogs();
+      } catch {
+        if (disposed || attempts >= 5) return;
+        installTimer = window.setTimeout(() => void armPluginDialogs(), 1000);
+      }
+    };
+    void armPluginDialogs();
+
     const onDragOver = (event: DragEvent) => {
       if (!event.dataTransfer) return;
       // Without preventDefault the browser NAVIGATES to the dropped file and
@@ -43,6 +83,13 @@ export function FileDropTarget() {
           'cmd.tenmol_files.classify',
           [path],
         );
+        // Refusals FIRST: a `.pwg` classifies as `plain` and would otherwise
+        // go straight to `cmd.load`, which executes it. See `refusalFor`.
+        const refusal = refusalFor(info, label);
+        if (refusal !== null) {
+          say(refusal, 'warning');
+          return;
+        }
         const dialog = dialogNeededFor(info);
         if (dialog !== null) {
           say(dialogRequiredMessage(label, dialog), 'warning');
@@ -146,6 +193,8 @@ export function FileDropTarget() {
     window.addEventListener('drop', onDrop);
     window.addEventListener('keydown', onKey, true);
     return () => {
+      disposed = true;
+      if (installTimer !== undefined) window.clearTimeout(installTimer);
       window.removeEventListener('dragover', onDragOver);
       window.removeEventListener('drop', onDrop);
       window.removeEventListener('keydown', onKey, true);

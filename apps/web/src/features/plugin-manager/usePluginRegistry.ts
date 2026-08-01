@@ -1,8 +1,10 @@
 /**
- * Read-only view of PyMOL's plugin registry.
+ * View of PyMOL's plugin registry.
  *
  * SCOPE DECISION (product owner, wave 3): v1 ships the Plugin Manager
- * READ-ONLY — list, preferences, startup paths. Install-from-file,
+ * READ-ONLY — list, preferences, startup paths — with ONE exception added in
+ * wave 6, the per-plugin `autoload` checkbox (inventory row 463), which writes
+ * only PyMOL's own `~/.pymolpluginsrc.py`. Install-from-file,
  * install-from-URL and repository browse are cut, because those paths download
  * and execute arbitrary Python from the network into the user's interpreter,
  * guarded only by `confirm_network_access()` (`modules/pymol/plugins/
@@ -16,9 +18,16 @@
  * literally `pymol.plugins.findPlugins`. Verified over the wire.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useSession } from '../../app';
+import {
+  initializePluginSystem,
+  isAutoloadEnabled,
+  readAutoload,
+  setAutoload,
+  type CallFn,
+} from './pluginSystem';
 
 /** One discovered plugin. `findPlugins` returns `{name: filename}` and nothing more. */
 export interface DiscoveredPlugin {
@@ -26,6 +35,11 @@ export interface DiscoveredPlugin {
   filename: string;
   /** Which entry of `get_startup_path()` this file came from. */
   startupPath: string;
+  /**
+   * `PluginInfo.autoload` — enabled at startup. Absent from the `autoload` dict
+   * means enabled, which is why this is resolved here and not left nullable.
+   */
+  autoload: boolean;
 }
 
 export interface PluginRegistry {
@@ -35,9 +49,13 @@ export interface PluginRegistry {
   loading: boolean;
   error: string | null;
   refresh: () => void;
+  /** Flip one plugin's enabled-at-startup flag. Rejects if the scan failed. */
+  setAutoload: (name: string, enabled: boolean) => Promise<void>;
+  /** Name of the plugin whose checkbox is mid-flight, or null. */
+  saving: string | null;
 }
 
-const EMPTY: Omit<PluginRegistry, 'refresh'> = {
+const EMPTY: Omit<PluginRegistry, 'refresh' | 'setAutoload' | 'saving'> = {
   plugins: [],
   startupPaths: [],
   preferences: { verbose: false, instantsave: true },
@@ -55,22 +73,30 @@ export function longestOwningPath(filename: string, paths: readonly string[]): s
   return best;
 }
 
-/** Minimal slice of `Session` this feature needs; keeps the loader React-free. */
-export type CallFn = <T>(fn: string, args?: readonly unknown[]) => Promise<T>;
+export type { CallFn } from './pluginSystem';
 
 /**
  * The whole data load, as a plain async function so it is testable without a
  * renderer. The hook below is a thin wrapper over this.
+ *
+ * ORDER MATTERS. `plugins.initialize(-2)` comes FIRST because it is what reads
+ * `~/.pymolpluginsrc.py`; the bridge never calls it, so without this line
+ * `autoload` and the preferences are always PyMOL's compiled-in defaults and
+ * any later write silently discards the user's saved choices (measured in
+ * `bridge/tests/test_wf_plugins.py`). It imports no plugin code.
  */
 export async function loadPluginRegistry(
   call: CallFn,
-): Promise<Omit<PluginRegistry, 'refresh' | 'loading' | 'error'>> {
+): Promise<Omit<PluginRegistry, 'refresh' | 'loading' | 'error' | 'setAutoload' | 'saving'>> {
+  await initializePluginSystem(call);
+
   const startupPaths = (await call<string[]>('plugins.get_startup_path')) ?? [];
   const found = (await call<Record<string, string>>('plugins.findPlugins', [startupPaths])) ?? {};
   // pref_get is one call per key; there are only two and they are cheap.
-  const [verbose, instantsave] = await Promise.all([
+  const [verbose, instantsave, autoload] = await Promise.all([
     call<boolean>('plugins.pref_get', ['verbose', false]),
     call<boolean>('plugins.pref_get', ['instantsave', true]),
+    readAutoload(call),
   ]);
 
   const plugins = Object.entries(found)
@@ -78,6 +104,7 @@ export async function loadPluginRegistry(
       name,
       filename,
       startupPath: longestOwningPath(filename, startupPaths),
+      autoload: isAutoloadEnabled(name, autoload),
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -92,17 +119,27 @@ export function usePluginRegistry(): PluginRegistry {
   const session = useSession();
   const [state, setState] = useState(EMPTY);
   const [nonce, setNonce] = useState(0);
+  const [saving, setSaving] = useState<string | null>(null);
+  /**
+   * The checkbox writes `~/.pymolpluginsrc.py`, so it must never run against a
+   * registry that failed to initialize — that is exactly the case where the
+   * in-memory `autoload` dict does not reflect the file and a save would
+   * destroy it.
+   */
+  const ready = useRef(false);
 
   const refresh = useCallback(() => setNonce((n) => n + 1), []);
 
   useEffect(() => {
     let cancelled = false;
+    ready.current = false;
     setState((s) => ({ ...s, loading: true, error: null }));
 
     void (async () => {
       try {
         const loaded = await loadPluginRegistry((fn, args) => session.call(fn, args));
         if (cancelled) return;
+        ready.current = true;
         setState({ ...loaded, loading: false, error: null });
       } catch (e) {
         if (cancelled) return;
@@ -117,5 +154,26 @@ export function usePluginRegistry(): PluginRegistry {
     };
   }, [session, nonce]);
 
-  return { ...state, refresh };
+  const toggle = useCallback(
+    async (name: string, enabled: boolean) => {
+      if (!ready.current) {
+        throw new Error(
+          'plugin registry not initialized; refusing to write ~/.pymolpluginsrc.py',
+        );
+      }
+      setSaving(name);
+      try {
+        await setAutoload((fn, args) => session.call(fn, args), name, enabled);
+        setState((s) => ({
+          ...s,
+          plugins: s.plugins.map((p) => (p.name === name ? { ...p, autoload: enabled } : p)),
+        }));
+      } finally {
+        setSaving(null);
+      }
+    },
+    [session],
+  );
+
+  return { ...state, refresh, setAutoload: toggle, saving };
 }

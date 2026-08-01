@@ -109,9 +109,14 @@ export function callOf(session: Session): CallFn {
  * `invalidate: 'palette'` is for writes that change RGB values themselves
  * (`set_color`, `space`), `'ramps'` for `ramp_new` / `ramp_update` / `delete`.
  * Everything else only recolours atoms and leaves the table alone.
+ *
+ * `echo: null` is for the one caller that submits through `cmd.do` (the colour
+ * editor's Apply): PyMOL echoes a `do` itself — measured, `PyMOL>set_color …`
+ * then `PyMOL>recolor` — so a client echo would print the command twice. A
+ * `{t:'call'}` is NOT echoed by PyMOL, which is why everything else passes one.
  */
 export function useColorAction(): (
-  echo: string,
+  echo: string | null,
   run: (call: CallFn) => Promise<unknown>,
   invalidate?: 'palette' | 'ramps' | null,
 ) => Promise<string | null> {
@@ -119,7 +124,7 @@ export function useColorAction(): (
   return useCallback(
     async (echo, run, invalidate = null) => {
       const call = callOf(session);
-      session.stores.feedback.appendClient(echo);
+      if (echo !== null) session.stores.feedback.appendClient(echo);
       try {
         await run(call);
       } catch (error) {

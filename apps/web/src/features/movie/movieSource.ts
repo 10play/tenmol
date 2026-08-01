@@ -26,6 +26,8 @@ import type {
   MovieEncoders,
   MovieExportResult,
   MoviePanel,
+  MovieProducePlan,
+  MovieProduceResult,
   MovieStatus,
   ScenePanelPayload,
   SceneThumbnail,
@@ -48,6 +50,10 @@ export interface MovieSource {
   thumbnail(name: string): Promise<SceneThumbnail | null>;
   encoders(): Promise<MovieEncoders | null>;
   exportPng(prefix: string, options?: Record<string, unknown>): Promise<MovieExportResult | null>;
+  /** What `movie.produce` *would* do — encoder, frame names, resolved size. */
+  producePlan(filename: string, options?: Record<string, unknown>): Promise<MovieProducePlan | null>;
+  /** `movie.produce` with no `APIEnterNotModal` window and a real result. */
+  produce(filename: string, options?: Record<string, unknown>): Promise<MovieProduceResult>;
   /** True once `ensure()` has proven the aggregate endpoints exist. */
   readonly ready: boolean;
   readonly lastError: string | null;
@@ -194,6 +200,43 @@ export function createMovieSource(call: CallFn): MovieSource {
         return fail(error);
       }
     },
+
+    async producePlan(
+      filename: string,
+      options: Record<string, unknown> = {},
+    ): Promise<MovieProducePlan | null> {
+      if (!(await ensure())) return null;
+      try {
+        return await call<MovieProducePlan>('cmd.get_movie_produce_plan', [filename], options);
+      } catch (error) {
+        return fail(error);
+      }
+    },
+
+    /**
+     * `cmd.movie_produce` when the bridge module is loaded, `cmd.movie.produce`
+     * when it is not.
+     *
+     * The fallback is NOT equivalent and says so: upstream `produce` hard-codes
+     * `mpng(modal=-1)`, and measured over this socket the call right after it
+     * raised ` Error: APIEnterNotModal(G)` with `get_modal_draw() == 1`. The
+     * bridge endpoint pins `modal=0`, so it returns only once the file exists.
+     */
+    async produce(
+      filename: string,
+      options: Record<string, unknown> = {},
+    ): Promise<MovieProduceResult> {
+      if (await ensure()) {
+        return call<MovieProduceResult>('cmd.movie_produce', [filename], options);
+      }
+      await call('cmd.movie.produce', [filename], options);
+      return {
+        filename,
+        ok: true,
+        bytes: 0,
+        modal: -1,
+      } as MovieProduceResult;
+    },
   };
 }
 
@@ -334,6 +377,51 @@ export const range = {
   minsert: (count: number, frame = 0, object = '') =>
     act('cmd.minsert', [count, frame], `cmd.minsert(${count},${frame})`, {
       kwargs: object ? { object } : {},
+      invalidatesPanel: true,
+    }),
+} as const;
+
+/**
+ * The five writes the movie PANEL itself issues, byte-identical to the strings
+ * `CMovie::release` hands to `PParse`/`PLog` (`layer1/Movie.cpp:1616-1699`).
+ *
+ * Separate from `range` above on purpose: `range` is the editor form, where an
+ * empty object box means "leave the argument off and take PyMOL's default".
+ * Here the object argument is never absent — it is `''`, `'same'`, `'none'` or
+ * a name, chosen by `objectArgument()` — because the camera row and column mode
+ * differ ONLY in that argument, and dropping it turns a camera-row drag into a
+ * column drag. No spaces after the commas: that is how the C formats them, and
+ * a `.pml` log has to be indistinguishable.
+ */
+export const panelGesture = {
+  mmove: (target: number, source: number, count: number, object: string) =>
+    act('cmd.mmove', [target, source, count], `cmd.mmove(${target},${source},${count},object='${object}')`, {
+      kwargs: { object },
+      invalidatesPanel: true,
+    }),
+  mcopy: (target: number, source: number, count: number, object: string) =>
+    act('cmd.mcopy', [target, source, count], `cmd.mcopy(${target},${source},${count},object='${object}')`, {
+      kwargs: { object },
+      invalidatesPanel: true,
+    }),
+  minsert: (count: number, frame: number, object: string) =>
+    act('cmd.minsert', [count, frame], `cmd.minsert(${count},${frame},object='${object}')`, {
+      kwargs: { object },
+      invalidatesPanel: true,
+    }),
+  mdelete: (count: number, frame: number, object: string) =>
+    act('cmd.mdelete', [count, frame], `cmd.mdelete(${count},${frame},object='${object}')`, {
+      kwargs: { object },
+      invalidatesPanel: true,
+    }),
+  clear: (first: number, last: number, object: string) =>
+    act('cmd.mview', ['clear'], `cmd.mview('clear',first=${first},last=${last},object='${object}')`, {
+      kwargs: { first, last, object },
+      invalidatesPanel: true,
+    }),
+  /** Ctrl+Shift wheel (`layer1/Movie.cpp:1561-1564`). */
+  rowHeight: (value: number) =>
+    act('cmd.set', ['movie_panel_row_height', value], `cmd.set('movie_panel_row_height',${value})`, {
       invalidatesPanel: true,
     }),
 } as const;

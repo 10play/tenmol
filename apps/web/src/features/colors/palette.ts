@@ -281,6 +281,146 @@ export function findByName(state: PaletteState, name: string): ColorEntry | null
   return state.entries.find((e) => e.name.toLowerCase() === lower) ?? null;
 }
 
+/* ------------------------------------------------------------------ *
+ * The colour editor's list and name box (`edit_colors_dialog`)
+ * ------------------------------------------------------------------ */
+
+/**
+ * `list_colors`'s sort, which is `QListWidgetItem::operator<` — i.e.
+ * `QString::operator<`, a case-SENSITIVE UTF-16 code-unit compare, the same
+ * order Python's `sorted()` gives.
+ *
+ * Not `localeCompare`. MEASURED both ways over the live 178 digit-free names:
+ * the two agree on every one of them (they are all lowercase ASCII, and even
+ * `_deepsalmon` and the five `tv_*` names land in the same places). They stop
+ * agreeing the moment a user defines a colour with a capital in it —
+ * `['MyColour','apple'].sort()` is `MyColour, apple` (Qt/Python) whereas
+ * `localeCompare` answers `apple, MyColour` — and `set_color` accepts any name,
+ * so the editor uses the deterministic one.
+ */
+export function compareColorNames(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/**
+ * The model behind `list_colors`.
+ *
+ * The Qt dialog fills it from `cmd.get_color_indices()` — mode 1,
+ * `ColorGetStatus(a) == 1`, i.e. **names with no digit in them**
+ * (`layer4/Cmd.cpp:1341`, `layer1/Color.cpp:784-800`) — and then APPENDS every
+ * name its own Apply button creates, whether or not it has a digit
+ * (`pymol_qt_gui.py:596-600`).
+ *
+ * MEASURED: `set_color tenmol_wf_dlg` (no digit) lands at slot 5388 and DOES
+ * show up in the next `get_color_indices()`, which went 178 -> 179;
+ * `set_color tenmol_wf_dlg2` (digit) lands at 5389 and does NOT. So a refetch
+ * alone reproduces the append for digit-free names only. Every slot past the
+ * built-in table is a user definition, so those are added here explicitly —
+ * which also picks up colours defined from the console, something the Qt list
+ * never shows until the whole dialog is reopened (and not even then, for a
+ * digit-bearing name).
+ */
+export function editorNames(state: PaletteState): string[] {
+  const out = new Set<string>();
+  for (const entry of state.named) out.add(entry.name);
+  for (const entry of state.entries) {
+    if (entry.index >= COLOR_TABLE_SIZE) out.add(entry.name);
+  }
+  return [...out].sort(compareColorNames);
+}
+
+/**
+ * The 2-decimal grid `input_R/G/B` live on.
+ *
+ * `colors.ui` declares no `decimals` property for the three `QDoubleSpinBox`es,
+ * so they carry Qt's default of 2, and `setValue()` rounds to it. That is why
+ * `run()` can print with `%.2f` and still be showing the truth: what the
+ * spinbox holds after `load_color` IS the 2-decimal value.
+ *
+ * Quantising here keeps the same invariant on the web side — the swatch, the
+ * three numbers, the slider and the `set_color` line all show one value. Without
+ * it the swatch previews `grey50`'s real 0.50505 while Apply writes 0.51.
+ *
+ * (Qt-side claim is from `colors.ui` + the Qt default, not observed: there is no
+ * Qt binding in this checkout to run the dialog against.)
+ */
+export function quantiseChannels(rgb: Rgb): Rgb {
+  const q = (v: number) => Math.round(Math.max(0, Math.min(1, v)) * 100) / 100;
+  return [q(rgb[0]), q(rgb[1]), q(rgb[2])];
+}
+
+/**
+ * The exact line `run()` submits — `pymol_qt_gui.py:589-590`:
+ *
+ *     self.cmd.do('set_color %s, [%.2f, %.2f, %.2f]\nrecolor' % (name, R, G, B))
+ *
+ * The embedded newline is two commands in one `cmd.do`, and it does run both:
+ * measured over the socket, the console answers `PyMOL>set_color …`,
+ * ` Color: "…" defined as [ 0.120, 0.340, 0.560 ].`, `PyMOL>recolor`.
+ *
+ * `toFixed(2)` for `%.2f`: MEASURED equal on all 357 values this dialog can
+ * produce — the 101 slider positions k/100 and the 256 hex values k/255 — see
+ * `bridge/tests/test_wf_colors.py::test_toFixed_2_is_pythons_percent_2f`.
+ */
+export function applyLine(name: string, rgb: Rgb): string {
+  return `set_color ${name}, [${rgb.map((v) => v.toFixed(2)).join(', ')}]\nrecolor`;
+}
+
+/** What `load_color` decided: an RGB to show, or null for "leave it alone". */
+export interface NameLookup {
+  index: number;
+  rgb: Rgb;
+  /** true when the local table answered and no round trip was needed. */
+  local: boolean;
+}
+
+/**
+ * `load_color(name)` — `pymol_qt_gui.py:556-562`, over the wire.
+ *
+ * The dialog does `get_color_index(name)` then `get_color_tuple(index)` on every
+ * keystroke, and `ColorGetIndex` is much more than a dictionary lookup
+ * (`layer1/Color.cpp:661-748`). MEASURED against the live engine:
+ *
+ *     'red'      -> 4          exact
+ *     'RED'      -> 4          case-insensitive
+ *     're'       -> 4          case-insensitive PREFIX
+ *     'gr'       -> 3   green  (prefix, first match wins — not 'grey')
+ *     ''         -> 1   black  (!), so clearing the box loads black
+ *     'zzz'      -> -1         ignored
+ *     '0xff8800' -> 1090488320 inline TRGB, tuple (1, 0.533, 0)
+ *     '104'      -> 104        a numeric string is an index
+ *     'front'    -> -6         and `get_color_tuple(-6)` is **None**
+ *
+ * So a local table lookup cannot stand in for it, and this asks the backend for
+ * anything the table does not answer exactly. Exact hits (every click in the
+ * list) cost nothing.
+ *
+ * THE GUARD IS `index < 0`, NOT `index == -1`. The Qt dialog only tests -1
+ * (`pymol_qt_gui.py:558`), but `atomic`/`object`/`front`/`back` resolve to
+ * -4/-5/-6/-7 and `cmd.get_color_tuple` returns None for all of them (mode 0 is
+ * `if(index >= 0)`, `layer4/Cmd.cpp:1336`) — measured, with a
+ * `cmd-Error: Unknown color '-6'.` on the console. `rgb[0]` on None then raises
+ * TypeError inside the `textChanged` handler, so typing "front" into the
+ * desktop dialog's name box throws. Here it is simply ignored.
+ */
+export async function resolveColorName(
+  state: PaletteState,
+  name: string,
+  call: CallFn,
+): Promise<NameLookup | null> {
+  const exact = state.entries.find((e) => e.name === name);
+  if (exact) return { index: exact.index, rgb: exact.rgb, local: true };
+
+  const index = await call<unknown>('get_color_index', [name]).catch(() => null);
+  if (typeof index !== 'number' || index < 0) return null;
+
+  const cached = state.entries[index];
+  if (cached && cached.index === index) return { index, rgb: cached.rgb, local: true };
+
+  const tuple = toRgb(await call<unknown>('get_color_tuple', [index]).catch(() => null));
+  return tuple ? { index, rgb: tuple, local: false } : null;
+}
+
 /**
  * The generated bands. `ColorReset` lays them out contiguously
  * (`layer1/Color.cpp:1089-1185`); the picker shows them behind an "advanced"

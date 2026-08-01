@@ -32,6 +32,29 @@
   line-height: 1.5;
 }
 
+.apbs__probe {
+  margin: 0 0 8px;
+}
+
+.apbs__list {
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--pm-bg);
+  border: 1px solid var(--pm-edge);
+  list-style: none;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.apbs__found {
+  color: var(--pm-text-bright);
+}
+
+.apbs__missing {
+  color: var(--pm-text-dim);
+}
+
 .apbs__script {
   margin: 0 0 8px;
   padding: 6px;
@@ -46,6 +69,7 @@
 }
 
 .apbs__btn {
+  margin: 0 0 8px;
   padding: 2px 12px;
   background: var(--pm-btn-enabled);
   border: 1px solid var(--pm-edge);

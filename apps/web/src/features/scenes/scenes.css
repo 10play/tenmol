@@ -303,3 +303,80 @@
 .scrow.is-dropzone {
   outline: 1px dashed var(--accent, #6bf);
 }
+
+/* --- named camera views (`cmd.view`, 00:336) -----------------------------
+
+   Visually subordinate to the scene bin on purpose: a view is eighteen floats
+   in a Python dict, not a scene, and the panel should not imply it carries
+   colours, reps or a thumbnail. */
+
+.vwlist {
+  border-top: 1px solid var(--pm-line);
+  padding: 2px 0;
+}
+
+.vwlist__head {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 4px;
+}
+
+.vwlist__title {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--pm-text-dim);
+}
+
+.vwlist__name {
+  width: 84px;
+  font: inherit;
+  font-size: 11px;
+  background: var(--pm-bg, #111);
+  color: inherit;
+  border: 1px solid var(--pm-line);
+  padding: 1px 3px;
+}
+
+.vwlist__name.is-invalid {
+  outline: 1px solid var(--error, #d9534f);
+}
+
+.vwlist__err {
+  margin: 1px 4px;
+  font-size: 10px;
+  color: var(--error, #d9534f);
+}
+
+.vwlist__rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 2px 4px 4px;
+}
+
+.vwrow {
+  display: inline-flex;
+  border: 1px solid var(--pm-line);
+}
+
+.vwrow__name,
+.vwrow__del {
+  font: inherit;
+  font-size: 11px;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  padding: 1px 5px;
+  cursor: pointer;
+}
+
+.vwrow__del {
+  border-left: 1px solid var(--pm-line);
+  color: var(--pm-text-dim);
+}
+
+.vwrow__name:hover,
+.vwrow__del:hover {
+  background: var(--pm-hover, #2a2a2a);
+}

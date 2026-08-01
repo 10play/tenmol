@@ -13,6 +13,7 @@ import type {
   FileClassification,
   MaeDialogInfo,
   MapDialogInfo,
+  MapGenerateInfo,
   MtzDialogInfo,
   PartialGate,
   TrajDialogInfo,
@@ -464,6 +465,142 @@ export function MtzDialog({
           onChange={(e) => setResoMax(Number(e.target.value))}
         />
       </Field>
+    </Modal>
+  );
+}
+
+/* --------------------------------------------------------- map generate */
+
+/**
+ * `PyMOLMapLoad` (`modules/pmg_tk/PyMOLMapLoad.py:10-345`) — the legacy Tk
+ * "PyMOL Map Generation" dialog, rebuilt.
+ *
+ * Three Pmw groups, kept: Column Labels (amplitudes / phases / weights, the
+ * weights list led by a literal `"None"`, all three pre-picked by
+ * `guessCols`), Input Options (min/max resolution) and Map Options (name
+ * prefix + an FoFc checkbutton). OK is `cmd.map_generate` followed by the
+ * representation `default_fofc_map_rep` / `default_2fofc_map_rep` names.
+ *
+ * TWO THINGS THE ORIGINAL GETS WRONG, both measured and both fixed here:
+ *
+ *  1. `cmd.map_generate` returns the map name whether or not it worked
+ *     (`creating.py:288`), so `PyMOLMapLoad.py:262`'s success test never fires
+ *     and the Tk dialog goes on to isomesh an object that does not exist. The
+ *     bridge answers with `created`, read back from `cmd.get_names()`.
+ *  2. This tree compiles the generator out (`NO_MMLIBS`,
+ *     `layer3/Executive.cpp:6929-6935`), so it fails on every input. The banner
+ *     says so up front instead of letting the user find out.
+ *
+ * The dialog is still offered, because the failure is a BUILD property: a tree
+ * built with mmlibs makes the same OK button work.
+ */
+export function MapGenerateDialog({
+  filename,
+  info,
+  onRun,
+  onClose,
+}: {
+  filename: string;
+  info: MapGenerateInfo;
+  onRun: (args: {
+    amplitudes: string;
+    phases: string;
+    weights: string;
+    minRes: number | '';
+    maxRes: number | '';
+    namePrefix: string;
+    fofc: boolean;
+  }) => void;
+  onClose: () => void;
+}) {
+  const [amplitudes, setAmplitudes] = useState(
+    info.guessAmplitudes ?? info.amplitudes[0] ?? '',
+  );
+  const [phases, setPhases] = useState(info.guessPhases ?? info.phases[0] ?? '');
+  // `self._wt_chooser.selectitem("None")` (`PyMOLMapLoad.py:113`).
+  const [weights, setWeights] = useState('None');
+  const [minRes, setMinRes] = useState<number | ''>(info.minRes);
+  const [maxRes, setMaxRes] = useState<number | ''>(info.maxRes);
+  const [namePrefix, setNamePrefix] = useState('');
+  const [fofc, setFofc] = useState(false);
+
+  const rep = fofc ? info.fofcRep : info.twoFofcRep;
+  const blocked = Boolean(info.error) || !amplitudes || !phases;
+
+  return (
+    <Modal
+      title="PyMOL Map Generation"
+      onClose={onClose}
+      footer={
+        <>
+          <span className="fdlg__spacer" />
+          <button type="button" className="fdlg__btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="fdlg__btn fdlg__btn--go"
+            disabled={blocked}
+            onClick={() =>
+              onRun({ amplitudes, phases, weights, minRes, maxRes, namePrefix, fofc })
+            }
+          >
+            OK
+          </button>
+        </>
+      }
+    >
+      <div className="fdlg__path">{filename}</div>
+      {info.supported === false && <Unavailable message={info.buildNote} />}
+      {info.error && <div className="fdlg__error">{info.error}</div>}
+
+      <Field label="Amplitudes">
+        <select value={amplitudes} onChange={(e) => setAmplitudes(e.target.value)}>
+          {info.amplitudes.map((col) => (
+            <option key={col}>{col}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Phases">
+        <select value={phases} onChange={(e) => setPhases(e.target.value)}>
+          {info.phases.map((col) => (
+            <option key={col}>{col}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Weights">
+        <select value={weights} onChange={(e) => setWeights(e.target.value)}>
+          {info.weights.map((col) => (
+            <option key={col}>{col}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Min. Resolution">
+        <input
+          type="number"
+          step={0.1}
+          value={minRes}
+          onChange={(e) => setMinRes(e.target.value === '' ? '' : Number(e.target.value))}
+        />
+      </Field>
+      <Field label="Max Resolution">
+        <input
+          type="number"
+          step={0.1}
+          value={maxRes}
+          onChange={(e) => setMaxRes(e.target.value === '' ? '' : Number(e.target.value))}
+        />
+      </Field>
+      <Field
+        label="New Map Name Prefix"
+        hint="Blank uses the dataset name from the amplitudes column (PyMOLMapLoad.py:245-249)"
+      >
+        <input value={namePrefix} onChange={(e) => setNamePrefix(e.target.value)} />
+      </Field>
+      <Check label="FoFc" checked={fofc} onChange={setFofc} />
+      <div className="fdlg__hint">
+        {`Will build: ${rep} (${fofc ? 'default_fofc_map_rep' : 'default_2fofc_map_rep'})`}
+      </div>
     </Modal>
   );
 }

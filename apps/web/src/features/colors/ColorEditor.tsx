@@ -3,18 +3,23 @@
  * (`modules/pmg_qt/pymol_qt_gui.py:547-611`) over `pmg_qt/forms/colors.ui`.
  *
  * Widget-for-widget: a sorted list of the **178 digit-free** names (the Qt
- * dialog populates from `cmd.get_color_indices()`, not `all=1`), a live swatch
- * (`frame_color`), a name field, three 0..1 numeric inputs stepping 0.01
- * (`input_R/G/B`), three 0..100 sliders (`slider_R/G/B`), and Apply.
+ * dialog populates from `cmd.get_color_indices()`, not `all=1`) plus whatever
+ * this session has defined, a live swatch (`frame_color`), a name field, three
+ * 0..1 numeric inputs stepping 0.01 (`input_R/G/B`), three 0..100 sliders
+ * (`slider_R/G/B`), and Apply.
  *
  * Behaviours copied deliberately, because they are what make it feel like the
  * PyMOL dialog rather than a colour picker:
  *
  *  * selecting in the list writes the NAME field, and it is the name field's
  *    change that loads the RGB (`currentTextChanged -> setText`, then
- *    `textChanged -> load_color`) — so typing a known name loads it too;
- *  * `load_color` returns early when `get_color_index` answers -1, leaving the
- *    sliders where they were instead of resetting to black;
+ *    `textChanged -> load_color`) — so typing a known name loads it too, and so
+ *    does typing a PREFIX of one, or `0xff8800`, or `104` (see
+ *    `resolveColorName`);
+ *  * `load_color` returns early when the index is negative, leaving the sliders
+ *    where they were instead of resetting to black;
+ *  * the three channels live on the spinboxes' 2-decimal grid, so the swatch
+ *    shows the value Apply will write and not something 1/255 away from it;
  *  * Apply goes through `cmd.do('set_color name, [r, g, b]\nrecolor')` with
  *    **2 decimal places**, so the console shows exactly what the desktop shows,
  *    and a brand-new name is appended to the list and selected;
@@ -27,34 +32,74 @@
  * `layer1/Color.cpp:704-712`), and the seven special-colour chips.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SPECIAL_COLORS, cssToRgb, rgbToCss } from '@tenmol/protocol';
-import { findByName, type PaletteState, type Rgb } from './palette';
-import { useColorAction } from './usePalette';
+import {
+  applyLine,
+  editorNames,
+  findByName,
+  quantiseChannels,
+  resolveColorName,
+  type PaletteState,
+  type Rgb,
+} from './palette';
+import { callOf, useColorAction } from './usePalette';
+import { useSession } from '../../app';
 
 const CHANNELS = ['R', 'G', 'B'] as const;
 
 export function ColorEditor({ palette }: { palette: PaletteState }) {
+  const session = useSession();
   const act = useColorAction();
   const [name, setName] = useState('red');
-  const [rgb, setRgb] = useState<Rgb>([1, 0, 0]);
+  const [rgb, setRgbState] = useState<Rgb>([1, 0, 0]);
   const [filter, setFilter] = useState('');
   const [status, setStatus] = useState<string | null>(null);
+  /** What the hex box is showing while it is being typed into; see below. */
+  const [hexDraft, setHexDraft] = useState<string | null>(null);
 
-  // `input_name.textChanged -> load_color` (pymol_qt_gui.py:609). The lookup is
-  // the local table, which is `get_color_index` + `get_color_tuple` already
-  // fetched; a miss leaves the sliders alone, exactly like the early return at
-  // `pymol_qt_gui.py:557-558`.
+  // `load_color` is synchronous in Qt and asynchronous here, so every write to
+  // the channels carries a token and a late reply that no longer owns the token
+  // is dropped. That covers both races the desktop dialog cannot have: two
+  // keystrokes whose replies land out of order, and a slider dragged while a
+  // name lookup is still in flight (which would otherwise snap back).
+  const token = useRef(0);
+
+  // Everything that writes the channels goes through the spinbox grid, so the
+  // swatch, the numbers, the sliders and the `set_color` line never disagree.
+  const setRgb = (next: Rgb) => {
+    token.current++;
+    setRgbState(quantiseChannels(next));
+  };
+
+  // The table the lookup consults, held in a ref rather than read as a
+  // dependency. `load_color` is connected to `textChanged` and to NOTHING else
+  // (`pymol_qt_gui.py:609`); `usePalette` hands out a NEW state object on every
+  // refetch, and the Colours window's "refetch" button is in the title bar,
+  // visible while this tab is open — as a dependency it re-ran the lookup and
+  // reset half-made channels to the named colour (measured: R dragged to 0.42,
+  // one refetch, R back at 1.00).
+  const paletteRef = useRef(palette);
   useEffect(() => {
-    const entry = findByName(palette, name);
-    if (entry) setRgb(entry.rgb);
-  }, [name, palette]);
+    paletteRef.current = palette;
+  }, [palette]);
+
+  // `input_name.textChanged -> load_color` (pymol_qt_gui.py:609), which is
+  // `get_color_index` + `get_color_tuple` — see `resolveColorName` for why that
+  // cannot be a local table lookup. A miss leaves the sliders where they are,
+  // like the early return at `pymol_qt_gui.py:557-558`.
+  useEffect(() => {
+    const mine = ++token.current;
+    void resolveColorName(paletteRef.current, name, callOf(session)).then((found) => {
+      if (found && token.current === mine) setRgbState(quantiseChannels(found.rgb));
+    });
+  }, [name, session]);
 
   const names = useMemo(() => {
-    const list = palette.named.map((entry) => entry.name).sort((a, b) => a.localeCompare(b));
+    const list = editorNames(palette);
     const needle = filter.trim().toLowerCase();
     return needle ? list.filter((n) => n.toLowerCase().includes(needle)) : list;
-  }, [palette.named, filter]);
+  }, [palette, filter]);
 
   const setChannel = (i: number, value: number) => {
     const next: [number, number, number] = [rgb[0], rgb[1], rgb[2]];
@@ -68,13 +113,10 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
       setStatus('name is required');
       return;
     }
-    // `%.2f` and the embedded newline, from pymol_qt_gui.py:589-590.
-    const line = `set_color ${clean}, [${rgb.map((v) => v.toFixed(2)).join(', ')}]\nrecolor`;
-    const error = await act(
-      `PyMOL>${line.replace('\n', ' ; ')}`,
-      (call) => call('do', [line]),
-      'palette',
-    );
+    // No client echo: this goes out as `cmd.do`, and PyMOL echoes BOTH lines
+    // itself — measured, `PyMOL>set_color …`, ` Color: "…" defined as [ … ].`,
+    // `PyMOL>recolor`. Adding our own would print the command twice.
+    const error = await act(null, (call) => call('do', [applyLine(clean, rgb)]), 'palette');
     setStatus(error ?? `set_color ${clean} applied and recoloured`);
   };
 
@@ -123,7 +165,12 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
 
         <label className="cedit__field">
           <span>name</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} spellCheck={false} />
+          <input
+            aria-label="input_name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            spellCheck={false}
+          />
         </label>
 
         {CHANNELS.map((channel, i) => (
@@ -150,16 +197,27 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
           </div>
         ))}
 
+        {/*
+          The draft is not decoration. A controlled input whose value is
+          `rgbToCss(rgb)` cannot be TYPED into: the first keystroke gives a
+          string `cssToRgb` refuses, the state does not move, and React puts the
+          old text straight back. Only a paste ever worked. So the field holds
+          its own text while it is being edited and snaps to the canonical
+          (2-decimal, see `quantiseChannels`) form on blur.
+        */}
         <label className="cedit__field">
           <span>hex</span>
           <input
-            value={rgbToCss(rgb)}
+            aria-label="input_hex"
+            value={hexDraft ?? rgbToCss(rgb)}
             spellCheck={false}
             onChange={(e) => {
+              setHexDraft(e.target.value);
               const parsed = cssToRgb(e.target.value);
               if (parsed) setRgb(parsed);
             }}
-            title="0xRRGGBB is what ColorGetIndex itself parses (layer1/Color.cpp:704-712)"
+            onBlur={() => setHexDraft(null)}
+            title="0xRRGGBB is what ColorGetIndex itself parses (layer1/Color.cpp:704-712); the value lands on the spinboxes' 2-decimal grid, so #ff8800 settles as #ff8700"
           />
         </label>
 

@@ -14,11 +14,14 @@
 
 import { useEffect, useState } from 'react';
 import { useSession, useStore } from '../../app';
+import { BusyOverlay } from './BusyOverlay';
 import { CommandLine } from './CommandLine';
 import { FeedbackLog } from './FeedbackLog';
 import { OrthoConsole } from './OrthoConsole';
+import { OrthoLoopRect } from './OrthoLoopRect';
 import { QuickButtons } from './QuickButtons';
 import { getConsoleSource } from './consoleSource';
+import { showSplash } from './orthoOverlays';
 import './console.css';
 
 /**
@@ -121,12 +124,31 @@ export function ConsolePanel() {
           >
             clear
           </button>
+          {/* The splash, made reachable. `OrthoInit` raises `SplashFlag` only
+              when it is given `showSplash` (`layer1/Ortho.cpp:2729-2731`) and
+              the bridge boots with `options.show_splash = 0`
+              (`engine.py:132`, measured in `test_wf_ortho.py`), so a browser
+              never inherits one. `cmd.splash(0)` runs the real `OrthoSplash`
+              and the banner arrives as ordinary feedback; raising the store's
+              flag then reproduces what the flag DOES — force the whole
+              scrollback visible over the scene until the first click or Esc
+              (`:1638`, `:967`, `:2523`). */}
+          <button
+            type="button"
+            className="console__bar-btn"
+            title="cmd.splash(0) — show PyMOL's banner over the viewport (click or Esc to dismiss)"
+            onClick={() => showSplash((fn, args) => session.call(fn, args), source.store)}
+          >
+            splash
+          </button>
         </div>
         <FeedbackLog />
         <CommandLine />
       </div>
       <QuickButtons />
       <OrthoConsole />
+      <BusyOverlay />
+      <OrthoLoopRect />
     </>
   );
 }

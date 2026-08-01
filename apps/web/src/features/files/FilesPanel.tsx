@@ -32,10 +32,12 @@ import type {
   LogStatus,
   MaeDialogInfo,
   MapDialogInfo,
+  MapGenerateInfo,
   MovieDialogInfo,
   MtzDialogInfo,
   MultiFileTarget,
   PartialGate,
+  PluginDialogRequest,
   RecentEntry,
   RenderInfo,
   SaveMoleculeInfo,
@@ -48,12 +50,20 @@ import {
   AlnDialog,
   MaeDialog,
   MapDialog,
+  MapGenerateDialog,
   MtzDialog,
   PartialDialog,
   TrajDialog,
   baseName,
   type AlnInfo,
 } from './LoadDialogs';
+import { refusalFor } from './globalDrop';
+import {
+  PLUGIN_DIALOG_POLL_MS,
+  answerForPluginDialog,
+  pickerForPluginDialog,
+  pluginDialogMessage,
+} from './pluginDialogs';
 import { ExportMoleculeDialog, SaveObjectDialog, type MoleculeSaveRequest } from './SaveDialogs';
 import { MovieDialog, PngDialog, RenderPanel } from './ImageDialogs';
 import { FetchDialog, LogDialog, RecentDialog } from './ToolsDialogs';
@@ -66,6 +76,7 @@ type Dialog =
   | { kind: 'map'; filename: string; mapType: string; info: MapDialogInfo }
   | { kind: 'mae'; filename: string; info: MaeDialogInfo }
   | { kind: 'mtz'; filename: string; info: MtzDialogInfo }
+  | { kind: 'mapgen'; filename: string; info: MapGenerateInfo }
   | { kind: 'aln'; filename: string; info: AlnInfo }
   | { kind: 'partial'; filename: string; gate: PartialGate }
   | { kind: 'export-molecule'; info: SaveMoleculeInfo }
@@ -159,8 +170,19 @@ export function FilesPanel() {
        * the bridge, which derives it from the loader registry rather than a
        * name list (`panels/files.py::_is_sentinel_loader`).
        */
-      if (step.unavailable) {
-        say(` ${filename}: ${step.unavailable}`, 'warning');
+      /*
+       * REFUSED formats come first and are a different thing from unavailable
+       * ones: `.pwg` loads perfectly well, which is the problem. `cmd.load` on
+       * a `.pwg` runs its directives with no confirmation — measured, a file
+       * containing only the word `delete` deleted itself
+       * (`bridge/tests/test_wf_files.py`) — and the same parser opens a port,
+       * imports an arbitrary module and starts a second HTTP server
+       * (`modules/pymol/importing.py:516-615`). It classifies as `plain`, so
+       * without this gate it went straight through.
+       */
+      const refusal = refusalFor(step, filename);
+      if (refusal !== null) {
+        say(refusal, 'warning');
         return false;
       }
 
@@ -349,6 +371,29 @@ export function FilesPanel() {
         run: async () => {
           if (!(await ensure())) return;
           setDialog({ kind: 'fetch', info: await api.fetchInfo() });
+        },
+      },
+      {
+        /*
+         * `PyMOLMapLoad` has NO menu entry anywhere in the Qt front-end — it is
+         * dead code reachable only from the Tk skin. Giving it one here is the
+         * whole point of porting it: `cmd.map_generate` is a real command with
+         * no other UI. The dialog itself says, up front, that this build
+         * compiles the generator out.
+         */
+        id: 'map-generate',
+        label: 'Generate Map from Reflections…',
+        run: async () => {
+          if (!(await ensure())) return;
+          const result = await pick({
+            mode: 'open',
+            title: 'Reflection file (MTZ)',
+            filters: ['Reflections (*.mtz)', 'All Files (*)'],
+            accept: 'Open',
+          });
+          if (!result) return;
+          const filename = first(result.paths);
+          setDialog({ kind: 'mapgen', filename, info: await api.mapGenerateInfo(filename) });
         },
       },
       { id: 'sep1', separator: true },
@@ -567,6 +612,63 @@ export function FilesPanel() {
    * mounted by the viewport slot, which is always on screen.
    */
 
+  /* -------------------------------------------- blocking plugin dialogs */
+
+  /**
+   * Answer legacy plugins parked inside `tkinter.filedialog`.
+   *
+   * The bridge shim (`panels/files.py::BridgeFileDialog`) blocks the plugin's
+   * Python thread and parks a request; this drains it into the same path
+   * picker every other dialog in this area uses, and posts the answer back.
+   * See `pluginDialogs.ts` for why it polls instead of riding the `dialog`
+   * topic (both halves of that live in frozen files).
+   *
+   * STATED LIMITATION: this panel is an OVERLAY slot, so the poll only runs
+   * while the File dialogs panel is open. A plugin that asks for a file with
+   * the panel closed stays blocked until it is opened — the request survives
+   * for `DialogBroker.DEFAULT_TIMEOUT` (300 s) and is picked up then. Moving
+   * the poll to an always-mounted slot is the fix, and that slot belongs to
+   * WP-25 (plugin manager), not here.
+   */
+  const pluginBusy = useRef(false);
+  useEffect(() => {
+    if (!hello) return undefined;
+    let cancelled = false;
+
+    const tick = async () => {
+      if (pluginBusy.current || cancelled) return;
+      let requests: PluginDialogRequest[];
+      try {
+        requests = await api.dialogPending();
+      } catch {
+        return; // service not installed yet; the next tick will retry
+      }
+      const request = requests[0];
+      if (!request || cancelled) return;
+
+      pluginBusy.current = true;
+      say(pluginDialogMessage(request));
+      try {
+        const result = await pick(pickerForPluginDialog(request));
+        await api.dialogAnswer(
+          request.dialogId,
+          answerForPluginDialog(request, result ? result.paths : null),
+        );
+      } catch (e) {
+        say(` plugin dialog failed: ${String(e)}`, 'error');
+        await api.dialogCancel(request.dialogId).catch(() => undefined);
+      } finally {
+        pluginBusy.current = false;
+      }
+    };
+
+    const timer = window.setInterval(() => void tick(), PLUGIN_DIALOG_POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [api, hello, pick, say]);
+
   /* ------------------------------------------------------------- render */
 
   return (
@@ -678,6 +780,34 @@ export function FilesPanel() {
                 `load_mtz ${dialog.filename}, ${args.prefix}, ${args.amplitudes}, ${args.phases}, ${args.weights}, ${args.resoMin}, ${args.resoMax}`,
               )
               .then(finish);
+          }}
+        />
+      )}
+
+      {dialog.kind === 'mapgen' && (
+        <MapGenerateDialog
+          filename={dialog.filename}
+          info={dialog.info}
+          onClose={finish}
+          onRun={(args) => {
+            void api
+              .mapGenerateRun({ filename: dialog.filename, ...args })
+              .then((result) => {
+                if (result.error) say(` map_generate: ${result.error}`, 'error');
+                else
+                  say(
+                    ` map_generate: created ${result.prefix}` +
+                      (result.reps.length
+                        ? ` and ${result.reps.map((r) => r.name).join(', ')}`
+                        : ''),
+                  );
+                // `autoclose_dialogs` decides whether OK closes the form
+                // (`PyMOLMapLoad.py:323-325`); a failure keeps it open either
+                // way so the user can fix a column and retry.
+                if (result.ok && result.autoclose) finish();
+                else if (result.ok) setDialog({ kind: 'none' });
+              })
+              .catch((e: unknown) => say(` map_generate failed: ${String(e)}`, 'error'));
           }}
         />
       )}
@@ -1028,6 +1158,7 @@ const emptyClassification: FileClassification = {
   mapType: null,
   alnFormat: null,
   cmsTraj: null,
+  refused: null,
   unavailable: null,
 };
 
