@@ -89,3 +89,52 @@ def test_every_drain_has_at_least_one_owner(symbol):
     assert drain_lint.EXPECTED_CALL_SITES.get(
         symbol
     ), f"{symbol} has no owner; the lint would ban it outright"
+
+
+# --- protocol-surface checks (area 11) --------------------------------------
+#
+# These run against the DISPATCHER rather than a browser, because they are
+# claims about the wire contract, not about any panel. Kept here rather than in
+# an e2e spec so they fail fast in the bridge suite.
+
+
+def test_the_drain_lint_module_is_importable_from_the_repo_root():
+    """tools/parity is on sys.path for this suite; a move would break the gate."""
+    assert hasattr(drain_lint, "check")
+    assert hasattr(drain_lint, "EXPECTED_CALL_SITES")
+
+
+def test_completion_resolves_a_partial_keyword():
+    """`cmd._parser.complete` backs the console's Tab key.
+
+    Verified over the real socket during wave 4: 'colo' -> 'color'. Asserted
+    in-process too, so a policy change that revokes the grant fails here rather
+    than silently disabling Tab in the UI.
+
+    Starts the singleton only if nothing else in the run owns it — PyMOL allows
+    exactly one and raises on a second start(), so skipping on "not started"
+    would make this test order-dependent and usually vacuous.
+    """
+    pytest.importorskip("pymol")
+    import sys
+
+    sys.argv = ["pymol"]
+    import pymol
+
+    started_here = pymol.cmd._COb is None
+    if started_here:
+        opts = pymol.invocation.options
+        opts.no_gui = 1
+        opts.internal_gui = 0
+        opts.internal_feedback = 0
+        opts.external_gui = 0
+        from pymol2 import SingletonPyMOL
+
+        instance = SingletonPyMOL()
+        instance.start()
+    try:
+        assert pymol.cmd._parser.complete("colo") == "color"
+    finally:
+        if started_here:
+            instance.stop()
+
