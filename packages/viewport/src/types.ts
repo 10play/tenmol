@@ -281,6 +281,8 @@ export interface ViewportHandle {
   readonly cameraRpc: { turns: number; moves: number; zooms: number; errors: number };
   /** `rasterizing` as the drag gate saw it, most recent last. */
   readonly cameraGate: readonly boolean[];
+  /** Client-side pick counters. Zero unless the backend cannot pick for itself. */
+  readonly localPick: { attempts: number; hits: number; misses: number };
   readonly inputStats: { buttons: number; drags: number; wheels: number; coalesced: number };
   destroy(): void;
 }

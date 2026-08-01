@@ -32,6 +32,7 @@ import { repName } from '@tenmol/protocol';
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
 import { createCompositor } from './compositor';
 import { createCameraDriver } from './input/camera';
+import { createPickIndex } from './picking';
 import { createInputController } from './input/mouse';
 import type { GeometryCache } from './modeG/cache';
 import { isEmptyGeometryFrame } from './modeG/frames';
@@ -385,6 +386,8 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
    * path (which can pick, and which honours the ButMode table).
    */
   const gateSamples: boolean[] = [];
+  const pickIndex = createPickIndex();
+  const pickStats = { attempts: 0, hits: 0, misses: 0 };
   const cameraDriver = createCameraDriver({
     call: (fn, args = []) => transport.call(fn, [...args]),
     onError,
@@ -402,6 +405,43 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     },
     transport,
     geometry: () => ({ cssWidth: cssSize.width, cssHeight: cssSize.height, dpr: size.dpr }),
+    /**
+     * CLIENT-SIDE PICK, only when the backend cannot pick for itself.
+     *
+     * PyMOL's pick renders a colour buffer and reads pixels
+     * (`layer1/ScenePicking.cpp`), so a bridge with no GL context cannot do it
+     * at all — a click there selects nothing, silently. This resolves the click
+     * against the same geometry Mode G is drawing and issues a real selection.
+     *
+     * NOT enabled against a GL backend on purpose: measured agreement with
+     * PyMOL's own pick is ~93.5%, i.e. about one click in fifteen lands on a
+     * neighbouring atom. That is not good enough to replace an authoritative
+     * pick, but it is far better than the alternative here, which is nothing.
+     */
+    onPick: (_point, ev) => {
+      if (compositor.state.rasterizing) return; // the server will pick; leave it alone
+      if (view === null) return;
+      // The index wants DOM coordinates in CSS pixels against the SCENE
+      // rectangle, not the PyMOL-space point the input path produces (that is
+      // already y-flipped and dpr-scaled, and would pick the mirrored atom).
+      const box = surface.glCanvas.getBoundingClientRect();
+      const rect = { width: stats.sceneWidth || cssSize.width, height: stats.sceneHeight || cssSize.height };
+      const hit = pickIndex.pick(view, rect, ev.clientX - box.left, ev.clientY - box.top, {
+        pixelRatio: size.dpr,
+      });
+      pickStats.attempts++;
+      if (hit === null) {
+        pickStats.misses++;
+        return;
+      }
+      pickStats.hits++;
+      // `index` is 0-based in the CGO pick payload; PyMOL's `obj\`N` selection
+      // syntax is 1-based. Verified natively: index 10 resolves to "u\`11".
+      const selection = `${hit.object}\`${hit.index + 1}`;
+      void transport
+        .call('cmd.select', ['sele', selection])
+        .catch((cause: unknown) => onError(cause instanceof Error ? cause : new Error(String(cause))));
+    },
     onActivity: () => {
       lastInputAt = now();
       pixelSource.invalidate?.();
@@ -520,10 +560,16 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       // show; `compositor.draw()` re-requests it the moment that changes.
       if (!compositor.shouldDraw(rep)) {
         renderer.removeRep(frame.header.rep);
+        pickIndex.removeRep(frame.header.rep);
         forgetGeometryFor(frame.header.rep);
         return;
       }
       const problems = renderer.apply(frame);
+      // The pick index shadows the renderer exactly: same frames in, same reps
+      // out. A GL-free backend cannot run PyMOL's pick pass (it renders a
+      // colour buffer and reads pixels), so this is the only way a click can
+      // become a selection there.
+      pickIndex.apply(frame);
       stats.geometryFrames++;
       drawnReps.add(frame.header.rep);
       const watching = drawWatch.get(frame.header.rep);
@@ -680,6 +726,9 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       // "draw exactly this" escape hatch used by tests and by an app driving
       // the renderer by hand. The stream path above is the gated one.
       renderer.apply(frame);
+      // Keep the pick index in step on this path too — a frame pushed here is
+      // still geometry the user can click.
+      pickIndex.apply(frame);
       stats.geometryFrames++;
       stats.geometryDrawCalls = renderer.stats.drawCalls;
       stats.geometryInstances = renderer.stats.instances;
@@ -708,6 +757,10 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     /** `rasterizing` as the drag gate saw it, most recent last. */
     get cameraGate(): readonly boolean[] {
       return gateSamples.slice(-16);
+    },
+    /** Client-side pick counters. Zero unless the backend cannot pick. */
+    get localPick(): { attempts: number; hits: number; misses: number } {
+      return { ...pickStats };
     },
     get inputStats(): { buttons: number; drags: number; wheels: number; coalesced: number } {
       return input.stats;

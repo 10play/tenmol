@@ -78,6 +78,15 @@ export interface InputControllerOptions {
    * selection keep whatever behaviour the backend can give them.
    */
   cameraDriver?: CameraDriver | undefined;
+  /**
+   * A left-button PRESS, for a backend that cannot run PyMOL's pick pass.
+   *
+   * Called in addition to the normal forwarding, never instead of it: on a GL
+   * backend PyMOL's own pick is authoritative and this must not compete with
+   * it. The viewport only acts on it when the compositor reports the server is
+   * not rasterising.
+   */
+  onPick?: ((point: PymolPoint, ev: MouseEvent) => void) | undefined;
   /** Injectable clock/timers for tests. Default `performance.now`/`setTimeout`. */
   now?: () => number;
   setTimer?: (callback: () => void, ms: number) => unknown;
@@ -206,6 +215,9 @@ export function createInputController(options: InputControllerOptions): InputCon
     // A new press starts a new gesture: forget the previous drag anchor, or the
     // first sample of the next drag is a delta across the gap between them.
     lastDragPoint = null;
+    if (state === ButtonState.Down && button === MouseButton.Left) {
+      options.onPick?.(point, ev);
+    }
     send({
       t: 'input',
       kind: 'button',
