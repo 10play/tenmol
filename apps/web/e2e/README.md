@@ -52,6 +52,17 @@ until the `files` and `menubar` panels landed inputs earlier in the DOM, at
 which point the suite typed into a disabled search box and five of six specs
 failed for reasons unrelated to what they tested. Use `input.cmdline__input`.
 
+## GL-free specs
+
+One spec runs against a SECOND bridge started `--no-gl`, booted lazily so an
+ordinary run pays nothing for it. That is what a Linux box without EGL or a
+Windows box without WGL looks like, and the spec asserts the whole
+cross-platform claim in one place: the scene renders client-side, a drag moves
+the camera by RPC, a click selects an atom through the local pick index, and
+`healthz.draws` is still 0 at the end.
+
+Take a spec's stack from `noGl()` rather than `stack` to opt in.
+
 ## The PNG-pull fallback hides Mode G
 
 `?viewportPull=off` matters more than it looks. With the dev PNG-pull source

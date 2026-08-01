@@ -99,7 +99,7 @@ async function httpOk(url) {
 }
 
 /** Boot bridge + vite + browser. Always pair with `stack.close()` in a finally. */
-export async function startStack({ quiet = true } = {}) {
+export async function startStack({ quiet = true, noGl = false } = {}) {
   const procs = [];
   const kill = () => {
     for (const p of procs) {
@@ -130,6 +130,10 @@ export async function startStack({ quiet = true } = {}) {
         `http://127.0.0.1:${vitePort}`,
         '--origin',
         `http://localhost:${vitePort}`,
+        // `--no-gl` refuses to create a context at all, which is how the
+        // cross-platform path (Linux without EGL, Windows without WGL) is
+        // tested on a machine that does have GL.
+        ...(noGl ? ['--no-gl'] : []),
       ],
       { cwd: REPO, stdio: quiet ? 'ignore' : 'inherit' },
     );

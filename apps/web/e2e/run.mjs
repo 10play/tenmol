@@ -42,6 +42,16 @@ try {
   process.exit(2);
 }
 
+/**
+ * GL-free specs need their own bridge, started `--no-gl`. Booted lazily so the
+ * ordinary run pays nothing for it, and torn down with the main stack.
+ */
+let noGlStack = null;
+const noGl = async () => {
+  if (noGlStack === null) noGlStack = await startStack({ quiet: !loud, noGl: true });
+  return noGlStack;
+};
+
 let failed = 0;
 try {
   for (const t of selected) {
@@ -54,7 +64,7 @@ try {
     // `(retried)` so it stays visible rather than being silently swallowed.
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        await t.fn({ stack, assert });
+        await t.fn({ stack, assert, noGl });
         const tag = attempt > 0 ? '  (retried)' : '';
         console.log(`  ok    ${t.name}  (${Date.now() - t0}ms)${tag}`);
         last = null;
@@ -76,6 +86,7 @@ try {
   }
 } finally {
   await stack.close();
+  if (noGlStack !== null) await noGlStack.close();
 }
 
 console.log(`\ne2e: ${selected.length - failed}/${selected.length} passed`);

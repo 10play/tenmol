@@ -613,4 +613,94 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * THE CROSS-PLATFORM CLAIM, end to end.
+     *
+     * A bridge with no GL context is what a Linux box without EGL or a Windows
+     * box without WGL looks like. Everything here must hold with the server
+     * never calling `PyMOL_Draw`:
+     *
+     *   - the scene renders, client-side, from PyMOL's own geometry
+     *   - the camera responds to a drag, via RPC rather than forwarded input,
+     *     because raw `{t:'input'}` is queued behind a flag only a draw sets
+     *   - a click selects an atom, via the local pick index, because PyMOL's
+     *     own pick pass renders a colour buffer it cannot produce
+     *
+     * `viewportPull=off` is REQUIRED: with the dev PNG-pull fallback on, a
+     * GL-free bridge still shows a picture at ~1 fps because `cmd.png(ray=0)`
+     * silently ray-traces, and Mode G stays suppressed. That looks like
+     * success and is not.
+     */
+    name: 'GL-free: renders, drags and picks with the server never drawing',
+    async fn({ noGl, assert }) {
+      const stack = await noGl();
+      const page = await openApp(stack, { query: '?viewportHandle=1&viewportPull=off' });
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+
+      const health = await (await fetch(stack.healthz)).json();
+      assert(health.gl?.available === false, 'this stack was supposed to have no GL');
+
+      await run(page, 'load test/dat/1tii.pdb, gf', 2600);
+      await run(page, 'hide everything', 900);
+      await run(page, 'show cartoon', 1800);
+      await run(page, 'orient', 1600);
+      await page.waitForTimeout(2500);
+      // The capability probe answers `no-accessor` on the first request; retry.
+      for (let i = 0; i < 3; i++) {
+        await page.evaluate(() => window.__tenmolViewport.setRepMode(5, 'geometry'));
+        await page.waitForTimeout(2200);
+      }
+
+      const stats = await page.evaluate(() =>
+        JSON.parse(JSON.stringify(window.__tenmolViewport.stats)),
+      );
+      assert(stats.composition.rasterizing === false, 'the server is still rasterising');
+      assert(stats.geometryTriangles > 1000, `nothing drawn client-side (${stats.geometryTriangles})`);
+
+      const box = await page.locator('canvas').first().boundingBox();
+      const cx = box.x + box.width / 2;
+      const cy = box.y + box.height / 2;
+
+      // Camera: a drag must move the view even though raw input cannot.
+      const before = await ask(page, 'round(cmd.get_view()[0], 4)');
+      await page.mouse.move(cx, cy);
+      await page.mouse.down();
+      for (let k = 1; k <= 12; k++) {
+        await page.mouse.move(cx + k * 8, cy);
+        await page.waitForTimeout(45);
+      }
+      await page.mouse.up();
+      await page.waitForTimeout(1600);
+      assert((await ask(page, 'round(cmd.get_view()[0], 4)')) !== before, 'the camera did not move');
+
+      const rpc = await page.evaluate(() =>
+        JSON.parse(JSON.stringify(window.__tenmolViewport.cameraRpc)),
+      );
+      assert(rpc.turns > 0, 'no camera RPCs were issued');
+      assert(rpc.errors === 0, `camera RPCs failed: ${rpc.errors}`);
+
+      // Picking: click across the structure; at least one must select an atom.
+      for (const [fx, fy] of [
+        [0.3, 0.35],
+        [0.35, 0.5],
+        [0.65, 0.5],
+        [0.5, 0.65],
+      ]) {
+        await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy);
+        await page.waitForTimeout(400);
+      }
+      const pick = await page.evaluate(() =>
+        JSON.parse(JSON.stringify(window.__tenmolViewport.localPick)),
+      );
+      assert(pick.index.keys > 0, 'the pick index is empty; no geometry was indexed');
+      assert(pick.hits > 0, `every click missed (${pick.attempts} attempts)`);
+      assert((await ask(page, "cmd.count_atoms('sele')")) !== '0', 'no atom was selected');
+
+      // And the server never drew, for the whole run.
+      const after = await (await fetch(stack.healthz)).json();
+      assert(after.draws === 0, `the server drew ${after.draws} times`);
+      await page.close();
+    },
+  },
 ];
