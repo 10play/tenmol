@@ -112,3 +112,4 @@ describe('pickOffsets (layer1/ScenePicking.cpp:196-204)', () => {
     expect(pickOffsets(2)).toHaveLength(9);
   });
 });
+

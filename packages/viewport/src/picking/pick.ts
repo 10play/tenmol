@@ -22,6 +22,7 @@ import {
   type IndexedMeshHeader,
   type InstanceBuffer,
   type RepId,
+  cgoArraysLayout,
 } from '@tenmol/protocol';
 
 import { fovWidth, isOrthoscopic, modelViewMatrix, type ViewMatrix } from '../camera';
@@ -29,6 +30,44 @@ import { pickOffsets, screenRay, type Rect } from './ray';
 
 /** `cPickable*`, `layer1/Rep.h`. */
 export const PICKABLE_ATOM = -1;
+
+/**
+ * Draw-arrays primitive modes that describe triangles.
+ *
+ * MEASURED, and the reason an earlier version indexed nothing: a 1TII cartoon
+ * emits 1220 blocks, of which 1036 are STRIP (5) and 184 are FAN (6). NONE are
+ * plain `GL_TRIANGLES` (4). Accepting only mode 4 discarded every block, left
+ * the index empty, and made every click miss.
+ */
+const GL_TRIANGLES = 4;
+const GL_TRIANGLE_STRIP = 5;
+const GL_TRIANGLE_FAN = 6;
+
+/**
+ * Face index for a draw-arrays block, or null when the mode is not triangles.
+ *
+ * Winding is ignored: ray-triangle intersection does not care, so the strip's
+ * alternating order needs no special case.
+ */
+function faceIndex(mode: number, nverts: number): Uint32Array | null {
+  if (nverts < 3) return null;
+  if (mode === GL_TRIANGLES) return null; // already face soup; caller uses null
+  const faces = nverts - 2;
+  if (mode !== GL_TRIANGLE_STRIP && mode !== GL_TRIANGLE_FAN) return null;
+  const out = new Uint32Array(faces * 3);
+  for (let f = 0; f < faces; f++) {
+    if (mode === GL_TRIANGLE_FAN) {
+      out[f * 3] = 0;
+      out[f * 3 + 1] = f + 1;
+      out[f * 3 + 2] = f + 2;
+    } else {
+      out[f * 3] = f;
+      out[f * 3 + 1] = f + 1;
+      out[f * 3 + 2] = f + 2;
+    }
+  }
+  return out;
+}
 export const PICKABLE_NO_PICK = -4;
 
 export interface PickHit {
@@ -317,7 +356,14 @@ export function createPickIndex(): PickIndex {
         else stats.points += inst.count;
       }
       for (const mesh of entry.meshes) {
-        stats.triangles += mesh.index === null ? 0 : Math.floor(mesh.index.length / 3);
+        // A null index means NON-INDEXED, i.e. every 3 vertices is a face —
+        // not "no faces". Counting it as zero made a fully pickable block
+        // report an empty index, which is the single most misleading number
+        // this struct can produce.
+        stats.triangles +=
+          mesh.index === null
+            ? Math.floor(mesh.position.length / 9)
+            : Math.floor(mesh.index.length / 3);
       }
     }
   }
@@ -355,6 +401,51 @@ export function createPickIndex(): PickIndex {
           if (h.buffers.atom) entry.hasPickData = true;
         }
       } else if (isCgoDrawArraysHeader(header)) {
+        // DRAW-ARRAYS TRIANGLE BLOCKS. Without these a cartoon-only scene
+        // indexes NOTHING and every click misses: cartoon is not spheres or
+        // cylinders, it is `CGO_DRAW_ARRAYS` triangles, and the instance loop
+        // below never sees it. Measured before this existed: 8 clicks, 8
+        // misses, `stats.keys === 0`.
+        //
+        // Sub-arrays are CONSECUTIVE, not interleaved (`cgoArraysLayout`), and
+        // the pick block is itself split rgba-then-index, so the atom mapping
+        // is the SECOND half of it.
+        for (const block of header.blocks) {
+          const isTriangles =
+            block.mode === GL_TRIANGLES ||
+            block.mode === GL_TRIANGLE_STRIP ||
+            block.mode === GL_TRIANGLE_FAN;
+          if (!isTriangles) continue; // lines and points are not pickable here
+          const data = bufferOrNull<Float32Array>(frame, block.data);
+          if (data === null) continue;
+          const layout = cgoArraysLayout(block.arraybits, block.nverts);
+          const position = data.subarray(
+            layout.vertex.offset,
+            layout.vertex.offset + layout.vertex.length,
+          );
+          let atom: Int32Array | null = null;
+          if (layout.pickColorIndex) {
+            // {atom, bond} pairs as floats; the index we want is every other one.
+            const pick = data.subarray(
+              layout.pickColorIndex.offset,
+              layout.pickColorIndex.offset + layout.pickColorIndex.length,
+            );
+            atom = new Int32Array(block.nverts);
+            for (let v = 0; v < block.nverts; v++) atom[v] = pick[v * 2] ?? -1;
+            entry.hasPickData = true;
+          }
+          entry.meshes.push({
+            position: new Float32Array(position),
+            // Strips and fans get an explicit face index; plain triangles stay
+            // null, which the ray walk reads as "every 3 vertices is a face".
+            index: faceIndex(block.mode, block.nverts),
+            atom,
+            vis: null,
+            // Draw-arrays faces are exact geometry, not a proximity hull, so
+            // the nearest-vertex relaxation the surface path uses must be off.
+            proximity: false,
+          });
+        }
         for (const buffer of header.instances) {
           const built = instanceEntry(frame, buffer);
           if (built === null) continue;

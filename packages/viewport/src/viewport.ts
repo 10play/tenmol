@@ -44,7 +44,13 @@ import { DEFAULT_POLICY, createRenderPolicy } from './renderPolicy';
 import { createResizeNegotiator } from './resize';
 import { createStreamPauseController } from './stream';
 import { createSurface } from './surface';
-import type { PixelFramePayload, ViewportHandle, ViewportOptions, ViewportStats } from './types';
+import type {
+  LocalPickStats,
+  PixelFramePayload,
+  ViewportHandle,
+  ViewportOptions,
+  ViewportStats,
+} from './types';
 
 function now(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
@@ -759,8 +765,8 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       return gateSamples.slice(-16);
     },
     /** Client-side pick counters. Zero unless the backend cannot pick. */
-    get localPick(): { attempts: number; hits: number; misses: number } {
-      return { ...pickStats };
+    get localPick(): LocalPickStats {
+      return { ...pickStats, index: { ...pickIndex.stats } };
     },
     get inputStats(): { buttons: number; drags: number; wheels: number; coalesced: number } {
       return input.stats;

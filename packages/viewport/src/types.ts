@@ -245,6 +245,27 @@ export interface ViewportStats {
   };
 }
 
+/**
+ * Client-side pick diagnostics. `index` is what the ray actually has to work
+ * with — an empty index and a missed click look identical from the outside,
+ * which is what made cartoon picking take three rounds to get right.
+ */
+export interface LocalPickStats {
+  attempts: number;
+  hits: number;
+  misses: number;
+  index: {
+    keys: number;
+    spheres: number;
+    cylinders: number;
+    ellipsoids: number;
+    cones: number;
+    triangles: number;
+    points: number;
+    keysWithoutPickData: number;
+  };
+}
+
 export interface ViewportHandle {
   readonly stats: ViewportStats;
   /** The Mode-P canvas (2-D) and the Mode-G canvas (WebGL2). */
@@ -282,7 +303,7 @@ export interface ViewportHandle {
   /** `rasterizing` as the drag gate saw it, most recent last. */
   readonly cameraGate: readonly boolean[];
   /** Client-side pick counters. Zero unless the backend cannot pick for itself. */
-  readonly localPick: { attempts: number; hits: number; misses: number };
+  readonly localPick: LocalPickStats;
   readonly inputStats: { buttons: number; drags: number; wheels: number; coalesced: number };
   destroy(): void;
 }
