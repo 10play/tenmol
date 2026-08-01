@@ -236,3 +236,85 @@ def test_the_replayed_element_is_the_third_one(ws: WSClient) -> None:
         assert replayed == {"CTRL-A": "zoom"}, replayed
     finally:
         ws.call("save_shortcut.save_shortcuts", before or {})
+
+
+# =========================================================================== #
+# Part 3 — reading the LIVE bindings
+#
+# `cmd.key_mappings` is an attribute, and the dispatcher resolves callables
+# only, so no `{t:'call'}` can fetch it. The editor therefore seeded from the
+# mirrored DEFAULT table and could not see a `set_key` made from the command
+# line, a pymolrc or a plugin — while its Refresh button promised to "reflect
+# any external changes".
+# =========================================================================== #
+
+SHORTCUTS_NS = "cmd.tenmol_shortcuts"
+SHORTCUTS_BOOTSTRAP = (
+    "import tenmol_bridge.panels.shortcuts as _ts; _ts.install()"
+)
+
+
+@pytest.fixture()
+def live(ws: WSClient):
+    ws.do(SHORTCUTS_BOOTSTRAP)
+    assert ws.call(SHORTCUTS_NS + ".hello")["ok"] is True
+    return ws
+
+
+def test_the_attribute_itself_is_still_unfetchable(ws: WSClient) -> None:
+    """The reason this module exists, asserted so it cannot quietly change."""
+    reply = ws.call_reply("cmd.key_mappings")
+    assert reply["t"] == "err"
+    assert "not callable" in reply["error"]["message"], reply
+
+
+def test_the_live_table_has_every_default(live: WSClient) -> None:
+    result = live.call(SHORTCUTS_NS + ".key_mappings")
+    assert result["ok"] is True
+    assert result["count"] > 100, result["count"]
+    keys = [entry["key"] for entry in result["entries"]]
+    assert keys == sorted(keys), "entries are not in a stable order"
+    for expected in ("F1", "CTRL-A", "ALT-1"):
+        assert expected in keys, expected
+
+
+def test_an_EXTERNAL_set_key_is_visible(live: WSClient) -> None:
+    """The whole point: a binding made outside the editor shows up.
+
+    Before this, Refresh re-seeded from the mirrored defaults and a command-line
+    `set_key` was invisible — the tooltip promised something the button could
+    not do.
+    """
+    live.call("cmd.set_key", "CTRL-J", "zoom")
+    try:
+        entries = {
+            entry["key"]: entry
+            for entry in live.call(SHORTCUTS_NS + ".key_mappings")["entries"]
+        }
+        assert "CTRL-J" in entries, sorted(entries)[:8]
+        assert entries["CTRL-J"]["kind"] == "command"
+        assert entries["CTRL-J"]["command"] == "zoom"
+    finally:
+        live.do("cmd.key_mappings.pop('CTRL-J', None)")
+
+
+def test_a_CALLABLE_binding_is_described_not_repr_ed(live: WSClient) -> None:
+    """A `(fn, args, kwargs)` binding cannot cross the wire.
+
+    `repr()` would put a memory address in the UI — and one that changes every
+    run. The entry reports `kind: callable` plus the function NAME, so the
+    editor can show it and know it is not editable as text.
+    """
+    live.do("cmd.set_key('CTRL-Y', lambda: None)")
+    try:
+        entries = {
+            entry["key"]: entry
+            for entry in live.call(SHORTCUTS_NS + ".key_mappings")["entries"]
+        }
+        entry = entries["CTRL-Y"]
+        assert entry["kind"] == "callable", entry
+        assert entry["command"] == ""
+        assert entry["callable"], entry
+        assert "0x" not in entry["callable"], entry
+    finally:
+        live.do("cmd.key_mappings.pop('CTRL-Y', None)")

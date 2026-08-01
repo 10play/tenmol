@@ -555,6 +555,48 @@ describe('mapOrthoKey', () => {
     });
   });
 
+  /* ---- the cases the inventory row lists that were not yet covered ---- */
+
+  it('Ctrl-K truncates the line, and is a chord when nothing is typed', () => {
+    // `OrthoKey case 11`. The split is the same one Ctrl-A/E use: the ortho
+    // CLI only owns the key once the arrows are grabbed, i.e. once the user
+    // has actually started a line.
+    expect(mapOrthoKey(key('k', { ctrlKey: true }), withLine('color re'))).toEqual({
+      kind: 'truncate',
+    });
+    expect(mapOrthoKey(key('k', { ctrlKey: true }), withLine(''))).toEqual({
+      kind: 'chord',
+      fn: '_ctrl',
+      key: 'K',
+    });
+  });
+
+  it('Backspace edits the line', () => {
+    expect(mapOrthoKey(key('Backspace'), withLine('color'))).toEqual({ kind: 'backspace' });
+  });
+
+  it('Ctrl-M IS carriage return, not a chord', () => {
+    /*
+     * `case 13`. Easy to get wrong: every other Ctrl-<letter> that the CLI
+     * does not claim falls through to `_ctrl`, but Ctrl-M is literally the
+     * same code point as Enter, so it must submit instead.
+     */
+    expect(mapOrthoKey(key('m', { ctrlKey: true }), withLine('color red'))).toEqual({
+      kind: 'submit',
+    });
+    expect(mapOrthoKey(key('m', { ctrlKey: true }), withLine(''))).toEqual({ kind: 'none' });
+  });
+
+  it('Space advances the SCENE under presentation instead of toggling the movie', () => {
+    // Same key, different command, decided by a setting — a client that
+    // hard-coded `mtoggle` would break presentation mode silently.
+    const presenting = withLine('', { settings: { presentation: 1 } as never });
+    expect(mapOrthoKey(key(' '), presenting)).toEqual({
+      kind: 'command',
+      line: "scene '', next",
+    });
+  });
+
   it('DEL is the CTRL-D chord on an empty line', () => {
     expect(mapOrthoKey(key('Delete'), withLine(''))).toEqual({
       kind: 'chord',

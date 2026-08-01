@@ -27,13 +27,24 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
+
+/** `bridge/tenmol_bridge/panels/shortcuts.py`. */
+const SHORTCUTS_NS = 'cmd.tenmol_shortcuts';
+const SHORTCUTS_BOOTSTRAP = 'import tenmol_bridge.panels.shortcuts as _ts; _ts.install()';
+
+interface LiveBinding {
+  key: string;
+  kind: 'command' | 'callable';
+  command: string;
+  callable: string | null;
+}
 import {
   DEFAULT_SHORTCUTS,
   isReservedKey,
   keyEventToShortcutName,
   validateShortcutName,
 } from '../mouse/tables';
-import { useSession } from '../../app';
+import { errorText, useSession } from '../../app';
 import './shortcuts.css';
 
 interface Row {
@@ -159,6 +170,57 @@ export function ShortcutEditor({ onClose }: { onClose: () => void }) {
     setStatus('all key bindings restored to their defaults');
   }, [rows, setKey]);
 
+  /**
+   * Re-read the LIVE bindings from PyMOL.
+   *
+   * This used to call `seed()` — the mirrored DEFAULT table — so the button's
+   * own tooltip ("reflect any external changes") was untrue: a `set_key` from
+   * the command line, a pymolrc or a plugin was invisible. `cmd.key_mappings`
+   * is an attribute and the dispatcher resolves callables only, so the read
+   * goes through `cmd.tenmol_shortcuts` (`bridge/tenmol_bridge/panels/
+   * shortcuts.py`), bootstrapped the way the other panels are.
+   *
+   * A binding whose value is a Python CALLABLE is shown by name and left
+   * uneditable — there is no text for it, and inventing one would let a user
+   * "edit" a binding into something different.
+   */
+  const refreshFromEngine = useCallback(async (): Promise<void> => {
+    const read = () =>
+      session.call<{ entries: LiveBinding[] }>(`${SHORTCUTS_NS}.key_mappings`);
+    let live: { entries: LiveBinding[] };
+    try {
+      live = await read();
+    } catch {
+      try {
+        await session.run(SHORTCUTS_BOOTSTRAP);
+        live = await read();
+      } catch (error) {
+        setRows(seed());
+        setStatus(
+          `could not read the live bindings (${errorText(error)}); ` +
+            'showing the default table instead',
+        );
+        return;
+      }
+    }
+
+    const defaults = new Map(DEFAULT_SHORTCUTS.map((entry) => [entry.key, entry]));
+    setRows(
+      live.entries.map((entry) => {
+        const fallback = defaults.get(entry.key);
+        const command = entry.kind === 'callable' ? `<${entry.callable}>` : entry.command;
+        return {
+          key: entry.key,
+          command,
+          description: fallback?.description ?? (entry.kind === 'callable' ? 'python callable' : ''),
+          userDefined: fallback && fallback.command !== command ? command : '',
+          created: fallback === undefined,
+        };
+      }),
+    );
+    setStatus(`table refreshed from PyMOL — ${live.entries.length} live bindings`);
+  }, [session]);
+
   const save = useCallback(async (): Promise<void> => {
     /*
      * The 3-element list is not a convention, it is the file format:
@@ -224,10 +286,7 @@ export function ShortcutEditor({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             title="Refresh the table to reflect any external changes"
-            onClick={() => {
-              setRows(seed());
-              setStatus('table refreshed from the default binding table');
-            }}
+            onClick={() => void refreshFromEngine()}
           >
             Refresh
           </button>
