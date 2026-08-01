@@ -503,4 +503,35 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * The sequence viewer's whole job is turning a click into a selection.
+     *
+     * Also pins CELL WIDTH, which is not cosmetic: `.seqrow__line` is a flex row
+     * and cells set their width inline, so without `flex: 0 0 auto` 928 cells
+     * asking for 8px inside a ~1056px row shrink to ~1px. That renders the
+     * sequence as an illegible band AND makes every cell too narrow to click —
+     * a centre click lands on a neighbour.
+     */
+    name: 'a sequence viewer cell is clickable and selects that residue',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+      await run(page, 'load test/dat/1tii.pdb, sq', 2400);
+      await run(page, 'set seq_view, 1', 1800);
+
+      const width = await page.evaluate(() => {
+        const cell = document.querySelector('.seqcell');
+        return cell ? Math.round(cell.getBoundingClientRect().width) : -1;
+      });
+      assert(width >= 6, `sequence cells collapsed to ${width}px; they are unclickable below ~6px`);
+
+      const before = await ask(page, 'cmd.count_atoms("sele")');
+      await page.locator('.seqcell').nth(40).click();
+      await page.waitForTimeout(1500);
+      const selections = await ask(page, 'cmd.get_names("selections")');
+      assert(selections.includes('sele'), `no selection was made (${before} -> ${selections})`);
+      await page.close();
+    },
+  },
 ];
