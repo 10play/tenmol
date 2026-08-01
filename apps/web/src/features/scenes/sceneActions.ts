@@ -53,6 +53,24 @@ export const sceneActions = {
   rename: (key: string, newKey: string) => scene([key, 'rename'], { new_key: newKey }),
   insertBefore: () => scene(['', 'insert_before']),
   insertAfter: () => scene(['', 'insert_after']),
+  /*
+   * HAZARD, dormant but real, for whoever builds presentation mode.
+   *
+   * `viewing.py:1107-1114`: a second consecutive `next`/`previous` at the end
+   * of the scene list, with `presentation` on, calls `chain_session()` — and
+   * if there is no numerically-next .pse/.psw beside `session_file`, it calls
+   * `_self.quit()`.
+   *
+   * On the desktop that closes the app the user is looking at. Here it ends
+   * the BRIDGE PROCESS for every connected client, and because the call comes
+   * from inside PyMOL it bypasses the graceful shutdown the bridge installs
+   * for a client-issued `cmd.quit` (`bridge/tenmol_bridge/server.py:139`).
+   *
+   * `presentation` is OFF by default, which is the only thing stopping it;
+   * `presentation_auto_quit` is ON, and both are editable from the Advanced
+   * Settings table. Preconditions are pinned in
+   * `bridge/tests/test_sessions.py`, which deliberately does not trigger them.
+   */
   next: () => scene(['', 'next']),
   previous: () => scene(['', 'previous']),
   first: () => scene(['', 'first']),
