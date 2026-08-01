@@ -238,3 +238,64 @@ describe('default shortcut table', () => {
     expect(shortcutGroup('pgup')).toBe('navigation / movie / scene');
   });
 });
+
+/* -------------------------------------------------------------------------- *
+ * `validateShortcutName` against the REAL `cmd.set_key`.
+ *
+ * The validator exists so the shortcut editor can refuse a binding before the
+ * round trip. That is only worth doing if it refuses exactly what PyMOL
+ * refuses — a validator that is stricter blocks legal bindings, and one that
+ * is looser just moves the error later.
+ *
+ * Every case below was run against a live engine over the socket. The comment
+ * on each line is the message PyMOL actually produced.
+ * -------------------------------------------------------------------------- */
+
+describe('validateShortcutName matches cmd.set_key, measured', () => {
+  const ACCEPTED = [
+    'CTRL-A',
+    'CTSH-A',
+    'ALT-A',
+    'F1',
+    'CTRL-F1',
+    'SHFT-F1', // SHFT is only refused with a regular LETTER, not with F-keys
+    'pgup',
+    'pgdn',
+    'home',
+    'insert',
+    'up',
+    'down',
+    'left',
+    'right',
+    'end',
+    'CTRL-pgup',
+  ];
+
+  const REFUSED: ReadonlyArray<readonly [string, string]> = [
+    ['SHFT-A', "Can't map regular letters with SHFT."],
+    ['A', "Can't map regular letters."],
+    ['a', "Can't map regular letters."],
+    ['BOGUS-A', "not a valid modifier key: 'BOGUS'."],
+    ['nonesuch', "special 'nonesuch' key not found."],
+    ['CTRL-nonesuch', "special 'nonesuch' key not found."],
+    // Not a PyMOL special key at all, despite being an obvious thing to try.
+    ['escape', "special 'escape' key not found."],
+  ];
+
+  it.each(ACCEPTED)('accepts %s, and so does the engine', (name) => {
+    expect(validateShortcutName(name)).toBeNull();
+  });
+
+  it.each(REFUSED)('refuses %s (engine: %s)', (name) => {
+    expect(validateShortcutName(name)).not.toBeNull();
+  });
+
+  it('is neither stricter nor looser than the engine on this table', () => {
+    // Stated as one assertion too, so a change that flips a single case fails
+    // with the whole picture rather than one opaque line.
+    const clientAccepts = [...ACCEPTED, ...REFUSED.map(([n]) => n)].filter(
+      (n) => validateShortcutName(n) === null,
+    );
+    expect(clientAccepts.sort()).toEqual([...ACCEPTED].sort());
+  });
+});
