@@ -12,9 +12,13 @@
  *   still (`render/framestream.py:1652`), which is the same image by the same
  *   renderer. So page 2 offers save, and says where the picture is instead of
  *   duplicating it into a second canvas.
- * - Clipboard is not offered. `cmd._copy_image` is a shim that raises
- *   NotImplementedError headlessly (`bridge/tenmol_bridge/shims.py:9`), and a
- *   button that always errors is worse than an absent one.
+ * - Clipboard IS offered now, by a different route. `cmd._copy_image` is a shim
+ *   that raises NotImplementedError headlessly, and a browser cannot be handed
+ *   a QImage anyway — so `cmd.tenmol_files.copy_image_png` returns the PRIOR
+ *   render as PNG bytes and the client writes them with
+ *   `navigator.clipboard.write(new ClipboardItem(...))`. `prior=1` matters: it
+ *   copies what is on screen instead of re-rendering, which for a ray trace
+ *   could be minutes of work to reproduce.
  * - Save writes SERVER-side through `cmd.png(path, prior=1, dpi=...)`. This is
  *   a local desktop replacement with full filesystem access; a browser download
  *   would re-encode and lose the dpi metadata `prior=1` exists to preserve.
@@ -95,6 +99,36 @@ export function RenderDialog() {
     },
     [session, state.width, state.height, state.transparent],
   );
+
+  const copyImage = useCallback(async () => {
+    setStatus(null);
+    try {
+      const result = await session.call<{ ok: boolean; base64: string; error: string | null }>(
+        'cmd.tenmol_files.copy_image_png',
+        [state.dpi],
+      );
+      if (!result.ok) {
+        // Qt PRINTS "no prior image"; showing it in place is the same
+        // information without a trip to the console.
+        setStatus(result.error ?? 'no prior image');
+        return;
+      }
+      const bytes = Uint8Array.from(atob(result.base64), (c) => c.charCodeAt(0));
+      const blob = new Blob([bytes], { type: 'image/png' });
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      setStatus('image copied to the clipboard');
+    } catch (e) {
+      /*
+       * The clipboard API is gated on a secure context AND a user gesture, and
+       * refuses outright in some browsers. Saying which failed matters: "copy
+       * failed" reads as a broken render when the render was fine.
+       */
+      setStatus(
+        `clipboard write failed (${e instanceof Error ? e.message : String(e)}) — ` +
+          'the image is still in the viewport; use Save image instead.',
+      );
+    }
+  }, [session, state.dpi]);
 
   const save = useCallback(async () => {
     const path = savePath.trim();
@@ -252,6 +286,14 @@ export function RenderDialog() {
             />
             <button type="button" className="render__btn" onClick={() => void save()}>
               Save image
+            </button>
+            <button
+              type="button"
+              className="render__btn"
+              title="cmd.png(prior=1) — copies the image already rendered"
+              onClick={() => void copyImage()}
+            >
+              Copy image
             </button>
           </div>
           <div className="render__actions">

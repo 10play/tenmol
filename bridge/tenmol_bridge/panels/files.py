@@ -1338,6 +1338,55 @@ class FilesAPI:
             return False
         return True
 
+    def copy_image_png(self, dpi: int = -1) -> Dict[str, Any]:
+        """The last rendered image as base64 PNG, for the clipboard.
+
+        Qt does this by writing `cmd.png(tempfile, prior=1, dpi=...)` and
+        pushing the resulting QImage onto the Qt clipboard
+        (`pymol_qt_gui.py:1170-1186`). A browser cannot be handed a QImage, and
+        `cmd._copy_image` is a stub that raises headlessly, so the bytes come
+        back over the wire instead and the client writes them with
+        `navigator.clipboard.write(new ClipboardItem({'image/png': blob}))`.
+
+        `prior=1` is the whole point: it saves the image ALREADY rendered
+        rather than rendering a new one, so "copy" copies what is on screen —
+        including a ray trace, which re-rendering would be minutes of work to
+        reproduce.
+
+        Measured: with nothing rendered yet, `cmd.png(prior=1)` raises and
+        writes no file. That is Qt's "no prior image" case, and it is returned
+        as `ok: False` with that message rather than raised, so the button can
+        say it in place instead of throwing.
+        """
+        import tempfile
+
+        handle, temp = tempfile.mkstemp(suffix=".png", prefix="tenmol-copy-")
+        os.close(handle)
+        try:
+            try:
+                kwargs = {"prior": 1}
+                if int(dpi) > 0:
+                    kwargs["dpi"] = int(dpi)
+                self.cmd.png(temp, **kwargs)
+            except Exception as exc:  # noqa: BLE001 - reported, not raised
+                return {"ok": False, "base64": "", "error": str(exc) or "no prior image"}
+
+            if not os.path.exists(temp) or os.path.getsize(temp) == 0:
+                return {"ok": False, "base64": "", "error": "no prior image"}
+            with open(temp, "rb") as png:
+                blob = png.read()
+            return {
+                "ok": True,
+                "base64": base64.b64encode(blob).decode("ascii"),
+                "bytes": len(blob),
+                "error": None,
+            }
+        finally:
+            try:
+                os.unlink(temp)
+            except OSError:
+                pass
+
     def download(self, path: str, max_bytes: int = 0) -> Dict[str, Any]:
         """Base64 a server file so the browser can save a copy.
 

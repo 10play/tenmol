@@ -1043,3 +1043,79 @@ def test_classify_and_the_capability_list_cannot_disagree(installed, ws: WSClien
         if info["format"] != fmt:
             continue  # the extension maps elsewhere (e.g. .py -> py); not a case
         assert (info["unavailable"] is None) == cap["available"], (fmt, info, cap)
+
+
+# =========================================================================== #
+# Part 6 — copy image to clipboard
+# =========================================================================== #
+
+
+@pytest.mark.engine
+def test_copy_image_reports_no_prior_image_rather_than_raising(installed, ws: WSClient):
+    """Qt prints "no prior image"; the button needs to say it, not throw.
+
+    Measured: `cmd.png(prior=1)` with nothing rendered RAISES and writes no
+    file. Returning that as data is what lets the dialog show it in place.
+    """
+    ws.call("cmd.delete", "all")
+    result = ws.call(NS + ".copy_image_png")
+    if result["ok"]:
+        pytest.skip("something in this shared session had already rendered")
+    assert result["base64"] == ""
+    assert result["error"]
+
+
+@pytest.mark.engine
+def test_copy_image_returns_the_PRIOR_render_as_png_bytes(installed, ws, tmp_path):
+    """`prior=1` copies what is ON SCREEN rather than rendering again.
+
+    That matters most for a ray trace: re-rendering to satisfy a copy could be
+    minutes of work to reproduce an image the user is already looking at.
+    """
+    data = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "test", "dat", "il2.pdb",
+    )
+    ws.call("cmd.load", data, "zc_obj")
+    try:
+        ws.call("cmd.png", str(tmp_path / "seed.png"), 0, 0, -1, ray=0)
+        result = ws.call(NS + ".copy_image_png")
+        assert result["ok"] is True, result
+        assert result["bytes"] > 1000
+        blob = base64.b64decode(result["base64"])
+        # A real PNG, not an empty file or an error string.
+        assert blob[:8] == b"\x89PNG\r\n\x1a\n", blob[:16]
+        assert len(blob) == result["bytes"]
+    finally:
+        ws.call("cmd.delete", "zc_obj")
+
+
+@pytest.mark.engine
+def test_the_cms_trajectory_probe_runs_on_the_SERVER(installed, ws: WSClient, tmp_path):
+    """`_get_cms_traj_file` is filesystem probing, so it cannot be client-side.
+
+    The pure function is unit-tested above; this is the half that matters for
+    the port — that `classify` performs the probe on the PyMOL host and hands
+    the resulting path back, so React can open the trajectory dialog for a file
+    it never sees.
+    """
+    cms = tmp_path / "run-out.cms"
+    cms.write_text("")
+    trj = tmp_path / "run_trj"
+    trj.mkdir()
+    (trj / "clickme.dtr").write_text("")
+
+    info = ws.call(NS + ".classify", str(cms))
+    assert info["cmsTraj"] == str(trj / "clickme.dtr"), info
+
+    # And the `.xtc` fallback, second in the candidate order.
+    plain = tmp_path / "other.cms"
+    plain.write_text("")
+    (tmp_path / "other.xtc").write_text("")
+    assert ws.call(NS + ".classify", str(plain))["cmsTraj"] == str(tmp_path / "other.xtc")
+
+    # No trajectory beside it: null, not an empty string, so the client's
+    # `if (info.cmsTraj)` cannot be fooled.
+    bare = tmp_path / "bare.cms"
+    bare.write_text("")
+    assert ws.call(NS + ".classify", str(bare))["cmsTraj"] is None
