@@ -94,7 +94,12 @@ BLOB_RETURNS: frozenset = frozenset(
     {
         "get_session",
         "get_volume_field",
-        "get_volume_histogram",
+        # NOT `get_volume_histogram`. It was listed here and that made it
+        # UNUSABLE: the blob writer only accepts a numpy array, and this
+        # returns "a list of length bins + 4" (`querying.py`) — 68 floats at
+        # the default 64 bins. Every call answered
+        # `NotSerializable: get_volume_histogram returned list, expected a
+        # numpy array`. It is a tiny inline value and always was.
         "get_vrml",
         "get_idtf",
         "get_collada",
