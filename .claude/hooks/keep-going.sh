@@ -4,7 +4,7 @@
 # Blocks the stop and feeds Claude the remaining work as a reason. Three ways out:
 #   1. Parity reaches 0 open rows      -> the work is actually done
 #   2. `touch .claude/STOP`            -> manual escape hatch
-#   3. Iteration cap (default 25)      -> runaway guard, resets on the next user prompt
+#   3. Iteration cap (default 100)     -> runaway guard, resets on the next user prompt
 #
 # Never exits non-zero: a failing Stop hook should not wedge the session.
 set -uo pipefail
@@ -29,7 +29,7 @@ if [ -f ".claude/STOP" ]; then
 fi
 
 # --- runaway guard ----------------------------------------------------------
-MAX="${TENMOL_KEEP_GOING_MAX:-25}"
+MAX="${TENMOL_KEEP_GOING_MAX:-100}"
 n=$(cat "$COUNT_FILE" 2>/dev/null || echo 0)
 case "$n" in ''|*[!0-9]*) n=0 ;; esac
 n=$((n + 1))
