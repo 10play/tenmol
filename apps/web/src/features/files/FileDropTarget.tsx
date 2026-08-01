@@ -14,6 +14,7 @@ import {
   dialogNeededFor,
   dialogRequiredMessage,
   planFromDataTransfer,
+  windowAccelerator,
 } from './globalDrop';
 import type { FileClassification } from '@tenmol/protocol/topics/files';
 
@@ -53,6 +54,24 @@ export function FileDropTarget() {
       }
     };
 
+    /** Upload each browser File, then load it — shared by drop and Ctrl+O. */
+    const uploadAndLoad = async (files: readonly File[]): Promise<void> => {
+      try {
+        await api.ensure();
+      } catch (error) {
+        say(` file service unavailable: ${String(error)}`, 'error');
+        return;
+      }
+      for (const file of files) {
+        const uploaded = await api.upload(file.name, await fileToBase64(file));
+        if (!uploaded.ok) {
+          say(` upload failed: ${uploaded.error}`, 'error');
+          continue;
+        }
+        await load(uploaded.path, file.name);
+      }
+    };
+
     const onDrop = (event: DragEvent) => {
       const plan = planFromDataTransfer(event.dataTransfer);
       if (plan.kind === 'none') return;
@@ -65,28 +84,71 @@ export function FileDropTarget() {
           await load(plan.url, plan.url);
           return;
         }
+        await uploadAndLoad(plan.files);
+      })();
+    };
+
+    /*
+     * THE WINDOW ACCELERATORS LIVE HERE FOR THE SAME REASON THE DROP DOES.
+     *
+     * Ctrl+O and Ctrl+S are `pymol_qt_gui.py:387-388`'s "extra Qt shortcuts
+     * (MacPyMOL compatible)" — window-level QShortcuts, not PyMOL `set_key`
+     * bindings, so they must never reach the viewport key handler. They used
+     * to be registered by `FilesPanel`, an OVERLAY slot, so they only worked
+     * while the File dialogs panel happened to be open. Same bug as the drop
+     * handler had, same fix.
+     *
+     * REDUCED SCOPE, stated rather than hidden: Ctrl+O here opens the
+     * BROWSER's file picker and runs the upload-then-load path above, not the
+     * panel's server-side path browser with its modal queue. That queue lives
+     * in `FilesPanel` and cannot be driven from outside it. A user who wants
+     * the server browser opens the panel; a user who hits Ctrl+O gets a file
+     * open, which is what the accelerator promises.
+     */
+    const onKey = (event: KeyboardEvent) => {
+      const accelerator = windowAccelerator(event);
+      if (accelerator === null) return;
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (accelerator === 'open') {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true;
+        input.onchange = () => {
+          const files = Array.from(input.files ?? []);
+          if (files.length > 0) void uploadAndLoad(files);
+        };
+        input.click();
+        return;
+      }
+
+      void (async () => {
         try {
           await api.ensure();
-        } catch (error) {
-          say(` drop failed: ${String(error)}`, 'error');
-          return;
-        }
-        for (const file of plan.files) {
-          const uploaded = await api.upload(file.name, await fileToBase64(file));
-          if (!uploaded.ok) {
-            say(` upload failed: ${uploaded.error}`, 'error');
-            continue;
+          const file = await api.sessionFile();
+          if (!file.hasPath) {
+            say(
+              ' Ctrl+S: this session has no file yet — use File dialogs ▸ Save Session As…',
+              'warning',
+            );
+            return;
           }
-          await load(uploaded.path, file.name);
+          await session.run(`save ${file.path}`);
+          say(` saved ${file.path}`);
+        } catch (error) {
+          say(` save failed: ${error instanceof Error ? error.message : String(error)}`, 'error');
         }
       })();
     };
 
     window.addEventListener('dragover', onDragOver);
     window.addEventListener('drop', onDrop);
+    window.addEventListener('keydown', onKey, true);
     return () => {
       window.removeEventListener('dragover', onDragOver);
       window.removeEventListener('drop', onDrop);
+      window.removeEventListener('keydown', onKey, true);
     };
   }, [session]);
 

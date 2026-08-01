@@ -8,7 +8,12 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { dialogNeededFor, dialogRequiredMessage, planFromDataTransfer } from './globalDrop';
+import {
+  dialogNeededFor,
+  dialogRequiredMessage,
+  planFromDataTransfer,
+  windowAccelerator,
+} from './globalDrop';
 
 function transfer(data: Record<string, string>, files: File[] = []): DataTransfer {
   return {
@@ -84,5 +89,44 @@ describe('dialogNeededFor', () => {
     expect(message).toContain('run.dcd');
     expect(message).toContain('trajectory');
     expect(message).toContain('File dialogs');
+  });
+});
+
+
+describe('windowAccelerator', () => {
+  const ev = (patch: Partial<Parameters<typeof windowAccelerator>[0]>) => ({
+    key: 'o',
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    ...patch,
+  });
+
+  it('matches Ctrl+O and Ctrl+S', () => {
+    expect(windowAccelerator(ev({ ctrlKey: true, key: 'o' }))).toBe('open');
+    expect(windowAccelerator(ev({ ctrlKey: true, key: 's' }))).toBe('save');
+  });
+
+  it('accepts Meta as well, which is the "MacPyMOL compatible" part', () => {
+    expect(windowAccelerator(ev({ metaKey: true, key: 'o' }))).toBe('open');
+    expect(windowAccelerator(ev({ metaKey: true, key: 'S' }))).toBe('save');
+  });
+
+  it('ignores the bare key, so typing "o" still types "o"', () => {
+    expect(windowAccelerator(ev({ key: 'o' }))).toBeNull();
+  });
+
+  it('ALT disqualifies it', () => {
+    /*
+     * Ctrl+Alt+O is a different chord, and on some layouts it is how AltGr
+     * characters arrive — treating it as Open would hijack typing.
+     */
+    expect(windowAccelerator(ev({ ctrlKey: true, altKey: true, key: 'o' }))).toBeNull();
+  });
+
+  it('ignores every other Ctrl chord', () => {
+    for (const key of ['a', 'c', 'v', 'z', 'Enter']) {
+      expect(windowAccelerator(ev({ ctrlKey: true, key }))).toBeNull();
+    }
   });
 });

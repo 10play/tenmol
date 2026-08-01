@@ -549,28 +549,15 @@ export function FilesPanel() {
     };
   }, [menuOpen]);
 
-  useEffect(() => {
-    // "Extra Qt shortcuts (MacPyMOL compatible)": Ctrl+O -> file_open,
-    // Ctrl+S -> session_save (`pymol_qt_gui.py:387-388`). They are NOT PyMOL
-    // `set_key` bindings, so they must never reach the viewport key handler —
-    // hence `preventDefault` + `stopPropagation`.
-    const onKey = (event: KeyboardEvent) => {
-      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
-      const key = event.key.toLowerCase();
-      if (key !== 'o' && key !== 's') return;
-      event.preventDefault();
-      event.stopPropagation();
-      if (key === 'o') void fileOpen();
-      else
-        void ensure().then(async (info) => {
-          if (!info) return;
-          const file = await api.sessionFile();
-          await sessionSaveAs(file.hasPath ? file.path : undefined);
-        });
-    };
-    window.addEventListener('keydown', onKey, true);
-    return () => window.removeEventListener('keydown', onKey, true);
-  }, [api, ensure, fileOpen, sessionSaveAs]);
+  /*
+   * THE Ctrl+O / Ctrl+S ACCELERATORS USED TO BE REGISTERED HERE, and that was
+   * the same bug the drop handler had: this panel is an OVERLAY slot, so the
+   * shortcuts only worked while it happened to be open. They now live in
+   * `FileDropTarget`, which the viewport slot mounts unconditionally.
+   *
+   * Not duplicated on purpose — two listeners would both fire, opening two
+   * pickers for one keypress.
+   */
 
   /*
    * The window-level drag & drop handler USED TO LIVE HERE, and that was the

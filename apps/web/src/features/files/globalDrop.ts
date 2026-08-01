@@ -86,3 +86,31 @@ export function dialogRequiredMessage(name: string, dialog: string): string {
     'which asks for the options this format requires.'
   );
 }
+
+
+/**
+ * Is this keypress one of the two window-level accelerators?
+ *
+ * `pymol_qt_gui.py:387-388` registers Ctrl+O (file_open) and Ctrl+S
+ * (session_save) as window QShortcuts — described there as "MacPyMOL
+ * compatible", which is why Meta counts as well as Control.
+ *
+ * They are NOT PyMOL `set_key` bindings, so a match must be swallowed rather
+ * than forwarded: reaching the viewport key handler would send CTRL-O to
+ * PyMOL as well as opening the picker.
+ *
+ * ALT DISQUALIFIES. Ctrl+Alt+O is a different chord, and on some layouts it is
+ * how AltGr characters arrive — treating it as Open would hijack typing.
+ */
+export function windowAccelerator(event: {
+  key: string;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  altKey: boolean;
+}): 'open' | 'save' | null {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey) return null;
+  const key = event.key.toLowerCase();
+  if (key === 'o') return 'open';
+  if (key === 's') return 'save';
+  return null;
+}
