@@ -862,19 +862,22 @@ export function FilesPanel() {
                   echo: `mpng ${first(result.paths)}, width=${options.width}, height=${options.height}, mode=${options.ray ? 2 : 1}`,
                 });
               } else {
-                await session.act({
-                  fn: 'movie.produce',
-                  args: [first(result.paths)],
-                  kwargs: {
-                    width: options.width,
-                    height: options.height,
-                    quality: options.quality,
-                    mode: options.ray ? 'ray' : 'draw',
-                    encoder: options.encoder,
-                    quiet: 0,
-                  },
-                  echo: `movie.produce ${first(result.paths)}, encoder=${options.encoder}, mode=${options.ray ? 'ray' : 'draw'}`,
+                // NOT `movie.produce` directly: `movie._encode` spawns the
+                // encoder with no `stdin=` (`modules/pymol/movie.py:770-800`),
+                // ffmpeg eats the bridge's own fd 0 and the server shuts down
+                // mid-export — reproduced twice against a live bridge. The
+                // wrapper in `panels/files.py` detaches fd 0 first.
+                setBusy(`encoding ${baseName(first(result.paths))}`);
+                const produced = await api.produce(first(result.paths), {
+                  width: options.width,
+                  height: options.height,
+                  quality: options.quality,
+                  mode: options.ray ? 'ray' : 'draw',
+                  encoder: options.encoder,
+                  quiet: 0,
                 });
+                setBusy(null);
+                if (!produced.ok) say(` produce: ${produced.error}`, 'error');
               }
             })();
           }}

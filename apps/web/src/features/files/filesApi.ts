@@ -38,6 +38,7 @@ import {
   type PdbeLookup,
   type RecentEntry,
   type MultiFileNames,
+  type ProduceResult,
   type RenderInfo,
   type RunPlan,
   type SaveCheck,
@@ -98,6 +99,15 @@ export interface FilesApi {
     selection: string,
     state: number,
   ): Promise<MultiFileNames>;
+  /**
+   * `movie.produce` through the bridge wrapper, which detaches stdin first.
+   * Calling `movie.produce` directly kills the bridge: `movie._encode` gives
+   * `ffmpeg` no `stdin=` and the child eats the server's descriptor 0.
+   */
+  produce(
+    filename: string,
+    options: Readonly<Record<string, unknown>>,
+  ): Promise<ProduceResult>;
   sessionFile(): Promise<SessionFileInfo>;
 
   movieInfo(): Promise<MovieDialogInfo>;
@@ -183,6 +193,7 @@ export function createFilesApi(transport: FilesTransport): FilesApi {
     namesOfType: (otype) => call<string[]>('names_of_type', [otype]),
     multiFileNames: (pattern, selection, state) =>
       call<MultiFileNames>('multifilenamegen', [pattern, selection, state]),
+    produce: (filename, options) => call<ProduceResult>('produce', [filename], options),
     sessionFile: () => call<SessionFileInfo>('session_file'),
 
     movieInfo: () => call<MovieDialogInfo>('movie_dialog_info'),

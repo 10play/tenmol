@@ -226,25 +226,20 @@ function OverlayLayer() {
           </button>
         ))}
       </div>
-      {open.length > 0 && (
-        <div className="overlay-layer">
-          {slots
-            .filter((slot) => open.includes(slot.id))
-            .map((slot) => (
-              <div key={slot.id} className="overlay-panel">
-                <button
-                  type="button"
-                  className="overlay-panel__close"
-                  aria-label={`close ${slot.title}`}
-                  onClick={() => toggle(slot.id)}
-                >
-                  x
-                </button>
-                <FeatureSlot id={slot.id} />
-              </div>
-            ))}
-        </div>
-      )}
+      {/*
+        * Rendered WITHOUT a wrapper. These panels bring their own positioning —
+        * `features/settings` is `position: absolute; right: 8px`, anchored to
+        * the app root. Wrapping each in a `position: relative` box made that box
+        * their containing block; it then collapsed to zero size (its only child
+        * was absolutely positioned) and threw the panel's own controls to
+        * x = -134, off screen left. The launcher decides WHETHER a panel
+        * renders; the panel decides WHERE.
+        */}
+      {slots
+        .filter((slot) => open.includes(slot.id))
+        .map((slot) => (
+          <FeatureSlot key={slot.id} id={slot.id} />
+        ))}
     </>
   );
 }

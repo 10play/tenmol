@@ -51,6 +51,14 @@ async function run(page, command, waitMs = 900) {
   await page.waitForTimeout(waitMs);
 }
 
+/** Evaluate a python expression and read the answer out of the console. */
+async function ask(page, expr) {
+  await run(page, `print("Q=", ${expr})`, 1100);
+  const text = await page.evaluate(() => document.body.innerText);
+  const all = [...text.matchAll(/Q= *([^\n]*)/g)];
+  return all.length ? all[all.length - 1][1].trim() : '?';
+}
+
 /**
  * The viewport's own stats, via `?viewportHandle=1`.
  *
@@ -278,6 +286,41 @@ export const tests = [
 
       const after = await read();
       assert(after !== before, `menu leaf did not reach PyMOL (internal_prompt stayed ${before})`);
+      await page.close();
+    },
+  },
+  {
+    /**
+     * The advanced settings table is the one surface that proves settings
+     * introspection works end to end: enumerate ~779 settings from the backend,
+     * filter them, and write one back.
+     */
+    name: 'the advanced settings table filters and writes through to PyMOL',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+
+      await page.getByRole('button', { name: 'Settings', exact: true }).click();
+      await page.waitForTimeout(800);
+      await page.getByText('Edit All', { exact: false }).first().click();
+      await page.waitForTimeout(1500);
+
+      await page
+        .locator('.setadv__filter input, input[placeholder="regex or substring"]')
+        .first()
+        .fill('sphere_scale');
+      await page.waitForTimeout(1200);
+
+      const before = await ask(page, "cmd.get('sphere_scale')");
+      const value = page.locator('.setadv__c-value input').first();
+      assert((await value.count()) === 1, 'filter did not narrow to one editable row');
+      await value.fill('0.75');
+      await value.press('Enter');
+      await page.waitForTimeout(1500);
+      const after = await ask(page, "cmd.get('sphere_scale')");
+
+      assert(after !== before, `setting did not write through (stayed ${before})`);
+      assert(after.startsWith('0.75'), `expected 0.75, got ${after}`);
       await page.close();
     },
   },

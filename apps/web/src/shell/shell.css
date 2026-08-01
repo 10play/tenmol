@@ -262,43 +262,4 @@
   color: var(--pm-text-bright);
 }
 
-.overlay-layer {
-  position: fixed;
-  inset: 24px 0 26px 0;
-  z-index: 45;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 10px;
-  padding: 10px;
-  overflow: auto;
-  pointer-events: none;
-}
 
-.overlay-panel {
-  position: relative;
-  pointer-events: auto;
-  max-height: 100%;
-  overflow: auto;
-  box-shadow: 0 4px 18px rgb(0 0 0 / 55%);
-}
-
-.overlay-panel__close {
-  position: absolute;
-  top: 2px;
-  right: 3px;
-  z-index: 1;
-  width: 15px;
-  height: 15px;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  color: var(--pm-text-dim);
-  font: inherit;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.overlay-panel__close:hover {
-  color: var(--pm-text-bright);
-}
