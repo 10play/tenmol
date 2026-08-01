@@ -52,6 +52,13 @@ until the `files` and `menubar` panels landed inputs earlier in the DOM, at
 which point the suite typed into a disabled search box and five of six specs
 failed for reasons unrelated to what they tested. Use `input.cmdline__input`.
 
+## Shared backend state
+
+All specs run against ONE PyMOL process, so session state carries between them.
+Assert on the object you created, not on `all` — a spec asserting benzene was 12
+atoms got 11390, which was an earlier spec's 1tii plus the benzene. Either scope
+the query (`cmd.get_names("objects")[-1]`) or `reinitialize` first.
+
 ## Flakiness, and what is done about it
 
 Chromium's GPU process occasionally dies under repeated page creation with

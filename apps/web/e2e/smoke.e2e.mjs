@@ -417,4 +417,46 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * A builder fragment button does NOT build immediately — it arms the attach
+     * wizard, which is PyMOL's real behaviour. The full path is therefore
+     * button -> wizard -> "Create As New Object" -> a real object with the right
+     * atom count. Asserting the count is what distinguishes "a fragment was
+     * built" from "something was created".
+     */
+    name: 'a builder fragment arms the attach wizard and builds a real molecule',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+
+      // Two buttons say "Builder": the overlay launcher and PyMOL's own quick
+      // buttons row. Scope to the launcher.
+      await page
+        .locator('.overlay-launcher__btn')
+        .filter({ hasText: /^Builder$/ })
+        .first()
+        .click();
+      await page.waitForTimeout(700);
+      await page.locator('.builder-launch').click();
+      await page.waitForTimeout(1400);
+
+      await page.getByRole('button', { name: 'Benzene', exact: true }).first().click();
+      await page.waitForTimeout(1500);
+      const armed = await page.evaluate(() => document.body.innerText);
+      assert(/attach phenyl/i.test(armed), 'fragment button did not arm the attach wizard');
+
+      await page.getByText('Create As New Object', { exact: false }).first().click();
+      await page.waitForTimeout(2400);
+
+      // Count the NEW object, not "all". Every spec shares one PyMOL process,
+      // so a global count picks up whatever an earlier spec loaded — this
+      // asserted 12 and got 11390, which was 1tii plus the benzene.
+      const objects = await ask(page, 'cmd.get_names("objects")');
+      assert(objects !== '[]', 'no object was created');
+      const atoms = await ask(page, 'cmd.count_atoms(cmd.get_names("objects")[-1])');
+      assert(atoms === '12', `benzene should be 12 atoms (C6H6), got ${atoms}`);
+      await page.close();
+    },
+  },
 ];
