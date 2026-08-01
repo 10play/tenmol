@@ -67,7 +67,25 @@ export interface StreamGeometrySourceOptions {
   pollMs?: number;
   onUnavailable?: (error: Error) => void;
   /** Diagnostics: called whenever a key is dropped or re-pulled. */
-  onLifecycle?: (action: 'refetch' | 'drop', key: ResolvedKey) => void;
+  onLifecycle?: (action: 'refetch' | 'drop' | 'discover', key: ResolvedKey) => void;
+  /**
+   * Learn the object list from the version table instead of waiting to be told
+   * (`cache.discover`). Default true. Set false for the wave-2 behaviour.
+   */
+  discover?: boolean;
+  /**
+   * Which reps discovery is allowed to pull.
+   *
+   * Default: any rep this source has ALREADY been asked for at least once, on
+   * any object. That is the conservative reading of "the viewport draws this
+   * rep in Mode G" — the only signal the source has, since the render policy
+   * lives in `../renderPolicy.ts` and is not passed down here — and it means
+   * discovery can never start a pull for a rep the viewport would throw away.
+   * It is also exactly what is needed: `viewport.ts` asks for a rep on the
+   * objects IT knows about, and discovery then covers every other object PyMOL
+   * is drawing that rep for.
+   */
+  wants?: (rep: RepId) => boolean;
 }
 
 export interface StreamGeometrySource extends GeometrySource {
@@ -85,6 +103,7 @@ export function createStreamGeometrySource(
 ): StreamGeometrySource {
   const { transport } = options;
   const lifecycle = options.invalidate !== false;
+  const discovering = options.discover !== false;
 
   let unsubscribe: (() => void) | null = null;
   let sink: GeometrySink | null = null;
@@ -92,6 +111,10 @@ export function createStreamGeometrySource(
   let started = false;
   let seq = 0;
   let table: VersionTable | null = null;
+
+  /** Reps `request()` has ever been called with; the default `wants` gate. */
+  const requestedReps = new Set<RepId>();
+  const wants = options.wants ?? ((rep: RepId): boolean => requestedReps.has(rep));
 
   const cache = createGeometryCache();
 
@@ -168,6 +191,19 @@ export function createStreamGeometrySource(
 
   const apply = (next: VersionTable): void => {
     table = next;
+    if (discovering && options.request !== false) {
+      for (const entry of cache.discover(next, wants)) {
+        options.onLifecycle?.('discover', {
+          object: entry.object,
+          rep: entry.rep,
+          state: entry.requestedState,
+        });
+      }
+      // Deliberately no pull here: the entry has no resolved state, so
+      // `plan()` below is already the code path that pulls it, and routing
+      // discovery through the same plan keeps ONE place that decides what a
+      // table means.
+    }
     const plan = cache.plan(next);
     for (const key of plan.drop) drop(key);
     for (const entry of plan.refetch) {
@@ -217,6 +253,7 @@ export function createStreamGeometrySource(
 
     request(object: string, rep: RepId, state: number = CURRENT_STATE): void {
       if (options.request === false) return;
+      requestedReps.add(rep);
       const entry = cache.track(object, rep, state);
       if (entry.pending) return;
       pull(entry);

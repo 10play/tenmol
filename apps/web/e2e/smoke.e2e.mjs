@@ -534,4 +534,44 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * Colour is verified by COUNTING ATOMS per colour rather than reading one
+     * atom's colour index: `cmd.get_model(...)` produces no output through the
+     * console path, and an index alone would not show that the whole selection
+     * was recoloured.
+     */
+    name: 'picking a colour from the C menu recolours the selection',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+      await run(page, 'load test/dat/1tii.pdb, cl', 2400);
+      await run(page, 'color green, cl', 1500);
+
+      // Scope to THIS object. Counting globally picks up other specs' objects,
+      // whose oxygens are red by default — the first run expected 5684 and got
+      // 28442.
+      const green = await ask(page, "cmd.count_atoms('cl and color green')");
+      assert(Number(green) > 0, `nothing was green to begin with (${green})`);
+      assert(
+        (await ask(page, "cmd.count_atoms('cl and color red')")) === '0',
+        'this object was already red',
+      );
+
+      await page
+        .locator('.overlay-launcher__btn')
+        .filter({ hasText: /Colour|Color/ })
+        .first()
+        .click();
+      await page.waitForTimeout(700);
+      await page.locator('.colors-launch').click();
+      await page.waitForTimeout(1400);
+      await page.getByText('red', { exact: true }).first().click();
+      await page.waitForTimeout(2000);
+
+      const red = await ask(page, "cmd.count_atoms('cl and color red')");
+      assert(red === green, `expected all ${green} atoms red, got ${red}`);
+      await page.close();
+    },
+  },
 ];

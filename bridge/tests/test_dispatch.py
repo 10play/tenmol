@@ -362,8 +362,19 @@ def test_topics_are_the_frozen_v1_set() -> None:
 
 
 def test_topic_set_matches_the_protocol_packages_topic_modules() -> None:
-    """One topic module per topic, both sides, no drift (plan §5.2)."""
+    """One topic module per topic, both sides, no drift (plan §5.2).
+
+    The authority on the TypeScript side is the frozen barrel
+    ``packages/protocol/src/topics/index.ts``: a module is a wire topic exactly
+    when the barrel re-exports it. The directory also holds *shared-vocabulary*
+    modules (WP-11 `console`, WP-14 `menus`, WP-18 `files`, …) that the barrel
+    deliberately does not re-export — they are reached by their subpath and ride
+    an existing topic. Comparing the raw directory listing would make every such
+    module a false positive while still missing the failure that matters: a real
+    topic module that the barrel forgot.
+    """
     import pathlib
+    import re
 
     topics_dir = (
         pathlib.Path(__file__).resolve().parents[2]
@@ -374,15 +385,32 @@ def test_topic_set_matches_the_protocol_packages_topic_modules() -> None:
     )
     if not topics_dir.is_dir():
         pytest.skip("packages/protocol/src/topics/ has not landed")
+
+    barrel = (topics_dir / "index.ts").read_text(encoding="utf-8")
+    exported = set(re.findall(r"^export \* from '\./([A-Za-z0-9_]+)';", barrel, re.M))
+    assert exported == set(session.TOPICS), {
+        "only-in-typescript": sorted(exported - set(session.TOPICS)),
+        "only-in-bridge": sorted(set(session.TOPICS) - exported),
+    }
+
+    # Every re-exported module must actually exist on disk.
     on_disk = {
         path.stem
         for path in topics_dir.glob("*.ts")
         if not path.stem.startswith("_") and path.stem != "index"
     }
-    assert on_disk == set(session.TOPICS), {
-        "only-in-typescript": sorted(on_disk - set(session.TOPICS)),
-        "only-in-bridge": sorted(set(session.TOPICS) - on_disk),
-    }
+    assert exported <= on_disk, sorted(exported - on_disk)
+
+    # And every non-topic module in the directory must say so in its header, so
+    # a genuinely forgotten topic cannot hide among the shared-vocabulary ones.
+    for stem in sorted(on_disk - exported):
+        header = (topics_dir / f"{stem}.ts").read_text(encoding="utf-8")
+        assert "@notATopic" in header, (
+            f"packages/protocol/src/topics/{stem}.ts is not re-exported by the "
+            "frozen barrel, so it is not a wire topic. Either register the topic "
+            "bridge-side and add it to index.ts, or declare `@notATopic` in its "
+            "module header."
+        )
 
 
 def test_subscription_sequence_numbers_are_monotonic_per_topic() -> None:

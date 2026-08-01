@@ -496,3 +496,120 @@ describe('stream geometry source lifecycle', () => {
     source.stop();
   });
 });
+
+/* ------------------------------------------------------------------ *
+ * discovery: where the object list comes from
+ * ------------------------------------------------------------------ */
+
+describe('version-table discovery', () => {
+  it('THE DEFECT: without discovery a measurement object is never pulled', () => {
+    // A `distance` object is a measurement object whose ONLY rep is `dashes`.
+    // It never appears in a viewport that builds its pull list from
+    // (app object list x reps with a mode toggle), which is what the client
+    // did before `cache.discover`.
+    const cache = createGeometryCache();
+    cache.track('u', Rep.Dash, -1);
+    const plan = cache.plan(
+      table([
+        ['u', 0, Rep.Dash, 1, 1],
+        ['dd', 0, Rep.Dash, 1, 1],
+      ]),
+    );
+    expect(plan.refetch.map((e) => e.object)).toEqual(['u']);
+  });
+
+  it('adopts every active row for a rep this viewport already draws', () => {
+    const cache = createGeometryCache();
+    cache.track('u', Rep.Dash, -1);
+    const added = cache.discover(
+      table([
+        ['u', 0, Rep.Dash, 1, 1],
+        ['dd', 0, Rep.Dash, 1, 1],
+        ['aa', 0, Rep.Angle, 1, 1],
+        ['hh', 0, Rep.Dihedral, 1, 1],
+      ]),
+      (rep) => rep === Rep.Dash,
+    );
+    expect(added.map((e) => `${e.object}/${String(e.rep)}`)).toEqual(['dd/10']);
+    expect(cache.stats.discovered).toBe(1);
+    // Tracked at -1, like every other entry, so a state change does not fork
+    // the key.
+    expect(cache.get('dd', Rep.Dash)?.requestedState).toBe(-1);
+    expect(cache.get('aa', Rep.Angle)).toBeUndefined();
+  });
+
+  it('never adopts an inactive row, and never adopts twice', () => {
+    const cache = createGeometryCache();
+    const rows = table([
+      ['dd', 0, Rep.Dash, 1, 0],
+      ['ee', 0, Rep.Dash, 1, 1],
+    ]);
+    expect(cache.discover(rows, () => true).map((e) => e.object)).toEqual(['ee']);
+    expect(cache.discover(rows, () => true)).toEqual([]);
+    expect(cache.stats.discovered).toBe(1);
+  });
+
+  it('pulls dashes/angles/dihedrals for objects nobody asked about', async () => {
+    // The end-to-end shape of the fix: the viewport asks for the three
+    // measurement reps on the ONE object it knows (`u`, which has none of
+    // them); PyMOL's table names the three measurement objects; the source
+    // pulls all three without another `request()`.
+    const rows: Row[] = [
+      ['u', 0, Rep.Cartoon, 1, 1],
+      ['dd', 0, Rep.Dash, 1, 1],
+      ['aa', 0, Rep.Angle, 1, 1],
+      ['hh', 0, Rep.Dihedral, 1, 1],
+    ];
+    const transport = fakeTransport({ cartoon: { status: 'not-built', state: 0 } }, () => rows);
+    const { sink } = recordingSink();
+    const discovered: string[] = [];
+    const source = createStreamGeometrySource({
+      transport,
+      pollMs: 10_000,
+      onLifecycle: (action, key) => {
+        if (action === 'discover') discovered.push(`${key.object}/${String(key.rep)}`);
+      },
+    });
+    source.start(sink);
+    source.request('u', Rep.Dash, -1);
+    source.request('u', Rep.Angle, -1);
+    source.request('u', Rep.Dihedral, -1);
+    await flush();
+    await source.refresh();
+    await flush();
+
+    expect(discovered.sort()).toEqual(['aa/17', 'dd/10', 'hh/18']);
+    const pulled = new Set(
+      transport.calls
+        .filter((c) => c.fn === '_bridge.pull_geometry')
+        .map((c) => `${String(c.args[0])}/${String(c.args[1])}`),
+    );
+    expect(pulled.has('dd/dashes')).toBe(true);
+    expect(pulled.has('aa/angles')).toBe(true);
+    expect(pulled.has('hh/dihedrals')).toBe(true);
+    // Cartoon was never requested, so it is never discovered either: the gate
+    // is "a rep this viewport draws", not "everything in the scene".
+    expect(pulled.has('u/cartoon')).toBe(false);
+    source.stop();
+  });
+
+  it('discover:false keeps the wave-2 behaviour', async () => {
+    const rows: Row[] = [
+      ['u', 0, Rep.Dash, 1, 1],
+      ['dd', 0, Rep.Dash, 1, 1],
+    ];
+    const transport = fakeTransport({}, () => rows);
+    const { sink } = recordingSink();
+    const source = createStreamGeometrySource({ transport, pollMs: 10_000, discover: false });
+    source.start(sink);
+    source.request('u', Rep.Dash, -1);
+    await flush();
+    await source.refresh();
+    await flush();
+    expect(
+      transport.calls.filter((c) => c.fn === '_bridge.pull_geometry').map((c) => c.args[0]),
+    ).not.toContain('dd');
+    expect(source.cache.stats.discovered).toBe(0);
+    source.stop();
+  });
+});

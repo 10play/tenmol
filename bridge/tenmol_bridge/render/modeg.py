@@ -134,10 +134,38 @@ REP_NAMES: Dict[int, str] = {
 REP_IDS: Dict[str, int] = {name: index for index, name in REP_NAMES.items()}
 
 #: ``MODE_G_CAPABLE_REPS`` from ``geometry.ts``, intersected with what the
-#: accessor actually implements today (spike 06 §"ALL REPS": labels is
-#: ``unsupported``; cell/cgo/slice/angles/dihedrals/dashes hang off
-#: non-CoordSet paths and also answer ``unsupported``).
-MODE_G_CAPABLE_REPS: Tuple[int, ...] = (0, 1, 2, 4, 5, 6, 7, 8, 9, 11, 19)
+#: accessor actually implements today.
+#:
+#: THIS LIST IS A PROMISE, AND IT WAS WRONG.  ``_resolve`` in
+#: ``render/__init__.py`` answers ``set_render_mode`` with ``unsupported-rep``
+#: for anything missing here, and ``capabilities()['capableReps']`` is what a
+#: client is told it may ask for -- so a rep left off this tuple is a rep the
+#: bridge keeps rasterising for ever, however well the accessor serves it.
+#:
+#: The old comment said "cell/cgo/slice/angles/dihedrals/dashes hang off
+#: non-CoordSet paths and also answer ``unsupported``".  That was true of spike
+#: 06 and is no longer true of this tree.  Re-measured against a real PyMOL
+#: built from this source (``bridge/tests/test_modeg_objects.py`` is the
+#: executable form of the table):
+#:
+#:     dashes    (10)  RepDistDash::V              status ok, 16 line instances
+#:     cell      (12)  CoordSet::UnitCellCGO       status ok, 1 draw-arrays block
+#:                                                 (GL_LINES, 24 verts)
+#:     cgo       (13)  ObjectCGO::origCGO          status ok, 1 begin/end block
+#:     extent    (15)  CObject::ExtentMin/Max      status ok, 12 line instances
+#:     angles    (17)  RepAngle::V                 status ok, 52 line instances
+#:     dihedrals (18)  RepDihedral::V              status ok, 55 line instances
+#:
+#: Still excluded, each for a reason that has been checked rather than assumed:
+#:   3  labels    -- the accessor answers ``unsupported``; text needs an atlas.
+#:   14 callback  -- arbitrary user GL at render time; nothing to serialise.
+#:   16 slice     -- needs an ObjectMap to exist before it can be exercised, and
+#:                   nothing in ``test/dat`` carries one.  NOT claimed here
+#:                   because it has not been measured in this tree.
+#:   20 volume    -- a 3-D field, served by ``cmd.get_volume_field``.
+MODE_G_CAPABLE_REPS: Tuple[int, ...] = (
+    0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 18, 19,
+)
 
 
 class RepInv:
@@ -744,6 +772,22 @@ class GeometryService:
                 fallback=_fallback_for(status),
             )
 
+        # THE CELL RENDERS WHITE, AND THE COLOUR IS NOT IN THE GEOMETRY.
+        # `CrystalGetUnitCellCGO` emits vertices and nothing else -- the block
+        # arrives `arraybits: 1`, 24 verts, no colour array -- because PyMOL
+        # colours it at RENDER time: `CoordSet::render` calls
+        # `CGORender(UnitCellCGO, color, ...)` with `color` from
+        # `ResolveCellColor` (`layer2/CoordSet.cpp:1281-1291,1412-1416`), which
+        # is the `cell_color` setting or, when that is negative (the default),
+        # the OBJECT's colour.  A client that only sees the buffer has no way
+        # to know that, so it drew a white box over a green one.  Resolve it
+        # here, on the engine thread, and hand it down as `rgb` -- the same key
+        # the accessor already uses for extent/dashes/angles/dihedrals.
+        if index == REP_IDS["cell"] and not raw.get("rgb"):
+            rgb = self._cell_rgb(cmd, object_name)
+            if rgb is not None:
+                raw["rgb"] = rgb
+
         t1 = time.perf_counter()
         try:
             header, payload, diagnostics = self._convert(
@@ -825,6 +869,27 @@ class GeometryService:
             encode_ms=encode_ms,
             diagnostics=diagnostics,
         )
+
+    @staticmethod
+    def _cell_rgb(cmd: Any, object_name: str) -> Optional[Tuple[float, float, float]]:
+        """``ResolveCellColor`` in Python.  ``None`` when it cannot be read.
+
+        Must run with the API lock RELEASED: every call below takes its own.
+        Failure is never fatal -- a missing colour only means the client falls
+        back to the buffer's own (white), which is what it did before.
+        """
+        try:
+            color = int(cmd.get_setting_int("cell_color", str(object_name)))
+            if color < 0:
+                # `cell_color` unset -> the object's own colour, exactly as
+                # `ResolveCellColor` does.
+                color = int(cmd.get_object_color_index(str(object_name)))
+            rgb = cmd.get_color_tuple(color)
+        except Exception:  # noqa: BLE001 - diagnostics only, never fatal
+            return None
+        if not rgb or len(rgb) < 3:
+            return None
+        return (float(rgb[0]), float(rgb[1]), float(rgb[2]))
 
     # -- conversion --------------------------------------------------------
 
@@ -987,9 +1052,13 @@ class GeometryService:
         blocks: List[Dict[str, Any]] = []
         instances: List[Dict[str, Any]] = []
 
+        # `CGORender(cgo, color, ...)` takes a colour POINTER used for every
+        # vertex the CGO does not colour itself; the unit cell is the rep that
+        # relies on it (see `fetch`).  `rgb` is that pointer, on the wire.
+        fallback_rgb = raw.get("rgb")
         for group in ("draw_arrays", "begin_end"):
             for entry in raw.get(group) or ():
-                block = self._draw_arrays_block(packer, entry)
+                block = self._draw_arrays_block(packer, entry, fallback_rgb)
                 if block is not None:
                     blocks.append(block)
 
@@ -1042,7 +1111,10 @@ class GeometryService:
     # -- cgo buckets -------------------------------------------------------
 
     def _draw_arrays_block(
-        self, packer: _Packer, entry: Dict[str, Any]
+        self,
+        packer: _Packer,
+        entry: Dict[str, Any],
+        fallback_rgb: Any = None,
     ) -> Optional[Dict[str, Any]]:
         nverts = int(entry.get("nverts", 0) or 0)
         if nverts <= 0:
@@ -1052,6 +1124,13 @@ class GeometryService:
             return None
         normal = entry.get("normal")
         rgba = entry.get("rgba")
+        if not rgba and fallback_rgb:
+            # A colourless block is NOT a white block: PyMOL hands `CGORender`
+            # an explicit colour for exactly this case.  Materialising it as a
+            # constant colour array costs 16 bytes a vertex on the one rep that
+            # needs it (24 verts for a unit cell) and keeps the client's
+            # `cgoArraysLayout()` path completely unchanged.
+            rgba = _const_rgba(fallback_rgb, nverts)
         pick = entry.get("pick")
         access = entry.get("accessibility")
 
@@ -1479,6 +1558,19 @@ def _fallback_for(status: str) -> Optional[str]:
 
 def _const_f32(value: float, count: int) -> bytes:
     return _F32.pack(float(value)) * count
+
+
+def _const_rgba(rgb: Any, count: int) -> Optional[bytes]:
+    """``count`` copies of one opaque RGBA, from an ``[r, g, b]`` triple.
+
+    Returns ``None`` for anything that is not a usable triple so the caller
+    keeps its "no colour array" branch rather than shipping garbage.
+    """
+    try:
+        r, g, b = (float(rgb[0]), float(rgb[1]), float(rgb[2]))
+    except (TypeError, ValueError, IndexError, KeyError):
+        return None
+    return struct.pack("<4f", r, g, b, 1.0) * count
 
 
 def _rgb_to_rgba(rgb: Any, count: int) -> Optional[bytes]:

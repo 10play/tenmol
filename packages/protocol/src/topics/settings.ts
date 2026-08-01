@@ -11,13 +11,208 @@
  *  * The per-object setting channel is SEPARATE and must be drained too
  *    (21.6 us for 31 objects — do it every tick).
  *
- * Min/max are unavailable in v1 (C++ Task 4 not built): sliders are unclamped
- * and annotated (plan §6 WP-15).
+ * Min/max ARE available after all, but only as a HINT and never as a limit —
+ * see `SettingMeta.min`.  Nothing here clamps.
  */
 
-export type SettingKind = 'boolean' | 'int' | 'float' | 'float3' | 'color' | 'string';
+/* ------------------------------------------------------------------ *
+ * Vocabulary
+ * ------------------------------------------------------------------ */
 
+/** `layer1/Setting.h:113-120`; `blank` is the one retired slot (index 83). */
+export type SettingKind = 'boolean' | 'int' | 'float' | 'float3' | 'color' | 'string' | 'blank';
+
+/**
+ * `SettingLevelGetName` (`layer1/Setting.cpp:83-85`).  A lattice, not a chain:
+ * `global < object < object-state`, then `object-state < atom < atom-state` and
+ * `object-state < bond < bond-state` as siblings (`layer1/Setting.cpp:55-63`).
+ */
+export type SettingLevel =
+  | 'unused'
+  | 'global'
+  | 'object'
+  | 'object-state'
+  | 'atom'
+  | 'atom-state'
+  | 'bond'
+  | 'bond-state';
+
+/** Where a write is aimed.  Subset of the levels: what a UI can select. */
+export type SettingScope =
+  | 'global'
+  | 'object'
+  | 'object-state'
+  | 'atom'
+  | 'atom-state'
+  | 'bond'
+  | 'bond-state';
+
+/** float3 arrives as three numbers; everything else is a scalar. */
 export type SettingValue = boolean | number | readonly number[] | string;
+
+/* ------------------------------------------------------------------ *
+ * The catalogue
+ * ------------------------------------------------------------------ */
+
+/**
+ * One row of the static C setting table as the bridge reports it
+ * (`bridge/tenmol_bridge/panels/settings.py`).
+ *
+ * `index` is FROZEN FOREVER — sessions serialize it
+ * (`layer1/SettingInfo.h:5-6`), so it, not the name, is the identity.
+ */
+export interface SettingMeta {
+  index: number;
+  name: string;
+  kind: SettingKind;
+  /** `_cmd.get_setting_level(index)` — never wrapped in `pymol.setting`. */
+  level: SettingLevel;
+  /** Scopes this level may legally be written at.  Anything else is a no-op. */
+  scopes: readonly SettingScope[];
+  /**
+   * From `layer1/SettingInfo.h`, parsed and validated against the live table;
+   * absent when the header is not next to the bridge.  There is NO C accessor
+   * for this (`00-parity-inventory.md` area 5) and none was invented.
+   */
+  default?: SettingValue;
+  /**
+   * A HINT, never a limit.  PyMOL clamps only `int` settings and only for
+   * global writes (`layer1/Setting.cpp:1890-1911`); exactly 30 records declare
+   * a range and the two float ones are never enforced at all.  The client
+   * therefore ships UNCLAMPED inputs and shows the range as text.
+   */
+  min?: number;
+  max?: number;
+  /** `data/setting_help.csv` — 697 named rows, and this is its first consumer. */
+  help?: string;
+}
+
+/** Provenance of the catalogue, so the UI can say what it does not know. */
+export interface SettingCatalogueMeta {
+  cSettingInit: number;
+  indexDictSize: number;
+  nameListSize: number;
+  /** Repo-relative path, or null when defaults/ranges are unavailable. */
+  defaultsSource: string | null;
+  defaultsNote: string;
+  minMaxEnforced: false;
+  minMaxNote: string;
+  helpSource: string | null;
+  helpRows: number;
+}
+
+export interface SettingCatalogue {
+  version: number;
+  count: number;
+  settings: readonly SettingMeta[];
+  /** `ray_shadows -> ray_shadow`'s index; injected after the name snapshot. */
+  aliases: Readonly<Record<string, number>>;
+  counts: Readonly<Record<string, number>>;
+  levelCounts: Readonly<Record<string, number>>;
+  meta: SettingCatalogueMeta;
+}
+
+/* ------------------------------------------------------------------ *
+ * Values
+ * ------------------------------------------------------------------ */
+
+/** `[index, value, text]` — text is `cmd.get`'s rendering. */
+export type SettingValueRow = readonly [number, SettingValue, string];
+
+export interface SettingValuesReply {
+  /** '' for the global scope. */
+  object: string;
+  state: number;
+  values: readonly SettingValueRow[];
+  /** Indices the backend refused (unknown name, object lacks state, ...). */
+  failed: readonly number[];
+}
+
+/** `cmd.get_object_settings` -> the overrides an object genuinely carries. */
+export type ObjectOverrideRow = readonly [number, SettingKind, SettingValue];
+
+export interface SettingScopeReply {
+  object: string;
+  state: number;
+  objectSettings: readonly ObjectOverrideRow[];
+  atoms: readonly { model: string; index: number; settings: readonly number[] }[];
+  /** Present only when a selection was given; see `SettingBondsReply`. */
+  bonds?: readonly SettingBondRow[];
+  truncated: boolean;
+  error?: string;
+}
+
+/* ------------------------------------------------------------------ *
+ * Bond level — the six settings `cmd.set` silently cannot reach
+ * ------------------------------------------------------------------ */
+
+/**
+ * `cmd.set` over a selection of atoms "will appear to take, but no change will
+ * be observed" for a bond-level setting (`modules/pymol/setting.py:245-248`).
+ * `cmd.set_bond` / `cmd.unset_bond` / `cmd.get_bond` are the only working path,
+ * so the client must know which six names those are and route them.
+ */
+export const BOND_LEVEL_SETTINGS = [
+  'valence',
+  'line_width',
+  'line_color',
+  'stick_radius',
+  'stick_color',
+  'stick_transparency',
+] as const;
+
+/** One bond that actually carries an override (`get_bond` skips `None`). */
+export interface SettingBondRow {
+  index: number;
+  model: string;
+  /** The two atom indices `cmd.get_bond` reported, in its order. */
+  atoms: readonly [number, number];
+  value: SettingValue;
+}
+
+export interface SettingBondsReply {
+  selection: string;
+  state: number;
+  /** Indices actually queried — the six above, resolved on the backend. */
+  settings: readonly number[];
+  bonds: readonly SettingBondRow[];
+  truncated: boolean;
+  error?: string;
+}
+
+/* ------------------------------------------------------------------ *
+ * Change notification
+ * ------------------------------------------------------------------ */
+
+/**
+ * The bridge's cursor-addressed view of `cmd.get_setting_updates()`.
+ *
+ * The status thread is the drain's only consumer; this is a TAP on what it
+ * received, so reading it slowly loses nothing.  `full` means "a batch the size
+ * of a session load arrived" — refetch everything rather than trusting a diff.
+ */
+export interface SettingDrainReply {
+  cursor: number;
+  indices: readonly number[];
+  batches: number;
+  full: boolean;
+  /** The tap's ring wrapped past this caller's cursor: treat as `full`. */
+  lost: boolean;
+  observing: boolean;
+}
+
+export interface SettingServiceStatus {
+  installed: boolean;
+  cursor: number;
+  calls: number;
+  recorded: number;
+  catalogueBuilt: boolean;
+  module: string;
+}
+
+/* ------------------------------------------------------------------ *
+ * The topic payload (the barrel's one requirement)
+ * ------------------------------------------------------------------ */
 
 export interface SettingChange {
   /** Setting index, e.g. 254 = scenes_changed (`layer1/SettingInfo.h:339`). */
