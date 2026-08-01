@@ -117,7 +117,20 @@ export async function startStack({ quiet = true } = {}) {
 
     const bridge = spawn(
       'bash',
-      [join(REPO, 'scripts/dev-bridge.sh'), '--port', String(bridgePort), '--no-token'],
+      [
+        join(REPO, 'scripts/dev-bridge.sh'),
+        '--port',
+        String(bridgePort),
+        '--no-token',
+        // The bridge's Origin allow-list is a fixed range (5173-5183 / 4173-4183,
+        // `config.py:108`). This suite uses an EPHEMERAL vite port, so without
+        // this the socket closes 1006 and every spec silently tests a
+        // disconnected app.
+        '--origin',
+        `http://127.0.0.1:${vitePort}`,
+        '--origin',
+        `http://localhost:${vitePort}`,
+      ],
       { cwd: REPO, stdio: quiet ? 'ignore' : 'inherit' },
     );
     procs.push(bridge);

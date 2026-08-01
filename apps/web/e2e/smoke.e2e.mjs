@@ -89,10 +89,14 @@ export const tests = [
     async fn({ stack, assert }) {
       const page = await openApp(stack);
       await page.waitForTimeout(2500);
-      const connected = await page.evaluate(() =>
-        document.body.innerText.toLowerCase().includes('connected'),
-      );
-      assert(connected, 'status bar never reported connected');
+      // NOT a substring match on "connected": that also matches
+      // "reconnecting", and it passed for a run whose socket was closing 1006
+      // the whole time. Assert on the failure panel being absent instead.
+      const state = await page.evaluate(() => ({
+        failing: !!document.querySelector('.connpanel'),
+        text: document.querySelector('.connpanel')?.textContent?.slice(0, 120) ?? null,
+      }));
+      assert(!state.failing, `connection panel is showing: ${state.text}`);
       // A DisconnectedError is the client's designed reconnect path (the socket
       // races the dev server on first paint); anything else is a real defect.
       const real = page.__errors.filter((e) => !e.includes('DisconnectedError'));
