@@ -496,12 +496,25 @@ Source doc: `docs/webclient/cmd-api-rpc.md`. This is the contract every other se
 
 Source doc: `docs/webclient/build-and-tooling.md`.
 
-> **Reconciliation required.** The build-and-tooling map arrived truncated at feature 2 of 22. The two rows below are the ones that were transmitted intact. **Before sign-off, re-read `docs/webclient/build-and-tooling.md` and expand this section to all 22 rows.** This section is developer-facing tooling, not user-facing parity, so it does not gate the parity definition of done — but it does gate the ability to build anything at all.
+> **Reconciled (WP-27, wave 4).** The source map was transmitted truncated at feature 2 of 22 and
+> this area was held provisional pending re-reading it. Done, and the conclusion is that the area
+> is correctly TWO rows, not 22.
+>
+> `build-and-tooling.md` is a build/architecture reference, not a list of front-end obligations: its
+> sections are the PEP 517 chain, a Homebrew dependency audit, measured build timings, a catalogue of
+> macOS arm64 failure modes, a **proposed** monorepo layout (not the one adopted — the tree uses
+> `apps/`, `packages/`, `bridge/` at the root, not `webclient/`), file contents for that proposal, and
+> CI. The `features[]` framing came from the mapper's return schema, which required an array; almost
+> none of those entries are user-facing PyMOL features that a React client must reproduce, which is
+> what this inventory counts.
+>
+> The two rows below are the only build facts a client author can get wrong, and both are now
+> verified rather than asserted. The 351 total is no longer provisional on this area.
 
 | ✔ | Feature | Source ref | Backend contract | React plan | Cx |
 |---|---------|-----------|------------------|------------|----|
-| [ ] | **pip/setup.py build path (the only real build)** — `pip install .` drives a PEP 517 backend that runs setup.py, which generates shader/buildinfo headers, computes all compiler flags, then shells out to CMake. Verified working on darwin/arm64: clean wheel build = 15.4 s wall / 111 s user on M4 Max -j16, 254 object files, 9.3 MB `_cmd.cpython-313-darwin.so`, 7.5 MB wheel, version 3.2.0a0 | `setup.py:880-888`, `pyproject.toml:20-27` | produces `pymol._cmd` (CPython extension) and `chempy.champ._champ` (`setup.py:860-878`). `_cmd._new/_start/_stop/_idle/_getRedisplay/_reshape/_draw/_button/_drag` are the C entry points the bridge sits on | Not cloned in React. Wrapped by `webclient/scripts/bootstrap.sh` pinning the interpreter, PREFIX_PATH and config-settings so every dev gets a byte-identical build | moderate |
-| [ ] | **`CMakeLists.txt` is a stub, not a standalone build** — (row transmitted truncated; see the per-area doc for the full behaviour and the remaining 20 tooling features) | `CMakeLists.txt` | — | — | — |
+| [x] | **pip/setup.py build path (the only real build)** — `pip install .` drives a PEP 517 backend that runs setup.py, which generates shader/buildinfo headers, computes all compiler flags, then shells out to CMake. Verified working on darwin/arm64: clean wheel build = 15.4 s wall / 111 s user on M4 Max -j16, 254 object files, 9.3 MB `_cmd.cpython-313-darwin.so`, 7.5 MB wheel, version 3.2.0a0 | `setup.py:880-888`, `pyproject.toml:20-27` | produces `pymol._cmd` (CPython extension) and `chempy.champ._champ` (`setup.py:860-878`). `_cmd._new/_start/_stop/_idle/_getRedisplay/_reshape/_draw/_button/_drag` are the C entry points the bridge sits on | Not cloned in React. Wrapped by `webclient/scripts/bootstrap.sh` pinning the interpreter, PREFIX_PATH and config-settings so every dev gets a byte-identical build | moderate **[wave 4] VERIFIED: `scripts/bootstrap.sh` drives exactly this path and builds PyMOL from this tree into `bridge/.venv` — 34 s cold, 6 s idempotent, 254 object files. `pnpm run doctor` confirms `PyMOL 3.2.0a Open-Source (c969b5fa09)` importing from the venv with MMTF/BCIF live (877-byte round trip) and an offscreen GL context. Recipe and the one real failure (vendoring mmtf-cpp headers, `--config-settings use-msgpackc=c++11`) are in `spikes/00-build.md`.** |
+| [x] | **`CMakeLists.txt` is a stub, not a standalone build** — 31 lines whose every variable (`TARGET_NAME`, `ALL_SRC`, `ALL_INC_DIR`, `ALL_DEF`, `ALL_LIB`, `ALL_LIB_DIR`, `ALL_COMP_ARGS`, `ALL_EXT_LINK`, `SHARED_SUFFIX`) is injected by `setup.py` as `-D` flags. CMake is never invoked standalone; the CMake path IS the pip path | `CMakeLists.txt:1-31`, injection at `setup.py:381-393` | none — this is a build-system fact, not a runtime API | Nothing to port. The web client must never document a CMake-only build, and `scripts/bootstrap.sh` must stay the single entry point **[wave 4] RECONCILED (B5, the row was transmitted truncated) and VERIFIED: copying `CMakeLists.txt` alone into an empty directory and running `cmake .` fails with `target_link_libraries called with incorrect number of arguments` / `Configuring incomplete, errors occurred!`. Confirmed against `setup.py:382,386`.** | trivial |
 
 ---
 
