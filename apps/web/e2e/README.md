@@ -52,5 +52,19 @@ until the `files` and `menubar` panels landed inputs earlier in the DOM, at
 which point the suite typed into a disabled search box and five of six specs
 failed for reasons unrelated to what they tested. Use `input.cmdline__input`.
 
+## Flakiness, and what is done about it
+
+Chromium's GPU process occasionally dies under repeated page creation with
+swiftshader — the run logs `GPU process exited unexpectedly: exit_code=15` and a
+spec that passes on its own fails. Each spec therefore gets **one retry**, and a
+spec that only passed on the second attempt is printed `(retried)` so the
+flakiness stays visible instead of being laundered into a green run.
+
+An **assertion** failure is never retried. Only infrastructure errors are, which
+is how a GPU crash surfaces. A real regression reproduces and still goes red.
+
+Browser stderr is noisy (`[vite] connecting`, DevTools banners, the GPU warning).
+Pipe it away with `2>/dev/null` when you only want the results.
+
 A `DisconnectedError` on first paint is tolerated — the socket races the dev
 server and the client is designed to reconnect. Any other page error fails.

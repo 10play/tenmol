@@ -11,6 +11,14 @@
  * screen.
  */
 
+/*
+ * The callbacks passed to `page.evaluate()` are serialised and run in the
+ * BROWSER, so they legitimately reference `window` and `document` even though
+ * this file executes under node. Declared here rather than in the shared
+ * eslint.config.js, which WP-00 owns.
+ */
+/* global window, document */
+
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -41,29 +49,6 @@ async function run(page, command, waitMs = 900) {
   await input.fill(command);
   await input.press('Enter');
   await page.waitForTimeout(waitMs);
-}
-
-/**
- * How much is drawn in the viewport, as the PNG byte length of a screenshot of
- * the canvas element.
- *
- * WHY NOT readPixels: a WebGL canvas is created without `preserveDrawingBuffer`
- * (the default, and the right default — preserving it costs a full copy every
- * frame), so `readPixels` from outside the render loop returns zeros even
- * though the canvas is visibly drawn. The first version of this helper did
- * exactly that and reported ink=0 for a viewport that screenshots proved was
- * rendering ubiquitin.
- *
- * PNG length is a proxy, not a pixel count, and it is a good one here: a
- * uniform background compresses to a couple of kB, a molecule does not. The
- * assertions below use it only for large relative differences, never for
- * absolute fidelity.
- */
-async function canvasBytes(page) {
-  const canvas = page.locator('canvas').first();
-  if ((await canvas.count()) === 0) return -1;
-  const shot = await canvas.screenshot({ type: 'png' });
-  return shot.length;
 }
 
 /**

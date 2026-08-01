@@ -46,15 +46,32 @@ let failed = 0;
 try {
   for (const t of selected) {
     const t0 = Date.now();
-    try {
-      await t.fn({ stack, assert });
-      console.log(`  ok    ${t.name}  (${Date.now() - t0}ms)`);
-    } catch (e) {
+    let last;
+    // ONE visible retry. Chromium's GPU process occasionally dies under
+    // repeated page creation with swiftshader ("GPU process exited
+    // unexpectedly"), which fails a spec that passes on its own. A real
+    // regression reproduces and still goes red; a transient is marked
+    // `(retried)` so it stays visible rather than being silently swallowed.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await t.fn({ stack, assert });
+        const tag = attempt > 0 ? '  (retried)' : '';
+        console.log(`  ok    ${t.name}  (${Date.now() - t0}ms)${tag}`);
+        last = null;
+        break;
+      } catch (e) {
+        last = e;
+        // An assertion that failed is a real result; only retry infrastructure
+        // errors, which is what a GPU crash surfaces as.
+        if (e instanceof AssertionFailure) break;
+      }
+    }
+    if (last) {
       failed++;
-      const kind = e instanceof AssertionFailure ? 'FAIL' : 'ERROR';
+      const kind = last instanceof AssertionFailure ? 'FAIL' : 'ERROR';
       console.log(`  ${kind}  ${t.name}  (${Date.now() - t0}ms)`);
-      console.log(`        ${e.message}`);
-      if (loud && !(e instanceof AssertionFailure)) console.log(e.stack);
+      console.log(`        ${last.message}`);
+      if (loud && !(last instanceof AssertionFailure)) console.log(last.stack);
     }
   }
 } finally {
