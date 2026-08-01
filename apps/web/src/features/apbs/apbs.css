@@ -1,0 +1,68 @@
+/* APBS stub. Deliberately looks like a real panel, not an error state: the
+   feature is deferred, not broken. */
+
+.apbs {
+  min-width: 420px;
+  max-width: 560px;
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font-size: 11px;
+}
+
+.apbs__title {
+  padding: 3px 6px;
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+}
+
+.apbs__body {
+  padding: 8px;
+}
+
+.apbs__lead {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.apbs__status {
+  margin: 0 0 8px;
+  color: var(--pm-text-dim);
+  line-height: 1.5;
+}
+
+.apbs__script {
+  margin: 0 0 8px;
+  padding: 6px;
+  background: var(--pm-bg);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text-bright);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  line-height: 1.45;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.apbs__btn {
+  padding: 2px 12px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.apbs__note {
+  margin: 10px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  line-height: 1.45;
+}
+
+.apbs code,
+.apbs__note code {
+  font-family: var(--pm-font-mono);
+}
