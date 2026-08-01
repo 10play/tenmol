@@ -72,3 +72,8 @@ testing/timings.tab
 # ---------------------------------------------------------------------------
 .DS_Store
 *.swp
+
+# --- claude code (local) ----------------------------------------------------
+.claude/settings.local.json
+.claude/.state/
+.claude/STOP
