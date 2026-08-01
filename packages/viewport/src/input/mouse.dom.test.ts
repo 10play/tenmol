@@ -167,16 +167,25 @@ describe('input controller without requestAnimationFrame', () => {
 describe('wheel resolution', () => {
   let element: HTMLElement;
   let sent: InputMessage[];
+  let pinches: number[];
 
   beforeEach(() => {
     element = window.document.createElement('div');
     window.document.body.appendChild(element);
     sent = [];
+    pinches = [];
     createInputController({
       element,
       transport: {
         input: (message) => sent.push(message),
         call: () => Promise.resolve(null),
+      },
+      // Without a pinch handler the ctrlKey branch cannot be taken at all, and
+      // every wheel event falls through to ButMode.
+      pinch: {
+        begin: () => pinches.push(0),
+        update: (scale: number) => pinches.push(scale),
+        end: () => undefined,
       },
       geometry: () => ({ cssWidth: 400, cssHeight: 300, dpr: 1 }),
       dragBudgetMs: 16,
@@ -237,6 +246,41 @@ describe('wheel resolution', () => {
     // `abs(delta_y) < abs(delta_x)` upstream — a mostly-horizontal gesture with
     // a little vertical noise is still horizontal.
     wheel({ deltaY: 2, deltaX: 120 });
+    assert.deepEqual(buttons(), []);
+  });
+
+  test('treats a ctrlKey wheel as a PINCH when no Ctrl key is held', () => {
+    /*
+     * A trackpad pinch arrives as a wheel event with ctrlKey set — that is the
+     * only pinch signal a non-Safari browser gives. With no physical Ctrl
+     * down, it must not reach ButMode as a wheel button.
+     */
+    wheel({ deltaY: -40, ctrlKey: true });
+    assert.deepEqual(buttons(), []);
+  });
+
+  test('gives a REAL Ctrl+wheel back to ButMode', () => {
+    /*
+     * `('w','ctrl','mvsz')` is a live binding in the default mode, so holding
+     * Ctrl and turning a real wheel must move the slab, not zoom. Both events
+     * carry ctrlKey: true, so the only way to tell them apart is to watch the
+     * key itself.
+     */
+    window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Control' }));
+    wheel({ deltaY: -40, ctrlKey: true });
+    assert.deepEqual(buttons(), [
+      [3, 0],
+      [3, 1],
+    ]);
+    window.dispatchEvent(new window.KeyboardEvent('keyup', { key: 'Control' }));
+  });
+
+  test('a lost keyup does not disable pinch for ever', () => {
+    // The window can lose focus mid-chord and the keyup never arrives; a stuck
+    // `true` would silently kill pinch-zoom until the next Ctrl press.
+    window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Control' }));
+    window.dispatchEvent(new window.Event('blur'));
+    wheel({ deltaY: -40, ctrlKey: true });
     assert.deepEqual(buttons(), []);
   });
 

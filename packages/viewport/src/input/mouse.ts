@@ -299,11 +299,20 @@ export function createInputController(options: InputControllerOptions): InputCon
   };
 
   const onWheel = (ev: WheelEvent): void => {
-    // The browser reports a trackpad pinch as a wheel event with ctrlKey set
-    // (Chrome, Safari, Firefox all do this; it is the only pinch signal a
-    // non-Safari browser gives us). PyMOL's own pinch handler manipulates the
-    // view directly rather than going through ButMode, so we do too.
-    if (ev.ctrlKey && options.pinch) {
+    /*
+     * The browser reports a trackpad pinch as a wheel event with ctrlKey set
+     * (Chrome, Safari, Firefox all do this; it is the only pinch signal a
+     * non-Safari browser gives us). PyMOL's own pinch handler manipulates the
+     * view directly rather than going through ButMode, so we do too.
+     *
+     * BUT A REAL CTRL KEY MUST NOT BE STOLEN. `('w','ctrl','mvsz')` is a live
+     * binding in the default mode, so a user holding Ctrl and turning a real
+     * wheel expects to move the slab — and every one of those events also
+     * arrives with `ctrlKey: true`, indistinguishable from a pinch on its own.
+     * The only way to tell them apart is to watch the KEY: if Control is
+     * physically down, this is Ctrl+wheel and belongs to ButMode.
+     */
+    if (ev.ctrlKey && !ctrlKeyDown && options.pinch) {
       ev.preventDefault();
       if (!pinchActive) {
         pinchActive = true;
@@ -351,6 +360,26 @@ export function createInputController(options: InputControllerOptions): InputCon
     counters.wheels++;
     sendButton(button, ButtonState.Down, point, ev);
     sendButton(button, ButtonState.Up, point, ev);
+  };
+
+  /**
+   * Is a physical Control key held right now?
+   *
+   * Tracked rather than inferred, because `ev.ctrlKey` on a wheel event is set
+   * by BOTH a real Ctrl key and a trackpad pinch. Reset on blur: if the window
+   * loses focus mid-chord the keyup never arrives, and a stuck `true` would
+   * disable pinch-zoom until the next Ctrl press.
+   */
+  let ctrlKeyDown = false;
+
+  const onKeyDown = (ev: KeyboardEvent): void => {
+    if (ev.key === 'Control') ctrlKeyDown = true;
+  };
+  const onKeyUp = (ev: KeyboardEvent): void => {
+    if (ev.key === 'Control') ctrlKeyDown = false;
+  };
+  const onBlur = (): void => {
+    ctrlKeyDown = false;
   };
 
   const onContextMenu = (ev: Event): void => {
@@ -435,6 +464,9 @@ export function createInputController(options: InputControllerOptions): InputCon
   element.addEventListener('lostpointercapture', onLostCapture);
   element.addEventListener('wheel', onWheel, { passive: false });
   element.addEventListener('contextmenu', onContextMenu);
+  window.addEventListener('keydown', onKeyDown, true);
+  window.addEventListener('keyup', onKeyUp, true);
+  window.addEventListener('blur', onBlur);
 
   return {
     destroy(): void {
@@ -443,6 +475,9 @@ export function createInputController(options: InputControllerOptions): InputCon
       element.removeEventListener('pointerup', onPointerUp);
       element.removeEventListener('pointercancel', onPointerUp);
       element.removeEventListener('lostpointercapture', onLostCapture);
+      window.removeEventListener('keydown', onKeyDown, true);
+      window.removeEventListener('keyup', onKeyUp, true);
+      window.removeEventListener('blur', onBlur);
       element.removeEventListener('wheel', onWheel);
       element.removeEventListener('contextmenu', onContextMenu);
       if (pinchTimer !== null) clearTimeout(pinchTimer);
