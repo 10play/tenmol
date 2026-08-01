@@ -29,6 +29,7 @@
  * (`layer1/Ortho.cpp:2503-2510`).
  */
 
+import type { CameraDriver } from './camera';
 import { ButtonState, Modifier, MouseButton, modifierMask } from '@tenmol/protocol';
 
 import type { ViewportTransport } from '../types';
@@ -64,6 +65,19 @@ export interface InputControllerOptions {
    * it holds whether or not the page is being presented.
    */
   dragBudgetMs?: number;
+  /**
+   * Drive the camera by RPC instead of forwarding drags as `{t:'input'}`.
+   *
+   * Set this ONLY for a backend with no GL context. Raw input there is
+   * accepted and silently never applied — `OrthoDefer`'s queue is drained by
+   * `ExecutiveDrawNow`, which needs a flag only `PyMOL_Draw` sets. Measured on
+   * a `--no-gl` bridge: a 20-step drag left `get_view()` byte-identical, while
+   * `cmd.turn` moved it immediately.
+   *
+   * Buttons, clicks and wheel-as-button still forward normally, so picking and
+   * selection keep whatever behaviour the backend can give them.
+   */
+  cameraDriver?: CameraDriver;
   /** Injectable clock/timers for tests. Default `performance.now`/`setTimeout`. */
   now?: () => number;
   setTimer?: (callback: () => void, ms: number) => unknown;
@@ -147,9 +161,29 @@ export function createInputController(options: InputControllerOptions): InputCon
    * The clock-driven coalescer. NOT rAF: see `./coalescer.ts` for why, and for
    * the four invariants (order, `when`, final position, one flush per budget).
    */
+  let lastDragPoint: { x: number; y: number } | null = null;
+
   const coalescer = createDragCoalescer({
     flush: (drag: DragSample): void => {
       counters.drags++;
+      const driver = options.cameraDriver;
+      if (driver) {
+        // GL-free: translate the sample into a camera RPC. Deltas are computed
+        // here rather than in the driver because only this side knows the
+        // previous sample, and a drag that starts mid-gesture must not jump.
+        const previous = lastDragPoint;
+        lastDragPoint = { x: drag.x, y: drag.y };
+        if (previous === null) return;
+        driver.drag({
+          dx: drag.x - previous.x,
+          // PyMOL y is already flipped relative to the DOM by `toPymolPoint`,
+          // so flip back to get a DOM-sense dy for the driver's own convention.
+          dy: previous.y - drag.y,
+          button: activeButton ?? 0,
+          mod: drag.mod,
+        });
+        return;
+      }
       send({ t: 'input', kind: 'drag', x: drag.x, y: drag.y, mod: drag.mod, when: drag.when });
     },
     ...(options.dragBudgetMs === undefined ? {} : { budgetMs: options.dragBudgetMs }),
@@ -169,6 +203,9 @@ export function createInputController(options: InputControllerOptions): InputCon
     counters.buttons++;
     lastPoint = point;
     lastMod = modifierMask(ev);
+    // A new press starts a new gesture: forget the previous drag anchor, or the
+    // first sample of the next drag is a delta across the gap between them.
+    lastDragPoint = null;
     send({
       t: 'input',
       kind: 'button',
@@ -214,6 +251,9 @@ export function createInputController(options: InputControllerOptions): InputCon
     const point = pointOf(ev);
     lastPoint = point;
     lastMod = modifierMask(ev);
+    // A new press starts a new gesture: forget the previous drag anchor, or the
+    // first sample of the next drag is a delta across the gap between them.
+    lastDragPoint = null;
     coalescer.push({ x: point.x, y: point.y, mod: lastMod, when: whenOf(ev) });
   };
 
