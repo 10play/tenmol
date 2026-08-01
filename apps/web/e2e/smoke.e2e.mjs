@@ -324,4 +324,52 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * The browser cannot open a native file dialog, so File > Open is a
+     * BRIDGE-SERVED path browser over the real filesystem. This pins the whole
+     * round trip: navigate, list, select, and land an object in PyMOL.
+     */
+    name: 'File > Open loads a structure through the bridge-served path picker',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+      const before = await ask(page, 'cmd.get_names("objects")');
+
+      await page.getByRole('button', { name: 'File dialogs', exact: true }).click();
+      await page.waitForTimeout(700);
+      await page.locator('.files__strip button').first().click();
+      await page.waitForTimeout(700);
+      await page.getByText(/^Open…/).first().click();
+      await page.waitForTimeout(1200);
+
+      // Typed path, not a double click on a row: in one run a double click
+      // descended into an unexpected directory, so the row-click path is not
+      // what this spec asserts.
+      const goto = page.locator('.fpick__goto');
+      await goto.fill(`${REPO}/test/dat`);
+      await goto.press('Enter');
+      await page.waitForTimeout(1400);
+
+      const crumbs = await page.evaluate(() =>
+        [...document.querySelectorAll('.fpick__crumb')].map((c) => c.textContent?.trim()),
+      );
+      assert(crumbs.includes('dat'), `picker did not navigate: ${crumbs.join('/')}`);
+
+      const file = page.locator('.fdlg').getByText('1tii.pdb', { exact: true }).last();
+      assert((await file.count()) > 0, '1tii.pdb not listed in test/dat');
+      await file.click();
+      await page.waitForTimeout(500);
+      await page
+        .locator('.fdlg')
+        .getByRole('button', { name: /^(Open|OK|Load)/ })
+        .first()
+        .click();
+      await page.waitForTimeout(2500);
+
+      const after = await ask(page, 'cmd.get_names("objects")');
+      assert(after.includes('1tii'), `object never loaded (before=${before} after=${after})`);
+      await page.close();
+    },
+  },
 ];
