@@ -935,3 +935,111 @@ def test_pymolrc_candidates_are_absolute_server_paths(installed, ws: WSClient):
     assert os.path.isabs(info["home"]) and "~" not in info["home"]
     for path in info["paths"]:
         assert os.path.isabs(path), path
+
+
+# =========================================================================== #
+# Part 5 — the load capability list
+#
+# `loadfunctions` has 22 keys and SIX of them cannot load anything in an
+# open-source build. A picker built from the raw key set advertises formats
+# that raise the moment they are used.
+# =========================================================================== #
+
+
+@pytest.mark.engine
+def test_the_raw_key_set_is_the_one_that_lies(installed, ws: WSClient) -> None:
+    """Kept as evidence for why `load_capabilities` exists at all."""
+    keys = ws.call(NS + ".load_formats")
+    for incentive in ("mae", "mtz", "stl", "vis", "moe", "phypo"):
+        assert incentive in keys, incentive
+
+
+@pytest.mark.engine
+def test_capabilities_mark_every_incentive_only_format(installed, ws: WSClient) -> None:
+    caps = {c["format"]: c for c in ws.call(NS + ".load_capabilities")}
+    assert set(caps) == set(ws.call(NS + ".load_formats"))
+    for fmt in ("mae", "mtz", "stl", "vis", "moe", "phypo"):
+        assert caps[fmt]["available"] is False, fmt
+        assert caps[fmt]["reason"], fmt
+
+
+@pytest.mark.engine
+def test_capabilities_do_not_over_report_unavailability(installed, ws: WSClient) -> None:
+    """`dae` and the XML loaders WORK; marking them unavailable would hide them.
+
+    Measured: loading a `.dae` reaches `failed to open file`, i.e. the handler
+    ran and only disliked the path, and a valid `.cml` loads its atoms.
+    """
+    caps = {c["format"]: c for c in ws.call(NS + ".load_capabilities")}
+    for fmt in ("dae", "cml", "pdbml", "pdb", "pse", "aln", "png", "py", "pml"):
+        assert caps[fmt]["available"] is True, (fmt, caps[fmt])
+        assert caps[fmt]["reason"] is None
+
+
+@pytest.mark.engine
+def test_an_incentive_only_load_really_does_raise(installed, ws: WSClient, tmp_path):
+    """The capability list is a claim about behaviour; here is the behaviour."""
+    stl = tmp_path / "t.stl"
+    stl.write_text("solid x\nendsolid x\n")
+    reply = ws.call_reply("cmd.load", str(stl), "zz_stl")
+    assert reply["t"] == "err"
+    assert reply["error"]["type"] == "IncentiveOnlyException", reply["error"]
+
+
+@pytest.mark.engine
+def test_a_valid_cml_loads_and_a_broken_one_reports_the_WRONG_error(
+    installed, ws: WSClient, tmp_path
+):
+    """UPSTREAM DEFECT in the error path only, pinned.
+
+    `lazyio.py:36,164` write `except etree.XMLSyntaxError:`. That attribute is
+    lxml's; the stdlib `xml.etree.ElementTree` has no such name. Python only
+    evaluates an `except` expression when an exception actually occurs, so:
+
+        valid file    -> `fromstring` succeeds, the clause is never evaluated,
+                         the file loads correctly
+        invalid file  -> the clause is evaluated and raises
+                         `AttributeError: module 'xml.etree.ElementTree' has no
+                         attribute 'XMLSyntaxError'`
+
+    i.e. the loader works and only its "this isn't XML" message is broken. An
+    earlier reading of this called the whole format broken, which the valid-file
+    half disproves — hence both halves are asserted.
+    """
+    good = tmp_path / "good.cml"
+    good.write_text(
+        '<?xml version="1.0"?>\n<cml><molecule id="m1"><atomArray>'
+        '<atom id="a1" elementType="C" x3="0.0" y3="0.0" z3="0.0"/>'
+        '<atom id="a2" elementType="O" x3="1.2" y3="0.0" z3="0.0"/>'
+        "</atomArray></molecule></cml>\n"
+    )
+    try:
+        assert ws.call_reply("cmd.load", str(good), "zz_cml")["t"] == "ok"
+        assert ws.call("cmd.count_atoms", "zz_cml") == 2
+    finally:
+        ws.call("cmd.delete", "zz_cml")
+
+    bad = tmp_path / "bad.cml"
+    bad.write_text("not xml at all")
+    reply = ws.call_reply("cmd.load", str(bad), "zz_bad")
+    assert reply["t"] == "err"
+    assert reply["error"]["type"] == "AttributeError", reply["error"]
+    assert "XMLSyntaxError" in reply["error"]["message"]
+
+
+@pytest.mark.engine
+def test_classify_and_the_capability_list_cannot_disagree(installed, ws: WSClient):
+    """One source of truth, asserted rather than assumed.
+
+    `classify` answers "can I load THIS file" and `load_capabilities` answers
+    "which formats work at all". They used to be computed differently — the
+    former from a literal `("vis", "moe", "phypo")` tuple — so upstream adding
+    or removing an Incentive format would have moved one and not the other.
+    Both now read handler identity.
+    """
+    caps = {c["format"]: c for c in ws.call(NS + ".load_capabilities")}
+    for fmt, cap in caps.items():
+        info = ws.call(NS + ".classify", "probe.%s" % fmt)
+        if info["format"] != fmt:
+            continue  # the extension maps elsewhere (e.g. .py -> py); not a case
+        assert (info["unavailable"] is None) == cap["available"], (fmt, info, cap)

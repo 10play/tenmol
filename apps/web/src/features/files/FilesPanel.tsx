@@ -148,6 +148,22 @@ export function FilesPanel() {
       const { filename } = step;
       await api.noteOpen(filename);
 
+      /*
+       * Refuse a format that cannot load in this build, BEFORE trying.
+       *
+       * The modal branches below already disable themselves on
+       * `info.unavailable` (mae, mtz), but a `.stl` or `.vis` classifies as
+       * `plain` and fell straight through to `cmd.load`, which raises
+       * IncentiveOnlyException — the user got a stack-flavoured console line
+       * instead of "this build cannot read STL". The reason string comes from
+       * the bridge, which derives it from the loader registry rather than a
+       * name list (`panels/files.py::_is_sentinel_loader`).
+       */
+      if (step.unavailable) {
+        say(` ${filename}: ${step.unavailable}`, 'warning');
+        return false;
+      }
+
       if (step.dialog === 'traj') {
         setDialog({ kind: 'traj', filename, info: await api.trajInfo() });
         return true;
@@ -197,7 +213,7 @@ export function FilesPanel() {
     // `loadPlain` is declared below and is stable for the same [api, session,
     // say]; listing it here would be a use-before-declaration, so the closure
     // reads it at call time instead. Deliberate, not an oversight.
-    [api, session],
+    [api, session, say],
   );
 
   /** Returns true when the Desmond auto-chain opened the trajectory modal. */

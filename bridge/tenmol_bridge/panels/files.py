@@ -297,12 +297,33 @@ def classify_filename(fname: str) -> Dict[str, Any]:
         info["unavailable"] = UNAVAILABLE_FORMATS[dotted]
     elif fmt and ("." + fmt) in UNAVAILABLE_FORMATS:
         info["unavailable"] = UNAVAILABLE_FORMATS["." + fmt]
-    elif fmt in ("vis", "moe", "phypo"):
+    elif _is_sentinel_loader(fmt):
         info["unavailable"] = (
-            "'%s' format is Incentive-only and raises in this build "
-            "(modules/pymol/importing.py:1641-1643)" % fmt
+            "'%s' format is Incentive-only and raises in this build" % fmt
         )
     return info
+
+
+def _is_sentinel_loader(fmt: str) -> bool:
+    """Is this format registered to `incentive_format_not_available_func`?
+
+    This used to be the literal tuple ``("vis", "moe", "phypo")``. The four
+    sentinel entries (`mae` as well) share ONE function object
+    (`importing.py:1620,1641-1643`), so identity answers the question exactly
+    and cannot drift the way a copied name list does — upstream adds and
+    removes Incentive formats between releases, and a stale list here silently
+    offers a loader that raises.
+    """
+    if not fmt:
+        return False
+    try:
+        from pymol import importing
+    except Exception:  # noqa: BLE001 - no PyMOL: nothing is a sentinel
+        return False
+    sentinel = getattr(importing, "incentive_format_not_available_func", None)
+    if sentinel is None:
+        return False
+    return importing.loadfunctions.get(fmt) is sentinel
 
 
 class _RecentDB:
@@ -414,6 +435,57 @@ class FilesAPI:
         from pymol import importing
 
         return sorted(importing.loadfunctions)
+
+    def load_capabilities(self) -> List[Dict[str, Any]]:
+        """Which `loadfunctions` formats actually work in THIS build.
+
+        `load_formats` returns the raw key set, and that list lies: `mae`,
+        `vis`, `moe` and `phypo` are registered to
+        `incentive_format_not_available_func`, and `mtz` and `stl` raise
+        `IncentiveOnlyException` from inside their own bodies. A picker built
+        from the raw keys offers six formats that cannot load anything.
+
+        Two signals, because one is not enough:
+
+        * **Handler identity.** The four sentinel entries share one function
+          object (`importing.py:1620,1641-1643`), so they are detectable
+          exactly, with no name list to keep in step with upstream.
+        * **A measured table.** `mtz` and `stl` are ordinary handlers that
+          raise once called, which nothing static can see; they come from
+          `incentive_only.UNAVAILABLE_FORMATS`, which was populated by running
+          them.
+
+        Measured on this build: `dae` IS available (it reached "failed to open
+        file", i.e. the loader ran and only disliked the path), and `cml` and
+        `pdbml` load valid files correctly.
+        """
+        from pymol import importing
+
+        from ..incentive_only import UNAVAILABLE_FORMATS
+
+        sentinel = getattr(importing, "incentive_format_not_available_func", None)
+        blocked = {
+            key.lstrip("."): reason for key, reason in UNAVAILABLE_FORMATS.items()
+        }
+
+        out: List[Dict[str, Any]] = []
+        for fmt in sorted(importing.loadfunctions):
+            handler = importing.loadfunctions[fmt]
+            if sentinel is not None and handler is sentinel:
+                out.append(
+                    {
+                        "format": fmt,
+                        "available": False,
+                        "reason": "'%s' format not supported by this PyMOL build" % fmt,
+                    }
+                )
+            elif fmt in blocked:
+                out.append(
+                    {"format": fmt, "available": False, "reason": blocked[fmt]}
+                )
+            else:
+                out.append({"format": fmt, "available": True, "reason": None})
+        return out
 
     def save_formats(self) -> List[str]:
         """``exporting.savefunctions`` keys, plus the ``func_type4`` set."""
