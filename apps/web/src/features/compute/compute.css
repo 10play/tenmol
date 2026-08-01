@@ -1,0 +1,116 @@
+/* Compute panel (pymol.util helpers). Shares the global panel tokens. */
+
+.compute {
+  min-width: 380px;
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font-size: 11px;
+}
+
+.compute__title {
+  padding: 3px 6px;
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+}
+
+.compute__sel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 2px;
+}
+
+.compute__sel input {
+  flex: 1;
+  background: var(--pm-bg);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font-family: var(--pm-font-mono);
+  font-size: inherit;
+  padding: 1px 3px;
+}
+
+.compute__table {
+  width: 100%;
+  border-collapse: collapse;
+  padding: 4px;
+}
+
+.compute__table td {
+  padding: 2px 8px;
+  vertical-align: middle;
+}
+
+.compute__table tr.is-off {
+  opacity: 0.55;
+}
+
+.compute__btn {
+  width: 100%;
+  text-align: left;
+  padding: 2px 8px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.compute__btn.is-danger {
+  border-color: var(--pm-caption);
+  color: var(--pm-caption);
+}
+
+.compute__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.compute__val {
+  font-family: var(--pm-font-mono);
+  color: var(--pm-text-bright);
+  white-space: nowrap;
+}
+
+.compute__val.is-error {
+  color: var(--pm-caption);
+  white-space: normal;
+}
+
+.compute__off {
+  color: var(--pm-text-dim);
+  font-style: italic;
+}
+
+.compute__confirm {
+  margin: 4px 8px 8px;
+  padding: 6px;
+  border: 1px solid var(--pm-caption);
+  background: var(--pm-panel-alt);
+}
+
+.compute__warn {
+  margin: 0 0 6px;
+  color: var(--pm-caption);
+  line-height: 1.45;
+}
+
+.compute__confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.compute__confirm-actions .compute__btn {
+  width: auto;
+}
+
+.compute__note {
+  margin: 0;
+  padding: 6px 8px;
+  border-top: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  line-height: 1.45;
+}
