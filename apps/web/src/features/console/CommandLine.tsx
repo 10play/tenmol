@@ -51,11 +51,15 @@
 
 import { useLayoutEffect, useRef, useState } from 'react';
 import { errorText, useSession, useStore } from '../../app';
+// Cross-feature IMPORT, not a shared-file edit: the command line needs WP-18's
+// upload to turn a browser File into a path PyMOL can see.
+import { createFilesApi, fileToBase64 } from '../files/filesApi';
 import { useCommandHistory } from './useCommandHistory';
 import {
   NO_PREVIEW,
   dragEnterPreview,
   dragLeaveRestore,
+  dropNeedsUpload,
   droppedText,
   type PreviewState,
 } from './dragPreview';
@@ -155,6 +159,33 @@ export function CommandLine() {
     void session.call(`cmd.${fn}`, [key]).catch((error: unknown) => {
       session.stores.feedback.appendClient(` ${errorText(error)}`, 'error');
     });
+  };
+
+  /**
+   * Upload dropped files and insert their SERVER paths at the cursor.
+   *
+   * Sequential, not parallel: the inserted text must come out in the order the
+   * files were dropped, and `Promise.all` would race them into whatever order
+   * the uploads finished in.
+   */
+  const uploadDropped = async (files: readonly File[]) => {
+    const api = createFilesApi({
+      call: (fn, args, kwargs) => session.call(fn, args ?? [], kwargs ?? {}),
+      do: (line) => session.conn.do(line),
+    });
+    const paths: string[] = [];
+    try {
+      await api.ensure();
+      for (const file of files) {
+        const uploaded = await api.upload(file.name, await fileToBase64(file));
+        if (uploaded.ok) paths.push(uploaded.path);
+        else session.stores.feedback.appendClient(` upload failed: ${uploaded.error}`, 'error');
+      }
+    } catch (error) {
+      session.stores.feedback.appendClient(` upload failed: ${errorText(error)}`, 'error');
+      return;
+    }
+    if (paths.length > 0) applyPreview(paths.join(' '), false);
   };
 
   const applyPreview = (dropped: string | null, selectInserted: boolean) => {
@@ -293,6 +324,26 @@ export function CommandLine() {
         }}
         onDrop={(e) => {
           e.preventDefault();
+          /*
+           * A real FILE carries no text at all — `dataTransfer.files` holds a
+           * browser File object whose path the page cannot see. Qt has the
+           * path already (`toLocalFile()`); here the bytes have to reach the
+           * PyMOL host before there IS a path to insert. So the file is
+           * uploaded and the SERVER path lands at the cursor, which is what
+           * the inventory row asks for and what makes the inserted text
+           * something PyMOL can actually load.
+           */
+          const files = Array.from(e.dataTransfer.files ?? []);
+          if (
+            dropNeedsUpload({
+              fileCount: files.length,
+              uriList: e.dataTransfer.getData('text/uri-list'),
+              plain: e.dataTransfer.getData('text/plain'),
+            })
+          ) {
+            void uploadDropped(files);
+            return;
+          }
           applyPreview(
             droppedText({
               uriList: e.dataTransfer.getData('text/uri-list'),

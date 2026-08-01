@@ -37,7 +37,13 @@ import {
   type ConsoleState,
 } from '@tenmol/stores/console';
 import { mapOrthoKey, movieKeyframeCommand } from './orthoKeys';
-import { dragEnterPreview, dragLeaveRestore, droppedText, NO_PREVIEW } from './dragPreview';
+import {
+  dragEnterPreview,
+  dragLeaveRestore,
+  dropNeedsUpload,
+  droppedText,
+  NO_PREVIEW,
+} from './dragPreview';
 import { adoptSettings, BRIDGE_ZEROED } from './settingsAdopt';
 
 const ESC = '\u001b';
@@ -649,5 +655,31 @@ describe('adoptSettings', () => {
     ]);
     expect(patch).toEqual({ text: 1 });
     expect(remote.overlay).toBe(1);
+  });
+});
+
+describe('dropNeedsUpload', () => {
+  /*
+   * The command line accepts two very different drops. Text (a URI or a path)
+   * is inserted directly, as Qt does with `toLocalFile()`. A browser File has
+   * no readable path, so its bytes must be uploaded before there is anything
+   * to insert — which is why this predicate exists at all.
+   */
+  it('uploads when the drop is nothing but files', () => {
+    expect(dropNeedsUpload({ fileCount: 1, uriList: '', plain: '' })).toBe(true);
+    expect(dropNeedsUpload({ fileCount: 3, uriList: '', plain: '' })).toBe(true);
+  });
+
+  it('prefers text when a drag carries BOTH', () => {
+    // A file-manager drag usually supplies both. The URI is already a usable
+    // string, and uploading a copy would insert a different path than the one
+    // the user dragged.
+    expect(dropNeedsUpload({ fileCount: 1, uriList: 'file:///a/b.pdb', plain: '' })).toBe(false);
+    expect(dropNeedsUpload({ fileCount: 1, uriList: '', plain: '/a/b.pdb' })).toBe(false);
+  });
+
+  it('does nothing when there are no files', () => {
+    expect(dropNeedsUpload({ fileCount: 0, uriList: '', plain: '' })).toBe(false);
+    expect(dropNeedsUpload({ fileCount: 0, uriList: 'https://a/1.pdb', plain: '' })).toBe(false);
   });
 });

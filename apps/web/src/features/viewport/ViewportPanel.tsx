@@ -27,6 +27,7 @@ import {
 } from '@tenmol/viewport';
 
 import { useSession, useShallowStore } from '../../app';
+import { FileDropTarget } from '../files/FileDropTarget';
 import { createDevPullSource, pullSourceAvailable } from './devFrames';
 import {
   NULL_PIXEL_SOURCE,
@@ -133,6 +134,13 @@ export function ViewportPanel(): React.JSX.Element {
 
   return (
     <div className="viewport">
+      {/*
+        * Window-level drag & drop (`pymol_gl_widget.py:256-270`). It lives
+        * here because the viewport slot is ALWAYS mounted; it previously lived
+        * inside `FilesPanel`, an overlay panel, so drops were silently ignored
+        * whenever that panel was closed — which is almost always.
+        */}
+      <FileDropTarget />
       <div className="viewport__host" ref={hostRef} data-tenmol-viewport="true" />
 
       <div className={`viewport__hud${hudOpen ? '' : ' viewport__hud--closed'}`}>

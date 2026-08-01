@@ -42,7 +42,7 @@ import type {
   TrajDialogInfo,
 } from '@tenmol/protocol/topics/files';
 import { useSession } from '../../app';
-import { createFilesApi, fileToBase64, saveToBrowser, type FilesApi } from './filesApi';
+import { createFilesApi, saveToBrowser, type FilesApi } from './filesApi';
 import { PathPicker, joinPath, type PickerRequest, type PickerResult } from './PathPicker';
 import {
   AlnDialog,
@@ -556,46 +556,13 @@ export function FilesPanel() {
     return () => window.removeEventListener('keydown', onKey, true);
   }, [api, ensure, fileOpen, sessionSaveAs]);
 
-  useEffect(() => {
-    // Drag & drop onto the viewport (`pymol_gl_widget.py:256-270`): local
-    // files go through `load_dialog`, URLs are passed straight through as
-    // strings because `cmd.load` handles them via `file_read`.
-    const onDragOver = (event: DragEvent) => {
-      if (!event.dataTransfer) return;
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'copy';
-    };
-    const onDrop = (event: DragEvent) => {
-      const data = event.dataTransfer;
-      if (!data) return;
-      event.preventDefault();
-      const uri = data.getData('text/uri-list').trim();
-      if (uri && uri.includes('://') && !uri.startsWith('file://')) {
-        void openPaths([uri]);
-        return;
-      }
-      const files = Array.from(data.files ?? []);
-      if (files.length === 0) return;
-      void (async () => {
-        if (!(await ensure())) return;
-        const paths: string[] = [];
-        for (const file of files) {
-          setBusy(`uploading ${file.name}`);
-          const uploaded = await api.upload(file.name, await fileToBase64(file));
-          if (uploaded.ok) paths.push(uploaded.path);
-          else say(` upload failed: ${uploaded.error}`, 'error');
-        }
-        setBusy(null);
-        if (paths.length) await openPaths(paths);
-      })();
-    };
-    window.addEventListener('dragover', onDragOver);
-    window.addEventListener('drop', onDrop);
-    return () => {
-      window.removeEventListener('dragover', onDragOver);
-      window.removeEventListener('drop', onDrop);
-    };
-  }, [api, ensure, openPaths, say]);
+  /*
+   * The window-level drag & drop handler USED TO LIVE HERE, and that was the
+   * bug: this panel is an overlay slot, so `AppShell.OverlayLayer` mounts it
+   * only while the user has it open. Dropping a structure on the window did
+   * nothing whenever it was closed, silently. It is now `FileDropTarget`,
+   * mounted by the viewport slot, which is always on screen.
+   */
 
   /* ------------------------------------------------------------- render */
 

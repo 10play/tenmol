@@ -95,3 +95,24 @@ export function dragLeaveRestore(saved: PreviewState): { text: string; cursor: n
   if (saved.savedPos === -1) return null;
   return { text: saved.savedText, cursor: saved.savedPos };
 }
+
+/**
+ * Does this drop carry FILES that need uploading, rather than text?
+ *
+ * Qt never faces this: `toLocalFile()` gives it a path the process can already
+ * open. A browser hands over a `File` object whose path the page cannot see, so
+ * the bytes must reach the PyMOL host before there is any path to insert.
+ *
+ * Text WINS when both are present. A drag from a file manager often carries
+ * both a `text/uri-list` and a `File`, and the URI is already a usable string —
+ * uploading a copy of a file the server can likely see anyway would be wasteful
+ * and would insert a different path than the user dragged.
+ */
+export function dropNeedsUpload(input: {
+  fileCount: number;
+  uriList: string;
+  plain: string;
+}): boolean {
+  if (input.fileCount <= 0) return false;
+  return input.uriList === '' && input.plain === '';
+}
