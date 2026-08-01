@@ -9,6 +9,7 @@ session-scoped bridge from ``conftest.py``.
 
 from __future__ import annotations
 
+import base64
 import json
 import struct
 
@@ -165,21 +166,34 @@ def test_numpy_arrays_are_copied_and_shaped() -> None:
     assert encoded["__ndarray__"] is True
     assert encoded["shape"] == [2, 3]
     assert encoded["dtype"] == "float32"
-    assert isinstance(encoded["data"], bytes)
+    # BASE64, not raw bytes: replies go out through `ws.send_json`, which
+    # cannot encode `bytes`. This assertion used to say `isinstance(..., bytes)`
+    # and passed happily while `cmd.get_coords` failed for every real caller,
+    # because it never put the dict on a wire. `json.dumps` below is the part
+    # that actually matters.
+    assert encoded["encoding"] == "base64"
+    assert isinstance(encoded["data"], str)
+    json.dumps(encoded)
     # THE copy-before-unlock rule (plan §B8): mutating the source must not
     # change what we already encoded, or a view onto C++ memory could escape
     # the API lock (layer2/CoordSet.cpp:326-361).
     before = encoded["data"]
     array[0, 0] = 99.0
     assert encoded["data"] == before
-    assert numpy.frombuffer(before, dtype="float32")[0] == 0.0
+    raw = base64.b64decode(before)
+    assert numpy.frombuffer(raw, dtype="float32")[0] == 0.0
 
 
 def test_non_contiguous_arrays_are_made_contiguous() -> None:
     numpy = pytest.importorskip("numpy")
     array = numpy.arange(12, dtype="float32").reshape(3, 4)[:, ::2]
     encoded = codec.encode(array)
-    assert len(encoded["data"]) == array.size * 4
+    # Decoded length, not the base64 length — the point of the test is that the
+    # strided view was compacted, and base64 inflates by 4/3.
+    assert len(base64.b64decode(encoded["data"])) == array.size * 4
+    assert numpy.frombuffer(base64.b64decode(encoded["data"]), dtype="float32").tolist() == [
+        0.0, 2.0, 4.0, 6.0, 8.0, 10.0,
+    ]
 
 
 def test_unknown_types_are_an_error_never_a_repr() -> None:

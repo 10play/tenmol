@@ -35,6 +35,8 @@ engine could already have mutated or freed the buffer.
 
 from __future__ import annotations
 
+import base64
+
 import math
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -127,11 +129,24 @@ def _encode_ndarray(value: Any) -> Dict[str, Any]:
         contiguous = value.copy(order="C")
     # tobytes() copies unconditionally, which is exactly the guarantee we need
     # before the API lock goes away.
+    #
+    # BASE64, NOT RAW BYTES, and this was a real outage rather than a
+    # preference. This function was written against msgpack, which has a `bin`
+    # type; RPC replies actually go out through `ws.send_json`, which cannot
+    # encode `bytes` at all. So `cmd.get_coords` and `cmd.get_coordset` — the
+    # zero-copy coordinate path, and the most obvious source of geometry for a
+    # GL-free client — failed for EVERY caller since they were written. The
+    # unit test above passed throughout, because it asserted the dict and never
+    # put it on a wire.
+    #
+    # `encoding` is explicit so a future binary transport can send `bin` again
+    # and the client can tell the two apart instead of guessing from the type.
     return {
         "__ndarray__": True,
         "shape": list(value.shape),
         "dtype": str(value.dtype),
-        "data": contiguous.tobytes(),
+        "encoding": "base64",
+        "data": base64.b64encode(contiguous.tobytes()).decode("ascii"),
     }
 
 
