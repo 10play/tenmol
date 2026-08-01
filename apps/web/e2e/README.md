@@ -52,6 +52,17 @@ until the `files` and `menubar` panels landed inputs earlier in the DOM, at
 which point the suite typed into a disabled search box and five of six specs
 failed for reasons unrelated to what they tested. Use `input.cmdline__input`.
 
+## The PNG-pull fallback hides Mode G
+
+`?viewportPull=off` matters more than it looks. With the dev PNG-pull source
+ON, a bridge started `--no-gl` STILL shows a picture at about 1 fps, because
+`cmd.png(ray=0)` on a context-free PyMOL silently ray-traces. The pull source
+then reports that it IS rasterising, the compositor correctly defers, and Mode
+G shows `0 draws` — which is indistinguishable from a broken Mode G.
+
+Any spec asserting client-side rendering must pass `viewportPull=off`, or it
+will measure the fallback instead of the thing under test.
+
 ## Shared backend state
 
 All specs run against ONE PyMOL process, so session state carries between them.
