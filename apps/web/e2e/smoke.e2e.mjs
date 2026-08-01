@@ -227,4 +227,46 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * The menu bar is DATA, not markup: `modules/pymol/menu.py` generates most
+     * of it at runtime and every leaf is a command string executed with
+     * `cmd.do` (`layer4/PopUp.cpp:471-475`). So the thing worth asserting is
+     * not that buttons exist but that a leaf reaches PyMOL and that check state
+     * comes from settings rather than local React state.
+     */
+    name: 'a checkable menu leaf executes and reflects live setting state',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      const input = page.locator(CMDLINE);
+      await input.waitFor({ state: 'visible', timeout: 20_000 });
+
+      const tops = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('.menubar button'))
+          .map((b) => b.textContent?.trim())
+          .filter(Boolean),
+      );
+      assert(
+        ['File', 'Edit', 'Build', 'Movie', 'Display', 'Setting'].every((m) => tops.includes(m)),
+        `menu bar is missing entries: ${JSON.stringify(tops)}`,
+      );
+
+      const read = async () => {
+        await run(page, 'print("IP=", cmd.get("internal_prompt"))', 1100);
+        const text = await page.evaluate(() => document.body.innerText);
+        const all = [...text.matchAll(/IP= *(\S+)/g)];
+        return all.length ? all[all.length - 1][1] : '?';
+      };
+      const before = await read();
+
+      await page.getByRole('button', { name: 'Display', exact: true }).click();
+      await page.waitForTimeout(400);
+      await page.getByText('Internal Prompt', { exact: false }).first().click();
+      await page.waitForTimeout(1000);
+
+      const after = await read();
+      assert(after !== before, `menu leaf did not reach PyMOL (internal_prompt stayed ${before})`);
+      await page.close();
+    },
+  },
 ];
