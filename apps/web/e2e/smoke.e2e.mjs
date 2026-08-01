@@ -343,13 +343,17 @@ export const tests = [
       await page.getByText(/^Open…/).first().click();
       await page.waitForTimeout(1200);
 
-      // Typed path, not a double click on a row: in one run a double click
-      // descended into an unexpected directory, so the row-click path is not
-      // what this spec asserts.
-      const goto = page.locator('.fpick__goto');
-      await goto.fill(`${REPO}/test/dat`);
-      await goto.press('Enter');
-      await page.waitForTimeout(1400);
+      // Directory rows descend on a SINGLE click (`PathPicker.tsx:267`) and are
+      // rendered with a `▸` prefix, so match on that — an exact-text match on
+      // the bare name matches nothing, and a double click fires two navigations.
+      for (const dir of ['test', 'dat']) {
+        await page
+          .locator('.fpick__row--dir')
+          .filter({ hasText: new RegExp(`^▸${dir}$`) })
+          .first()
+          .click();
+        await page.waitForTimeout(1200);
+      }
 
       const crumbs = await page.evaluate(() =>
         [...document.querySelectorAll('.fpick__crumb')].map((c) => c.textContent?.trim()),
