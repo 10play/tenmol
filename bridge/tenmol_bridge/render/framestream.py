@@ -339,6 +339,25 @@ class CoverageProbe:
             self.last = SceneCoverage(source="error", at=time.monotonic())
             return self.last
 
+        # `cmd.get_vis()` LIES about non-molecular objects.  Measured on a scene
+        # with `hide everything` plus a distance and an angle:
+        #
+        #     u    [1, [], [],                          26]   <- correct, empty
+        #     dd   [1, [], [0,1,2,...,20],               7]   <- every rep index
+        #     aa   [1, [], [0,1,2,...,20],               7]
+        #
+        # A measurement object does not use the molecular rep model, so its
+        # `entry[2]` is the whole rep range rather than the one rep it draws.
+        # Taken at face value no measurement object is ever a subset of a
+        # client's declaration, `covered` stays empty, and `plan_mask` answers
+        # `nothing-maskable` FOREVER — which is exactly why `dash` and `angle`
+        # resolved to Mode G and were then suppressed on every frame while
+        # `lines` worked.
+        #
+        # `_cmd.web_get_versions` knows the truth (`dd -> dashes|0`,
+        # `aa -> angles|0`), so it overrides `get_vis` wherever it has an answer.
+        exact_reps = self._exact_reps(engine)
+
         objects: Dict[str, FrozenSet[int]] = {}
         for name, entry in vis.items():
             try:
@@ -354,6 +373,9 @@ class CoverageProbe:
                 continue
             bits = int(atom_reps.get(name, 0))
             reps.update(index for index in range(REP_COUNT) if (bits >> index) & 1)
+            override = exact_reps.get(str(name))
+            if override is not None:
+                reps = set(override)
             objects[str(name)] = frozenset(reps)
 
         cost = (time.perf_counter() - t0) * 1000.0
@@ -367,6 +389,42 @@ class CoverageProbe:
             at=time.monotonic(),
         )
         return self.last
+
+    def _exact_reps(self, engine: Any) -> Dict[str, FrozenSet[int]]:
+        """Per-object rep sets from ``_cmd.web_get_versions``, or ``{}``.
+
+        Authoritative where it answers: the accessor reports the reps that are
+        actually BUILT, keyed ``"<repname>|<state>"``, with an ``active`` flag.
+        Returns an empty mapping on any older PyMOL so the ``get_vis`` path
+        stands unchanged.
+        """
+        try:
+            from .modeg import REP_IDS  # local: avoids a cycle at import time
+
+            cob = getattr(getattr(engine, "cmd", None), "_COb", None)
+            if cob is None:
+                return {}
+            import pymol._cmd as _c
+
+            raw = _c.web_get_versions(cob, 1, 0)
+        except Exception:  # noqa: BLE001 - never take the pump down
+            return {}
+        if not isinstance(raw, dict):
+            return {}
+
+        out: Dict[str, FrozenSet[int]] = {}
+        for name, entry in (raw.get("objects") or {}).items():
+            if not isinstance(entry, dict) or not entry.get("enabled", True):
+                continue
+            found = set()
+            for key, meta in (entry.get("reps") or {}).items():
+                if isinstance(meta, dict) and not meta.get("active", True):
+                    continue
+                index = REP_IDS.get(str(key).split("|", 1)[0])
+                if index is not None:
+                    found.add(int(index))
+            out[str(name)] = frozenset(found)
+        return out
 
     def stats(self) -> Dict[str, Any]:
         payload: Dict[str, Any] = {

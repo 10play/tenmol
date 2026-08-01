@@ -138,3 +138,62 @@ def test_completion_resolves_a_partial_keyword():
         if started_here:
             instance.stop()
 
+
+def test_get_vis_lies_about_measurement_objects():
+    """The regression that pinned measurement reps to server rasterisation.
+
+    `cmd.get_vis()` reports EVERY rep index for a measurement object, because a
+    distance does not use the molecular rep model:
+
+        u    [1, [], [],                 26]   correct, empty after hide
+        dd   [1, [], [0,1,...,20],         7]   every rep index
+
+    Taken at face value, no measurement object is ever a subset of a client's
+    Mode-G declaration, so `plan_mask` answers `nothing-maskable` forever and
+    the server keeps rasterising reps the client is ready to draw. This asserts
+    the LIE still exists (so the workaround is not silently removed while the
+    underlying behaviour persists) and that `web_get_versions` tells the truth.
+    """
+    pytest.importorskip("pymol")
+    import sys
+
+    sys.argv = ["pymol"]
+    import pymol
+
+    started_here = pymol.cmd._COb is None
+    if started_here:
+        opts = pymol.invocation.options
+        opts.no_gui = 1
+        opts.internal_gui = 0
+        opts.internal_feedback = 0
+        opts.external_gui = 0
+        from pymol2 import SingletonPyMOL
+
+        instance = SingletonPyMOL()
+        instance.start()
+    cmd = pymol.cmd
+    try:
+        cmd.delete("all")
+        cmd.load(str(REPO / "test" / "dat" / "1tii.pdb"), "u")
+        cmd.hide("everything")
+        cmd.distance("dd", "u//A/1/CA", "u//A/5/CA")
+        cmd.refresh()
+
+        vis = cmd.get_vis()
+        assert vis["u"][2] == [], "molecule should report no reps after hide everything"
+        assert len(vis["dd"][2]) > 5, (
+            "get_vis no longer over-reports measurement reps; the coverage "
+            "override in render/framestream.py may now be unnecessary"
+        )
+
+        import pymol._cmd as _c
+
+        raw = _c.web_get_versions(cmd._COb, 1, 0)
+        reps = list((raw.get("objects") or {}).get("dd", {}).get("reps") or {})
+        assert any(key.startswith("dashes") for key in reps), reps
+        assert not any(key.startswith("cartoon") for key in reps), reps
+    finally:
+        cmd.delete("all")
+        if started_here:
+            instance.stop()
+
