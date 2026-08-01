@@ -5,7 +5,7 @@
  * component would remount the feature on every parent render.
  */
 
-import { Suspense, lazy, type ComponentType } from 'react';
+import { Suspense, lazy, type ComponentType, useEffect } from 'react';
 import { getSlot, isInstalled, loadFeature } from '../features/registry';
 import { useSession } from '../app';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -57,16 +57,8 @@ export function FeatureSlot({ id, className }: { id: string; className?: string 
       }
     >
       <Suspense fallback={<div className={`feature-loading ${className ?? ''}`}>loading…</div>}>
-        {/*
-         * `data-feature` marks a slot that actually MOUNTED. Without it the
-         * three states a slot can be in — mounted, absent, crashed — are not
-         * distinguishable from outside, so a slot that ships a directory but
-         * fails to wire up its `register.ts` looks identical to unbuilt work.
-         * `apps/web/e2e` asserts on this.
-         */}
-        <div data-feature={id} style={{ display: 'contents' }}>
-          <Panel />
-        </div>
+        <MountMarker id={id} />
+        <Panel />
       </Suspense>
     </ErrorBoundary>
   );
@@ -75,4 +67,31 @@ export function FeatureSlot({ id, className }: { id: string; className?: string 
 /** True when every id given has a directory. Used by the shell for layout. */
 export function anyInstalled(ids: readonly string[]): boolean {
   return ids.some(isInstalled);
+}
+
+/**
+ * Records that a slot MOUNTED, without putting anything in the layout.
+ *
+ * Three states a slot can be in — mounted, absent (no directory), crashed
+ * (`.feature-failed`) — and only two were observable from outside. A slot that
+ * ships a directory but fails to wire up its `register.ts` renders as ABSENT,
+ * indistinguishable from unbuilt work. `apps/web/e2e` asserts on this list.
+ *
+ * A wrapper `<div data-feature>` was tried first and was wrong: `display:
+ * contents` gives the element NO box, so `getBoundingClientRect()` returned
+ * zeros and Playwright computed click points at (0,0), landing on the menu bar.
+ * A body-level attribute records the same fact and cannot perturb layout,
+ * geometry or hit-testing.
+ */
+function MountMarker({ id }: { id: string }) {
+  useEffect(() => {
+    const read = () => (document.body.dataset.features ?? '').split(' ').filter(Boolean);
+    document.body.dataset.features = [...new Set([...read(), id])].join(' ');
+    return () => {
+      document.body.dataset.features = read()
+        .filter((x) => x !== id)
+        .join(' ');
+    };
+  }, [id]);
+  return null;
 }

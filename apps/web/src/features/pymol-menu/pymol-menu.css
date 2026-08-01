@@ -1,0 +1,61 @@
+/*
+ * PyMOL pop-up. `layer4/PopUp.cpp` draws a plain filled rect with a 1px border
+ * and 1 line of text per row; the palette is the internal-GUI one, so the DOM
+ * version uses the same tokens as the object panel rather than inventing a
+ * "web" menu look.
+ */
+
+.pymenu {
+  position: fixed;
+  z-index: 60;
+  min-width: 150px;
+  padding: 2px 0;
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--pm-line);
+  box-shadow: 0 6px 22px rgb(0 0 0 / 55%);
+  font-family: var(--pm-font-ui);
+  font-size: var(--pm-fs);
+  color: var(--pm-text);
+  user-select: none;
+}
+
+.pymenu__head {
+  padding: 3px 10px 4px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--pm-line);
+  color: var(--pm-text-dim);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pymenu__item {
+  display: block;
+  width: 100%;
+  padding: 3px 14px;
+  border: 0;
+  background: none;
+  color: var(--pm-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pymenu__item:hover,
+.pymenu__item:focus-visible {
+  background: var(--pm-accent);
+  color: #fff;
+  outline: none;
+}
+
+.pymenu__sep {
+  height: 1px;
+  margin: 3px 6px;
+  background: var(--pm-line);
+}
+
+.pymenu__title {
+  padding: 3px 10px;
+  color: var(--pm-caption);
+  font-size: 10px;
+}

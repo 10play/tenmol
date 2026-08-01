@@ -1,0 +1,178 @@
+/*
+ * The sequence viewer block. Metrics are PyMOL's own (`layer1/Seq.h:84-88`):
+ * LineHeight 13, CharWidth 8, ScrollBarWidth 16, CharMargin 2.
+ *
+ * `seq_view_location` 0 puts it at the top of the viewport and 1 at the bottom
+ * (`layer1/Ortho.cpp:2181`, `:2418`); `seq_view_overlay` draws it OVER the
+ * scene instead of reserving space (`layer1/Seq.cpp:282-289`).
+ */
+
+/*
+ * z-index: PyMOL stacks the Seq block ABOVE the scene — `OrthoDoDraw` draws
+ * blocks after the scene and the seq block owns its strip outright
+ * (`layer1/Ortho.cpp:2404-2420`), so nothing in the viewport may sit over it.
+ * The viewport slot's diagnostic HUD is `z-index: 10`
+ * (`apps/web/src/features/viewport/viewport.css:22`) at `top: 8px`, i.e.
+ * exactly on top of a `seq_view_location = 0` strip, and it swallowed the
+ * pointer events for the first ~40 columns until this was raised above it —
+ * caught by the WP-21 browser run, where `.seqcell` clicks timed out with
+ * "viewport__hud-line intercepts pointer events".
+ */
+.seqview {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  background: var(--pm-bg-viewport, #000);
+  border-bottom: 1px solid var(--pm-edge, #2a2f34);
+  font-family: var(--pm-font-mono, monospace);
+  font-size: 11px;
+  user-select: none;
+  max-height: 40%;
+}
+
+.seqview--top {
+  top: 0;
+}
+
+.seqview--bottom {
+  bottom: 0;
+  top: auto;
+  border-bottom: none;
+  border-top: 1px solid var(--pm-edge, #2a2f34);
+}
+
+.seqview--overlay {
+  background: rgb(0 0 0 / 62%);
+}
+
+.seqview__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 15px;
+  padding: 0 6px;
+  color: var(--pm-text-dim, #7b8288);
+  font-size: 10px;
+  background: var(--pm-panel-alt, #16191c);
+  border-bottom: 1px solid var(--pm-edge, #2a2f34);
+}
+
+.seqview__spacer {
+  margin-left: auto;
+}
+
+.seqview__error {
+  color: #ff6b6b;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.seqview__rows {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden auto;
+  padding: 2px 0;
+}
+
+.seqrow {
+  position: relative;
+  white-space: nowrap;
+}
+
+.seqrow__labels {
+  position: relative;
+  color: var(--pm-text-dim, #7b8288);
+  font-size: 9px;
+  line-height: 13px;
+}
+
+.seqrow__num,
+.seqrow__crumb {
+  position: absolute;
+  top: 0;
+}
+
+.seqrow__crumb {
+  color: #4d8ac9;
+}
+
+.seqrow__line {
+  display: flex;
+  align-items: center;
+  line-height: 13px;
+}
+
+.seqrow__name {
+  padding-right: 6px;
+  color: var(--pm-text-dim, #7b8288);
+}
+
+.seqcell {
+  display: inline-block;
+  overflow: hidden;
+  text-align: left;
+  cursor: pointer;
+  white-space: pre;
+}
+
+/*
+ * `col->inverse` is INVERTED VIDEO in the C (`layer1/Seq.cpp:465-482`). The
+ * real swap is inline in `SequenceViewer.tsx`, from the colour the bridge sent
+ * for that column; this is only the fallback for a column whose colour index is
+ * missing from `payload.colors`. It must NOT be `background: currentcolor` —
+ * that resolves against this element's own `color`, which the next declaration
+ * sets to black, so every selected cell came out black-on-black (caught by
+ * reading the WP-21 drag screenshot, not by any assertion).
+ */
+.seqcell.is-selected {
+  background: #cfd8dc;
+  color: #000;
+}
+
+.seqcell.is-spacer {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.seqcell.is-locked {
+  cursor: not-allowed;
+}
+
+.seqview__scroll {
+  position: relative;
+  height: 16px;
+  flex: none;
+  background: var(--pm-panel-alt, #16191c);
+  border-top: 1px solid var(--pm-edge, #2a2f34);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.seqview__minimap {
+  position: relative;
+  height: 3px;
+  margin: 1px 0;
+}
+
+.seqview__tick {
+  position: absolute;
+  top: 0;
+  height: 3px;
+  min-width: 1px;
+  background: #4d8ac9;
+}
+
+.seqview__thumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 8px;
+  background: rgb(255 255 255 / 14%);
+  border: 1px solid var(--pm-edge, #2a2f34);
+  pointer-events: none;
+}

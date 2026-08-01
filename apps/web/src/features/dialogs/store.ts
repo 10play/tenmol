@@ -1,0 +1,218 @@
+/**
+ * The dialog window manager for area 10 (volume / properties / text editor /
+ * advanced settings).
+ *
+ * A MODULE SINGLETON, like `app/session.ts` and for the same reason: the four
+ * dialogs live in four different registry slots, all of which render
+ * independently under `AppShell`'s `overlay` region, and they must agree about
+ * what is open. A React context would have to be mounted above all four, and
+ * the shell — which nobody in this work package owns — is the only place that
+ * could do it.
+ *
+ * The key format is `<kind>` for singletons and `<kind>:<arg>` for the ones
+ * PyMOL itself caches per object: `colorramping._volume_windows_qt` keeps ONE
+ * volume panel per volume name (`modules/pymol/colorramping.py:170-179`), and
+ * so does this.
+ */
+
+import { createStore, type Store } from '@tenmol/stores';
+
+export const DIALOG_KINDS = ['volume', 'properties', 'texteditor', 'advanced-settings'] as const;
+export type DialogKind = (typeof DIALOG_KINDS)[number];
+
+export interface DialogWindowSpec {
+  key: string;
+  kind: DialogKind;
+  /** Volume object name for `volume`; unused elsewhere. */
+  arg: string;
+  title: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  z: number;
+  minimised: boolean;
+}
+
+export interface DialogsState {
+  windows: readonly DialogWindowSpec[];
+  /** Monotonic, so `raise` is a single `set`. */
+  topZ: number;
+}
+
+/**
+ * Default geometry per kind. The volume panel is 600x200 in Qt
+ * (`VolumeEditorWidget.sizeHint`, `volume.py:93-94`) plus the button row; the
+ * rest are sized to their content, not to Qt's, because Qt's are screen-sized
+ * dialogs and this is a floating panel inside one window.
+ */
+const GEOMETRY: Record<DialogKind, { width: number; height: number }> = {
+  volume: { width: 640, height: 300 },
+  properties: { width: 560, height: 520 },
+  texteditor: { width: 720, height: 520 },
+  'advanced-settings': { width: 620, height: 520 },
+};
+
+const TITLES: Record<DialogKind, (arg: string) => string> = {
+  // `_VolumePanel.__init__` — `name + ' - Volume Color Map Editor'` (volume.py:822).
+  volume: (arg) => `${arg} - Volume Color Map Editor`,
+  properties: () => 'Properties',
+  texteditor: (arg) => (arg ? `${arg} - PyMOL Text Editor` : 'PyMOL Text Editor'),
+  'advanced-settings': () => 'Advanced Settings',
+};
+
+export interface DialogsStore extends Store<DialogsState> {
+  open(kind: DialogKind, arg?: string): string;
+  close(key: string): void;
+  raise(key: string): void;
+  move(key: string, x: number, y: number): void;
+  resize(key: string, width: number, height: number): void;
+  toggleMinimised(key: string): void;
+  isOpen(kind: DialogKind, arg?: string): boolean;
+  windowsOfKind(kind: DialogKind): readonly DialogWindowSpec[];
+}
+
+export function dialogKey(kind: DialogKind, arg = ''): string {
+  return arg ? `${kind}:${arg}` : kind;
+}
+
+export function createDialogsStore(): DialogsStore {
+  const store = createStore<DialogsState>({ windows: [], topZ: 10 });
+
+  const patch = (key: string, fn: (w: DialogWindowSpec) => DialogWindowSpec) =>
+    store.set((s) => ({ windows: s.windows.map((w) => (w.key === key ? fn(w) : w)) }));
+
+  const api: DialogsStore = {
+    ...store,
+
+    open(kind, arg = ''): string {
+      const key = dialogKey(kind, arg);
+      const state = store.get();
+      const z = state.topZ + 1;
+      const existing = state.windows.find((w) => w.key === key);
+      if (existing) {
+        // Cached per name, exactly like `_volume_windows_qt`: show and raise,
+        // never a second instance.
+        store.set({
+          topZ: z,
+          windows: state.windows.map((w) => (w.key === key ? { ...w, z, minimised: false } : w)),
+        });
+        return key;
+      }
+      const size = GEOMETRY[kind];
+      // Cascade so two panels are never exactly on top of each other.
+      const offset = state.windows.length * 24;
+      store.set({
+        topZ: z,
+        windows: [
+          ...state.windows,
+          {
+            key,
+            kind,
+            arg,
+            title: TITLES[kind](arg),
+            x: 80 + offset,
+            y: 70 + offset,
+            width: size.width,
+            height: size.height,
+            z,
+            minimised: false,
+          },
+        ],
+      });
+      return key;
+    },
+
+    close(key): void {
+      store.set((s) => ({ windows: s.windows.filter((w) => w.key !== key) }));
+    },
+
+    raise(key): void {
+      const state = store.get();
+      const window = state.windows.find((w) => w.key === key);
+      if (!window || window.z === state.topZ) return;
+      const z = state.topZ + 1;
+      store.set({ topZ: z, windows: state.windows.map((w) => (w.key === key ? { ...w, z } : w)) });
+    },
+
+    move(key, x, y): void {
+      patch(key, (w) => ({ ...w, x, y }));
+    },
+
+    resize(key, width, height): void {
+      patch(key, (w) => ({ ...w, width, height }));
+    },
+
+    toggleMinimised(key): void {
+      patch(key, (w) => ({ ...w, minimised: !w.minimised }));
+    },
+
+    isOpen(kind, arg = ''): boolean {
+      const key = dialogKey(kind, arg);
+      return store.get().windows.some((w) => w.key === key);
+    },
+
+    windowsOfKind(kind): readonly DialogWindowSpec[] {
+      return store.get().windows.filter((w) => w.kind === kind);
+    },
+  };
+
+  return api;
+}
+
+/** The one instance every dialogs slot shares. */
+export const dialogsStore: DialogsStore = createDialogsStore();
+
+/* ------------------------------------------------------------------ *
+ * Who draws the windows
+ * ------------------------------------------------------------------ */
+
+/**
+ * Four registry slots can draw these windows — `dialogs`, `volume`,
+ * `properties`, `texteditor` — and the shell decides which of them is mounted.
+ * `AppShell`'s overlay region now mounts a slot only while the user has toggled
+ * it on, so "the volume slot hosts volume windows" is not a safe assumption:
+ * a user who opens a volume panel from the `dialogs` launcher would get
+ * nothing, because the component that would have drawn it is not mounted.
+ *
+ * So hosting is CLAIMED, not assigned. The first mounted slot to ask for a kind
+ * draws it; the others draw nothing; when the holder unmounts the claim is
+ * released and the next asker takes over. That makes the feature correct for
+ * every subset of slots the shell chooses to mount, without this work package
+ * reaching into `shell/AppShell.tsx`, which it does not own.
+ */
+type HostToken = symbol;
+
+const hostClaims = new Map<DialogKind, HostToken>();
+const hostListeners = new Set<() => void>();
+
+function notifyHosts(): void {
+  for (const listener of [...hostListeners]) listener();
+}
+
+export function subscribeHosts(listener: () => void): () => void {
+  hostListeners.add(listener);
+  return () => {
+    hostListeners.delete(listener);
+  };
+}
+
+/** True if `token` now holds (or already held) the claim for `kind`. */
+export function claimHost(kind: DialogKind, token: HostToken): boolean {
+  const current = hostClaims.get(kind);
+  if (current === token) return true;
+  if (current !== undefined) return false;
+  hostClaims.set(kind, token);
+  notifyHosts();
+  return true;
+}
+
+export function releaseHost(kind: DialogKind, token: HostToken): void {
+  if (hostClaims.get(kind) !== token) return;
+  hostClaims.delete(kind);
+  notifyHosts();
+}
+
+export function isHost(kind: DialogKind, token: HostToken): boolean {
+  return hostClaims.get(kind) === token;
+}

@@ -1,0 +1,269 @@
+/*
+ * Scene bin. Button colours follow SceneDrawButtons (layer1/Scene.cpp:2885):
+ * pressed 0.7, current scene 0.5, others 0.25 grey.
+ */
+
+.scpanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border-top: 1px solid var(--pm-edge);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  color: var(--pm-text);
+}
+
+.scpanel__head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 17px;
+  padding: 0 5px;
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  user-select: none;
+}
+
+.scpanel__title {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.scpanel__spacer {
+  margin-left: auto;
+}
+
+.scpanel__btn {
+  border: 0;
+  background: var(--pm-control-idle);
+  color: var(--pm-text-bright);
+  font-family: inherit;
+  font-size: 9px;
+  padding: 1px 5px;
+  cursor: pointer;
+}
+
+.scpanel__btn:hover {
+  background: #5d6165;
+}
+
+/* --- the in-viewport buttons overlay ---------------------------------- */
+
+.scbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  padding: 2px 5px;
+  background: #101113;
+}
+
+.scbar__empty {
+  color: #5b6167;
+  font-size: 9px;
+}
+
+.scbar__btn {
+  border: 0;
+  padding: 1px 6px;
+  background: rgb(64 64 64);
+  color: var(--pm-text-bright);
+  font-family: inherit;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.scbar__btn.is-current {
+  background: rgb(128 128 128);
+  color: #0e0f11;
+}
+
+.scbar__btn:active,
+.scbar__btn.is-dragging {
+  background: rgb(179 179 179);
+  color: #0e0f11;
+}
+
+/* --- the Scene Panel table -------------------------------------------- */
+
+.scpanel__rows {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.scrow {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 3px 5px;
+  border-bottom: 1px solid var(--pm-edge);
+}
+
+.scrow.is-current {
+  background: #22252b;
+}
+
+.scrow.is-selected {
+  outline: 1px solid var(--pm-accent);
+  outline-offset: -1px;
+}
+
+.scrow__handle {
+  border: 0;
+  background: transparent;
+  color: #5b6167;
+  cursor: grab;
+  padding: 0 2px;
+  font-size: 10px;
+}
+
+.scrow__thumb {
+  width: 74px;
+  height: 42px;
+  flex: 0 0 74px;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.scrow__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scrow__nothumb {
+  color: #3b4045;
+  font-size: 8px;
+}
+
+.scrow__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scrow__name {
+  border: 0;
+  background: transparent;
+  color: var(--pm-text-bright);
+  font-family: inherit;
+  font-size: 10px;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.scrow__rename,
+.scrow__message {
+  background: #101113;
+  border: 1px solid var(--pm-line);
+  color: var(--pm-text);
+  font-family: inherit;
+  font-size: 9px;
+  padding: 1px 3px;
+  width: 100%;
+}
+
+.scrow__stores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.scrow__store {
+  background: #262a30;
+  color: var(--pm-text-dim);
+  font-size: 8px;
+  padding: 0 3px;
+}
+
+.scrow__ops {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scrow__ops button,
+.scmenu button,
+.scpopup button {
+  border: 1px solid var(--pm-line);
+  background: var(--pm-panel-alt);
+  color: var(--pm-text);
+  font-family: inherit;
+  font-size: 9px;
+  padding: 1px 4px;
+  cursor: pointer;
+}
+
+.scmenu button.is-on,
+.scmenu button.has-scene {
+  background: var(--pm-accent);
+  color: #0e0f11;
+}
+
+/* --- menu ------------------------------------------------------------- */
+
+.scmenu {
+  border-top: 1px solid var(--pm-edge);
+  padding: 3px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scmenu__row,
+.scmenu__sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
+}
+
+.scmenu__sub {
+  padding-left: 8px;
+  border-left: 1px solid var(--pm-line);
+}
+
+.scmenu__sub--keys button {
+  min-width: 26px;
+}
+
+.scmenu__current {
+  margin-left: auto;
+  color: var(--pm-text-dim);
+  font-size: 9px;
+}
+
+/* --- popup ------------------------------------------------------------ */
+
+.scpopup__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+
+.scpopup {
+  position: absolute;
+  min-width: 130px;
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-line);
+  box-shadow: 0 6px 22px rgb(0 0 0 / 60%);
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.scpopup__head {
+  padding: 2px 4px;
+  color: var(--pm-text-dim);
+  font-size: 9px;
+  text-transform: uppercase;
+}

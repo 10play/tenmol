@@ -100,3 +100,35 @@
   color: var(--pm-text-dim);
   font-family: var(--pm-font-mono);
 }
+
+/* Collapsed state: a tab, not a panel. The `viewport` region renders inline, so
+   an always-expanded dialog permanently costs viewport width. */
+.render__tab {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 5;
+  padding: 1px 8px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.render__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.render__collapse {
+  padding: 0 2px;
+  background: transparent;
+  border: 0;
+  color: var(--pm-text-dim);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}

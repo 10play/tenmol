@@ -172,3 +172,71 @@
   margin: 3px 6px;
   background: var(--pm-line);
 }
+
+/* ---------------------------------------------------------------------
+ * Drag feedback and the panel-feed additions (WP-12).
+ * ------------------------------------------------------------------- */
+
+/* pressed hull, {0.7,0.7,0.7} (Executive.cpp:16443) — the band a left-drag
+ * will apply its deferred toggle to. */
+.objrow.is-pressed .objrow__name {
+  background: var(--pm-btn-pressed);
+}
+
+/* the row a right-button reorder drag is currently over */
+.objrow.is-droptarget {
+  outline: 1px solid var(--pm-accent);
+  outline-offset: -1px;
+}
+
+/* PyMOL draws the button and opens nothing (Executive.cpp:15218-15227) */
+.objrow__op.is-inert {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.objpanel__rows {
+  overscroll-behavior: contain;
+}
+
+/* Popup menu: submenus, the source label and the error line ------------- */
+
+.rowmenu__src {
+  margin-left: 6px;
+  color: #4a4f55;
+  font-size: 9px;
+}
+
+.rowmenu__error {
+  padding: 3px 8px;
+  color: #ff6b6b;
+  word-break: break-word;
+}
+
+.rowmenu__sub {
+  position: relative;
+}
+
+.rowmenu__row.is-sub.is-open {
+  background: var(--pm-accent);
+  color: #ffffff;
+}
+
+.rowmenu__arrow {
+  margin-left: auto;
+  padding-left: 6px;
+  opacity: 0.7;
+}
+
+.rowmenu__panel {
+  position: absolute;
+  top: -2px;
+  right: 100%;
+  min-width: 170px;
+  max-width: 260px;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: #26292c;
+  border: 1px solid #101214;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.6);
+}

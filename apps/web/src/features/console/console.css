@@ -102,3 +102,101 @@
 .quickbutton:disabled {
   opacity: 0.45;
 }
+
+.console__bar-font {
+  height: 14px;
+  padding: 0 2px;
+  background: var(--pm-panel);
+  color: var(--pm-text-dim);
+  border: 1px solid var(--pm-line);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+/* ------------------------------------------------------------------ *
+ * The in-viewport console (OrthoConsole)
+ *
+ * `OrthoDrawText` (layer1/Ortho.cpp:1623-1693) draws bottom-left over the
+ * scene, `cOrthoLeftMargin` = 3 px in, `cOrthoBottomMargin` = 5 px up, line
+ * height `cOrthoLineHeight` = 12 px, character cell 8 px wide.
+ *
+ * `pointer-events` is the one place this departs from a literal port. PyMOL's
+ * text is pixels in the same framebuffer as the scene, so a click "through" it
+ * is a scene click. Here the band is DOM sitting on top of the viewport, so it
+ * would eat every drag that started over it. The container is therefore
+ * transparent to the pointer and only the drawn lines take clicks — which is
+ * also what makes focusing the prompt possible at all.
+ * ------------------------------------------------------------------ */
+
+.ortho {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-left: 3px;
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  line-height: 12px;
+  pointer-events: none;
+  outline: none;
+  z-index: 3;
+}
+
+.ortho__band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000;
+  z-index: -1;
+}
+
+.ortho__lines {
+  display: flex;
+  flex-direction: column;
+  white-space: pre;
+  pointer-events: auto;
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ortho__line {
+  height: 12px;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.ortho__line.is-gap {
+  margin-bottom: 4px; /* `if (lcount == adjust_at) y += 4` */
+}
+
+/* `I->TextColor` = {0.83, 0.83, 1.0} (layer1/Ortho.cpp:2702-2704). */
+.ortho__line--text {
+  color: #d4d4ff;
+}
+
+/* `I->OverlayColor` = 1 - bg_rgb; black background -> white (`:1876-1880`). */
+.ortho__line--overlay {
+  color: #fff;
+}
+
+.ortho:focus .ortho__caret {
+  background: #d4d4ff;
+  color: #000;
+}
+
+.ortho__caret {
+  border-bottom: 1px solid #d4d4ff;
+}
+
+.ortho__hidden {
+  align-self: flex-start;
+  padding: 1px 4px;
+  color: #6f757a;
+  font-size: 10px;
+  pointer-events: auto;
+}

@@ -1,0 +1,140 @@
+/*
+ * The ButMode block. Metrics and colours come from the C: cButModeLineHeight
+ * (layer1/ButMode.h:217, DIP2PIXEL(12)), and the four text colours
+ * ButModeInit sets (layer1/ButMode.cpp:557-573):
+ *   TextColor  (0.2, 1.0, 0.2)  green   — "Mouse Mode" / "Selecting"
+ *   TextColor1 (0.5, 0.5, 1.0)  blue    — the row and column headers
+ *   TextColor2 (0.8, 0.8, 0.8)  grey    — the 5-char action cells
+ *   TextColor3 (1.0, 0.5, 0.5)  salmon  — the mode name and the level
+ */
+
+.butmode {
+  --butmode-line: 13px;
+  flex: none;
+  border-top: 1px solid var(--pm-edge);
+  background: var(--pm-panel);
+  font-family: var(--pm-font-mono);
+  font-size: 10.5px;
+  user-select: none;
+}
+
+.butmode__line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: var(--butmode-line);
+  padding: 0 5px;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.butmode__line:disabled {
+  cursor: default;
+}
+
+.butmode__line:hover:not(:disabled) {
+  background: var(--pm-panel-alt);
+}
+
+.butmode__label {
+  color: #33cc33; /* TextColor */
+}
+
+.butmode__value {
+  color: var(--pm-mouse-mode); /* TextColor3 */
+}
+
+.butmode__grid {
+  padding: 1px 0 2px;
+  cursor: pointer;
+}
+
+.butmode__row {
+  display: flex;
+  align-items: center;
+  height: var(--butmode-line);
+  padding: 0 5px;
+  white-space: pre;
+}
+
+.butmode__rowlabel {
+  width: 58px;
+  flex: none;
+  color: #8080ff; /* TextColor1 */
+}
+
+.butmode__rowlabel--head {
+  color: var(--pm-mouse-mode);
+}
+
+.butmode__cell {
+  width: 34px;
+  flex: none;
+  color: #cccccc; /* TextColor2 */
+}
+
+.butmode__cell--head {
+  color: #8080ff;
+  text-align: left;
+}
+
+.butmode__warn {
+  padding: 2px 5px 3px;
+  color: #d8a13a;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+/* --------------------------------------------------------------------- */
+
+.mousecfg {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.mousecfg__head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--pm-text);
+}
+
+.mousecfg__note {
+  color: var(--pm-text-dim);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.mousecfg__table {
+  border-collapse: collapse;
+  font-family: var(--pm-font-mono);
+  font-size: 10.5px;
+}
+
+.mousecfg__table th {
+  padding: 2px 4px;
+  color: #8080ff;
+  font-weight: normal;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.mousecfg__table td {
+  padding: 1px;
+}
+
+.mousecfg__select {
+  width: 108px;
+  padding: 1px 2px;
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--pm-line);
+  color: var(--pm-text);
+  font: inherit;
+}

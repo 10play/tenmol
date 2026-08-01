@@ -182,7 +182,7 @@ export const tests = [
      * silently looking like unbuilt work rather than a wiring mistake. That is
      * the failure this catches.
      */
-    name: 'every shipped feature slot mounts without throwing',
+    name: 'every shipped feature slot mounts without throwing (overlays via the launcher)',
     async fn({ stack, assert }) {
       const page = await openApp(stack);
       await page.waitForTimeout(3500);
@@ -209,9 +209,21 @@ export const tests = [
         .map((d) => d.name);
       assert(shipped.length > 0, 'no feature directories found at all');
 
-      const mounted = await page.evaluate(
-        (ids) => ids.filter((id) => document.querySelector(`[data-feature="${id}"]`) !== null),
-        shipped,
+      // Overlay panels are CLOSED until opened — they used to render
+      // unconditionally, and ten of them stacked in the document flow pushed the
+      // viewport off screen. So open every one from the launcher first;
+      // "shipped implies mounted" only holds once they are open. This also means
+      // the launcher itself is covered.
+      const launchers = page.locator('.overlay-launcher__btn');
+      const n = await launchers.count();
+      for (let i = 0; i < n; i++) await launchers.nth(i).click();
+      await page.waitForTimeout(800);
+
+      // `document.body.dataset.features` — a side channel, so the check cannot
+      // perturb layout. An earlier wrapper element with `display: contents` had
+      // no box and made Playwright click at (0,0).
+      const mounted = await page.evaluate(() =>
+        (document.body.dataset.features ?? '').split(' ').filter(Boolean),
       );
       // Hard failure, not a skip. An earlier version gated this on
       // `mounted.length > 0`, which made the whole check vacuous the moment the

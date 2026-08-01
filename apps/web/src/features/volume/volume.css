@@ -1,0 +1,99 @@
+/* Volume Color Map Editor (WP-22). */
+
+.volpanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 4px;
+  position: relative;
+}
+
+.volpanel__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.volpanel__preset {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.volpanel__spacer {
+  flex: 1;
+}
+
+.volpanel__count {
+  opacity: 0.7;
+}
+
+.volpanel__status {
+  font-size: 10.5px;
+  opacity: 0.65;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.volpanel__error {
+  font-size: 11px;
+  color: #a11;
+}
+
+.volpanel__buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+
+.volpanel__check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+}
+
+.volpanel__picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  border: 1px solid #b0b0b0;
+  border-radius: 3px;
+  padding: 3px 5px;
+  background: #fff;
+}
+
+/* The canvas fills whatever the window's body leaves. */
+.volcanvas {
+  position: relative;
+  flex: 1;
+  min-height: 120px;
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  overflow: hidden;
+}
+
+.volcanvas__c {
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.volcanvas__tip {
+  position: absolute;
+  pointer-events: none;
+  background: #ffffe1;
+  border: 1px solid #8a8a5a;
+  padding: 2px 5px;
+  font:
+    11px/1.3 ui-monospace,
+    monospace;
+  white-space: pre;
+  color: #1c1c1c;
+  z-index: 3;
+}

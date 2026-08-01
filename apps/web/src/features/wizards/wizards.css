@@ -1,0 +1,358 @@
+/*
+ * The wizard block.
+ *
+ * PyMOL draws this between the object list and the mouse-mode block
+ * (layer1/Ortho.cpp:2286-2300) and gives it height
+ * internal_gui_control_size * NLine + 4 (layer1/Wizard.cpp:254-259) — so with
+ * no wizard on the stack it is genuinely zero pixels tall, not an empty box.
+ *
+ * Colours come from CWizard::draw (layer1/Wizard.cpp:748-770): buttons are a
+ * dim grey raised fill, popup rows are blue-lavender, text rows use text_color2.
+ */
+
+.wizards {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  border-top: 1px solid var(--pm-edge);
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+}
+
+/* -- launcher ------------------------------------------------------------ */
+
+.wizlaunch__bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 17px;
+  padding: 0 5px;
+  background: var(--pm-panel-alt);
+  color: var(--pm-text-dim);
+  font-size: 10px;
+  user-select: none;
+}
+
+.wizlaunch__toggle,
+.wizlaunch__dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0 3px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.wizlaunch__dismiss {
+  margin-left: auto;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.wizlaunch__toggle:hover,
+.wizlaunch__dismiss:hover {
+  color: var(--pm-text);
+}
+
+.wizlaunch__menu {
+  max-height: 320px;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--pm-edge);
+  padding: 2px 0;
+}
+
+.wizlaunch__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--pm-text);
+  font: inherit;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.wizlaunch__item:hover:not(:disabled) {
+  background: #2b3a4a;
+}
+
+.wizlaunch__item:disabled {
+  color: #5b6167;
+  cursor: not-allowed;
+}
+
+.wizlaunch__na {
+  color: #b06060;
+  font-size: 9px;
+}
+
+.wizlaunch__all {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* -- panel --------------------------------------------------------------- */
+
+.wizpanel {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--pm-edge);
+}
+
+.wizpanel__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 17px;
+  padding: 0 5px;
+  background: var(--pm-panel-alt);
+  color: var(--pm-text-dim);
+  font-size: 10px;
+  user-select: none;
+}
+
+.wizpanel__head-title {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.wizpanel__depth {
+  margin-left: auto;
+  color: #7f8a94;
+}
+
+.wizpanel__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  /* Wizard.cpp:258 — panel height is control_size * NLine + 4. */
+  padding: 2px 2px;
+}
+
+.wizpanel__error {
+  padding: 4px 6px;
+  color: #ff6b6b;
+  font-size: 10px;
+  word-break: break-word;
+}
+
+.wizpanel__promptonly {
+  padding: 4px 6px;
+  color: #5b6167;
+  font-size: 10px;
+}
+
+/* -- rows ---------------------------------------------------------------- */
+
+.wizrow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 5px;
+  font: inherit;
+  text-align: left;
+  border: none;
+}
+
+.wizrow--blank {
+  background: transparent;
+}
+
+.wizrow--text {
+  color: #c8ccd0;
+  background: transparent;
+}
+
+.wizrow--button,
+.wizrow--popup {
+  cursor: pointer;
+  color: var(--pm-text);
+  border-top: 1px solid #6d7378;
+  border-left: 1px solid #6d7378;
+  border-right: 1px solid #24282c;
+  border-bottom: 1px solid #24282c;
+}
+
+/* Wizard.cpp:756-763 — dim grey raised fill. */
+.wizrow--button {
+  background: #43484d;
+}
+
+/* Wizard.cpp:764-770 — blue-lavender raised fill. */
+.wizrow--popup {
+  background: #4a4f6b;
+  justify-content: space-between;
+}
+
+.wizrow--button:hover,
+.wizrow--popup:hover {
+  filter: brightness(1.15);
+}
+
+/* Wizard.cpp:490-494 — pressing highlights; drag-off cancels (:519-548). */
+.wizrow--button.is-pressed {
+  border-top-color: #24282c;
+  border-left-color: #24282c;
+  border-right-color: #6d7378;
+  border-bottom-color: #6d7378;
+  filter: brightness(1.35);
+}
+
+.wizrow__caret {
+  color: #aab0c8;
+  font-size: 9px;
+}
+
+/* -- popup menu ---------------------------------------------------------- */
+
+.wizmenu {
+  position: fixed;
+  z-index: 60;
+  min-width: 160px;
+  max-width: 420px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-edge);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 55%);
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+}
+
+.wizmenu__head {
+  padding: 3px 8px;
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.wizmenu__body {
+  padding: 2px 0;
+}
+
+/* PopUp.cpp:293-320 — cPopUpBarHeight for code 0. */
+.wizmenu__sep {
+  height: 1px;
+  margin: 3px 6px;
+  background: var(--pm-edge);
+}
+
+/* code 2 — a non-selectable title. */
+.wizmenu__title {
+  padding: 2px 8px;
+  color: var(--pm-text-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.wizmenu__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--pm-text);
+  font: inherit;
+  padding: 2px 8px;
+  cursor: pointer;
+  white-space: pre;
+}
+
+.wizmenu__item:hover:not(:disabled) {
+  background: #2b3a4a;
+}
+
+.wizmenu__item:disabled {
+  color: #5b6167;
+  cursor: default;
+}
+
+.wizmenu__arrow {
+  color: #7f8a94;
+}
+
+.wizmenu__flyout {
+  border-left: 1px solid var(--pm-edge);
+}
+
+.wizmenu__error {
+  padding: 2px 8px;
+  color: #ff6b6b;
+  font-size: 10px;
+}
+
+/* -- prompt overlay ------------------------------------------------------ */
+
+.wizprompt {
+  position: absolute;
+  z-index: 40;
+  pointer-events: none;
+  white-space: pre;
+  font-family: var(--pm-font-mono);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.wizprompt--backdrop {
+  padding: 2px 4px;
+}
+
+/* -- key capture + event seam -------------------------------------------- */
+
+.wizkeys,
+.wizevents {
+  padding: 3px 5px;
+  border-top: 1px solid var(--pm-edge);
+  font-size: 10px;
+  color: var(--pm-text-dim);
+}
+
+.wizkeys__label,
+.wizevents__head {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.wizkeys__input,
+.wizevents__input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #14181c;
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font: inherit;
+  font-family: var(--pm-font-mono);
+  padding: 2px 4px;
+}
+
+.wizevents__buttons {
+  display: flex;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.wizevents__buttons button {
+  flex: 1;
+  background: #43484d;
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font: inherit;
+  font-size: 10px;
+  padding: 1px 2px;
+  cursor: pointer;
+}
+
+.wizevents__buttons button:disabled {
+  color: #5b6167;
+  cursor: not-allowed;
+}

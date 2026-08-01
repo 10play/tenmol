@@ -1,7 +1,7 @@
 /**
- * `PyMOL>` prompt + command entry.
+ * `PyMOL>` prompt + command entry — the External GUI one.
  *
- * Widget parity: `CommandLineEdit` (`modules/pmg_qt/pymol_qt_gui.py:1087`)
+ * Widget parity: `CommandLineEdit` (`modules/pmg_qt/pymol_qt_gui.py:1085`)
  * behind a `QLabel("PyMOL>")` (`:141-143`). Key handling is
  * `lineeditKeyPressEventFilter` (`:421-438`):
  *
@@ -22,9 +22,18 @@
  * LINE or None, and *prints* the candidate list through `colorprinting.suggest`
  * (`parser.py:63-67`). Those printed lines are console output like any other:
  * `pcatch` puts them in PyMOL's line buffer and they arrive on the `feedback`
- * topic, which `FeedbackLog` already renders. So " parser: matching commands:"
- * showing up in the log is the FEATURE, not a leak — it is exactly what the Qt
- * and Tk consoles show.
+ * topic, which `FeedbackLog` renders. So " parser: matching commands:" showing
+ * up in the log is the FEATURE, not a leak — it is exactly what the Qt and Tk
+ * consoles show. Measured against this build, one round trip each:
+ *
+ *     'frag'            -> 'fragment '            commands (cmd.kwhash)
+ *     'colo'            -> 'color'                + " parser: matching commands:"
+ *     'color ye'        -> 'color yellow'         colour names (auto_arg)
+ *     'set wrap_out'    -> 'set wrap_output, '    setting names
+ *     'delete al'       -> 'delete ala '          object names
+ *     'zoom al'         -> null                   + " parser: matching selection:"
+ *     'load /etc/hos'   -> 'load /etc/hosts'      the SERVER's filesystem
+ *     'colour'          -> null                   + " parser: no matching commands."
  *
  * Submit is `{t:'do'}`, which is where console parity lives: `cmd.do` emits both
  * the `PyMOL>` echo and the C-origin summary into the same line buffer (spike 02
@@ -33,11 +42,23 @@
  * itself, this component must NOT echo it locally while connected; doing both
  * printed every command twice (plan §6 WP-11, "fix already found, keep it").
  * The offline echo lives in `session.run()`.
+ *
+ * The unhandled Ctrl/Alt chords go to `cmd._ctrl` / `cmd._alt` / `cmd._ctsh`
+ * exactly as the in-viewport prompt's do (`layer1/Ortho.cpp:760-820`), so a
+ * user's `set_key` bindings still fire from the focused command line. Qt gets
+ * that for free because OrthoKey sees the key anyway; a browser input does not.
  */
 
-import { useRef, useState } from 'react';
-import { useSession, useStore } from '../../app';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { errorText, useSession, useStore } from '../../app';
 import { useCommandHistory } from './useCommandHistory';
+import {
+  NO_PREVIEW,
+  dragEnterPreview,
+  dragLeaveRestore,
+  droppedText,
+  type PreviewState,
+} from './dragPreview';
 
 /**
  * `cmd._parser.complete` — granted by `bridge/tenmol_bridge/policy/grants/
@@ -47,12 +68,21 @@ import { useCommandHistory } from './useCommandHistory';
  */
 const COMPLETE_FN = 'cmd._parser.complete';
 
+/**
+ * Ctrl chords the browser or the OS has already claimed. Forwarding these to
+ * `cmd._ctrl` would take Ctrl-C away from a user copying console output — a
+ * regression dressed up as parity. Everything else goes to PyMOL, which is
+ * where `set_key`/`shortcut_dict` bindings live.
+ */
+const BROWSER_CHORDS = new Set(['C', 'X', 'V', 'A', 'R', 'W', 'T', 'N', 'P', 'F']);
+
 export function CommandLine() {
   const session = useSession();
   const history = useCommandHistory(session.stores.ui);
   const phase = useStore(session.stores.connection, (s) => s.phase);
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const preview = useRef<PreviewState>(NO_PREVIEW);
   /**
    * One completion in flight at a time. Tab autorepeats when held, and PyMOL's
    * completion takes the API lock and can glob the filesystem; queueing those
@@ -60,12 +90,34 @@ export function CommandLine() {
    */
   const completing = useRef(false);
 
+  /**
+   * A selection to apply once React has written a PARTICULAR value into the
+   * DOM. The value is part of the record, and that is the whole trick.
+   *
+   * Measured failure without it: `setText(...)` schedules a render, but the
+   * console re-renders anyway at 10 Hz from the feedback push, so an UNRELATED
+   * commit can land first — still carrying the old value. A selection effect
+   * that fires on that commit selects a range in the old string and is then
+   * wiped when the real value is written (a controlled input's caret goes to
+   * the end on `node.value = ...`). The drag preview measured `[21,21]` where
+   * Qt selects `[5,21]` (`pymol_qt_gui.py:1116`), and only under load — with an
+   * idle page the first commit was the right one and it looked correct.
+   *
+   * Gating on the value makes the effect idempotent and order-independent: it
+   * does nothing until the commit it was waiting for.
+   */
+  const pendingSelection = useRef<{ value: string; range: [number, number] } | null>(null);
+  useLayoutEffect(() => {
+    const pending = pendingSelection.current;
+    const el = inputRef.current;
+    if (!pending || !el || el.value !== pending.value) return;
+    pendingSelection.current = null;
+    el.setSelectionRange(pending.range[0], pending.range[1]);
+  });
+
   const setLineAndCursorToEnd = (value: string) => {
     setText(value);
-    requestAnimationFrame(() => {
-      const el = inputRef.current;
-      if (el) el.setSelectionRange(value.length, value.length);
-    });
+    pendingSelection.current = { value, range: [value.length, value.length] };
   };
 
   const complete = (line: string) => {
@@ -98,6 +150,34 @@ export function CommandLine() {
 
   const offline = phase !== 'open';
 
+  const chord = (fn: '_ctrl' | '_alt' | '_ctsh', key: string) => {
+    if (offline) return;
+    void session.call(`cmd.${fn}`, [key]).catch((error: unknown) => {
+      session.stores.feedback.appendClient(` ${errorText(error)}`, 'error');
+    });
+  };
+
+  const applyPreview = (dropped: string | null, selectInserted: boolean) => {
+    const base = dragLeaveRestore(preview.current) ?? {
+      text: inputRef.current?.value ?? text,
+      cursor: inputRef.current?.selectionStart ?? text.length,
+    };
+    preview.current = NO_PREVIEW;
+    const result = dragEnterPreview(base.text, base.cursor, dropped);
+    if (!result) return false;
+    if (selectInserted) preview.current = result.saved;
+    setText(result.text);
+    // `setSelection(pos, len(droppedtext))` (`pymol_qt_gui.py:1116`) — the
+    // preview is SELECTED, so a drag that leaves is visibly undone.
+    pendingSelection.current = {
+      value: result.text,
+      range: selectInserted
+        ? [result.selectionStart, result.selectionEnd]
+        : [result.selectionEnd, result.selectionEnd],
+    };
+    return true;
+  };
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -106,7 +186,8 @@ export function CommandLine() {
     }
     if (e.key === 'Tab') {
       // Always swallow Tab, connected or not: PyMOL's handler returns 'break'
-      // (`_gui.py:903`) so Tab never moves focus out of the command line.
+      // (`_gui.py:903`) so Tab never moves focus out of the command line, and
+      // `eventFilter` eats the KeyRelease too (`pymol_qt_gui.py:444-448`).
       e.preventDefault();
       if (offline) {
         session.stores.feedback.appendClient(
@@ -129,6 +210,19 @@ export function CommandLine() {
       e.preventDefault();
       const next = history.forward();
       if (next !== null) setLineAndCursorToEnd(next);
+      return;
+    }
+    if (e.key.length !== 1 || e.metaKey) return;
+    const upper = e.key.toUpperCase();
+    if (e.ctrlKey && e.shiftKey) {
+      e.preventDefault();
+      chord('_ctsh', upper);
+    } else if (e.ctrlKey && !e.shiftKey && !BROWSER_CHORDS.has(upper)) {
+      e.preventDefault();
+      chord('_ctrl', upper);
+    } else if (e.altKey && !e.ctrlKey) {
+      e.preventDefault();
+      chord('_alt', upper);
     }
   };
 
@@ -154,6 +248,59 @@ export function CommandLine() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKeyDown}
+        onDragEnter={(e) => {
+          // `dragEnterEvent` (`pymol_qt_gui.py:1099-1116`) inserts the payload
+          // at the cursor and selects it, BEFORE the drop.
+          //
+          // BROWSER LIMIT, stated rather than hidden: the HTML5 drag data store
+          // is in "protected mode" during dragenter/dragover, so `getData()`
+          // returns '' for a real drag from another window and only `types` is
+          // readable. When that happens there is nothing to preview and the
+          // line is left untouched; `drop` then inserts for real. The preview
+          // degrades; the drop never does.
+          if (
+            !e.dataTransfer.types.includes('text/plain') &&
+            !e.dataTransfer.types.includes('text/uri-list')
+          ) {
+            preview.current = NO_PREVIEW;
+            return;
+          }
+          e.preventDefault();
+          applyPreview(
+            droppedText({
+              uriList: e.dataTransfer.getData('text/uri-list'),
+              plain: e.dataTransfer.getData('text/plain'),
+            }),
+            true,
+          );
+        }}
+        onDragOver={(e) => {
+          // `dragMoveEvent` is a deliberate `pass` (`:1091-1092`) — the preview
+          // must not chase the pointer — but the browser needs the default
+          // prevented or `drop` never fires at all.
+          e.preventDefault();
+        }}
+        onDragLeave={() => {
+          // `dragLeaveEvent` (`:1118-1121`).
+          const restored = dragLeaveRestore(preview.current);
+          preview.current = NO_PREVIEW;
+          if (!restored) return;
+          setText(restored.text);
+          pendingSelection.current = {
+            value: restored.text,
+            range: [restored.cursor, restored.cursor],
+          };
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          applyPreview(
+            droppedText({
+              uriList: e.dataTransfer.getData('text/uri-list'),
+              plain: e.dataTransfer.getData('text/plain'),
+            }),
+            false,
+          );
+        }}
         title={COMMAND_LINE_TOOLTIP}
       />
     </div>

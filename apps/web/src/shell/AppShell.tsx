@@ -23,7 +23,7 @@
  * scene (`OrthoDrawText`, `layer1/Ortho.cpp:1623-1693`).
  */
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useSession, useStore } from '../app';
 import { FeatureSlot } from './FeatureSlot';
 import { StatusBar } from './StatusBar';
@@ -109,9 +109,7 @@ export function AppShell() {
 
       <StatusBar />
 
-      {slotsForRegion('overlay').map((slot) => (
-        <FeatureSlot key={slot.id} id={slot.id} />
-      ))}
+      <OverlayLayer />
       {slotsForRegion('service').map((slot) => (
         <FeatureSlot key={slot.id} id={slot.id} />
       ))}
@@ -187,5 +185,66 @@ function useDrag(onMove: (e: PointerEvent) => void) {
       window.addEventListener('pointerup', up);
     },
     [onMove],
+  );
+}
+
+
+/**
+ * Overlay panels — dialogs and floating tools.
+ *
+ * These used to render UNCONDITIONALLY, straight into the document flow after
+ * the status bar. With one or two slots installed that merely looked odd; by
+ * the time the wave shipped ten (settings, files, dialogs, builder, colours,
+ * volume, properties, text editor, compute, plugin manager, APBS) they stacked
+ * down the page and pushed the 3-D viewport off screen entirely — the app was
+ * unusable and every slot still "mounted", so the mount check stayed green.
+ *
+ * A dialog is closed until you open it. The launcher keeps every installed
+ * panel reachable, so nothing becomes invisible in the process — the same rule
+ * the registry applies to absent slots.
+ */
+function OverlayLayer() {
+  const [open, setOpen] = useState<readonly string[]>([]);
+  const slots = slotsForRegion('overlay').filter((slot) => isInstalled(slot.id));
+  if (slots.length === 0) return null;
+
+  const toggle = (id: string) =>
+    setOpen((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+
+  return (
+    <>
+      <div className="overlay-launcher" role="toolbar" aria-label="panels">
+        {slots.map((slot) => (
+          <button
+            key={slot.id}
+            type="button"
+            className={`overlay-launcher__btn${open.includes(slot.id) ? ' is-on' : ''}`}
+            aria-pressed={open.includes(slot.id)}
+            onClick={() => toggle(slot.id)}
+          >
+            {slot.title}
+          </button>
+        ))}
+      </div>
+      {open.length > 0 && (
+        <div className="overlay-layer">
+          {slots
+            .filter((slot) => open.includes(slot.id))
+            .map((slot) => (
+              <div key={slot.id} className="overlay-panel">
+                <button
+                  type="button"
+                  className="overlay-panel__close"
+                  aria-label={`close ${slot.title}`}
+                  onClick={() => toggle(slot.id)}
+                >
+                  x
+                </button>
+                <FeatureSlot id={slot.id} />
+              </div>
+            ))}
+        </div>
+      )}
+    </>
   );
 }

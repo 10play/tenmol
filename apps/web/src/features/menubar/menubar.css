@@ -1,0 +1,116 @@
+/*
+ * Menu-bar additions. The base classes (.menubar, .menu, .menu__row,
+ * .menu__sep, .menu__mark, .menu__arrow) live in src/styles/global.css; this
+ * file only adds what a real, deep, checkable menu needs on top of them.
+ */
+
+.menubar__menus {
+  display: flex;
+  align-items: stretch;
+}
+
+.menubar__note {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: #5b6167;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+/* Rows are <button> for leaves, so they need the list geometry back. */
+.menu__row {
+  width: 100%;
+  text-align: left;
+  font-size: var(--pm-fs);
+}
+
+/* Menus like Setting > Label > Font are 14 rows; Movie > X-Rock is 20. Cap the
+   height rather than letting a list run off the bottom of the window. */
+.menu {
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+/* A nested list four levels deep runs off a 1280px window; MenuList measures
+   and adds this. */
+.menu--flip {
+  left: auto;
+  right: 100%;
+}
+
+.menu__row--sub.is-open {
+  background: var(--pm-accent);
+  color: #ffffff;
+}
+
+.menu__accel {
+  margin-left: 18px;
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.menu__row:hover .menu__accel {
+  color: #d5d8ff;
+}
+
+.menu__row.is-disabled .menu__accel {
+  color: #4a4d50;
+}
+
+/* About dialog ---------------------------------------------------------- */
+
+.about__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.about {
+  min-width: 340px;
+  padding: 14px 16px 12px;
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-line);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.about__title {
+  margin-bottom: 8px;
+  color: var(--pm-text-bright);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.about__body {
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  color: var(--pm-text);
+}
+
+.about__line {
+  min-height: 14px;
+  line-height: 14px;
+  white-space: pre;
+}
+
+.about__ok {
+  display: block;
+  margin: 12px 0 0 auto;
+  min-width: 62px;
+  height: 20px;
+  background: linear-gradient(#3a3e42, #2c3033);
+  border: 1px solid #141618;
+  color: var(--pm-text);
+  font-size: 11px;
+}
+
+.about__ok:hover {
+  background: linear-gradient(#474c51, #34383c);
+}

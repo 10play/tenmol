@@ -1,9 +1,14 @@
 /**
  * The quick-button grid of the External GUI — `modules/pmg_qt/pymol_qt_gui.py`
- * `:222-271`. Four rows, spacing 2, every button carrying `quickbutton=true`.
- * The movie transport row is omitted: it is the same set of actions as the
- * Control block, which the internal-GUI column renders where PyMOL draws it
- * (`layer1/Control.cpp`), and that block belongs to WP-20.
+ * `:222-271`. FOUR rows, spacing 2, every button carrying `quickbutton=true`
+ * and `WA_LayoutUsesWidgetRect` (a macOS Qt workaround with no web analogue).
+ *
+ * Row 3 is the movie transport (`|<`, `<`, Stop, Play, `>`, `>|`, MClear). It
+ * duplicates the in-viewport Control block (`layer1/Control.cpp:298-376`, which
+ * is WP-20's) and that duplication is upstream's: the Qt window really does
+ * show both. Omitting it here left four of this row's seven commands with no
+ * button anywhere in the client, so it is back, wired to the same `cmd.*`
+ * commands Qt uses.
  *
  * Below the grid sits the progress row (`:273-284`): a progress bar plus a red
  * Abort button wired to `cmd.interrupt` (`:282`), shown only while
@@ -25,6 +30,8 @@ interface QuickButton {
   title: string;
   /** Which work package will make a null button real. */
   todo?: string;
+  /** Handled in TypeScript rather than by a bare command line. */
+  action?: 'getView';
 }
 
 const ROWS: QuickButton[][] = [
@@ -38,13 +45,26 @@ const ROWS: QuickButton[][] = [
     { label: 'Unpick', cmd: 'unpick', title: 'cmd.unpick' },
     { label: 'Deselect', cmd: 'deselect', title: 'cmd.deselect' },
     { label: 'Rock', cmd: 'rock', title: 'cmd.rock' },
-    { label: 'Get View', cmd: 'get_view 2, quiet=0', title: 'cmd.get_view(2, quiet=0)' },
+    {
+      label: 'Get View',
+      cmd: null,
+      action: 'getView',
+      title: 'cmd.get_view(2, quiet=0) + get_view(3) to the clipboard',
+    },
+  ],
+  [
+    { label: '|<', cmd: 'rewind', title: 'cmd.rewind' },
+    { label: '<', cmd: 'backward', title: 'cmd.backward' },
+    { label: 'Stop', cmd: 'mstop', title: 'cmd.mstop' },
+    { label: 'Play', cmd: 'mplay', title: 'cmd.mplay' },
+    { label: '>', cmd: 'forward', title: 'cmd.forward' },
+    { label: '>|', cmd: 'ending', title: 'cmd.ending' },
+    { label: 'MClear', cmd: 'mclear', title: 'cmd.mclear' },
   ],
   [
     { label: 'Builder', cmd: null, title: 'the builder dock', todo: 'WP-17' },
     { label: 'Properties', cmd: null, title: 'the properties dialog', todo: 'WP-22' },
     { label: 'Rebuild', cmd: 'rebuild', title: 'cmd.rebuild' },
-    { label: 'MClear', cmd: 'mclear', title: 'cmd.mclear' },
   ],
 ];
 
@@ -53,6 +73,27 @@ export function QuickButtons() {
   const progress = useStore(session.stores.connection, (s) => s.progress);
   const busy = progress >= 0;
 
+  /**
+   * `PyMOLQtGUI.get_view` (`pymol_qt_gui.py:83-86`): print the matrix at
+   * verbosity 2, put the `get_view(3)` string on the clipboard, then print the
+   * confirmation. `navigator.clipboard.writeText` needs a user gesture — this
+   * IS one — and can still be refused, so the failure is reported instead of
+   * being swallowed into a silent no-op.
+   */
+  const getView = async () => {
+    await session.run('get_view 2, quiet=0');
+    try {
+      const text = await session.call<string>('cmd.get_view', [3]);
+      await navigator.clipboard.writeText(String(text));
+      session.stores.feedback.appendClient(' get_view: matrix copied to clipboard.');
+    } catch (error) {
+      session.stores.feedback.appendClient(
+        ` get_view: could not reach the clipboard — ${errorText(error)}`,
+        'warning',
+      );
+    }
+  };
+
   return (
     <div className="quickbuttons">
       {ROWS.map((row, i) => (
@@ -60,11 +101,16 @@ export function QuickButtons() {
           {row.map((button) => (
             <button
               type="button"
-              className={`quickbutton${button.cmd ? '' : ' quickbutton--todo'}`}
+              className={`quickbutton${button.cmd || button.action ? '' : ' quickbutton--todo'}`}
               key={button.label}
-              title={button.cmd ? button.title : `TODO (${button.todo}): ${button.title}`}
+              title={
+                button.cmd || button.action
+                  ? button.title
+                  : `TODO (${button.todo}): ${button.title}`
+              }
               onClick={() => {
-                if (button.cmd) void session.run(button.cmd);
+                if (button.action === 'getView') void getView();
+                else if (button.cmd) void session.run(button.cmd);
                 else
                   session.stores.feedback.appendClient(
                     ` ${button.label}: not implemented in this wave — ${button.title} is ${button.todo}`,

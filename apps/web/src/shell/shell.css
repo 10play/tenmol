@@ -228,3 +228,77 @@
   color: #55595d;
   background: #24272a;
 }
+
+/* Overlay panels ---------------------------------------------------------
+ * Closed until opened. Rendering every installed overlay unconditionally put
+ * ten panels in the document flow and pushed the viewport off screen.
+ */
+
+.overlay-launcher {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  gap: 2px;
+  padding: 2px 4px;
+  background: var(--pm-panel-alt);
+  border-top: 1px solid var(--pm-edge);
+  border-left: 1px solid var(--pm-edge);
+}
+
+.overlay-launcher__btn {
+  padding: 1px 7px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.overlay-launcher__btn.is-on {
+  background: var(--pm-btn-pressed);
+  color: var(--pm-text-bright);
+}
+
+.overlay-layer {
+  position: fixed;
+  inset: 24px 0 26px 0;
+  z-index: 45;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 10px;
+  padding: 10px;
+  overflow: auto;
+  pointer-events: none;
+}
+
+.overlay-panel {
+  position: relative;
+  pointer-events: auto;
+  max-height: 100%;
+  overflow: auto;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 55%);
+}
+
+.overlay-panel__close {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  z-index: 1;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--pm-text-dim);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.overlay-panel__close:hover {
+  color: var(--pm-text-bright);
+}

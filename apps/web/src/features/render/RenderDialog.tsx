@@ -32,6 +32,14 @@ export function RenderDialog() {
   const session = useSession();
   const [state, dispatch] = useReducer(reducer, INITIAL);
   const [page, setPage] = useState<Page>('setup');
+  /*
+   * COLLAPSED BY DEFAULT. `registry.ts` declares this slot in the `viewport`
+   * region and that file is frozen, so the panel renders alongside the GL
+   * surface rather than in the overlay layer. Rendering it expanded took half
+   * the viewport permanently — the same mistake the overlay region made with
+   * ten panels at once, just smaller. It opens on demand instead.
+   */
+  const [expanded, setExpanded] = useState(false);
   const [busy, setBusy] = useState<null | 'draw' | 'ray'>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [savePath, setSavePath] = useState('');
@@ -105,9 +113,32 @@ export function RenderDialog() {
 
   const num = (v: number) => (Number.isFinite(v) ? Number(v.toFixed(3)) : 0);
 
+  if (!expanded) {
+    return (
+      <button
+        type="button"
+        className="render__tab"
+        title="Ray / Draw render dialog"
+        onClick={() => setExpanded(true)}
+      >
+        Ray / Draw
+      </button>
+    );
+  }
+
   return (
     <div className="render">
-      <div className="render__title">Ray / Draw{page === 'result' ? ' — result' : ''}</div>
+      <div className="render__title">
+        Ray / Draw{page === 'result' ? ' — result' : ''}
+        <button
+          type="button"
+          className="render__collapse"
+          aria-label="close Ray / Draw"
+          onClick={() => setExpanded(false)}
+        >
+          x
+        </button>
+      </div>
 
       {page === 'setup' && (
         <div className="render__body">
