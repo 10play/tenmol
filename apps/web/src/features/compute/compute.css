@@ -114,3 +114,120 @@
   color: var(--pm-text-dim);
   line-height: 1.45;
 }
+
+/* ------------------------------------------------------------------ *
+ * Declared arguments.
+ *
+ * Half the helpers take something other than the shared selection —
+ * `mass_align` a target object, `ff_copy` a source and destination,
+ * `interchain_distances` an output object name — so they carry their own
+ * fields under the button rather than silently reusing the selection box.
+ * ------------------------------------------------------------------ */
+
+.compute__args {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 3px 0 2px 2px;
+}
+
+.compute__arg {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--fg-dim, #9aa);
+}
+
+.compute__arg input[type='text'],
+.compute__arg input[type='number'] {
+  width: 82px;
+  font: inherit;
+  padding: 1px 3px;
+}
+
+.compute__arg input[type='number'] {
+  width: 52px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Per-residue SASA. PyMOL prints a fixed-width `=` bar (util.py:1166-1172);
+ * this is the same readout with a real bar and a clickable selection.
+ * ------------------------------------------------------------------ */
+
+.compute__sasa {
+  margin-top: 4px;
+}
+
+.compute__sasa-head {
+  font-size: 10px;
+  color: var(--fg-dim, #9aa);
+  margin-bottom: 2px;
+}
+
+.compute__warn-inline {
+  color: var(--warn, #d89b3a);
+}
+
+.compute__sasa-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* Long structures run to hundreds of rows; the panel must not grow without
+     bound the way the overlay panels once did. */
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.compute__sasa-list li {
+  display: grid;
+  grid-template-columns: 92px 1fr 42px;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+}
+
+.compute__sasa-list li.is-raw .compute__sasa-num {
+  color: var(--warn, #d89b3a);
+}
+
+.compute__sasa-sele {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent, #6bf);
+  text-align: left;
+  cursor: pointer;
+}
+
+.compute__sasa-bar {
+  display: block;
+  height: 6px;
+  background: var(--bg-sunken, #1b1f23);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.compute__sasa-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent, #6bf);
+}
+
+.compute__sasa-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.compute__empty {
+  font-size: 10px;
+  color: var(--fg-dim, #9aa);
+}
+
+.compute__note-inline {
+  font-size: 10px;
+  color: var(--warn, #d89b3a);
+  margin: 2px 0 0 2px;
+  max-width: 260px;
+}

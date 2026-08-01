@@ -750,3 +750,101 @@ def test_upload_rejects_an_empty_name():
     api = files_panel.FilesAPI.__new__(files_panel.FilesAPI)
     result = files_panel.FilesAPI.upload(api, "", "")
     assert result["ok"] is False and result["path"] == ""
+
+
+# =========================================================================== #
+# Part 3 — the filename classifier's full mapping table
+#
+# The inventory row for `filename_to_format` / `filename_to_objectname` is
+# closed by `classify`, which calls both server-side (`files.py:245`).  What was
+# NOT closed is the table itself: the row's coverage note claims only "the
+# .pze/.maegz/.sdfgz/.pdb\d+ rules".  The mapping is 40-odd cases wide and the
+# whole argument for keeping it in Python ("never reimplement in JS") is that
+# getting it wrong loads a file as the wrong type SILENTLY.  So it is asserted
+# exhaustively, against the running build, through the same RPC the dialogs use.
+#
+# Direct `importing.*` access was considered and rejected: `importing` is not in
+# `DEFAULT_ROOTS`, and granting it would have widened the policy surface for a
+# path no React code calls, since every dialog goes through `classify`.
+# =========================================================================== #
+
+
+#: `(filename, expected format, expected zipped)` — read off
+#: `modules/pymol/importing.py:40-108`, asserted against the running build.
+FORMAT_CASES = (
+    # the plain case: the extension IS the format
+    ("x.pdb", "pdb", ""),
+    ("x.cif", "cif", ""),
+    ("x.sdf", "sdf", ""),
+    # aliases
+    ("x.ent", "pdb", ""),
+    ("x.p5m", "pdb", ""),
+    ("x.mmd", "mmod", ""),
+    ("x.out", "mmod", ""),
+    ("x.dat", "mmod", ""),
+    ("x.cc2", "cc1", ""),
+    ("x.sd", "sdf", ""),
+    ("x.rst7", "rst", ""),
+    ("x.o", "brix", ""),
+    ("x.dsn6", "brix", ""),
+    ("x.omap", "brix", ""),
+    ("x.ph4", "moe", ""),
+    ("x.spi", "spider", ""),
+    ("x.pym", "py", ""),
+    ("x.pyc", "py", ""),
+    ("x.p1m", "pml", ""),
+    ("x.pim", "pml", ""),
+    ("x.xml", "pdbml", ""),
+    ("x.mmcif", "cif", ""),
+    ("x.dxbin", "dx", ""),
+    # numbered variants, matched by regex not by table
+    ("x.pdb1", "pdb", ""),
+    ("x.pdb70", "pdb", ""),
+    ("x.xyz_3", "xyz", ""),
+    # a real `.gz`/`.bz2` tail, stripped and re-parsed
+    ("x.pdb.gz", "pdb", "gz"),
+    ("x.cif.gz", "cif", "gz"),
+    ("x.ent.bz2", "pdb", "bz2"),
+    # zipped SYNTHESISED from the extension — no `.gz` in the name
+    ("x.pze", "pse", "gz"),
+    ("x.pzw", "psw", "gz"),
+    ("x.sdfgz", "sdf", "gz"),
+    ("x.maegz", "mae", "gz"),
+    ("x.bcifgz", "bcif", "gz"),
+    # deliberately EMPTY: names of special loadables, not extensions
+    ("x.cgo", "", ""),
+    ("x.model", "", ""),
+    ("x.callback", "", ""),
+    ("x.brick", "", ""),
+    ("x.plugin", "", ""),
+    # case folding, and a directory prefix that must be basenamed away
+    ("X.PDB", "pdb", ""),
+    ("/tmp/deep/dir/x.pdb", "pdb", ""),
+)
+
+
+@pytest.mark.engine
+@pytest.mark.parametrize("name,fmt,zipped", FORMAT_CASES)
+def test_the_format_table_matches_importing_py(installed, ws: WSClient, name, fmt, zipped):
+    info = ws.call(NS + ".classify", name)
+    assert (info["format"], info["zipped"]) == (fmt, zipped), info
+
+
+@pytest.mark.engine
+def test_the_prefix_is_the_object_name_stem(installed, ws: WSClient):
+    """`prefix` is what `filename_to_objectname` legalises."""
+    assert ws.call(NS + ".classify", "/tmp/1tii.pdb")["prefix"] == "1tii"
+    assert ws.call(NS + ".classify", "/tmp/1tii.pdb.gz")["prefix"] == "1tii"
+    # No dot at all: `if not pre: pre = ext` makes the whole name the stem.
+    assert ws.call(NS + ".classify", "README")["prefix"] == "README"
+
+
+@pytest.mark.engine
+def test_the_object_name_is_legalised_not_just_the_stem(installed, ws: WSClient):
+    """The dialog previews the name PyMOL will really create."""
+    assert ws.call(NS + ".classify", "/tmp/1tii.pdb")["objectName"] == "1tii"
+    # `get_legal_name` is why this is not `prefix` — spaces and syntax
+    # characters would produce an object no selection expression can name.
+    spaced = ws.call(NS + ".classify", "/tmp/my protein.pdb")
+    assert spaced["prefix"] == "my protein"
+    assert spaced["objectName"] == ws.call("cmd.get_legal_name", "my protein")
