@@ -376,4 +376,45 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * Wizards are rendered by ONE generic component driven by the wizard
+     * protocol (`get_panel` / `get_prompt`), not by twelve bespoke React
+     * panels. The way to prove that is to drive two unrelated wizards through
+     * the same renderer and then execute a panel button.
+     */
+    name: 'the generic wizard renderer drives real wizards and its buttons execute',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+      await run(page, 'load test/dat/1tii.pdb, ubq', 2400);
+
+      await run(page, 'wizard measurement', 1800);
+      const measure = await page.evaluate(
+        () => document.querySelector('[class*="wiz"]')?.textContent ?? '',
+      );
+      assert(/click on the first atom/i.test(measure), `no measurement prompt: ${measure.slice(0, 80)}`);
+
+      await run(page, 'wizard appearance', 2000);
+      const appearance = await page.evaluate(
+        () => document.querySelector('[class*="wiz"]')?.textContent ?? '',
+      );
+      assert(/Appearance/.test(appearance), 'appearance panel did not render');
+      assert(/Done/.test(appearance), 'appearance panel has no Done button');
+
+      // A panel button must reach the backend, not just re-render.
+      //
+      // Assert on the POP, not on the stack emptying: PyMOL stacks wizards, so
+      // `Done` on `appearance` leaves the `measurement` wizard underneath and
+      // `cmd.get_wizard() is None` is correctly False. A first version of this
+      // spec asserted None and failed for that reason — the product was right.
+      const top = await ask(page, 'cmd.get_wizard().__class__.__name__');
+      assert(top === 'Appearance', `expected Appearance on top, got ${top}`);
+      await page.locator('.wizards').getByText('Done', { exact: true }).first().click();
+      await page.waitForTimeout(1600);
+      const after = await ask(page, 'cmd.get_wizard().__class__.__name__');
+      assert(after !== 'Appearance', `Done did not pop the wizard (still ${after})`);
+      await page.close();
+    },
+  },
 ];
