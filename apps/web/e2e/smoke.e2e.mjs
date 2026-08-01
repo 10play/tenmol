@@ -17,7 +17,7 @@
  * this file executes under node. Declared here rather than in the shared
  * eslint.config.js, which WP-00 owns.
  */
-/* global window, document */
+/* global window, document, HTMLElement */
 
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -571,6 +571,45 @@ export const tests = [
 
       const red = await ask(page, "cmd.count_atoms('cl and color red')");
       assert(red === green, `expected all ${green} atoms red, got ${red}`);
+      await page.close();
+    },
+  },
+  {
+    /**
+     * Input plumbing: the ButMode block and the global key bridge.
+     *
+     * The key half must blur the command line first. The service ignores keys
+     * typed into a text entry, which is correct — arrows should navigate frames,
+     * not fight the console — but it means a naive press does nothing and looks
+     * like a broken binding.
+     */
+    name: 'the ButMode block cycles and arrow keys reach PyMOL',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+      await run(page, 'load test/dat/1tii.pdb, ip', 2400);
+
+      const mode = await ask(page, "cmd.get('button_mode_name')");
+      await page.locator('.butmode-host').first().click();
+      await page.waitForTimeout(1300);
+      const cycled = await ask(page, "cmd.get('button_mode_name')");
+      assert(cycled !== mode, `clicking ButMode did not cycle the ring (stayed ${mode})`);
+
+      const level = await ask(page, "cmd.get('mouse_selection_mode')");
+      await page.getByText(/^Selecting/).first().click();
+      await page.waitForTimeout(1300);
+      const levelAfter = await ask(page, "cmd.get('mouse_selection_mode')");
+      assert(levelAfter !== level, `the Selecting line did not cycle the level (stayed ${level})`);
+
+      await run(page, 'mset 1 x30', 1200);
+      await run(page, 'frame 5', 1200);
+      await page.evaluate(() => {
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      });
+      await page.waitForTimeout(300);
+      await page.keyboard.press('ArrowRight');
+      await page.waitForTimeout(1400);
+      assert((await ask(page, 'cmd.get_frame()')) === '6', 'ArrowRight did not advance the frame');
       await page.close();
     },
   },
