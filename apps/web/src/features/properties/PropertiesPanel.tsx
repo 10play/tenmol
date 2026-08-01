@@ -149,6 +149,9 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
       assign(tree, 'ostate-settings', named(oSettings, settingNames.current));
       assign(tree, 'atom-identifiers', atom.identifiers);
       assign(tree, 'atom-builtins', atom.builtins);
+      // Upstream marks this branch Incentive-only and hides it; `p.all` works
+      // here, so the rows are real.
+      assign(tree, 'atom-properties', atom.properties);
       assign(tree, 'atom-settings', atomSettingsPlaceholder());
       assign(tree, 'astate-builtins', atom.astate);
       assign(tree, 'astate-settings', astateSettingsPlaceholder());

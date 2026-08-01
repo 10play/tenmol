@@ -19,27 +19,81 @@
  *   cmd.matrix_reset        cmd.transform_object cmd.safe_eval
  *   cmd.set / cmd.unset     cmd.alter / cmd.alter_state
  *
- * THE ONE THING THAT CANNOT CROSS THE WIRE, stated plainly instead of hidden:
- * Qt fills the atom rows with
+ * WHAT CANNOT CROSS THE WIRE, and what was done about it. Qt fills the atom
+ * rows with
  *
  *     cmd.iterate('pk1', 'update_atom_fields(locals())', space={...})
  *
- * — a Python CALLBACK in `space`. There is no way to send a callback, and the
- * inventory row says so ("the bridge needs a server-side helper that runs the
- * iterate and returns the collected namespace"). Until `_bridge.iterate_ns`
- * exists, the atom rows are sourced from `cmd.get_model(sel)`, whose chempy
- * `Atom` carries 11 of 11 identifiers and 14 of the 19 built-ins. The five it
- * does not carry — `reps`, `label`, `cartoon`, `protons`, `geom`, `valence` —
- * and the atom/atom-state SETTINGS wrappers (`s.*`) are reported as
- * `unavailable` with the endpoint that would supply them, never as a blank or a
- * zero.
+ * — a Python CALLBACK in `space`. A callback cannot be sent, and neither can
+ * the RESULT: `iterate` returns the atom COUNT and mutates `space` server-side,
+ * so a dict sent from here is populated in a copy this side never sees
+ * (asserted in `bridge/tests/test_properties.py`).
+ *
+ * Most rows come from `cmd.get_model(sel)`, whose chempy `Atom` carries all 11
+ * identifiers and 12 of the 19 built-ins. The remaining seven —
+ * `reps`, `label`, `cartoon`, `protons`, `geom`, `valence`, `color` — come from
+ * `cmd.tenmol_props.atom_extras` (`bridge/tenmol_bridge/panels/properties.py`),
+ * the server-side helper the inventory row asked for. `color` is in that list
+ * because chempy does NOT have it: this file used to map `atom.color`, so the
+ * row rendered from `undefined`.
+ *
+ * Atom-level SETTINGS stay unavailable, and that is a PyMOL limit rather than a
+ * missing endpoint: `s.<name>` inside `iterate` returns the EFFECTIVE value
+ * (falling back to object and global), there is no `get_atom_settings`, and
+ * `s.all` raises `LookupError`. The helper reports that reason as data so the
+ * panel can show it.
  */
 
 import type { Session } from '../../app';
 import type { PropertyRow } from '@tenmol/protocol/topics/dialogs';
 import { KEYS, coerceToPythonLiteral, formatValue, inferOldKind, oneLetter } from './model';
 
-const NEEDS_ITERATE = 'needs _bridge.iterate_ns (cmd.iterate space= cannot cross the wire)';
+/** `bridge/tenmol_bridge/panels/properties.py`, bootstrapped like the others. */
+export const PROPS_NS = 'cmd.tenmol_props';
+export const PROPS_BOOTSTRAP =
+  'import tenmol_bridge.panels.properties as _tp; _tp.install()';
+
+export interface AtomExtras {
+  ok: boolean;
+  found: boolean;
+  builtins: Record<string, unknown>;
+  properties: Record<string, unknown>;
+}
+
+/**
+ * Probe, and only bootstrap if the probe fails.
+ *
+ * The PyMOL process survives a socket drop but a bridge restart does not, and
+ * this side cannot tell the two apart cheaply — same reasoning as
+ * `filesApi.ensure()`.
+ */
+export async function atomExtras(
+  session: Session,
+  model: string,
+  index: number,
+  state: number,
+): Promise<AtomExtras | null> {
+  const empty: AtomExtras = { ok: false, found: false, builtins: {}, properties: {} };
+  const fetch = () =>
+    session.call<AtomExtras>(`${PROPS_NS}.atom_extras`, [model, index, state]);
+  try {
+    return await fetch();
+  } catch {
+    try {
+      await session.run(PROPS_BOOTSTRAP);
+      return await fetch();
+    } catch {
+      // The panel still renders every other row; these become `unavailable`.
+      return empty;
+    }
+  }
+}
+
+const NEEDS_HELPER = 'the bridge helper cmd.tenmol_props is not installed';
+const NO_ATOM_SETTINGS =
+  'PyMOL does not expose which settings are set on an atom: s.<name> in iterate ' +
+  'returns the effective value, there is no get_atom_settings, and s.all raises ' +
+  'LookupError. Set one with alter s.<name> = ...';
 
 export interface AtomRecord {
   index?: number;
@@ -190,6 +244,8 @@ export interface AtomRows {
   identifiers: PropertyRow[];
   builtins: PropertyRow[];
   astate: PropertyRow[];
+  /** Custom atom properties (`p.*`) — upstream hides this branch. */
+  properties: PropertyRow[];
   found: boolean;
 }
 
@@ -199,7 +255,13 @@ export async function atomRows(
   index: number,
   state: number,
 ): Promise<AtomRows> {
-  const empty: AtomRows = { identifiers: [], builtins: [], astate: [], found: false };
+  const empty: AtomRows = {
+    identifiers: [],
+    builtins: [],
+    astate: [],
+    properties: [],
+    found: false,
+  };
   if (!model || !index) return empty;
   let chempy: ChempyModel;
   try {
@@ -209,6 +271,9 @@ export async function atomRows(
   }
   const atom = chempy?.atom?.[0];
   if (!atom) return empty;
+
+  // The seven built-ins chempy has no field for.
+  const extras = await atomExtras(session, model, index, state);
 
   const values: Record<string, unknown> = {
     model,
@@ -233,9 +298,11 @@ export async function atomRows(
     text_type: atom.text_type ?? '',
     vdw: atom.vdw,
     ss: atom.ss ?? '',
-    color: atom.color,
     flags: atom.flags,
     elec_radius: atom.elec_radius,
+
+    // `color` is NOT a chempy field — it arrives with the other six.
+    ...(extras?.found ? extras.builtins : {}),
   };
 
   const identifiers: PropertyRow[] = KEYS.identifiers.map((key) => ({
@@ -248,7 +315,7 @@ export async function atomRows(
   const builtins: PropertyRow[] = KEYS.atomBuiltins.map((key) =>
     key in values
       ? { branch: 'atom-builtin', key, text: formatValue(key, values[key]) }
-      : { branch: 'atom-builtin', key, text: '', unavailable: NEEDS_ITERATE },
+      : { branch: 'atom-builtin', key, text: '', unavailable: NEEDS_HELPER },
   );
 
   const coord = atom.coord ?? [];
@@ -265,16 +332,35 @@ export async function atomRows(
     readOnly: key === 'state',
   }));
 
-  return { identifiers, builtins, astate, found: true };
+  return { identifiers, builtins, astate, properties: atomPropertyRows(extras), found: true };
 }
 
 /** The two branches nothing but a bridge helper can fill. */
 export function atomSettingsPlaceholder(): PropertyRow[] {
-  return [{ branch: 'atom-settings', key: 's.*', text: '', unavailable: NEEDS_ITERATE }];
+  return [{ branch: 'atom-settings', key: 's.*', text: '', unavailable: NO_ATOM_SETTINGS }];
+}
+
+/**
+ * Atom-level custom properties, from `p.all`.
+ *
+ * Upstream marks this branch "Incentive only" and hides it in open-source
+ * builds (`properties_dialog.py:107`). Measured, `p.all` works here, so the
+ * rows are real rather than greyed out.
+ */
+export function atomPropertyRows(extras: AtomExtras | null): PropertyRow[] {
+  const entries = Object.entries(extras?.properties ?? {});
+  if (entries.length === 0) {
+    return [{ branch: 'atom-property', key: 'p.*', text: '', unavailable: 'no custom properties on this atom' }];
+  }
+  return entries.map(([key, value]) => ({
+    branch: 'atom-property',
+    key: `p.${key}`,
+    text: formatValue(key, value),
+  }));
 }
 
 export function astateSettingsPlaceholder(): PropertyRow[] {
-  return [{ branch: 'astate-settings', key: 's.*', text: '', unavailable: NEEDS_ITERATE }];
+  return [{ branch: 'astate-settings', key: 's.*', text: '', unavailable: NO_ATOM_SETTINGS }];
 }
 
 /* ------------------------------------------------------------------ edits */

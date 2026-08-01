@@ -32,9 +32,16 @@ describe('the fixed tree (properties_dialog.py:69-117)', () => {
     ]);
     expect(tree[0]!.groups.map((g) => g.label)).toEqual(['TTT Matrix', 'Settings']);
     expect(tree[1]!.groups.map((g) => g.label)).toEqual(['Title', 'State Matrix', 'Settings']);
+    /*
+     * The Incentive-only branch is PRESENT upstream (`properties_dialog.py`
+     * lists it in the fixed tree) and hidden in open-source Qt builds. `p.all`
+     * works in this build — measured in `bridge/tests/test_properties.py` —
+     * so it is shown, between the built-ins and Settings as upstream orders it.
+     */
     expect(tree[2]!.groups.map((g) => g.label)).toEqual([
       'Identifiers',
       'Properties (built-in)',
+      'Properties (custom)',
       'Settings',
     ]);
     expect(tree[3]!.groups.map((g) => g.label)).toEqual(['Properties (built-in)', 'Settings']);

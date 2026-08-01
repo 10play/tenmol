@@ -166,6 +166,12 @@ export function emptyTree(): PropertySection[] {
           branch: 'atom-builtin',
           rows: [],
         },
+        {
+          id: 'atom-properties',
+          label: 'Properties (custom)',
+          branch: 'atom-property',
+          rows: [],
+        },
         { id: 'atom-settings', label: 'Settings', branch: 'atom-settings', rows: [] },
       ],
     },

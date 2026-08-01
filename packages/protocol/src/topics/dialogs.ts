@@ -109,6 +109,14 @@ export const PROPERTY_BRANCHES = [
   'atom-identifier',
   'atom-builtin',
   'atom-settings',
+  /*
+   * Atom-level custom properties. In the fixed tree at
+   * `properties_dialog.py:69-117` this branch is present but marked
+   * "Properties — Incentive only", so open-source Qt hides it. `p.all`
+   * works in this build (measured), so the branch is real here and the
+   * rows are filled by `cmd.tenmol_props.atom_extras`.
+   */
+  'atom-property',
   'astate-builtin',
   'astate-settings',
 ] as const;
