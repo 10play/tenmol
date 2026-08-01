@@ -228,7 +228,7 @@ export interface ViewportStats {
    * and the only way to tell "the GL-free camera engaged" from "raw input was
    * forwarded and silently dropped", which look identical from outside.
    */
-  cameraRpc?: { turns: number; moves: number; zooms: number; errors: number };
+
   /**
    * D2. Who is drawing what, right now: `declared` is what this client told the
    * bridge it would draw, `drawing` is what Mode G is actually allowed to draw
@@ -271,6 +271,16 @@ export interface ViewportHandle {
   setBackground(background: readonly [number, number, number] | null): void;
   /** Re-blit the last Mode-P frame and re-draw Mode G. */
   redraw(): void;
+  /**
+   * GL-free camera diagnostics, read live. Zero on a normal backend.
+   *
+   * Not part of `stats`: that object is rebuilt only when the render path
+   * runs, so a drag that fails to move anything leaves it stale and these read
+   * zero — indistinguishable from the driver never being consulted.
+   */
+  readonly cameraRpc: { turns: number; moves: number; zooms: number; errors: number };
+  /** `rasterizing` as the drag gate saw it, most recent last. */
+  readonly cameraGate: readonly boolean[];
   readonly inputStats: { buttons: number; drags: number; wheels: number; coalesced: number };
   destroy(): void;
 }

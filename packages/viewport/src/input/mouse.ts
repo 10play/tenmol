@@ -251,9 +251,6 @@ export function createInputController(options: InputControllerOptions): InputCon
     const point = pointOf(ev);
     lastPoint = point;
     lastMod = modifierMask(ev);
-    // A new press starts a new gesture: forget the previous drag anchor, or the
-    // first sample of the next drag is a delta across the gap between them.
-    lastDragPoint = null;
     coalescer.push({ x: point.x, y: point.y, mod: lastMod, when: whenOf(ev) });
   };
 

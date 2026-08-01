@@ -384,6 +384,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
    * server rasterises nothing, so a normal GL backend keeps the faithful input
    * path (which can pick, and which honours the ButMode table).
    */
+  const gateSamples: boolean[] = [];
   const cameraDriver = createCameraDriver({
     call: (fn, args = []) => transport.call(fn, [...args]),
     onError,
@@ -392,6 +393,11 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   const input = createInputController({
     element: surface.glCanvas,
     get cameraDriver() {
+      // Sampled at FLUSH time. Do NOT move this into `stats`: that object is
+      // rebuilt only when the render path runs, so a drag that moves nothing
+      // leaves it stale — which is what made this look like "the gate was
+      // never consulted" for two rounds.
+      gateSamples.push(compositor.state.rasterizing);
       return compositor.state.rasterizing ? undefined : cameraDriver;
     },
     transport,
@@ -538,7 +544,6 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       stats.geometryWarnings = [...renderer.lastWarnings];
       // Camera-driver counters: the only way to tell "GL-free camera engaged"
       // from "raw input forwarded and silently dropped" from outside.
-      stats.cameraRpc = { ...cameraDriver.counters };
       dirty = true;
     },
     unavailable: (key, reason) => {
@@ -688,6 +693,21 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     redraw(): void {
       presenter.redraw();
       dirty = true;
+    },
+    /**
+     * GL-free camera diagnostics, read LIVE.
+     *
+     * Deliberately not folded into `stats`: that object is rebuilt only when
+     * the render path runs, so a drag that fails to move anything leaves it
+     * stale and the counters read zero — which is indistinguishable from the
+     * driver never being consulted. That cost two rounds of wrong diagnosis.
+     */
+    get cameraRpc(): { turns: number; moves: number; zooms: number; errors: number } {
+      return { ...cameraDriver.counters };
+    },
+    /** `rasterizing` as the drag gate saw it, most recent last. */
+    get cameraGate(): readonly boolean[] {
+      return gateSamples.slice(-16);
     },
     get inputStats(): { buttons: number; drags: number; wheels: number; coalesced: number } {
       return input.stats;
