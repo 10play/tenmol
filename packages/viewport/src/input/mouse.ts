@@ -323,8 +323,29 @@ export function createInputController(options: InputControllerOptions): InputCon
     ev.preventDefault();
     // `OrthoButton` ignores wheel while a real button is held; do not even send.
     if (activeButton !== null) return;
-    const delta = ev.deltaY !== 0 ? ev.deltaY : ev.deltaX;
+    /*
+     * HORIZONTAL SCROLL IS IGNORED UNLESS SHIFT IS HELD.
+     *
+     * `keymapping.py:100-123` returns 0 for a horizontal wheel event unless
+     * the Shift modifier is down — Shift+Wheel is how Qt PyMOL emulates
+     * horizontal scrolling, and a bare sideways swipe does nothing.
+     *
+     * This used to fall back to `deltaX` whenever `deltaY` was 0, with no
+     * modifier test. On a trackpad that made a two-finger sideways swipe zoom
+     * or move the slab, where desktop PyMOL sits still — the kind of
+     * divergence a user reports as "the view jumps when I scroll sideways".
+     */
+    const horizontal = Math.abs(ev.deltaY) < Math.abs(ev.deltaX);
+    if (horizontal && !ev.shiftKey) return;
+    const delta = horizontal ? ev.deltaX : ev.deltaY;
     if (delta === 0) return;
+    /*
+     * SIGN, and why it looks inverted against `get_wheel_button`. Qt's
+     * `angleDelta().y()` is POSITIVE when the wheel turns away from the user
+     * and maps to button 3; the DOM's `WheelEvent.deltaY` is positive when
+     * content scrolls DOWN. Opposite conventions, so the same physical
+     * gesture needs the opposite comparison here.
+     */
     const button = delta < 0 ? MouseButton.ScrollForward : MouseButton.ScrollBackward;
     const point = pointOf(ev);
     counters.wheels++;

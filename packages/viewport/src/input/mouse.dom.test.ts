@@ -154,3 +154,94 @@ describe('input controller without requestAnimationFrame', () => {
     controller.destroy();
   });
 });
+
+/* -------------------------------------------------------------------------- *
+ * Wheel resolution.
+ *
+ * `keymapping.py:100-135`: vertical wheel becomes a synthetic down+up pair on
+ * button 3 (up) or 4 (down); horizontal scroll is IGNORED unless Shift is held,
+ * which is how Qt PyMOL emulates it; and the wheel is suppressed entirely while
+ * a real button is down.
+ * -------------------------------------------------------------------------- */
+
+describe('wheel resolution', () => {
+  let element: HTMLElement;
+  let sent: InputMessage[];
+
+  beforeEach(() => {
+    element = window.document.createElement('div');
+    window.document.body.appendChild(element);
+    sent = [];
+    createInputController({
+      element,
+      transport: {
+        input: (message) => sent.push(message),
+        call: () => Promise.resolve(null),
+      },
+      geometry: () => ({ cssWidth: 400, cssHeight: 300, dpr: 1 }),
+      dragBudgetMs: 16,
+      now: () => 0,
+    });
+  });
+
+  afterEach(() => {
+    element.remove();
+  });
+
+  function wheel(init: Record<string, unknown>): void {
+    element.dispatchEvent(
+      new window.WheelEvent('wheel', { bubbles: true, cancelable: true, ...init }),
+    );
+  }
+
+  const buttons = () =>
+    sent.filter((m) => m.kind === 'button').map((m) => [m.button, m.state]);
+
+  test('sends a down+up pair on button 3 when scrolling up', () => {
+    // The DOM's deltaY is NEGATIVE when content scrolls up, where Qt's
+    // angleDelta().y() is POSITIVE for the same physical gesture.
+    wheel({ deltaY: -120 });
+    assert.deepEqual(buttons(), [
+      [3, 0],
+      [3, 1],
+    ]);
+  });
+
+  test('sends button 4 when scrolling down', () => {
+    wheel({ deltaY: 120 });
+    assert.deepEqual(buttons(), [
+      [4, 0],
+      [4, 1],
+    ]);
+  });
+
+  test('IGNORES a horizontal swipe with no Shift', () => {
+    /*
+     * The bug this guards: the handler used to fall back to deltaX whenever
+     * deltaY was 0, with no modifier test. On a trackpad that made a two-finger
+     * sideways swipe zoom or move the slab, where desktop PyMOL sits still.
+     */
+    wheel({ deltaY: 0, deltaX: 120 });
+    assert.deepEqual(buttons(), []);
+  });
+
+  test('accepts a horizontal swipe WITH Shift, which is how Qt emulates it', () => {
+    wheel({ deltaY: 0, deltaX: 120, shiftKey: true });
+    assert.deepEqual(buttons(), [
+      [4, 0],
+      [4, 1],
+    ]);
+  });
+
+  test('prefers the dominant axis rather than merely a non-zero deltaY', () => {
+    // `abs(delta_y) < abs(delta_x)` upstream — a mostly-horizontal gesture with
+    // a little vertical noise is still horizontal.
+    wheel({ deltaY: 2, deltaX: 120 });
+    assert.deepEqual(buttons(), []);
+  });
+
+  test('does nothing at all when both deltas are zero', () => {
+    wheel({ deltaY: 0, deltaX: 0 });
+    assert.deepEqual(buttons(), []);
+  });
+});
