@@ -99,3 +99,30 @@ export function reorder(order: readonly string[], name: string, beforeIndex: num
 
 /** `_gui.py:61` — Recall/Store/Clear each list F1..F12. */
 export const F_KEYS = Array.from({ length: 12 }, (_, i) => `F${i + 1}`);
+
+/**
+ * Why a scene rename is refused, or `null` if it is fine.
+ *
+ * `modules/pmg_qt/scene_bin_gui.py:360-377` refuses two things — a blank name
+ * and a name containing a space — and reports both by printing to the console
+ * while the cell silently reverts. The refusals are kept; the silence is not
+ * (the inventory row asks for a visible inline error instead).
+ *
+ * The third case is not upstream's and is added because upstream's outcome is
+ * worse than an error: `cmd.scene(old, 'rename', new_key=existing)` overwrites
+ * the scene already holding that name, and the panel would just show one fewer
+ * row with no explanation.
+ */
+export function renameProblem(
+  next: string,
+  current: string,
+  existing: readonly string[],
+): string | null {
+  if (next.trim() === '') return 'a scene name cannot be blank';
+  // Tested before trimming: an interior space is the case that matters, and
+  // `scene_order` is a SPACE-SEPARATED list, so a name with a space in it
+  // could never be ordered again.
+  if (/\s/.test(next)) return 'a scene name cannot contain spaces';
+  if (next !== current && existing.includes(next)) return `"${next}" already exists`;
+  return null;
+}

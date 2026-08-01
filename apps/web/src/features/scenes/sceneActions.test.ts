@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { F_KEYS, reorder, sceneActions } from './sceneActions';
+import { F_KEYS, renameProblem, reorder, sceneActions } from './sceneActions';
 import {
   cameraMotionMenu,
   cameraStoreWithScene,
@@ -153,5 +153,44 @@ describe('motion menus (menu.py)', () => {
       'cmd.mview("smooth",window=15,object="m2")',
       'cmd.mview("smooth",window=30,object="m2")',
     ]);
+  });
+});
+
+/* -------------------------------------------------------------------------- *
+ * Rename validation.
+ *
+ * `scene_bin_gui.py:360-377` refuses a blank or space-containing name by
+ * printing to the console while the cell reverts, which reads as the edit
+ * simply not working. Same refusals, visible reason.
+ * -------------------------------------------------------------------------- */
+
+describe('renameProblem', () => {
+  const existing = ['one', 'two', 'three'];
+
+  it('accepts an ordinary new name', () => {
+    expect(renameProblem('four', 'one', existing)).toBeNull();
+  });
+
+  it('accepts the unchanged name, so committing without editing is not an error', () => {
+    expect(renameProblem('one', 'one', existing)).toBeNull();
+  });
+
+  it('refuses blank and whitespace-only names', () => {
+    expect(renameProblem('', 'one', existing)).toMatch(/blank/);
+    expect(renameProblem('   ', 'one', existing)).toMatch(/blank/);
+  });
+
+  it('refuses spaces ANYWHERE, not just at the edges', () => {
+    // `cmd.scene_order` takes a space-separated list, so a name with a space
+    // in it could never be ordered again.
+    expect(renameProblem('a b', 'one', existing)).toMatch(/spaces/);
+    expect(renameProblem(' a', 'one', existing)).toMatch(/spaces/);
+    expect(renameProblem('a\t b', 'one', existing)).toMatch(/spaces/);
+  });
+
+  it('refuses a name already in use', () => {
+    // Not upstream's check: `rename` to an existing key OVERWRITES it, so the
+    // panel would silently show one fewer scene.
+    expect(renameProblem('two', 'one', existing)).toMatch(/already exists/);
   });
 });

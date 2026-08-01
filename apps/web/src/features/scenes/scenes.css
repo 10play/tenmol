@@ -267,3 +267,39 @@
   font-size: 9px;
   text-transform: uppercase;
 }
+
+/* Inline rename validation — upstream prints to the console and reverts the
+   cell with no visible reason (`scene_bin_gui.py:360-377`). */
+
+.scrow__renamewrap {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scrow__rename.is-invalid {
+  outline: 1px solid var(--error, #d9534f);
+}
+
+.scrow__renameerr {
+  font-size: 10px;
+  color: var(--error, #d9534f);
+}
+
+.scpanel__hint {
+  margin: 2px 4px;
+  font-size: 10px;
+  color: var(--fg-dim, #9aa);
+}
+
+/* Drag-to-reorder feedback. The handle used to be a click that moved one row
+   per press; `is-dropzone` marks where the release will land. */
+
+.scrow__handle.is-dragging {
+  cursor: grabbing;
+  opacity: 0.6;
+}
+
+.scrow.is-dropzone {
+  outline: 1px dashed var(--accent, #6bf);
+}

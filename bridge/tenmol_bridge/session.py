@@ -360,9 +360,56 @@ class ClientSession:
                     self.binary_bytes += len(frame)
                 else:
                     await self.ws.send_json(frame)
-            except Exception:  # noqa: BLE001 - the socket died mid-write
+            except (TypeError, ValueError) as exc:
+                # NOT a dead socket: the FRAME could not be serialised.
+                #
+                # These two cases used to be one `except Exception: return`,
+                # and the consequence was severe out of all proportion to the
+                # cause. `cmd.get_scene_thumbnail` returns `bytes`, which
+                # `codec.encode` passes through (legal inside a binary frame,
+                # where ndarray payloads live) but `send_json` cannot encode.
+                # The writer task then exited, the socket stayed OPEN, and the
+                # client never received another reply to anything — measured:
+                # the call itself timed out at 60 s and so did every subsequent
+                # call on that connection. A hang, with no error, forever.
+                #
+                # The frame is dropped, the caller is told why, and the writer
+                # keeps running.
+                if not await self._report_unsendable(frame, exc):
+                    return
+                continue
+            except Exception:  # noqa: BLE001 - the socket really did die
                 return
             self.sent += 1
+
+    async def _report_unsendable(self, frame: Any, exc: Exception) -> bool:
+        """Tell the client its reply could not be encoded. False to give up.
+
+        Best effort by construction: the error frame is plain strings, so the
+        only way it can fail in turn is a genuinely dead socket — and in that
+        case there is nothing left to say.
+        """
+        msg_id = frame.get("id") if isinstance(frame, Mapping) else None
+        try:
+            await self.ws.send_json(
+                err_frame(
+                    msg_id,
+                    {
+                        "kind": "NotSerializable",
+                        "type": type(exc).__name__,
+                        "message": (
+                            "the result could not be encoded for the wire: %s. "
+                            "Binary returns must go through a blob or a panel "
+                            "route (for example `cmd.get_scene_thumbnail_png` "
+                            "rather than `cmd.get_scene_thumbnail`)." % exc
+                        ),
+                    },
+                )
+            )
+        except Exception:  # noqa: BLE001 - now the socket really is gone
+            return False
+        self.sent += 1
+        return True
 
     # -- task bookkeeping ---------------------------------------------------
 

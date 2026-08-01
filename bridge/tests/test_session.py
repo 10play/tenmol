@@ -464,3 +464,45 @@ def test_broadcast_topics_are_still_broadcast(bridge) -> None:
     finally:
         a.close()
         b.close()
+
+
+# =========================================================================== #
+# Part 3 — a frame that cannot be serialised must not kill the connection
+# =========================================================================== #
+
+
+@pytest.mark.engine
+def test_a_bytes_return_errors_instead_of_hanging_the_connection(ws: WSClient) -> None:
+    """`Session.writer` used to treat an encoding failure as a dead socket.
+
+    `cmd.get_scene_thumbnail` returns raw `bytes`. `codec.encode` passes those
+    through — legal, because ndarray payloads ride inside BINARY frames — but
+    `ws.send_json` cannot encode them. The writer's `except Exception: return`
+    then exited the task while the socket stayed OPEN, so:
+
+        * the call itself never got a reply (measured: 60 s timeout), and
+        * every LATER call on that connection also never got a reply.
+
+    A silent, permanent hang from one unlucky return type. The two cases are
+    now distinguished: a serialisation failure drops the frame, answers the
+    caller, and leaves the writer running.
+    """
+    ws.call("cmd.fragment", "ala", "zz_ala")
+    try:
+        ws.call("cmd.scene", "zz_scene", "store")
+        msg_id = ws.send(
+            t="call", fn="cmd.get_scene_thumbnail", args=["zz_scene"], kwargs={}
+        )
+        reply = ws.wait_reply(msg_id, timeout=20)
+
+        assert reply["t"] == "err", reply
+        assert reply["error"]["kind"] == "NotSerializable", reply
+        # The message has to say what to do instead, or it is just a nicer hang.
+        assert "get_scene_thumbnail_png" in reply["error"]["message"], reply
+
+        # The whole point: the connection still works.
+        assert ws.call("cmd.count_atoms", "zz_ala") > 0
+        assert ws.call("cmd.get_names", "all") is not None
+    finally:
+        ws.call("cmd.scene", "zz_scene", "clear")
+        ws.call("cmd.delete", "zz_ala")

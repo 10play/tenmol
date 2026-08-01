@@ -23,7 +23,7 @@ import type { SceneRecord } from '@tenmol/protocol/topics/movie';
 import { useSession } from '../../app';
 import { useScenes } from './useScenes';
 import { SceneMenu } from './SceneMenu';
-import { reorder, sceneActions } from './sceneActions';
+import { renameProblem, reorder, sceneActions } from './sceneActions';
 import './scenes.css';
 
 export function ScenePanel() {
@@ -37,6 +37,16 @@ export function ScenePanel() {
   );
   const [dragging, setDragging] = useState<string | null>(null);
   const [browsing, setBrowsing] = useState(false);
+  /*
+   * `scene_bin_gui.py:360-377` rejects a blank or space-containing name by
+   * PRINTING to the console and silently reverting the cell. That is the one
+   * behaviour the inventory row explicitly asks not to be cloned: the user
+   * sees the name snap back with no reason given. The rejection is the same;
+   * the reason is visible.
+   */
+  const [renameError, setRenameError] = useState<string | null>(null);
+  /** Row index the pointer is currently over during a handle drag. */
+  const [dropAt, setDropAt] = useState<number | null>(null);
 
   useEffect(() => {
     for (const scene of payload.scenes) {
@@ -46,12 +56,46 @@ export function ScenePanel() {
   }, [payload.scenes, thumbs, loadThumb]);
 
   const commitRename = async (scene: SceneRecord) => {
-    const next = draft.trim();
+    // NOT trimmed before validating: " a b " is a name with spaces, and
+    // trimming first would silently accept the interior space.
+    const next = draft;
+    const reason = renameProblem(next, scene.name, payload.order);
+    if (reason !== null) {
+      setRenameError(reason);
+      return;
+    }
     setRenaming(null);
-    // scene_bin_gui.py rejects spaces and blank names.
-    if (!next || next === scene.name || /\s/.test(next)) return;
-    await run(sceneActions.rename(scene.name, next));
+    setRenameError(null);
+    if (next !== scene.name) await run(sceneActions.rename(scene.name, next));
   };
+
+  /**
+   * Finish a handle drag. Issues ONE `scene_order` for the whole move.
+   *
+   * A release anywhere that is not a row cancels — see the effect below — so
+   * dropping outside the list leaves the order untouched rather than sending
+   * the last hovered position.
+   */
+  const commitDrag = (index: number) => {
+    if (dragging === null) return;
+    const name = dragging;
+    setDragging(null);
+    setDropAt(null);
+    if (payload.order.indexOf(name) === index) return;
+    void run(sceneActions.order(reorder(payload.order, name, index)));
+  };
+
+  useEffect(() => {
+    if (dragging === null) return;
+    const cancel = () => {
+      setDragging(null);
+      setDropAt(null);
+    };
+    // Fires after the row's own onPointerUp, which has already cleared
+    // `dragging`; so this only runs when the release missed every row.
+    window.addEventListener('pointerup', cancel);
+    return () => window.removeEventListener('pointerup', cancel);
+  }, [dragging]);
 
   const onButtonDown = (scene: SceneRecord, event: React.MouseEvent) => {
     if (event.button === 1) {
@@ -150,24 +194,63 @@ export function ScenePanel() {
       </div>
 
       {/* --- the Scene Panel table -------------------------------------- */}
+      {/*
+        * `scene_bin_gui.py:150` puts this instruction under the table. Kept
+        * verbatim in meaning, reworded for what this panel actually does:
+        * upstream says "load into Workspace", which is Qt's word for recall.
+        */}
+      <p className="scpanel__hint">Double-click a row to recall that scene.</p>
       <div className="scpanel__rows">
         {payload.scenes.map((scene, index) => (
           <div
             className={`scrow${scene.current ? ' is-current' : ''}${
               selected === scene.name ? ' is-selected' : ''
-            }`}
+            }${dragging !== null && dropAt === index ? ' is-dropzone' : ''}`}
             key={scene.name}
             onDoubleClick={() => void run(sceneActions.recall(scene.name))}
             onClick={() => setSelected(scene.name)}
+            onPointerEnter={() => {
+              if (dragging !== null) setDropAt(index);
+            }}
+            onPointerUp={() => commitDrag(index)}
             role="presentation"
           >
+            {/*
+              * A REAL drag, not a click.
+              *
+              * This handle used to move the row up exactly one position per
+              * click, which is not what a drag handle claims to do — moving a
+              * scene from the end to the front of a ten-scene list took nine
+              * clicks and nine `scene_order` round trips.
+              *
+              * Pointer events with capture, the same primitive `AppShell`'s
+              * splitters use; no drag-and-drop library. `dropAt` is the row the
+              * pointer is over, and the reorder is issued once, on release.
+              */}
             <button
               type="button"
-              className="scrow__handle"
+              className={`scrow__handle${dragging === scene.name ? ' is-dragging' : ''}`}
               title="drag to reorder — cmd.scene_order"
-              onClick={() => {
-                const target = Math.max(0, index - 1);
-                void run(sceneActions.order(reorder(payload.order, scene.name, target)));
+              aria-label={`reorder ${scene.name}`}
+              onPointerDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setDragging(scene.name);
+                setDropAt(index);
+              }}
+              onPointerEnter={() => {
+                if (dragging !== null) setDropAt(index);
+              }}
+              onKeyDown={(event) => {
+                // Keyboard equivalent, because a pointer drag is not operable
+                // without a pointer.
+                const delta = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+                if (delta === 0) return;
+                event.preventDefault();
+                const target = Math.min(payload.order.length - 1, Math.max(0, index + delta));
+                if (target !== index) {
+                  void run(sceneActions.order(reorder(payload.order, scene.name, target)));
+                }
               }}
             >
               ⋮⋮
@@ -186,19 +269,32 @@ export function ScenePanel() {
 
             <div className="scrow__body">
               {renaming === scene.name ? (
-                <input
-                  className="scrow__rename"
-                  value={draft}
-                  autoFocus
-                  spellCheck={false}
-                  onChange={(event) => setDraft(event.target.value)}
-                  onBlur={() => void commitRename(scene)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') void commitRename(scene);
-                    if (event.key === 'Escape') setRenaming(null);
-                  }}
-                  aria-label="scene name"
-                />
+                <span className="scrow__renamewrap">
+                  <input
+                    className={`scrow__rename${renameError ? ' is-invalid' : ''}`}
+                    value={draft}
+                    autoFocus
+                    spellCheck={false}
+                    aria-invalid={renameError !== null}
+                    onChange={(event) => {
+                      setDraft(event.target.value);
+                      setRenameError(null);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') void commitRename(scene);
+                      if (event.key === 'Escape') {
+                        setRenaming(null);
+                        setRenameError(null);
+                      }
+                    }}
+                    aria-label="scene name"
+                  />
+                  {renameError !== null && (
+                    <span className="scrow__renameerr" role="alert">
+                      {renameError}
+                    </span>
+                  )}
+                </span>
               ) : (
                 <button
                   type="button"
