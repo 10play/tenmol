@@ -459,4 +459,48 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * Movie transport and scene recall. Both are camera/frame state that must
+     * round-trip through PyMOL, so both assert on backend state rather than on
+     * the control lighting up.
+     *
+     * Buttons are matched by TITLE: two of the nine are labelled `>` (play and
+     * forward), so matching on text picks play and the frame advances by
+     * however long the assertion waited.
+     */
+    name: 'movie transport steps frames and a scene recalls the camera',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+      await run(page, 'load test/dat/1tii.pdb, mv', 2400);
+      await run(page, 'mset 1 x30', 1400);
+      await run(page, 'frame 5', 1200);
+
+      await page.locator('button[title^="forward one frame"]').first().click();
+      await page.waitForTimeout(1200);
+      assert((await ask(page, 'cmd.get_frame()')) === '6', 'forward did not step exactly one frame');
+
+      await page.locator('button[title^="rewind"]').first().click();
+      await page.waitForTimeout(1200);
+      assert((await ask(page, 'cmd.get_frame()')) === '1', 'rewind did not return to frame 1');
+
+      // Scene recall ANIMATES by default, so a sample taken while the camera is
+      // still interpolating reads a value that is neither the old one nor the
+      // new one — this assertion first failed with 0.828 between 0.137 and the
+      // stored view. Disable the animation rather than sleeping and hoping.
+      await run(page, 'set scene_animation_duration, 0', 1000);
+      await run(page, 'scene S1, store', 1400);
+      const stored = await ask(page, 'round(cmd.get_view()[0], 3)');
+      await run(page, 'turn y, 60', 1200);
+      const turned = await ask(page, 'round(cmd.get_view()[0], 3)');
+      assert(turned !== stored, 'turn did not move the camera; the recall test would be vacuous');
+
+      await page.locator('.scpanel').getByText('S1', { exact: true }).first().click();
+      await page.waitForTimeout(1600);
+      const recalled = await ask(page, 'round(cmd.get_view()[0], 3)');
+      assert(recalled === stored, `scene recall did not restore the camera (${turned} -> ${recalled})`);
+      await page.close();
+    },
+  },
 ];
