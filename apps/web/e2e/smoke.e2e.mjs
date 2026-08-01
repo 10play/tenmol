@@ -703,4 +703,74 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * The Text Editor writing to the PyMOL host.
+     *
+     * This is the spec that would have caught the bug it now guards:
+     * `features/texteditor/files.ts` called `_bridge.read_text_file` and
+     * `_bridge.write_text_file`, and NEITHER ROUTE EXISTS. Every server open
+     * and save failed, the panel silently fell back to the browser file
+     * picker, and "edit your pymolrc in place" — the point of the feature —
+     * did nothing. Nothing failed loudly, so nothing noticed.
+     *
+     * Driving it through the UI is the whole value here: the panel only takes
+     * the server path if `probeServerFiles` succeeds, so this asserts the
+     * probe, the write and the read back through PyMOL in one go.
+     */
+    name: 'the text editor saves to a real file on the PyMOL host',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+
+      /*
+       * The editor is a HOSTED WINDOW, not an overlay panel: the `texteditor`
+       * slot renders whatever `useHostedWindows` lists, and windows are opened
+       * from the Dialogs panel. Clicking the overlay launcher labelled "Text
+       * editor" mounts the host with zero windows in it — which is what the
+       * first version of this spec did, and why it timed out on the textarea.
+       */
+      await page.getByRole('button', { name: 'Dialogs', exact: true }).click();
+      await page.waitForTimeout(800);
+      await page.locator('[data-open="texteditor"]').click();
+      await page.waitForTimeout(1500);
+
+      const area = page.locator('textarea.txted__area');
+      await area.waitFor({ state: 'visible', timeout: 10_000 });
+
+      // "bridge fs" means probeServerFiles found the route. Before the fix
+      // this read "browser fs" and every assertion below was unreachable.
+      const access = (await page.locator('.txted__access').first().innerText()).trim();
+      assert(access === 'bridge fs', `editor is not using the server fs (${access})`);
+
+      const body = '# tenmol e2e\nset sphere_scale, 0.42\n';
+      await area.fill(body);
+
+      const target = `${stack.tmp ?? '/tmp'}/tenmol-e2e-editor.pml`;
+      page.once('dialog', (dialog) => void dialog.accept(target));
+      await page.locator('[data-txted-saveas]').click();
+      await page.waitForTimeout(1500);
+
+      const shown = (await page.locator('.txted__path').first().innerText()).trim();
+      assert(shown === target, `path did not update after save (${shown})`);
+
+      // Read it back THROUGH PYMOL, not through the panel that wrote it.
+      const readBack = await ask(
+        page,
+        `open(${JSON.stringify(target)}).read().strip().splitlines()[-1]`,
+      );
+      assert(
+        readBack.includes('sphere_scale, 0.42'),
+        `the file on disk does not contain what was typed (${readBack})`,
+      );
+
+      // And it is really a file PyMOL can run.
+      await ask(page, `cmd.do("@" + ${JSON.stringify(target)}) or "ran"`);
+      await page.waitForTimeout(1200);
+      const applied = await ask(page, "cmd.get('sphere_scale')");
+      assert(applied.startsWith('0.42'), `running the saved script did nothing (${applied})`);
+
+      await page.close();
+    },
+  },
 ];

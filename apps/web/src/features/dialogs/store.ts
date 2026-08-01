@@ -77,7 +77,23 @@ export function dialogKey(kind: DialogKind, arg = ''): string {
 }
 
 export function createDialogsStore(): DialogsStore {
-  const store = createStore<DialogsState>({ windows: [], topZ: 10 });
+/*
+ * FLOOR FOR FLOATING WINDOWS.
+ *
+ * This was 10, so the first window opened at z-index 11 — BELOW the sequence
+ * viewer, which is `z-index: 20` because PyMOL draws the Seq block above the
+ * scene (`seqview.css`). With a sequence shown, the viewer covered a window's
+ * title bar and File/Save were unclickable. Caught by the text-editor e2e
+ * spec, where Playwright reported `.seqrow__line ... intercepts pointer
+ * events`; the CSS rule on `.dlgwin` could not fix it, because `DialogWindow`
+ * sets `zIndex` INLINE from this number and inline wins.
+ *
+ * 30 clears the viewport HUD (10) and the Seq block (20). Raising a window
+ * still increments from here, so relative order among windows is unchanged.
+ */
+const WINDOW_Z_FLOOR = 30;
+
+const store = createStore<DialogsState>({ windows: [], topZ: WINDOW_Z_FLOOR });
 
   const patch = (key: string, fn: (w: DialogWindowSpec) => DialogWindowSpec) =>
     store.set((s) => ({ windows: s.windows.map((w) => (w.key === key ? fn(w) : w)) }));

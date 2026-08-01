@@ -19,6 +19,7 @@
  * script the user edits can still be executed by PyMOL.
  */
 
+import { FILES_NS } from '@tenmol/protocol/topics/files';
 import type { Session } from '../../app';
 
 export type FileAccess = 'server' | 'browser';
@@ -31,19 +32,38 @@ export interface ReadResult {
 
 /** `_bridge.read_text_file(path) -> {path, text}` (WP-18). */
 export async function readServerFile(session: Session, path: string): Promise<ReadResult> {
-  const value = await session.call<{ path?: string; text?: string }>('_bridge.read_text_file', [
-    path,
-  ]);
+  /*
+   * WAS `_bridge.read_text_file`, which DOES NOT EXIST — measured, the bridge
+   * answers `no render route for '_bridge.read_text_file'`. Every attempt to
+   * open a file on the PyMOL host therefore failed and the panel silently fell
+   * back to the browser file picker, which cannot edit a pymolrc IN PLACE —
+   * the one thing this editor is for.
+   *
+   * `cmd.tenmol_files` is the file service that does exist: same work package,
+   * already policy-reachable as a three-segment `cmd.*` path, already
+   * bootstrapped by `filesApi.ensure()`.
+   */
+  const value = await session.call<{ path?: string; text?: string; ok?: boolean; error?: string | null }>(
+    `${FILES_NS}.read_text`,
+    [path],
+  );
+  if (value?.ok === false) throw new Error(value.error ?? `could not read ${path}`);
   return { path: value?.path ?? path, text: value?.text ?? '', access: 'server' };
 }
 
-/** `_bridge.write_text_file(path, text)` (WP-18). */
+/** `cmd.tenmol_files.write_text(path, text)` (WP-18). */
 export async function writeServerFile(
   session: Session,
   path: string,
   text: string,
 ): Promise<void> {
-  await session.call('_bridge.write_text_file', [path, text]);
+  const value = await session.call<{ ok?: boolean; error?: string | null }>(
+    `${FILES_NS}.write_text`,
+    [path, text],
+  );
+  // Errors are RETURNED rather than raised, so that the path that failed
+  // survives; turn that back into a throw for the panel's catch.
+  if (value?.ok === false) throw new Error(value.error ?? `could not write ${path}`);
 }
 
 /**
@@ -63,7 +83,10 @@ export const MISSING_ROUTE =
 
 export async function probeServerFiles(session: Session): Promise<boolean> {
   try {
-    await session.call('_bridge.read_text_file', ['']);
+    // An EMPTY path: the route exists and will simply dislike the argument,
+    // which is the distinction this probe is drawing. `read_text` returns its
+    // errors rather than raising, so a returned `ok:false` is a live route.
+    await session.call(`${FILES_NS}.read_text`, ['']);
     return true;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

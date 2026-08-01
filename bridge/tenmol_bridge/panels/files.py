@@ -1177,6 +1177,95 @@ class FilesAPI:
 
     # ------------------------------------------------------------ transfer
 
+    #: A script or an rc file is text a person typed. 8 MB is far past any of
+    #: those and far short of the download cap, which exists for `.pse` blobs.
+    MAX_TEXT_BYTES = 8 * 1024 * 1024
+
+    def read_text(self, path: str) -> Dict[str, Any]:
+        """Read a server file as text, for the script / pymolrc editor.
+
+        The editor used to call `_bridge.read_text_file`, which DOES NOT EXIST
+        (measured: `no render route for '_bridge.read_text_file'`), so opening
+        a file on the PyMOL host failed and the panel fell back to the browser
+        file picker — which cannot edit a pymolrc in place, the one thing that
+        row of the inventory is about.
+
+        Errors are RETURNED, not raised: the editor shows them in its own
+        status line next to the filename, and an exception would lose which
+        path failed by the time it reached the UI.
+        """
+        full = self.expand(path)
+        try:
+            size = os.path.getsize(full)
+        except OSError as exc:
+            return {"path": full, "ok": False, "text": "", "error": str(exc)}
+        if size > self.MAX_TEXT_BYTES:
+            return {
+                "path": full,
+                "ok": False,
+                "text": "",
+                "size": size,
+                "error": "%d bytes exceeds the %d byte text cap"
+                % (size, self.MAX_TEXT_BYTES),
+            }
+        try:
+            with open(full, "r", encoding="utf-8", errors="replace") as handle:
+                text = handle.read()
+        except OSError as exc:
+            return {"path": full, "ok": False, "text": "", "error": str(exc)}
+        return {
+            "path": full,
+            "ok": True,
+            "text": text,
+            "size": size,
+            "name": os.path.basename(full),
+            "error": None,
+        }
+
+    def write_text(self, path: str, text: str) -> Dict[str, Any]:
+        """Write a server file as text.
+
+        `errors="replace"` on the READ side means a binary file opened by
+        mistake comes back with U+FFFD in it; writing that back would corrupt
+        the file silently. So a write refuses if the target exists and is not
+        decodable as UTF-8 — the editor cannot have produced a faithful copy
+        of something it could not read.
+        """
+        full = self.expand(path)
+        if not full or os.path.isdir(full):
+            return {"path": full, "ok": False, "error": "not a writable path"}
+        if os.path.exists(full) and not self._is_utf8(full):
+            return {
+                "path": full,
+                "ok": False,
+                "error": (
+                    "refusing to overwrite %s: it is not UTF-8 text, so what "
+                    "the editor loaded is not a faithful copy of it"
+                    % os.path.basename(full)
+                ),
+            }
+        try:
+            with open(full, "w", encoding="utf-8") as handle:
+                handle.write(text)
+        except OSError as exc:
+            return {"path": full, "ok": False, "error": str(exc)}
+        return {
+            "path": full,
+            "ok": True,
+            "size": len(text.encode("utf-8")),
+            "name": os.path.basename(full),
+            "error": None,
+        }
+
+    @staticmethod
+    def _is_utf8(full: str) -> bool:
+        try:
+            with open(full, "rb") as handle:
+                handle.read(1024 * 1024).decode("utf-8")
+        except (OSError, UnicodeDecodeError):
+            return False
+        return True
+
     def download(self, path: str, max_bytes: int = 0) -> Dict[str, Any]:
         """Base64 a server file so the browser can save a copy.
 

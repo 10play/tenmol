@@ -848,3 +848,90 @@ def test_the_object_name_is_legalised_not_just_the_stem(installed, ws: WSClient)
     spaced = ws.call(NS + ".classify", "/tmp/my protein.pdb")
     assert spaced["prefix"] == "my protein"
     assert spaced["objectName"] == ws.call("cmd.get_legal_name", "my protein")
+
+
+# =========================================================================== #
+# Part 4 — the text editor's read / write
+#
+# `features/texteditor/files.ts` called `_bridge.read_text_file` and
+# `_bridge.write_text_file`. NEITHER EXISTS — measured, the bridge answers
+# `no render route for '_bridge.read_text_file'`. So "open a file on the PyMOL
+# host" failed every time and the panel fell back to the browser file picker,
+# which cannot edit a pymolrc IN PLACE — the one thing that inventory row is
+# about. These two methods are the route it now uses.
+# =========================================================================== #
+
+
+@pytest.mark.engine
+def test_the_old_bridge_routes_really_are_absent(ws: WSClient) -> None:
+    """Pinned so the replacement is not quietly redundant later."""
+    for fn in ("_bridge.read_text_file", "_bridge.write_text_file"):
+        reply = ws.call_reply(fn, "/etc/hostname")
+        assert reply["t"] == "err", fn
+        assert "no render route" in reply["error"]["message"], reply
+
+
+@pytest.mark.engine
+def test_text_round_trips_through_the_files_panel(installed, ws: WSClient, tmp_path):
+    target = str(tmp_path / "probe.pml")
+    body = "# tenmol\nbg_color grey20\nset sphere_scale, 0.4\n"
+
+    wrote = ws.call(NS + ".write_text", target, body)
+    assert wrote["ok"] is True, wrote
+    read = ws.call(NS + ".read_text", target)
+    assert read["ok"] is True and read["text"] == body, read
+    assert read["name"] == "probe.pml"
+
+
+@pytest.mark.engine
+def test_reading_a_missing_file_returns_the_error_rather_than_raising(installed, ws, tmp_path):
+    """The editor shows the message beside the filename; an exception loses it."""
+    read = ws.call(NS + ".read_text", str(tmp_path / "nope.pml"))
+    assert read["ok"] is False
+    assert read["text"] == ""
+    assert "No such file" in read["error"], read
+
+
+@pytest.mark.engine
+def test_writing_refuses_to_clobber_a_non_utf8_file(installed, ws: WSClient, tmp_path):
+    """The read side uses errors="replace", so a binary file loads with U+FFFD.
+
+    Writing that back would corrupt it silently — the editor never held a
+    faithful copy. So the write refuses instead.
+    """
+    binary = tmp_path / "blob.bin"
+    binary.write_bytes(bytes(range(256)))
+    path = str(binary)
+
+    # It "reads" — with replacement characters, which is the trap.
+    read = ws.call(NS + ".read_text", path)
+    assert read["ok"] is True and "�" in read["text"]
+
+    wrote = ws.call(NS + ".write_text", path, read["text"])
+    assert wrote["ok"] is False, "clobbered a binary file"
+    assert "not UTF-8" in wrote["error"], wrote
+    assert binary.read_bytes() == bytes(range(256)), "the file was modified anyway"
+
+
+@pytest.mark.engine
+def test_writing_refuses_a_directory(installed, ws: WSClient, tmp_path):
+    wrote = ws.call(NS + ".write_text", str(tmp_path), "x")
+    assert wrote["ok"] is False and "not a writable path" in wrote["error"]
+
+
+@pytest.mark.engine
+def test_the_empty_path_probe_answers_without_raising(installed, ws: WSClient):
+    """`probeServerFiles` sends '' to decide whether the route exists at all."""
+    reply = ws.call_reply(NS + ".read_text", "")
+    assert reply["t"] == "ok", reply
+    assert reply["result"]["ok"] is False
+
+
+@pytest.mark.engine
+def test_pymolrc_candidates_are_absolute_server_paths(installed, ws: WSClient):
+    """File ▸ Edit pymolrc — the list the editor offers when 2+ rc files exist."""
+    info = ws.call(NS + ".pymolrc")
+    assert isinstance(info["paths"], list)
+    assert os.path.isabs(info["home"]) and "~" not in info["home"]
+    for path in info["paths"]:
+        assert os.path.isabs(path), path
