@@ -12,9 +12,11 @@
  *   still (`render/framestream.py:1652`), which is the same image by the same
  *   renderer. So page 2 offers save, and says where the picture is instead of
  *   duplicating it into a second canvas.
- * - Clipboard IS offered now, by a different route. `cmd._copy_image` is a shim
- *   that raises NotImplementedError headlessly, and a browser cannot be handed
- *   a QImage anyway — so `cmd.tenmol_files.copy_image_png` returns the PRIOR
+ * - Clipboard IS offered now, by a different route. Upstream's `cmd._copy_image`
+ *   raises NotImplementedError by default; the bridge REPLACES it with a shim
+ *   that dispatches to a registered handler and returns None when there is
+ *   none (measured — it does not raise here). Either way a browser cannot be
+ *   handed a QImage — so `cmd.tenmol_files.copy_image_png` returns the PRIOR
  *   render as PNG bytes and the client writes them with
  *   `navigator.clipboard.write(new ClipboardItem(...))`. `prior=1` matters: it
  *   copies what is on screen instead of re-rendering, which for a ray trace
