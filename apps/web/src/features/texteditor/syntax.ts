@@ -166,3 +166,21 @@ export function defaultPymolrcPath(platform: string, home: string): string {
   if (platform.startsWith('win')) return `${home}\\pymolrc.pml`;
   return `${home}/.pymolrc`;
 }
+
+/**
+ * Is this path one of PyMOL's startup rc files?
+ *
+ * Matches what `invocation.get_user_config()` looks for: a basename that is or
+ * ends with `pymolrc`, optionally with a `.pml`/`.py`/`.pym` extension —
+ * `.pymolrc`, `pymolrc.pml`, `~/.pymolrc.py`.
+ *
+ * Used to gate the "restart to apply" note. pymolrc is consumed before the GUI
+ * exists, so editing it changes nothing in the running session; an editor that
+ * saves a file and visibly does nothing reads as broken. Matching too narrowly
+ * hides the warning on a real rc file, too broadly puts a restart banner on
+ * ordinary scripts — hence the tests either side of the line.
+ */
+export function isPymolrc(path: string): boolean {
+  const base = (path.split(/[\\/]/).pop() ?? '').toLowerCase();
+  return /(^|\.)pymolrc(\.(pml|py|pym))?$/.test(base);
+}

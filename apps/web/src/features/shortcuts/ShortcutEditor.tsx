@@ -160,6 +160,14 @@ export function ShortcutEditor({ onClose }: { onClose: () => void }) {
   }, [rows, setKey]);
 
   const save = useCallback(async (): Promise<void> => {
+    /*
+     * The 3-element list is not a convention, it is the file format:
+     * `~/.pymol/shortcuts_save.json` IS `cmd.shortcut_dict`, and at startup
+     * `save_shortcut.setkey_from_dict` replays element [2] — the user-defined
+     * command — skipping entries whose [2] is falsy. Saving a flat
+     * `{key: command}` would write a file that loads fine and then binds the
+     * key to `command[2]`, a single character.
+     */
     const payload: Record<string, [string, string, string]> = {};
     for (const row of rows) payload[row.key] = [row.command, row.description, row.userDefined];
     try {
@@ -167,9 +175,8 @@ export function ShortcutEditor({ onClose }: { onClose: () => void }) {
       setStatus('saved to ~/.pymol/shortcuts_save.json');
     } catch (error) {
       setStatus(
-        `Save failed: ${error instanceof Error ? error.message : String(error)} — the bridge ` +
-          'policy has no grant for pymol.save_shortcut (bridge/tenmol_bridge/policy/base.py ' +
-          'DEFAULT_ROOTS). Bindings set this session are live in PyMOL either way.',
+        `Save failed: ${error instanceof Error ? error.message : String(error)}. ` +
+          'Bindings set this session are live in PyMOL either way; only persistence failed.',
       );
     }
   }, [rows, session]);

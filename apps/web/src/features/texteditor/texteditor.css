@@ -145,3 +145,13 @@
 .tok--skipped {
   color: #8a8a8a;
 }
+
+/* "restart to apply" for pymolrc. It is read once, before the GUI exists, so a
+   save that visibly does nothing needs explaining rather than looking broken. */
+.txted__note {
+  padding: 3px 6px;
+  font-size: 11px;
+  color: #6a4a00;
+  background: #fff4d6;
+  border-top: 1px solid #e0cfa0;
+}

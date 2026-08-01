@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   defaultPymolrcPath,
+  isPymolrc,
   editorTitle,
   highlight,
   highlightPmlLine,
@@ -108,5 +109,32 @@ describe('Plain Text', () => {
   it('is genuinely unhighlighted — there is no syntax/plain.py upstream', () => {
     const lines = highlight('# not a comment here\nshow sticks', 'plain');
     expect(lines.every((tokens) => tokens.every((t) => t.kind === 'plain'))).toBe(true);
+  });
+});
+
+describe('isPymolrc', () => {
+  /*
+   * The note it gates is not cosmetic: pymolrc is consumed at startup, so a
+   * user who edits and saves it sees nothing happen. Matching too NARROWLY
+   * hides the warning on a real rc file; too broadly puts a "restart PyMOL"
+   * banner on ordinary scripts.
+   */
+  it('matches the rc files invocation.get_user_config() looks for', () => {
+    for (const path of [
+      '/home/a/.pymolrc',
+      '/home/a/.pymolrc.py',
+      '/home/a/.pymolrc.pml',
+      '/home/a/pymolrc',
+      '/home/a/pymolrc.pml',
+      'C:\\Users\\a\\pymolrc.py',
+    ]) {
+      expect(isPymolrc(path)).toBe(true);
+    }
+  });
+
+  it('does not claim an ordinary script needs a restart', () => {
+    for (const path of ['/home/a/setup.pml', '/home/a/run.py', '/home/a/notes.txt', '']) {
+      expect(isPymolrc(path)).toBe(false);
+    }
   });
 });

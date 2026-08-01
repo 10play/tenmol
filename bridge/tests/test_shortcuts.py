@@ -191,10 +191,20 @@ def test_shortcuts_round_trip_through_the_save_file(ws: WSClient) -> None:
     own `~/.pymol/shortcuts_save.json`, not a fixture.
     """
     before = ws.call("save_shortcut.load_shortcuts_dict")
-    probe = {"CTRL-A": "print('tenmol round trip')"}
+    # THE SHAPE MATTERS. The file is `cmd.shortcut_dict`, whose values are
+    # 3-element lists `[command, description, user_defined]`, and
+    # `setkey_from_dict` replays element [2] — not the whole value
+    # (`save_shortcut.py:57-62`). A flat `{key: "command"}` would survive this
+    # round trip perfectly and then, at the next startup, `"command"[2]` would
+    # be the character 'm': truthy, so PyMOL would silently bind the key to a
+    # one-letter command. An earlier version of this test saved exactly that.
+    probe = {"CTRL-A": ["print('a')", "user defined", "print('tenmol round trip')"]}
     try:
         ws.call("save_shortcut.save_shortcuts", probe)
-        assert ws.call("save_shortcut.load_shortcuts_dict") == probe
+        loaded = ws.call("save_shortcut.load_shortcuts_dict")
+        assert loaded == probe
+        # What startup will actually replay.
+        assert loaded["CTRL-A"][2] == "print('tenmol round trip')"
     finally:
         # Restore unconditionally. `before` is falsy both when the file is
         # absent and when it holds `{}`; writing `{}` back means "no saved
@@ -202,3 +212,27 @@ def test_shortcuts_round_trip_through_the_save_file(ws: WSClient) -> None:
         # leaving a test binding in the user's real ~/.pymol file.
         ws.call("save_shortcut.save_shortcuts", before or {})
         assert ws.call("save_shortcut.load_shortcuts_dict") == (before or {})
+
+
+def test_the_replayed_element_is_the_third_one(ws: WSClient) -> None:
+    """`setkey_from_dict` binds `value[2]`, and skips a falsy one.
+
+    `load_and_set` is NOT granted (it takes a `cmd` object no browser can
+    send), so the replay itself is not reachable from here. What IS assertable
+    is the contract the saved file must satisfy for that replay to work, and
+    that the editor's own payload satisfies it — `ShortcutEditor.save()` builds
+    `[command, description, userDefined]`, mirrored by a unit test beside it.
+    """
+    before = ws.call("save_shortcut.load_shortcuts_dict")
+    try:
+        # A binding the user cleared: `remove_unused` keeps it, replay skips it.
+        probe = {
+            "CTRL-A": ["orient", "default", "zoom"],
+            "CTRL-E": ["ray", "default", ""],
+        }
+        ws.call("save_shortcut.save_shortcuts", probe)
+        loaded = ws.call("save_shortcut.load_shortcuts_dict")
+        replayed = {k: v[2] for k, v in loaded.items() if v[2]}
+        assert replayed == {"CTRL-A": "zoom"}, replayed
+    finally:
+        ws.call("save_shortcut.save_shortcuts", before or {})

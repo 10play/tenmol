@@ -32,7 +32,7 @@ import {
   writeServerFile,
   type FileAccess,
 } from './files';
-import { editorTitle, highlight, syntaxForFilename } from './syntax';
+import { editorTitle, highlight, isPymolrc, syntaxForFilename } from './syntax';
 import './texteditor.css';
 
 const MODE_LABEL: Record<SyntaxMode, string> = {
@@ -247,6 +247,19 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
 
         {error && <div className="txted__error">{error}</div>}
         {!error && status && <div className="txted__status">{status}</div>}
+        {/*
+          * pymolrc is read ONCE, at startup (`invocation.get_user_config()` is
+          * consumed before the GUI exists), so editing it changes nothing in
+          * the running session. Qt does not say this and the inventory row
+          * asks for it: a file you edit and save, that visibly does nothing,
+          * reads as a broken editor.
+          */}
+        {isPymolrc(path) && (
+          <div className="txted__note" role="note">
+            pymolrc is read at startup — restart PyMOL to apply, or paste the
+            lines into the command line to try them now.
+          </div>
+        )}
 
         <div className="txted__editor" style={{ fontSize }}>
           <pre className="txted__pre" ref={preRef} aria-hidden="true">
