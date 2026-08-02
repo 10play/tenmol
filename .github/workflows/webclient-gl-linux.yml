@@ -72,8 +72,11 @@ on:
       - "packages/engine/setup.py"
   workflow_dispatch:
 
+# `github.event_name` is in the key on purpose: without it the push run
+# and the pull_request run for the same branch share a group and cancel
+# each other, which is why runs showed up as `cancelled` with no cause.
 concurrency:
-  group: gl-linux-${{ github.ref }}
+  group: gl-linux-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 env:

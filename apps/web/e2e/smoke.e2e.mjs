@@ -65,12 +65,38 @@ async function run(page, command, waitMs = 900) {
   await page.waitForTimeout(Math.round(waitMs * SCALE));
 }
 
-/** Evaluate a python expression and read the answer out of the console. */
-async function ask(page, expr) {
-  await run(page, `print("Q=", ${expr})`, 1100);
-  const text = await page.evaluate(() => document.body.innerText);
-  const all = [...text.matchAll(/Q= *([^\n]*)/g)];
-  return all.length ? all[all.length - 1][1].trim() : '?';
+/**
+ * Evaluate a python expression and read the answer out of the console.
+ *
+ * EVERY QUESTION IS TAGGED, and that is not decoration. This used to print a
+ * bare `Q=` and take the LAST match in the page body — so when the answer had
+ * not rendered yet, it silently returned the PREVIOUS question's answer.
+ *
+ * On this machine the reply always landed inside the fixed wait, so it never
+ * showed. On a GitHub runner it produced two different failures in the same
+ * spec on the same commit — one run green, one red — including an object-list
+ * assertion that failed while printing a CAMERA MATRIX, because the answer it
+ * compared belonged to the `view()` call before it. A test that reads the
+ * wrong answer is worse than one that times out: it fails somewhere else,
+ * intermittently, and blames the wrong code.
+ *
+ * Returns '?' when this question's own tag never appeared, which is a timeout
+ * and reads like one.
+ */
+let askSeq = 0;
+async function ask(page, expr, timeoutMs = 8000) {
+  const tag = `Q${++askSeq}`;
+  await run(page, `print("${tag}=", ${expr})`, 1100);
+  // Wait for THIS tag rather than a fixed sleep: the console renders the reply
+  // when it arrives, and how long that takes is the runner's business.
+  const deadline = Date.now() + timeoutMs * SCALE;
+  for (;;) {
+    const text = await page.evaluate(() => document.body.innerText);
+    const all = [...text.matchAll(new RegExp(`${tag}= *([^\n]*)`, 'g'))];
+    if (all.length) return all[all.length - 1][1].trim();
+    if (Date.now() > deadline) return '?';
+    await page.waitForTimeout(200);
+  }
 }
 
 /**

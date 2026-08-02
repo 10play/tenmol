@@ -75,8 +75,11 @@ on:
     paths-ignore: ["docs/**", "**/*.md"]
   workflow_dispatch:
 
+# `github.event_name` is in the key on purpose: without it the push run
+# and the pull_request run for the same branch share a group and cancel
+# each other, which is why runs showed up as `cancelled` with no cause.
 concurrency:
-  group: webclient-e2e-${{ github.ref }}
+  group: webclient-e2e-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 env:
