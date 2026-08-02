@@ -1467,10 +1467,24 @@ PyObject* extractDistLines(
 {
   auto I = reinterpret_cast<mirror::RepDistLines*>(rep);
 
+  /* `radius` and `linewidth` are deliberately NOT validated here.
+   *
+   * They are not layout evidence: RepDistDash/RepAngle/RepDihedral assign them
+   * only inside render() (layer2/RepDistDash.cpp:340), so on a NEVER-RENDERED
+   * rep — which is precisely the GL-free case this accessor exists for — they
+   * hold whatever the allocator left behind. The block below already knows
+   * this and reads the two settings instead.
+   *
+   * Validating them read uninitialised memory and called the result a layout
+   * mismatch. It passed on macOS/arm64, where the bytes happened to be 0.0,
+   * and failed on Linux/llvmpipe, where `linewidth` came back -nan:
+   *   DIAG ds=1 N=40(par=1) V=1 radfin=1 lwfin=0 rad=0 lw=-nan cgo=1
+   * i.e. every real layout check passed and only the uninitialised float
+   * rejected the rep. Mode G served no dashes, angles or dihedrals on Linux
+   * at all. The raw members are still reported as `rep_radius`/
+   * `rep_linewidth` below, so genuine drift stays visible. */
   const bool layout_ok = I->ds == ds && I->N >= 0 && (I->N % 2) == 0 &&
                          (I->N == 0 || I->V != nullptr) &&
-                         std::isfinite(I->radius) && std::isfinite(I->linewidth) &&
-                         I->radius >= 0.f && I->linewidth >= 0.f &&
                          cgoLooksSane(I->shaderCGO, G);
   if (!layout_ok) {
     return makeResult("layout-mismatch",
