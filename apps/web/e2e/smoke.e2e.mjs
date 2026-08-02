@@ -943,6 +943,9 @@ export const tests = [
       // 2. CTRL + left dragged onto another row — hover-activate: enable only
       // the row under the pointer, disabling the one it activated before.
       await gesture('m98a', { mods: ['Control'], to: 'm98b' });
+      // The hover-activate arrives as a drag, which on a software renderer
+      // lands well after the gesture returns. Poll the outcome.
+      await until(page, 'cmd.get_names("objects",1)', (v) => !v.includes('m98a'));
       const afterHover = await enabled();
       assert(
         afterHover.includes('m98b') && !afterHover.includes('m98a'),
@@ -1278,7 +1281,15 @@ export const tests = [
         });
 
       try {
+        // ISOLATE. All 21 specs share one PyMOL and the earlier ones leave
+        // their objects behind (ala, 1tii, obj01, mv, sq, cl, ip). The
+        // sequence viewer would be asked for every one of them, and 1tii
+        // alone is 6,058 columns — on a slow runner the 4 Hz poll never
+        // returned and the strip never rendered. This spec is about a layout
+        // rule, not about payload size.
+        await run(page, 'disable all', 700);
         await run(page, 'load packages/engine/test/dat/pept.pdb, p12seq', 2400);
+        await run(page, 'enable p12seq', 700);
         // ESTABLISH the baseline, do not assume it. All 21 specs share one
         // bridge and `seq_view` is a GLOBAL setting: the sequence-viewer spec
         // above turns it on and leaves it on, so this one arrived to a strip
