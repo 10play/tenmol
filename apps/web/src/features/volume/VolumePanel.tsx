@@ -17,6 +17,18 @@
  * gates DRAGS and colour-dialog previews and nothing else. Add, remove, wheel
  * and the end of every release push unconditionally. That asymmetry is
  * deliberate upstream and is reproduced here call for call.
+ *
+ * PULL DISCIPLINE — `volume_ramp_changed`. Qt's panel is not only a writer: it
+ * is REGISTERED in `colorramping._volume_windows_qt[name]`, and any other
+ * caller of `cmd.volume_color(name, ramp)` reaches into it with
+ * `panel.widget().editor.setColors(ramplist)` (`colorramping.py:170-179`) — so
+ * `volume_color vol, rainbow2` typed at the prompt, or the same leaf chosen in
+ * `A > volume`, redraws the open editor. That callback cannot exist here (see
+ * `menuBridge.ts`), so the same seam is a `watch(name)` on the bridge module
+ * plus an event: on mount this panel says "a window for `name` is open" and
+ * reloads whenever the engine reports the ramp changed under it. The editor's
+ * own pushes carry `_guiupdate: 0` and are filtered out server-side, exactly as
+ * Qt's are, so this never turns into a feedback loop.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -46,7 +58,15 @@ import {
   valueBoxPrompt,
   type RampView,
 } from './ramp';
-import { applyPreset, fetchHistogram, getRamp, listPresets, setRamp } from './service';
+import {
+  applyPreset,
+  fetchHistogram,
+  getRamp,
+  presetList,
+  setRamp,
+  type PresetList,
+} from './service';
+import { subscribeVolumeRamp, unwatchVolume, watchVolume } from './menuBridge';
 import './volume.css';
 
 type Modal =
@@ -78,14 +98,16 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   /**
-   * The named ramps, read live off `menu.vol_color` — which is where the
-   * internal `A > volume` submenu gets them. `BUILTIN_VOLUME_RAMPS` is the
-   * fallback for a backend that refuses the call, and the difference is shown
-   * rather than hidden.
+   * The named ramps, read live — from `cmd.tenmol_volume.ramps()` if the bridge
+   * has the volume module, else from `menu.vol_color`, which is where the
+   * internal `A > volume` submenu itself gets them. `BUILTIN_VOLUME_RAMPS` is
+   * the fallback for a backend that refuses both, and WHICH ONE ANSWERED is
+   * shown rather than hidden (`presetList`, `service.ts`).
    */
-  const [presets, setPresets] = useState<{ names: readonly string[]; live: boolean }>({
+  const [presets, setPresets] = useState<PresetList>({
     names: BUILTIN_VOLUME_RAMPS,
-    live: false,
+    source: 'constant',
+    extra: [],
   });
 
   /** The newest points/view, readable from a callback that closed over an old render. */
@@ -138,13 +160,8 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
       }
 
       // Live, and every reload: `volume_ramp_new` can add one at any time.
-      // A refusal is not an error for the panel — it just means the constant.
-      try {
-        const names = await listPresets(session, name);
-        if (names.length > 0) setPresets({ names, live: true });
-      } catch {
-        setPresets({ names: BUILTIN_VOLUME_RAMPS, live: false });
-      }
+      // A refusal is not an error for the panel — it just falls a tier.
+      setPresets(await presetList(session, name));
 
       const fetched = await fetchHistogram(session, name, flat);
       // `setHistogram` reverts to the CURRENT range when it sees a NaN, so the
@@ -166,6 +183,40 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  /**
+   * `_volume_windows_qt[name] = panel` on mount, `del` on unmount, and the
+   * `setColors` callback in between.
+   *
+   * `reloadRef` rather than `reload` in the dependency list: `reload` is a new
+   * function whenever the panel re-renders with a new session/name pair, and
+   * re-running this effect would `unwatch` and `watch` on the socket for every
+   * render. The subscription is registered once per window.
+   */
+  const reloadRef = useRef(reload);
+  reloadRef.current = reload;
+
+  /** Is the engine reporting changes for this name? Shown, never assumed. */
+  const [watched, setWatched] = useState(false);
+  /** How many reloads came from OUTSIDE this panel. Observable in the DOM. */
+  const [remoteReloads, setRemoteReloads] = useState(0);
+
+  useEffect(() => {
+    let live = true;
+    void watchVolume(session, name).then((ok) => {
+      if (live) setWatched(ok);
+    });
+    const off = subscribeVolumeRamp(name, () => {
+      setRemoteReloads((n) => n + 1);
+      void reloadRef.current();
+    });
+    return () => {
+      live = false;
+      off();
+      setWatched(false);
+      void unwatchVolume(session, name);
+    };
+  }, [session, name]);
 
   /* -------------------------------------------------------------- prompts */
 
@@ -290,20 +341,45 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
               <option value="">named ramp…</option>
               {presets.names.map((ramp) => (
                 <option key={ramp} value={ramp}>
-                  {ramp}
+                  {presets.extra.includes(ramp) ? `${ramp} *` : ramp}
                 </option>
               ))}
             </select>
           </label>
           <span
             className="volpanel__presetsrc"
-            data-volume-preset-source={presets.live ? 'menu.vol_color' : 'constant'}
+            data-volume-preset-source={presets.source}
+            data-volume-preset-extra={presets.extra.length}
+            title={
+              presets.source === 'constant'
+                ? 'the backend refused both live reads; this is the compiled-in list'
+                : `live read via ${presets.source}` +
+                  (presets.extra.length ? ` — * = registered by volume_ramp_new` : '')
+            }
           >
-            {presets.live ? 'live' : 'built-in list'}
+            {presets.source === 'constant' ? 'built-in list' : 'live'}
           </span>
           <button type="button" data-volume-reload="" onClick={() => void reload()}>
             Reload
           </button>
+          {/*
+            * Whether the engine is reporting outside changes for this name, and
+            * how many it has reported. `_volume_windows_qt` is invisible in Qt
+            * and a panel that has silently stopped tracking looks identical to
+            * one that is up to date; this is that state, shown.
+            */}
+          <span
+            className="volpanel__watch"
+            data-volume-watch={watched ? 'live' : 'off'}
+            data-volume-remote={remoteReloads}
+            title={
+              watched
+                ? 'the engine reports ramp changes made outside this panel (cmd.tenmol_volume.watch)'
+                : 'no volume_ramp_changed subscription: this panel only sees its own writes'
+            }
+          >
+            {watched ? `tracking${remoteReloads ? ` +${remoteReloads}` : ''}` : 'untracked'}
+          </span>
           <span className="volpanel__spacer" />
           <span className="volpanel__count" data-volume-count={points.length}>
             {points.length} stops

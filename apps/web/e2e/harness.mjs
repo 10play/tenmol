@@ -203,9 +203,19 @@ export async function startStack({ quiet = true, noGl = false } = {}) {
   }
 }
 
-/** Open the app. The bridge URL was already wired via VITE_TENMOL_WS_URL. */
-export async function openApp(stack, { query = '' } = {}) {
-  const page = await stack.browser.newPage({ viewport: { width: 1280, height: 900 } });
+/**
+ * Open the app. The bridge URL was already wired via VITE_TENMOL_WS_URL.
+ *
+ * `viewport` is overridable because the internal-gui column is a flex column
+ * and its panels SHRINK: measured at 1280x900 with six objects loaded,
+ * `.objpanel` is 36 px tall (its row list 19 px, scrollHeight 128) while
+ * `.mvpanel` takes 221 — so an object row is only reachable through a 19 px
+ * scroll window that any poll can reset. At 1280x1400 the same panel is 534 px
+ * and nothing scrolls. A spec about ROW BEHAVIOUR should not be a test of that
+ * squeeze; see the row-98 spec, which says so and still hit-tests every click.
+ */
+export async function openApp(stack, { query = '', viewport = { width: 1280, height: 900 } } = {}) {
+  const page = await stack.browser.newPage({ viewport });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${stack.url}${query}`, { waitUntil: 'networkidle' });

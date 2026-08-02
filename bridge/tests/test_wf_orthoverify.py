@@ -219,11 +219,16 @@ def test_the_progress_topic_ticks_at_10_Hz_with_nothing_happening(
         frame = ws._recv(0.3)
         if frame and frame.get("t") == "event" and frame.get("topic") == "progress":
             stamps.append(time.monotonic())
-            values.append(float(frame["payload"]["value"]))
+            values.append(float(frame["payload"]["fraction"]))
 
     # 1.2 s at 10 Hz is 12 frames; allow a wide margin for a loaded machine.
     assert len(values) >= 5, (values, stamps)
     assert all(v == -1.0 for v in values), values
-    assert set(ws.events[-1]["payload"]) == {"value"}, ws.events[-1]
+    # The declared shape (`topics/progress.ts`), which the server disagreed
+    # with in every field until wave 10 fixed `BridgeServer._on_status`.
+    assert set(ws.events[-1]["payload"]) == {"fraction", "busy", "abortable"}, (
+        ws.events[-1]
+    )
+    assert ws.events[-1]["payload"]["busy"] is False
     span = stamps[-1] - stamps[0]
     assert span / max(1, len(stamps) - 1) < 0.5, (span, len(stamps))

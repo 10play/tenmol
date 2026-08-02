@@ -55,6 +55,9 @@ __all__ = [
     "err_frame",
     "event_frame",
     "feedback_frame",
+    "progress_payload",
+    "TK_DIALOG_KIND",
+    "plugin_dialog_payload",
     "encode_binary_frame",
     "decode_binary_frame",
     "HEADER_ALIGNMENT",
@@ -196,6 +199,116 @@ def event_frame(topic: str, seq: int, payload: Any) -> Dict[str, Any]:
 
 def feedback_frame(lines: Iterable[Any]) -> Dict[str, Any]:
     return {"t": T_FEEDBACK, "lines": list(lines)}
+
+
+def progress_payload(progress: float) -> Dict[str, Any]:
+    """The ``progress`` topic payload.  Mirror of ``topics/progress.ts``.
+
+    THIS USED TO DISAGREE WITH THE DECLARED TYPE IN EVERY FIELD.  The server
+    emitted ``{"value": <float>}`` while ``ProgressPayload`` declared
+    ``{fraction, busy, label, abortable}`` — zero overlap, so a consumer that
+    trusted the type read ``undefined`` and the bar never moved.  (It worked
+    only because ``apps/web/src/app/session.ts`` read both names defensively
+    and said so in a comment.)  The type is the contract; this is the mirror.
+
+    ``label`` is **not** in the payload and was removed from the TypeScript
+    interface, because it cannot be filled honestly: the busy text lives in
+    ``I->BusyMessage`` and there is no accessor for it.  Measured on this build
+    (``bridge/tests/test_wf_ortho.py``): ``hasattr(cmd, 'get_busy')`` is False
+    while ``hasattr(pymol._cmd, 'get_busy')`` is True, and ``_cmd.get_busy``
+    answers a *flag*, not a string.  A field that is always ``''`` is worse
+    than no field.
+
+    ``busy`` is ``fraction >= 0``, which is Qt's own gate
+    (``pymol_qt_gui.py:931-939``: ``progress = int(cmd.get_progress()*100)``
+    then ``setVisible(progress >= 0)``).  The two spellings differ only for
+    ``-0.005 < fraction < 0`` and ``cmd.get_progress()`` returns exactly
+    ``-1.0`` when idle (measured across 82,015 samples, wave 8), so the
+    difference is unobservable.
+
+    ``abortable`` is ``busy`` on this backend, and that is a fact about the
+    backend rather than a redundant field: ``cmd.interrupt`` is "asynch -- no
+    locking" (``modules/pymol/locking.py:88``), so anything PyMOL reports
+    progress for can be interrupted while the engine thread is still inside the
+    C++ call.  The field exists so a producer that has a non-abortable job can
+    say so.
+    """
+    fraction = float(progress)
+    busy = fraction >= 0.0
+    return {"fraction": fraction, "busy": busy, "abortable": busy}
+
+
+#: ``mimic_tk``'s seven entry points -> the ``DialogKind`` vocabulary of
+#: ``packages/protocol/src/topics/dialog.ts``.  The exact entry point is kept
+#: alongside in ``entry`` — a plugin calling ``askopenfiles`` needs a list of
+#: handles back and ``askopenfilename`` a single string, which the *kind* does
+#: not distinguish and the *entry* does.
+TK_DIALOG_KIND: Dict[str, str] = {
+    "askopenfilename": "open-file",
+    "askopenfilenames": "open-file",
+    "askopenfile": "open-file",
+    "askopenfiles": "open-file",
+    "asksaveasfilename": "save-file",
+    "asksaveasfile": "save-file",
+    "askdirectory": "open-directory",
+}
+
+
+def plugin_dialog_payload(request: Mapping[str, Any], event: str) -> Dict[str, Any]:
+    """One ``dialog`` topic payload for a blocked plugin file dialog.
+
+    ``request`` is one row of ``DialogBroker.pending()``
+    (``panels/files.py``): ``{dialogId, kind, options, waitingFor}``, where
+    ``kind`` is the tkinter entry point.  ``event`` is ``'opened'`` or
+    ``'closed'`` — the second one matters because a dialog also disappears
+    when the blocked thread's 300 s timeout fires, and a UI that only ever
+    hears about openings leaves a dead picker on screen.
+    """
+    entry = str(request.get("kind") or "")
+    options = dict(request.get("options") or {})
+    # `BridgeFileDialog._payload` has already run tkinter's `filetypes` through
+    # `_getfilter`, byte-identical to `mimic_tk.py:37-48`, so what arrives is
+    # Qt filter strings: `['PDB (*.pdb)', 'All (*.*)']`.  `DialogPayload.filters`
+    # is declared as `[label, '*.pdb *.cif']` pairs, so split them back.
+    filters = [_split_filter(part) for part in options.get("filters") or ()]
+    payload: Dict[str, Any] = {
+        "dialogId": int(request.get("dialogId", 0)),
+        "kind": TK_DIALOG_KIND.get(entry, "open-file"),
+        "entry": entry,
+        "event": event,
+        "title": str(options.get("title") or entry or "File"),
+        "message": (
+            "a plugin's Python thread is blocked in %s" % entry
+            if event == "opened"
+            else "%s is no longer waiting" % entry
+        ),
+        "options": options,
+        "waitingFor": float(request.get("waitingFor", 0.0) or 0.0),
+    }
+    if filters:
+        payload["filters"] = filters
+    directory = options.get("initialdir")
+    if directory:
+        payload["directory"] = str(directory)
+    initial = options.get("initialfile")
+    if initial:
+        payload["initial"] = str(initial)
+    return payload
+
+
+def _split_filter(part: Any) -> list:
+    """``'PDB (*.pdb *.ent)'`` -> ``['PDB', '*.pdb *.ent']``.
+
+    A filter with no parentheses (nothing produces one today, but a plugin may
+    pass ``filetypes`` PyMOL never sees) becomes ``[text, '*']`` rather than
+    being dropped: a picker that silently shows no filter is worse than one
+    that shows a permissive one.
+    """
+    text = str(part)
+    open_at = text.rfind("(")
+    if open_at < 0 or not text.rstrip().endswith(")"):
+        return [text, "*"]
+    return [text[:open_at].strip(), text[open_at + 1 : text.rstrip().rfind(")")].strip()]
 
 
 # -- binary framing ---------------------------------------------------------

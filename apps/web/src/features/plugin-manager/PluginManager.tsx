@@ -14,6 +14,7 @@
 
 import { useState } from 'react';
 
+import { LegacyPlugins } from './LegacyPlugins';
 import { usePluginRegistry } from './usePluginRegistry';
 import {
   addPath,
@@ -24,7 +25,7 @@ import {
 } from './pluginSystem';
 import './plugin-manager.css';
 
-type Tab = 'installed' | 'settings' | 'paths';
+type Tab = 'installed' | 'legacy' | 'settings' | 'paths';
 
 const PLUGINSRC = '~/.pymolpluginsrc.py';
 
@@ -84,6 +85,11 @@ function Confirm({
 
 const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
   { id: 'installed', label: 'Installed Plugins' },
+  // Inventory row 76, option (b). Upstream's `initializePlugins` re-points the
+  // registry so `menudict['Plugin']` becomes a `Legacy Plugins` submenu of the
+  // menu bar; here it is a tab, because the browser's menu bar is generated
+  // from `pymol.menu` data and a plugin cannot mutate it.
+  { id: 'legacy', label: 'Legacy Plugins' },
   { id: 'settings', label: 'Settings' },
   { id: 'paths', label: 'Startup Paths' },
 ];
@@ -183,15 +189,18 @@ export function PluginManager() {
             startup the way the desktop app does.
           </p>
           <p className="plugmgr__note">
-            Enabling a <em>legacy</em> plugin does not make it appear anywhere. A legacy plugin
-            reaches the UI only through <code>plugins.addmenuitem</code>, which needs the Tk
-            <code> PMGApp</code> the bridge refuses to build, so it is a no-op here;{' '}
-            <code>addmenuitemqt</code> raises <code>QtNotAvailableError</code> because a PyQt window
-            would open on the server, not in this browser. PyMOL&rsquo;s own bundled plugins are
-            replaced by native panels (APBS, lighting settings) instead of being ported.
+            A legacy plugin reaches the UI through <code>plugins.addmenuitem</code>, and what it
+            registers is listed under <strong>Legacy Plugins</strong> — the bridge stands in as{' '}
+            <code>pymol._ext_gui</code> and records the menu instead of building a Tk one.{' '}
+            <code>addmenuitemqt</code> still raises <code>QtNotAvailableError</code>: that call
+            asserts the plugin opens a PyQt window, which would open on the server, not in this
+            browser. PyMOL&rsquo;s own bundled plugins are replaced by native panels (APBS,
+            lighting settings) instead of being ported.
           </p>
         </div>
       )}
+
+      {tab === 'legacy' && <LegacyPlugins />}
 
       {tab === 'settings' && (
         <div className="plugmgr__body">

@@ -199,6 +199,8 @@ class Engine:
                 self.p.idle()
             self.state = EngineState.HEADLESS
 
+        self._install_viewport_seam()
+
         try:
             version = self.cmd.get_version()
             self.pymol_version = str(version[0])
@@ -240,6 +242,142 @@ class Engine:
         self.ticks += 1
         self.last_tick_ms = (time.perf_counter() - t0) * 1000.0
         return did_work
+
+    # ------------------------------------------------- the `viewport` seam
+
+    def _install_viewport_seam(self) -> None:
+        """Make ``cmd.viewport(w, h)`` do something.  ``execapp`` parity.
+
+        THE DEFECT THIS CLOSES.  ``CmdViewport`` (``layer4/Cmd.cpp:4968``) ends
+        at ``PyMOL_NeedReshape(G->PyMOL, 2, 0, 0, w, h)``.  The bridge runs
+        ``no_gui=0`` so ``G->HaveGUI`` is true, and that branch only *stores*
+        the request in ``I->Reshape[]`` and raises ``ReshapeFlag``
+        (``layer5/PyMOL.cpp:2511-2557``) for the embedding application to
+        collect with ``PyMOL_GetReshapeInfo``.  Nothing collected it, so typing
+        ``viewport 640,480`` at the web prompt was a **silent no-op**: the
+        offscreen FBO, ``cmd.get_viewport()`` and every forwarded mouse
+        coordinate stayed where they were.
+
+        AND IT CANNOT BE COLLECTED.  ``PyMOL_GetReshape`` and
+        ``PyMOL_GetReshapeInfo`` are declared in ``layer5/PyMOL.h:294,300`` and
+        are **not wrapped anywhere in Python** — not in ``pymol2``, not in
+        ``_cmd``.  Draining the flag from the pump, which is what this row was
+        waiting for, would need a C++ change.  So the fix is the one upstream
+        itself uses instead: ``execapp`` does not drain the flag either, it
+        REPLACES the command (``pymol_qt_gui.py:1229-1231``,
+        ``commandoverloaddecorator`` at ``:1033-1038``) with one that resizes
+        the host window.  This is the same seam with the same two halves —
+        ``setattr(cmd, name, func)`` for the API and ``cmd.extend(func)`` for
+        the command language, because ``keywords.py:298`` captured the ORIGINAL
+        function object in ``cmd.keyword`` when PyMOL started and replacing the
+        attribute alone would leave the typed command line untouched.
+        """
+        if self.cmd is None:
+            return
+        engine = self
+
+        def viewport(width: Any = -1, height: Any = -1, _self: Any = None) -> None:
+            # Tuple syntax, deprecated upstream but still accepted
+            # (`viewing.py:1473-1478`): `viewport (640,480)` arrives as one
+            # string when it comes off the command line.
+            if isinstance(width, str) and str(height) == "-1":
+                try:
+                    parsed = engine.cmd.safe_eval(width)
+                except Exception:  # noqa: BLE001
+                    parsed = width
+                if isinstance(parsed, (tuple, list)) and len(parsed) == 2:
+                    # Kept verbatim, warning included (`viewing.py:1476-1477`):
+                    # it is what `get_viewport(3)` round-trips into.
+                    from pymol import colorprinting  # noqa: WPS433
+
+                    colorprinting.warning(
+                        " Warning: Tuple-syntax (parentheses) for viewport is "
+                        "deprecated"
+                    )
+                    width, height = parsed
+                else:
+                    width = parsed
+            width, height = int(width), int(height)
+            if threading.get_ident() != engine.thread_ident:
+                # Upstream's own off-thread rule (`viewing.py:1480-1482`): a
+                # plugin worker must not reshape, it must queue.  The queued
+                # line comes back through this same seam on the engine thread,
+                # because `cmd.extend` put it in the command language too.
+                engine.cmd.do("viewport %d,%d" % (width, height), 0)
+                return
+            engine.set_scene_size(width, height)
+
+        try:
+            viewport.__doc__ = getattr(self.cmd, "viewport").__doc__
+            self.cmd.viewport = viewport
+            # BOTH halves, as `commandoverloaddecorator` does. `cmd.extend`
+            # rebinds `cmd.keyword['viewport']` (`commanding.py:827-828`);
+            # without it the typed command line keeps the original function and
+            # only the Python API would have been fixed.
+            self.cmd.extend(viewport)
+        except Exception as exc:  # noqa: BLE001 - never fail the boot for this
+            log("could not install the cmd.viewport seam: %r" % (exc,))
+
+    def set_scene_size(self, width: int, height: int) -> Dict[str, int]:
+        """``PyMOLQtGUI.pymolviewport`` (``pymol_qt_gui.py:61-80``), transcribed.
+
+        ``viewport`` means "make the SCENE rectangle this big", not "make the
+        window this big": Qt reads the current viewport and resizes the WINDOW
+        by the difference, letting ``OrthoReshape`` take its own margins off
+        again.  That arithmetic is reproduced here rather than re-derived,
+        because deriving it means the internal-GUI width, ``(internal_feedback
+        - 1) * cOrthoLineHeight + cOrthoBottomSceneMargin``, ``SeqGetHeight``
+        and ``MovieGetPanelHeight`` — C constants with no Python accessor.
+
+        Three behaviours, all Qt's:
+
+        * ``w < 1 and h < 1`` — the bare ``viewport`` command, which is what
+          ``SettingGenerateSideEffects`` queues for ``internal_gui``,
+          ``internal_feedback``, ``movie_panel`` and four others
+          (``OrthoCommandIn(G, "viewport")``): FORCE a reshape at the current
+          window size.  The window keeps its size and the scene rectangle
+          absorbs the change — which is why ``set internal_feedback, 3`` takes
+          800x600 to 800x558 rather than growing the window.
+        * one dimension < 1 — the other is derived from the current ASPECT.
+        * both given — window += (requested scene - current scene).
+
+        ``fb_scale`` is 1 here and has no analogue: it is Qt's device-pixel
+        ratio between widget coordinates and the backing store, and the bridge
+        has no widget — the browser's own devicePixelRatio is applied on the
+        client, in the size it sends with ``{t:'input', kind:'reshape'}``.
+        """
+        self.assert_thread()
+        cw, ch = self._scene_size()
+        if height < 1 and width < 1:
+            self.resize(self.width, self.height)
+            return self._scene_report()
+        if height < 1:
+            height = int((width * ch) / max(1, cw))
+        if width < 1:
+            width = int((height * cw) / max(1, ch))
+        self.resize(
+            max(1, self.width + (width - cw)), max(1, self.height + (height - ch))
+        )
+        return self._scene_report()
+
+    def _scene_report(self) -> Dict[str, int]:
+        scene = self._scene_size()
+        return {
+            "width": scene[0],
+            "height": scene[1],
+            "windowWidth": self.width,
+            "windowHeight": self.height,
+        }
+
+    def _scene_size(self) -> tuple:
+        """``cmd.get_viewport()`` — the SCENE rectangle, margins already gone."""
+        try:
+            got = self.cmd.get_viewport()
+        except Exception:  # noqa: BLE001
+            return (self.width, self.height)
+        if not got or len(got) < 2:
+            return (self.width, self.height)
+        return (int(got[0]), int(got[1]))
 
     def resize(self, width: int, height: int) -> None:
         """Resize the offscreen surface and PyMOL's window in lockstep.

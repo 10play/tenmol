@@ -231,3 +231,39 @@
   margin: 2px 0 0 2px;
   max-width: 260px;
 }
+
+/*
+ * Diagnostics captured while a helper ran (inventory row 503 / B9).
+ *
+ * `flex: 0 0 auto` is deliberate even though the parent is a table cell: the
+ * panel is mounted inside a flex column overlay, and a block that computes its
+ * own height inside one gets shrunk to nothing by `flex-shrink`, at which point
+ * `overflow: hidden` clips it while it still reports a full bounding box —
+ * invisible AND click-swallowing. That exact shape broke an e2e spec once.
+ */
+.compute__diag {
+  flex: 0 0 auto;
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--fg-dim, #9aa);
+}
+
+.compute__diag > summary {
+  cursor: pointer;
+  color: var(--fg-dim, #9aa);
+}
+
+.compute__diaglines {
+  margin: 2px 0 0;
+  padding: 4px 6px;
+  max-height: 180px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--bg-sunken, #1b1f23);
+  border-radius: 2px;
+  color: var(--fg, #cdd);
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 10px;
+  line-height: 1.35;
+}

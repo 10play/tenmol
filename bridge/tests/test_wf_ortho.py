@@ -97,7 +97,7 @@ def timed_ray(ws: WSClient) -> Tuple[float, List[Tuple[float, float]]]:
         if frame is None:
             raise AssertionError("no reply to the ray")
         if frame.get("t") == "event" and frame.get("topic") == "progress":
-            samples.append((time.monotonic() - t0, float(frame["payload"]["value"])))
+            samples.append((time.monotonic() - t0, float(frame["payload"]["fraction"])))
         if frame.get("id") == msg_id and frame.get("t") in ("ok", "err"):
             reply = frame
             break
@@ -159,7 +159,7 @@ def test_progress_goes_back_to_MINUS_ONE_when_the_job_is_over(
     while time.monotonic() < deadline:
         frame = rayable._recv(0.3)
         if frame and frame.get("topic") == "progress":
-            idle = float(frame["payload"]["value"])
+            idle = float(frame["payload"]["fraction"])
             if idle < 0:
                 break
     assert idle is not None, "the progress topic stopped publishing"
@@ -280,19 +280,22 @@ def test_the_busy_MESSAGE_and_the_two_BARS_are_not_reachable_from_python(
     assert said[-1].strip() == "WFO_BUSY False True", said[-1]
 
 
-def test_the_progress_frame_on_the_wire_is_value_not_fraction(
+def test_the_progress_frame_on_the_wire_matches_the_type_that_declares_it(
     rayable: WSClient,
 ) -> None:
-    """A real disagreement between the type and the server, pinned.
+    """FIXED IN WAVE 10.  This test used to pin the disagreement.
 
-    `ProgressPayload` (`packages/protocol/src/topics/progress.ts`) declares
-    `{fraction, busy, label, abortable}`; `BridgeServer._on_status` emits
-    `{"value": <float>}` and nothing else.  `apps/web/src/app/session.ts:170`
-    already reads both defensively, which is why the bar works — but a client
-    that trusted the declared type would show 0% forever.
+    `ProgressPayload` (`packages/protocol/src/topics/progress.ts`) declared
+    `{fraction, busy, label, abortable}` while `BridgeServer._on_status` emitted
+    `{"value": <float>}` — zero overlapping field names, so anything reading the
+    declared type got `undefined`, and the only reason the bar ever moved is
+    that `apps/web/src/app/session.ts:170` read both and said so in a comment.
+    `server.py` was frozen for every wave that noticed.
 
-    Both files belong to other work packages (and `server.py` is frozen), so
-    this is REPORTED here rather than fixed.
+    Both sides now agree, and the agreement is one function,
+    `tenmol_bridge.session.progress_payload`. `label` was deleted rather than
+    faked: the busy text is `I->BusyMessage` and there is no accessor for it —
+    the test just above measures `hasattr(cmd, 'get_busy') == False`.
     """
     _, samples = timed_ray(rayable)
     assert samples, "no progress frame at all"
@@ -303,8 +306,25 @@ def test_the_progress_frame_on_the_wire_is_value_not_fraction(
         if frame.get("topic") == "progress"
     ]
     assert payloads, rayable.events[-3:]
-    assert set(payloads[-1]) == {"value"}, payloads[-1]
-    assert isinstance(payloads[-1]["value"], float)
+    assert set(payloads[-1]) == {"fraction", "busy", "abortable"}, payloads[-1]
+    assert isinstance(payloads[-1]["fraction"], float)
+
+    # A busy frame really did carry busy=True during the ray, so the flag is
+    # not merely present.
+    busy = [p for p in payloads if p["fraction"] >= 0.0]
+    assert busy, [p["fraction"] for p in payloads]
+    assert all(p["busy"] is True and p["abortable"] is True for p in busy)
+
+    # ...and it goes back to idle. Pumped for it rather than read off the last
+    # frame already collected: `timed_ray` returns on the ok reply, and the ray
+    # can still have been reporting when that arrived.
+    rayable.pump_frames(0.5)
+    last = [
+        frame["payload"]
+        for frame in rayable.events
+        if frame.get("topic") == "progress"
+    ][-1]
+    assert last == {"fraction": -1.0, "busy": False, "abortable": False}, last
 
 
 def test_a_plain_rpc_gets_no_answer_while_the_engine_is_busy(

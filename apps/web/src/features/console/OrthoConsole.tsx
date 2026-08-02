@@ -93,13 +93,26 @@ export function OrthoConsole() {
     return () => observer.disconnect();
   }, [host, store]);
 
-  const perform = useOrthoActions();
+  /**
+   * Bumped by every browser paste event. `useOrthoActions` reads it to decide
+   * whether its `cmd.paste()` fallback is still needed — see the `paste` case.
+   */
+  const pasteMark = useRef(0);
+  const perform = useOrthoActions(pasteMark);
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       const action = mapOrthoKey(event, store.get());
       if (action.kind === 'none') return;
-      event.preventDefault();
+      // CTRL-V IS THE ONE KEY THAT MUST KEEP ITS DEFAULT ACTION.
+      // `preventDefault()` on the keydown is exactly how a page BLOCKS pasting:
+      // it cancels the clipboard read, so the `paste` event below never fires
+      // and the only thing left is `cmd.paste()`, which cannot return text in a
+      // GUI-less engine (`externing.py:152-175` needs `machine_get_clipboard`,
+      // measured absent on this bridge). Preventing it here therefore made
+      // Ctrl-V a guaranteed no-op. `stopPropagation` stays: it does not affect
+      // the default action, and the viewport must not also see the chord.
+      if (action.kind !== 'paste') event.preventDefault();
       event.stopPropagation();
       void perform(action);
     },
@@ -131,11 +144,12 @@ export function OrthoConsole() {
       style={{ paddingBottom: ORTHO_BOTTOM_MARGIN }}
       onKeyDown={onKeyDown}
       onPaste={(event) => {
-        // `case 22` routes a non-empty line to `cmd.paste()`
-        // (`layer1/Ortho.cpp:1013-1024`). In a browser the clipboard text is
-        // right here in the event, so this IS that paste; the empty-line case
-        // is the `CTRL-V` chord and never produces an onPaste, because
-        // `orthoKeys` preventDefaults it.
+        // `case 22` routes a line that HAS TEXT ON IT to `cmd.paste()`
+        // (`layer1/Ortho.cpp:1013-1024`: `if (I->CurChar != I->PromptChar)`).
+        // In a browser the clipboard text is right here in the event, so this
+        // IS that paste. The empty-line case is the `CTRL-V` CHORD, which goes
+        // to `cmd._ctrl('V')` and wants no text at all.
+        pasteMark.current++;
         const text = event.clipboardData.getData('text/plain');
         if (!text) return;
         event.preventDefault();
@@ -241,7 +255,7 @@ function HiddenNote({ settings }: { settings: ConsoleSettings }) {
  * Actions
  * ------------------------------------------------------------------ */
 
-function useOrthoActions() {
+function useOrthoActions(pasteMark: React.RefObject<number>) {
   const session = useSession();
   const source = getConsoleSource();
   const store = source.store;
@@ -317,11 +331,21 @@ function useOrthoActions() {
           return;
         }
 
-        case 'paste':
-          // Reached only if the browser produced no clipboard event; ask
-          // PyMOL, exactly as `case 22` does.
+        case 'paste': {
+          // The keydown deliberately does NOT preventDefault, so the browser's
+          // own `paste` event is on its way — it is dispatched after the
+          // keydown handler returns, so give it one macrotask before deciding
+          // it is not coming.
+          const before = pasteMark.current;
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          if (pasteMark.current !== before) return; // the browser pasted for us
+          // No clipboard event (a synthetic key, or a browser that refused the
+          // read): ask PyMOL, exactly as `case 22` does. This is a NO-OP on
+          // this backend and is kept anyway, because a GUI-carrying engine
+          // still answers it.
           await session.call('cmd.paste').catch(() => undefined);
           return;
+        }
 
         case 'command':
           await session.run(action.line);

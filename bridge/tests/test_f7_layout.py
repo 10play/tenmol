@@ -615,22 +615,24 @@ def test_the_seven_layout_settings_share_one_side_effect_a_viewport_command() ->
     assert re.findall(r"case cSetting_(\w+):", block.group(1)) == list(LAYOUT_SETTINGS)
 
 
-def test_a_layout_setting_does_not_relayout_until_the_client_reshapes(
+def test_a_layout_setting_relayouts_immediately_now(
     gui_on: WSClient, gl_bridge: RunningBridge, dip: int
 ) -> None:
-    """MEASURED, twice over.  The row's "settings are not cosmetic", inverted.
+    """FIXED IN WAVE 10.  This test used to pin the staleness.
 
-    ``mouse_grid`` is a setting whose whole job is layout, and writing it
-    changes NOTHING until a reshape arrives:
+    ``mouse_grid`` is a setting whose whole job is layout, and writing it used
+    to change NOTHING until a reshape arrived: not one pixel of the column
+    moved, and a click at y=100 — inside the band ``mouse_grid`` had just
+    created — still missed the ButMode block.
 
-      * not one pixel of the column moves;
-      * a click at y=100 — inside the band ``mouse_grid`` is supposed to have
-        just created — still misses the ButMode block.
-
-    One ``{t:'input',kind:'reshape'}`` later, both flip.  ``OrthoCommandIn(G,
-    "viewport")`` queues ``viewport`` with no arguments, which ends in
-    ``PyMOL_NeedReshape`` (``layer5/PyMOL.cpp:2511-2536``) — a request to the
-    windowing system, and the bridge is not one.
+    ``OrthoCommandIn(G, "viewport")`` queues ``viewport`` with no arguments,
+    which ends in ``PyMOL_NeedReshape`` (``layer5/PyMOL.cpp:2511-2536``) — a
+    request to the windowing system, and the bridge was not one.  Qt is, and
+    what it does with the bare command is one line (``pymol_qt_gui.py:67-70``):
+    ``pw.pymol.reshape(w, h, True)`` at the CURRENT window size.
+    ``Engine._install_viewport_seam`` now does exactly that, so the relayout
+    happens on the write and there is no window in which the scene rectangle
+    and the canvas disagree.
     """
     ws = gui_on
     ws.call("cmd.set", "mouse_grid", 0)
@@ -641,48 +643,49 @@ def test_a_layout_setting_does_not_relayout_until_the_client_reshapes(
     ws.call("cmd.set", "mouse_grid", 1)
     settle(ws)
     assert int(ws.call("cmd.get_setting_int", "mouse_grid")) == 1, "the write itself was lost"
-    assert rows_differing(before, grab(gl_bridge), W - COLUMN * dip, W) == [], (
-        "the column redrew without a reshape"
+    assert rows_differing(before, grab(gl_bridge), W - COLUMN * dip, W) != [], (
+        "the column did NOT redraw; the viewport seam is gone"
     )
-    assert probe_column(ws, 100) == "none", "the ButMode block grew without a reshape"
+    assert probe_column(ws, 100) == "butmode-mode", "the ButMode block did not grow"
 
+    # ...and a reshape afterwards is idempotent, not a second correction.
     assert reshape(ws) == (W - COLUMN * dip, H)
     settle(ws)
-    assert rows_differing(before, grab(gl_bridge), W - COLUMN * dip, W) != []
     assert probe_column(ws, 100) == "butmode-mode"
 
 
-def test_internal_feedback_is_the_same_staleness_where_it_actually_hurts(
+def test_internal_feedback_no_longer_leaves_the_scene_42px_out_of_date(
     column: WSClient, dip: int
 ) -> None:
-    """MEASURED.  The one case in the seven a web client can trip over.
+    """FIXED IN WAVE 10.  The one case in the seven a web client trips over.
 
     ``internal_gui`` is held at 0 by the bridge and the React column is DOM, so
-    a stale ``mouse_grid`` costs nothing.  ``internal_feedback`` is different:
-    it takes a band off the bottom of the SCENE, and the scene rectangle is
-    what every forwarded mouse coordinate is expressed in.
+    a stale ``mouse_grid`` cost nothing.  ``internal_feedback`` is different: it
+    takes a band off the bottom of the SCENE, and the scene rectangle is what
+    every forwarded mouse coordinate is expressed in.  What used to happen::
 
         set internal_feedback, 3   -> cmd.get_viewport() still 800x600
         ... one reshape later      -> 800x558
 
-    A user typing that at the web prompt therefore gets a viewport that agrees
-    with the canvas until the next window resize, and then silently stops
-    agreeing by 42 px.  Pinned as the measured consequence; the fix (re-drive a
-    reshape when one of ``LAYOUT_SETTINGS`` changes) belongs to whoever owns the
-    canvas, and is REPORTED rather than smuggled in here.
+    i.e. a user typing that at the web prompt kept a viewport that agreed with
+    the canvas until the next window resize and then silently stopped agreeing
+    by 42 px.  The band is now taken on the write, which is Qt's own timing.
     """
     ws = column
     ws.call("cmd.set", "internal_gui", 0)
     ws.call("cmd.set", "internal_feedback", 0)
     assert reshape(ws) == (W, H)
 
+    band = (2 * BUTMODE_LINE + 18) * dip  # (n-1)*cOrthoLineHeight + cOrthoBottomSceneMargin
+    assert band == 42
+
     ws.call("cmd.set", "internal_feedback", 3)
     settle(ws)
-    assert viewport(ws) == (W, H), "the scene rectangle moved without a reshape"
+    assert viewport(ws) == (W, H - band), "the scene rectangle did not move on the write"
 
-    band = (2 * BUTMODE_LINE + 18) * dip  # (n-1)*cOrthoLineHeight + cOrthoBottomSceneMargin
+    # The reshape that used to be the ONLY thing that applied it now finds
+    # nothing left to do.
     assert reshape(ws) == (W, H - band)
-    assert band == 42
 
 
 def test_a_layout_setting_emits_nothing_on_the_geometry_topic_and_a_rep_one_does(

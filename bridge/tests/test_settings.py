@@ -248,8 +248,15 @@ def test_catalogue_says_where_defaults_came_from(catalogue: Dict[str, Any]) -> N
 
 
 def test_a_header_that_disagrees_is_rejected_wholesale(monkeypatch: Any, bridge: Any) -> None:
-    """A stale header must produce NO defaults, never wrong ones."""
+    """A stale header must produce NO defaults, never wrong ones.
+
+    BOTH deliveries have to be removed since wave 10: defaults now arrive from
+    the build-time asset (``panels/setting_catalog.json``) when it is present
+    and from the header only otherwise, so hiding the header alone no longer
+    hides the data.  The claim under test is unchanged — no source, no defaults.
+    """
     monkeypatch.setattr(S, "setting_info_path", lambda: None)
+    monkeypatch.setattr(S, "asset_path", lambda: None)
     built = bridge.pump.call(
         lambda engine: S.catalogue(engine.cmd, refresh=True), label="test:catalogue-nohdr"
     )

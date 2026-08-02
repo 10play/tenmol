@@ -647,9 +647,17 @@ describe('bond-level settings are the ones cmd.set cannot reach', () => {
 describe('a setting write is not cosmetic (row 209)', () => {
   /** A session with just the four members `getSettingsService` touches. */
   function fakeSession(backend: ReturnType<typeof fakeBackend>) {
+    // `on`/`sub` are not decoration: `getSettingsService` subscribes to the
+    // `settings` topic on construction (wave 10 — the push that replaced the
+    // 200 ms poll lag). A stub without them would make every test here throw.
     return {
       call: backend.call as never,
-      conn: { do: backend.run, isOpen: true },
+      conn: {
+        do: backend.run,
+        isOpen: true,
+        on: vi.fn(() => () => undefined),
+        sub: vi.fn(() => Promise.resolve()),
+      },
       poller: { kick: vi.fn() },
       stores: {},
     } as unknown as Parameters<typeof getSettingsService>[0];

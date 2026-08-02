@@ -18,13 +18,15 @@
  *    it should have been.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { PanelMenuNode } from '@tenmol/protocol';
 import type { SceneRecord } from '@tenmol/protocol/topics/movie';
 import { useSession } from '../../app';
+import { RowMenu } from '../objects/RowMenu';
 import { useScenes } from './useScenes';
 import { SceneMenu } from './SceneMenu';
 import { ViewList } from './ViewList';
-import { renameProblem, reorder, sceneActions } from './sceneActions';
+import { dragOrder, encodeMenu, renameProblem, reorder, sceneActions } from './sceneActions';
 import { layoutSceneButtons } from './sceneButtonGeometry';
 import './scenes.css';
 
@@ -34,11 +36,34 @@ export function ScenePanel() {
   const [selected, setSelected] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
-  const [menuFor, setMenuFor] = useState<{ name: string; at: { x: number; y: number } } | null>(
-    null,
-  );
+  /**
+   * The strip's right-click popup: `pymol.menu.scene_menu`'s OWN entries.
+   *
+   * `items` is null until the call answers, so the popup renders its loading
+   * state rather than a table this file made up.
+   */
+  const [menuFor, setMenuFor] = useState<{
+    name: string;
+    at: { x: number; y: number };
+    items: readonly PanelMenuNode[] | null;
+    error: string | null;
+  } | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
-  const [browsing, setBrowsing] = useState(false);
+  /**
+   * `CScene::Pressed` + `CScene::PressMode` for the button strip.
+   *
+   * A REF, not state, and that is load-bearing rather than a style choice.
+   * These are plain fields on `CScene` and they are read by the very next
+   * event: `mousedown` writes them and `mouseup` reads them. React state
+   * updates are batched, so under any batching boundary — `act()` in a test, a
+   * transition, two events delivered in one task — the release would read the
+   * PREVIOUS value and the click would do nothing. Two existing tests dispatch
+   * both events inside one `act()` and caught exactly that.
+   *
+   * `dragIndex` below is the render-visible half, set only while dragging.
+   */
+  const press = useRef<{ index: number; mode: 1 | 2 | 3 | 4 } | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
   /*
    * `scene_bin_gui.py:360-377` rejects a blank or space-containing name by
    * PRINTING to the console and silently reverting the cell. That is the one
@@ -161,6 +186,23 @@ export function ScenePanel() {
     void run(sceneActions.order(reorder(payload.order, name, index)));
   };
 
+  /*
+   * A strip press that ends anywhere but on a button.
+   *
+   * `SceneRelease` clears `Pressed`/`Over`/`PressMode` unconditionally — the
+   * per-button branches only decide whether anything is EMITTED. Without this,
+   * releasing off the strip left the machine armed and the next hover over a
+   * button reordered the list with no button held down.
+   */
+  useEffect(() => {
+    const clear = () => {
+      press.current = null;
+      setDragIndex(null);
+    };
+    window.addEventListener('mouseup', clear);
+    return () => window.removeEventListener('mouseup', clear);
+  }, []);
+
   useEffect(() => {
     if (dragging === null) return;
     const cancel = () => {
@@ -173,37 +215,121 @@ export function ScenePanel() {
     return () => window.removeEventListener('pointerup', cancel);
   }, [dragging]);
 
-  const onButtonDown = (scene: SceneRecord, event: React.MouseEvent) => {
+  /**
+   * `MenuActivate1Arg(G, x, y + 20, ..., "scene_menu", name)`
+   * (`SceneMouse.cpp:1119-1125`).
+   *
+   * The entries are fetched, not written here: `menu.scene_menu(None, name)`
+   * over the ordinary call path. `self_cmd` is unused by that function
+   * (`menu.py:1842-1849` only formats strings), which is why `null` is a legal
+   * first argument — the same shape `features/volume` uses for
+   * `menu.vol_color`.
+   */
+  const openSceneMenu = useCallback(
+    (name: string, x: number, y: number) => {
+      setMenuFor({ name, at: { x, y: y + 20 }, items: null, error: null });
+      void session
+        .call<unknown>('menu.scene_menu', [null, name])
+        .then((raw) => {
+          const items = encodeMenu(raw);
+          setMenuFor((open) => (open && open.name === name ? { ...open, items } : open));
+        })
+        .catch((error: unknown) => {
+          const text = error instanceof Error ? error.message : String(error);
+          setMenuFor((open) =>
+            open && open.name === name ? { ...open, items: [], error: text } : open,
+          );
+        });
+    },
+    [session],
+  );
+
+  /* ------------------------------------------------------------------ *
+   * The strip's mouse machine — `SceneClickSceneButton` (`SceneMouse.cpp:178`),
+   * `SceneDrag` (`:1233`) and `SceneRelease` (`:1076`).
+   *
+   * It is a four-state machine and the states are PyMOL's `PressMode`:
+   *
+   *   1  LEFT pressed      recall on RELEASE, and only over the same button
+   *   2  MIDDLE pressed    "rapid browse": recall on the PRESS and again on
+   *                        every button dragged over, Ctrl forcing animate=0
+   *   3  RIGHT pressed     drag to reorder, or — released without moving —
+   *                        `pymol.menu.scene_menu`
+   *   4  dragging          reached from 3 only, one `scene_order` per row
+   *                        crossed
+   *
+   * WHAT THIS REPLACES, and why it was wrong: the strip used to start a drag
+   * on the LEFT button and open a hand-written rename/update/delete popup on
+   * the right. Both buttons did the other one's job, and the popup was three
+   * buttons this file invented rather than `menu.py:1842`.
+   *
+   * State 4 is reachable only from 3 because of a deliberate C fallthrough:
+   * `case 2:` sets `I->Pressed = I->Over` before falling into `case 3:`, whose
+   * test is `Pressed != Over` — false by construction. Middle-drag browses; it
+   * never reorders.
+   */
+  const onButtonDown = (scene: SceneRecord, index: number, event: React.MouseEvent) => {
     if (event.button === 1) {
       event.preventDefault();
-      setBrowsing(true);
-      void run(event.ctrlKey ? sceneActions.browse(scene.name) : sceneActions.recall(scene.name));
+      press.current = { index, mode: 2 };
+      // The press itself recalls, unless this scene is already current — the
+      // `cur_name && elem.name != cur_name` guard at `SceneMouse.cpp:200-205`.
+      if (scene.name !== payload.current) {
+        void run(
+          event.ctrlKey ? sceneActions.browse(scene.name) : sceneActions.recall(scene.name),
+        );
+      }
       return;
     }
-    if (event.button === 0) setDragging(scene.name);
-  };
-
-  const onButtonEnter = (scene: SceneRecord) => {
-    if (browsing) void run(sceneActions.browse(scene.name));
-  };
-
-  const onButtonUp = (scene: SceneRecord, event: React.MouseEvent) => {
-    setBrowsing(false);
     if (event.button === 2) {
       event.preventDefault();
-      setMenuFor({ name: scene.name, at: { x: event.clientX, y: event.clientY } });
+      press.current = { index, mode: 3 };
       return;
     }
-    if (event.button !== 0) return;
-    if (dragging && dragging !== scene.name) {
-      const index = payload.order.indexOf(scene.name);
-      void run(sceneActions.order(reorder(payload.order, dragging, index)));
-      setDragging(null);
+    if (event.button === 0) press.current = { index, mode: 1 };
+  };
+
+  const onButtonEnter = (scene: SceneRecord, index: number, event: React.MouseEvent) => {
+    const state = press.current;
+    if (state === null || index === state.index) return;
+    if (state.mode === 2) {
+      if (scene.name !== payload.current) {
+        void run(
+          event.ctrlKey ? sceneActions.browse(scene.name) : sceneActions.recall(scene.name),
+        );
+      }
+      press.current = { index, mode: 2 };
       return;
     }
-    setDragging(null);
-    setSelected(scene.name);
-    void run(sceneActions.recall(scene.name));
+    if (state.mode === 3 || state.mode === 4) {
+      const action = dragOrder(payload.order, state.index, index);
+      if (action) void run(action);
+      press.current = { index, mode: 4 };
+      setDragIndex(index);
+    }
+  };
+
+  const onButtonUp = (scene: SceneRecord, index: number, event: React.MouseEvent) => {
+    const state = press.current;
+    press.current = null;
+    setDragIndex(null);
+    if (state === null) return;
+    if (state.mode === 1 && event.button === 0) {
+      // `I->Over == I->Pressed` — a left press that wandered off recalls nothing.
+      if (index !== state.index) return;
+      setSelected(scene.name);
+      void run(sceneActions.recall(scene.name));
+      return;
+    }
+    if (state.mode === 2 && event.button === 1) {
+      if (scene.name !== payload.current) void run(sceneActions.recall(scene.name));
+      return;
+    }
+    if (state.mode === 3 && event.button === 2) {
+      // No drag happened, so this is the menu, at the press point + 20 px the
+      // way `MenuActivate1Arg(G, x, y + 20, ...)` offsets it.
+      openSceneMenu(scene.name, event.clientX, event.clientY);
+    }
   };
 
   return (
@@ -303,6 +429,11 @@ export function ScenePanel() {
         )}
         {visibleScenes.map((scene, index) => {
           const box = layout?.shown ? layout.buttons[index] : undefined;
+          // The index the C machine reasons about is the SCENE ORDER's, not
+          // this map's: `NSkip` rows may be scrolled past, and a drag that
+          // computed `scene_order` from the on-screen position would move the
+          // wrong scene the moment the strip was scrolled.
+          const orderIndex = payload.order.indexOf(scene.name);
           return (
             <button
               key={scene.name}
@@ -310,7 +441,7 @@ export function ScenePanel() {
               className={
                 'scbar__btn' +
                 (scene.current ? ' is-current' : '') +
-                (dragging === scene.name ? ' is-dragging' : '') +
+                (dragIndex === orderIndex ? ' is-dragging' : '') +
                 (box?.truncated ? ' is-truncated' : '')
               }
               title={scene.message || scene.name}
@@ -330,9 +461,9 @@ export function ScenePanel() {
                     }
                   : undefined
               }
-              onMouseDown={(event) => onButtonDown(scene, event)}
-              onMouseEnter={() => onButtonEnter(scene)}
-              onMouseUp={(event) => onButtonUp(scene, event)}
+              onMouseDown={(event) => onButtonDown(scene, orderIndex, event)}
+              onMouseEnter={(event) => onButtonEnter(scene, orderIndex, event)}
+              onMouseUp={(event) => onButtonUp(scene, orderIndex, event)}
               onContextMenu={(event) => event.preventDefault()}
             >
               {box ? box.label : scene.name}
@@ -520,48 +651,32 @@ export function ScenePanel() {
       />
 
       {menuFor && (
-        <div
-          className="scpopup__scrim"
-          onClick={() => setMenuFor(null)}
-          role="presentation"
-        >
-          <div
-            className="scpopup"
-            style={{ left: menuFor.at.x, top: menuFor.at.y }}
-            onClick={(event) => event.stopPropagation()}
-            role="menu"
-          >
-            <div className="scpopup__head">Scene {menuFor.name}</div>
-            <button
-              type="button"
-              onClick={() => {
-                setDraft(menuFor.name);
-                setRenaming(menuFor.name);
-                setMenuFor(null);
-              }}
-            >
-              rename
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                void run(sceneActions.update(menuFor.name));
-                setMenuFor(null);
-              }}
-            >
-              update
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                void run(sceneActions.clear(menuFor.name));
-                setMenuFor(null);
-              }}
-            >
-              delete
-            </button>
-          </div>
-        </div>
+        /*
+          * `pymol.menu.scene_menu`, rendered by the SAME popup the object panel
+          * and the sequence viewer use — `MenuActivate*` is one entry point in
+          * the C, so there is one renderer here too. The three leaves are
+          * PyMOL's own command strings (`cmd.wizard("renaming",...)`,
+          * `cmd.scene(...,"update")`, `cmd.scene(...,"delete")`) and they go
+          * out as `{t:'do'}`, which is what `PopUp.cpp:471-475` does with them.
+          */
+        <RowMenu
+          title={`Scene ${menuFor.name}`}
+          op="A"
+          menuName="scene_menu"
+          items={menuFor.items ?? []}
+          loading={menuFor.items === null}
+          error={menuFor.error}
+          anchor={menuFor.at}
+          onPick={(command) => {
+            setMenuFor(null);
+            void session.run(command);
+            void refresh();
+          }}
+          onExpand={() => {
+            /* `scene_menu` is three leaves and two separators; nothing is lazy. */
+          }}
+          onClose={() => setMenuFor(null)}
+        />
       )}
     </div>
   );

@@ -37,8 +37,12 @@ export function bindConnection(
   options: BindConnectionOptions = {},
 ): ViewportTransport {
   const transport: ViewportTransport = {
-    input(message): void {
-      connection.sendInput(message);
+    input(message): boolean {
+      // The answer is forwarded, not swallowed: `sendInput` returns false and
+      // DROPS the frame while the socket is not open (`connection.ts:327-331`),
+      // and `input/mouse.ts` needs to know so it can abandon the gesture
+      // instead of delivering its drags and its release without the press.
+      return connection.sendInput(message);
     },
     call(fn, args = [], kwargs = {}): Promise<unknown> {
       return connection.call(fn, args, kwargs);

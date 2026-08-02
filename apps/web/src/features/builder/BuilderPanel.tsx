@@ -30,10 +30,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   BuilderActionKind,
+  BuilderPickMode,
   BuilderSculptTick,
   BuilderState,
   BuilderTables,
 } from '@tenmol/protocol/topics/builder';
+import { registerPickRoute } from './viewportPicking';
 import { errorText, useSession } from '../../app';
 import { createBuilderController, pickHint } from './controller';
 import {
@@ -62,6 +64,15 @@ type NucTab = 'DNA' | 'RNA';
 
 /** Anyone can open the Builder: `window.dispatchEvent(new Event(OPEN_EVENT))`. */
 export const OPEN_EVENT = 'tenmol:open-builder';
+
+/**
+ * The two wizards that force the mouse into BOND picking on activation —
+ * `cmd.button('single_left','none','PkBd')` (`builder.py:514-563,700-740`).
+ * There is no getter for the button table (`ButModeGet` is declared at
+ * `layer1/ButMode.h:225` and never bound in `layer4/Cmd.cpp`), so the armed
+ * wizard's class name IS the state, and `builder_state` already carries it.
+ */
+const BOND_PICK_WIZARDS = new Set(['ValenceWizard', 'UnbondWizard']);
 
 export function BuilderPanel() {
   const session = useSession();
@@ -149,13 +160,16 @@ export function BuilderPanel() {
   }, [open, controller, apply]);
 
   /**
-   * THE SCULPTING LOOP.
+   * THE SCULPTING READOUT.
    *
-   * `sculpting 1` does nothing on this backend by itself: PyMOL sculpts from
-   * its idle handler (`layer5/PyMOL.cpp:2424`) and the bridge pump draws
-   * without idling. So while the flag is on, the panel drives
-   * `cmd.builder_sculpt_tick` — the same gate, object set and cycle count the
-   * C idle loop uses — and the moved atoms arrive through the pixel stream.
+   * `sculpting 1` is enough on this backend: the pump's tick calls
+   * `PyMOL_Idle` (`bridge/tenmol_bridge/engine.py:236`), which is where
+   * `ExecutiveSculptIterateAll` lives (`layer5/PyMOL.cpp:2424`), so the engine
+   * minimises on its own — 0.6843 A of drift in 2.0 s with no client attached,
+   * measured in `bridge/tests/test_p10_viewport.py`. The panel therefore POLLS
+   * `cmd.builder_sculpt_tick` with 0 cycles while the flag is on, purely to
+   * show the strain converging; the moved atoms arrive on the pixel stream and
+   * on the 4 Hz geometry diff exactly as any other engine-side change does.
    */
   const ticker = useMemo(
     () =>
@@ -180,6 +194,64 @@ export function BuilderPanel() {
   }, [open, ticker, state?.settings.sculpting]);
 
   useEffect(() => () => ticker.stop(), [ticker]);
+
+  /**
+   * VIEWPORT CLICKS. `SceneClick` routes a click by the ButMode action, so in
+   * EDITING mode the pixel that would select `sele` fills `pk1..pk4` instead
+   * (`layer1/SceneMouse.cpp:404-470`). The client had no such branch: the
+   * viewport turned every GL-free pick into `cmd.select` and the Builder's
+   * `controller.pick()` was reachable only from a test. This is that branch.
+   *
+   * `stateRef` rather than `state`: the route must see the LATEST wizard and
+   * mouse mode without being torn down and re-registered 4 Hz with the poll.
+   */
+  const stateRef = useRef<BuilderState | null>(null);
+  stateRef.current = state;
+
+  useEffect(() => {
+    if (!open) return;
+    return registerPickRoute((hit) => {
+      const current = stateRef.current;
+      // Not in editing mode: this click means "select", which is exactly what
+      // the viewport does by itself. Leave it alone.
+      if (current === null || !current.mouse.editing) return false;
+      const wantsBond =
+        current.wizard !== null && BOND_PICK_WIZARDS.has(current.wizard.name);
+      if (wantsBond && hit.index2 === null) {
+        // Armed for a bond and the click landed on something that identifies
+        // ONE atom (a sphere, a surface triangle). Consume it anyway: falling
+        // through would rewrite `sele` while the user is trying to pick a bond.
+        setError(
+          'pick a BOND: that click resolved to a single atom — only sticks/lines carry both ends',
+        );
+        return true;
+      }
+      const mode: BuilderPickMode = wantsBond ? 'bond' : 'multi';
+      setBusy(true);
+      controller
+        // 0-based in the CGO pick payload, 1-based in PyMOL's `obj`N` syntax,
+        // which is what `builder_pick` builds. Verified natively: index 10
+        // resolves to "u`11".
+        .pick(
+          hit.object,
+          hit.index + 1,
+          mode === 'bond' && hit.index2 !== null ? hit.index2 + 1 : null,
+          mode,
+        )
+        .then(apply)
+        .catch((exc: unknown) => setError(errorText(exc)))
+        .finally(() => setBusy(false));
+      return true;
+    });
+  }, [open, controller, apply]);
+
+  /** `Undo` / `Redo`, shared by the two buttons and the keyboard. */
+  const undo = useCallback(() => {
+    void session.call('cmd.undo').catch((exc: unknown) => setError(errorText(exc)));
+  }, [session]);
+  const redo = useCallback(() => {
+    void session.call('cmd.redo').catch((exc: unknown) => setError(errorText(exc)));
+  }, [session]);
 
   const act = useCallback(
     (kind: BuilderActionKind, params: Record<string, unknown> = {}) => {
@@ -215,7 +287,32 @@ export function BuilderPanel() {
   }
 
   return (
-    <div className="builder" role="dialog" aria-label="Builder">
+    <div
+      className="builder"
+      role="dialog"
+      aria-label="Builder"
+      /*
+       * "Two toolbar buttons plus keyboard shortcuts". Scoped to the panel
+       * rather than the window on purpose: the ortho console already forwards
+       * Ctrl-Z to PyMOL's own key table as a `cmd._ctrl('Z')` chord while IT
+       * has focus, and two features racing for the same chord on `window` is
+       * how a viewport stops rotating.
+       */
+      onKeyDown={(event) => {
+        if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+        const key = event.key.toLowerCase();
+        if (key === 'z') {
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.shiftKey) redo();
+          else undo();
+        } else if (key === 'y' && !event.shiftKey) {
+          event.preventDefault();
+          event.stopPropagation();
+          redo();
+        }
+      }}
+    >
       <div className="builder__title">
         <span className="builder__title-text">Builder</span>
         {busy && <span className="builder__busy" aria-label="working" />}
@@ -553,9 +650,8 @@ export function BuilderPanel() {
             type="button"
             className="bbtn"
             title="Undo last change"
-            onClick={() => {
-              void session.call('cmd.undo').catch((exc: unknown) => setError(errorText(exc)));
-            }}
+            aria-keyshortcuts="Control+Z"
+            onClick={undo}
           >
             Undo
           </button>
@@ -563,9 +659,8 @@ export function BuilderPanel() {
             type="button"
             className="bbtn"
             title="Redo last change"
-            onClick={() => {
-              void session.call('cmd.redo').catch((exc: unknown) => setError(errorText(exc)));
-            }}
+            aria-keyshortcuts="Control+Shift+Z Control+Y"
+            onClick={redo}
           >
             Redo
           </button>

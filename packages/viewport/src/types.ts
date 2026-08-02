@@ -48,8 +48,17 @@ import type { BandBox, CameraCounters } from './input/camera';
  * `bindConnection()` in `./transport.ts`.
  */
 export interface ViewportTransport {
-  /** Fire-and-forget `{t:'input'}`. MUST preserve submission order. */
-  input(message: InputMessage): void;
+  /**
+   * Fire-and-forget `{t:'input'}`. MUST preserve submission order.
+   *
+   * Return `false` when the frame was NOT handed to the socket — that is what
+   * `@tenmol/client`'s `sendInput` already answers while the connection is
+   * down (`connection.ts:327-331`), and the input controller uses it to
+   * abandon a gesture rather than deliver a drag and a release whose press
+   * PyMOL never saw. Returning `void` is still fine: `isConnected()` is then
+   * the only signal, which is what the app's own transport supplies.
+   */
+  input(message: InputMessage): void | boolean;
   /** `{t:'call'}` — resolves with the decoded result, rejects on `{t:'err'}`. */
   call(fn: string, args?: readonly unknown[], kwargs?: Record<string, unknown>): Promise<unknown>;
   /**
@@ -313,6 +322,14 @@ export interface ViewportHandle {
   readonly cameraGate: readonly boolean[];
   /** Client-side pick counters. Zero unless the backend cannot pick for itself. */
   readonly localPick: LocalPickStats;
-  readonly inputStats: { buttons: number; drags: number; wheels: number; coalesced: number };
+  readonly inputStats: {
+    buttons: number;
+    drags: number;
+    wheels: number;
+    coalesced: number;
+    /** Input frames the connection refused, plus the gesture they belonged to. */
+    dropped: number;
+    brokenGestures: number;
+  };
   destroy(): void;
 }

@@ -249,10 +249,23 @@ export function buildGeometry(frame: GeometryFrame, options: BuildOptions = {}):
         continue;
       }
       const data = viewOf(frame, buffer.data) as Float32Array;
+      // OPTIONAL SUB-BUFFERS are read off the raw record, exactly as `atom2`
+      // is in `picking/pick.ts`: they are additive on the wire and deliberately
+      // not part of the frozen `InstanceBuffer` type.
+      const normalRef = (buffer as unknown as { normal?: unknown }).normal;
+      let normal: Float32Array | undefined;
+      if (normalRef !== undefined && normalRef !== null) {
+        try {
+          normal = viewOf(frame, normalRef as never) as Float32Array;
+        } catch {
+          normal = undefined; // a malformed ref must not cost us the whole rep
+        }
+      }
       const draw = buildInstancedDraw(buffer, data, {
         ...(pointSize === undefined ? {} : { pointSize }),
         ...(options.pixelRatio === undefined ? {} : { pixelRatio: options.pixelRatio }),
         ...(nonbondedSize === undefined ? {} : { nonbondedSize }),
+        ...(normal === undefined ? {} : { normal }),
       });
       if (draw === null) {
         problems.push(`instance buffer '${buffer.kind}' is malformed`);

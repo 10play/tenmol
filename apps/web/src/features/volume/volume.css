@@ -29,6 +29,22 @@
   opacity: 0.55;
 }
 
+/*
+ * The volume_ramp_changed subscription, shown. `flex: 0 0 auto` is not
+ * decoration: this row is a flex line and a shrinking text box collapses under
+ * `overflow: hidden`, which shipped once already and left an invisible element
+ * that still swallowed clicks.
+ */
+.volpanel__watch {
+  flex: 0 0 auto;
+  font-size: 10px;
+  opacity: 0.55;
+}
+
+.volpanel__watch[data-volume-watch='live'] {
+  opacity: 0.8;
+}
+
 .volpanel__spacer {
   flex: 1;
 }

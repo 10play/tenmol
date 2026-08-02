@@ -150,6 +150,14 @@ DANGEROUS: Dict[str, str] = {
 }
 
 #: Requires ONE client confirmation per session, then flows freely (§A6).
+#:
+#: A work package adds to this through ``Grant.confirm_once`` — see
+#: :meth:`Policy.add_grant`.  It used to be reachable ONLY by editing this file,
+#: which is why ``policy/grants/wp-25-apbs.py`` documents at length that it
+#: could not gate ``subproc.execute`` even though it wanted to argue about
+#: whether it should.  "The work package cannot express the decision" and "the
+#: work package decided not to" are different states and the policy should be
+#: able to tell them apart.
 CONFIRM_ONCE: FrozenSet[str] = frozenset({"system"})
 
 #: Executed by the bridge, not by PyMOL.  ``cmd.quit`` would take the C
@@ -247,8 +255,13 @@ class Grant:
     #: the dunder rule or :data:`EXCLUSIVE_TO_BRIDGE`.
     symbols: Set[str] = field(default_factory=set)
     private: Set[str] = field(default_factory=set)
+    #: ``leaf`` OR a whole dotted path -> why it is dangerous.  Both work; the
+    #: dotted form wins when both match (see :meth:`Policy.check`).
     dangerous: Dict[str, str] = field(default_factory=dict)
     invalidates: Dict[str, Iterable[str]] = field(default_factory=dict)
+    #: Symbols this work package wants gated behind one client confirmation,
+    #: on top of :data:`CONFIRM_ONCE`.  Same keying as ``dangerous``.
+    confirm_once: Set[str] = field(default_factory=set)
 
 
 class Policy:
@@ -270,6 +283,7 @@ class Policy:
         }
         self.allow_dangerous = allow_dangerous
         self.require_confirmation = require_confirmation
+        self.confirm_once: Set[str] = set(CONFIRM_ONCE)
         self._confirmed: Set[str] = set()
         self.grants: List[Grant] = []
 
@@ -280,6 +294,7 @@ class Policy:
         self.symbols |= set(grant.symbols)
         self.private |= set(grant.private)
         self.dangerous.update(grant.dangerous)
+        self.confirm_once |= set(grant.confirm_once)
         for key, value in grant.invalidates.items():
             self.invalidates[key] = tuple(value)
         self.grants.append(grant)
@@ -366,7 +381,19 @@ class Policy:
                 ),
             )
 
-        danger_reason = self.dangerous.get(leaf, "")
+        # DOTTED PATH FIRST, LEAF SECOND.  This used to be `get(leaf)` alone,
+        # and the consequence was a silent one: a work package writing
+        # `Grant(dangerous={"subproc.execute": "..."})` — the obvious spelling,
+        # and the one `Grant.symbols` uses — got a rule that could NEVER fire,
+        # with no error anywhere.  `policy/grants/wp-25-apbs.py` carries a
+        # ten-line comment working around it, and the comment is now the only
+        # record of a problem that no longer exists.
+        #
+        # Leaf keying stays, and stays the default: `DANGEROUS` is deliberately
+        # leaf-keyed, because `cmd.load` and a panel's `load` are the same
+        # capability under two names.  The dotted form is the narrower rule, so
+        # it wins where both match.
+        danger_reason = self.dangerous.get(symbol) or self.dangerous.get(leaf, "")
         dangerous = bool(danger_reason)
         if dangerous and not self.allow_dangerous:
             return Decision(
@@ -379,8 +406,9 @@ class Policy:
             )
         needs_confirmation = (
             self.require_confirmation
-            and leaf in CONFIRM_ONCE
+            and (leaf in self.confirm_once or symbol in self.confirm_once)
             and leaf not in self._confirmed
+            and symbol not in self._confirmed
         )
         return Decision(
             symbol=symbol,
@@ -389,8 +417,10 @@ class Policy:
             danger_reason=danger_reason,
             needs_confirmation=needs_confirmation,
             routed=leaf in ROUTED,
-            invalidates=self.invalidates.get(leaf, ()),
+            invalidates=self.invalidates.get(symbol) or self.invalidates.get(leaf, ()),
         )
 
     def invalidation_for(self, symbol: str) -> tuple:
-        return self.invalidates.get(symbol.rsplit(".", 1)[-1], ())
+        return self.invalidates.get(symbol) or self.invalidates.get(
+            symbol.rsplit(".", 1)[-1], ()
+        )

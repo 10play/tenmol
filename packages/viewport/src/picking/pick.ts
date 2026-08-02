@@ -76,6 +76,19 @@ export interface PickHit {
   state: number;
   /** `CGO_PICK_COLOR` operand 0 — an atom index within `object`. */
   index: number;
+  /**
+   * THE OTHER END OF A PICKED BOND, or null when the hit identifies one atom.
+   *
+   * A stick is drawn as a HALF BOND: one cylinder instance carrying both atom
+   * ids (`pick` and `pick2` — `InstanceBuffer.atom` / `.atom2`), split at the
+   * midpoint. `index` is the half that was hit; this is the far end. Together
+   * they are the two atom indices a bond pick needs
+   * (`cmd.builder_pick(..., mode='bond')` -> `cmd.edit(a, b, pkbond=1)`), which
+   * no field of this struct could express before: `bond` is PyMOL's bond INDEX
+   * inside the object, not an atom, and it is -1 (`cPickableAtom`) for every
+   * instance a stick rep emits.
+   */
+  index2: number | null;
   /** `CGO_PICK_COLOR` operand 1: `cPickableAtom` (-1) or a bond index. */
   bond: number;
   /** Eye-space distance along the ray. */
@@ -639,6 +652,7 @@ export function createPickIndex(): PickIndex {
       index: number,
       bond: number,
       kind: PickHit['kind'],
+      index2: number | null = null,
     ): void => {
       if (t <= 0 || (best !== null && t >= best.distance)) return;
       best = {
@@ -646,6 +660,7 @@ export function createPickIndex(): PickIndex {
         rep: entry.rep,
         state: entry.state,
         index,
+        index2,
         bond,
         distance: t,
         kind,
@@ -724,15 +739,21 @@ export function createPickIndex(): PickIndex {
               // Half-bond: the near half belongs to atom1, the far half to
               // atom2 (`pick2`), which is exactly how RepCylBond colours it.
               let picked = atom;
+              // The far end travels with it: a cylinder that carries two atom
+              // ids IS a bond, and both are needed to name it.
+              let other: number | null = inst.atom2 === null ? null : (inst.atom2[i] ?? null);
               if (inst.atom2 !== null) {
                 const px = o[0] + t * d[0] - v1[0];
                 const py = o[1] + t * d[1] - v1[1];
                 const pz = o[2] + t * d[2] - v1[2];
                 const h2 = axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2];
                 const s = h2 > 0 ? (px * axis[0] + py * axis[1] + pz * axis[2]) / h2 : 0;
-                if (s > 0.5) picked = inst.atom2[i] ?? atom;
+                if (s > 0.5) {
+                  picked = inst.atom2[i] ?? atom;
+                  other = atom;
+                }
               }
-              take(t, entry, picked, bond, 'cylinder');
+              take(t, entry, picked, bond, 'cylinder', other);
               break;
             }
           }

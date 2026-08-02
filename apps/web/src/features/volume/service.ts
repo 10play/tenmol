@@ -34,7 +34,11 @@
  */
 
 import type { Session } from '../../app';
-import { HISTOGRAM_BINS, type FlatVolumeRamp } from '@tenmol/protocol/topics/dialogs';
+import {
+  BUILTIN_VOLUME_RAMPS,
+  HISTOGRAM_BINS,
+  type FlatVolumeRamp,
+} from '@tenmol/protocol/topics/dialogs';
 import { histogramFromField } from './ramp';
 
 export interface BlobHandle {
@@ -100,9 +104,9 @@ export async function applyPreset(session: Session, name: string, preset: string
  * `cmd.volume_ramp_new` makes it appear here on the next call, measured.
  *
  * Row kinds are PyMOL's popup kinds (`layer4/PopUp.cpp`): 2 title, 0
- * separator, 1 leaf. The `panel` leaf is filtered out here because its command
- * is `cmd.volume_panel`, which raises `ImportError: pymol.Qt` on a build with
- * no Qt binding — offering it would be offering a crash.
+ * separator, 1 leaf. The `panel` leaf is filtered out of the DROPDOWN because
+ * it is not a ramp — it opens the editor, and it is live now, wired through
+ * `menuBridge.ts` where the menu that owns it is dispatched.
  */
 export async function listPresets(session: Session, name: string): Promise<string[]> {
   const rows = await session.call<[number, string, string][]>('menu.vol_color', [null, name]);
@@ -112,6 +116,65 @@ export async function listPresets(session: Session, name: string): Promise<strin
       (row) => Array.isArray(row) && row[0] === 1 && String(row[2]).startsWith('cmd.volume_color('),
     )
     .map((row) => String(row[1]));
+}
+
+/** Which of the three sources answered. Shown in the panel, never hidden. */
+export type PresetSource = 'tenmol_volume.ramps' | 'menu.vol_color' | 'constant';
+
+export interface PresetList {
+  names: readonly string[];
+  source: PresetSource;
+  /** Names NOT among PyMOL's five built-ins — `volume_ramp_new` registrations. */
+  extra: readonly string[];
+}
+
+/**
+ * The preset list, three tiers, tried in order. NEVER THROWS.
+ *
+ *   1. `cmd.tenmol_volume.ramps()` — `sorted(pymol.colorramping.namedramps)`,
+ *      read server-side by `bridge/tenmol_bridge/panels/volume.py`. This is the
+ *      "bridge getter returning `namedramps` keys" the inventory row's target
+ *      column asked for, and the only tier that can tell a registered ramp from
+ *      a built-in one.
+ *   2. `menu.vol_color` — the same dict, wrapped in popup rows. `colorramping`
+ *      is not an addressable namespace and `menu` is (`policy/base.py`), so this
+ *      is the way round on a bridge with no volume module.
+ *   3. `BUILTIN_VOLUME_RAMPS` — the compiled-in five, for a backend that
+ *      refuses both.
+ *
+ * Tier 1 is not free (one call) and not always available, which is exactly why
+ * the tier that answered is reported rather than assumed.
+ */
+export async function presetList(session: Session, name: string): Promise<PresetList> {
+  try {
+    const reply = await session.call<{ names?: string[]; extra?: string[] }>(
+      'cmd.tenmol_volume.ramps',
+    );
+    if (Array.isArray(reply?.names) && reply.names.length > 0) {
+      return {
+        names: reply.names,
+        source: 'tenmol_volume.ramps',
+        extra: Array.isArray(reply.extra) ? reply.extra : [],
+      };
+    }
+  } catch {
+    /* no volume module on this bridge — tier 2 */
+  }
+  try {
+    const names = await listPresets(session, name);
+    if (names.length > 0) {
+      return {
+        names,
+        source: 'menu.vol_color',
+        // Without the server-side split this is the honest answer: the row
+        // format carries no such flag, so nothing is claimed about it.
+        extra: [],
+      };
+    }
+  } catch {
+    /* refused, or an older engine — tier 3 */
+  }
+  return { names: BUILTIN_VOLUME_RAMPS, source: 'constant', extra: [] };
 }
 
 /** `cmd.volume_ramp_new(rname, flat)` — registers the current ramp by name. */

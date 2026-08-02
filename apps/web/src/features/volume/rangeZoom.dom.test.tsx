@@ -54,6 +54,16 @@ vi.mock('./service', () => ({
   applyPreset: vi.fn(async () => {}),
   listVolumes: vi.fn(async () => []),
   registerRamp: vi.fn(async () => {}),
+  // `presetList` NEVER THROWS in the real module and the panel relies on that,
+  // so the double must not be the thing that makes it throw. (The previous
+  // version of this mock simply omitted the preset function and the panel
+  // survived on an inner catch — a hole that hid a real coupling.)
+  listPresets: vi.fn(async () => ['2fofc']),
+  presetList: vi.fn(async () => ({
+    names: ['2fofc'],
+    source: 'menu.vol_color' as const,
+    extra: [] as string[],
+  })),
 }));
 
 // ONE stable object. `useSession()`'s result is a dependency of `reload`, which
@@ -412,8 +422,12 @@ async function mountPanel() {
   await act(async () => {
     root.render(<VolumePanel spec={SPEC} />);
   });
-  // the two awaited service calls resolve on the microtask queue
-  await act(async () => {});
+  // The awaited service calls resolve on the microtask queue, one act() pass
+  // each: `getRamp`, then `presetList`'s two tiers (`cmd.tenmol_volume.ramps`
+  // is refused by this double and falls through to `menu.vol_color`), then
+  // `fetchHistogram`. A fixed loop rather than a count, because a tier that
+  // answers earlier must not make this file red.
+  for (let i = 0; i < 5; i++) await act(async () => {});
 }
 
 describe('<VolumePanel> Reset Data Range (volume.py:739-746)', () => {

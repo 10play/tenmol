@@ -40,6 +40,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fixture from './__fixtures__/engine-volume.json';
 import { VolumePanel } from './VolumePanel';
 import { DOT_RADIUS } from './ramp';
+import { resetVolumeBridge } from './menuBridge';
+import type { Session } from '../../app';
 import type { DialogWindowSpec } from '../dialogs/store';
 
 /* ------------------------------------------------------------ the socket */
@@ -94,6 +96,24 @@ vi.mock('../../app', () => ({ useSession: () => SESSION }));
 
 /** Every `cmd.volume_color(name, flat)` — i.e. every push to the engine. */
 const pushes = () => calls.filter((c) => c.fn === 'volume_color' && c.args.length === 2);
+
+/**
+ * The `volume_ramp_changed` plumbing (`menuBridge.ts`), which this file's
+ * socket double deliberately does NOT answer.
+ *
+ * Keeping it out of the read-path assertions is the point: the row these tests
+ * cover is about which histogram tier runs, and it must stay green on a bridge
+ * with no `cmd.tenmol_volume` module at all. `p10volumeEvents.dom.test.tsx`
+ * asserts the plumbing itself, including the degraded state this file produces.
+ */
+const BRIDGE_PLUMBING = new Set([
+  'cmd.tenmol_volume.status',
+  'cmd.tenmol_volume.watch',
+  'cmd.tenmol_volume.unwatch',
+  'cmd.tenmol_volume.ramps',
+  'cmd.do',
+]);
+const readPath = () => calls.map((c) => c.fn).filter((fn) => !BRIDGE_PLUMBING.has(fn));
 
 /* -------------------------------------------------------- the 2D recorder */
 
@@ -232,6 +252,12 @@ const REAL_CONTEXT = HTMLCanvasElement.prototype.getContext;
 
 beforeEach(() => {
   calls.length = 0;
+  // `ensureVolumeBridge` remembers, per session, that a bridge refused the
+  // install and stops asking after three tries. `SESSION` is a module
+  // singleton shared by every test in this file, so without this reset the
+  // fourth mount would issue no plumbing calls and the counts below would
+  // depend on test order.
+  resetVolumeBridge(SESSION as unknown as Session);
   histogramReply = fixture.histogram;
   presetRows = ENGINE_PRESET_ROWS;
   frame = recorder();
@@ -371,12 +397,22 @@ describe('the engine histogram reaches the canvas as a red polyline', () => {
     await mountPanel();
 
     // service.ts's tier 1 is `cmd.get_volume_histogram(name)` and nothing else.
-    expect(calls.map((c) => c.fn)).toEqual([
-      'volume_color',
-      'menu.vol_color',
-      'get_volume_histogram',
+    expect(readPath()).toEqual(['volume_color', 'menu.vol_color', 'get_volume_histogram']);
+    expect(calls.find((c) => c.fn === 'get_volume_histogram')!.args).toEqual(['p8vol']);
+
+    // ...and the volume-module calls are exactly these three: the subscription
+    // probes once, bootstraps once and gives up, and the preset list falls off
+    // tier 1 onto `menu.vol_color`. This double answers no `cmd.tenmol_volume`
+    // call at all, so a panel that cannot subscribe says so rather than
+    // pretending to track.
+    expect(calls.map((c) => c.fn).filter((fn) => BRIDGE_PLUMBING.has(fn))).toEqual([
+      'cmd.tenmol_volume.status',
+      'cmd.do',
+      'cmd.tenmol_volume.ramps',
     ]);
-    expect(calls[2]!.args).toEqual(['p8vol']);
+    expect(document.querySelector('[data-volume-watch]')?.getAttribute('data-volume-watch')).toBe(
+      'off',
+    );
     expect(document.querySelector('.volpanel__status')?.textContent).toBe(
       'histogram via get_volume_histogram',
     );

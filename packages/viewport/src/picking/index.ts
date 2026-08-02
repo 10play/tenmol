@@ -38,3 +38,12 @@ export {
   type BandRect,
   type BoxHit,
 } from './pick';
+export {
+  registerPickRoute,
+  routeViewportPick,
+  dispatchViewportPick,
+  pickSelectionName,
+  pickRouteCount,
+  resetPickRoutes,
+  type PickRoute,
+} from './route';

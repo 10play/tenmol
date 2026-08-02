@@ -48,17 +48,21 @@ There is **no** Python or C API for a setting's default or its min/max: the data
 lives in the static C table ``SettingInfo[]`` and nothing exports it
 (``00-parity-inventory.md`` area 5 row 2 records this as a missing C++
 accessor).  No API is invented here.  Instead the header that GENERATES that
-table, ``layer1/SettingInfo.h``, is parsed if it is present next to the bridge,
-and the parse is **rejected wholesale** unless every index it produces agrees
-with the live ``setting.index_dict`` name and with
-``_cmd.get_setting_level(index)``.  When it is absent or disagrees the catalogue
-simply reports ``defaultsSource: null`` and the UI ships unclamped inputs and
-says so.  PyMOL itself only clamps *int* settings and only for global writes
-(``layer1/Setting.cpp:1890-1911``), so client-side clamping would be a lie in
-both directions; the range is shown as a hint and never enforced.
+table, ``layer1/SettingInfo.h``, is parsed — at BUILD time into
+``panels/setting_catalog.json`` (:func:`build_asset`), and at run time straight
+from the header when a source checkout is present and the asset is not.  Either
+way the records are **rejected wholesale** unless every index agrees with the
+live ``setting.index_dict`` name and with ``_cmd.get_setting_level(index)``.
+When neither delivery survives, the catalogue reports ``defaultsSource: null``
+and the UI ships unclamped inputs and says so.  PyMOL itself only clamps *int*
+settings and only for global writes (``layer1/Setting.cpp:1890-1911``), so
+client-side clamping would be a lie in both directions; the range is shown as a
+hint and never enforced.
 
 Help text comes from ``data/setting_help.csv`` (875 rows), which has **zero
-consumers anywhere in the PyMOL tree** — this is its first one.
+consumers anywhere in the PyMOL tree** — this is its first one.  It is carried
+in the same asset, because a ``pip install`` layout has the CSV (under
+``$PYMOL_DATA``) but never the header.
 
 HOW THE CLIENT REACHES IT
 -------------------------
@@ -93,6 +97,7 @@ is cumulative and cursor-addressed, polling it slowly is lossless.
 from __future__ import annotations
 
 import csv
+import json
 import os
 import re
 import threading
@@ -117,6 +122,13 @@ __all__ = [
     "parse_setting_info",
     "load_help",
     "coerce",
+    "ASSET_NAME",
+    "ASSET_VERSION",
+    "asset_path",
+    "asset_json",
+    "build_asset",
+    "load_asset",
+    "write_asset",
 ]
 
 # ---------------------------------------------------------------------------
@@ -431,6 +443,15 @@ def setting_help_path() -> Optional[str]:
     for path in _candidate_paths("TENMOL_SETTING_HELP_CSV", "data/setting_help.csv"):
         if os.path.isfile(path):
             return path
+    #: Unlike the header, the CSV IS installed: ``setup.py`` copies ``data/``
+    #: into the package, so ``$PYMOL_DATA/setting_help.csv`` exists in every
+    #: ``pip install`` layout (verified in this venv).  Look there before
+    #: giving up, so an installed bridge keeps its tooltips.
+    data = os.environ.get("PYMOL_DATA")
+    if data:
+        path = os.path.join(data, "setting_help.csv")
+        if os.path.isfile(path):
+            return path
     return None
 
 
@@ -450,6 +471,125 @@ def load_help(path: Optional[str] = None) -> Dict[str, str]:
         for row in csv.reader(handle):
             if len(row) >= 2 and row[0]:
                 out[row[0].strip()] = row[1].strip()
+    return out
+
+
+# ---------------------------------------------------------------------------
+# The build-time asset  (inventory row 203, "Setting defaults / min-max / help")
+# ---------------------------------------------------------------------------
+#
+# WHY THIS EXISTS, and why it is a JSON asset rather than a C accessor.
+#
+# The two files above are SOURCE-TREE files.  ``layer1/SettingInfo.h`` is a
+# header: no wheel, no conda package and no ``pip install pymol`` layout ships
+# it, and ``setting_info_path()`` only ever looks next to this repository.  So a
+# bridge running against an INSTALLED PyMOL has no defaults and no ranges at
+# all -- measured on this machine by pointing ``TENMOL_SETTINGINFO_H`` at a
+# nonexistent path: ``defaultsSource: None`` and 0 of 779 rows carrying a
+# ``default``.  (``setting_help.csv`` is luckier: it IS installed, under
+# ``$PYMOL_DATA``, and :func:`setting_help_path` now looks there too.)
+#
+# The row offered two deliveries.  A C accessor next to ``CmdGetSettingLevel``
+# would need ``layer4/Cmd.cpp`` and a rebuild of the extension module -- a C++
+# change, which this work is not allowed to make and which would also make the
+# data unavailable to anything that is not this exact build.  The build-time
+# asset needs neither: it is generated from the two source files by
+#
+#     python -m tenmol_bridge.panels.settings --emit
+#
+# checked in next to this module, and shipped with the bridge package.  It is
+# validated against the live setting table index-by-index exactly as the header
+# parse is, so a stale asset produces NO defaults rather than wrong ones, and
+# ``test_p10_rest.py`` regenerates it in memory and fails if the checked-in copy
+# differs by one byte -- staleness is a red test, not a silent lie.
+
+#: Next to this module, so it travels with the package.
+ASSET_NAME = "setting_catalog.json"
+#: Bumped when the asset's SHAPE changes; a mismatch rejects the asset.
+ASSET_VERSION = 1
+
+
+def asset_path() -> Optional[str]:
+    """The checked-in build-time asset, or None."""
+    override = os.environ.get("TENMOL_SETTING_CATALOG_JSON")
+    if override:
+        return override if os.path.isfile(override) else None
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ASSET_NAME)
+    return path if os.path.isfile(path) else None
+
+
+def build_asset(
+    header_path: Optional[str] = None, help_path: Optional[str] = None
+) -> Dict[str, Any]:
+    """``SettingInfo.h`` + ``setting_help.csv`` -> the static JSON document.
+
+    Pure: it reads the two files and returns a dict.  Raises ``OSError`` if
+    either is missing, because emitting a half asset would be worse than not
+    emitting one.
+    """
+    header_path = header_path or setting_info_path()
+    help_path = help_path or setting_help_path()
+    if not header_path:
+        raise OSError("layer1/SettingInfo.h not found; cannot build the asset")
+    if not help_path:
+        raise OSError("data/setting_help.csv not found; cannot build the asset")
+    records = parse_setting_info(header_path)
+    help_text = load_help(help_path)
+    return {
+        "version": ASSET_VERSION,
+        "cSettingInit": C_SETTING_INIT,
+        # The ORIGIN, repo-relative, is what ``defaultsSource`` reports: the
+        # numbers come from the header whichever way they were delivered.
+        "settingInfoOrigin": "layer1/SettingInfo.h",
+        "helpOrigin": "data/setting_help.csv",
+        "records": [records[index] for index in sorted(records)],
+        "help": help_text,
+    }
+
+
+def asset_json(document: Optional[Dict[str, Any]] = None) -> str:
+    """The asset's on-disk text.  One writer, so a diff is a real diff."""
+    return json.dumps(document or build_asset(), indent=1, sort_keys=True) + "\n"
+
+
+def write_asset(path: Optional[str] = None) -> str:
+    """Generate the asset and write it.  Returns the path written."""
+    target = path or os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), ASSET_NAME
+    )
+    with open(target, "w", encoding="utf-8") as handle:
+        handle.write(asset_json())
+    return target
+
+
+def load_asset(path: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """Read the asset, or None when it is absent or unusable.
+
+    Shape errors are treated exactly like absence: this module never ships
+    half-trusted data, and the caller validates whatever comes back anyway.
+    """
+    path = path or asset_path()
+    if not path or not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            document = json.load(handle)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(document, dict):
+        return None
+    if document.get("version") != ASSET_VERSION:
+        return None
+    if not isinstance(document.get("records"), list):
+        return None
+    return document
+
+
+def _asset_records(document: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
+    out: Dict[int, Dict[str, Any]] = {}
+    for record in document.get("records", []):
+        if isinstance(record, dict) and isinstance(record.get("index"), int):
+            out[int(record["index"])] = record
     return out
 
 
@@ -496,6 +636,20 @@ def catalogue(cmd: Any = None, refresh: bool = False) -> Dict[str, Any]:
     parsed, parse_note, parse_path = _validated_setting_info(visible, levels, kinds)
     help_path = setting_help_path()
     help_text = load_help(help_path)
+    if not help_text:
+        # Same delivery argument as the defaults: the asset carries the CSV's
+        # 875 rows, so tooltips survive a layout with no `data/` beside the
+        # bridge.  `helpSource` reports the ORIGIN, not the asset, because that
+        # is where the text was written.
+        document = load_asset()
+        if document is not None and isinstance(document.get("help"), dict):
+            # NOT filtered on the value: `load_help` keeps a named row with an
+            # empty description, so filtering here would make `helpRows`
+            # disagree with the CSV by one and turn a byte-identical asset into
+            # a different answer.
+            help_text = {str(k): str(v) for k, v in document["help"].items() if k}
+            if help_text:
+                help_path = str(document.get("helpOrigin") or "data/setting_help.csv")
 
     rows: List[Dict[str, Any]] = []
     counts: Dict[str, int] = {}
@@ -558,6 +712,42 @@ def catalogue(cmd: Any = None, refresh: bool = False) -> Dict[str, Any]:
 def _validated_setting_info(
     visible: Dict[int, str], levels: Dict[int, str], kinds: Dict[int, str]
 ) -> Tuple[Dict[int, Dict[str, Any]], str, Optional[str]]:
+    """Defaults and ranges, from the asset if there is one, else the header.
+
+    Either way the records are refused unless every index agrees with the LIVE
+    table: the delivery changes, the "never show wrong defaults" rule does not.
+    """
+    document = load_asset()
+    if document is not None:
+        records = _asset_records(document)
+        origin = str(document.get("settingInfoOrigin") or "layer1/SettingInfo.h")
+        parsed, note, path = _validate_records(
+            records,
+            visible,
+            levels,
+            kinds,
+            label="the build-time asset panels/%s" % ASSET_NAME,
+            origin=origin,
+            note=(
+                "defaults and ranges from the build-time asset "
+                "tenmol_bridge/panels/%s, generated from %s and validated "
+                "index-by-index against the live table" % (ASSET_NAME, origin)
+            ),
+        )
+        if parsed:
+            return (parsed, note, path)
+        # A rejected asset falls through to the header rather than blanking the
+        # column: on a source checkout the header is the more authoritative of
+        # the two, and it is what the asset is generated from.
+        if setting_info_path() is None:
+            return ({}, note, None)
+
+    return _validated_from_header(visible, levels, kinds)
+
+
+def _validated_from_header(
+    visible: Dict[int, str], levels: Dict[int, str], kinds: Dict[int, str]
+) -> Tuple[Dict[int, Dict[str, Any]], str, Optional[str]]:
     """Parse the header, then refuse it unless it matches the LIVE table."""
     path = setting_info_path()
     if path is None:
@@ -572,6 +762,31 @@ def _validated_setting_info(
     except OSError as exc:
         return ({}, "could not read %s: %s" % (path, exc), None)
 
+    return _validate_records(
+        parsed,
+        visible,
+        levels,
+        kinds,
+        label=path,
+        origin=os.path.relpath(path, _repo_root()),
+        note=(
+            "defaults and ranges parsed from the header that generates "
+            "SettingInfo[] and validated index-by-index against the live table"
+        ),
+    )
+
+
+def _validate_records(
+    parsed: Dict[int, Dict[str, Any]],
+    visible: Dict[int, str],
+    levels: Dict[int, str],
+    kinds: Dict[int, str],
+    label: str,
+    origin: str,
+    note: str,
+) -> Tuple[Dict[int, Dict[str, Any]], str, Optional[str]]:
+    """Index-by-index agreement with the live table, or nothing at all."""
+    path = label
     if len(parsed) != C_SETTING_INIT:
         return (
             {},
@@ -605,12 +820,7 @@ def _validated_setting_info(
                 % (path, index, record["kind"], live_kind),
                 None,
             )
-    return (
-        parsed,
-        "defaults and ranges parsed from the header that generates SettingInfo[]"
-        " and validated index-by-index against the live table",
-        os.path.relpath(path, _repo_root()),
-    )
+    return (parsed, note, origin)
 
 
 # ---------------------------------------------------------------------------
@@ -983,3 +1193,48 @@ def uninstall(cmd: Any = None) -> None:
     ):
         if hasattr(setting, name):
             delattr(setting, name)
+
+
+# ---------------------------------------------------------------------------
+# Build step
+# ---------------------------------------------------------------------------
+
+
+def _main(argv: Optional[Sequence[str]] = None) -> int:
+    """``python -m tenmol_bridge.panels.settings --emit|--check``.
+
+    ``--check`` is what CI (and ``test_p10_rest.py``) needs: it regenerates the
+    asset in memory and reports whether the checked-in copy is byte-identical,
+    without writing anything.
+    """
+    import sys as _sys
+
+    args = list(_sys.argv[1:] if argv is None else argv)
+    mode = args[0] if args else "--emit"
+    if mode not in ("--emit", "--check"):
+        print("usage: python -m tenmol_bridge.panels.settings [--emit|--check]")
+        return 2
+    try:
+        fresh = asset_json()
+    except OSError as exc:
+        print("cannot build the asset: %s" % exc)
+        return 2
+    target = os.path.join(os.path.dirname(os.path.abspath(__file__)), ASSET_NAME)
+    if mode == "--check":
+        current = ""
+        if os.path.isfile(target):
+            with open(target, "r", encoding="utf-8") as handle:
+                current = handle.read()
+        if current == fresh:
+            print("%s is up to date (%d bytes)" % (ASSET_NAME, len(fresh)))
+            return 0
+        print("%s is STALE — run `python -m tenmol_bridge.panels.settings --emit`" % ASSET_NAME)
+        return 1
+    with open(target, "w", encoding="utf-8") as handle:
+        handle.write(fresh)
+    print("wrote %s (%d bytes)" % (target, len(fresh)))
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover - the build step
+    raise SystemExit(_main())

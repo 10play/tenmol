@@ -32,7 +32,7 @@ import { repName } from '@tenmol/protocol';
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
 import { createCompositor } from './compositor';
 import { createCameraDriver, type BandBox, type CameraCounters } from './input/camera';
-import { createPickIndex } from './picking';
+import { createPickIndex, dispatchViewportPick } from './picking';
 import { createInputController } from './input/mouse';
 import type { GeometryCache } from './modeG/cache';
 import { isEmptyGeometryFrame } from './modeG/frames';
@@ -463,12 +463,20 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
         return;
       }
       pickStats.hits++;
-      // `index` is 0-based in the CGO pick payload; PyMOL's `obj\`N` selection
-      // syntax is 1-based. Verified natively: index 10 resolves to "u\`11".
-      const selection = `${hit.object}\`${hit.index + 1}`;
-      void transport
-        .call('cmd.select', ['sele', selection])
-        .catch((cause: unknown) => onError(cause instanceof Error ? cause : new Error(String(cause))));
+      // WHO GETS THE CLICK. `SceneClick` dispatches on the ButMode action, so
+      // the same pixel means "select" in viewing mode and "fill pk1..pk4" in
+      // editing mode (`layer1/SceneMouse.cpp:404-470`). A registered route is
+      // the client's editing branch — the Builder registers one while it is
+      // open — and when it takes the hit the default selection must NOT also
+      // run, or every editor pick would rewrite `sele` behind the user's back.
+      // The order is asserted in `picking/p10pickroute.test.ts`.
+      dispatchViewportPick(hit, (selection) => {
+        void transport
+          .call('cmd.select', ['sele', selection])
+          .catch((cause: unknown) =>
+            onError(cause instanceof Error ? cause : new Error(String(cause))),
+          );
+      });
     },
     onActivity: () => {
       lastInputAt = now();
@@ -798,7 +806,14 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     get localPick(): LocalPickStats {
       return { ...pickStats, index: { ...pickIndex.stats } };
     },
-    get inputStats(): { buttons: number; drags: number; wheels: number; coalesced: number } {
+    get inputStats(): {
+      buttons: number;
+      drags: number;
+      wheels: number;
+      coalesced: number;
+      dropped: number;
+      brokenGestures: number;
+    } {
       return input.stats;
     },
     destroy(): void {

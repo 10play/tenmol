@@ -232,10 +232,23 @@ export interface SettingChange {
   level?: string;
 }
 
+/**
+ * PUSHED, at last. For four waves this topic accepted a subscription and
+ * nothing anywhere published to it, so the client polled the cursor-addressed
+ * tap (`setting.tenmol_settings_drain`) at 5 Hz instead — lossless, and 200 ms
+ * late. `BridgeServer._on_status` now publishes: the status thread collects the
+ * indices `cmd.get_setting_updates()` gave it (still the process's ONE drain)
+ * and hands them to the engine thread to enrich, because reading a value is
+ * `cmd.get_setting_tuple`, which takes `lock_api` and would stall the status
+ * thread for the whole of a `cmd.ray()`.
+ */
 export interface SettingsPayload {
   /**
    * Map key is the setting index rendered as a decimal string, because JSON
    * object keys are always strings.
+   *
+   * EMPTY when `full` is true: 798 enriched rows per client per session load,
+   * to say something the client answers by refetching, is the wrong payload.
    */
   changed: Record<string, SettingChange>;
   /**
@@ -243,4 +256,12 @@ export interface SettingsPayload {
    * `len(get_setting_updates()) == 798` — a usable full-resync signal (§1.5).
    */
   full?: boolean;
+  /**
+   * Every index in this batch, enriched or not. Present on both shapes, so a
+   * consumer that only needs "did X change?" never has to care which one it
+   * got.
+   */
+  indices?: readonly number[];
+  /** Indices the backend could not read (unknown, or no such object/state). */
+  failed?: readonly number[];
 }

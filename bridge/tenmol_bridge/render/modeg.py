@@ -1031,6 +1031,14 @@ class GeometryService:
         }
         if raw.get("atom"):
             instance["atom"] = packer.add(raw["atom"], "i32", 1)
+        # ``RepDot::VN`` -- one normal per dot, which ``RepDot`` shades with and
+        # which had nowhere to go until now (parity row 131: "UNLIT because the
+        # wire buffer carries no normal").  It rides as an OPTIONAL SUB-BUFFER,
+        # the same shape ``atom``/``bond``/``atom2`` already use, so the 8-float
+        # ``sphere`` record is untouched and every size check on it still holds.
+        normals = raw.get("normal")
+        if normals is not None and len(memoryview(normals).cast("B")) == count * 3 * 4:
+            instance["normal"] = packer.add(normals, "f32", 3)
 
         header = self._common(object_name, index, state)
         header.update(

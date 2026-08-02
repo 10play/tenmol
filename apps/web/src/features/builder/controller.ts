@@ -40,9 +40,10 @@ export interface BuilderController {
   ): Promise<BuilderState>;
   wizardClick(index: number): Promise<BuilderState>;
   /**
-   * One frame of the sculpting loop PyMOL's idle handler runs for itself
-   * (`layer5/PyMOL.cpp:2424`). The bridge pump draws but never idles, so
-   * nothing sculpts unless the client asks; `sculptTicker.ts` is what asks.
+   * One turn of the sculpting loop PyMOL's idle handler runs for itself
+   * (`layer5/PyMOL.cpp:2424`) — and, with `cycles: 0`, a pure READ of the total
+   * strain. The pump does idle (`engine.py:236`), so the engine is already
+   * minimising and `sculptTicker.ts` passes 0 rather than iterating beside it.
    */
   sculptTick(cycles?: number): Promise<BuilderSculptTick>;
   /**

@@ -21,8 +21,15 @@
  * records for a GUI action (`PLog`, `layer4/PopUp.cpp:471-475`).
  */
 
+import { useSyncExternalStore } from 'react';
+
 import { errorText, useSession, useStore } from '../../app';
-import { menuHooks, openPanel } from '../../shell/panelHooks';
+import {
+  menuHooks,
+  openPanel,
+  subscribeMenuHooks,
+  type MenuHook,
+} from '../../shell/panelHooks';
 
 interface QuickButton {
   label: string;
@@ -85,15 +92,29 @@ export function progressPercent(progress: number): number {
   return Math.trunc(progress * 100);
 }
 
-/** A button that will really do its job when pressed. */
-export function live(button: QuickButton): boolean {
-  if (button.action === 'render') return menuHooks()['render_dialog'] !== undefined;
+/**
+ * A button that will really do its job when pressed.
+ *
+ * `hooks` is passed in rather than read from the module so the component can
+ * SUBSCRIBE to it: `features/render` registers `render_dialog` from an effect,
+ * i.e. after this component's first paint, and a plain `menuHooks()` read here
+ * would leave Draw/Ray drawn as a TODO until something else forced a re-render.
+ */
+export function live(
+  button: QuickButton,
+  hooks: Readonly<Record<string, MenuHook>> = menuHooks(),
+): boolean {
+  if (button.action === 'render') return hooks['render_dialog'] !== undefined;
   return button.cmd !== null || button.action !== undefined;
 }
 
 export function QuickButtons() {
   const session = useSession();
   const progress = useStore(session.stores.connection, (s) => s.progress);
+  // `menuHooks()` is identity-cached and invalidated on registration, which is
+  // what makes it a legal `getSnapshot` (an `Object.fromEntries` per call is a
+  // new identity every render and React loops for ever).
+  const hooks = useSyncExternalStore(subscribeMenuHooks, menuHooks, menuHooks);
 
   /**
    * `PyMOLQtGUI.get_view` (`pymol_qt_gui.py:83-86`): print the matrix at
@@ -137,14 +158,17 @@ export function QuickButtons() {
   };
 
   /**
-   * `features/render` (WP-19) has built the two-page Draw/Ray form but exposes
-   * no way to open it from outside itself: `RenderDialog` keeps `expanded` in
-   * local state and takes no props, and unlike `features/builder` it publishes
-   * no open event. So this looks for a registered hook and, when there is none,
-   * says exactly what is missing instead of pretending to open something.
+   * Qt's Draw/Ray is a `WidgetMenu` wrapping `render_dialog`
+   * (`pymol_qt_gui.py:222,232`) — one click, and it lazily builds the form the
+   * first time. Here `features/render` registers `render_dialog` from its own
+   * always-mounted component, so this is the same one click.
+   *
+   * The fallback stays: it is what said, for two waves, exactly which line was
+   * missing, and it is what a feature directory that has not landed yet should
+   * still produce instead of a dead button.
    */
   const openRender = () => {
-    const hook = menuHooks()['render_dialog'];
+    const hook = hooks['render_dialog'];
     if (hook) {
       void hook([]);
       return;
@@ -166,9 +190,9 @@ export function QuickButtons() {
               type="button"
               // Still VISIBLY unbuilt when it is unbuilt: Draw/Ray keeps its
               // `todo` marker until someone registers `render_dialog`.
-              className={`quickbutton${live(button) ? '' : ' quickbutton--todo'}`}
+              className={`quickbutton${live(button, hooks) ? '' : ' quickbutton--todo'}`}
               key={button.label}
-              title={live(button) ? button.title : `TODO (${button.todo}): ${button.title}`}
+              title={live(button, hooks) ? button.title : `TODO (${button.todo}): ${button.title}`}
               onClick={() => {
                 if (button.action === 'getView') void getView();
                 else if (button.action === 'builder') void openBuilder();

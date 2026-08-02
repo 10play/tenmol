@@ -19,11 +19,31 @@ import {
   refusalFor,
   windowAccelerator,
 } from './globalDrop';
-import { installFileMenuHooks } from './menuHooks';
+import { takeOpenFromLocation } from './deepLink';
+import { installFileMenuHooks, requestFilesOpen } from './menuHooks';
 import type { FileClassification } from '@tenmol/protocol/topics/files';
 
 export function FileDropTarget() {
   const session = useSession();
+
+  /*
+   * ROW 293 — THE DOCUMENT-HANDLER SEAM, AND IT IS MOUNTED FOR EVER.
+   *
+   * `?open=<path>` is `handle_file_open_active`'s argument arriving the only
+   * way it can reach a browser tab (see `deepLink.ts` for the whole argument).
+   * It runs the SAME `load_dialog` pipeline as `File ▸ Open Recent`, so a
+   * `.psw` gets the presentation preset and a `.pse` gets the partial
+   * question; nothing here decides anything about the file itself.
+   *
+   * Mount-only, and it consumes the parameter before doing anything with it —
+   * StrictMode invokes this twice and a reload would otherwise re-open the
+   * file. Here rather than in `FilesPanel` for the usual reason: that is an
+   * overlay slot, so it does not exist when the app starts.
+   */
+  useEffect(() => {
+    const paths = takeOpenFromLocation();
+    if (paths.length > 0) requestFilesOpen(paths);
+  }, []);
 
   /*
    * ROW 242 — BIND THE FILE MENU'S LEAVES, AND DO IT HERE.

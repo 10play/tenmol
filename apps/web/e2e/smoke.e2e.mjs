@@ -773,4 +773,179 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * INVENTORY ROW 98 — the object panel's modifier gestures, in a browser.
+     *
+     * `layer3/Executive.cpp:15260-15332` gives a row seven different meanings
+     * depending on which button is down and which modifiers are held. Wave 8
+     * drove all seven as pointer events in jsdom and the row stayed partial for
+     * one stated reason: none of the six MODIFIED ones had ever been driven by
+     * a real browser against a real bridge, only plain left and a left band
+     * drag had. This is that leg.
+     *
+     * Every assertion is on PyMOL's own state — the enabled-object list, the
+     * camera matrix — never on a class name, because the claim is "the gesture
+     * reached the engine and meant the right thing".
+     *
+     * `set animation, 0` first: `panelActions.zoom/center` send `animate=-1`,
+     * which sweeps over `animation_duration` in `int(duration*30)` key frames
+     * and returns BEFORE the camera moves. Sampling `get_view()` right after a
+     * gesture would read a value that is neither the old one nor the new one.
+     */
+    name: 'object rows: the six modifier gestures reach PyMOL (row 98)',
+    async fn({ stack, assert }) {
+      /*
+       * A TALLER WINDOW, and this is a finding rather than a convenience.
+       *
+       * The internal-gui column is a flex column and `.objpanel` shrinks inside
+       * it. Measured at the suite's usual 1280x900, with six objects loaded:
+       * `.objpanel` 36 px, its row list 19 px against a scrollHeight of 128,
+       * while `.mvpanel` had grown 125 -> 221 the moment an object was enabled.
+       * Every row is then reachable only through a 19 px scroll window that the
+       * 30 Hz object poll can reset between the scroll and the click — which is
+       * how this spec first failed, on a click that landed on the wizard panel.
+       * At 1280x1400 `.objpanel` is 534 px and nothing scrolls.
+       *
+       * The squeeze is a real defect and belongs to whoever owns the column
+       * (features/movie grows; features/objects and the shell shrink); it is
+       * reported, not fixed here. This spec is about what the SEVEN GESTURES
+       * mean, so it takes the window it needs and hit-tests every click anyway.
+       */
+      const page = await openApp(stack, { viewport: { width: 1280, height: 1400 } });
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+
+      await run(page, 'set animation, 0', 800);
+      await run(page, 'delete m98a or m98b', 700);
+      await run(page, 'fragment ala, m98a', 1200);
+      await run(page, 'fragment his, m98b', 1200);
+      // Apart in MODEL space (`translate` defaults to camera space), so
+      // "centre on this one" and "centre on that one" are distinguishable.
+      await run(page, 'translate [25,0,0], m98b, camera=0', 1000);
+      await run(page, 'disable m98a', 600);
+      await run(page, 'disable m98b', 900);
+
+      /**
+       * The centre of a row, and PROOF that a click there hits that row.
+       *
+       * Two hazards, both hit while writing this:
+       *
+       *  - `.objrow__name-text`, NOT `.objrow__name`: the button also holds the
+       *    row's caption, so its text is `m98a1/1` and an exact-name match on
+       *    the button finds nothing.
+       *  - `.objpanel__rows` is a flex child that gets SQUEEZED when a sibling
+       *    of the internal-gui column grows (measured: enabling an object grew
+       *    `.mvpanel` 125 -> 221 px and shrank `.objpanel` 132 -> 36, i.e. to
+       *    one row). The clipped rows still report their full bounding box, so
+       *    `boundingBox()` hands back coordinates that now belong to whatever
+       *    moved into that space — the wizard launcher, in the run that found
+       *    this. Hence `scrollIntoViewIfNeeded` first, and a hit test after: a
+       *    gesture that would land on another widget FAILS here instead of
+       *    silently proving nothing.
+       */
+      const rowBox = async (name) => {
+        const row = page
+          .locator('.objrow__name-text')
+          .filter({ hasText: new RegExp(`^${name}$`) })
+          .first();
+        await row.waitFor({ state: 'visible', timeout: 15_000 });
+        await row.scrollIntoViewIfNeeded();
+        const box = await row.boundingBox();
+        assert(box !== null, `row ${name} has no box`);
+        const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+        const hit = await page.evaluate(
+          ([x, y]) => {
+            const el = document.elementFromPoint(x, y);
+            const own = el?.closest('.objrow');
+            return own ? (own.textContent ?? '') : `NOT A ROW: ${el?.className ?? 'null'}`;
+          },
+          [point.x, point.y],
+        );
+        assert(hit.includes(name), `a click at the ${name} row would land on ${hit}`);
+        return point;
+      };
+
+      /** One press-release on a row with modifiers held. */
+      const gesture = async (name, { button = 'left', mods = [], to = null } = {}) => {
+        const from = await rowBox(name);
+        for (const key of mods) await page.keyboard.down(key);
+        await page.mouse.move(from.x, from.y);
+        await page.mouse.down({ button });
+        if (to !== null) {
+          const dest = await rowBox(to);
+          // Several small steps: the panel recomputes the hovered row from
+          // clientY on every move, and one jump would skip the band.
+          for (let i = 1; i <= 6; i++) {
+            await page.mouse.move(from.x, from.y + ((dest.y - from.y) * i) / 6);
+            await page.waitForTimeout(60);
+          }
+        }
+        await page.mouse.up({ button });
+        for (const key of [...mods].reverse()) await page.keyboard.up(key);
+        await page.waitForTimeout(1400);
+      };
+
+      const enabled = async () => await ask(page, 'cmd.get_names("objects",1)');
+      const view = async () => await ask(page, '[round(v,3) for v in cmd.get_view()]');
+
+      // 1. SHIFT + left — immediate toggle.
+      assert(!(await enabled()).includes('m98a'), 'm98a should have started disabled');
+      await gesture('m98a', { mods: ['Shift'] });
+      assert((await enabled()).includes('m98a'), 'shift+left did not enable the row');
+      await gesture('m98a', { mods: ['Shift'] });
+      assert(!(await enabled()).includes('m98a'), 'shift+left did not toggle back off');
+
+      // 2. CTRL + left dragged onto another row — hover-activate: enable only
+      // the row under the pointer, disabling the one it activated before.
+      await gesture('m98a', { mods: ['Control'], to: 'm98b' });
+      const afterHover = await enabled();
+      assert(
+        afterHover.includes('m98b') && !afterHover.includes('m98a'),
+        `ctrl-drag should leave only m98b enabled, got ${afterHover}`,
+      );
+
+      // 3. CTRL+SHIFT + left — hover-activate AND zoom.
+      const beforeZoom = await view();
+      await gesture('m98a', { mods: ['Control', 'Shift'] });
+      const afterZoom = await enabled();
+      assert(afterZoom.includes('m98a'), `ctrl+shift+left did not activate (${afterZoom})`);
+      assert((await view()) !== beforeZoom, 'ctrl+shift+left did not zoom the camera');
+
+      // 4. MIDDLE — centre and activate. The origin is `get_view()[12:15]`.
+      await run(page, 'disable m98b', 700);
+      const originBefore = await ask(page, '[round(v,1) for v in cmd.get_view()[12:15]]');
+      await gesture('m98b', { button: 'middle' });
+      const afterMiddle = await enabled();
+      assert(afterMiddle.includes('m98b'), `middle click did not activate (${afterMiddle})`);
+      const originAfter = await ask(page, '[round(v,1) for v in cmd.get_view()[12:15]]');
+      assert(
+        originAfter !== originBefore,
+        `middle click did not centre (origin stayed ${originBefore})`,
+      );
+
+      // 5. CTRL + middle — zoom and activate.
+      await run(page, 'disable m98a', 700);
+      const beforeCtrlMiddle = await view();
+      await gesture('m98a', { button: 'middle', mods: ['Control'] });
+      const afterCtrlMiddle = await enabled();
+      assert(afterCtrlMiddle.includes('m98a'), `ctrl+middle did not activate (${afterCtrlMiddle})`);
+      assert((await view()) !== beforeCtrlMiddle, 'ctrl+middle did not move the camera');
+
+      // 6. CTRL+SHIFT + middle — disable everything, then enable only this one.
+      // The only gesture in the panel with a GLOBAL effect, so the assertion is
+      // global too: nothing else in the session may still be on.
+      await run(page, 'enable m98a', 700);
+      await gesture('m98b', { button: 'middle', mods: ['Control', 'Shift'] });
+      const solo = await enabled();
+      assert(
+        solo.replace(/\s+/g, '') === "['m98b']",
+        `ctrl+shift+middle should leave exactly one object enabled, got ${solo}`,
+      );
+
+      // Leave the shared engine as it was found: `animation` is global.
+      await run(page, 'set animation, 1', 600);
+      await run(page, 'delete m98a or m98b', 600);
+      await page.close();
+    },
+  },
 ];

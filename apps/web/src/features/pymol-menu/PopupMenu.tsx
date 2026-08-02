@@ -6,7 +6,9 @@
  *    (`:270-300`);
  *  * choosing a leaf executes its command string (`:471-475`) — so the leaf is
  *    sent through `t:'do'`, unmodified, and PyMOL echoes it into the console
- *    itself;
+ *    itself, UNLESS a registered hook claims it first (`leafHooks.ts`; the one
+ *    leaf that needs this today is `A > volume > panel`, whose command names a
+ *    Qt entry point that does not exist in a browser);
  *  * the menu is dismissed by a click outside, by Escape, and by choosing.
  *
  * NOT reproduced yet (WP-13 owns the full engine): lazily-expanded submenus
@@ -16,6 +18,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useSession, useStoreState } from '../../app';
+import { dispatchLeaf } from './leafHooks';
 import { pymolMenu } from './menuStore';
 import './pymol-menu.css';
 
@@ -84,7 +87,9 @@ export function PopupMenu() {
             title={command}
             onClick={() => {
               pymolMenu.close();
-              void session.run(command);
+              // One line, and it is the whole seam: with nothing registered
+              // this is `session.run(command)` exactly as before.
+              dispatchLeaf(command, (line) => void session.run(line));
             }}
           >
             {label}

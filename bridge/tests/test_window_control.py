@@ -89,15 +89,31 @@ def test_an_unknown_action_is_refused_with_the_choices(ws: WSClient) -> None:
 # ------------------------------------------------------------- viewport
 
 
-def test_cmd_viewport_does_NOT_resize_this_engine(ws: WSClient) -> None:
-    """The finding that matters for the client's resize path.
+def test_cmd_viewport_DOES_resize_this_engine_now(ws: WSClient) -> None:
+    """FIXED IN WAVE 10.  This test used to pin the silent no-op.
 
-    `cmd.viewport(w, h)` returns ok and changes nothing — there is no window
-    for it to drive. A client that resized this way would see the canvas and
-    the engine drift apart, with no error to explain it.
+    `cmd.viewport(w, h)` returned ok and changed nothing — `CmdViewport` ends
+    at `PyMOL_NeedReshape` (`layer4/Cmd.cpp:4968`), which with `G->HaveGUI`
+    true only raises a flag for the embedding application, and nothing read it.
+    A client that resized this way saw the canvas and the engine drift apart
+    with no error to explain it.
+
+    `PyMOL_GetReshapeInfo` has no Python wrapper, so draining the flag was
+    never reachable from here. `execapp` does not drain it either — it replaces
+    the command (`pymol_qt_gui.py:1229-1231`, `commandoverloaddecorator`), and
+    `Engine._install_viewport_seam` now does the same.
+
+    Restored afterwards: the viewport is shared by every test in this process
+    and a stale 640x480 would move every subsequent pick coordinate.
     """
     before = ws.call("cmd.get_viewport")[:2]
-    assert ws.call_reply("cmd.viewport", 640, 480)["t"] == "ok"
+    try:
+        assert ws.call_reply("cmd.viewport", 640, 480)["t"] == "ok"
+        time.sleep(0.4)
+        assert ws.call("cmd.get_viewport")[:2] == [640, 480]
+    finally:
+        ws.input("reshape", width=before[0], height=before[1], force=1)
+        time.sleep(0.6)
     assert ws.call("cmd.get_viewport")[:2] == before
 
 

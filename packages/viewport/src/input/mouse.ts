@@ -107,6 +107,17 @@ export interface InputControllerStats {
   dragForcedFlushes: number;
   /** Longest gap between two drags of the last gesture, in ms. */
   dragMaxGapMs: number;
+  /**
+   * Input frames the socket did not take, plus the ones deliberately withheld
+   * because the PRESS they belong to was one of them.
+   *
+   * Non-zero means the "lossless" half of the transport contract was broken by
+   * the connection, and is the only way to tell that from "the user did not
+   * move the mouse".
+   */
+  dropped: number;
+  /** Gestures abandoned because their press never reached the engine. */
+  brokenGestures: number;
 }
 
 export interface InputController {
@@ -138,7 +149,7 @@ const PINCH_IDLE_MS = 250;
 export function createInputController(options: InputControllerOptions): InputController {
   const { element, transport, geometry } = options;
 
-  const counters = { buttons: 0, drags: 0, wheels: 0 };
+  const counters = { buttons: 0, drags: 0, wheels: 0, dropped: 0, brokenGestures: 0 };
   let lastInputAt = 0;
 
   /** The button currently held, or null. PyMOL tracks exactly one. */
@@ -157,9 +168,44 @@ export function createInputController(options: InputControllerOptions): InputCon
     options.onActivity?.();
   };
 
+  /**
+   * True when the PRESS of the gesture in progress was not delivered.
+   *
+   * LOSSLESSNESS, and why a half-gesture is worse than none. `sendInput`
+   * returns false and DROPS when the socket is not open
+   * (`packages/client/src/connection.ts:327-331`), and nothing looked at that
+   * return. So a socket that closed under a press let the drags and the RELEASE
+   * through on reconnect: `SceneDrag` would then measure against a stale
+   * `LastX/LastY` from whatever the user did before, and `SceneRelease` would
+   * report a button PyMOL never saw go down. The queue this row is about is
+   * ordered and lossless *inside* the socket; this is the edge where it is not.
+   */
+  let brokenGesture = false;
+
   const send = (message: Parameters<ViewportTransport['input']>[0]): void => {
+    // A new press always starts a fresh gesture, even if the last one broke.
+    if (message.kind === 'button' && message.state === ButtonState.Down) brokenGesture = false;
+    if (brokenGesture) {
+      counters.dropped++;
+      // The matching release ends the abandoned gesture; after it, the next
+      // press is clean.
+      if (message.kind === 'button' && message.state === ButtonState.Up) brokenGesture = false;
+      return;
+    }
     try {
-      transport.input(message);
+      // `isConnected` covers the transport whose `input()` returns void — the
+      // app's `createSessionTransport` — and the boolean covers `bindConnection`,
+      // which forwards `sendInput`'s own answer.
+      const open = transport.isConnected?.() !== false;
+      const accepted = open && transport.input(message) !== false;
+      if (!accepted) {
+        counters.dropped++;
+        if (message.kind === 'button' && message.state === ButtonState.Down) {
+          brokenGesture = true;
+          counters.brokenGestures++;
+        }
+        return;
+      }
       activity();
     } catch (cause) {
       options.onError?.(cause instanceof Error ? cause : new Error(String(cause)));
@@ -506,6 +552,12 @@ export function createInputController(options: InputControllerOptions): InputCon
     },
     get dragMaxGapMs(): number {
       return coalescer.stats.maxGapMs;
+    },
+    get dropped(): number {
+      return counters.dropped;
+    },
+    get brokenGestures(): number {
+      return counters.brokenGestures;
     },
   };
 

@@ -818,22 +818,24 @@ def test_full_screen_is_not_available_on_this_build(cam: WSClient) -> None:
         assert reply["error"]["kind"] == "CmdException", reply
 
 
-def test_cmd_viewport_is_a_no_op_and_reshape_is_the_real_resize(
+def test_cmd_viewport_and_reshape_are_now_two_working_resizes(
     cam: WSClient, bridge
 ) -> None:
-    """DEFECT, measured: typing ``viewport 640,480`` does nothing on the bridge.
+    """FIXED IN WAVE 10.  This test used to pin the silent no-op.
 
     ``CmdViewport`` ends at ``PyMOL_NeedReshape(G->PyMOL, 2, 0, 0, w, h)``
     (``layer4/Cmd.cpp:4966``).  The bridge runs ``no_gui=0`` (``engine.py:124``)
     so ``G->HaveGUI`` is true, and that branch only stores the request in
     ``I->Reshape[]`` and raises ``ReshapeFlag`` for the host to collect with
-    ``PyMOL_GetReshapeInfo`` (``layer5/PyMOL.cpp:2537-2547``).  Nothing in the
-    bridge collects it, so ``get_viewport()`` is unchanged and the offscreen FBO
-    is unchanged.  The only working resize is the reshape input frame, which
-    goes to ``Engine.resize`` -> ``p.reshape`` -> ``PyMOL_Reshape``.
+    ``PyMOL_GetReshapeInfo`` (``layer5/PyMOL.cpp:2537-2547``).  Nothing
+    collected it, so ``get_viewport()`` and the offscreen FBO were unchanged.
 
-    The fix belongs in the pump (drain the reshape request into
-    ``Engine.resize``), which is outside this slot and is reported instead.
+    THE FIX IS NOT THE ONE WAVES 7-9 REPORTED.  "Drain the reshape request in
+    the pump" is unreachable: ``PyMOL_GetReshape`` and ``PyMOL_GetReshapeInfo``
+    are declared in ``layer5/PyMOL.h:294,300`` and wrapped nowhere in Python,
+    so it would need a C++ change.  ``execapp`` does not drain the flag either
+    — it REPLACES the command (``pymol_qt_gui.py:1229-1231``) — and the bridge
+    now installs the same seam.  Both paths work and end in ``Engine.resize``.
     """
     before = list(cam.call("cmd.get_viewport"))
     engine = bridge.pump.engine
@@ -842,8 +844,8 @@ def test_cmd_viewport_is_a_no_op_and_reshape_is_the_real_resize(
     try:
         assert cam.call_reply("cmd.viewport", 640, 480)["t"] == "ok"
         time.sleep(0.4)
-        assert list(cam.call("cmd.get_viewport")) == before, "cmd.viewport worked?"
-        assert [engine.width, engine.height] == before
+        assert list(cam.call("cmd.get_viewport")) == [640, 480]
+        assert [engine.width, engine.height] == [640, 480]
 
         reply = cam.request(t="input", kind="reshape", width=640, height=480)
         assert reply["t"] == "ok" and reply["result"] == {"width": 640, "height": 480}

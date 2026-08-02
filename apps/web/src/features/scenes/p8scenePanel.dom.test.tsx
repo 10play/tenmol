@@ -284,20 +284,49 @@ describe('the scene BUTTONS overlay — drag to reorder', () => {
     });
   }
 
-  it('pressing one button and releasing on another sends one scene_order', async () => {
+  /*
+   * CORRECTED IN WAVE 10, and worth saying why rather than quietly editing.
+   *
+   * This test used to press the LEFT button on one row and release on another
+   * and expect a `scene_order`. That is not what PyMOL does:
+   * `SceneClickSceneButton` (`layer1/SceneMouse.cpp:186-218`) gives the left
+   * button `PressMode = 1`, whose only outcome is a recall on a release over
+   * the SAME button, and `SceneRelease` case 1 checks `I->Over == I->Pressed`.
+   * Reordering is the RIGHT button (`PressMode = 3` promoted to 4 by
+   * `SceneDrag`), and it is emitted per row crossed, not on release.
+   *
+   * The old assertion was pinning the panel's own invention. The full machine
+   * is driven in `p10sceneBar.dom.test.tsx`; what stays here is the pair of
+   * claims this file was really making — a left drag does NOT reorder, and a
+   * right drag does.
+   */
+  it('a LEFT press released on another button does nothing at all', async () => {
     await render();
     const [alpha, beta] = buttons();
     expect(alpha?.textContent).toBe('alpha');
 
-    // `SceneClickButton`: press marks the drag, release over a DIFFERENT
-    // button reorders (`cmd.scene_order([a,b])`, Scene.cpp:2885).
     mouse(alpha!, 'mousedown', { button: 0 });
     mouse(beta!, 'mouseup', { button: 0 });
 
+    expect(acted.filter((a) => a.fn === 'cmd.scene_order')).toEqual([]);
+    expect(acted.filter((a) => a.fn === 'cmd.scene')).toEqual([]);
+  });
+
+  it('a RIGHT press dragged onto another button reorders, and does not recall', async () => {
+    await render();
+    const [alpha, beta] = buttons();
+
+    mouse(alpha!, 'mousedown', { button: 2 });
+    // React synthesises `onMouseEnter` from the delegated `mouseover`; a
+    // native `mouseenter` reaches no handler at all.
+    mouse(beta!, 'mouseover');
+    mouse(beta!, 'mouseup', { button: 2 });
+
     const orders = acted.filter((a) => a.fn === 'cmd.scene_order');
     expect(orders).toHaveLength(1);
+    // alpha (0) dragged onto beta (1): `elem - 1` is alpha itself, which is
+    // `>= pressed`, so the anchor becomes beta — `cmd.scene_order([beta, alpha])`.
     expect(orders[0]?.args).toEqual(['beta alpha']);
-    // A reorder is NOT also a recall.
     expect(acted.filter((a) => a.fn === 'cmd.scene')).toEqual([]);
   });
 
@@ -314,14 +343,17 @@ describe('the scene BUTTONS overlay — drag to reorder', () => {
   it('middle press browses, and dragging across browses again (animate=0 with Ctrl)', async () => {
     await render();
     const [alpha, beta] = buttons();
-    mouse(alpha!, 'mousedown', { button: 1, ctrlKey: true });
-    mouse(beta!, 'mouseover', { button: 1 });
-    act(() => {
-      beta!.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
-    });
-
+    // `alpha` is the CURRENT scene here, and `SceneMouse.cpp:200-205` guards
+    // the browse with `cur_name && elem.name != cur_name` — so the press that
+    // browses has to be the press on `beta`. (This test used to press `alpha`
+    // and expect a recall of the scene already loaded.)
+    mouse(beta!, 'mousedown', { button: 1, ctrlKey: true });
     const recalls = acted.filter((a) => a.fn === 'cmd.scene');
-    expect(recalls[0]?.args).toEqual(['alpha', 'recall']);
+    expect(recalls[0]?.args).toEqual(['beta', 'recall']);
     expect(recalls[0]?.kwargs).toEqual({ animate: 0 });
+
+    // Dragging back across `alpha`, which IS current, browses nothing.
+    mouse(alpha!, 'mouseover', { ctrlKey: true });
+    expect(acted.filter((a) => a.fn === 'cmd.scene')).toHaveLength(1);
   });
 });

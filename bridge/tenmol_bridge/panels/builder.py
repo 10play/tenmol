@@ -1993,7 +1993,7 @@ def builder_select(cmd: Any, selection: str) -> Dict[str, Any]:
 
 
 def builder_sculpt_tick(cmd: Any, cycles: Any = None) -> Dict[str, Any]:
-    """ONE frame of PyMOL's sculpting loop, for a client that has to drive it.
+    """ONE turn of PyMOL's sculpting loop, or -- with ``cycles=0`` -- a strain read.
 
     UPSTREAM this is not a command at all -- it is the idle handler.
     ``PyMOL_Idle`` calls ``ExecutiveSculptIterateAll(G)`` whenever
@@ -2003,12 +2003,21 @@ def builder_sculpt_tick(cmd: Any, cycles: Any = None) -> Dict[str, Any]:
     whose per-object ``sculpting`` is set and runs ``sculpting_cycles``
     iterations of it at the CURRENT state (``layer3/Executive.cpp:7106-7135``).
 
-    There is no idle loop here: the bridge pump draws, it does not iterate.  So
-    the client ticks, and this is the tick -- the same gate, the same object
-    set, the same cycle count, in one round trip.  ``cmd.sculpt_iterate("all",
-    ...)`` is the public form of exactly that walk (``:7164-7173``) and returns
-    the TOTAL STRAIN, which the panel shows so a user can see the minimisation
-    converge.
+    THERE IS AN IDLE LOOP HERE, and wave 9 said there was not.  The pump's tick
+    calls ``PyMOL_Idle`` (``bridge/tenmol_bridge/engine.py:236``), so the engine
+    minimises on its own with no client attached at all: MEASURED 0.6843 A of
+    drift over 2.0 s on a displaced alanine with no tick, no pixel subscriber
+    and no draw request, and 0.0000 A in the second after ``set sculpting, 0``
+    (``bridge/tests/test_p10_viewport.py``).
+
+    So this call is not the loop -- it is one turn of the same walk, offered to
+    a client for two reasons.  With ``cycles=0`` (what ``sculptTicker.ts``
+    sends) it is a pure READ of the TOTAL STRAIN, which the panel shows so a
+    user can see the minimisation converge: 0 cycles provably moves nothing
+    (strain 169.2976, movement 0.000000 A, same file).  With cycles > 0 it
+    iterates, for a backend whose pump does not idle.
+    ``cmd.sculpt_iterate("all", ...)`` is the public form of exactly that walk
+    (``:7164-7173``).
 
     ONE DELIBERATE DIFFERENCE, and it is the C's own conditional: the idle loop
     passes a ``center`` accumulator when ``sculpt_auto_center`` is on, which

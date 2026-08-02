@@ -57,7 +57,12 @@ describe('input controller without requestAnimationFrame', () => {
     createInputController({
       element,
       transport: {
-        input: (message) => sent.push(message),
+        input: (message) => {
+          // `void | boolean` since wave 10: the controller reads a `false` as
+          // "the socket refused this frame" (`types.ts`), and `push` returns a
+          // length, which would read as "delivered" only by accident.
+          sent.push(message);
+        },
         call: () => Promise.resolve(null),
       },
       geometry: () => ({ cssWidth: 400, cssHeight: 300, dpr: 1 }),
@@ -177,7 +182,12 @@ describe('wheel resolution', () => {
     createInputController({
       element,
       transport: {
-        input: (message) => sent.push(message),
+        input: (message) => {
+          // `void | boolean` since wave 10: the controller reads a `false` as
+          // "the socket refused this frame" (`types.ts`), and `push` returns a
+          // length, which would read as "delivered" only by accident.
+          sent.push(message);
+        },
         call: () => Promise.resolve(null),
       },
       // Without a pinch handler the ctrlKey branch cannot be taken at all, and

@@ -29,10 +29,23 @@
 import { useCallback, useEffect, useReducer, useState } from 'react';
 
 import { useSession } from '../../app';
+import { registerMenuHook } from '../../shell/panelHooks';
 import { INITIAL, derive, reducer, type Units } from './useRenderForm';
 import './render.css';
 
 type Page = 'setup' | 'result';
+
+/**
+ * The `_gui.py` seam name Qt fills with a bound method
+ * (`pymol_qt_gui.py:232`: `('Draw/Ray', WidgetMenu(self).setSetupUi(self.render_dialog))`).
+ * The External GUI's Draw/Ray quick button has been looking for exactly this
+ * string since wave 8 (`features/console/QuickButtons.tsx:90,147`) and printing
+ * the missing line when it was absent.
+ */
+export const RENDER_HOOK = 'render_dialog';
+
+/** Also accepted, for symmetry with `features/builder`'s `tenmol:open-builder`. */
+export const OPEN_EVENT = 'tenmol:open-render';
 
 export function RenderDialog() {
   const session = useSession();
@@ -50,6 +63,33 @@ export function RenderDialog() {
   const [status, setStatus] = useState<string | null>(null);
   const [savePath, setSavePath] = useState('');
   const d = derive(state);
+
+  /*
+   * THE OPEN SEAM. Until now this component could only be opened by itself:
+   * `expanded` was local state, it took no props, published no event and
+   * registered no hook, so Qt's one-click Draw/Ray button (a `WidgetMenu`
+   * wrapping `render_dialog`) had nothing to call and rendered as a labelled
+   * TODO. Rows 00:58 and 00:73 both stood open on this one line.
+   *
+   * Registering from HERE is what makes it work: this slot is in the `viewport`
+   * region, which `AppShell` mounts unconditionally, so the component exists
+   * from first paint — collapsed to its `Ray / Draw` tab. Registering from an
+   * overlay panel instead is the mistake three features shipped: an overlay
+   * only exists while it is open, so its hook is absent exactly when something
+   * needs it to open the panel.
+   *
+   * Opening is idempotent, and it must be: Qt's WidgetMenu re-shows an already
+   * built dialog rather than building a second one.
+   */
+  useEffect(() => {
+    const open = () => setExpanded(true);
+    const unregister = registerMenuHook(RENDER_HOOK, open);
+    window.addEventListener(OPEN_EVENT, open);
+    return () => {
+      unregister();
+      window.removeEventListener(OPEN_EVENT, open);
+    };
+  }, []);
 
   // Seed dpi from PyMOL, exactly as the Qt form seeds its combo from
   // `image_dots_per_inch` when > 0.

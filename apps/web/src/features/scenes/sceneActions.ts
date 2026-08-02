@@ -19,6 +19,8 @@
  * Append> submenu of the Scene menu (`_gui.py:781-786`).
  */
 
+import type { PanelMenuCode, PanelMenuNode } from '@tenmol/protocol';
+
 export interface SceneAction {
   fn: string;
   args: readonly unknown[];
@@ -116,6 +118,37 @@ export const sceneActions = {
 } as const;
 
 /**
+ * `pymol.menu.scene_menu`'s reply -> the popup nodes `RowMenu` renders.
+ *
+ * `menu.py:1842` returns `[[code, text, command], ...]` and NOTHING ELSE: no
+ * submenus, no lazy callables. So the encoding is the flat case of the bridge's
+ * `panels/objects.py::_encode_items`, done here because the menu itself needs
+ * no bridge module — `menu` is an addressable root (`policy/base.py`), the
+ * function ignores its `self_cmd` argument, and the reply is plain lists the
+ * codec already serialises. One round trip, no new server surface.
+ *
+ * Anything that is not `[code, text, command]` is dropped rather than guessed
+ * at, so a future submenu shows up as a missing row and not as a broken one.
+ */
+export function encodeMenu(raw: unknown): PanelMenuNode[] {
+  if (!Array.isArray(raw)) return [];
+  const out: PanelMenuNode[] = [];
+  raw.forEach((entry, index) => {
+    if (!Array.isArray(entry) || entry.length < 2) return;
+    const command = entry[2];
+    const code = Number(entry[0]);
+    if (code !== 0 && code !== 1 && code !== 2) return;
+    out.push({
+      code: code as PanelMenuCode,
+      text: String(entry[1]),
+      path: [index],
+      command: typeof command === 'string' ? command : '',
+    });
+  });
+  return out;
+}
+
+/**
  * Move `name` to sit immediately before/after `anchor`, as a full order list.
  *
  * `scene_order` with `location='current'` inserts the block at the position of
@@ -123,6 +156,42 @@ export const sceneActions = {
  * (`layer1/Scene.cpp:2885`, `cmd.scene_order([a,b])`). Computing the whole
  * order client-side and sending it once is equivalent and easier to test.
  */
+/**
+ * The scene_order the BUTTON STRIP emits mid-drag — `SceneMouse.cpp:1274-1298`.
+ *
+ * Not `reorder()` below. The strip does not compute a whole new order and send
+ * it; PyMOL sends a two-name block and lets `MovieSceneOrder` place it, and it
+ * sends one per row crossed, not one per gesture:
+ *
+ *   over === 0        `cmd.scene_order(['pressed'], location='top')`
+ *   otherwise         `cmd.scene_order([anchor, 'pressed'])` — location
+ *                     defaults to `current`, which inserts the block at the
+ *                     slot `anchor` occupies (`MovieScene.cpp:140-146`), so
+ *                     `pressed` ends up immediately after `anchor`.
+ *
+ * `anchor` is the row BEFORE the one under the pointer when dragging up, and
+ * the row under the pointer when dragging down. That asymmetry is the C's
+ * `SceneElem* first = elem - 1; if (first >= pressed) first = elem;` — a
+ * POINTER comparison against the pressed element, which is a comparison of
+ * indices. Both branches land the dragged scene where the pointer is.
+ *
+ * Returns null when there is nothing to send (same row).
+ */
+export function dragOrder(
+  order: readonly string[],
+  pressedIndex: number,
+  overIndex: number,
+): SceneAction | null {
+  const pressed = order[pressedIndex];
+  if (pressed === undefined || overIndex === pressedIndex) return null;
+  if (overIndex < 0 || overIndex >= order.length) return null;
+  if (overIndex === 0) return sceneActions.order([pressed], 'top');
+  const anchorIndex = overIndex - 1 >= pressedIndex ? overIndex : overIndex - 1;
+  const anchor = order[anchorIndex];
+  if (anchor === undefined || anchor === pressed) return null;
+  return sceneActions.order([anchor, pressed]);
+}
+
 export function reorder(order: readonly string[], name: string, beforeIndex: number): string[] {
   const without = order.filter((entry) => entry !== name);
   const at = Math.max(0, Math.min(without.length, beforeIndex));

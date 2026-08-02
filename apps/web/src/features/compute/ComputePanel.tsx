@@ -30,7 +30,68 @@ import {
 import { COMPUTE_BOOTSTRAP, COMPUTE_NS, type SasaRelativeResult } from '@tenmol/protocol/topics/compute';
 import './compute.css';
 
-type Row = { text: string; error: boolean; table?: SasaRelativeResult };
+type Row = {
+  text: string;
+  error: boolean;
+  table?: SasaRelativeResult;
+  /** Console lines PyMOL printed WHILE this button's call ran. See below. */
+  diagnostics?: readonly string[];
+};
+
+/**
+ * How long to keep watching the feedback stream after a call returns.
+ *
+ * Not decoration, and not a guess at a round trip: PyMOL's console output does
+ * not come back with the RPC reply. It is drained by the bridge's status thread
+ * at `status_hz` (10 Hz, `bridge/tenmol_bridge/config.py`) and pushed as
+ * `{t:'feedback'}` frames, so the last lines of a run land AFTER the promise
+ * resolves. Measured on `util.protein_vacuum_esp`: the four diagnostic lines
+ * arrive across ~0.3 s either side of the reply. 800 ms is two status ticks of
+ * margin on that.
+ */
+export const DIAGNOSTIC_WINDOW_MS = 800;
+
+/** More than this and it is a log, not a result; the console has the rest. */
+const MAX_DIAGNOSTIC_LINES = 40;
+
+/** The shape this module needs out of a `FeedbackEntry`; keeps it store-free. */
+interface FeedbackLine {
+  seq: number;
+  text: string;
+  origin: 'server' | 'client';
+  kind: string;
+}
+
+/**
+ * The console lines PyMOL produced since `mark`, as a result rather than a log.
+ *
+ * Three filters, each for a reason:
+ *
+ *   origin === 'server'  — a client-origin line is this UI talking to itself
+ *                          (`session.act`'s echo, transport notices). Showing
+ *                          it back would claim PyMOL said it.
+ *   kind !== 'prompt'    — `PyMOL>...` is the echo of somebody's command line,
+ *                          not output of this call.
+ *   text.trim() !== ''   — PyMOL pads its diagnostics with blank lines.
+ *
+ * Exported because the filter, not the rendering, is the part worth pinning.
+ */
+export function diagnosticsSince(
+  lines: readonly FeedbackLine[],
+  mark: number,
+): readonly string[] {
+  const out: string[] = [];
+  for (const line of lines) {
+    if (line.seq < mark) continue;
+    if (line.origin !== 'server') continue;
+    if (line.kind === 'prompt') continue;
+    if (line.text.trim() === '') continue;
+    out.push(line.text);
+  }
+  // The TAIL, not the head: when a run overflows, the summary lines that come
+  // last are the ones worth keeping.
+  return out.length > MAX_DIAGNOSTIC_LINES ? out.slice(-MAX_DIAGNOSTIC_LINES) : out;
+}
 
 type Form = Record<string, string | number | boolean>;
 
@@ -61,6 +122,25 @@ export function ComputePanel() {
   const execute = useCallback(
     async (m: Metric) => {
       setBusy(m.id);
+      /*
+       * B9 / inventory row 503: "must warn before the mutation AND surface the
+       * diagnostics".
+       *
+       * `util.protein_vacuum_esp` prints what it did — how many residues it
+       * deleted, the summed partial charge, the total charge of the map — and
+       * those lines used to go only to the generic console feed, metres away
+       * from the button that caused them and interleaved with everything else.
+       * A user who has just confirmed a DESTRUCTIVE dialog is exactly the user
+       * who needs to see them.
+       *
+       * The mark is the feedback store's next sequence number, taken before the
+       * call: every line the store hands out afterwards is newer, and `seq` is
+       * monotonic and never reused (`packages/stores/src/feedback.ts`). That is
+       * a read of a store the shell already fills, NOT a second subscription —
+       * the bridge's feedback drain is destructive and a second consumer would
+       * split the stream (see `app/session.ts`).
+       */
+      const mark = session.stores.feedback.get().nextSeq;
       try {
         // `quiet` is not universal — see Metric.quiet.
         const kwargs = m.quiet === false ? {} : { quiet: 1 };
@@ -97,6 +177,19 @@ export function ComputePanel() {
       } finally {
         setBusy(null);
         setConfirming(null);
+        // Detached on purpose: the button un-busies immediately and the
+        // diagnostics fill in when the console has caught up. Awaiting it here
+        // would leave a destructive helper looking like it was still running
+        // for another 800 ms.
+        void (async () => {
+          await new Promise((resolve) => setTimeout(resolve, DIAGNOSTIC_WINDOW_MS));
+          const lines = diagnosticsSince(session.stores.feedback.get().lines, mark);
+          if (lines.length === 0) return;
+          setResults((r) => {
+            const row = r[m.id];
+            return row ? { ...r, [m.id]: { ...row, diagnostics: lines } } : r;
+          });
+        })();
       }
     },
     [session, selection, forms],
@@ -177,6 +270,15 @@ export function ComputePanel() {
                     (row?.text ?? '')
                   )}
                   {row?.table && <SasaTable result={row.table} />}
+                  {row?.diagnostics && row.diagnostics.length > 0 && (
+                    <details className="compute__diag" data-diagnostics={m.id} open>
+                      <summary>
+                        what PyMOL reported ({row.diagnostics.length}{' '}
+                        {row.diagnostics.length === 1 ? 'line' : 'lines'})
+                      </summary>
+                      <pre className="compute__diaglines">{row.diagnostics.join('\n')}</pre>
+                    </details>
+                  )}
                 </td>
               </tr>
             );
@@ -210,8 +312,9 @@ export function ComputePanel() {
       )}
 
       <p className="compute__note">
-        Diagnostics print to the console, where PyMOL puts them. Results use each helper&rsquo;s own
-        units; a failure is shown here rather than only in the feedback pane.
+        Whatever PyMOL printed while a helper ran is captured next to that helper&rsquo;s result, as
+        well as going to the console. Results use each helper&rsquo;s own units; a failure is shown
+        here rather than only in the feedback pane.
       </p>
     </div>
   );

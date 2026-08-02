@@ -130,6 +130,12 @@ export interface InstanceDrawOptions {
   pixelRatio?: number;
   /** `nonbonded_size` from the frame header; the cross arm half-length. */
   nonbondedSize?: number;
+  /**
+   * `RepDot::VN`, one MODEL-space normal per dot, when the frame carried the
+   * optional `normal` sub-buffer. Absent for every other kind and for a bridge
+   * that does not send it — the points are then flat, as they always were.
+   */
+  normal?: Float32Array;
 }
 
 /** Largest `w` in a sphere buffer. 0 means "these are dots, not spheres". */
@@ -309,9 +315,18 @@ function buildPointCloud(
   geometry.setAttribute('position', new InterleavedBufferAttribute(interleaved, 3, 0));
   geometry.setAttribute('color', new InterleavedBufferAttribute(interleaved, 4, 4));
   geometry.boundingSphere = boundingSphereOf('sphere', data, buffer.count, 8);
+  // `RepDot::VN`, if the frame carried it. A short buffer is IGNORED rather
+  // than half-applied: three would read past the end and light the tail of the
+  // cloud with garbage, which is worse than the flat look it replaces.
+  const normal =
+    options.normal !== undefined && options.normal.length >= buffer.count * 3
+      ? options.normal
+      : null;
+  if (normal !== null) geometry.setAttribute('normal', new BufferAttribute(normal, 3));
   const material = createPointMaterial({
     ...(options.pointSize === undefined ? {} : { pointSize: options.pointSize }),
     ...(options.pixelRatio === undefined ? {} : { pixelRatio: options.pixelRatio }),
+    hasNormal: normal !== null,
   });
   const points = new Points(geometry, material);
   points.frustumCulled = false;

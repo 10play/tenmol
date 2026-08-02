@@ -50,7 +50,12 @@ describe('the input controller drives the GL-free driver', () => {
     controller = createInputController({
       element,
       transport: {
-        input: (message) => sent.push(message),
+        input: (message) => {
+          // `void | boolean` since wave 10: the controller reads a `false` as
+          // "the socket refused this frame" (`types.ts`), and `push` returns a
+          // length, which would read as "delivered" only by accident.
+          sent.push(message);
+        },
         call: () => Promise.resolve(null),
       },
       cameraDriver: driver,
@@ -120,7 +125,12 @@ describe('the input controller drives the GL-free driver', () => {
     const gated = createInputController({
       element,
       transport: {
-        input: (message) => sent.push(message),
+        input: (message) => {
+          // `void | boolean` since wave 10: the controller reads a `false` as
+          // "the socket refused this frame" (`types.ts`), and `push` returns a
+          // length, which would read as "delivered" only by accident.
+          sent.push(message);
+        },
         call: () => Promise.resolve(null),
       },
       cameraDriver: undefined,

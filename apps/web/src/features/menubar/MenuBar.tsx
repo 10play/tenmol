@@ -101,6 +101,16 @@ export function MenuBar() {
   const [values, setValues] = useState<Record<string, MenuSettingValue>>({});
   const [about, setAbout] = useState<string[] | null>(null);
   const [recent, setRecent] = useState<{ files: string[]; error: string | null } | null>(null);
+  /**
+   * The `recent()` fetch that is in the air.
+   *
+   * `renderDynamic` kicks the fetch off FROM RENDER, and one open renders the
+   * submenu more than once (the hover, then the settings refresh that lands a
+   * few ms later). MEASURED without this: two `tenmol_menus('recent')` round
+   * trips per open, because `recent` is still null when the second render
+   * runs. Qt reads a property and pays nothing; here it is an RPC.
+   */
+  const recentFetch = useRef<Promise<void> | null>(null);
   const [tree, setTree] = useState<MenusPayload>(MENU_DATA);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -195,7 +205,10 @@ export function MenuBar() {
     void refresh(open);
     // Qt rebuilds Open Recent on every `aboutToShow`; dropping the cache when
     // the menu closes is the same contract.
-    if (open === null) setRecent(null);
+    if (open === null) {
+      setRecent(null);
+      recentFetch.current = null;
+    }
   }, [open, refresh]);
 
   /* ---------------- the push channel (`setting_callbacks`) ---------------- */
@@ -388,16 +401,22 @@ export function MenuBar() {
   // across opens. The DB is server-side (`~/.pymol/recent.db`, `_gui.py:975`)
   // precisely so it survives a browser-storage clear.
   const loadRecent = useCallback(async () => {
-    if (recent) return;
-    try {
-      const files = await source.recent();
-      setRecent({ files: Array.isArray(files) ? files : [], error: null });
-    } catch (error) {
-      setRecent({
-        files: [],
-        error: `recent files unavailable: ${error instanceof Error ? error.message : String(error)}`,
-      });
-    }
+    // …once per open: `recent` for the reads that already landed,
+    // `recentFetch` for the one still in the air (see the ref's own note).
+    if (recent || recentFetch.current) return;
+    const fetching = (async () => {
+      try {
+        const files = await source.recent();
+        setRecent({ files: Array.isArray(files) ? files : [], error: null });
+      } catch (error) {
+        setRecent({
+          files: [],
+          error: `recent files unavailable: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      }
+    })();
+    recentFetch.current = fetching;
+    await fetching;
   }, [recent, source]);
 
   const renderDynamic = useCallback(

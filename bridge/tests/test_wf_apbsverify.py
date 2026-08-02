@@ -132,17 +132,24 @@ def test_execute_reaches_a_full_shell_with_no_confirmation(
 def test_confirm_once_gates_system_but_not_execute() -> None:
     """The asymmetry, on a fresh Policy so suite order cannot decide it.
 
-    ``CONFIRM_ONCE`` is ``frozenset({"system"})`` (``policy/base.py:153``) and
-    ``Grant`` has no field that can add to it, so the WP-25 grant could not have
-    gated ``execute`` without editing a file it does not own.  Recorded as the
-    reason the docstring correction stops at prose instead of changing
-    behaviour.
+    UPDATED IN WAVE 10, and the update is the point.  This test used to record
+    that ``Grant`` had **no field** that could add to ``CONFIRM_ONCE``, so the
+    WP-25 grant *could not* gate ``execute`` even if it wanted to.  That is no
+    longer true: ``Grant.confirm_once`` exists (``policy/base.py``), and the
+    same pass fixed the dotted-path lookup that any such gate would have had to
+    work around.
+
+    The BEHAVIOUR is unchanged, and now for a reason the code can express: WP-25
+    argues in its own grant file that gating ``execute`` while ``cmd.do`` is
+    dangerous, ungated and able to run ``import subprocess`` on the same socket
+    is theatre.  "Cannot say it" and "chose not to say it" are different states;
+    this is now the second one.
     """
     from tenmol_bridge.policy import build_policy
     from tenmol_bridge.policy.base import CONFIRM_ONCE, Grant
 
     assert CONFIRM_ONCE == frozenset({"system"})
-    assert not hasattr(Grant("probe"), "confirm_once")
+    assert Grant("probe").confirm_once == set(), "the field exists and is empty"
 
     policy = build_policy()
     system = policy.check("cmd.system")
@@ -150,6 +157,11 @@ def test_confirm_once_gates_system_but_not_execute() -> None:
 
     assert system.dangerous and system.needs_confirmation is True
     assert execute.dangerous and execute.needs_confirmation is False
+
+    # ...and the gate WOULD work if WP-25 ever asked for it, keyed either way.
+    gated = build_policy().add_grant(Grant("probe", confirm_once={"subproc.execute"}))
+    assert gated.check("subproc.execute").needs_confirmation is True
+    assert gated.check("subproc.which").needs_confirmation is False
 
 
 def test_execute_is_a_new_channel_and_not_a_new_capability(ws: WSClient, bridge) -> None:
