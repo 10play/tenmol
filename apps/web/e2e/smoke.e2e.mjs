@@ -43,12 +43,26 @@ const CMDLINE = 'input.cmdline__input';
  * fixed-delay version passed in isolation and failed intermittently in the full
  * suite, where seven pages load in sequence against one dev server.
  */
+/**
+ * Multiplier for every fixed wait below.
+ *
+ * The numbers in this file were tuned on an M4 Max with a hardware GL context.
+ * A GitHub macOS runner reports `Apple Software Renderer` and shares its CPU,
+ * and five specs failed there on the first real CI run — every one of them with
+ * a "the action did not take effect" message (`rewind did not return to frame
+ * 1`, `shift+left did not enable the row`, `the sequence viewer never
+ * appeared`), which is what a too-short sleep looks like, not a broken feature.
+ *
+ * CI sets TENMOL_E2E_SCALE. Local runs are unaffected.
+ */
+const SCALE = Number(process.env['TENMOL_E2E_SCALE'] ?? 1) || 1;
+
 async function run(page, command, waitMs = 900) {
   const input = page.locator(CMDLINE);
   await input.waitFor({ state: 'visible', timeout: 20_000 });
   await input.fill(command);
   await input.press('Enter');
-  await page.waitForTimeout(waitMs);
+  await page.waitForTimeout(Math.round(waitMs * SCALE));
 }
 
 /** Evaluate a python expression and read the answer out of the console. */
@@ -57,6 +71,29 @@ async function ask(page, expr) {
   const text = await page.evaluate(() => document.body.innerText);
   const all = [...text.matchAll(/Q= *([^\n]*)/g)];
   return all.length ? all[all.length - 1][1].trim() : '?';
+}
+
+/**
+ * Poll `expr` until `want` matches, and return the last value seen.
+ *
+ * SCALING A SLEEP IS A WORSE FIX THAN NOT SLEEPING. A fixed wait is either too
+ * short somewhere (flake) or too long everywhere (a slow suite), and the right
+ * number depends on hardware nobody controls. These assertions are all of the
+ * form "did PyMOL's state actually change?", which is a question that can be
+ * ASKED repeatedly — so ask it until it is true or the deadline passes.
+ *
+ * `want` is a string to compare, or a predicate over the answer.
+ */
+async function until(page, expr, want, timeoutMs = 15_000) {
+  const deadline = Date.now() + timeoutMs * SCALE;
+  const ok = typeof want === 'function' ? want : (v) => v === want;
+  let last = '?';
+  for (;;) {
+    last = await ask(page, expr);
+    if (ok(last)) return last;
+    if (Date.now() > deadline) return last;
+    await page.waitForTimeout(400);
+  }
 }
 
 /**
@@ -480,12 +517,16 @@ export const tests = [
       await run(page, 'frame 5', 1200);
 
       await page.locator('button[title^="forward one frame"]').first().click();
-      await page.waitForTimeout(1200);
-      assert((await ask(page, 'cmd.get_frame()')) === '6', 'forward did not step exactly one frame');
+      assert(
+        (await until(page, 'cmd.get_frame()', '6')) === '6',
+        'forward did not step exactly one frame',
+      );
 
       await page.locator('button[title^="rewind"]').first().click();
-      await page.waitForTimeout(1200);
-      assert((await ask(page, 'cmd.get_frame()')) === '1', 'rewind did not return to frame 1');
+      assert(
+        (await until(page, 'cmd.get_frame()', '1')) === '1',
+        'rewind did not return to frame 1',
+      );
 
       // Scene recall ANIMATES by default, so a sample taken while the camera is
       // still interpolating reads a value that is neither the old one nor the
@@ -768,8 +809,7 @@ export const tests = [
 
       // And it is really a file PyMOL can run.
       await ask(page, `cmd.do("@" + ${JSON.stringify(target)}) or "ran"`);
-      await page.waitForTimeout(1200);
-      const applied = await ask(page, "cmd.get('sphere_scale')");
+      const applied = await until(page, "cmd.get('sphere_scale')", (v) => v.startsWith('0.42'));
       assert(applied.startsWith('0.42'), `running the saved script did nothing (${applied})`);
 
       await page.close();
@@ -893,7 +933,10 @@ export const tests = [
       // 1. SHIFT + left — immediate toggle.
       assert(!(await enabled()).includes('m98a'), 'm98a should have started disabled');
       await gesture('m98a', { mods: ['Shift'] });
-      assert((await enabled()).includes('m98a'), 'shift+left did not enable the row');
+      assert(
+        (await until(page, 'cmd.get_names("objects",1)', (v) => v.includes('m98a'))).includes('m98a'),
+        'shift+left did not enable the row',
+      );
       await gesture('m98a', { mods: ['Shift'] });
       assert(!(await enabled()).includes('m98a'), 'shift+left did not toggle back off');
 
@@ -1178,9 +1221,10 @@ export const tests = [
         );
         assert(hit.includes('p11l_f'), `a click on the p11l_f row would land on ${hit}`);
         await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-        await page.waitForTimeout(1400);
         assert(
-          (await ask(page, 'cmd.get_names("objects",1)')).includes('p11l_f'),
+          (await until(page, 'cmd.get_names("objects",1)', (v) => v.includes('p11l_f'))).includes(
+            'p11l_f',
+          ),
           'clicking the last object row did not enable it in PyMOL',
         );
       } finally {
@@ -1249,6 +1293,9 @@ export const tests = [
         // OVERLAY ON: draws over the picture, takes nothing.
         await run(page, 'set seq_view_overlay, 1', 600);
         await run(page, 'set seq_view, 1', 1600);
+        // The viewer polls the bridge at 4 Hz, so the strip appears a round trip
+        // after the setting lands — longer than any fixed wait should assume.
+        await page.locator('.seqview').waitFor({ state: 'attached', timeout: 30_000 });
         const overlay = await survey();
         assert(overlay.strip !== null, 'the sequence viewer never appeared');
         assert(

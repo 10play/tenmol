@@ -182,6 +182,13 @@ jobs:
       # the server never draws. Runs first so that "the app is broken" and "this
       # runner has no GL" are separated before the big run muddles them.
       - name: e2e -- the GL-free spec
+        env:
+          # The runner reports `Apple Software Renderer` and shares its CPU;
+          # the waits in smoke.e2e.mjs were tuned on an M4 Max. Five specs
+          # failed on the first real run, all with 'the action did not take
+          # effect' messages. The brittle assertions now poll, and this
+          # scales what is still a fixed wait.
+          TENMOL_E2E_SCALE: '3'
         run: |
           set -o pipefail
           set +e
@@ -206,6 +213,13 @@ jobs:
       # Collapsing them into "red" is how a missing chromium gets mistaken for a
       # regression, so they are annotated separately.
       - name: e2e -- all 21 specs
+        env:
+          # The runner reports `Apple Software Renderer` and shares its CPU;
+          # the waits in smoke.e2e.mjs were tuned on an M4 Max. Five specs
+          # failed on the first real run, all with 'the action did not take
+          # effect' messages. The brittle assertions now poll, and this
+          # scales what is still a fixed wait.
+          TENMOL_E2E_SCALE: '3'
         run: |
           set -o pipefail
           set +e
