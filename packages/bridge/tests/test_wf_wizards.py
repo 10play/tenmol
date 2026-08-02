@@ -637,11 +637,23 @@ def test_auto_position_is_computed_from_field_of_view_and_get_view(wf, view):
     """`box.py:104-149` -- recomputed here from the two live inputs."""
     ws = wf
     ws.call("cmd.delete", "all")
-    ws.call("cmd.set_view", view)
     # The expectation below is written against `view`, so a camera that is
     # still MOVING (a `center(animate=1)` left in flight by another test) would
-    # show up as an unexplained one-coordinate mismatch.  Fail loudly instead.
-    assert ws.call("cmd.get_view") == pytest.approx(view, abs=1e-4)
+    # show up as an unexplained one-coordinate mismatch.
+    #
+    # The suite shares one PyMOL, so whether that happens depends on which
+    # tests ran first — deselecting the three benchmarks was enough to change
+    # it. Re-issue until the camera holds still, then fail loudly if it never
+    # does, which keeps the guard and drops the order dependence.
+    deadline = time.monotonic() + 10.0
+    while True:
+        ws.call("cmd.set_view", view)
+        if ws.call("cmd.get_view") == pytest.approx(view, abs=1e-4):
+            break
+        assert time.monotonic() < deadline, (
+            "the camera never settled: another test left an animation in flight"
+        )
+        time.sleep(0.1)
     ws.call("wizards.launch", "box")
     fov = ws.call("cmd.get_setting_float", "field_of_view")
 

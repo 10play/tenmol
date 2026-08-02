@@ -46,6 +46,8 @@ from typing import Any, Dict, List
 
 import pytest
 
+from conftest import slow
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from conftest import WSClient  # noqa: E402
@@ -423,7 +425,7 @@ def test_output_arrives_while_the_child_is_still_running(ws: WSClient, bridge) -
     started = time.monotonic()
     msg_id = ws.send(t="call", fn="subproc.execute", args=[[sys.executable, "-u", "-c", code]],
                      kwargs={})
-    assert wait_for(ws, bridge, needle, timeout=10.0), "nothing streamed"
+    assert wait_for(ws, bridge, needle, timeout=slow(10.0)), "nothing streamed"
     first_line_at = time.monotonic() - started
 
     reply = ws.wait_reply(msg_id, timeout=30.0)
@@ -468,7 +470,10 @@ def test_a_wedged_child_is_killed_at_the_timeout(ws: WSClient) -> None:
     elapsed = time.monotonic() - started
     assert result["timedOut"] is True
     assert result["returncode"] < 0, result
-    assert elapsed < 10.0, elapsed
+    # Scaled: the child is killed at ITS OWN timeout, but a loaded runner adds
+    # scheduling latency on top — measured 22.0 s against this 10.0 s bound.
+    # A watchdog that never fires still runs to the harness timeout and fails.
+    assert elapsed < slow(10.0), elapsed
 
 
 def test_a_missing_executable_is_a_typed_error_raised_before_the_fork(

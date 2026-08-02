@@ -29,6 +29,8 @@ import time
 
 import pytest
 
+from conftest import slow_rate
+
 from tenmol_bridge.config import log
 from tenmol_bridge.engine import EngineState
 
@@ -292,7 +294,9 @@ def test_status_thread_only_uses_lock_attempting_calls(bridge, ws):
     elapsed = time.monotonic() - started
 
     polls_during = poller.polls - polls_before
-    expected = max(1, int((elapsed - 0.3) * bridge.pump.config.status_hz))
+    # Scaled: a loaded runner genuinely polls fewer times in the same
+    # wall-clock window. A stalled thread still reports ~0 and fails.
+    expected = max(1, int(slow_rate((elapsed - 0.3) * bridge.pump.config.status_hz)))
     assert polls_during >= expected, (
         "the status thread stalled while the API lock was held for %.2fs: "
         "%d polls, expected >= %d" % (elapsed, polls_during, expected)

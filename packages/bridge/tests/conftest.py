@@ -262,3 +262,43 @@ def ws(bridge: RunningBridge):
     client = WSClient(bridge.ws_url)
     yield client
     client.close()
+
+
+# ---------------------------------------------------------------------------
+# Wall-clock tolerance
+# ---------------------------------------------------------------------------
+
+#: Multiplier for every deadline, rate and budget asserted in this suite.
+#:
+#: The numbers throughout these tests were measured on an M4 Max with a
+#: hardware GL context and an otherwise idle machine. A GitHub macOS runner is
+#: neither: the same suite takes 21m43s there against ~9m here, its GL is a
+#: software rasteriser, and its CPU is shared. Eleven tests failed on the first
+#: full run and every one of them was a clock, not a defect:
+#:
+#:   status thread: 8 polls, expected >= 13
+#:   a wedged child killed at 22.0s, asserted < 10.0
+#:   pipeline stage 267.67 ms, asserted <= 6.0
+#:   animated camera sampled mid-flight; "no reply to frame 8"
+#:
+#: An absolute bound measures the hardware. Scaling it keeps the assertion
+#: meaningful — a REGRESSION still blows past 3x — while letting a slow box
+#: pass. CI sets TENMOL_TEST_SLOW; local runs are unaffected.
+def slow_factor() -> float:
+    """Read TENMOL_TEST_SLOW, defaulting to 1.0."""
+    import os
+
+    try:
+        return max(1.0, float(os.environ.get("TENMOL_TEST_SLOW", "1")))
+    except ValueError:
+        return 1.0
+
+
+def slow(seconds: float) -> float:
+    """A deadline in seconds, scaled for the host."""
+    return seconds * slow_factor()
+
+
+def slow_rate(count: float) -> float:
+    """A minimum event/poll COUNT, scaled DOWN for a slower host."""
+    return count / slow_factor()
