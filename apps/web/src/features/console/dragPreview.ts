@@ -23,8 +23,28 @@
  * list (a privacy rule, not a bug). Text dragged from inside the page IS
  * readable on dragenter in Chromium; text dragged from another application and
  * every `Files` entry is not. So {@link dragEnterPreview} returns `null` when
- * it cannot see the payload, the line is left alone, and `drop` inserts for
- * real — the preview degrades, the drop never does.
+ * it cannot see the payload, and `drop` inserts for real — the drop never
+ * degrades.
+ *
+ * WHAT THE PREVIEW DOES INSTEAD, and why this is a decision rather than a
+ * workaround. For four waves this row's gap sentence read "for a drag
+ * originating OUTSIDE the page the HTML5 data store is in protected mode, so
+ * there is no live preview" — which is true of the PAYLOAD and was being
+ * treated as true of the preview. It is not: `dataTransfer.types` and
+ * `dataTransfer.items[i].kind` ARE readable in protected mode, so the browser
+ * will say "one file" or "some text" even while it refuses to say which. The
+ * command line therefore previews {@link protectedPlaceholder} — inserted at
+ * the cursor and SELECTED exactly like Qt's, restored on leave exactly like
+ * Qt's, and replaced by the real path on drop. It is a deliberate deviation
+ * (Qt inserts the true text because Qt can read it), and it is the whole of
+ * what this platform allows: the file's NAME is withheld until `drop` in every
+ * engine, so a byte-identical preview is not achievable and the honest choice
+ * is between the wrong length and nothing at all. The purpose of the Qt
+ * behaviour — "see where the drop will land, before you let go, and get your
+ * line back if you change your mind" — is preserved.
+ *
+ * A drag from INSIDE the page is unaffected: `getData` answers there, the real
+ * text is previewed, and the placeholder never appears.
  */
 
 export interface PreviewState {
@@ -73,6 +93,39 @@ export function droppedText(items: {
   if (first) return first;
   return null;
 }
+
+/**
+ * The stand-in previewed when the payload is withheld (protected mode).
+ *
+ * Everything here comes from what a drag DOES expose before the drop:
+ * `dataTransfer.types` (a `Files` entry for any file drag, plus whatever MIME
+ * types the source advertises) and `dataTransfer.items[i].kind`, which counts
+ * the files without revealing them. `items` is the count to trust —
+ * `dataTransfer.files` is EMPTY until `drop`, so a length check there reports
+ * "no files" for the one case this exists to cover.
+ *
+ * Returns `null` when the drag carries nothing this widget could accept, which
+ * is what makes the caller leave the line untouched and not preventDefault.
+ */
+export function protectedPlaceholder(input: {
+  types: readonly string[];
+  /** `[...items].filter(i => i.kind === 'file').length`. */
+  fileCount: number;
+}): string | null {
+  const types = new Set(input.types);
+  if (input.fileCount > 0) {
+    return input.fileCount === 1 ? '⟨file⟩' : `⟨${input.fileCount} files⟩`;
+  }
+  // A `Files` type with no readable item list: Safari and old Edge report the
+  // type and an empty `items`, so the count cannot be the only signal.
+  if (types.has('Files')) return '⟨file⟩';
+  if (types.has('text/uri-list')) return '⟨link⟩';
+  if (types.has('text/plain')) return '⟨text⟩';
+  return null;
+}
+
+/** Every placeholder {@link protectedPlaceholder} can produce, for tests/CSS. */
+export const PLACEHOLDER_PATTERN = /^⟨[^⟩]+⟩$/u;
 
 /** `dragEnterEvent` (`:1099-1116`). Returns `null` when there is nothing to show. */
 export function dragEnterPreview(

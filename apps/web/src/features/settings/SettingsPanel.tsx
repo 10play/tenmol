@@ -8,14 +8,24 @@
  * is in the module-level service (`./service.ts`), not in this component.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { SettingMeta, SettingValue } from '@tenmol/protocol';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import type { SettingMeta } from '@tenmol/protocol';
+import type { MenuCommandNode, MenuValue } from '@tenmol/protocol/topics/menus';
 import { valueKey } from '@tenmol/stores/settings';
 import { useSession, useStore } from '../../app';
+import { menuHooks, subscribeMenuHooks } from '../../shell/panelHooks';
+import { HOOK_OWNERS, UNAVAILABLE_HOOKS } from '../menubar/model';
+import { runAction, type MenuRuntime } from '../menubar/actions';
 import { AdvancedSettingsTable } from './AdvancedSettingsTable';
 import { LightingPanel } from './LightingPanel';
 import { MenuDataRenderer, type MenuContext } from './SettingMenu';
-import type { MenuItem } from './menuData';
+import {
+  MENUDATA_SOURCE,
+  menuSubtree,
+  menuValue,
+  PANEL_MENUS,
+  type PanelMenuName,
+} from './menuTree';
 import { getSettingsService } from './service';
 import './settings.css';
 
@@ -33,6 +43,9 @@ export function SettingsPanel() {
   const connection = useStore(session.stores.connection, (s) => s.phase);
   const objectRows = useStore(session.stores.objects, (s) => s.rows);
   const [open, setOpen] = useState<Window | null>(null);
+  /** Which of the four data-driven menus the renderer is showing. */
+  const [which, setWhich] = useState<PanelMenuName>('Setting');
+  const external = useSyncExternalStore(subscribeMenuHooks, menuHooks, menuHooks);
 
   useEffect(() => {
     if (connection !== 'open') return;
@@ -53,45 +66,76 @@ export function SettingsPanel() {
   );
 
   const write = useCallback(
-    (meta: SettingMeta, value: SettingValue) => {
+    (setting: string, value: MenuValue) => {
+      const meta = byName.get(setting);
+      if (!meta) return;
       void source.write(meta, value).catch(() => undefined);
     },
-    [source],
+    [byName, source],
+  );
+
+  /**
+   * The seams this panel fills itself. `Setting ▸ Edit All...` is a `= None`
+   * attribute of `PyMOLDesktopGUI` (`_gui.py:26`) that Qt binds to its own
+   * settings dialog (`pymol_qt_gui.py:880`); the dialog it should open is two
+   * lines below, so it is bound here rather than registered globally — the
+   * menu bar's copy of the same leaf goes through `toolkitHooks.tsx`.
+   */
+  const localHooks = useMemo(
+    () => ({
+      settings_edit_all_dialog: () => setOpen('table'),
+    }),
+    [],
+  );
+
+  const runtime: MenuRuntime = useMemo(
+    () => ({
+      run: (line: string) => session.run(line),
+      call: (fn: string, args?: unknown[], kwargs?: Record<string, unknown>) =>
+        session.call(fn, args ?? [], kwargs ?? {}),
+      note: (line: string, kind?: 'warning' | 'error') =>
+        session.stores.feedback.appendClient(line, kind),
+      openUrl: (url: string) => window.open(url, '_blank', 'noopener,noreferrer'),
+      // A feature that owns a dialog wins over this panel's stand-in, exactly
+      // as in `MenuBar`.
+      hooks: { ...localHooks, ...external },
+    }),
+    [session, localHooks, external],
   );
 
   const run = useCallback(
-    (item: Extract<MenuItem, { kind: 'command' }>) => {
+    (node: MenuCommandNode) => {
       void (async () => {
-        session.stores.feedback.appendClient(item.echo);
-        for (const call of item.calls) {
-          try {
-            await session.call(call.fn, call.args, call.kwargs ?? {});
-          } catch (e) {
-            session.stores.feedback.appendClient(
-              ` ${e instanceof Error ? e.message : String(e)}`,
-              'error',
-            );
-          }
-        }
-        // These commands write many settings at once; the tap will report them,
-        // but a kick makes the checkmarks move immediately.
+        await runAction(runtime, node.action);
+        // A command node may write many settings at once (the Transparency
+        // presets write three, `util.performance` a dozen); the 5 Hz tap will
+        // report them, but a kick moves the check marks immediately.
         await source.poll().catch(() => undefined);
       })();
     },
-    [session, source],
+    [runtime, source],
   );
 
   const ctx: MenuContext = useMemo(
     () => ({
-      byName,
       valueOf: (name: string) => {
         const meta = byName.get(name);
-        return meta ? entries[valueKey(meta.index)]?.value : undefined;
+        return menuValue(meta, meta ? entries[valueKey(meta.index)]?.value : undefined);
       },
       write,
       run,
+      hook: (name: string) =>
+        UNAVAILABLE_HOOKS[name] ? undefined : runtime.hooks[name],
+      hookNote: (name: string) => {
+        const impossible = UNAVAILABLE_HOOKS[name];
+        if (impossible) return `${name}: ${impossible}`;
+        const owner = HOOK_OWNERS[name];
+        return owner
+          ? `not built yet — ${owner.owner} owns it (${owner.note})`
+          : `"${name}" has no handler in this client`;
+      },
     }),
-    [byName, entries, write, run],
+    [byName, entries, write, run, runtime],
   );
 
   return (
@@ -116,7 +160,7 @@ export function SettingsPanel() {
           <div className="setwin__title">
             <span>
               {open === 'menu'
-                ? 'Setting'
+                ? which
                 : open === 'table'
                   ? 'PyMOL Advanced Settings'
                   : 'Lighting Settings'}
@@ -133,7 +177,36 @@ export function SettingsPanel() {
                   : 'loading the setting catalogue…'}
               </p>
             ) : open === 'menu' ? (
-              <MenuDataRenderer ctx={ctx} />
+              <>
+                {/*
+                  * ONE renderer, four menus. `_gui.py`'s Setting, Display,
+                  * Mouse and Scene menus are the four that are (almost)
+                  * entirely check/radio over settings, and the whole point of
+                  * `get_menudata` is that nothing about them is special-cased
+                  * per menu — so the picker changes the DATA, not the code.
+                  */}
+                <div className="setmenu__tabs" role="tablist" aria-label="menu">
+                  {PANEL_MENUS.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      role="tab"
+                      aria-selected={which === name}
+                      className={`setmenu__tab${which === name ? ' is-on' : ''}`}
+                      onClick={() => setWhich(name)}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                  <span
+                    className="setmenu__source"
+                    title={`${MENUDATA_SOURCE} — harvested by bridge/tenmol_bridge/panels/menus.py`}
+                  >
+                    get_menudata
+                  </span>
+                </div>
+                <MenuDataRenderer nodes={menuSubtree(which)} ctx={ctx} />
+              </>
             ) : open === 'table' ? (
               <AdvancedSettingsTable
                 store={store}

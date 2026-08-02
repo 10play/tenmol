@@ -35,8 +35,33 @@ export const BUILDER_RPC = {
   action: 'cmd.builder_action',
   pick: 'cmd.builder_pick',
   wizardClick: 'cmd.builder_wizard_click',
+  sculptTick: 'cmd.builder_sculpt_tick',
   dismiss: 'cmd.builder_dismiss',
 } as const;
+
+/**
+ * One frame of the sculpting loop.
+ *
+ * Upstream there is no such call: `PyMOL_Idle` runs
+ * `ExecutiveSculptIterateAll` whenever the `sculpting` setting is on
+ * (`layer5/PyMOL.cpp:2424`, `layer1/Control.cpp:397-403`). The bridge pump
+ * draws but does not idle, so the CLIENT ticks — see
+ * `bridge/tenmol_bridge/panels/builder.py:builder_sculpt_tick`.
+ */
+export interface BuilderSculptTick {
+  /** `sculpting` was on, i.e. PyMOL's own idle loop would have iterated. */
+  active: boolean;
+  /** Total strain over every molecular object (`ExecutiveSculptIterate`). */
+  strain: number;
+  cycles: number;
+  objects: number;
+  /**
+   * `sculpt_auto_center` is on but unreachable this way: the idle loop passes
+   * a centre accumulator that `cmd.sculpt_iterate` cannot
+   * (`layer3/Executive.cpp:7117,7170`), so the scene does not follow the atoms.
+   */
+  auto_center_unsupported: boolean;
+}
 
 /** One entry of `pk1`..`pk4`, in click order (`layer3/Editor.h:30-48`). */
 export interface BuilderPickedAtom {
@@ -99,6 +124,10 @@ export interface BuilderSettings {
   editor_auto_measure: number;
   secondary_structure: number;
   auto_remove_hydrogens: number;
+  /** The tick loop's gate — `ControlIdling` is exactly this setting. */
+  sculpting: number;
+  /** Iterations per idle frame upstream; per tick here. */
+  sculpting_cycles: number;
 }
 
 export interface BuilderState {

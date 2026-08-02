@@ -61,6 +61,7 @@ import {
   dragLeaveRestore,
   dropNeedsUpload,
   droppedText,
+  protectedPlaceholder,
   type PreviewState,
 } from './dragPreview';
 
@@ -183,9 +184,22 @@ export function CommandLine() {
       }
     } catch (error) {
       session.stores.feedback.appendClient(` upload failed: ${errorText(error)}`, 'error');
+      restorePreview();
       return;
     }
+    // The placeholder is still standing in for these files while they upload;
+    // whatever happens next, it must not be what the user is left holding.
     if (paths.length > 0) applyPreview(paths.join(' '), false);
+    else restorePreview();
+  };
+
+  /** `dragLeaveEvent` (`:1118-1121`), also used when a drop resolves to nothing. */
+  const restorePreview = (): void => {
+    const restored = dragLeaveRestore(preview.current);
+    preview.current = NO_PREVIEW;
+    if (!restored) return;
+    setText(restored.text);
+    pendingSelection.current = { value: restored.text, range: [restored.cursor, restored.cursor] };
   };
 
   const applyPreview = (dropped: string | null, selectInserted: boolean) => {
@@ -195,7 +209,17 @@ export function CommandLine() {
     };
     preview.current = NO_PREVIEW;
     const result = dragEnterPreview(base.text, base.cursor, dropped);
-    if (!result) return false;
+    if (!result) {
+      // Nothing to insert. `base` is what the preview replaced, so putting it
+      // back is what stops a stand-in outliving the drag that created it — a
+      // drop whose payload turns out to be empty must not leave `⟨file⟩` in
+      // the line. Qt cannot reach this state: it only previews text it read.
+      if ((inputRef.current?.value ?? text) !== base.text) {
+        setText(base.text);
+        pendingSelection.current = { value: base.text, range: [base.cursor, base.cursor] };
+      }
+      return false;
+    }
     if (selectInserted) preview.current = result.saved;
     setText(result.text);
     // `setSelection(pos, len(droppedtext))` (`pymol_qt_gui.py:1116`) — the
@@ -289,21 +313,24 @@ export function CommandLine() {
           // readable. When that happens there is nothing to preview and the
           // line is left untouched; `drop` then inserts for real. The preview
           // degrades; the drop never does.
-          if (
-            !e.dataTransfer.types.includes('text/plain') &&
-            !e.dataTransfer.types.includes('text/uri-list')
-          ) {
+          const types = [...(e.dataTransfer.types ?? [])];
+          const real = droppedText({
+            uriList: e.dataTransfer.getData('text/uri-list'),
+            plain: e.dataTransfer.getData('text/plain'),
+          });
+          // `items` rather than `files`: the file LIST is empty until `drop`,
+          // but the item kinds are readable now, which is how a drag from
+          // Finder can be previewed at all.
+          const fileCount = [...(e.dataTransfer.items ?? [])].filter(
+            (item) => item.kind === 'file',
+          ).length;
+          const shown = real ?? protectedPlaceholder({ types, fileCount });
+          if (shown === null) {
             preview.current = NO_PREVIEW;
             return;
           }
           e.preventDefault();
-          applyPreview(
-            droppedText({
-              uriList: e.dataTransfer.getData('text/uri-list'),
-              plain: e.dataTransfer.getData('text/plain'),
-            }),
-            true,
-          );
+          applyPreview(shown, true);
         }}
         onDragOver={(e) => {
           // `dragMoveEvent` is a deliberate `pass` (`:1091-1092`) — the preview
@@ -313,14 +340,7 @@ export function CommandLine() {
         }}
         onDragLeave={() => {
           // `dragLeaveEvent` (`:1118-1121`).
-          const restored = dragLeaveRestore(preview.current);
-          preview.current = NO_PREVIEW;
-          if (!restored) return;
-          setText(restored.text);
-          pendingSelection.current = {
-            value: restored.text,
-            range: [restored.cursor, restored.cursor],
-          };
+          restorePreview();
         }}
         onDrop={(e) => {
           e.preventDefault();

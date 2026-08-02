@@ -20,6 +20,22 @@
  */
 
 import type { SeqviewPayload, SeqviewSelectResult } from '@tenmol/protocol';
+import type { PanelMenuNode } from '@tenmol/protocol';
+
+/**
+ * One right-click popup, as `SeekerClick` builds it
+ * (`layer3/Seeker.cpp:357-395`): `pick_sele` on the active selection when the
+ * cell is IN that selection, `seq_option` on a `_seeker` temporary otherwise.
+ */
+export interface SeqviewMenuPayload {
+  /** `pick_sele` | `seq_option`, or '' when there was nothing to build one on. */
+  menu: string;
+  /** The selection the leaves refer to — the active one, or `_seeker`. */
+  sele: string;
+  /** `ObjectMoleculeGetAtomSele` of the first atom, or the selection name. */
+  title: string;
+  items: PanelMenuNode[];
+}
 
 export const BOOTSTRAP_LINE =
   'from tenmol_bridge.panels import seqview; seqview.install()';
@@ -64,6 +80,19 @@ export interface SeqviewSource {
   ): Promise<{ log: string }>;
   /** A cell that carries a state sets that object's state (`:463-466`). */
   setState(object: string, state: number): Promise<{ log: string }>;
+  /** Right click: `pick_sele` (selected cell) or `seq_option` (anything else). */
+  menu(
+    object: string,
+    atoms: readonly number[],
+    selected: boolean,
+  ): Promise<SeqviewMenuPayload>;
+  /** One lazy submenu of that popup — PyMOL's `SubGetItem`. */
+  menuExpand(
+    path: readonly number[],
+    object: string,
+    atoms: readonly number[],
+    selected: boolean,
+  ): Promise<{ path: number[]; items: PanelMenuNode[] }>;
   /** Forget that the panel is installed — after a reconnect. */
   reset(): void;
 }
@@ -133,6 +162,19 @@ export function createSeqviewSource(call: CallFn): SeqviewSource {
 
     setState(object, state) {
       return action<{ log: string }>('set_state', [object, state]);
+    },
+
+    menu(object, atoms, selected) {
+      return action<SeqviewMenuPayload>('menu', [object, [...atoms], selected ? 1 : 0]);
+    },
+
+    menuExpand(path, object, atoms, selected) {
+      return action<{ path: number[]; items: PanelMenuNode[] }>('menu_expand', [
+        [...path],
+        object,
+        [...atoms],
+        selected ? 1 : 0,
+      ]);
     },
 
     reset() {

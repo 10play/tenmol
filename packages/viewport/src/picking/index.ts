@@ -28,11 +28,13 @@
  *      the provoking vertex scores 15/15.
  */
 
-export { screenRay, pickOffsets, PICK_RANGE, type EyeRay, type Rect } from './ray';
+export { screenRay, screenPoint, pickOffsets, PICK_RANGE, type EyeRay, type Rect } from './ray';
 export {
   createPickIndex,
   type PickIndex,
   type PickHit,
   type PickOptions,
   type PickIndexStats,
+  type BandRect,
+  type BoxHit,
 } from './pick';

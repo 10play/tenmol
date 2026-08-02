@@ -33,6 +33,8 @@ import type {
   RepRenderState,
 } from '@tenmol/protocol';
 
+import type { BandBox, CameraCounters } from './input/camera';
+
 /* ------------------------------------------------------------------ *
  * Transport
  * ------------------------------------------------------------------ */
@@ -299,7 +301,14 @@ export interface ViewportHandle {
    * runs, so a drag that fails to move anything leaves it stale and these read
    * zero — indistinguishable from the driver never being consulted.
    */
-  readonly cameraRpc: { turns: number; moves: number; zooms: number; errors: number };
+  readonly cameraRpc: CameraCounters;
+  /**
+   * The ButMode action code the last GL-free gesture resolved to, and the
+   * mouse mode it was resolved against. `-1` is `cButModeNothing`.
+   */
+  readonly cameraAction: { action: number; mode: string };
+  /** The live rubber-band rectangle in DOM CSS pixels, or null. */
+  readonly selectionBand: BandBox | null;
   /** `rasterizing` as the drag gate saw it, most recent last. */
   readonly cameraGate: readonly boolean[];
   /** Client-side pick counters. Zero unless the backend cannot pick for itself. */

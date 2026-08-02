@@ -28,7 +28,7 @@ import {
 
 import fixture from './__fixtures__/catalogue.json';
 import { SETTING_MENU, menuSettingNames, type MenuItem } from './menuData';
-import { valuesEqual } from './SettingMenu';
+import { valueEquals } from '../menubar/model';
 import { LIGHTING_PRESETS, LIGHTING_SECTIONS } from './LightingPanel';
 import { getSettingsService } from './service';
 
@@ -213,13 +213,16 @@ describe('Setting menu transcription', () => {
     }
   });
 
+  // The renderer now compares with `features/menubar/model.ts`'s `valueEquals`
+  // — ONE implementation for the menu bar and this panel, so the two surfaces
+  // cannot disagree about whether a radio is on. Same tolerance, same reason.
   it('marks radio items on with a tolerant numeric comparison', () => {
-    expect(valuesEqual(0.5, 0.5)).toBe(true);
-    expect(valuesEqual(0.5000001, 0.5)).toBe(true);
-    expect(valuesEqual(0.6, 0.5)).toBe(false);
-    expect(valuesEqual(undefined, 0)).toBe(false);
-    expect(valuesEqual('1', '1')).toBe(true);
-    expect(valuesEqual('', '')).toBe(true);
+    expect(valueEquals(0.5, 0.5)).toBe(true);
+    expect(valueEquals(0.5000001, 0.5)).toBe(true);
+    expect(valueEquals(0.6, 0.5)).toBe(false);
+    expect(valueEquals(undefined, 0)).toBe(false);
+    expect(valueEquals('1', '1')).toBe(true);
+    expect(valueEquals('', '')).toBe(true);
   });
 });
 

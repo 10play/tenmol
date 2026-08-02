@@ -18,13 +18,14 @@
  *    it should have been.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { SceneRecord } from '@tenmol/protocol/topics/movie';
 import { useSession } from '../../app';
 import { useScenes } from './useScenes';
 import { SceneMenu } from './SceneMenu';
 import { ViewList } from './ViewList';
 import { renameProblem, reorder, sceneActions } from './sceneActions';
+import { layoutSceneButtons } from './sceneButtonGeometry';
 import './scenes.css';
 
 export function ScenePanel() {
@@ -55,6 +56,20 @@ export function ScenePanel() {
    * exactly what it turns off.
    */
   const [buttons, setButtons] = useState<boolean | null>(null);
+  /**
+   * `internal_gui_control_size` and `display_scale_factor` — the two engine
+   * numbers `SceneDrawButtons` lays the strip out with (`Scene.cpp:2896-2901`).
+   * Read, not assumed: both are ordinary settings anything can write.
+   */
+  const [metrics, setMetrics] = useState({ controlSize: 18, scale: 1 });
+  /**
+   * `CScene::rect` — the block `SceneDrawButtons` lays the strip out in. It is
+   * the SCENE's rect, i.e. the viewport, so it is read from the engine
+   * (`cmd.get_viewport`) rather than measured off a CSS box: the numbers the
+   * port needs are PyMOL's, not the DOM's.
+   */
+  const [block, setBlock] = useState<{ width: number; height: number } | null>(null);
+  const [skip, setSkip] = useState(0);
 
   const readButtons = async () => {
     try {
@@ -70,11 +85,51 @@ export function ScenePanel() {
   }, []);
 
   useEffect(() => {
+    void (async () => {
+      try {
+        const [controlSize, scale, viewport] = await Promise.all([
+          session.call<number>('cmd.get_setting_int', ['internal_gui_control_size']),
+          session.call<number>('cmd.get_setting_int', ['display_scale_factor']),
+          session.call<[number, number]>('cmd.get_viewport'),
+        ]);
+        setMetrics({ controlSize: controlSize || 18, scale: scale || 1 });
+        if (Array.isArray(viewport) && viewport.length === 2) {
+          setBlock({ width: Number(viewport[0]), height: Number(viewport[1]) });
+        }
+      } catch {
+        /* the defaults ARE PyMOL's defaults; a failed read changes nothing */
+      }
+    })();
+  }, [session]);
+
+  useEffect(() => {
     for (const scene of payload.scenes) {
       if (!thumbs[scene.name]) void loadThumb(scene.name);
     }
     // Re-request only for names we have not resolved yet.
   }, [payload.scenes, thumbs, loadThumb]);
+
+  /**
+   * `SceneDrawButtons`' layout for the current list. `null` until the engine
+   * has answered `cmd.get_viewport` — see the strip below.
+   */
+  const layout = useMemo(() => {
+    if (!block) return null;
+    return layoutSceneButtons({
+      rect: { left: 0, right: block.width, bottom: 0, top: block.height },
+      controlSize: metrics.controlSize,
+      scale: metrics.scale,
+      names: payload.order,
+      skip,
+    });
+  }, [block, metrics, payload.order, skip]);
+
+  /** The window the layout drew: `NSkip` entries are scrolled past. */
+  const visibleScenes = useMemo(() => {
+    if (!layout?.shown) return payload.scenes;
+    const drawn = new Set(layout.buttons.map((button) => button.name));
+    return payload.scenes.filter((scene) => drawn.has(scene.name));
+  }, [layout, payload.scenes]);
 
   const commitRename = async (scene: SceneRecord) => {
     // NOT trimmed before validating: " a b " is a name with spaces, and
@@ -191,28 +246,99 @@ export function ScenePanel() {
         </button>
       </div>
 
-      {/* --- the buttons overlay row ------------------------------------ */}
+      {/* --- the buttons overlay row ------------------------------------ *
+        * The LAYOUT is `SceneDrawButtons`' (`./sceneButtonGeometry.ts`): 8-dip
+        * character cells, `internal_gui_control_size` row height, names cut to
+        * `max_char`, and a scrollbar once the list is longer than `n_disp`
+        * rows. Until the engine has answered `cmd.get_viewport` there is no
+        * block to lay anything out in, so the strip degrades to an untruncated
+        * flex row rather than rendering nothing.
+        */}
       {buttons !== false && (
-      <div className="scbar" role="toolbar" aria-label="scene buttons">
+      <div
+        className={'scbar' + (layout?.shown ? ' scbar--laid' : '')}
+        role="toolbar"
+        aria-label="scene buttons"
+        onWheel={(event) => {
+          if (!layout?.scrollBar) return;
+          event.preventDefault();
+          setSkip((value) =>
+            Math.max(
+              0,
+              Math.min(
+                payload.scenes.length - layout.nDisp,
+                value + (event.deltaY > 0 ? 1 : -1),
+              ),
+            ),
+          );
+        }}
+        style={
+          layout?.shown
+            ? // The drawn count, not `n_disp`: the loop can stop early on the
+              // `y < rect.bottom` break, and a strip taller than its stack is
+              // dead space that swallows clicks meant for the table below.
+              { height: layout.buttons.length * layout.lineHeight }
+            : undefined
+        }
+      >
         {payload.scenes.length === 0 && <span className="scbar__empty">no scenes</span>}
-        {payload.scenes.map((scene) => (
-          <button
-            key={scene.name}
-            type="button"
-            className={
-              'scbar__btn' +
-              (scene.current ? ' is-current' : '') +
-              (dragging === scene.name ? ' is-dragging' : '')
-            }
-            title={scene.message || scene.name}
-            onMouseDown={(event) => onButtonDown(scene, event)}
-            onMouseEnter={() => onButtonEnter(scene)}
-            onMouseUp={(event) => onButtonUp(scene, event)}
-            onContextMenu={(event) => event.preventDefault()}
+        {layout?.scrollBar && (
+          <div
+            className="scbar__scroll"
+            role="scrollbar"
+            aria-label="scene buttons"
+            aria-valuenow={skip}
+            aria-valuemin={0}
+            aria-valuemax={Math.max(0, layout.scrollBar.total - layout.scrollBar.visible)}
+            style={{ width: layout.scrollBar.width }}
           >
-            {scene.name}
-          </button>
-        ))}
+            <div
+              className="scbar__thumb"
+              style={{
+                top: `${((skip / layout.scrollBar.total) * 100).toFixed(2)}%`,
+                height: `${((layout.scrollBar.visible / layout.scrollBar.total) * 100).toFixed(2)}%`,
+              }}
+            />
+          </div>
+        )}
+        {visibleScenes.map((scene, index) => {
+          const box = layout?.shown ? layout.buttons[index] : undefined;
+          return (
+            <button
+              key={scene.name}
+              type="button"
+              className={
+                'scbar__btn' +
+                (scene.current ? ' is-current' : '') +
+                (dragging === scene.name ? ' is-dragging' : '') +
+                (box?.truncated ? ' is-truncated' : '')
+              }
+              title={scene.message || scene.name}
+              data-full-name={scene.name}
+              style={
+                box
+                  ? {
+                      position: 'absolute',
+                      left: box.left,
+                      // `stackOffset`, NOT `topOffset`: this strip is only as
+                      // tall as the stack, where PyMOL's block is the whole
+                      // viewport. See `sceneButtonGeometry.ts`.
+                      top: box.stackOffset,
+                      width: box.width,
+                      height: box.height,
+                      fontSize: layout ? layout.charWidth * 1.25 : undefined,
+                    }
+                  : undefined
+              }
+              onMouseDown={(event) => onButtonDown(scene, event)}
+              onMouseEnter={() => onButtonEnter(scene)}
+              onMouseUp={(event) => onButtonUp(scene, event)}
+              onContextMenu={(event) => event.preventDefault()}
+            >
+              {box ? box.label : scene.name}
+            </button>
+          );
+        })}
       </div>
       )}
 

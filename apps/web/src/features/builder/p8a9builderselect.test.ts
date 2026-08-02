@@ -37,6 +37,8 @@ const emptyState = (): BuilderState =>
       editor_auto_measure: 0,
       secondary_structure: 1,
       auto_remove_hydrogens: 0,
+      sculpting: 0,
+      sculpting_cycles: 10,
     },
     clean_available: false,
     clean_reason: 'Incentive-only',

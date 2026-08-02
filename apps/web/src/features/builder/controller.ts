@@ -14,6 +14,7 @@ import {
   BUILDER_BOOTSTRAP,
   BUILDER_RPC,
   type BuilderActionKind,
+  type BuilderSculptTick,
   type BuilderPickMode,
   type BuilderState,
   type BuilderTables,
@@ -38,6 +39,12 @@ export interface BuilderController {
     mode: BuilderPickMode,
   ): Promise<BuilderState>;
   wizardClick(index: number): Promise<BuilderState>;
+  /**
+   * One frame of the sculpting loop PyMOL's idle handler runs for itself
+   * (`layer5/PyMOL.cpp:2424`). The bridge pump draws but never idles, so
+   * nothing sculpts unless the client asks; `sculptTicker.ts` is what asks.
+   */
+  sculptTick(cycles?: number): Promise<BuilderSculptTick>;
   /**
    * "A named selection was edited somewhere else" — the engine's
    * `WizardDoSelect` (`layer1/Wizard.cpp:172-190`), which PyMOL fires only from
@@ -106,6 +113,14 @@ export function createBuilderController(transport: BuilderTransport): BuilderCon
     wizardClick(index) {
       return withBootstrap(() =>
         transport.call<BuilderState>(BUILDER_RPC.wizardClick, [index]),
+      );
+    },
+    sculptTick(cycles) {
+      return withBootstrap(() =>
+        transport.call<BuilderSculptTick>(
+          BUILDER_RPC.sculptTick,
+          cycles === undefined ? [] : [cycles],
+        ),
       );
     },
     selectionEdited(selection) {

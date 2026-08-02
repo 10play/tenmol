@@ -151,6 +151,57 @@
   background: var(--pm-line);
 }
 
+/* A radio group is markup, not layout: no box, no indent. */
+.setmenu__group,
+.setmenu__list--radios {
+  display: contents;
+}
+
+.setmenu__accel {
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--pm-text-dim);
+  font-size: 10px;
+}
+
+.setmenu__row--dynamic,
+.setmenu__row--error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 6px;
+  color: #5b6167;
+}
+
+.setmenu__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--pm-line);
+}
+
+.setmenu__tab {
+  padding: 2px 8px;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--pm-text-dim);
+  font: inherit;
+  cursor: pointer;
+}
+
+.setmenu__tab.is-on {
+  border-color: var(--pm-line);
+  background: var(--pm-panel-alt);
+  color: var(--pm-text-bright);
+}
+
+.setmenu__source {
+  margin-left: auto;
+  color: var(--pm-text-dim);
+  font-size: 10px;
+}
+
 /* --- the advanced table --------------------------------------------------
  *
  * Prefixed `setadv__`, not `advset__`: `features/dialogs/dialogs.css` already

@@ -1,7 +1,8 @@
 /**
  * Window-level drag & drop, mounted wherever something is always on screen.
  *
- * Renders nothing. See `globalDrop.ts` for why this is not simply the handler
+ * Renders only `PluginDialogHost` (nothing, until a legacy plugin blocks on a
+ * file dialog). See `globalDrop.ts` for why this is not simply the handler
  * `FilesPanel` already had: that one is inside an OVERLAY slot, so it only
  * existed while the user had the File dialogs panel open.
  */
@@ -10,6 +11,7 @@ import { useEffect } from 'react';
 
 import { useSession } from '../../app';
 import { createFilesApi, fileToBase64 } from './filesApi';
+import { PluginDialogHost } from './PluginDialogHost';
 import {
   dialogNeededFor,
   dialogRequiredMessage,
@@ -17,10 +19,24 @@ import {
   refusalFor,
   windowAccelerator,
 } from './globalDrop';
+import { installFileMenuHooks } from './menuHooks';
 import type { FileClassification } from '@tenmol/protocol/topics/files';
 
 export function FileDropTarget() {
   const session = useSession();
+
+  /*
+   * ROW 242 — BIND THE FILE MENU'S LEAVES, AND DO IT HERE.
+   *
+   * Every `File ▸ …` entry is a `hook` action naming a `_gui.py` seam
+   * (`generated/menudata.ts`), and until something calls `registerMenuHook`
+   * for it the leaf renders disabled with "not built yet — WP-18 owns it".
+   * WP-18 is this feature. The registration must outlive the File dialogs
+   * panel, which is an overlay slot mounted only while it is open — so it
+   * lives in the one part of this feature that is always mounted, exactly like
+   * the drop handler and the Ctrl+O/Ctrl+S accelerators below.
+   */
+  useEffect(() => installFileMenuHooks(), []);
 
   useEffect(() => {
     const api = createFilesApi({
@@ -201,5 +217,11 @@ export function FileDropTarget() {
     };
   }, [session]);
 
-  return null;
+  /*
+   * ROW 295 — the plugin file-dialog picker is rendered HERE, for the same
+   * reason `install_tk_dialogs` is called here: a blocked plugin thread must
+   * get its dialog whether or not the File dialogs panel happens to be open.
+   * The poller used to live in `FilesPanel` (an overlay slot), so it did not.
+   */
+  return <PluginDialogHost />;
 }

@@ -37,7 +37,6 @@ import type {
   MtzDialogInfo,
   MultiFileTarget,
   PartialGate,
-  PluginDialogRequest,
   RecentEntry,
   RenderInfo,
   SaveMoleculeInfo,
@@ -59,12 +58,7 @@ import {
   type AlnInfo,
 } from './LoadDialogs';
 import { refusalFor } from './globalDrop';
-import {
-  PLUGIN_DIALOG_POLL_MS,
-  answerForPluginDialog,
-  pickerForPluginDialog,
-  pluginDialogMessage,
-} from './pluginDialogs';
+import { FILES_ACTION_EVENT, FILES_OPEN_PATHS, type FilesActionDetail } from './menuHooks';
 import { ExportMoleculeDialog, SaveObjectDialog, type MoleculeSaveRequest } from './SaveDialogs';
 import { MovieDialog, PngDialog, RenderPanel } from './ImageDialogs';
 import { FetchDialog, LogDialog, RecentDialog } from './ToolsDialogs';
@@ -110,6 +104,10 @@ export function FilesPanel() {
   const [dialog, setDialog] = useState<Dialog>({ kind: 'none' });
   const [picker, setPicker] = useState<PickerState | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  /** Row 293: set while a `.psw` has this tab in presentation mode. */
+  const [presentation, setPresentation] = useState<
+    { previous: Record<string, string>; label: string } | null
+  >(null);
   const pending = useRef<FileClassification[]>([]);
 
   /* --------------------------------------------------------- bootstrap */
@@ -239,10 +237,78 @@ export function FilesPanel() {
     [api, session, say],
   );
 
+  /**
+   * ROW 293 — the `.psw` presentation preset, applied by the one route that
+   * can reach it.
+   *
+   * `PyMOLApplication.handle_file_open_active` (`pymol_qt_gui.py:1140-1160`) is
+   * the macOS Finder "Open With" handler: it decides between a second PyMOL
+   * process and loading in place, and for a PyMOL SHOW file it runs four
+   * statements first — `set presentation`, `set internal_gui, 0`,
+   * `set internal_feedback, 0`, `full_screen on` — before `load_dialog`.
+   *
+   * There is no Finder event in a browser, but the *file* still arrives here,
+   * and until now `open_with_plan`/`presentation_preset` were an RPC with no
+   * caller. This is the caller. Three deliberate differences, each measured:
+   *
+   *  * the plan's `action` is REPORTED, never obeyed: `new-window` means "a
+   *    second OS process", which contradicts one bridge / one client (row 294),
+   *    so the file loads here and the console says what upstream would have
+   *    done;
+   *  * because we always take the load-here branch, the preset follows the
+   *    FILE TYPE (`classification.format === 'psw'`, which covers `.psw`,
+   *    `.pzw` and `.psw.gz` — upstream's handler asks `endswith('.psw')` and
+   *    misses the other two), not the plan's `presentation` flag, which is
+   *    pre-ANDed with "we are not spawning a window";
+   *  * `full_screen` is not attempted: `CmdFullScreen` never assigns its `ok`
+   *    flag, so `cmd.full_screen` raises on every build while changing nothing
+   *    (`presentation_preset`'s own docstring, measured).
+   *
+   * The previous values come back from the bridge so the tab can leave
+   * presentation mode again — upstream throws them away, because a window
+   * manager is not part of this app.
+   */
+  const enterPresentation = useCallback(
+    async (filename: string, step: FileClassification): Promise<Record<string, string> | null> => {
+      if (step.dialog !== 'session') return null;
+      const plan = await api.openWithPlan(filename).catch(() => null);
+      if (!plan) return null;
+      if (plan.action === 'new-window') {
+        say(
+          ` ${baseName(filename)}: PyMOL would open this in a SECOND process` +
+            ` (reuse_helper ${plan.reuseHelper ? 1 : 0}, ${plan.names.length} object(s) loaded);` +
+            ' one bridge process, one client — loading it in place instead',
+          'warning',
+        );
+      }
+      if (plan.classification.format !== 'psw') return null;
+      const preset = await api.presentationPreset(false);
+      setPresentation({ previous: preset.previous, label: baseName(filename) });
+      say(
+        ` presentation mode on for ${baseName(filename)}:` +
+          ` internal_gui ${preset.current['internal_gui'] ?? '0'},` +
+          ` internal_feedback ${preset.current['internal_feedback'] ?? '0'}`,
+      );
+      return preset.previous;
+    },
+    [api, say],
+  );
+
+  const leavePresentation = useCallback(
+    async (previous: Record<string, string>) => {
+      await api.presentationRestore(previous).catch(() => undefined);
+      setPresentation(null);
+    },
+    [api],
+  );
+
   /** Returns true when the Desmond auto-chain opened the trajectory modal. */
   const loadPlain = useCallback(
     async (filename: string, step: FileClassification, partial?: 0 | 1): Promise<boolean> => {
       const usePartial = partial ?? step.partial ?? 0;
+      // Upstream's order: the preset runs BEFORE `load_dialog` (`:1152-1156`),
+      // so the session lands in a window that is already in presentation mode.
+      const restore = await enterPresentation(filename, step);
       try {
         await session.act({
           fn: 'cmd.load',
@@ -257,6 +323,9 @@ export function FilesPanel() {
         // a failed load abandons the rest of the selection here too.
         say(` ${String(e)}`, 'error');
         pending.current = [];
+        // A show file that failed to load must not leave the tab in
+        // presentation mode with nothing to present. Upstream has no such undo.
+        if (restore) await leavePresentation(restore);
         return false;
       }
       // Desmond auto-chain (`file_dialogs.py:71-75`).
@@ -266,7 +335,7 @@ export function FilesPanel() {
       }
       return false;
     },
-    [api, session, say],
+    [api, enterPresentation, leavePresentation, session, say],
   );
 
   /**
@@ -572,6 +641,85 @@ export function FilesPanel() {
     [api, ensure, fileOpen, hello, pick, session, sessionSaveAs],
   );
 
+  /* ------------------------------------------------ the menu bar's leaves */
+
+  /**
+   * Run one of this panel's menu actions on behalf of somebody else.
+   *
+   * The File menu is WP-14's feature and these dialogs are WP-18's; the bridge
+   * between them is `menuHooks.ts` (`registerMenuHook` -> `openPanel('files',
+   * …)` -> this event). The action id is looked up in the SAME table the
+   * panel's own strip renders, so `File ▸ Open…` in the menu bar and `File ▾ ▸
+   * Open…` here cannot drift apart — there is one implementation.
+   *
+   * The three `log-*` ids are the exception and are handled directly: Qt's
+   * `log_open`/`log_resume`/`log_append` each go straight to a file dialog
+   * (`pymol_qt_gui.py:823-845`), whereas this panel's single `Log File ▸ …`
+   * item opens the hub that offers all three. Routing the leaves through
+   * `logPick` keeps the leaf's meaning exact.
+   *
+   * TWO STEPS, and the second is not ceremony. Five of the ids exist only once
+   * `hello` has landed — `Export Image As ▸ VRML 2/COLLADA/GLTF/POV-Ray/STL`
+   * are built from `hello.geometryExports`, i.e. from the bridge's own
+   * `savefunctions` view — and a hook fired on a panel that has just been
+   * mounted for it arrives BEFORE that. So the request is parked in state, the
+   * bootstrap is kicked off, and the effect below runs again when the menu
+   * table it needs actually exists. (Measured: without this, those five leaves
+   * answered `no File action "geo-wrl"` every time.)
+   */
+  const [request, setRequest] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onAction = (event: Event) => {
+      const detail = (event as CustomEvent<FilesActionDetail>).detail;
+      const action = detail?.action;
+      if (!action) return;
+      setMenuOpen(false);
+      // `load_dialog(fname)` for a path the CALLER chose (Open Recent, a
+      // "recently used" list, a deep link): it carries its own argument, so it
+      // is not a menu id and does not wait for `hello`.
+      if (action === FILES_OPEN_PATHS) {
+        void openPaths([...(detail?.paths ?? [])]);
+        return;
+      }
+      setRequest(action);
+      void ensure();
+    };
+    window.addEventListener(FILES_ACTION_EVENT, onAction);
+    return () => window.removeEventListener(FILES_ACTION_EVENT, onAction);
+  }, [ensure, openPaths]);
+
+  useEffect(() => {
+    if (request === null) return;
+    const LOG_MODES: Record<string, 'w' | 'a' | 'resume'> = {
+      'log-open': 'w',
+      'log-append': 'a',
+      'log-resume': 'resume',
+    };
+    const item = menu.find((entry) => entry.id === request);
+    const mode = LOG_MODES[request];
+    // Neither yet: the menu is still half-built. Wait for `hello` — unless the
+    // bootstrap has already failed, in which case nothing more is coming.
+    if (!item && !mode && !hello && !error) return;
+    setRequest(null);
+    if (item?.disabledReason) {
+      say(` ${request}: ${item.disabledReason}`, 'warning');
+      return;
+    }
+    if (item?.run) {
+      void item.run();
+      return;
+    }
+    if (mode) {
+      void logPick(mode);
+      return;
+    }
+    say(` no File action "${request}" in this client`, 'warning');
+    // `logPick` is a plain function declaration in this scope, so it is
+    // re-created every render; `menu`/`hello` changing is what re-runs this,
+    // and by then it closes over the same `hello` the menu was built from.
+  }, [request, menu, hello, error, say]);
+
   /* ------------------------------------------------- keyboard + dropping */
 
   useEffect(() => {
@@ -615,60 +763,22 @@ export function FilesPanel() {
 
   /* -------------------------------------------- blocking plugin dialogs */
 
-  /**
-   * Answer legacy plugins parked inside `tkinter.filedialog`.
+  /*
+   * THE PLUGIN FILE-DIALOG POLLER USED TO LIVE HERE, and that was row 295's
+   * remaining defect: this panel is an OVERLAY slot, so `AppShell.OverlayLayer`
+   * mounts it only while the user has it open. A legacy plugin that called
+   * `tkinter.filedialog.askopenfilename()` with the panel closed parked a
+   * request nothing was watching for, and its Python thread stayed blocked
+   * until `DialogBroker.DEFAULT_TIMEOUT` (300 s) turned the request into
+   * tkinter's `''` — silently, because the picker was never drawn. Upstream's
+   * `mimic_tk` dialog is a parentless application-modal `QFileDialog`, which
+   * has no such window.
    *
-   * The bridge shim (`panels/files.py::BridgeFileDialog`) blocks the plugin's
-   * Python thread and parks a request; this drains it into the same path
-   * picker every other dialog in this area uses, and posts the answer back.
-   * See `pluginDialogs.ts` for why it polls instead of riding the `dialog`
-   * topic (both halves of that live in frozen files).
-   *
-   * STATED LIMITATION: this panel is an OVERLAY slot, so the poll only runs
-   * while the File dialogs panel is open. A plugin that asks for a file with
-   * the panel closed stays blocked until it is opened — the request survives
-   * for `DialogBroker.DEFAULT_TIMEOUT` (300 s) and is picked up then. Moving
-   * the poll to an always-mounted slot is the fix, and that slot belongs to
-   * WP-25 (plugin manager), not here.
+   * It is now `PluginDialogHost`, rendered by `FileDropTarget`, which the
+   * viewport slot mounts unconditionally. NOT duplicated here on purpose: two
+   * pollers would both claim the same request and the loser's `dialog_answer`
+   * would answer a dialog that no longer exists.
    */
-  const pluginBusy = useRef(false);
-  useEffect(() => {
-    if (!hello) return undefined;
-    let cancelled = false;
-
-    const tick = async () => {
-      if (pluginBusy.current || cancelled) return;
-      let requests: PluginDialogRequest[];
-      try {
-        requests = await api.dialogPending();
-      } catch {
-        return; // service not installed yet; the next tick will retry
-      }
-      const request = requests[0];
-      if (!request || cancelled) return;
-
-      pluginBusy.current = true;
-      say(pluginDialogMessage(request));
-      try {
-        const result = await pick(pickerForPluginDialog(request));
-        await api.dialogAnswer(
-          request.dialogId,
-          answerForPluginDialog(request, result ? result.paths : null),
-        );
-      } catch (e) {
-        say(` plugin dialog failed: ${String(e)}`, 'error');
-        await api.dialogCancel(request.dialogId).catch(() => undefined);
-      } finally {
-        pluginBusy.current = false;
-      }
-    };
-
-    const timer = window.setInterval(() => void tick(), PLUGIN_DIALOG_POLL_MS);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
-  }, [api, hello, pick, say]);
 
   /* ------------------------------------------------------------- render */
 
@@ -687,6 +797,17 @@ export function FilesPanel() {
           File ▾
         </button>
         {busy && <span className="files__busy">{busy}</span>}
+        {presentation && (
+          <button
+            type="button"
+            className="files__menubtn"
+            data-testid="files-leave-presentation"
+            title="Restore internal_gui / internal_feedback / presentation"
+            onClick={() => void leavePresentation(presentation.previous)}
+          >
+            Leave presentation ({presentation.label})
+          </button>
+        )}
         {error && (
           <span className="files__error" title={error}>
             file service unavailable

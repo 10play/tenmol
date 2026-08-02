@@ -171,6 +171,8 @@ export function createInputController(options: InputControllerOptions): InputCon
    * the four invariants (order, `when`, final position, one flush per budget).
    */
   let lastDragPoint: { x: number; y: number } | null = null;
+  /** The last DOM point a move reported, in CSS px within the element. */
+  let lastDomPoint: { x: number; y: number } | null = null;
 
   const coalescer = createDragCoalescer({
     flush: (drag: DragSample): void => {
@@ -182,14 +184,20 @@ export function createInputController(options: InputControllerOptions): InputCon
         // previous sample, and a drag that starts mid-gesture must not jump.
         const previous = lastDragPoint;
         lastDragPoint = { x: drag.x, y: drag.y };
-        if (previous === null) return;
+        /*
+         * The ANCHOR SAMPLE still goes through, with a zero delta. A rubber
+         * band tracks the ABSOLUTE cursor, so swallowing the first sample of a
+         * gesture left the rectangle one sample behind for its whole life;
+         * every other action ignores a zero delta anyway.
+         */
         driver.drag({
-          dx: drag.x - previous.x,
+          dx: previous === null ? 0 : drag.x - previous.x,
           // PyMOL y is already flipped relative to the DOM by `toPymolPoint`,
           // so flip back to get a DOM-sense dy for the driver's own convention.
-          dy: previous.y - drag.y,
+          dy: previous === null ? 0 : previous.y - drag.y,
           button: activeButton ?? 0,
           mod: drag.mod,
+          ...(lastDomPoint === null ? {} : { x: lastDomPoint.x, y: lastDomPoint.y }),
         });
         return;
       }
@@ -207,16 +215,46 @@ export function createInputController(options: InputControllerOptions): InputCon
   const pointOf = (ev: { clientX: number; clientY: number }): PymolPoint =>
     toPymolPoint(ev, element.getBoundingClientRect(), geometry());
 
+  /** DOM CSS pixels within the element, y DOWN — what the driver's box wants. */
+  const domPoint = (ev: { clientX: number; clientY: number }): { x: number; y: number } => {
+    const box = element.getBoundingClientRect();
+    return { x: ev.clientX - box.left, y: ev.clientY - box.top };
+  };
+
   const sendButton = (button: number, state: number, point: PymolPoint, ev: MouseEvent): void => {
     flushDrag();
     counters.buttons++;
     lastPoint = point;
     lastMod = modifierMask(ev);
-    // A new press starts a new gesture: forget the previous drag anchor, or the
-    // first sample of the next drag is a delta across the gap between them.
-    lastDragPoint = null;
+    /*
+     * A new press starts a new gesture. The anchor is the PRESS POSITION, not
+     * "nothing": `SceneClick` stores `I->LastX/LastY` at the click and
+     * `SceneDrag` measures from there (`layer1/SceneMouse.cpp:864-878`), so the
+     * first move of a gesture carries real motion. Anchoring on the first MOVE
+     * instead threw that sample away — measured in wave 4 as "11 turns from 12
+     * samples". A release clears it, so the next gesture cannot inherit a delta
+     * across the gap between them.
+     */
+    lastDragPoint = state === ButtonState.Down ? { x: point.x, y: point.y } : null;
+    lastDomPoint = state === ButtonState.Down ? domPoint(ev) : null;
     if (state === ButtonState.Down && button === MouseButton.Left) {
       options.onPick?.(point, ev);
+    }
+    /*
+     * GL-FREE: the driver needs the press and the release, not just the moves.
+     * `ButModeTranslate` is resolved at the press (`SceneClick` stores
+     * `I->Button`), and a rubber band exists only between the two — a driver
+     * that saw drags alone could never commit one. Wheel-as-button frames are
+     * excluded: the wheel has its own slots and `onWheel` drives it directly.
+     */
+    if (button === MouseButton.Left || button === MouseButton.Middle || button === MouseButton.Right) {
+      const driver = options.cameraDriver;
+      if (driver) {
+        const dom = domPoint(ev);
+        const sample = { x: dom.x, y: dom.y, button, mod: modifierMask(ev) };
+        if (state === ButtonState.Down) driver.press(sample);
+        else driver.release(sample);
+      }
     }
     send({
       t: 'input',
@@ -263,6 +301,7 @@ export function createInputController(options: InputControllerOptions): InputCon
     const point = pointOf(ev);
     lastPoint = point;
     lastMod = modifierMask(ev);
+    lastDomPoint = domPoint(ev);
     coalescer.push({ x: point.x, y: point.y, mod: lastMod, when: whenOf(ev) });
   };
 
@@ -358,6 +397,19 @@ export function createInputController(options: InputControllerOptions): InputCon
     const button = delta < 0 ? MouseButton.ScrollForward : MouseButton.ScrollBackward;
     const point = pointOf(ev);
     counters.wheels++;
+    /*
+     * GL-FREE: forwarding a wheel frame to a backend that never draws does
+     * nothing at all (the same `OrthoDefer` dead end as a drag), so the driver
+     * resolves the wheel slots itself. It is NOT `move z` unconditionally: the
+     * default mode binds the bare wheel to `Slab`, and only Ctrl+Shift+wheel to
+     * `MovZ` (`controlling.py` three_button_viewing).
+     */
+    const driver = options.cameraDriver;
+    if (driver) {
+      driver.wheel(delta < 0 ? -1 : 1, modifierMask(ev));
+      activity();
+      return;
+    }
     sendButton(button, ButtonState.Down, point, ev);
     sendButton(button, ButtonState.Up, point, ev);
   };

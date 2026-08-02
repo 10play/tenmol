@@ -61,6 +61,7 @@ import {
   type ShellSettings,
 } from './orthoPanel';
 import { panelsStore, togglePanel } from './panelHooks';
+import { SESSION_FILE_INDEX, getSettingsTap } from './settingsTap';
 import {
   dockModifier,
   isDockShortcut,
@@ -475,26 +476,47 @@ function useShellSettings(session: Session): void {
  * `"PyMOL (" + os.path.basename(v) + ")"` (`pymol_qt_gui.py:112-115`). MEASURED:
  * 440 really is `session_file`, and `cmd.save(*.pse)` sets it to the absolute
  * path, so this is the whole title mechanism.
+ *
+ * A PUSH, and the 1 Hz `cmd.get` it replaces is now only the cold path.
+ * `settingsTap.watch(440, …)` is `setting_callbacks[440].append(cb)`: the
+ * bridge's tap reports that 440 changed and the tap reads it back, which is
+ * exactly the two steps `update_feedback` performs. The poll below survives for
+ * the seconds before the tap installs, and for a bridge where it never does —
+ * it STOPS ISSUING CALLS the moment the drain answers (`tap.live`), so this is
+ * not a poll with a subscription bolted beside it.
  */
 function useWindowTitle(session: Session): void {
   useEffect(() => {
     let alive = true;
+    const apply = (file: string | null): void => {
+      if (!alive) return;
+      const title = windowTitle(file);
+      if (document.title !== title) document.title = title;
+    };
+
+    const tap = getSettingsTap(session);
+    const detach = tap.attach();
+    const unwatch = tap.watch(SESSION_FILE_INDEX, (value) =>
+      apply(typeof value === 'string' ? value : value === null ? null : String(value)),
+    );
+
     const tick = async (): Promise<void> => {
+      if (tap.live) return; // the tap owns the title now
       let file: string | null = null;
       try {
         file = await session.call<string>('cmd.get', ['session_file']);
       } catch {
         return; // offline: leave the last title alone rather than resetting it
       }
-      if (!alive) return;
-      const title = windowTitle(file);
-      if (document.title !== title) document.title = title;
+      apply(file);
     };
     void tick();
     const timer = setInterval(() => void tick(), SHELL_POLL_MS);
     return () => {
       alive = false;
       clearInterval(timer);
+      unwatch();
+      detach();
     };
   }, [session]);
 }

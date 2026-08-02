@@ -84,6 +84,57 @@ export function screenRay(view: ViewMatrix, rect: Rect, x: number, y: number): E
 }
 
 /**
+ * The exact inverse of `screenRay`: an EYE-space point -> DOM coordinates.
+ *
+ * Used by the rubber band, which has to ask "is this atom inside the
+ * rectangle" rather than "what does this pixel hit". Sharing the projection
+ * with `screenRay` is the point: a band that projected with its own copy of
+ * the fov/ortho arithmetic would disagree with the ray at the frame edge, and
+ * a user would see a click and a band select different atoms.
+ *
+ * `behind` is true for a point at or behind the eye, which has no screen
+ * position at all under perspective.
+ */
+export function screenPoint(
+  view: ViewMatrix,
+  rect: Rect,
+  eye: readonly [number, number, number],
+): { x: number; y: number; behind: boolean } {
+  const w = Math.max(1, rect.width);
+  const h = Math.max(1, rect.height);
+  const aspect = w / h;
+  const fw = fovWidth(view);
+
+  let ndcX: number;
+  let ndcY: number;
+  let behind = false;
+
+  if (isOrthoscopic(view)) {
+    const height = (Math.max(1e-4, -view[11]) * fw) / 2;
+    const width = height * aspect;
+    ndcX = eye[0] / width;
+    ndcY = eye[1] / height;
+  } else {
+    const tanHalf = Math.tan(fw / 2);
+    const depth = -eye[2];
+    if (depth <= 1e-6) {
+      behind = true;
+      ndcX = 0;
+      ndcY = 0;
+    } else {
+      ndcX = eye[0] / depth / (aspect * tanHalf);
+      ndcY = eye[1] / depth / tanHalf;
+    }
+  }
+
+  return {
+    x: ((ndcX + 1) / 2) * w - 0.5,
+    y: ((1 - ndcY) / 2) * h - 0.5,
+    behind,
+  };
+}
+
+/**
  * `SceneRenderPickingSinglePick`, `layer1/ScenePicking.cpp:186-208`, VERBATIM.
  *
  * The pick pass reads a `(2*cRange+1)^2` window of FRAMEBUFFER pixels around

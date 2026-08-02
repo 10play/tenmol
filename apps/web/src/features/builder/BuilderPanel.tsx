@@ -30,6 +30,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   BuilderActionKind,
+  BuilderSculptTick,
   BuilderState,
   BuilderTables,
 } from '@tenmol/protocol/topics/builder';
@@ -53,6 +54,7 @@ import {
   type RingButton,
 } from './tables';
 import { RING_ICONS } from './ringIcons';
+import { createSculptTicker } from './sculptTicker';
 import './builder.css';
 
 type Tab = 'Chemical' | 'Protein' | 'Nucleic Acid';
@@ -82,6 +84,7 @@ export function BuilderPanel() {
   const [busy, setBusy] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [undoObjects, setUndoObjects] = useState<string[] | null>(null);
+  const [sculpt, setSculpt] = useState<BuilderSculptTick | null>(null);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -144,6 +147,39 @@ export function BuilderPanel() {
     }, 250);
     return () => window.clearInterval(timer);
   }, [open, controller, apply]);
+
+  /**
+   * THE SCULPTING LOOP.
+   *
+   * `sculpting 1` does nothing on this backend by itself: PyMOL sculpts from
+   * its idle handler (`layer5/PyMOL.cpp:2424`) and the bridge pump draws
+   * without idling. So while the flag is on, the panel drives
+   * `cmd.builder_sculpt_tick` — the same gate, object set and cycle count the
+   * C idle loop uses — and the moved atoms arrive through the pixel stream.
+   */
+  const ticker = useMemo(
+    () =>
+      createSculptTicker({
+        tick: (cycles) => controller.sculptTick(cycles),
+        onTick: (result) => {
+          if (mounted.current) setSculpt(result);
+        },
+        onError: (exc) => {
+          if (mounted.current) setError(errorText(exc));
+        },
+      }),
+    [controller],
+  );
+
+  useEffect(() => {
+    if (!open) {
+      ticker.stop();
+      return;
+    }
+    ticker.sync(state?.settings.sculpting);
+  }, [open, ticker, state?.settings.sculpting]);
+
+  useEffect(() => () => ticker.stop(), [ticker]);
 
   const act = useCallback(
     (kind: BuilderActionKind, params: Record<string, unknown> = {}) => {
@@ -595,6 +631,13 @@ export function BuilderPanel() {
       <div className="builder__footer">
         <span>
           {slots.length ? `picked: ${slots.join(' ')}` : 'nothing picked — buttons arm a wizard'}
+        </span>
+        <span data-testid="builder-sculpt">
+          {sculpt?.active
+            ? `sculpting: strain ${sculpt.strain.toFixed(2)} · ${sculpt.cycles} cycles/frame`
+            : state?.settings.sculpting
+              ? 'sculpting: starting…'
+              : ''}
         </span>
         <span>{state ? `${state.objects.length} object(s)` : ''}</span>
       </div>

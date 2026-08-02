@@ -29,7 +29,24 @@
  * Additions the Qt dialog does not have, all of which the inventory row asks
  * for: a search box over the list, a hex field accepting `0xRRGGBB` / `#RRGGBB`
  * (the `0x` form is what `ColorGetIndex` itself parses,
- * `layer1/Color.cpp:704-712`), and the seven special-colour chips.
+ * `layer1/Color.cpp:704-712`), the seven special-colour chips, and the HSV
+ * picker below.
+ *
+ * THE HSV PICKER (row 72's last open item, "HSV/RGB picker replacing 3 sliders
+ * + 3 spinboxes"). It REPLACES the three RGB rows rather than sitting beside
+ * them — one trio at a time, switched by the R G B / H S V toggle — because the
+ * six-widget RGB form is the one piece of `colors.ui` parity worth keeping as
+ * the default, and eleven sliders in a column is not a picker, it is a mixing
+ * desk. Two details that are not decoration:
+ *
+ *  * the conversion is `Lib/colorsys.py` (`./hsv.ts`), the module PyMOL itself
+ *    imports for `spectrum … interpolation=hsv`, so the H slider walks the same
+ *    path between two colours that PyMOL walks;
+ *  * H is HELD while the picker is open. `rgbToHsv` reports hue 0 for anything
+ *    grey (`minc === maxc`), so dragging V to 0 and back would silently pull a
+ *    blue swatch to red if the hue were re-derived from RGB each render. The
+ *    draft is dropped the moment the colour arrives from anywhere else — the
+ *    name field, the list, the hex box — which is where a stale hue would lie.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -43,10 +60,24 @@ import {
   type PaletteState,
   type Rgb,
 } from './palette';
+import {
+  HSV_RANGES,
+  displayToHsv,
+  hsvToDisplay,
+  hsvToRgb,
+  hueStripCss,
+  rgbToHsv,
+  type Hsv,
+} from './hsv';
 import { callOf, useColorAction } from './usePalette';
 import { useSession } from '../../app';
 
 const CHANNELS = ['R', 'G', 'B'] as const;
+const HSV_CHANNELS = [
+  { key: 'H', max: HSV_RANGES.h, unit: '°' },
+  { key: 'S', max: HSV_RANGES.s, unit: '%' },
+  { key: 'V', max: HSV_RANGES.v, unit: '%' },
+] as const;
 
 export function ColorEditor({ palette }: { palette: PaletteState }) {
   const session = useSession();
@@ -57,6 +88,10 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
   const [status, setStatus] = useState<string | null>(null);
   /** What the hex box is showing while it is being typed into; see below. */
   const [hexDraft, setHexDraft] = useState<string | null>(null);
+  /** Which trio the form is showing. RGB is `colors.ui`'s, and the default. */
+  const [space, setSpace] = useState<'rgb' | 'hsv'>('rgb');
+  /** The hue the user is holding; null means "derive it from RGB". */
+  const [hsvDraft, setHsvDraft] = useState<Hsv | null>(null);
 
   // `load_color` is synchronous in Qt and asynchronous here, so every write to
   // the channels carries a token and a late reply that no longer owns the token
@@ -69,7 +104,24 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
   // swatch, the numbers, the sliders and the `set_color` line never disagree.
   const setRgb = (next: Rgb) => {
     token.current++;
+    setHsvDraft(null);
     setRgbState(quantiseChannels(next));
+  };
+
+  /** What the H/S/V rows show: the held draft, or the colour's own HSV. */
+  const hsv: Hsv = hsvDraft ?? rgbToHsv(rgb);
+  const hsvShown = hsvToDisplay(hsv);
+
+  const setHsvChannel = (i: number, value: number) => {
+    const next: [number, number, number] = [hsvShown[0], hsvShown[1], hsvShown[2]];
+    next[i] = value;
+    const asHsv = displayToHsv(next);
+    token.current++;
+    // The draft is set AFTER `setRgbState` in source order but both land in the
+    // same render; what matters is that this path does not go through `setRgb`,
+    // which is the one that forgets the hue.
+    setRgbState(quantiseChannels(hsvToRgb(asHsv)));
+    setHsvDraft(asHsv);
   };
 
   // The table the lookup consults, held in a ref rather than read as a
@@ -91,7 +143,12 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
   useEffect(() => {
     const mine = ++token.current;
     void resolveColorName(paletteRef.current, name, callOf(session)).then((found) => {
-      if (found && token.current === mine) setRgbState(quantiseChannels(found.rgb));
+      if (found && token.current === mine) {
+        // A colour that arrived from the NAME field brings its own hue; the
+        // held draft is about the one the user was dragging and is now stale.
+        setHsvDraft(null);
+        setRgbState(quantiseChannels(found.rgb));
+      }
     });
   }, [name, session]);
 
@@ -173,29 +230,77 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
           />
         </label>
 
-        {CHANNELS.map((channel, i) => (
-          <div className="cedit__channel" key={channel}>
-            <span className="cedit__channel-name">{channel}</span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={1}
-              aria-label={`slider_${channel}`}
-              value={Math.round((rgb[i] ?? 0) * 100)}
-              onChange={(e) => setChannel(i, Number(e.target.value) / 100)}
-            />
-            <input
-              type="number"
-              min={0}
-              max={1}
-              step={0.01}
-              aria-label={`input_${channel}`}
-              value={Number((rgb[i] ?? 0).toFixed(2))}
-              onChange={(e) => setChannel(i, Number(e.target.value))}
-            />
-          </div>
-        ))}
+        <div className="cedit__space" role="radiogroup" aria-label="colour space">
+          {(['rgb', 'hsv'] as const).map((option) => (
+            <button
+              type="button"
+              key={option}
+              role="radio"
+              aria-checked={space === option}
+              aria-label={`space_${option}`}
+              className={'cedit__space-btn' + (space === option ? ' is-on' : '')}
+              onClick={() => setSpace(option)}
+              title={
+                option === 'rgb'
+                  ? 'the three QDoubleSpinBox/QSlider pairs of forms/colors.ui'
+                  : 'hue, saturation, value — colorsys, the space PyMOL interpolates in'
+              }
+            >
+              {option === 'rgb' ? 'R G B' : 'H S V'}
+            </button>
+          ))}
+        </div>
+
+        {space === 'rgb'
+          ? CHANNELS.map((channel, i) => (
+              <div className="cedit__channel" key={channel}>
+                <span className="cedit__channel-name">{channel}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  aria-label={`slider_${channel}`}
+                  value={Math.round((rgb[i] ?? 0) * 100)}
+                  onChange={(e) => setChannel(i, Number(e.target.value) / 100)}
+                />
+                <input
+                  type="number"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  aria-label={`input_${channel}`}
+                  value={Number((rgb[i] ?? 0).toFixed(2))}
+                  onChange={(e) => setChannel(i, Number(e.target.value))}
+                />
+              </div>
+            ))
+          : HSV_CHANNELS.map((channel, i) => (
+              <div className="cedit__channel" key={channel.key}>
+                <span className="cedit__channel-name">{channel.key}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={channel.max}
+                  step={1}
+                  aria-label={`slider_${channel.key}`}
+                  className={channel.key === 'H' ? 'cedit__hue' : undefined}
+                  style={channel.key === 'H' ? { background: hueStripCss() } : undefined}
+                  value={hsvShown[i]}
+                  onChange={(e) => setHsvChannel(i, Number(e.target.value))}
+                />
+                <input
+                  type="number"
+                  min={0}
+                  max={channel.max}
+                  step={1}
+                  aria-label={`input_${channel.key}`}
+                  value={hsvShown[i]}
+                  onChange={(e) => setHsvChannel(i, Number(e.target.value))}
+                />
+                <span className="cedit__unit">{channel.unit}</span>
+              </div>
+            ))}
 
         {/*
           The draft is not decoration. A controlled input whose value is

@@ -301,6 +301,27 @@ MAP_HEADER_CLASSES: Dict[str, str] = {
 }
 
 
+def non_mtz_refusal(filename: str) -> str:
+    """Why a CIF/CNS/HKL reflection file cannot reach the map generator.
+
+    ``PyMOLMapLoad`` offered all four formats and built a ``CIFHeader`` or a
+    ``CNSHeader`` for three of them, but ``cmd.map_generate`` hard-codes
+    ``headering.MTZHeader`` (``creating.py:234-236``, comment "TODO: work for
+    CIF, MTZ, and CNS"), so the other three cannot work at all.
+
+    Handing one to the generator anyway is not a clean failure: MTZHeader's
+    parser unpacks a header offset from bytes 4-8 of the file and seeks there
+    (``headering.py:261-302``), so a TEXT file comes back as, MEASURED on
+    ``testing/data/1bna.cif``, ``"'<' not supported between instances of 'int'
+    and 'NoneType'"`` — which tells the user nothing. Both the dialog's info
+    call and its run call answer with this sentence instead.
+    """
+    return (
+        "cmd.map_generate reads MTZ only (creating.py:234-236 'TODO: "
+        "work for CIF, MTZ, and CNS'); %s is not an MTZ" % filename
+    )
+
+
 def map_generate_prefix(amplitudes: str, name_prefix: str = "") -> str:
     """``PyMOLMapLoad.run``'s prefix rule (``PyMOLMapLoad.py:245-254``).
 
@@ -1068,10 +1089,19 @@ class FilesAPI:
         return out
 
     def save_formats(self) -> List[str]:
-        """``exporting.savefunctions`` keys, plus the ``func_type4`` set."""
+        """``exporting.savefunctions`` keys, plus the ``func_type4`` set.
+
+        ``func_type4`` (``exporting.py:853-857``) is ``{mmod, pkl, pkla}``.
+        ``mmod`` used to be MISSING from this list while its three aliases
+        ``mmd``/``out``/``dat`` (``importing.py:67-68`` maps all three to
+        format ``mmod``) were present -- so ``x.mmod``, which ``cmd.save``
+        writes perfectly well (measured: 3175 bytes of MacroModel for a trp
+        fragment) and which ``save_check`` already calls ``recognised``, was
+        the one saveable extension the manifest denied.
+        """
         from pymol import exporting
 
-        extra = ["mmd", "out", "dat", "pkl", "pkla"]
+        extra = ["mmod", "mmd", "out", "dat", "pkl", "pkla"]
         return sorted(set(list(exporting.savefunctions) + extra))
 
     # ------------------------------------------------------------ paths
@@ -1534,10 +1564,7 @@ class FilesAPI:
             # `cmd.map_generate` hard-codes `headering.MTZHeader`
             # (`creating.py:236`) with a "TODO: work for CIF, MTZ, and CNS" —
             # so anything but .mtz cannot reach the generator at all.
-            info["error"] = (
-                "cmd.map_generate reads MTZ only (creating.py:234-236 'TODO: "
-                "work for CIF, MTZ, and CNS'); %s is not an MTZ" % filename
-            )
+            info["error"] = non_mtz_refusal(filename)
             return info
         try:
             from pymol import headering
@@ -1623,6 +1650,16 @@ class FilesAPI:
         # nothing to show (`creating.py:230-232`).
         if not os.path.isfile(self.expand(filename)):
             report["error"] = "no such file: %s" % filename
+            return report
+
+        # …and the format check the info call already makes, repeated here
+        # because `run` is reachable without it (a typed path, a client that
+        # skipped the probe). Without it a `.cif` walked into MTZHeader's
+        # binary parser: MEASURED, `map_generate_run(1bna.cif, FWT, PHWT)`
+        # answered `error="'<' not supported between instances of 'int' and
+        # 'NoneType'"`, having already burned a `get_unused_name`.
+        if MAP_HEADER_CLASSES.get(self.expand(filename)[-3:].lower()) != "MTZHeader":
+            report["error"] = non_mtz_refusal(filename)
             return report
 
         prefix = self.cmd.get_unused_name(map_generate_prefix(amplitudes, name_prefix))
@@ -1977,17 +2014,53 @@ class FilesAPI:
         Redirecting fd 0 (not ``sys.stdin``) is what it takes, because the
         child inherits the *descriptor*, not the Python object.  PyMOL's own
         source is off limits to this work package, so the guard lives here.
+
+        AND THE GUARD ONLY COVERS THE ENCODER IF THE ENCODER IS SYNCHRONOUS,
+        which upstream's is not.  ``produce`` hard-codes ``mpng(..., modal=-1)``
+        (``movie.py:973``); ``MoviePNG`` reads any non-zero ``modal`` as
+        "install ``MovieModalDraw``" unless the mode is ray
+        (``layer1/Movie.cpp:836-865``), so ``get_modal_draw()`` is true when
+        ``produce`` reaches ``:982-987`` and ``_encode`` — the ffmpeg spawn —
+        goes to a **daemon thread**.  The ``finally`` below then restored fd 0
+        before ffmpeg was ever started, and `` produce: finished.`` was printed
+        by that detached thread: exactly the ordering the wave-4 note recorded
+        the shutdown after.  MEASURED over the socket on the unpatched build::
+
+            cmd.tenmol_files.produce(f, mode='draw')
+                -> {'ok': False, 'size': 0, 'error': 'no output file was written'}
+            cmd.mset  ->  pymol.CmdException: ' Error: APIEnterNotModal(G)'
+            (the .mp4 appeared ~1.5 s later, written by the detached thread)
+
+        i.e. the browser was told the export had failed while it was still
+        running, and the next call into the engine raised.  Handing ``produce``
+        the same ``_ModalOverride`` proxy the movie panel uses pins ``modal=0``,
+        so ``MoviePNG`` completes inside this one pump task, ``produce`` takes
+        the *inline* ``_encode`` branch, and ffmpeg is spawned while fd 0 is
+        still ``/dev/null``.  The cost, stated: the pump is busy for the whole
+        export instead of for none of it (``panels/movie.py::_ModalOverride``).
         """
         from pymol import movie
+
+        from .movie import _ModalOverride
 
         devnull = os.open(os.devnull, os.O_RDONLY)
         saved = os.dup(0)
         try:
             os.dup2(devnull, 0)
-            movie.produce(self.expand(filename), _self=self.cmd, **kwargs)
+            movie.produce(
+                self.expand(filename), _self=_ModalOverride(self.cmd, 0), **kwargs
+            )
         except Exception as exc:  # noqa: BLE001
             return {"ok": False, "error": str(exc), "path": self.expand(filename)}
         finally:
+            # ``_encode:811`` is the only ``unset('keep_alive')`` upstream has
+            # and it is not reached when ``mpng`` raises, which would pin the
+            # engine awake for the rest of the session.  Safe to force here
+            # only because the encode is now synchronous.
+            try:
+                self.cmd.unset("keep_alive")
+            except Exception:  # noqa: BLE001
+                pass
             os.dup2(saved, 0)
             os.close(saved)
             os.close(devnull)

@@ -17,12 +17,24 @@
  *   - `self.menudict`, the registry legacy Tk plugins mutate, is Qt-object
  *     valued and belongs to WP-25's plugin surface, not here.
  *
- * Setting-bound state is fetched when a menu OPENS (`cmd.get_setting_tuple` per
- * distinct setting in that menu's subtree, in parallel) and again after any
- * click that could have changed it. That is the same contract as Qt's
- * `setting_callbacks`, minus the push channel — `cmd.get_setting_updates` is
- * owned exclusively by the bridge status thread (plan §1.2) and a second
- * consumer would split the stream.
+ * Setting-bound state is read when a menu OPENS, which is when Qt reads it too:
+ * `_addmenu` calls `cmd.get_setting_tuple` while BUILDING each check/radio
+ * (`pymol_qt_gui.py:337`) and only then registers `setting_callbacks[index]`.
+ * A menu here is unmounted while closed, so "build" happens per open.
+ *
+ * The PUSH half is `shell/settingsTap.ts`, and it is the same shape as Qt's:
+ * the bridge's tap says WHICH INDICES changed, this file re-reads the open
+ * menu's settings when any of them is one of its own. That is what makes a
+ * radio dot move under `set orthoscopic, 1` typed at the prompt, or under a
+ * `util.performance(0)` that writes a dozen settings — with the menu already
+ * open and nobody touching it. `cmd.get_setting_updates` itself is destructive
+ * and owned by the bridge status thread (plan §1.2); the tap is the cumulative,
+ * cursor-addressed log of what that thread saw, and two consumers with two
+ * cursors do not split it (measured).
+ *
+ * The 120 ms re-read after a click is the FALLBACK for a bridge whose settings
+ * panel will not install: while the tap is live the click's own write comes
+ * back through it, and the timer is not armed.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
@@ -30,6 +42,7 @@ import type { MenuNode, MenuSettingValue, MenusPayload } from '@tenmol/protocol/
 import { truncateRecentLabel } from '@tenmol/protocol/topics/menus';
 import { useSession } from '../../app';
 import { menuHooks, subscribeMenuHooks } from '../../shell/panelHooks';
+import { getSettingsTap } from '../../shell/settingsTap';
 import { ToolkitDialogHost, useToolkitHooks } from './toolkitHooks';
 import { MENU_DATA } from './generated/menudata';
 import { createMenuSource } from './menuSource';
@@ -185,6 +198,52 @@ export function MenuBar() {
     if (open === null) setRecent(null);
   }, [open, refresh]);
 
+  /* ---------------- the push channel (`setting_callbacks`) ---------------- */
+
+  const tap = useMemo(() => getSettingsTap(session), [session]);
+
+  // `refresh` and `open` are read by a subscription that must not be torn down
+  // and rebuilt every time either changes — that would drop batches between
+  // renders and re-issue the index resolution.
+  const latest = useRef({ open, refresh });
+  latest.current = { open, refresh };
+
+  useEffect(() => {
+    const detach = tap.attach();
+    // One call resolves every setting name the whole tree binds to, so the
+    // batch filter below is index arithmetic and never another round trip.
+    let byName: ReadonlyMap<string, number> = new Map();
+    void tap
+      .indices(tree.settings)
+      .then((map) => {
+        byName = map;
+      })
+      .catch(() => undefined);
+
+    const unsubscribe = tap.subscribe(({ indices, full }) => {
+      const { open: current, refresh: read } = latest.current;
+      if (current === null) return; // nothing on screen to update
+      if (!full) {
+        const menu = menus[current];
+        if (!menu) return;
+        const mine = new Set(
+          settingsIn([menu])
+            .map((name) => byName.get(name))
+            .filter((index): index is number => index !== undefined),
+        );
+        // An empty map means the tap could not resolve names (no settings panel
+        // on this bridge); refusing to filter is better than refusing to update.
+        if (mine.size > 0 && !indices.some((index) => mine.has(index))) return;
+      }
+      void read(current);
+    });
+
+    return () => {
+      unsubscribe();
+      detach();
+    };
+  }, [tap, tree.settings, menus]);
+
   /* ---------------- runtime ---------------- */
 
   // `mvprg` needs the runtime it lives inside (it calls `run` and `call`), so
@@ -314,10 +373,12 @@ export function MenuBar() {
         void setSetting(runtime, node.setting, node.value);
       }
       // Anything at all may have changed a setting (`util.performance` sets a
-      // dozen), so re-read this menu's settings after the click lands.
-      window.setTimeout(() => void refresh(open), 120);
+      // dozen). While the tap is live that write comes back as a batch of
+      // indices and the subscription above re-reads; this timer is the fallback
+      // for a bridge that has no tap.
+      if (!tap.live) window.setTimeout(() => void refresh(open), 120);
     },
-    [runtime, values, refresh, open],
+    [runtime, values, refresh, open, tap],
   );
 
   /* ---------------- Open Recent ---------------- */
@@ -352,12 +413,24 @@ export function MenuBar() {
           empty={recent?.error ?? 'no recent files'}
           onPick={(file) => {
             setOpen(null);
-            // Qt calls `load_dialog(fname)`, which additionally routes .mtz,
-            // .pse and multi-object formats through their own importers
-            // (WP-18). Until that lands this runs the plain command line, which
-            // is what `load_dialog` does for every ordinary structure file —
-            // and it goes out as `{t:'do'}` so the console echoes it.
-            void session.run(`load ${file}`);
+            // Qt calls `load_dialog(fname)` (`pymol_qt_gui.py:367-375`), i.e.
+            // the FULL dispatcher: a `.pse` asks the partial question, a `.mtz`
+            // opens the reflection dialog, a `.dcd` the trajectory one. That
+            // pipeline is `features/files`, which publishes `requestFilesOpen`
+            // for exactly this call site. Loaded on CLICK, like the Qt handler's
+            // own deferred import, so the menu bar does not pull the file
+            // feature into its bundle to render a submenu.
+            void (async () => {
+              try {
+                const { requestFilesOpen } = await import('../files/menuHooks');
+                requestFilesOpen([file]);
+              } catch {
+                // No file feature in this build: the bare line is still what
+                // `load_dialog` does for every ordinary structure file, and it
+                // goes out as `{t:'do'}` so the console echoes it.
+                await session.run(`load ${file}`);
+              }
+            })();
           }}
         />
       );

@@ -26,7 +26,7 @@ import {
 } from '@tenmol/protocol';
 
 import { fovWidth, isOrthoscopic, modelViewMatrix, type ViewMatrix } from '../camera';
-import { pickOffsets, screenRay, type Rect } from './ray';
+import { pickOffsets, screenPoint, screenRay, type Rect } from './ray';
 
 /** `cPickable*`, `layer1/Rep.h`. */
 export const PICKABLE_ATOM = -1;
@@ -130,6 +130,25 @@ export interface PickIndex {
     y: number,
     options?: PickOptions,
   ): PickHit | null;
+  /**
+   * Every atom whose geometry projects inside a screen rectangle — the client
+   * half of the rubber band.
+   */
+  box(view: ViewMatrix, rect: Rect, band: BandRect, options?: PickOptions): BoxHit[];
+}
+
+/** A rubber-band rectangle in DOM CSS pixels, already normalised. */
+export interface BandRect {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+export interface BoxHit {
+  object: string;
+  /** `CGO_PICK_COLOR` operand 0 — an atom index within `object`, 0-based. */
+  index: number;
 }
 
 /* ------------------------------------------------------------------ *
@@ -481,6 +500,89 @@ export function createPickIndex(): PickIndex {
 
     castExact(view, rect, x, y, options = {}): PickHit | null {
       return cast(view, rect, x, y, options, 0);
+    },
+
+    /**
+     * RUBBER BAND. `SceneMultipick` renders the pick buffer over the rectangle
+     * and collects every DISTINCT id that survived the depth test
+     * (`layer1/ScenePicking.cpp`), so PyMOL's band takes only atoms whose
+     * pixels are actually visible. With no GL there is no depth buffer, so
+     * this projects each primitive's identifying vertex and takes everything
+     * that lands inside the rectangle: an atom hidden BEHIND another one is
+     * included here and would not be by PyMOL. That is the one known
+     * divergence, and it is a superset, never a subset.
+     */
+    box(view, rect, band, options = {}): BoxHit[] {
+      const wanted = options.reps;
+      const m = Array.from(modelViewMatrix(view)) as number[];
+      const mv = (i: number): number => m[i] ?? 0;
+      const eyeOf = (x: number, y: number, z: number): [number, number, number] => [
+        mv(0) * x + mv(4) * y + mv(8) * z + mv(12),
+        mv(1) * x + mv(5) * y + mv(9) * z + mv(13),
+        mv(2) * x + mv(6) * y + mv(10) * z + mv(14),
+      ];
+
+      const out: BoxHit[] = [];
+      const seen = new Set<string>();
+      const take = (object: string, index: number, x: number, y: number, z: number): void => {
+        const key = `${object} ${index}`;
+        if (seen.has(key)) return;
+        const p = screenPoint(view, rect, eyeOf(x, y, z));
+        if (p.behind) return;
+        if (p.x < band.left || p.x > band.right || p.y < band.top || p.y > band.bottom) return;
+        seen.add(key);
+        out.push({ object, index });
+      };
+
+      for (const entry of keys.values()) {
+        if (wanted !== undefined && !wanted.includes(entry.rep)) continue;
+        for (const inst of entry.instances) {
+          const { data, itemSize, count } = inst;
+          for (let i = 0; i < count; i++) {
+            const b = i * itemSize;
+            if ((inst.bond?.[i] ?? PICKABLE_ATOM) === PICKABLE_NO_PICK) continue;
+            const atom = inst.atom?.[i];
+            if (atom === undefined) continue;
+            const x = data[b] ?? 0;
+            const y = data[b + 1] ?? 0;
+            const z = data[b + 2] ?? 0;
+            if (inst.kind === 'cylinder' && inst.atom2 !== null) {
+              // A half-bond carries two identities; each end is its own atom,
+              // exactly as the ray cast splits them at the midpoint.
+              take(entry.object, atom, x, y, z);
+              const other = inst.atom2[i];
+              if (other !== undefined)
+                take(
+                  entry.object,
+                  other,
+                  x + (data[b + 3] ?? 0),
+                  y + (data[b + 4] ?? 0),
+                  z + (data[b + 5] ?? 0),
+                );
+              continue;
+            }
+            take(entry.object, atom, x, y, z);
+          }
+        }
+        for (const mesh of entry.meshes) {
+          const { position, atom, vis } = mesh;
+          if (atom === null) continue;
+          const verts = Math.floor(position.length / 3);
+          for (let v = 0; v < verts; v++) {
+            if (vis !== null && (vis[v] ?? 0) === 0) continue;
+            const id = atom[v];
+            if (id === undefined) continue;
+            take(
+              entry.object,
+              id,
+              position[v * 3] ?? 0,
+              position[v * 3 + 1] ?? 0,
+              position[v * 3 + 2] ?? 0,
+            );
+          }
+        }
+      }
+      return out;
     },
 
     pick(view, rect, x, y, options = {}): PickHit | null {

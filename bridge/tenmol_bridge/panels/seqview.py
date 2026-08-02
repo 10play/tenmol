@@ -80,6 +80,8 @@ __all__ = [
     "center",
     "collect_atoms",
     "install",
+    "menu",
+    "menu_expand",
     "sele_mode_keyword",
     "select",
     "select_expression",
@@ -999,6 +1001,105 @@ def set_state(cmd: Any, obj: str, state: int) -> Dict[str, Any]:
     return {"log": 'cmd.set("state",%d,"%s")' % (int(state), obj)}
 
 
+def _atom_sele_label(cmd: Any, obj: str, index: int) -> str:
+    """``ObjectMoleculeGetAtomSele`` (``layer2/ObjectMolecule.cpp``).
+
+    PyMOL's own atom identifier, ``/object/segi/chain/resn`resi/name``, which
+    ``SeekerClick`` hands to ``seq_option`` as the menu TITLE
+    (``layer3/Seeker.cpp:379-390``).  ``menu.seq_option`` then cuts it back to
+    the last ``/`` (``modules/pymol/menu.py:1801-1804``), so the residue path is
+    what the user sees at the top of the popup.
+    """
+    rows: List[Tuple[Any, ...]] = []
+    cmd.iterate(
+        "%s and index %d" % (obj, int(index)),
+        "rows.append((model, segi, chain, resn, resi, name))",
+        space={"rows": rows},
+    )
+    if not rows:
+        return "/%s" % obj
+    model, segi, chain, resn, resi, name = rows[0]
+    return "/%s/%s/%s/%s`%s/%s" % (model, segi, chain, resn, resi, name)
+
+
+def menu(
+    cmd: Any,
+    obj: str = "",
+    atoms: Sequence[int] = (),
+    selected: int = 0,
+) -> Dict[str, Any]:
+    """The two right-click popups of ``SeekerClick`` (``Seeker.cpp:357-395``).
+
+    The C branches on ONE condition: an active selection exists AND the column
+    under the pointer is in it (``col->inverse``).  If so the menu is
+    ``pick_sele`` on the SELECTION (``menu.py:1709``); otherwise ``_seeker`` is
+    built from the column's atom list and the menu is ``seq_option`` on that
+    temporary, titled with the first atom's identifier (``menu.py:1800``).  A
+    right click OUTSIDE any cell takes the first branch too (``:330-340``).
+
+    ``_seeker`` is left in place, exactly as the C does: the leaves of the menu
+    are command strings referring to it (``cmd.zoom("_seeker")``), so deleting
+    it here would make every one of them a no-op.  The next ``select`` /
+    ``select_range`` / ``menu`` call overwrites it.
+    """
+    from pymol import menu as pymol_menu  # late: needs a started PyMOL
+
+    from .objects import _encode_items
+
+    name = active_sele_name(cmd, create_new=False)
+    if int(selected) and name:
+        entries = pymol_menu.pick_sele(cmd, name, name)
+        return {
+            "menu": "pick_sele",
+            "sele": name,
+            "title": name,
+            "items": _encode_items(entries, ()),
+        }
+    indices = [int(index) for index in atoms]
+    if not obj or not indices:
+        return {"menu": "", "sele": "", "title": "", "items": []}
+    cmd.select(TEMP_SELE, _index_expression(obj, indices), enable=0, quiet=1)
+    title = _atom_sele_label(cmd, obj, indices[0])
+    entries = pymol_menu.seq_option(cmd, TEMP_SELE, title)
+    return {
+        "menu": "seq_option",
+        "sele": TEMP_SELE,
+        "title": title,
+        "items": _encode_items(entries, ()),
+    }
+
+
+def menu_expand(
+    cmd: Any,
+    path: Sequence[int],
+    obj: str = "",
+    atoms: Sequence[int] = (),
+    selected: int = 0,
+) -> Dict[str, Any]:
+    """Resolve one lazy submenu of the popup above -- PyMOL's ``SubGetItem``.
+
+    The menu is REBUILT and then walked, because the leaves are Python objects
+    that cannot cross the wire; the path is the only thing the client keeps.
+    """
+    from pymol import menu as pymol_menu
+
+    from .objects import _encode_items, _walk
+
+    name = active_sele_name(cmd, create_new=False)
+    if int(selected) and name:
+        entries: Any = pymol_menu.pick_sele(cmd, name, name)
+    else:
+        indices = [int(index) for index in atoms]
+        cmd.select(TEMP_SELE, _index_expression(obj, indices), enable=0, quiet=1)
+        entries = pymol_menu.seq_option(
+            cmd, TEMP_SELE, _atom_sele_label(cmd, obj, indices[0]) if indices else obj
+        )
+    command = _walk(entries, list(path))
+    if not callable(command):
+        raise ValueError("menu path %r is not a lazy submenu" % (list(path),))
+    return {"path": list(path), "items": _encode_items(command(), list(path))}
+
+
 # --------------------------------------------------------------------------
 # Installation
 # --------------------------------------------------------------------------
@@ -1016,6 +1117,8 @@ ACTIONS: Dict[str, str] = {
     "clear": "clear",
     "center": "center",
     "set_state": "set_state",
+    "menu": "menu",
+    "menu_expand": "menu_expand",
     "install": "_installed",
 }
 

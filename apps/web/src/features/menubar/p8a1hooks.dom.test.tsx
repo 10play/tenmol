@@ -100,12 +100,25 @@ async function flush(times = 4): Promise<void> {
   }
 }
 
-/** Flush until `selector` exists, or fail loudly with what IS in the dialog. */
-async function waitFor(selector: string, tries = 40): Promise<Element> {
-  for (let i = 0; i < tries; i += 1) {
+/**
+ * Flush until `selector` exists, or fail loudly with what IS in the dialog.
+ *
+ * A DEADLINE, not a turn count. `tries` macrotasks of `setTimeout(…, 0)` is a
+ * budget in EVENT LOOP TURNS, and what this waits for is a dynamic `import()`
+ * — vitest transforming a module tree, which is wall-clock work on a machine
+ * running a dozen test files at once. Measured: 40 turns is enough for this
+ * file alone and not always enough beside thirty other files, which made the
+ * shortcut-editor case fail perhaps one run in three under load and never in
+ * isolation. Two seconds of real time is the same assertion without the race.
+ */
+async function waitFor(selector: string, timeoutMs = 2000): Promise<Element> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
     const found = container.querySelector(selector);
     if (found) return found;
-    await flush(1);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    });
   }
   throw new Error(
     `${selector} never appeared; dialog body was ` +

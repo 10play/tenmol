@@ -31,7 +31,7 @@ import { repName } from '@tenmol/protocol';
 
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
 import { createCompositor } from './compositor';
-import { createCameraDriver } from './input/camera';
+import { createCameraDriver, type BandBox, type CameraCounters } from './input/camera';
 import { createPickIndex } from './picking';
 import { createInputController } from './input/mouse';
 import type { GeometryCache } from './modeG/cache';
@@ -394,9 +394,32 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   const gateSamples: boolean[] = [];
   const pickIndex = createPickIndex();
   const pickStats = { attempts: 0, hits: 0, misses: 0 };
+  /** The scene rectangle, in CSS pixels — NOT the canvas (see `./picking/ray`). */
+  const sceneRect = (): { width: number; height: number } => ({
+    width: stats.sceneWidth || cssSize.width,
+    height: stats.sceneHeight || cssSize.height,
+  });
+  /** The live rubber band, in DOM CSS pixels. Read by the overlay. */
+  let bandBox: BandBox | null = null;
   const cameraDriver = createCameraDriver({
     call: (fn, args = []) => transport.call(fn, [...args]),
     onError,
+    view: () => view,
+    /**
+     * The object under the press, for the object and view actions — PyMOL
+     * takes the same thing from `LastPicked` (`SceneMouse.cpp:1512`).
+     */
+    pick: (x, y) => {
+      if (view === null) return null;
+      const hit = pickIndex.pick(view, sceneRect(), x, y, { pixelRatio: size.dpr });
+      return hit === null ? null : { object: hit.object, index: hit.index };
+    },
+    /** The rubber band, resolved against the same index the click uses. */
+    boxHits: (band) => (view === null ? [] : pickIndex.box(view, sceneRect(), band)),
+    onBand: (band) => {
+      bandBox = band;
+      dirty = true;
+    },
   });
 
   const input = createInputController({
@@ -431,8 +454,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       // rectangle, not the PyMOL-space point the input path produces (that is
       // already y-flipped and dpr-scaled, and would pick the mirrored atom).
       const box = surface.glCanvas.getBoundingClientRect();
-      const rect = { width: stats.sceneWidth || cssSize.width, height: stats.sceneHeight || cssSize.height };
-      const hit = pickIndex.pick(view, rect, ev.clientX - box.left, ev.clientY - box.top, {
+      const hit = pickIndex.pick(view, sceneRect(), ev.clientX - box.left, ev.clientY - box.top, {
         pixelRatio: size.dpr,
       });
       pickStats.attempts++;
@@ -757,8 +779,16 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
      * stale and the counters read zero — which is indistinguishable from the
      * driver never being consulted. That cost two rounds of wrong diagnosis.
      */
-    get cameraRpc(): { turns: number; moves: number; zooms: number; errors: number } {
+    get cameraRpc(): CameraCounters {
       return { ...cameraDriver.counters };
+    },
+    /** The ButMode action the last gesture resolved to, and the mode it used. */
+    get cameraAction(): { action: number; mode: string } {
+      return { action: cameraDriver.action, mode: cameraDriver.mode };
+    },
+    /** The live rubber band in DOM CSS pixels, or null. */
+    get selectionBand(): BandBox | null {
+      return bandBox;
     },
     /** `rasterizing` as the drag gate saw it, most recent last. */
     get cameraGate(): readonly boolean[] {

@@ -82,6 +82,7 @@ __all__ = [
     "builder_action",
     "builder_pick",
     "builder_wizard_click",
+    "builder_sculpt_tick",
     "builder_tables",
     "install",
     "ActionWizard",
@@ -386,6 +387,11 @@ def builder_state(cmd: Any) -> Dict[str, Any]:
         "settings": {
             "clean_electro_mode": _setting_int(cmd, "clean_electro_mode"),
             "sculpt_vdw_vis_mode": _setting_int(cmd, "sculpt_vdw_vis_mode"),
+            # The gate and the step size of the tick loop below
+            # (`builder_sculpt_tick`), so the panel can start and stop it
+            # without a second round trip.
+            "sculpting": _setting_int(cmd, "sculpting"),
+            "sculpting_cycles": _setting_int(cmd, "sculpting_cycles"),
             "suspend_undo": _setting_int(cmd, "suspend_undo"),
             "valence": _setting_int(cmd, "valence"),
             "auto_overlay": _setting_int(cmd, "auto_overlay"),
@@ -1986,6 +1992,55 @@ def builder_select(cmd: Any, selection: str) -> Dict[str, Any]:
     return state
 
 
+def builder_sculpt_tick(cmd: Any, cycles: Any = None) -> Dict[str, Any]:
+    """ONE frame of PyMOL's sculpting loop, for a client that has to drive it.
+
+    UPSTREAM this is not a command at all -- it is the idle handler.
+    ``PyMOL_Idle`` calls ``ExecutiveSculptIterateAll(G)`` whenever
+    ``ControlIdling(G)`` is true (``layer5/PyMOL.cpp:2424``), and
+    ``ControlIdling`` is true whenever the ``sculpting`` SETTING is on
+    (``layer1/Control.cpp:397-403``).  That loop walks every molecular object
+    whose per-object ``sculpting`` is set and runs ``sculpting_cycles``
+    iterations of it at the CURRENT state (``layer3/Executive.cpp:7106-7135``).
+
+    There is no idle loop here: the bridge pump draws, it does not iterate.  So
+    the client ticks, and this is the tick -- the same gate, the same object
+    set, the same cycle count, in one round trip.  ``cmd.sculpt_iterate("all",
+    ...)`` is the public form of exactly that walk (``:7164-7173``) and returns
+    the TOTAL STRAIN, which the panel shows so a user can see the minimisation
+    converge.
+
+    ONE DELIBERATE DIFFERENCE, and it is the C's own conditional: the idle loop
+    passes a ``center`` accumulator when ``sculpt_auto_center`` is on, which
+    re-centres the scene on the moving atoms; ``ExecutiveSculptIterate`` passes
+    ``nullptr`` and cannot do that.  Reported in the reply as
+    ``auto_center_unsupported`` rather than silently dropped.
+    """
+    if not cmd.get_setting_boolean("sculpting"):
+        return {
+            "active": False,
+            "strain": 0.0,
+            "cycles": 0,
+            "objects": 0,
+            "auto_center_unsupported": False,
+        }
+    n_cycles = (
+        _setting_int(cmd, "sculpting_cycles") if cycles is None else max(0, int(cycles))
+    )
+    # -1 is `CURRENT_STATE` (`editing.py:240`), which reaches C as -2 -- the
+    # literal `constexpr int state = -2` the idle loop uses.
+    strain = cmd.sculpt_iterate("all", -1, n_cycles)
+    return {
+        "active": True,
+        "strain": float(strain or 0.0),
+        "cycles": n_cycles,
+        "objects": len(cmd.get_object_list() or []),
+        "auto_center_unsupported": bool(
+            cmd.get_setting_boolean("sculpt_auto_center")
+        ),
+    }
+
+
 def builder_dismiss(cmd: Any) -> Dict[str, Any]:
     """The universal Done: drop the wizard and the builder's scratch selections."""
     wizard = cmd.get_wizard()
@@ -2010,6 +2065,7 @@ _ENTRY_POINTS = {
     "builder_pick": builder_pick,
     "builder_wizard_click": builder_wizard_click,
     "builder_select": builder_select,
+    "builder_sculpt_tick": builder_sculpt_tick,
     "builder_dismiss": builder_dismiss,
 }
 

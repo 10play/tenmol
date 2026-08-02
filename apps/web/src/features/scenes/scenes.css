@@ -390,3 +390,53 @@
   color: var(--fg-dim, #9aa3ad);
   white-space: nowrap;
 }
+
+/* --- the ported button geometry (`sceneButtonGeometry.ts`) --------------- *
+ *
+ * `.scbar--laid` is the strip once the engine has told us the block it lays
+ * out in: buttons are positioned and sized by `SceneDrawButtons`' arithmetic
+ * (8-dip cells, `internal_gui_control_size` rows) instead of by flex, so the
+ * strip is as wide as PyMOL would draw it and cuts names in the same place.
+ */
+.scbar--laid {
+  position: relative;
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  /* `.scpanel` is a flex COLUMN, so the inline `height` the component computes
+     is only a flex-basis: the default `flex-shrink: 1` squashed this strip to
+     nothing whenever the panel was short, and `overflow: hidden` then clipped
+     away buttons that still reported a full bounding box. Result: the scene
+     buttons were invisible and every click on one was silently taken by
+     whatever the strip had collapsed on top of. */
+  flex: 0 0 auto;
+}
+
+.scbar--laid .scbar__btn {
+  padding: 0 3px;
+  line-height: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.scbar__btn.is-truncated {
+  /* PyMOL simply stops drawing characters; the cue that it did is ours. */
+  border-right: 1px dotted #8a8f95;
+}
+
+.scbar__scroll {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1px;
+  background: #17181b;
+}
+
+.scbar__thumb {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  min-height: 4px;
+  background: rgb(128 128 128);
+}

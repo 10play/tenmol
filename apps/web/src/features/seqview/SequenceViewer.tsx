@@ -19,9 +19,10 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { SeqviewCell, SeqviewPayload, SeqviewRow } from '@tenmol/protocol';
+import type { PanelMenuNode, SeqviewCell, SeqviewPayload, SeqviewRow } from '@tenmol/protocol';
 import { useSession, useStore } from '../../app';
-import { createSeqviewSource, type SeqviewSource } from './source';
+import { RowMenu } from '../objects/RowMenu';
+import { createSeqviewSource, type SeqviewMenuPayload, type SeqviewSource } from './source';
 import { Button, click, move, wheel, type Mods, type SeqAction, type SeqDrag } from './grammar';
 import { selectionRuns } from './minimap';
 import { clampFirst, widestRow } from './window';
@@ -61,6 +62,22 @@ export function SequenceViewer(): React.JSX.Element | null {
   const [payload, setPayload] = useState<SeqviewPayload>(EMPTY);
   const [first, setFirst] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * The one open right-click popup, with the arguments that built it: a lazy
+   * submenu is resolved by REBUILDING the menu on the bridge and walking the
+   * path (`SubGetItem`), so the request has to be repeatable.
+   */
+  const [menu, setMenu] = useState<
+    | (SeqviewMenuPayload & {
+        at: { x: number; y: number };
+        object: string;
+        atoms: number[];
+        selected: boolean;
+      })
+    | null
+  >(null);
+  /** Where the last pointer press landed — the popup's anchor. */
+  const pointerRef = useRef({ x: 0, y: 0 });
 
   const source = useMemo<SeqviewSource>(
     () => createSeqviewSource((fn, args, kwargs) => session.call(fn, args, kwargs)),
@@ -212,12 +229,24 @@ export function SequenceViewer(): React.JSX.Element | null {
               break;
             }
             case 'menu': {
-              // `MenuActivate2Arg(..., "pick_sele"|"seq_option", ...)` is WP-13's
-              // popup service; say so rather than silently doing nothing.
-              session.stores.feedback.appendClient(
-                ` sequence viewer: the "${action.menu}" popup is WP-13 (pymol-menu)`,
-                'warning',
-              );
+              // `MenuActivate2Arg(G, x, y+16, x, y, false, "pick_sele"|
+              // "seq_option", ...)` (`layer3/Seeker.cpp:364,388`). The grammar
+              // has already decided WHICH of the two this is; the bridge builds
+              // the same `pymol.menu` tree the C would have activated.
+              const cell = row?.cells[(action as { col: number }).col - (row?.first ?? 0)];
+              const atoms = cell && !cell.spacer ? [...cell.atoms] : [];
+              const selected = action.menu === 'pick_sele';
+              if (!selected && atoms.length === 0) break;
+              const built = await source.menu(row?.object ?? '', atoms, selected);
+              if (built.menu) {
+                setMenu({
+                  ...built,
+                  at: { ...pointerRef.current },
+                  object: row?.object ?? '',
+                  atoms,
+                  selected,
+                });
+              }
               break;
             }
           }
@@ -237,6 +266,7 @@ export function SequenceViewer(): React.JSX.Element | null {
   const onPointerDown = useCallback(
     (rowIndexValue: number, col: number, cell: SeqviewCell | null, event: React.PointerEvent) => {
       event.preventDefault();
+      pointerRef.current = { x: event.clientX, y: event.clientY };
       const row = payload.rows[rowIndexValue];
       const button = (event.button === 1 ? Button.Middle : event.button === 2 ? Button.Right : Button.Left);
       const mods: Mods = { shift: event.shiftKey, ctrl: event.ctrlKey || event.metaKey };
@@ -286,6 +316,7 @@ export function SequenceViewer(): React.JSX.Element | null {
       // reachable only in the few pixels the container itself paints.
       const target = event.target as HTMLElement | null;
       if (target?.closest('.seqcell, .seqview__scroll')) return;
+      pointerRef.current = { x: event.clientX, y: event.clientY };
       const button = event.button === 1 ? Button.Middle : event.button === 2 ? Button.Right : Button.Left;
       const now = performance.now();
       const outcome = click({
@@ -424,6 +455,39 @@ export function SequenceViewer(): React.JSX.Element | null {
         ))}
       </div>
 
+      {menu && (
+        /*
+          * The SAME popup component the object panel uses
+          * (`features/objects/RowMenu`): one `pymol.menu` renderer for every
+          * surface that raises one, as `MenuActivate*` is one entry point in
+          * the C. Nothing about this menu is seqview-specific — the leaves are
+          * command strings PyMOL wrote.
+          */
+        <RowMenu
+          title={menu.title}
+          op="A"
+          menuName={menu.menu}
+          items={menu.items}
+          anchor={menu.at}
+          onPick={(command) => {
+            setMenu(null);
+            void session.run(command);
+            void refresh();
+          }}
+          onExpand={(path) => {
+            void source
+              .menuExpand(path, menu.object, menu.atoms, menu.selected)
+              .then((resolved) => {
+                setMenu((open) =>
+                  open ? { ...open, items: graftMenu(open.items, resolved.path, resolved.items) } : open,
+                );
+              })
+              .catch((fault: unknown) => setError(describe(fault)));
+          }}
+          onClose={() => setMenu(null)}
+        />
+      )}
+
       {/* The scrollbar doubles as the selection mini-map (`layer1/Seq.cpp:564-696`). */}
       <div
         className="seqview__scroll"
@@ -500,6 +564,26 @@ function cellTitle(row: SeqviewRow, cell: SeqviewCell): string {
   bits.push(`${cell.atoms.length} atom${cell.atoms.length === 1 ? '' : 's'}`);
   if (!row.selectable) bits.push('not selectable (non-discrete states)');
   return bits.join(' · ');
+}
+
+/**
+ * Replace the node at `path` with its resolved children — the client half of
+ * `SubGetItem` (`layer4/PopUp.cpp:88-110`), which caches what it resolved.
+ */
+export function graftMenu(
+  items: readonly PanelMenuNode[],
+  path: readonly number[],
+  resolved: readonly PanelMenuNode[],
+): PanelMenuNode[] {
+  if (path.length === 0) return [...resolved];
+  const [head, ...rest] = path;
+  return items.map((node, index) =>
+    index !== head
+      ? node
+      : rest.length === 0
+        ? { ...node, lazy: false, items: [...resolved] }
+        : { ...node, items: graftMenu(node.items ?? [], rest, resolved) },
+  );
 }
 
 function describe(error: unknown): string {
