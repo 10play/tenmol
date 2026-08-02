@@ -7,7 +7,7 @@
  *  * the two whose second eye cannot cross a WebSocket are DISABLED and say
  *    why, and clicking them sends nothing;
  *  * the other seven still issue their literal `stereo <word>` line, because
- *    they work — MEASURED, `bridge/tests/test_p11_menus.py`;
+ *    they work — MEASURED, `packages/bridge/tests/test_p11_menus.py`;
  *  * every live leaf's tooltip says where it will be visible, and that sentence
  *    CHANGES with the live answer from `_bridge.render_stats`, which is how the
  *    Mode-G half of the gap is closed without `features/viewport` publishing

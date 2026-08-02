@@ -2,7 +2,7 @@
  * Parity area 2, rows 112-113 — the busy box and the marquee, unit half.
  *
  * The engine-side facts these depend on are measured live in
- * `bridge/tests/test_wf_ortho.py`:
+ * `packages/bridge/tests/test_wf_ortho.py`:
  *
  *   * `cmd.get_progress()` is a single folded FRACTION, negative when idle,
  *     and `show_progress, 0` silences it entirely (13 frames across two rays,
@@ -34,7 +34,7 @@ import { tableForMode } from '../../../../../packages/viewport/src/input/mouseCo
 
 describe('the busy box geometry is PyMOL’s', () => {
   it('carries the five cBusy* constants verbatim', () => {
-    // `layer1/Ortho.cpp:192-198`.
+    // `packages/engine/layer1/Ortho.cpp:192-198`.
     expect([BUSY_WIDTH, BUSY_HEIGHT, BUSY_MARGIN, BUSY_BAR, BUSY_SPACING]).toEqual([
       240, 60, 10, 10, 15,
     ]);
@@ -52,7 +52,7 @@ describe('the busy box geometry is PyMOL’s', () => {
   });
 
   it('never draws a bar for the idle sentinel or for junk', () => {
-    // -1.0 is "not busy" (`layer4/Cmd.cpp:4341`), NOT 0%. A client that
+    // -1.0 is "not busy" (`packages/engine/layer4/Cmd.cpp:4341`), NOT 0%. A client that
     // clamped it into 0..1 would leave a bar on screen forever.
     expect(busyFillWidth(-1)).toBe(0);
     expect(busyFillWidth(Number.NaN)).toBe(0);
@@ -74,7 +74,7 @@ describe('when the box is drawn', () => {
 
 describe('the marquee rectangle', () => {
   it('normalises either drag direction, like SceneLoopRelease', () => {
-    // `layer1/SceneMouse.cpp:76-88` swaps top/bottom and right/left so the
+    // `packages/engine/layer1/SceneMouse.cpp:76-88` swaps top/bottom and right/left so the
     // rect handed to `ExecutiveSelectRect` is well ordered.
     const downRight = loopBox({ x: 10, y: 20 }, { x: 110, y: 220 });
     expect(downRight).toEqual({ left: 10, top: 20, width: 100, height: 200 });
@@ -97,8 +97,8 @@ describe('the marquee rectangle', () => {
   });
 
   it('knows the six action codes that start a loop', () => {
-    // The `switch` in `SceneClick` (`layer1/SceneMouse.cpp:803-809`), values
-    // from `layer1/ButMode.h:44-46,58-59,91`.
+    // The `switch` in `SceneClick` (`packages/engine/layer1/SceneMouse.cpp:803-809`), values
+    // from `packages/engine/layer1/ButMode.h:44-46,58-59,91`.
     expect(LOOP_ACTIONS).toEqual({
       19: 'add',
       20: 'subtract',

@@ -22,7 +22,7 @@
  *      PyMOL's default of 1.
  *
  * The bridge half — `RepMesh::Width` reaching the header at all — is
- * `bridge/tests/test_p11_mesh.py`.
+ * `packages/bridge/tests/test_p11_mesh.py`.
  */
 
 import { decodeGeometryFrame, encodeGeometryFrame } from '@tenmol/protocol';

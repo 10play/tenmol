@@ -1,7 +1,7 @@
 /**
  * The `mset` mini-language, ported for PREVIEW ONLY.
  *
- * `cmd.mset` is parsed entirely in Python (`modules/pymol/moving.py:691-763`)
+ * `cmd.mset` is parsed entirely in Python (`packages/engine/modules/pymol/moving.py:691-763`)
  * and hands `_cmd.mset` a space-separated list of **0-based** states. This is a
  * line-for-line port of that loop so the editor can show the resulting
  * frame->state table before the user commits.
@@ -26,7 +26,7 @@
 
 import type { MsetPreview, MsetToken } from '@tenmol/protocol/topics/movie';
 
-/** `modules/pymol/moving.py:731-737`. */
+/** `packages/engine/modules/pymol/moving.py:731-737`. */
 export function tokenizeMset(specification: string): string[] {
   let input = specification.replace(/\s/g, ' ');
   input = input.replace(/x/g, ' x');

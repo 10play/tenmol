@@ -2,14 +2,14 @@ import type { FrameState, MouseModeState } from './placeholderData';
 import { useBridge } from '../bridge/BridgeContext';
 
 /**
- * Mouse-mode block (ButMode) -- layer1/ButMode.cpp:192-395.
+ * Mouse-mode block (ButMode) -- packages/engine/layer1/ButMode.cpp:192-395.
  *
  * Line 1 is "Mouse Mode <button_mode_name>". When `mouse_grid` is on (default 1,
- * layer1/SettingInfo.h:687) a 4-column matrix (L / M / R / Wheel) is drawn with rows
+ * packages/engine/layer1/SettingInfo.h:687) a 4-column matrix (L / M / R / Wheel) is drawn with rows
  * `& Keys`, `Shft`, `Ctrl`, `CtSh`, ` SnglClk`, ` DblClk`, filled with 5-char codes
- * from `CButMode::Code` (layer1/ButMode.cpp:497-520).
+ * from `CButMode::Code` (packages/engine/layer1/ButMode.cpp:497-520).
  *
- * Click behaviour (layer1/ButMode.cpp:149-190): the bottom two lines cycle the
+ * Click behaviour (packages/engine/layer1/ButMode.cpp:149-190): the bottom two lines cycle the
  * selection mode (`mouse select_forward` / `select_backward`), everything else cycles
  * the mouse mode (`mouse forward` / `mouse backward`); right-click opens the
  * `mouse_config` popup.
@@ -32,7 +32,7 @@ export function MouseModeBlock({ mode, frame }: { mode: MouseModeState; frame: F
         onClick={() => cycle(false)}
         onContextMenu={(e) => {
           e.preventDefault();
-          bridge.appendFeedback([' [stub] mouse_config popup (modules/pymol/menu.py:82-101)']);
+          bridge.appendFeedback([' [stub] mouse_config popup (packages/engine/modules/pymol/menu.py:82-101)']);
         }}
       >
         Mouse Mode <span className="butmode__mode">{mode.buttonModeName}</span>
@@ -73,7 +73,7 @@ export function MouseModeBlock({ mode, frame }: { mode: MouseModeState; frame: F
         {mode.selectionLine}
       </button>
 
-      {/* fast-redraw line -- layer1/ButMode.cpp:423-475 */}
+      {/* fast-redraw line -- packages/engine/layer1/ButMode.cpp:423-475 */}
       <div className="butmode__frame">
         Frame {String(frame.frame).padStart(4)}/{String(frame.nFrame).padStart(4)}
       </div>

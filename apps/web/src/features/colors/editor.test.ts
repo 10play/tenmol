@@ -1,10 +1,10 @@
 /**
  * The colour EDITOR's own logic — the parts of `edit_colors_dialog`
- * (`modules/pmg_qt/pymol_qt_gui.py:547-611`) that are not React.
+ * (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:547-611`) that are not React.
  *
  * Every index and tuple asserted below was MEASURED against the live engine in
  * this checkout (PyMOL 3.2.0a) over the bridge WebSocket while writing
- * `bridge/tests/test_wf_colors.py`; that file re-measures them on every run, so
+ * `packages/bridge/tests/test_wf_colors.py`; that file re-measures them on every run, so
  * if PyMOL's answers ever move, the pair of tests disagrees rather than this one
  * quietly encoding a stale fact.
  */

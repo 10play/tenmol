@@ -3,10 +3,10 @@
  *
  * Layout is PyMOL's, not a web app's. Qt PyMOL has no splitters: the main window
  * is a `QMainWindow` with the GL widget as the central widget and the External
- * GUI as a dock (`modules/pmg_qt/pymol_qt_gui.py:184-193`). Everything on the
+ * GUI as a dock (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:184-193`). Everything on the
  * right — object panel, mouse-mode block, movie controls — is not Qt at all:
  * PyMOL draws it itself inside the GL viewport as 2D `Block`s stacked bottom-up
- * by `OrthoLayoutPanel()` (`layer1/Ortho.cpp:2261-2340`):
+ * by `OrthoLayoutPanel()` (`packages/engine/layer1/Ortho.cpp:2261-2340`):
  *
  *      Executive (object panel)   <- fills the remaining height
  *      Wizard                     <- only when a wizard is active
@@ -14,7 +14,7 @@
  *      Control (movie buttons)    <- 20px
  *
  * Here those blocks are real DOM in a right-hand column of width
- * `internal_gui_width` (default 220, `layer1/Ortho.h:24`), and the whole column
+ * `internal_gui_width` (default 220, `packages/engine/layer1/Ortho.h:24`), and the whole column
  * disappears when `internal_gui` is 0. Every child comes from the feature
  * registry, so this file never needs to change as features land. The DOM order
  * of the column is pinned by CSS `order` from `INTERNAL_GUI_ORDER`, because the
@@ -23,12 +23,12 @@
  *
  * The External GUI is docked at the BOTTOM rather than Qt's default top: the
  * in-viewport prompt and scrollback it duplicates are drawn at the bottom of the
- * scene (`OrthoDrawText`, `layer1/Ortho.cpp:1623-1693`). Its dockable/visible
+ * scene (`OrthoDrawText`, `packages/engine/layer1/Ortho.cpp:1623-1693`). Its dockable/visible
  * state machine is `shell/extGuiDock.ts` and is a transcription of
  * `toggle_ext_window_dockable`, Ctrl+E and all.
  *
  * THE ONE VALUE THE SHELL WRITES TO `internal_gui` IS 0. MEASURED
- * (`bridge/tests/test_wf_shell.py`) — with `internal_gui 1` and the default
+ * (`packages/bridge/tests/test_wf_shell.py`) — with `internal_gui 1` and the default
  * width, an 800x600 window reports a 580x600 scene, and every mouse coordinate
  * the browser forwards is then wrong by 220 px. The column is OUR DOM; PyMOL's
  * own copy of it must stay off. The client toggle therefore never writes the
@@ -144,7 +144,7 @@ export function AppShell() {
       gutter.current = state;
       if (changed) {
         // A double click collapsed or restored: `I->SkipRelease = true`, no drag
-        // follows (`layer1/Control.cpp:461`).
+        // follows (`packages/engine/layer1/Control.cpp:461`).
         e.preventDefault();
         applyWidth(state.width, true);
         return;

@@ -7,15 +7,15 @@ import { useBridge } from '../bridge/BridgeContext';
  * The object panel ("names list", the Executive block).
  *
  * In PyMOL today this is drawn by C++ *inside* the GL viewport
- * (`CExecutive::draw`, layer3/Executive.cpp:16116-16541). Here it is real DOM.
+ * (`CExecutive::draw`, packages/engine/layer3/Executive.cpp:16116-16541). Here it is real DOM.
  *
- * Row anatomy, left to right (docs/webclient/internal-gui.md §1.2):
+ * Row anatomy, left to right (docs/internal-gui.md §1.2):
  *   scrollbar gutter | group [+]/[-] | indent (nest_level * 8px) | name button |
  *   caption | A S H L C (M) toggles, each 17px wide, right-aligned
  *
  * The toggle column index is computed exactly as in `CExecutive::click`
- * (layer3/Executive.cpp:14992-15258): 0=A 1=S 2=H 3=L 4=C 5=M, and `get_op_cnt()`
- * (layer3/Executive.cpp:1749-1756) is 5 normally, 6 when
+ * (packages/engine/layer3/Executive.cpp:14992-15258): 0=A 1=S 2=H 3=L 4=C 5=M, and `get_op_cnt()`
+ * (packages/engine/layer3/Executive.cpp:1749-1756) is 5 normally, 6 when
  * `button_mode_name == "3-Button Motions"`.
  */
 
@@ -48,9 +48,9 @@ export function ObjectPanel({ buttonModeName }: ObjectPanelProps) {
   };
 
   const openOpMenu = (row: PanelRow, op: string) => {
-    // TODO(pymol-menu): each of these opens a popup built by modules/pymol/menu.py
+    // TODO(pymol-menu): each of these opens a popup built by packages/engine/modules/pymol/menu.py
     // (mol_action / mol_show / mol_hide / mol_labels / mol_color / obj_motion, ...)
-    // resolved server-side per row type. See docs/webclient/internal-gui.md §1.3 for
+    // resolved server-side per row type. See docs/internal-gui.md §1.3 for
     // the full dispatch table. The popup engine is another package's work.
     bridge.appendFeedback([` [stub] ${op}-menu for ${row.name} (${row.specType})`]);
   };
@@ -114,7 +114,7 @@ export function ObjectPanel({ buttonModeName }: ObjectPanelProps) {
 }
 
 /**
- * Strip the group prefix, per `CExecutive::draw` (layer3/Executive.cpp:16421-16434)
+ * Strip the group prefix, per `CExecutive::draw` (packages/engine/layer3/Executive.cpp:16421-16434)
  * when `group_full_member_names` is 0.
  */
 function shortName(row: PanelRow): string {

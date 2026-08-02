@@ -1,11 +1,11 @@
 /**
  * Wave 8, parity area 9: the `do_select` hook the AtomFlagWizard needs.
  *
- * `AtomFlagWizard` (`modules/pmg_qt/builder.py:906-913`) treats an edit of the
+ * `AtomFlagWizard` (`packages/engine/modules/pmg_qt/builder.py:906-913`) treats an edit of the
  * `_build_display` named selection as an edit of the fixed/restrained atom set.
  * PyMOL fires `wizard.do_select` only from ITS OWN mouse paths
- * (`layer1/SceneMouse.cpp:135,357`, `layer3/Seeker.cpp:150,231`,
- * `layer3/Executive.cpp:7563` — the box select); `cmd.select` never fires it.
+ * (`packages/engine/layer1/SceneMouse.cpp:135,357`, `packages/engine/layer3/Seeker.cpp:150,231`,
+ * `packages/engine/layer3/Executive.cpp:7563` — the box select); `cmd.select` never fires it.
  * In this client that selection is edited by the object panel, so the hook is
  * an explicit RPC, and this pins its name and shape against the backend's own
  * entry-point table read off disk.
@@ -18,7 +18,7 @@ import type { BuilderState } from '@tenmol/protocol/topics/builder';
 import { createBuilderController } from './controller';
 
 const REPO = join(import.meta.dirname, '../../../../..');
-const BRIDGE_BUILDER = join(REPO, 'bridge/tenmol_bridge/panels/builder.py');
+const BRIDGE_BUILDER = join(REPO, 'packages/bridge/tenmol_bridge/panels/builder.py');
 const bridgeSource = readFileSync(BRIDGE_BUILDER, 'utf8');
 
 const RPC = 'cmd.builder_select';

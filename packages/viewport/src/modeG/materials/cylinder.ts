@@ -1,5 +1,5 @@
 /**
- * Cylinder impostor material — a port of `data/shaders/cylinder.vs` +
+ * Cylinder impostor material — a port of `packages/engine/data/shaders/cylinder.vs` +
  * `cylinder.fs`.
  *
  * One instance = one 8-corner bounding box; the fragment shader intersects the

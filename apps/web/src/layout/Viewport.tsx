@@ -3,7 +3,7 @@ import { useBridge } from '../bridge/BridgeContext';
 
 /**
  * The 3D viewport area -- the "central widget" (PyMOLGLWidget,
- * modules/pmg_qt/pymol_qt_gui.py:207-208).
+ * packages/engine/modules/pmg_qt/pymol_qt_gui.py:207-208).
  *
  * THIS IS A MOUNT POINT ONLY.
  *
@@ -15,7 +15,7 @@ import { useBridge } from '../bridge/BridgeContext';
  *
  * What the shell *does* own is the size of the mount: it reports it to the backend as
  * `{t:'input',kind:'reshape'}`, which is what `cmd.viewport` / `OrthoReshape`
- * (layer1/Ortho.cpp:2340-2463) consume.
+ * (packages/engine/layer1/Ortho.cpp:2340-2463) consume.
  */
 export function Viewport() {
   const hostRef = useRef<HTMLDivElement>(null);

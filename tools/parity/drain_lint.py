@@ -5,9 +5,9 @@ Three PyMOL APIs are **destructive single-consumer reads**: calling one CONSUMES
 the thing it reports, so a second caller gets nothing and the first caller
 silently loses data.
 
-  ``cmd._get_feedback()``        pops one line per call   (modules/pymol/internal.py:593-606)
-  ``cmd.get_setting_updates()``  clears the changed flags (layer1/Setting.cpp:1121-1147)
-  ``p.getRedisplay(reset=True)`` clears the redisplay flag (layer5/PyMOL.cpp)
+  ``cmd._get_feedback()``        pops one line per call   (packages/engine/modules/pymol/internal.py:593-606)
+  ``cmd.get_setting_updates()``  clears the changed flags (packages/engine/layer1/Setting.cpp:1121-1147)
+  ``p.getRedisplay(reset=True)`` clears the redisplay flag (packages/engine/layer5/PyMOL.cpp)
 
 The architecture depends on exactly one owner draining each of them and fanning
 the result out (plan §1.2 / §1.5). A panel or feature module that calls one
@@ -16,7 +16,7 @@ thread, and the symptom shows up somewhere else entirely as "the UI stopped
 refreshing". That is why this is a lint and not a code review note.
 
 WHY AST AND NOT GREP: this codebase documents itself heavily. A plain
-``grep -r get_setting_updates`` over ``bridge/`` reports six files, of which
+``grep -r get_setting_updates`` over ``packages/bridge/`` reports six files, of which
 four are docstrings explaining the rule and one is the policy module listing the
 names as *string literals* in its reserved list. Exactly two are real calls.
 A grep lint here would be ~80% false positives and would be switched off within
@@ -55,7 +55,7 @@ DRAINS: Dict[str, str] = {
 #:
 #: ``getRedisplay`` in particular is owned by ``render/framestream.py``'s
 #: ``RedisplayGate``, deliberately and not by the pump: ``PyMOL_Draw`` clears
-#: ``RedisplayFlag`` at ``layer5/PyMOL.cpp:2331`` BEFORE ``ExecutiveDrawNow``,
+#: ``RedisplayFlag`` at ``packages/engine/layer5/PyMOL.cpp:2331`` BEFORE ``ExecutiveDrawNow``,
 #: so a post-draw tick hook reads False for the very frame it is about to send.
 #: The gate probes it from its own point in the cycle instead. Moving that drain
 #: into the pump to satisfy a stale plan line would break frame emission.
@@ -170,12 +170,12 @@ def check(paths: Iterable[str]) -> List[Violation]:
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("paths", nargs="*", default=["bridge/tenmol_bridge"])
+    ap.add_argument("paths", nargs="*", default=["packages/bridge/tenmol_bridge"])
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
 
     try:
-        violations = check(args.paths or ["bridge/tenmol_bridge"])
+        violations = check(args.paths or ["packages/bridge/tenmol_bridge"])
     except SyntaxError as exc:
         print(f"drain-lint: cannot parse {exc.filename}:{exc.lineno}: {exc.msg}", file=sys.stderr)
         return 2

@@ -2,9 +2,9 @@
  * Every write the scene surface makes, as `cmd.scene` / `cmd.scene_order`.
  *
  * `cmd.scene(key, action, message, view, color, active, rep, frame, animate,
- * new_key, hand, quiet, sele)` (`modules/pymol/viewing.py:1034`) is the whole
+ * new_key, hand, quiet, sele)` (`packages/engine/modules/pymol/viewing.py:1034`) is the whole
  * API; the C side is `MovieSceneRecall`/`Store`/`Order`
- * (`layer3/MovieScene.cpp:755,700,733,88`). The semantics reproduced here:
+ * (`packages/engine/layer3/MovieScene.cpp:755,700,733,88`). The semantics reproduced here:
  *
  *   `key='auto'` + recall silently becomes `next`
  *   `update` preserves the existing message
@@ -66,12 +66,12 @@ export const sceneActions = {
    * On the desktop that closes the app the user is looking at. Here it ends
    * the BRIDGE PROCESS for every connected client, and because the call comes
    * from inside PyMOL it bypasses the graceful shutdown the bridge installs
-   * for a client-issued `cmd.quit` (`bridge/tenmol_bridge/server.py:139`).
+   * for a client-issued `cmd.quit` (`packages/bridge/tenmol_bridge/server.py:139`).
    *
    * `presentation` is OFF by default, which is the only thing stopping it;
    * `presentation_auto_quit` is ON, and both are editable from the Advanced
    * Settings table. Preconditions are pinned in
-   * `bridge/tests/test_sessions.py`, which deliberately does not trigger them.
+   * `packages/bridge/tests/test_sessions.py`, which deliberately does not trigger them.
    */
   next: () => scene(['', 'next']),
   previous: () => scene(['', 'previous']),
@@ -153,7 +153,7 @@ export function encodeMenu(raw: unknown): PanelMenuNode[] {
  *
  * `scene_order` with `location='current'` inserts the block at the position of
  * `names[0]`, which is how the drag on the scene buttons works
- * (`layer1/Scene.cpp:2885`, `cmd.scene_order([a,b])`). Computing the whole
+ * (`packages/engine/layer1/Scene.cpp:2885`, `cmd.scene_order([a,b])`). Computing the whole
  * order client-side and sending it once is equivalent and easier to test.
  */
 /**
@@ -204,7 +204,7 @@ export const F_KEYS = Array.from({ length: 12 }, (_, i) => `F${i + 1}`);
 /**
  * Why a scene rename is refused, or `null` if it is fine.
  *
- * `modules/pmg_qt/scene_bin_gui.py:360-377` refuses two things — a blank name
+ * `packages/engine/modules/pmg_qt/scene_bin_gui.py:360-377` refuses two things — a blank name
  * and a name containing a space — and reports both by printing to the console
  * while the cell silently reverts. The refusals are kept; the silence is not
  * (the inventory row asks for a visible inline error instead).

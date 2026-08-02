@@ -14,7 +14,7 @@
  *      (three would otherwise read past the end and light the tail of the
  *      cloud with whatever follows it in the payload).
  *
- * The bridge half is `bridge/tests/test_p10_viewport.py`, which measured 647
+ * The bridge half is `packages/bridge/tests/test_p10_viewport.py`, which measured 647
  * unit normals on a real `dots` frame.
  */
 

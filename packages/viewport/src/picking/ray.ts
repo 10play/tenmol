@@ -5,11 +5,11 @@
  * all three are easy to get silently wrong:
  *
  *  1. The Y AXIS IS FLIPPED. The DOM's origin is top-left; PyMOL's viewport and
- *     `glReadPixels` are bottom-left (`layer1/ScenePicking.cpp` reads
+ *     `glReadPixels` are bottom-left (`packages/engine/layer1/ScenePicking.cpp` reads
  *     `y = height - 1 - domY` worth of rows). `screenRay` takes DOM coordinates
  *     and flips internally, so callers pass what `PointerEvent` gave them.
  *  2. The SCENE RECTANGLE IS NOT THE CANVAS. `OrthoReshape`
- *     (`layer1/Ortho.cpp:2383-2390`) takes the movie panel and the internal
+ *     (`packages/engine/layer1/Ortho.cpp:2383-2390`) takes the movie panel and the internal
  *     feedback lines off the bottom, so `cmd.get_viewport()` can be 800x585
  *     inside an 800x600 canvas, and the scene is anchored at the TOP. The
  *     projection uses the SCENE aspect ratio, and a click below the scene
@@ -135,7 +135,7 @@ export function screenPoint(
 }
 
 /**
- * `SceneRenderPickingSinglePick`, `layer1/ScenePicking.cpp:186-208`, VERBATIM.
+ * `SceneRenderPickingSinglePick`, `packages/engine/layer1/ScenePicking.cpp:186-208`, VERBATIM.
  *
  * The pick pass reads a `(2*cRange+1)^2` window of FRAMEBUFFER pixels around
  * the click (`#define cRange 7`, `:13`) and takes the FIRST non-background

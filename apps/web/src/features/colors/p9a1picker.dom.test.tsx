@@ -7,7 +7,7 @@
  * This file is that picker, mounted.
  *
  * The conversion itself is pinned against PyMOL's own `colorsys` in
- * `p9a1hsv.test.ts` (TypeScript side) and `bridge/tests/test_p9_shell.py`
+ * `p9a1hsv.test.ts` (TypeScript side) and `packages/bridge/tests/test_p9_shell.py`
  * (in-engine side) through one shared fixture. What is pinned HERE is the
  * wiring: that the trio really is replaced, that the swatch and the RGB
  * spinboxes follow the H slider, that Apply writes what HSV produced, and the

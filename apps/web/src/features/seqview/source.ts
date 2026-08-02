@@ -6,13 +6,13 @@
  * panel, at a much lower rate because a sequence row only changes when the
  * structure, the state, the settings or the selection change.
  *
- * BOOTSTRAP.  `bridge/tenmol_bridge/panels/seqview.py` is a bridge module, not a
+ * BOOTSTRAP.  `packages/bridge/tenmol_bridge/panels/seqview.py` is a bridge module, not a
  * PyMOL one, so nothing imports it until we ask. One allowed call does that:
  *
  *     cmd.do("from tenmol_bridge.panels import seqview; seqview.install()", 0, 0)
  *
  * `install()` binds `cmd.tenmol_seqview` onto the `pymol.cmd` module the
- * dispatcher resolves against (`modules/pymol2/__init__.py:53`), which is how a
+ * dispatcher resolves against (`packages/engine/modules/pymol2/__init__.py:53`), which is how a
  * PyMOL plugin installs a command and needs no policy grant: `cmd.do` is an
  * explicitly allowed capability (plan §A6) and `cmd.tenmol_seqview` is an
  * ordinary two-segment name under the `cmd` root. `log=0, echo=0` keeps the
@@ -24,7 +24,7 @@ import type { PanelMenuNode } from '@tenmol/protocol';
 
 /**
  * One right-click popup, as `SeekerClick` builds it
- * (`layer3/Seeker.cpp:357-395`): `pick_sele` on the active selection when the
+ * (`packages/engine/layer3/Seeker.cpp:357-395`): `pick_sele` on the active selection when the
  * cell is IN that selection, `seq_option` on a `_seeker` temporary otherwise.
  */
 export interface SeqviewMenuPayload {
@@ -61,7 +61,7 @@ export interface SeqviewSource {
   ): Promise<SeqviewSelectResult>;
   /**
    * A drag span, addressed by COLUMN so a 6,000-column row costs two integers
-   * (`SeekerSelectionToggleRange`, `layer3/Seeker.cpp:70-167`).
+   * (`SeekerSelectionToggleRange`, `packages/engine/layer3/Seeker.cpp:70-167`).
    */
   selectRange(
     object: string,

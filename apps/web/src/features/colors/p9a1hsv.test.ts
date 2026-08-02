@@ -4,11 +4,11 @@
  * Row 72's last open item was "the plan's HSV/RGB picker replacing the three
  * sliders and three spinboxes is absent". A picker is only worth having if it
  * agrees with the program it edits, so `hsv.ts` is a transcription of
- * `Lib/colorsys.py` — the module `modules/pymol/viewing.py:1971` imports for
+ * `Lib/colorsys.py` — the module `packages/engine/modules/pymol/viewing.py:1971` imports for
  * `spectrum … interpolation=hsv`.
  *
  * THE VECTORS ARE NOT WRITTEN IN THIS FILE. `__fixtures__/p9a1hsv.json` is
- * shared with `bridge/tests/test_p9_shell.py`, which asserts that `colorsys`
+ * shared with `packages/bridge/tests/test_p9_shell.py`, which asserts that `colorsys`
  * INSIDE the running engine produces exactly these numbers. Breaking either
  * implementation turns one of the two suites red; there is no private copy of
  * the answers here to keep both green.

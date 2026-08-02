@@ -14,7 +14,7 @@
  * dialog got no account of what was destroyed.
  *
  * The lines used here are the ones wave 8 measured off the wire
- * (`bridge/tests/test_p8_a34.py`), replayed through the real feedback store, so
+ * (`packages/bridge/tests/test_p8_a34.py`), replayed through the real feedback store, so
  * this asserts against PyMOL's actual wording rather than a paraphrase.
  */
 

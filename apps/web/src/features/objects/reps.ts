@@ -2,23 +2,23 @@
  * Which reps a show/hide menu leaf touches, so the client can draw a check
  * mark next to the ones already on.
  *
- * PyMOL DOES NOT DRAW THESE. `layer4/PopUp.cpp` has no notion of a checked
+ * PyMOL DOES NOT DRAW THESE. `packages/engine/layer4/PopUp.cpp` has no notion of a checked
  * item — every `rep_action` leaf looks identical whether the rep is on or off,
  * and the only way to know is to look at the scene. The inventory row asks for
  * the check marks precisely because `cmd.get_vis()[name][2]` is on the wire
  * already (`panels/objects.py:rows` ships it as the `reps` bitmask) and the
  * information is free.
  *
- * The mapping is `modules/pymol/constants.py:repmasks` — INCLUDING the two
+ * The mapping is `packages/engine/modules/pymol/constants.py:repmasks` — INCLUDING the two
  * combinations, which is why a bitmask and not an index: `wire` is
  * `lines|nonbonded` and `licorice` is `sticks|nb_spheres`, so the `wire` leaf
- * of `mol_show` is "on" only when BOTH bits are set. `bridge/tests/
+ * of `mol_show` is "on" only when BOTH bits are set. `packages/bridge/tests/
  * test_p8_a2.py::test_rep_masks_match_pymols_own_table` diffs this table
  * against the live `pymol.constants.repmasks`, so a rename in PyMOL fails a
  * test here rather than silently mis-ticking a menu.
  */
 
-/** `modules/pymol/constants.py:180-207`, verbatim. */
+/** `packages/engine/modules/pymol/constants.py:180-207`, verbatim. */
 export const REP_MASKS: Readonly<Record<string, number>> = {
   everything: 0b000111111111111111111111,
   sticks: 0b000000000000000000000001,

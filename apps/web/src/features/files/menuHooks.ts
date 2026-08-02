@@ -2,7 +2,7 @@
  * WP-18's half of the File menu: binding every `= None` file seam of
  * `PyMOLDesktopGUI` to the dialog that already implements it.
  *
- * THE PROBLEM THIS CLOSES. `modules/pymol/_gui.py:13-38` leaves twenty-odd
+ * THE PROBLEM THIS CLOSES. `packages/engine/modules/pymol/_gui.py:13-38` leaves twenty-odd
  * entry points unbound and Qt fills each with a bound method of its main
  * window (`pymol_qt_gui.py:878-897`). Here the menu bar is one feature and the
  * dialogs are another, so every File leaf rendered DISABLED, tooltipped

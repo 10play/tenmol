@@ -3,8 +3,8 @@
  *
  * NOTE FOR THE PARITY INVENTORY (plan §6 WP-12): the object panel has NO Python
  * data feed upstream. It is a C++ `Block::draw` surface (`struct CExecutive :
- * public Block`, `layer3/ExecutiveDef.h:54`, `:99`) redrawn from the live Spec
- * list at up to 50 Hz. `bridge/tenmol_bridge/panels/objects.py` is a NEW
+ * public Block`, `packages/engine/layer3/ExecutiveDef.h:54`, `:99`) redrawn from the live Spec
+ * list at up to 50 Hz. `packages/bridge/tenmol_bridge/panels/objects.py` is a NEW
  * endpoint built from `get_names` / `get_vis` / `get_session(partial=1)` —
  * those rows are "new bridge endpoint required", not "wire up existing API".
  *
@@ -23,7 +23,7 @@
  * The difference matters because group nesting and group open/closed are not
  * derivable client-side: `cmd.get_names` returns Spec order, not panel order,
  * and a CLOSED group's children are not rows at all
- * (`PanelListGroup`, `layer3/Executive.cpp:1531-1563`).
+ * (`PanelListGroup`, `packages/engine/layer3/Executive.cpp:1531-1563`).
  */
 
 export type PymolObjectType =
@@ -53,7 +53,7 @@ export interface ObjectRow {
   group: string;
   /** Indentation depth implied by group nesting; 0 at top level. */
   nest: number;
-  /** Rep visibility bitmask — `cRep*Bit` values, `layer1/Rep.h:84-104`. */
+  /** Rep visibility bitmask — `cRep*Bit` values, `packages/engine/layer1/Rep.h:84-104`. */
   reps: number;
   /** PyMOL color index, or null for objects without one. */
   color: number | null;
@@ -113,7 +113,7 @@ export interface PanelSnapshot {
  * ------------------------------------------------------------------ */
 
 /**
- * `layer4/PopUp.cpp:131-260` codes: 0 = separator bar, 1 = item, 2 = title.
+ * `packages/engine/layer4/PopUp.cpp:131-260` codes: 0 = separator bar, 1 = item, 2 = title.
  * These are PyMOL's own numbers, not an invention of this protocol.
  */
 export type PanelMenuCode = 0 | 1 | 2;
@@ -121,7 +121,7 @@ export type PanelMenuCode = 0 | 1 | 2;
 /** One `[code, text, command]` entry, serialised. */
 export interface PanelMenuNode {
   code: PanelMenuCode;
-  /** Raw PyMOL text, `\RGB` colour escapes included (`layer1/Text.cpp:507-548`). */
+  /** Raw PyMOL text, `\RGB` colour escapes included (`packages/engine/layer1/Text.cpp:507-548`). */
   text: string;
   /** Index path from the menu root; the handle `expand` takes. */
   path: number[];

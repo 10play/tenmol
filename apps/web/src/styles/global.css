@@ -5,27 +5,27 @@
  * taken from the PyMOL source (the C++ blocks specify float RGB triples) or chosen to
  * sit with them.
  *
- *   name button enabled   {0.5,0.5,0.5}   layer3/Executive.cpp:16121-16127
+ *   name button enabled   {0.5,0.5,0.5}   packages/engine/layer3/Executive.cpp:16121-16127
  *   name button disabled  {0.25,0.25,0.25}
  *   name button cloaked   {0.35,0.35,0.35}  (enabled, ancestor group disabled)
  *   name button pressed   {0.7,0.7,0.7}
- *   caption               {0.3,0.9,0.3}   layer3/Executive.cpp:16467-16487
- *   A button              {0.5,0.5,1.0}   layer3/Executive.cpp:16261-16334
+ *   caption               {0.3,0.9,0.3}   packages/engine/layer3/Executive.cpp:16467-16487
+ *   A button              {0.5,0.5,1.0}   packages/engine/layer3/Executive.cpp:16261-16334
  *   S button              {0.6,0.6,0.8}
  *   H button              {0.4,0.4,0.6}
  *   L button              {0.5,0.5,1.0}
- *   C button              4-colour rainbow quad, layer3/Executive.cpp:16074-16090
+ *   C button              4-colour rainbow quad, packages/engine/layer3/Executive.cpp:16074-16090
  *   M button              spec-level dependent {0.4,0.4,0.6}/{0.6,0.6,0.8}/{0.9,0.9,1.0}
- *   mouse mode name       {1.0,0.5,0.5}   layer1/ButMode.cpp
- *   control lit           {0.65,0.65,0.65} layer1/Control.cpp:645-649
- *   control pressed       {0.8,0.8,0.8}    layer1/Control.cpp:545
+ *   mouse mode name       {1.0,0.5,0.5}   packages/engine/layer1/ButMode.cpp
+ *   control lit           {0.65,0.65,0.65} packages/engine/layer1/Control.cpp:645-649
+ *   control pressed       {0.8,0.8,0.8}    packages/engine/layer1/Control.cpp:545
  *
  * Metrics come from the same place:
- *   internal_gui_width          220px  layer1/Ortho.h:24
- *   internal_gui_control_size   18px   layer1/SettingInfo.h:411  (row height)
- *   ExecToggleWidth             17px   layer3/Executive.cpp:3267-3273
- *   cOrthoLineHeight            12px   layer1/Ortho.h:26
- *   cControlBoxSize             17px   layer1/Control.cpp:36-42
+ *   internal_gui_width          220px  packages/engine/layer1/Ortho.h:24
+ *   internal_gui_control_size   18px   packages/engine/layer1/SettingInfo.h:411  (row height)
+ *   ExecToggleWidth             17px   packages/engine/layer3/Executive.cpp:3267-3273
+ *   cOrthoLineHeight            12px   packages/engine/layer1/Ortho.h:26
+ *   cControlBoxSize             17px   packages/engine/layer1/Control.cpp:36-42
  */
 
 :root {
@@ -66,7 +66,7 @@
   /*
    * The floor under the object list. `shell/orthoPanel.ts` derives the same
    * number from the same two source constants and `shell/p11layout.test.ts`
-   * asserts they agree: `controlHeight` (20, layer1/Ortho.cpp:2267) plus the
+   * asserts they agree: `controlHeight` (20, packages/engine/layer1/Ortho.cpp:2267) plus the
    * larger `ButModeGetHeight` (124, with `mouse_grid`) — the most the blocks
    * that outrank the Executive block can ever take from the column between
    * them. 8 rows of `--pm-row-h`.
@@ -76,14 +76,14 @@
   /*
    * The least the movie panel's own timeline may be squeezed to.
    * `MovieGetPanelHeight` is `movie_panel_row_height * ExecutiveCountMotions`
-   * (`layer1/Movie.cpp:1713-1721`) and `movie_panel_row_height` defaults to 15
-   * (`layer1/SettingInfo.h:722`), so one PyMOL movie row is 15 px. MEASURED
+   * (`packages/engine/layer1/Movie.cpp:1713-1721`) and `movie_panel_row_height` defaults to 15
+   * (`packages/engine/layer1/SettingInfo.h:722`), so one PyMOL movie row is 15 px. MEASURED
    * through the bridge: a six-object 30-frame session charges exactly one row.
    */
   --pm-movie-row-h: 15px;
 
   /*
-   * `controlHeight = DIP2PIXEL(20)` (`layer1/Ortho.cpp:2267`) — the Control
+   * `controlHeight = DIP2PIXEL(20)` (`packages/engine/layer1/Ortho.cpp:2267`) — the Control
    * block, PyMOL's nine movie buttons, the one band in the column that is a
    * flat constant. `.mvctl` measures 20 px (16 px buttons + 2 px of padding
    * either side), which is why it is written as this variable.
@@ -347,12 +347,12 @@ code {
 /*
  * THE COLUMN'S HEIGHT BUDGET, and the one rule that governs it.
  *
- * `OrthoLayoutPanel` (`layer1/Ortho.cpp:2261-2337`) stacks the column bottom-up
+ * `OrthoLayoutPanel` (`packages/engine/layer1/Ortho.cpp:2261-2337`) stacks the column bottom-up
  * — Control 20 px, ButMode `ButModeGetHeight`, Wizard `control_size * NLine + 4`
  * — and gives the EXECUTIVE BLOCK everything that is left. The object list is
  * the residual and every other block is sized from a constant or its own
  * content. MEASURED against the real engine at this column's own 644 px
- * (`bridge/tests/test_p11_layout.py`): Executive 584 px, 90.7% of the column.
+ * (`packages/bridge/tests/test_p11_layout.py`): Executive 584 px, 90.7% of the column.
  *
  * The web column also carries the movie panel and the scene bin, which PyMOL
  * draws at the bottom of the WINDOW and over the SCENE respectively (measured:

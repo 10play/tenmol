@@ -2,15 +2,15 @@
  * Topic `wizard` — the generic wizard protocol.  OWNER: WP-16.
  *
  * A PyMOL wizard is a plain Python object on a stack inside the C++ core
- * (`CWizard::Wiz`, `layer1/Wizard.cpp:69`), not a widget. The core pulls a
+ * (`CWizard::Wiz`, `packages/engine/layer1/Wizard.cpp:69`), not a widget. The core pulls a
  * *declarative* panel + prompt out of it and pushes events into it. Port that
  * protocol once and all 26 bundled wizards — plus the 16 builder wizards in
- * `modules/pmg_qt/builder.py` and any third-party plugin wizard — render with
+ * `packages/engine/modules/pmg_qt/builder.py` and any third-party plugin wizard — render with
  * no per-wizard code. These are the wire shapes of that protocol.
  *
  * TRANSPORT. Not a push topic: there is no Python-visible "wizard changed"
- * callback (verified — no observer hook exists in `layer1/Wizard.cpp` or
- * `modules/pymol/wizarding.py`; the direction is C pulling from Python). The
+ * callback (verified — no observer hook exists in `packages/engine/layer1/Wizard.cpp` or
+ * `packages/engine/modules/pymol/wizarding.py`; the direction is C pulling from Python). The
  * bridge instead wraps `cmd.refresh_wizard` / `set_wizard` / `set_wizard_stack`
  * / `dirty_wizard` and exposes a version counter, so the client polls the CHEAP
  * `wizards.probe` and only pulls `wizards.snapshot` when something changed.
@@ -29,7 +29,7 @@
 /* ------------------------------------------------------------------ masks */
 
 /**
- * `modules/pymol/wizard/__init__.py:6-15`, identical to `layer1/Wizard.cpp:49-58`.
+ * `packages/engine/modules/pymol/wizard/__init__.py:6-15`, identical to `packages/engine/layer1/Wizard.cpp:49-58`.
  * `CWizard::isEventType` (`:140`) gates EVERY dispatch on these bits before
  * crossing into Python, and the mask changes with wizard sub-state
  * (`box.py:398-403` adds `key` while renaming; `command.py:149-152` returns 0
@@ -62,7 +62,7 @@ export function wizardWants(mask: number, kind: WizardEventKind): boolean {
 
 /* ------------------------------------------------------------------ panel */
 
-/** `layer1/Wizard.cpp:44-47`. */
+/** `packages/engine/layer1/Wizard.cpp:44-47`. */
 export const WIZARD_ROW_TYPES = {
   /** `cWizBlank` — draws nothing, still occupies a row. */
   blank: 0,
@@ -78,7 +78,7 @@ export type WizardRowKind = keyof typeof WIZARD_ROW_TYPES;
 
 /**
  * One row of `Wizard.get_panel()` — the Python literal is
- * `[int type, str text, str code]` and `layer1/Wizard.cpp:241` requires at
+ * `[int type, str text, str code]` and `packages/engine/layer1/Wizard.cpp:241` requires at
  * least three items and reads only the first three.
  */
 export interface WizardPanelRow {
@@ -92,7 +92,7 @@ export interface WizardPanelRow {
   text: string;
   /**
    * PyMOL **command language**, executed by `PParse` server-side
-   * (`layer1/Wizard.cpp:573-577`). It is not JavaScript and not necessarily a
+   * (`packages/engine/layer1/Wizard.cpp:573-577`). It is not JavaScript and not necessarily a
    * method call — `sculpting.py:175` carries raw inline Python and
    * `demo.py:42` carries the keyword `replace_wizard demo,reps`.
    * NEVER evaluate this in the browser; send it back as `wizards.exec_code`.
@@ -103,7 +103,7 @@ export interface WizardPanelRow {
 
 /* ------------------------------------------------------------------- menu */
 
-/** `layer4/PopUp.cpp:231-248`, heights at `:293-320`. */
+/** `packages/engine/layer4/PopUp.cpp:231-248`, heights at `:293-320`. */
 export const WIZARD_MENU_CODES = {
   /** Separator bar; text and command are ignored. */
   separator: 0,
@@ -159,7 +159,7 @@ export interface WizardProbe {
 }
 
 /**
- * The full render state, mirroring `WizardRefresh` (`layer1/Wizard.cpp:195`),
+ * The full render state, mirroring `WizardRefresh` (`packages/engine/layer1/Wizard.cpp:195`),
  * which pulls prompt, event mask and panel in that order.
  */
 export interface WizardSnapshot extends WizardProbe {
@@ -186,7 +186,7 @@ export interface WizardEventCall {
   method: string;
   args: (string | number | boolean | null)[];
   /** False when the wizard does not implement it — normal, not an error
-   *  (`PyObject_HasAttrString`, `layer1/Wizard.cpp:162`). */
+   *  (`PyObject_HasAttrString`, `packages/engine/layer1/Wizard.cpp:162`). */
   present: boolean;
   error: string | null;
   result: unknown;
@@ -223,7 +223,7 @@ export type WizardMenubarNode =
 
 export interface WizardCatalog {
   wizards: WizardCatalogEntry[];
-  /** The Qt Wizard menu, verbatim from `modules/pymol/_gui.py:834-864`. */
+  /** The Qt Wizard menu, verbatim from `packages/engine/modules/pymol/_gui.py:834-864`. */
   menubar: WizardMenubarNode[];
   /** `wizarding.py:88-89` rewrites `distance` -> `measurement`. */
   aliases: Record<string, string>;

@@ -1,8 +1,8 @@
 /**
  * Key translation, checked branch by branch against
- * `modules/pmg_qt/keymapping.py` and against the GLUT special codes in
- * `modules/pymol/internal.py`, plus a diff of the default binding table against
- * `modules/pymol/shortcut_dict.py`.
+ * `packages/engine/modules/pmg_qt/keymapping.py` and against the GLUT special codes in
+ * `packages/engine/modules/pymol/internal.py`, plus a diff of the default binding table against
+ * `packages/engine/modules/pymol/shortcut_dict.py`.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -171,7 +171,7 @@ describe('shortcut notation', () => {
     if (hasPython) {
       const python = pyJson<string[]>(
         'import json, ast\n' +
-          'src = open("modules/pymol/shortcut_manager.py").read()\n' +
+          'src = open("packages/engine/modules/pymol/shortcut_manager.py").read()\n' +
           'head = "reserved_keys = "\n' +
           'i = src.index(head) + len(head)\n' +
           'j = src.index(")", i) + 1\n' +

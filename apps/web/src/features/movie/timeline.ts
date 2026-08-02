@@ -1,5 +1,5 @@
 /**
- * Movie-panel geometry and palette, ported from `layer1/View.cpp`.
+ * Movie-panel geometry and palette, ported from `packages/engine/layer1/View.cpp`.
  *
  * The C panel is drawn with four colours and one piece of arithmetic, and both
  * are reproduced exactly so a cell lands on the same pixel and hit-tests back
@@ -117,7 +117,7 @@ export function drawRow(
 }
 
 /**
- * The movie-panel mouse grammar (`layer1/Movie.cpp:1488-1699`).
+ * The movie-panel mouse grammar (`packages/engine/layer1/Movie.cpp:1488-1699`).
  *
  * Every gesture emits a literal command string through `PParse`; these are the
  * same strings, so the DOM panel and the GL panel are indistinguishable in a
@@ -134,7 +134,7 @@ export function drawRow(
  *
  * and `cMovieDragModeOblate` then overrides the column case to `'same'`
  * (`:1665`). Those are not cosmetic: `ExecutiveMotionViewModify`
- * (`layer3/Executive.cpp:533-560`) reads `''`/`all`/`same` as "camera then all
+ * (`packages/engine/layer3/Executive.cpp:533-560`) reads `''`/`all`/`same` as "camera then all
  * other objects" and `none` as "camera, and stop". Measured on a 6-frame movie
  * with keys on both the camera and object `m2`:
  *
@@ -184,7 +184,7 @@ export interface GestureInput {
 }
 
 /**
- * `CMovie::drag`'s `DragDraw` test (`layer1/Movie.cpp:1580`).
+ * `CMovie::drag`'s `DragDraw` test (`packages/engine/layer1/Movie.cpp:1580`).
  *
  * ```c
  * I->DragDraw = ((y < (rect.top + 50)) && (y > (rect.bottom - 50)));

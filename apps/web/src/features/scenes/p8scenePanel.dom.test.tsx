@@ -289,7 +289,7 @@ describe('the scene BUTTONS overlay — drag to reorder', () => {
    *
    * This test used to press the LEFT button on one row and release on another
    * and expect a `scene_order`. That is not what PyMOL does:
-   * `SceneClickSceneButton` (`layer1/SceneMouse.cpp:186-218`) gives the left
+   * `SceneClickSceneButton` (`packages/engine/layer1/SceneMouse.cpp:186-218`) gives the left
    * button `PressMode = 1`, whose only outcome is a recall on a release over
    * the SAME button, and `SceneRelease` case 1 checks `I->Over == I->Pressed`.
    * Reordering is the RIGHT button (`PressMode = 3` promoted to 4 by

@@ -51,7 +51,7 @@ export interface Bridge {
 
 const BridgeContext = createContext<Bridge | null>(null);
 
-/** OrthoSaveLines (0xFF) -- the size of PyMOL's own scrollback ring, layer1/Ortho.cpp. */
+/** OrthoSaveLines (0xFF) -- the size of PyMOL's own scrollback ring, packages/engine/layer1/Ortho.cpp. */
 const MAX_FEEDBACK_LINES = 255;
 
 /**

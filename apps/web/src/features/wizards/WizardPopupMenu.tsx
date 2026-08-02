@@ -2,8 +2,8 @@
  * The popup a type-3 (`cWizTypePopUp`) panel row opens.
  *
  * `CWizard::click` calls `get_menu(code)` with the row's `code` as the tag and
- * opens `PopUpNew` if the result is not `None` (`layer1/Wizard.cpp:495-511`).
- * Item grammar, from `layer4/PopUp.cpp:231-248` and the heights at `:293-320`:
+ * opens `PopUpNew` if the result is not `None` (`packages/engine/layer1/Wizard.cpp:495-511`).
+ * Item grammar, from `packages/engine/layer4/PopUp.cpp:231-248` and the heights at `:293-320`:
  *
  *   code 0  separator bar   — text and command ignored
  *   code 1  selectable item — third element is a command string, a nested list

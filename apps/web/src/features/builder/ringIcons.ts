@@ -1,7 +1,7 @@
 /**
  * The ten ring icons of Chemical row 2, shipped VERBATIM.
  *
- * `modules/pmg_qt/builder.py:1114-1125` loads
+ * `packages/engine/modules/pmg_qt/builder.py:1114-1125` loads
  * `$PYMOL_DATA/pmg_tk/bitmaps/builder/<key>.gif` twice — once as-is and once
  * through `QImage.invertPixels()` — and never uses the inverted copy (dead
  * code).  The bitmaps are 20-34 x 20 px, four-colour, 97-141 bytes each, so
@@ -14,7 +14,7 @@
  * `.bbtn__icon` applies `filter: invert(1)` (`builder.css`) — the React plan's
  * "use a CSS filter for dark mode".
  *
- * `p8a9icons.test.ts` re-reads `data/pmg_tk/bitmaps/builder/*.gif` off disk and
+ * `p8a9icons.test.ts` re-reads `packages/engine/data/pmg_tk/bitmaps/builder/*.gif` off disk and
  * compares the bytes, so this file cannot drift from what PyMOL ships.
  */
 

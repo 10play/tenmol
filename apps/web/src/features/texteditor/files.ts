@@ -1,10 +1,10 @@
 /**
  * The text editor's file access.
  *
- * `modules/pmg_qt/TextEditor.py` reads and writes with plain `open()` — the
+ * `packages/engine/modules/pmg_qt/TextEditor.py` reads and writes with plain `open()` — the
  * localhost assumption of the whole product. A browser cannot do that, so the
  * bridge has to expose it, and the endpoints belong to WP-18
- * (`bridge/tenmol_bridge/fs.py`, plan §6). They do not exist on this tree yet.
+ * (`packages/bridge/tenmol_bridge/fs.py`, plan §6). They do not exist on this tree yet.
  *
  * So this module has TWO paths and is explicit about which one ran:
  *

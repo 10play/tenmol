@@ -10,7 +10,7 @@
  *
  * 2. LAUNCH all four. In Qt these are reached from the menu bar (`Settings >
  *    Edit All`, `Wizard`-adjacent entries, `File > Edit pymolrc`) and from the
- *    internal object menu (`A > volume > panel`, `modules/pymol/menu.py:644-654`).
+ *    internal object menu (`A > volume > panel`, `packages/engine/modules/pymol/menu.py:644-654`).
  *    `features/menubar/` is WP-14's and `features/pymol-menu/` is WP-13's;
  *    until they land, a small launcher strip is the honest way to make the
  *    dialogs reachable without editing anyone else's file.

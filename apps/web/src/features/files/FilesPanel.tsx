@@ -3,12 +3,12 @@
  *
  * The menu bar itself is WP-14's slot and is not installed yet, so this
  * overlay feature carries its own compact "File ▾" strip: the area has to be
- * *reachable* to be verifiable. The item list is `modules/pymol/_gui.py:80-133`
+ * *reachable* to be verifiable. The item list is `packages/engine/modules/pymol/_gui.py:80-133`
  * — the toolkit-independent menu data every PyMOL front end consumes — minus
  * the entries that have no single-process web analogue (New PyMOL Window),
  * which are shown disabled with the reason rather than quietly dropped.
  *
- * THE OPEN PIPELINE is `load_dialog` (`modules/pmg_qt/file_dialogs.py:33-77`)
+ * THE OPEN PIPELINE is `load_dialog` (`packages/engine/modules/pmg_qt/file_dialogs.py:33-77`)
  * driven from the client:
  *
  *   pick paths            -> `plan_open` (first file partial=0, rest partial=1,
@@ -174,9 +174,9 @@ export function FilesPanel() {
        * ones: `.pwg` loads perfectly well, which is the problem. `cmd.load` on
        * a `.pwg` runs its directives with no confirmation — measured, a file
        * containing only the word `delete` deleted itself
-       * (`bridge/tests/test_wf_files.py`) — and the same parser opens a port,
+       * (`packages/bridge/tests/test_wf_files.py`) — and the same parser opens a port,
        * imports an arbitrary module and starts a second HTTP server
-       * (`modules/pymol/importing.py:516-615`). It classifies as `plain`, so
+       * (`packages/engine/modules/pymol/importing.py:516-615`). It classifies as `plain`, so
        * without this gate it went straight through.
        */
       const refusal = refusalFor(step, filename);
@@ -616,7 +616,7 @@ export function FilesPanel() {
         run: async () => {
           if (!(await ensure())) return;
           // `cmd.system('open .')` has no browser analogue; reveal the cwd in
-          // the in-app picker instead (`docs/webclient/file-io.md` §9).
+          // the in-app picker instead (`docs/file-io.md` §9).
           const info = await api.chdir('.');
           await pick({ mode: 'dir', title: 'Working directory', directory: info.cwd });
         },
@@ -1081,7 +1081,7 @@ export function FilesPanel() {
                 });
               } else {
                 // NOT `movie.produce` directly: `movie._encode` spawns the
-                // encoder with no `stdin=` (`modules/pymol/movie.py:770-800`),
+                // encoder with no `stdin=` (`packages/engine/modules/pymol/movie.py:770-800`),
                 // ffmpeg eats the bridge's own fd 0 and the server shuts down
                 // mid-export — reproduced twice against a live bridge. The
                 // wrapper in `panels/files.py` detaches fd 0 first.

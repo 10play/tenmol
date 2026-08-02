@@ -3,7 +3,7 @@
  *
  * Wave 9 ported `SceneDrawButtons`' geometry and wave 9's tests pin it. What no
  * test had ever driven — and what the panel got WRONG — is the mouse machine
- * around it (`layer1/SceneMouse.cpp:178`, `:1076`, `:1233`):
+ * around it (`packages/engine/layer1/SceneMouse.cpp:178`, `:1076`, `:1233`):
  *
  *   left    recall on RELEASE, and only if the release is over the same button
  *   middle  recall on the PRESS and on every button dragged across (Ctrl = 0)

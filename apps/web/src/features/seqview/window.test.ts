@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { clampFirst, widestRow } from './window';
 
-describe('clampFirst — CSeq::NSkip clamping (layer1/Seq.cpp:290-333)', () => {
+describe('clampFirst — CSeq::NSkip clamping (packages/engine/layer1/Seq.cpp:290-333)', () => {
   it('leaves an offset inside the row alone', () => {
     expect(clampFirst(6, 5684)).toBe(6);
   });

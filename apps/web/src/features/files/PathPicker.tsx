@@ -3,7 +3,7 @@
  * opens instead of a native file dialog.
  *
  * A browser cannot show `QFileDialog`, and it must not: PyMOL loads and saves
- * **server** paths (`cmd.load` -> `exp_path`, `modules/pymol/importing.py:751`;
+ * **server** paths (`cmd.load` -> `exp_path`, `packages/engine/modules/pymol/importing.py:751`;
  * `cmd.save`, `exporting.py:836-838`), and this is a local desktop app with
  * full filesystem access. So the listing comes from the bridge
  * (`cmd.tenmol_files.browse`) and this renders it.
@@ -196,7 +196,7 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
           {/* `QFileDialog` lets you type a path into its filename field; this
               is that affordance, and it is also what makes `~` and `$VAR`
               usable, because the bridge runs the text through `cmd.exp_path`
-              (`modules/pymol/cmd.py:112`) before listing. */}
+              (`packages/engine/modules/pymol/cmd.py:112`) before listing. */}
           <input
             className="fpick__goto"
             data-testid="fpick-goto"

@@ -22,7 +22,7 @@
  * whatever the mode". The mode is read from the backend (`button_mode_name`),
  * never assumed, and the resolution is redone on EVERY drag sample with the
  * modifier that sample carried — exactly as `SceneDrag` does
- * (`layer1/SceneMouse.cpp:1308`, `mode = ButModeTranslate(G, I->Button, mod)`),
+ * (`packages/engine/layer1/SceneMouse.cpp:1308`, `mode = ButModeTranslate(G, I->Button, mod)`),
  * so releasing Shift mid-drag changes the action mid-drag.
  *
  * WHAT IT CANNOT DO, and says so instead of guessing: the actions whose C
@@ -59,7 +59,7 @@ const MOVE_PER_PX = 0.1;
 /** Ångströms of dolly per wheel notch. */
 const ZOOM_PER_NOTCH = 2.0;
 
-/** `mouse_wheel_scale` default (`layer1/SettingInfo.h`). */
+/** `mouse_wheel_scale` default (`packages/engine/layer1/SettingInfo.h`). */
 const WHEEL_SCALE = 1.0;
 
 /** The mode the C core boots in, and the table used until the backend answers. */
@@ -179,7 +179,7 @@ const ACT = BUT_ACT_CODE;
 
 /**
  * The actions that consume `LastPicked` — the object motions and the fragment
- * motions (`layer1/SceneMouse.cpp:1501-1513`). Every other action is resolved
+ * motions (`packages/engine/layer1/SceneMouse.cpp:1501-1513`). Every other action is resolved
  * from the gesture alone, so it must not pay for a ray cast.
  */
 const NEEDS_PICK: ReadonlySet<number> = new Set(
@@ -217,7 +217,7 @@ function atomSelection(atom: AtomRef): string {
 }
 
 /**
- * `ExecutiveSelectRect` (`layer3/Executive.cpp:7480-7520`), with the temporary
+ * `ExecutiveSelectRect` (`packages/engine/layer3/Executive.cpp:7480-7520`), with the temporary
  * rectangle selection replaced by the literal atom list the client resolved.
  *
  * The three shapes are the C's, byte for byte, including the `?` prefixes that
@@ -304,7 +304,7 @@ export function createCameraDriver(options: CameraDriverOptions): CameraDriver {
     const level = Number(selMode);
     if (Number.isFinite(level)) cachedSelectionMode = level;
     // `ExecutiveGetActiveSeleName` returns the first ENABLED selection and
-    // falls back to creating `sele` (`layer3/Executive.cpp:7476`).
+    // falls back to creating `sele` (`packages/engine/layer3/Executive.cpp:7476`).
     const enabled = Array.isArray(names) ? (names as unknown[]).filter((n) => typeof n === 'string') : [];
     cachedSeleName = (enabled[0] as string | undefined) ?? 'sele';
     modeReadAt = Date.now();
@@ -342,7 +342,7 @@ export function createCameraDriver(options: CameraDriverOptions): CameraDriver {
    * The `_pkfragN` selection that contains `atom`, plus the editor's anchor.
    *
    * `EditorPrepareDrag` walks fragments 1..NFrag and keeps the one the dragged
-   * atom belongs to (`layer3/Editor.cpp:1928-1940`). `SelectorSubdivide` makes
+   * atom belongs to (`packages/engine/layer3/Editor.cpp:1928-1940`). `SelectorSubdivide` makes
    * at most four of them — one per picked atom (`pk1`..`pk4`) — so this probe
    * is bounded at four `count_atoms` calls and runs once per gesture.
    *
@@ -657,7 +657,7 @@ export function createCameraDriver(options: CameraDriverOptions): CameraDriver {
       if (isBoxAction(action) && band !== null) {
         // ABSOLUTE when the caller knows it: `SceneLoopDrag` sets
         // `LoopRect.right/bottom` to the cursor, it does not integrate deltas
-        // (`layer1/SceneMouse.cpp:56-66`), and an anchor sample with a zero
+        // (`packages/engine/layer1/SceneMouse.cpp:56-66`), and an anchor sample with a zero
         // delta must still move the rectangle.
         band = {
           ...band,

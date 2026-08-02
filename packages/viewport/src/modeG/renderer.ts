@@ -32,7 +32,7 @@ import { isOrthoscopic, modelViewMatrix, projectionMatrix, type ViewMatrix } fro
 import { buildGeometry, unmappedCensus } from '../webgl';
 import { isEmptyGeometryFrame, type BuiltGeometry } from './frames';
 
-/** `cSetting_fog_start` default (`layer1/SettingInfo.h`). */
+/** `cSetting_fog_start` default (`packages/engine/layer1/SettingInfo.h`). */
 export const FOG_START = 0.45;
 
 export interface GeometryRendererOptions {
@@ -181,7 +181,7 @@ export function createGeometryRenderer(options: GeometryRendererOptions): Geomet
     const ortho = isOrthoscopic(view);
     const front = view[15];
     const back = view[16];
-    // layer1/Scene.cpp:5131-5135
+    // packages/engine/layer1/Scene.cpp:5131-5135
     const fogStart = (back - front) * FOG_START + front;
     const fogScale = 1 / Math.max(1e-6, back - fogStart);
     const bg = background ?? [0, 0, 0];
@@ -253,7 +253,7 @@ export function createGeometryRenderer(options: GeometryRendererOptions): Geomet
 
     /**
      * PyMOL's scene is not always the whole window: `OrthoReshape`
-     * (`layer1/Ortho.cpp:2383-2390`) subtracts the movie panel and the internal
+     * (`packages/engine/layer1/Ortho.cpp:2383-2390`) subtracts the movie panel and the internal
      * feedback lines, so `get_viewport()` can be 1176x629 inside a 1176x644
      * window. Mode P letterboxes the bitmap into that rectangle; Mode G has to
      * draw into the SAME rectangle or the two modes disagree by exactly the

@@ -2,8 +2,8 @@
  * The wizard snapshot, kept live.
  *
  * PyMOL has no "wizard changed" callback to subscribe to — the direction is C
- * pulling from Python (`WizardRefresh`, `layer1/Wizard.cpp:195`), and there is
- * no observer hook anywhere in `layer1/Wizard.cpp` or `modules/pymol/wizarding.py`.
+ * pulling from Python (`WizardRefresh`, `packages/engine/layer1/Wizard.cpp:195`), and there is
+ * no observer hook anywhere in `packages/engine/layer1/Wizard.cpp` or `packages/engine/modules/pymol/wizarding.py`.
  * So the bridge wraps `cmd.refresh_wizard` / `set_wizard` / `set_wizard_stack` /
  * `dirty_wizard` and publishes a version counter, and this hook does:
  *

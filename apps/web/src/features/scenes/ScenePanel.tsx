@@ -4,13 +4,13 @@
  * Two surfaces in one panel, because in PyMOL they are two surfaces over the
  * same list:
  *
- *  * the **scene buttons** overlay (`layer1/Scene.cpp:2885` `SceneDrawButtons`
+ *  * the **scene buttons** overlay (`packages/engine/layer1/Scene.cpp:2885` `SceneDrawButtons`
  *    / `SceneClickButton`) — left click recalls on release over the same
  *    button, middle is "rapid browse" (recall on press and while dragging,
  *    `animate=0` with Ctrl), right opens `scene_menu` (`menu.py:1842`), and
  *    dragging reorders via `cmd.scene_order`. Current scene draws brighter
  *    than the rest (0.5 vs 0.25).
- *  * the **Scene Panel** dialog (`modules/pmg_qt/scene_bin_gui.py:29`) — Add
+ *  * the **Scene Panel** dialog (`packages/engine/modules/pmg_qt/scene_bin_gui.py:29`) — Add
  *    Scene, name/preview columns, rename, Update, Delete, double-click to
  *    recall, drag handles to reorder. Its Message and Actions columns are
  *    hard-coded placeholders upstream; here Message is bound to the real
@@ -75,7 +75,7 @@ export function ScenePanel() {
   /** Row index the pointer is currently over during a handle drag. */
   const [dropAt, setDropAt] = useState<number | null>(null);
   /**
-   * `scene_buttons` (`_gui.py:801`, `layer1/Scene.cpp:2885`). Read from the
+   * `scene_buttons` (`_gui.py:801`, `packages/engine/layer1/Scene.cpp:2885`). Read from the
    * engine rather than kept locally: it is a global setting the Scene menu,
    * the settings table and any script can all write, and the overlay below is
    * exactly what it turns off.

@@ -3,11 +3,11 @@
  *
  * In PyMOL this block is drawn by C++ inside the GL viewport, between the
  * object list and the mouse-mode block (`OrthoLayoutPanel`,
- * `layer1/Ortho.cpp:2286-2300`), and its height is
- * `internal_gui_control_size * NLine + 4` (`layer1/Wizard.cpp:254-259`), which
+ * `packages/engine/layer1/Ortho.cpp:2286-2300`), and its height is
+ * `internal_gui_control_size * NLine + 4` (`packages/engine/layer1/Wizard.cpp:254-259`), which
  * is 0 rows -> 0 pixels: an inactive wizard is invisible, not an empty box.
  *
- * Row types (`layer1/Wizard.cpp:44-47`, drawn at `:685-771`):
+ * Row types (`packages/engine/layer1/Wizard.cpp:44-47`, drawn at `:685-771`):
  *   0 blank   nothing drawn, the row still exists (`security.py:37-45`)
  *   1 text    flat label (`text_color2`)
  *   2 button  raised; fires `code` on RELEASE INSIDE the row (`:568-580`);
@@ -34,7 +34,7 @@ import { ColorCodedText } from './ColorCodedText';
 import { stripColorCodes } from './colorCodes';
 import { WizardPopupMenu } from './WizardPopupMenu';
 
-/** Setting `internal_gui_control_size`, default 18 (`layer1/SettingInfo.h:411`). */
+/** Setting `internal_gui_control_size`, default 18 (`packages/engine/layer1/SettingInfo.h:411`). */
 export const CONTROL_SIZE = 18;
 
 export interface WizardPanelProps {
@@ -70,7 +70,7 @@ export function WizardPanel({ snapshot, onExec, onMenu }: WizardPanelProps) {
         const items = await onMenu(row.code);
         if (items === null) {
           // get_menu returned None: PyMOL opens no popup at all
-          // (`layer1/Wizard.cpp:503-509`). Say so rather than flashing nothing.
+          // (`packages/engine/layer1/Wizard.cpp:503-509`). Say so rather than flashing nothing.
           setMenuError(`${row.code}: this wizard has no menu for that row`);
           return;
         }

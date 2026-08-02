@@ -12,7 +12,7 @@
  *    marked `unsupported` here rather than offered as a button that always
  *    errors.
  *  - `protein_vacuum_esp` MUTATES the model — it deletes alt-conformers and
- *    unassigned residues (`modules/pymol/util.py:335-383`) — and creates three
+ *    unassigned residues (`packages/engine/modules/pymol/util.py:335-383`) — and creates three
  *    objects. It is `destructive`, and the panel must confirm before running it.
  */
 
@@ -88,7 +88,7 @@ export const METRICS: readonly Metric[] = [
     kind: 'scalar',
     unit: 'Å²',
     precision: 2,
-    source: 'modules/pymol/util.py:205',
+    source: 'packages/engine/modules/pymol/util.py:205',
   },
   {
     id: 'sasa',
@@ -97,7 +97,7 @@ export const METRICS: readonly Metric[] = [
     kind: 'scalar',
     unit: 'Å²',
     precision: 2,
-    source: 'modules/pymol/util.py:240',
+    source: 'packages/engine/modules/pymol/util.py:240',
   },
   {
     id: 'mass',
@@ -106,7 +106,7 @@ export const METRICS: readonly Metric[] = [
     kind: 'scalar',
     unit: 'Da',
     precision: 2,
-    source: 'modules/pymol/util.py:285',
+    source: 'packages/engine/modules/pymol/util.py:285',
   },
   {
     id: 'formal',
@@ -114,7 +114,7 @@ export const METRICS: readonly Metric[] = [
     label: 'Sum of formal charges',
     kind: 'scalar',
     precision: 0,
-    source: 'modules/pymol/util.py:269',
+    source: 'packages/engine/modules/pymol/util.py:269',
   },
   {
     id: 'partial',
@@ -122,7 +122,7 @@ export const METRICS: readonly Metric[] = [
     label: 'Sum of partial charges',
     kind: 'scalar',
     precision: 4,
-    source: 'modules/pymol/util.py:277',
+    source: 'packages/engine/modules/pymol/util.py:277',
   },
   {
     id: 'surf_res',
@@ -130,7 +130,7 @@ export const METRICS: readonly Metric[] = [
     label: 'Find surface residues',
     kind: 'selection',
     quiet: false,
-    source: 'modules/pymol/util.py:121',
+    source: 'packages/engine/modules/pymol/util.py:121',
   },
   {
     id: 'surf_atoms',
@@ -138,7 +138,7 @@ export const METRICS: readonly Metric[] = [
     label: 'Find surface atoms',
     kind: 'selection',
     quiet: false,
-    source: 'modules/pymol/util.py:166',
+    source: 'packages/engine/modules/pymol/util.py:166',
   },
   {
     id: 'esp',
@@ -148,7 +148,7 @@ export const METRICS: readonly Metric[] = [
     warning:
       'This MODIFIES the structure: it deletes alternate conformers and residues it cannot ' +
       'assign charges to, then creates the objects _e_chg, _e_map and _e_pot. It cannot be undone.',
-    source: 'modules/pymol/util.py:385',
+    source: 'packages/engine/modules/pymol/util.py:385',
   },
   {
     /*
@@ -173,7 +173,7 @@ export const METRICS: readonly Metric[] = [
     warning:
       'This writes the computed value onto every atom in the selection (the ' +
       '"property" argument, b by default), overwriting what was there.',
-    source: 'modules/pymol/util.py:1064',
+    source: 'packages/engine/modules/pymol/util.py:1064',
   },
 
   /*
@@ -191,7 +191,7 @@ export const METRICS: readonly Metric[] = [
     label: 'Label chains',
     kind: 'action',
     quiet: false,
-    source: 'modules/pymol/util.py:721',
+    source: 'packages/engine/modules/pymol/util.py:721',
   },
   {
     id: 'label_segments',
@@ -199,7 +199,7 @@ export const METRICS: readonly Metric[] = [
     label: 'Label segments',
     kind: 'action',
     quiet: false,
-    source: 'modules/pymol/util.py:746',
+    source: 'packages/engine/modules/pymol/util.py:746',
   },
   {
     id: 'phipsi',
@@ -209,7 +209,7 @@ export const METRICS: readonly Metric[] = [
     quiet: false,
     // Upstream's default is `(pk1)`, the picked atom; the shared box is used
     // instead so the panel has one selection concept, not two.
-    source: 'modules/pymol/util.py:963',
+    source: 'packages/engine/modules/pymol/util.py:963',
   },
   {
     id: 'b2vdw',
@@ -220,7 +220,7 @@ export const METRICS: readonly Metric[] = [
     warning:
       'This overwrites the VDW radius of every atom in the selection with ' +
       'sqrt(b / 8pi^2). The original radii are not kept.',
-    source: 'modules/pymol/util.py:958',
+    source: 'packages/engine/modules/pymol/util.py:958',
   },
   {
     id: 'interchain',
@@ -262,7 +262,7 @@ export const METRICS: readonly Metric[] = [
       'A cutoff is required. Upstream defaults it to "no cutoff", which measures ' +
       'every atom pair between every chain — 12.4M distances on a 7-chain structure — ' +
       'and takes the renderer down with it.',
-    source: 'modules/pymol/util.py:1043',
+    source: 'packages/engine/modules/pymol/util.py:1043',
   },
   {
     id: 'mass_align',
@@ -294,7 +294,7 @@ export const METRICS: readonly Metric[] = [
       { kind: 'bool', name: 'enabled_only', label: 'enabled objects only', default: false },
       { kind: 'number', name: 'max_gap', label: 'max gap', default: 50 },
     ],
-    source: 'modules/pymol/util.py:253',
+    source: 'packages/engine/modules/pymol/util.py:253',
   },
   {
     id: 'ff_copy',
@@ -310,7 +310,7 @@ export const METRICS: readonly Metric[] = [
       { kind: 'text', name: 'src', label: 'from', default: '' },
       { kind: 'text', name: 'dst', label: 'to', default: '' },
     ],
-    source: 'modules/pymol/util.py:946',
+    source: 'packages/engine/modules/pymol/util.py:946',
   },
   {
     id: 'shaders',
@@ -320,7 +320,7 @@ export const METRICS: readonly Metric[] = [
     quiet: false,
     // Takes no arguments at all.
     params: [],
-    source: 'modules/pymol/util.py:534',
+    source: 'packages/engine/modules/pymol/util.py:534',
   },
 ];
 

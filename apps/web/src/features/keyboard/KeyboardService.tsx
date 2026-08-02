@@ -3,16 +3,16 @@
  * 0, 0, mod)`.
  *
  * WHY DOCUMENT-LEVEL. Qt sends keys from the WINDOW, not from the GL widget
- * (`modules/pmg_qt/pymol_qt_gui.py:50-54`); the widget only takes focus on
+ * (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:50-54`); the widget only takes focus on
  * click. So `home`, `pgup`, `ALT-A` and friends work wherever the pointer is.
  * We match that, with one gate Qt does not need: if focus is inside a text
  * field, the keystroke belongs to that field. Without the gate the console's
  * command line and PyMOL's internal line editor fight over every character
- * (`docs/webclient/input-mouse-keyboard.md §16.2`).
+ * (`docs/input-mouse-keyboard.md §16.2`).
  *
  * WHAT THIS DOES NOT DO: decide anything. Translation is
  * `@tenmol/viewport/input`'s `keyEventToButtonArgs`, a port of
- * `modules/pmg_qt/keymapping.py:61-97`; the MEANING of a key is
+ * `packages/engine/modules/pmg_qt/keymapping.py:61-97`; the MEANING of a key is
  * `PyMOL_Key`/`PyMOL_Special` -> `OrthoKey`/`OrthoSpecial` ->
  * `cmd._ctrl`/`_alt`/`_ctsh`/`_special` -> `cmd.key_mappings`, entirely
  * server-side. No shortcut is ever executed in the browser.
@@ -30,7 +30,7 @@ import { useSession } from '../../app';
  *
  * `preventDefault()` recovers most collisions, but reload and the devtools
  * chords are the difference between a usable application and a trapped tab.
- * PyMOL binds none of these (`modules/pymol/shortcut_dict.py`), so nothing is
+ * PyMOL binds none of these (`packages/engine/modules/pymol/shortcut_dict.py`), so nothing is
  * lost; CTRL-T (`bond;unpick`) and CTRL-F (`wizard find`) ARE bound and ARE
  * forwarded — Chrome still steals CTRL-T, which is the known, documented
  * browser-hijack risk (`input-mouse-keyboard.md §16.2`), not a bug here.

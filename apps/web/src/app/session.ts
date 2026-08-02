@@ -224,7 +224,7 @@ function createSession(initialConfig: BridgeConfig): Session {
   async function act(action: PanelAction): Promise<void> {
     if (stores.ui.get().echoActions) {
       // PyMOL's own panel logs the equivalent command line to the log file
-      // (`ExecutiveSpecSetVisibility`, layer3/Executive.cpp:15413-15487). Here
+      // (`ExecutiveSpecSetVisibility`, packages/engine/layer3/Executive.cpp:15413-15487). Here
       // it goes to the console, dimmed and marked client-origin, so a button
       // press is never mistaken for PyMOL output.
       stores.feedback.appendClient(action.echo);

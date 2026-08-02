@@ -113,7 +113,7 @@ describe('the writes', () => {
 });
 
 describe('the selection algebra shipped in the protocol package', () => {
-  it('matches SeekerSelectionToggle (`layer3/Seeker.cpp:203-221`)', () => {
+  it('matches SeekerSelectionToggle (`packages/engine/layer3/Seeker.cpp:203-221`)', () => {
     expect(seqSelectExpression('byresi', 'sel01', true, false)).toBe(
       '((byresi(?sel01)) or byresi(_seeker))',
     );
@@ -123,7 +123,7 @@ describe('the selection algebra shipped in the protocol package', () => {
     expect(seqSelectExpression('byresi', 'sel01', true, true)).toBe('byresi(_seeker)');
   });
 
-  it('carries the SelModeKW table (`layer1/Scene.cpp:459-467`)', () => {
+  it('carries the SelModeKW table (`packages/engine/layer1/Scene.cpp:459-467`)', () => {
     expect([...SEL_MODE_KEYWORDS]).toEqual([
       '',
       'byresi',
@@ -138,7 +138,7 @@ describe('the selection algebra shipped in the protocol package', () => {
 });
 
 describe('the scrollbar mini-map', () => {
-  it('collapses contiguous selected columns into runs (`layer1/Seq.cpp:564-696`)', () => {
+  it('collapses contiguous selected columns into runs (`packages/engine/layer1/Seq.cpp:564-696`)', () => {
     const cells = [
       {},
       { selected: true },

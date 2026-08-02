@@ -7,7 +7,7 @@
  * clicks RPC'd back — option (b) preserves `addmenuitem` semantics".
  *
  * This is the client half of (b). The server half is
- * `bridge/tenmol_bridge/panels/plugins.py`, which becomes `pymol._ext_gui` and
+ * `packages/bridge/tenmol_bridge/panels/plugins.py`, which becomes `pymol._ext_gui` and
  * drives the REAL upstream `PmwMenuBar` over a recording menu dict, so a plugin
  * calling
  *

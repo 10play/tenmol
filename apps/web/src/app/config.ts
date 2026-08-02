@@ -2,7 +2,7 @@
  * Where the bridge is, and how we are allowed to talk to it.
  *
  * The bridge mints a 256-bit session token at startup and requires it on `/ws`
- * and `/blob` (`bridge/tenmol_bridge/config.py`, `server.py`). It writes that
+ * and `/blob` (`packages/bridge/tenmol_bridge/config.py`, `server.py`). It writes that
  * token to stderr, or to a mode-0600 file with `--token-file`. A browser tab can
  * read neither, so the token has to be handed to the page. Three ways, in
  * priority order:

@@ -5,7 +5,7 @@
  * `cmd.config_mouse(...)` / `cmd.button(...)` and then re-reads the settings;
  * it never assumes the write landed. That matters because `cmd.mouse()` has
  * side effects beyond the table — it also calls `unpick()` or `deselect()` and
- * `refresh_wizard()` (`modules/pymol/controlling.py:679-685`) — and because a
+ * `refresh_wizard()` (`packages/engine/modules/pymol/controlling.py:679-685`) — and because a
  * script or a plugin can change the mode behind the UI's back.
  *
  * WHAT IS READ, AND WHY THOSE FOUR:
@@ -15,7 +15,7 @@
  *   mouse_grid            bool — whether the 5-char grid is shown at all
  *
  * The 80-slot ACTION TABLE itself is not readable: `ButModeGet` is C-only
- * (grepped `modules/`). Plan §A9 settles the answer — mirror `mode_dict` and
+ * (grepped `packages/engine/modules/`). Plan §A9 settles the answer — mirror `mode_dict` and
  * expand it locally (`@tenmol/viewport/input`), keyed by the mode name PyMOL
  * just told us. So the grid is derived from `button_mode_name`, which IS
  * authoritative.

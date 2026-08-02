@@ -37,7 +37,7 @@
  *   2. `when` is carried, never rewritten: `SceneDrag`/`SceneButton` measure
  *      the 0.35 s double-click, 0.25 s single-click and 4 px/10 px drag
  *      thresholds against the client-supplied event time
- *      (`layer1/Scene.cpp:4113-4155`).
+ *      (`packages/engine/layer1/Scene.cpp:4113-4155`).
  *   3. The FINAL position is never lost: `flush()` is called before every
  *      button message and at gesture end.
  *   4. At most one flush per `budgetMs`, so a 1000 Hz mouse cannot outrun the

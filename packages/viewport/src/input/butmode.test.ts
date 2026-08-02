@@ -1,8 +1,8 @@
 /**
  * The ButMode mirror is only worth having if it is provably the same table the
  * C core and `controlling.py` have. These tests read the ACTUAL PyMOL sources
- * in this repository — `layer1/ButMode.h`, `layer1/ButMode.cpp` and (through
- * the bridge venv) `modules/pymol/controlling.py` — and diff them against the
+ * in this repository — `packages/engine/layer1/ButMode.h`, `packages/engine/layer1/ButMode.cpp` and (through
+ * the bridge venv) `packages/engine/modules/pymol/controlling.py` — and diff them against the
  * TypeScript. A drift upstream fails the build instead of quietly producing a
  * wrong grid.
  */
@@ -34,8 +34,16 @@ import {
 import { tableForMode } from './mouseConfig';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+/**
+ * The GIT root — four levels up from `packages/viewport/src/input/`.
+ *
+ * It must be the git root and not `web/`, because the assertions below read
+ * BOTH trees against it: `packages/engine/layer1/ButMode.h` (upstream) and
+ * `packages/bridge/.venv/...` (ours). Upstream is `packages/engine/`, ours is `packages/`; only the git root
+ * is above both.
+ */
 export const REPO = resolve(HERE, '../../../..');
-export const PYTHON = resolve(REPO, 'bridge/.venv/bin/python');
+export const PYTHON = resolve(REPO, 'packages/bridge/.venv/bin/python');
 
 /** Run a snippet in the bridge venv and parse its stdout as JSON. */
 export function pyJson<T>(snippet: string): T {
@@ -48,7 +56,7 @@ export const hasPython = existsSync(PYTHON);
 /* ------------------------------------------------------------------ */
 
 describe('action codes', () => {
-  it('matches but_act_code in modules/pymol/controlling.py', () => {
+  it('matches but_act_code in packages/engine/modules/pymol/controlling.py', () => {
     if (!hasPython) return;
     const python = pyJson<Record<string, number>>(
       'import json;from pymol import controlling as c;print(json.dumps(c.but_act_code))',
@@ -69,9 +77,9 @@ describe('action codes', () => {
     expect(BUT_MOD_CODE).toEqual(python.mod);
   });
 
-  it('reproduces every 5-char label ButModeInit writes in layer1/ButMode.cpp', () => {
-    const header = readFileSync(resolve(REPO, 'layer1/ButMode.h'), 'utf8');
-    const source = readFileSync(resolve(REPO, 'layer1/ButMode.cpp'), 'utf8');
+  it('reproduces every 5-char label ButModeInit writes in packages/engine/layer1/ButMode.cpp', () => {
+    const header = readFileSync(resolve(REPO, 'packages/engine/layer1/ButMode.h'), 'utf8');
+    const source = readFileSync(resolve(REPO, 'packages/engine/layer1/ButMode.cpp'), 'utf8');
 
     const codeOf = new Map<string, number>();
     for (const match of header.matchAll(/^#define\s+(cButMode\w+)\s+(-?\d+)\s*$/gm)) {
@@ -121,7 +129,7 @@ describe('buttonSlot — cmd.button bit packing (controlling.py:849-864)', () =>
     expect(mine).toEqual(python);
   });
 
-  it('places the documented slots where layer1/ButMode.h:118-214 says', () => {
+  it('places the documented slots where packages/engine/layer1/ButMode.h:118-214 says', () => {
     expect(buttonSlot('l', 'none')).toBe(0);
     expect(buttonSlot('r', 'none')).toBe(2);
     expect(buttonSlot('l', 'shft')).toBe(3);
@@ -146,7 +154,7 @@ describe('buttonSlot — cmd.button bit packing (controlling.py:849-864)', () =>
   });
 });
 
-describe('butModeTranslate (layer1/ButMode.cpp:603-757)', () => {
+describe('butModeTranslate (packages/engine/layer1/ButMode.cpp:603-757)', () => {
   const viewing = tableForMode('three_button_viewing');
 
   it('resolves L/M/R with every modifier offset', () => {
@@ -282,7 +290,7 @@ describe('the on-screen grid', () => {
   });
 });
 
-describe('selection level line (layer1/ButMode.cpp:363-393)', () => {
+describe('selection level line (packages/engine/layer1/ButMode.cpp:363-393)', () => {
   it('shows the level and cycles when single-left is not pkat', () => {
     const viewing = tableForMode('three_button_viewing');
     expect(selectionLine(viewing, 1)).toEqual({

@@ -7,7 +7,7 @@
  * nothing else could ever see one. That is wrong for the same reason PyMOL does
  * not do it either — `SceneClick` routes a click by the ButMode action, so in
  * EDITING mode the same pixel goes to `EditorInactivate`/`EditorSelect` and
- * fills `pk1..pk4` instead of rewriting `sele` (`layer1/SceneMouse.cpp:404-470`).
+ * fills `pk1..pk4` instead of rewriting `sele` (`packages/engine/layer1/SceneMouse.cpp:404-470`).
  * The Builder is the client half of that editor, and it had no way to be told.
  *
  * THE SHAPE IS `shell/panelHooks.ts`'s, deliberately: a feature registers from

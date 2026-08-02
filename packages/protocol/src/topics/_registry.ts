@@ -95,7 +95,7 @@ export const TOPIC_META: Readonly<Record<Topic, TopicMeta>> = {
     source: 'status',
     destructiveDrain: true,
     binarySidecar: false,
-    note: '`cmd._get_feedback()` (modules/pymol/internal.py:596-606). None means "locked, retry", not "empty".',
+    note: '`cmd._get_feedback()` (packages/engine/modules/pymol/internal.py:596-606). None means "locked, retry", not "empty".',
   },
   progress: {
     topic: 'progress',
@@ -151,7 +151,7 @@ export const TOPIC_META: Readonly<Record<Topic, TopicMeta>> = {
     source: 'ondemand',
     destructiveDrain: false,
     binarySidecar: false,
-    note: '`pymol.menu.*` resolved over the wire; leaves are command STRINGS (layer4/PopUp.cpp:471-475) run via t:"do".',
+    note: '`pymol.menu.*` resolved over the wire; leaves are command STRINGS (packages/engine/layer4/PopUp.cpp:471-475) run via t:"do".',
   },
   settings: {
     topic: 'settings',
@@ -199,7 +199,7 @@ export const TOPIC_META: Readonly<Record<Topic, TopicMeta>> = {
     source: 'state',
     destructiveDrain: false,
     binarySidecar: false,
-    note: '`scenes_changed` (setting 254, layer1/SettingInfo.h:339) rides the settings drain — no new PyMOL event.',
+    note: '`scenes_changed` (setting 254, packages/engine/layer1/SettingInfo.h:339) rides the settings drain — no new PyMOL event.',
   },
   movie_panel: {
     topic: 'movie_panel',

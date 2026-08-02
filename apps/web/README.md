@@ -10,10 +10,10 @@ popup-menu engine, the wizard panel, the sequence viewer, or any dialog.
 ## Layout, and where it comes from
 
 PyMOL's window is a `QMainWindow` whose central widget is the GL viewport
-(`modules/pmg_qt/pymol_qt_gui.py:207-208`) with an "External GUI" dock
+(`packages/engine/modules/pmg_qt/pymol_qt_gui.py:207-208`) with an "External GUI" dock
 (`:184-193`). Everything on the right -- object panel, mouse-mode block, movie
 controls -- is _not Qt_: PyMOL draws it itself inside the GL viewport as 2D "Blocks",
-stacked bottom-up by `OrthoLayoutPanel()` (`layer1/Ortho.cpp:2261-2340`). In this
+stacked bottom-up by `OrthoLayoutPanel()` (`packages/engine/layer1/Ortho.cpp:2261-2340`). In this
 client those blocks are real DOM.
 
 ```
@@ -84,7 +84,7 @@ every remaining seam:
 
 - `TODO(viewport)` -- `@tenmol/viewport` takes the canvas
 - `TODO(objects)` -- object panel from the `objects` topic
-- `TODO(pymol-menu)` -- A/S/H/L/C popups from `modules/pymol/menu.py`
+- `TODO(pymol-menu)` -- A/S/H/L/C popups from `packages/engine/modules/pymol/menu.py`
 - `TODO(gen-menus)` -- generated menu tree
 - `TODO(completion)` -- Tab completion RPC (`cmd._parser.complete`)
 - `TODO(butmode)` -- real mouse-mode codes

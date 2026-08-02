@@ -1,5 +1,5 @@
 /**
- * Wire types for `cmd.tenmol_compute` (`bridge/tenmol_bridge/panels/compute.py`).
+ * Wire types for `cmd.tenmol_compute` (`packages/bridge/tenmol_bridge/panels/compute.py`).
  *
  * Only one `pymol.util` helper needs a bridge module at all. The rest —
  * `get_area`, `compute_mass`, `label_chains`, `phipsi` and the others — are
@@ -18,7 +18,7 @@
  * @notATopic  NOT A TRANSPORT TOPIC — deliberately not re-exported by the
  * frozen `topics/index.ts` barrel. Reached by its subpath
  * (`@tenmol/protocol/topics/compute`); it is a request/reply surface only and
- * publishes no events. `bridge/tests/test_dispatch.py` looks for this tag.
+ * publishes no events. `packages/bridge/tests/test_dispatch.py` looks for this tag.
  */
 
 /** Dotted prefix for every call in this area. */

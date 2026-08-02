@@ -2,7 +2,7 @@
  * The global key bridge, exercised as a mounted component: what actually
  * reaches `sendInput`, and what deliberately does not.
  *
- * The translation itself is tested against `modules/pmg_qt/keymapping.py` in
+ * The translation itself is tested against `packages/engine/modules/pmg_qt/keymapping.py` in
  * `packages/viewport/src/input/keys.test.ts`; this file tests the wiring —
  * document-level listening, the text-field gate, the browser-reserved escape
  * hatch, and `preventDefault` on Tab.

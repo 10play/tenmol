@@ -1,7 +1,7 @@
 /**
  * `CommandLineEdit`'s drag-enter live preview, as pure functions.
  *
- * `modules/pmg_qt/pymol_qt_gui.py:1085-1122` — a `QLineEdit` subclass whose
+ * `packages/engine/modules/pmg_qt/pymol_qt_gui.py:1085-1122` — a `QLineEdit` subclass whose
  * whole purpose is that a drag entering the widget shows you what you are about
  * to drop, *selected*, before you let go:
  *

@@ -126,7 +126,7 @@ export function createCompositor(options: CompositorOptions): Compositor {
       .then((result: unknown) => {
         // The bridge has no GL context and will never rasterise anything, so
         // Mode G owns the whole scene. Answered as a VALUE, not an error --
-        // see the note in bridge/tenmol_bridge/render/__init__.py.
+        // see the note in packages/bridge/tenmol_bridge/render/__init__.py.
         if ((result as { available?: unknown } | null)?.available === false) {
           supported = false;
           if (streamAvailable) {

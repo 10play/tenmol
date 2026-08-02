@@ -2,11 +2,11 @@
  * The wizard block.
  *
  * PyMOL draws this between the object list and the mouse-mode block
- * (layer1/Ortho.cpp:2286-2300) and gives it height
- * internal_gui_control_size * NLine + 4 (layer1/Wizard.cpp:254-259) — so with
+ * (packages/engine/layer1/Ortho.cpp:2286-2300) and gives it height
+ * internal_gui_control_size * NLine + 4 (packages/engine/layer1/Wizard.cpp:254-259) — so with
  * no wizard on the stack it is genuinely zero pixels tall, not an empty box.
  *
- * Colours come from CWizard::draw (layer1/Wizard.cpp:748-770): buttons are a
+ * Colours come from CWizard::draw (packages/engine/layer1/Wizard.cpp:748-770): buttons are a
  * dim grey raised fill, popup rows are blue-lavender, text rows use text_color2.
  */
 

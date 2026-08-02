@@ -4,7 +4,7 @@
  * Before this, `OFFERED_SCOPES` stopped at `atom` with the comment "offering
  * [atom-state] would be offering a no-op", which was true of `cmd.set` and not
  * of PyMOL: `cmd.alter_state`'s `s[...]` reaches it, and nothing else does.
- * MEASURED over the WebSocket (`bridge/tests/test_p8_a5.py`), on one setting:
+ * MEASURED over the WebSocket (`packages/bridge/tests/test_p8_a5.py`), on one setting:
  *
  *     cmd.set(name, v, sele)                     -> ATOM level      (iterate sees it)
  *     cmd.alter(sele, "s[..]=v")                 -> ATOM level      (iterate sees it)
@@ -48,11 +48,11 @@ function catalogue(): SettingCatalogue {
       cSettingInit: 798,
       indexDictSize: 780,
       nameListSize: 779,
-      defaultsSource: 'layer1/SettingInfo.h',
+      defaultsSource: 'packages/engine/layer1/SettingInfo.h',
       defaultsNote: '',
       minMaxEnforced: false,
       minMaxNote: 'PyMOL clamps int min/max on global writes',
-      helpSource: 'data/setting_help.csv',
+      helpSource: 'packages/engine/data/setting_help.csv',
       helpRows: 875,
     },
   };

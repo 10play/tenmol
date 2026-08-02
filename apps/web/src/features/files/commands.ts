@@ -1,7 +1,7 @@
 /**
  * The command strings PyMOL's own file dialogs build.
  *
- * Every format-specific import dialog in `modules/pmg_qt/file_dialogs.py` has
+ * Every format-specific import dialog in `packages/engine/modules/pmg_qt/file_dialogs.py` has
  * a `get_command()` that renders a live preview into `output_command` and is
  * then executed verbatim through `cmd.do` — the dialogs do NOT call the typed
  * API. Reproducing the *string* is therefore the parity requirement: it is

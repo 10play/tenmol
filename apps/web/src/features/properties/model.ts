@@ -1,6 +1,6 @@
 /**
  * The properties inspector's tree shape and value formatting —
- * `modules/pmg_qt/properties_dialog.py:69-117` and `:11-16`.
+ * `packages/engine/modules/pmg_qt/properties_dialog.py:69-117` and `:11-16`.
  *
  * Pure: no React, no bridge. `service.ts` fills it in, `PropertiesPanel.tsx`
  * draws it, and `model.test.ts` proves the formatting rules.

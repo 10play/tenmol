@@ -1,7 +1,7 @@
 /**
  * PyMOL's OTHER console — the one it draws inside the GL viewport.
  *
- * `OrthoDrawText` (`layer1/Ortho.cpp:1623-1693`) paints the tail of a 256-line
+ * `OrthoDrawText` (`packages/engine/layer1/Ortho.cpp:1623-1693`) paints the tail of a 256-line
  * ring bottom-left over the scene, with a black band behind the
  * `internal_feedback` lines (`OrthoDrawInternalFeedbackBG`, `:1506-1540`) and
  * a `_` cursor on the input line. This component is that, in DOM, portalled on
@@ -17,7 +17,7 @@
  * PyMOL looks like after `set internal_feedback, 0`.
  *
  * The bridge FORCES `internal_feedback = 0` at startup
- * (`bridge/tenmol_bridge/engine.py:129-130`, `:175-183`) because
+ * (`packages/bridge/tenmol_bridge/engine.py:129-130`, `:175-183`) because
  * `OrthoReshape` subtracts the feedback band from the scene rectangle and the
  * web client needs `cmd.get_viewport()` to equal its canvas. So the raw value
  * read back from PyMOL is a statement about the BRIDGE's geometry, not about
@@ -67,7 +67,7 @@ import { mapOrthoKey, movieKeyframeCommand, type OrthoAction } from './orthoKeys
 /** `cmd._parser.complete` — granted by `policy/grants/wp-11-console.py`. */
 const COMPLETE_FN = 'cmd._parser.complete';
 
-/** `cOrthoBottomSceneMargin` (`layer1/Ortho.h:25`) — the band's extra height. */
+/** `cOrthoBottomSceneMargin` (`packages/engine/layer1/Ortho.h:25`) — the band's extra height. */
 const BOTTOM_SCENE_MARGIN = 18;
 
 export function OrthoConsole() {
@@ -83,7 +83,7 @@ export function OrthoConsole() {
     setHost(document.querySelector<HTMLElement>('.shell__viewport'));
   }, []);
 
-  /* `I->ShowLines = height / cOrthoLineHeight` (`layer1/Ortho.cpp:2380`). */
+  /* `I->ShowLines = height / cOrthoLineHeight` (`packages/engine/layer1/Ortho.cpp:2380`). */
   useLayoutEffect(() => {
     if (!host) return;
     const measure = () => store.setShowLines(host.clientHeight / ORTHO_LINE_HEIGHT);
@@ -124,10 +124,10 @@ export function OrthoConsole() {
   const lines = visibleOrthoLines(state);
   const feedback = state.settings.internal_feedback;
   // `sceneBottom = textBottom + (internal_feedback - 1) * cOrthoLineHeight +
-  //  cOrthoBottomSceneMargin` (`layer1/Ortho.cpp:2385-2389`); the band is drawn
+  //  cOrthoBottomSceneMargin` (`packages/engine/layer1/Ortho.cpp:2385-2389`); the band is drawn
   // from 0 to that height (`:1517-1520`).
   const bandHeight = feedback > 0 ? (feedback - 1) * ORTHO_LINE_HEIGHT + BOTTOM_SCENE_MARGIN : 0;
-  // `OverlayColor = 1 - bg_rgb` (`layer1/Ortho.cpp:1876-1880`). The viewport
+  // `OverlayColor = 1 - bg_rgb` (`packages/engine/layer1/Ortho.cpp:1876-1880`). The viewport
   // background is black here (`--pm-bg-viewport`), so the overlay colour is
   // white and `length3f(OverlayColor) < 0.5` is false. Honouring a user-set
   // `bg_rgb` needs the colour table, which is WP-22's store.
@@ -145,7 +145,7 @@ export function OrthoConsole() {
       onKeyDown={onKeyDown}
       onPaste={(event) => {
         // `case 22` routes a line that HAS TEXT ON IT to `cmd.paste()`
-        // (`layer1/Ortho.cpp:1013-1024`: `if (I->CurChar != I->PromptChar)`).
+        // (`packages/engine/layer1/Ortho.cpp:1013-1024`: `if (I->CurChar != I->PromptChar)`).
         // In a browser the clipboard text is right here in the event, so this
         // IS that paste. The empty-line case is the `CTRL-V` CHORD, which goes
         // to `cmd._ctrl('V')` and wants no text at all.
@@ -158,7 +158,7 @@ export function OrthoConsole() {
         store.setLine(line);
       }}
       onMouseDown={() => {
-        // `OrthoButton` (`layer1/Ortho.cpp:2523-2524`).
+        // `OrthoButton` (`packages/engine/layer1/Ortho.cpp:2523-2524`).
         store.removeSplash();
         store.removeAutoOverlay();
       }}
@@ -191,7 +191,7 @@ export function OrthoConsole() {
 
 /**
  * One drawn line. Renders ANSI as styled runs when `colored_feedback` is on
- * (the escapes survive `OrthoFeedbackOut`, `layer1/Ortho.cpp:1148-1150`) and
+ * (the escapes survive `OrthoFeedbackOut`, `packages/engine/layer1/Ortho.cpp:1148-1150`) and
  * strips them exactly like `UtilStripANSIEscapes` when it is off — the second
  * case is belt and braces, since PyMOL already stripped them.
  *
@@ -245,7 +245,7 @@ function OrthoText({
 function HiddenNote({ settings }: { settings: ConsoleSettings }) {
   if (textVisible(settings)) return null;
   return (
-    <div className="ortho__hidden" title="layer1/Ortho.cpp:1637-1642">
+    <div className="ortho__hidden" title="packages/engine/layer1/Ortho.cpp:1637-1642">
       in-viewport console hidden — internal_feedback, text and overlay are all 0
     </div>
   );
@@ -316,7 +316,7 @@ function useOrthoActions(pasteMark: React.RefObject<number>) {
           completing.current = true;
           try {
             const completed = await session.call<string | null>(COMPLETE_FN, [line.text]);
-            // Ctrl-D is "just print, don't complete" (`layer1/Ortho.cpp:924-930`):
+            // Ctrl-D is "just print, don't complete" (`packages/engine/layer1/Ortho.cpp:924-930`):
             // the candidate list is a side effect on the feedback queue and the
             // return value is deliberately dropped.
             if (action.kind === 'completePrint') return;
@@ -381,7 +381,7 @@ function useOrthoActions(pasteMark: React.RefObject<number>) {
 
         case 'chord': {
           // `OrthoKeyControl` / `OrthoKeyAlt` / `OrthoKeyCtSh` PLog + PParse
-          // `cmd._ctrl(chr(N))` (`layer1/Ortho.cpp:760-820`). All three symbols
+          // `cmd._ctrl(chr(N))` (`packages/engine/layer1/Ortho.cpp:760-820`). All three symbols
           // are explicitly reachable (`policy/base.py` DEFAULT_PRIVATE).
           await session.call(`cmd.${action.fn}`, [action.key]).catch((error: unknown) => {
             session.stores.feedback.appendClient(` ${errorText(error)}`, 'error');

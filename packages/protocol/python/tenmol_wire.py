@@ -2,8 +2,8 @@
 
 WP-01 (``packages/protocol``). This is the NORMATIVE producer side of the wire
 format that ``packages/protocol/src/geometry.ts`` consumes. The bridge
-(``bridge/tenmol_bridge/``, WP-02/WP-04/WP-26) should import or vendor this
-module rather than re-deriving the layout; ``test/roundtrip.test.ts`` encodes
+(``packages/bridge/tenmol_bridge/``, WP-02/WP-04/WP-26) should import or vendor this
+module rather than re-deriving the layout; ``packages/engine/test/roundtrip.test.ts`` encodes
 with exactly this code and decodes in TypeScript.
 
 Wire format (server -> client, WebSocket BINARY frame)::
@@ -62,7 +62,7 @@ INSTANCE_ITEM_SIZE: Dict[str, int] = {
     "ellipsoid": 16,  # center[3], m[9], r,g,b,a
 }
 
-#: ``arraybits`` flags, ``layer1/CGO.h:272-277``.
+#: ``arraybits`` flags, ``packages/engine/layer1/CGO.h:272-277``.
 CGO_ARRAY_BIT = {
     "vertex": 0x01,
     "normal": 0x02,
@@ -72,8 +72,8 @@ CGO_ARRAY_BIT = {
     "texCoord": 0x20,
 }
 
-#: Floats per vertex per sub-array; ``layer1/CGO.cpp:54-65``,
-#: ``layer0/ShaderMgr.h:430-431``.
+#: Floats per vertex per sub-array; ``packages/engine/layer1/CGO.cpp:54-65``,
+#: ``packages/engine/layer0/ShaderMgr.h:430-431``.
 _CGO_SUB_SIZES: Sequence[Tuple[int, int]] = (
     (CGO_ARRAY_BIT["normal"], 3),
     (CGO_ARRAY_BIT["color"], 4),
@@ -92,9 +92,9 @@ def cgo_narrays(arraybits: int) -> int:
     """Floats per vertex across all sub-arrays of a ``cgo::draw::arrays`` block.
 
     Mirrors ``cgoNarrays()`` in ``src/geometry.ts`` and the C struct's
-    ``narrays`` (``layer1/CGO.h:341-352``).
+    ``narrays`` (``packages/engine/layer1/CGO.h:341-352``).
     """
-    n = 3  # CGO_VERTEX_ARRAY is always present (assert at layer1/CGO.cpp:1651)
+    n = 3  # CGO_VERTEX_ARRAY is always present (assert at packages/engine/layer1/CGO.cpp:1651)
     for bit, size in _CGO_SUB_SIZES:
         if arraybits & bit:
             n += size
@@ -219,7 +219,7 @@ def indexed_mesh_header(
     matrix: Optional[Sequence[float]] = None,
     level: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """``RepSurface`` (``layer2/RepSurface.cpp:59-101``) as an indexed mesh.
+    """``RepSurface`` (``packages/engine/layer2/RepSurface.cpp:59-101``) as an indexed mesh.
 
     ``buffers`` keys: position, normal, color, alpha, ao, index, strip, atom,
     vis -- mapping onto V, VN, VC, VA, VAO, T, S, AT, Vis respectively.

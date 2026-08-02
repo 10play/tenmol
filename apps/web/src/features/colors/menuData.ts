@@ -2,8 +2,8 @@
  * The colour menu's DATA, ported one-for-one from PyMOL.
  *
  * WHY A PORT AND NOT AN RPC. `pymol.menu.mol_color(self_cmd, sele)`
- * (`modules/pymol/menu.py:672-686`) builds this whole tree already, and
- * `bridge/tenmol_bridge/panels/colors.py:menu_tree` wraps it — but every
+ * (`packages/engine/modules/pymol/menu.py:672-686`) builds this whole tree already, and
+ * `packages/bridge/tenmol_bridge/panels/colors.py:menu_tree` wraps it — but every
  * `pymol.menu` provider takes the cmd INSTANCE as its first positional
  * argument, and a WebSocket client has no way to pass one.
  * `Dispatcher.resolve` would bind `self_cmd='(all)'` and the call would
@@ -11,7 +11,7 @@
  * `needsFromOthers`), the tree is reconstructed here.
  *
  * EVERY TABLE BELOW IS CHECKED AGAINST ITS PYTHON ORIGINAL by
- * `bridge/tests/test_colors.py::test_ts_port_matches_pymol_source`, which
+ * `packages/bridge/tests/test_colors.py::test_ts_port_matches_pymol_source`, which
  * parses this file and diffs it against `pymol.menu.all_colors_list`,
  * `pymol.menu.rep_setting_lists`, `pymol.util._color_cycle` and
  * `pymol.constants_palette.palette_dict` inside a live PyMOL. A drift here is
@@ -343,7 +343,7 @@ export const BY_ELEM_PAGES: readonly ElemPage[] = [
  * by-element page leave the object rec in different states. MEASURED on a `trp`
  * fragment coloured `grey50` first: after `util.cbag` the object colour was
  * still 104, after `util.cba(33, …)` it was 33 —
- * `bridge/tests/test_p8_a5.py::test_the_ten_fixed_carbon_shortcuts_leave_the_object_colour_alone`.
+ * `packages/bridge/tests/test_p8_a5.py::test_the_ten_fixed_carbon_shortcuts_leave_the_object_colour_alone`.
  * ------------------------------------------------------------------ */
 
 export interface CarbonShortcut {
@@ -371,7 +371,7 @@ export const FIXED_CARBON_SHORTCUTS: readonly CarbonShortcut[] = [
  *
  * The C menu of a mesh or surface object is NOT `mol_color`: `ExecutiveMenu`
  * routes `cObjectMesh` to `mesh_color(name)` and `cObjectSurface` to
- * `mesh_color(name, 'surface')` (`layer3/Executive.cpp:15249-15256`). The only
+ * `mesh_color(name, 'surface')` (`packages/engine/layer3/Executive.cpp:15249-15256`). The only
  * difference from the molecule menu is a `negative` submenu on top, whose
  * entries are two SETTINGS writes on the object, not atom colours:
  *
@@ -406,7 +406,7 @@ export const BY_SS_PRESETS: readonly {
 
 /* ------------------------------------------------------------------ *
  * `util._color_cycle` — util.py:27-70, identical to C `AutoColor`
- * (`layer1/Color.cpp:35-76`). 40 indices. Used by `util.cbc` /
+ * (`packages/engine/layer1/Color.cpp:35-76`). 40 indices. Used by `util.cbc` /
  * `util.color_objs` as `_color_cycle[c % 40]`, and shown here as the preview
  * strip next to "by chain" so the user can see what they are about to get.
  * ------------------------------------------------------------------ */
@@ -417,13 +417,13 @@ export const COLOR_CYCLE: readonly number[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * Palettes — modules/pymol/constants_palette.py:1-89
+ * Palettes — packages/engine/modules/pymol/constants_palette.py:1-89
  *
  * `(prefix, digits, first, last)`; prefix picks one of the generated
  * 1000-colour bands (o/s/r/c/w) and first..last are indices inside it, so a
  * palette preview is `get_color_tuple('<prefix><nnn>')` sampled between them.
  * The inventory says 57; the file in THIS tree has 60 — asserted in
- * `bridge/tests/test_colors.py`.
+ * `packages/bridge/tests/test_colors.py`.
  * ------------------------------------------------------------------ */
 
 export interface Palette {

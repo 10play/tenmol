@@ -2,7 +2,7 @@
  * The A / S / H / L / C / M buttons — metadata only.
  *
  * THE MENU CONTENTS ARE NOT IN THIS FILE AND MUST NEVER BE.
- * `docs/webclient/internal-gui.md` §12 is explicit: menus are FETCHED from the
+ * `docs/internal-gui.md` §12 is explicit: menus are FETCHED from the
  * backend as data (`pymol.menu.<name>(cmd, *args)` -> `[code, text, command]`),
  * because the entries embed `cmd.*` source strings and are generated from live
  * state — scene lists, ramp lists, object lists, the colour table. The previous
@@ -13,10 +13,10 @@
  * What DOES belong here is the dispatch *table* — which button opens which menu
  * for which row type — because the panel has to draw a button that opens
  * nothing (PyMOL draws the L button on a map row and does nothing when you
- * click it, `layer3/Executive.cpp:15205-15229`) and it cannot learn that from a
+ * click it, `packages/engine/layer3/Executive.cpp:15205-15229`) and it cannot learn that from a
  * request it never makes. The table is transcribed from `CExecutive::click`
  * (`:15012-15300`) and is asserted against the Python side's copy in
- * `bridge/tests/test_objects.py`.
+ * `packages/bridge/tests/test_objects.py`.
  *
  * Hit-column indices match `CExecutive::click`: 0=A 1=S 2=H 3=L 4=C 5=M, and
  * `get_op_cnt()` (`:1757-1765`) is 5, or 6 when

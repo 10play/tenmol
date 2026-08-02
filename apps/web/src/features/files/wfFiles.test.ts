@@ -1,7 +1,7 @@
 /**
  * Parity area 6, wave 6 — the client half of inventory rows 259/293/295/298.
  *
- * The bridge half is `bridge/tests/test_wf_files.py`, which runs everything
+ * The bridge half is `packages/bridge/tests/test_wf_files.py`, which runs everything
  * asserted here against a live PyMOL over the real socket. These are the pure
  * decisions the browser makes on its own:
  *
@@ -201,7 +201,7 @@ describe('map generation and the Finder open-with preset (rows 259, 293)', () =>
 
   it('asks for the presentation preset with full_screen OFF by default', async () => {
     // `cmd.full_screen` ALWAYS raises — `CmdFullScreen`
-    // (`layer4/Cmd.cpp:5352-5362`) returns an `ok` it never assigns — so the
+    // (`packages/engine/layer4/Cmd.cpp:5352-5362`) returns an `ok` it never assigns — so the
     // client does not ask for it unless something deliberately opts in.
     const call = vi.fn().mockResolvedValue({});
     const api = createFilesApi({ call, do: vi.fn() });

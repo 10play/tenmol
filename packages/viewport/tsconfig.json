@@ -11,5 +11,5 @@
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": ["src/**/*.ts", "packages/engine/test/**/*.ts"]
 }

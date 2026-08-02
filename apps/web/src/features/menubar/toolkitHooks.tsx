@@ -2,7 +2,7 @@
  * The `= None` toolkit seams the MENU BAR itself can fill.
  *
  * `PyMOLDesktopGUI` leaves every dialog entry point unbound
- * (`modules/pymol/_gui.py:13-40`) and Qt's main window binds them to bound
+ * (`packages/engine/modules/pymol/_gui.py:13-40`) and Qt's main window binds them to bound
  * methods of itself (`pymol_qt_gui.py:878-897`):
  *
  *     settings_edit_all_dialog  -> PyMOLAdvancedSettings(self, cmd).show()

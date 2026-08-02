@@ -3,7 +3,7 @@
  * Wizard, Plugin, Help.
  *
  * Qt builds these by walking `get_menudata` in `_addmenu`
- * (`modules/pmg_qt/pymol_qt_gui.py:295-352`) and then appending two things
+ * (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:295-352`) and then appending two things
  * imperatively afterwards: `Display ▸ External GUI` (`:373-381`) and
  * `Plugin ▸ Initialize Plugin System` (`:396-397`). Both are reproduced here as
  * *appended* items, in the same order, so the data-driven part stays pure.

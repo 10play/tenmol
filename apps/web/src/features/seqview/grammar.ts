@@ -1,7 +1,7 @@
 /**
  * The Seeker mouse grammar, as a pure reducer.
  *
- * `SeekerClick` (`layer3/Seeker.cpp:317-470`) and `SeekerDrag` (`:527-670`) are
+ * `SeekerClick` (`packages/engine/layer3/Seeker.cpp:317-470`) and `SeekerDrag` (`:527-670`) are
  * a small state machine over `CSeeker::dragInfo`. Reproducing it inside React
  * event handlers would make it untestable and would hide the one genuinely
  * subtle part — the direction flip, where dragging back past the anchor
@@ -12,10 +12,10 @@
  * action names the C++ call it stands for.
  */
 
-/** `cDoubleTime` (`layer3/Seeker.cpp:315`), in milliseconds. */
+/** `cDoubleTime` (`packages/engine/layer3/Seeker.cpp:315`), in milliseconds. */
 export const DOUBLE_CLICK_MS = 350;
 
-/** `P_GLUT_LEFT/MIDDLE/RIGHT` (`layer0/os_gl_glut_pretend.h:11-26`). */
+/** `P_GLUT_LEFT/MIDDLE/RIGHT` (`packages/engine/layer0/os_gl_glut_pretend.h:11-26`). */
 export const Button = { Left: 0, Middle: 1, Right: 2 } as const;
 export type ButtonValue = (typeof Button)[keyof typeof Button];
 
@@ -24,10 +24,10 @@ export interface Mods {
   ctrl: boolean;
 }
 
-/** `CSeeker::dragInfo` (`layer3/Seeker.cpp:38-60`). */
+/** `CSeeker::dragInfo` (`packages/engine/layer3/Seeker.cpp:38-60`). */
 export interface SeqDrag {
   button: ButtonValue;
-  /** Row index; the row is PINNED for the whole drag (`layer1/Seq.cpp:158`). */
+  /** Row index; the row is PINNED for the whole drag (`packages/engine/layer1/Seq.cpp:158`). */
   row: number;
   startCol: number;
   lastCol: number;
@@ -64,7 +64,7 @@ export type SeqAction =
   | { type: 'clear' }
   /** `MenuActivate2Arg(..., "pick_sele"|"seq_option", ...)` (`:363-390`). */
   | { type: 'menu'; menu: 'pick_sele' | 'seq_option'; row: number; col: number }
-  /** Wheel — horizontal scroll by ±1 (`layer1/Seq.cpp:218-223`). */
+  /** Wheel — horizontal scroll by ±1 (`packages/engine/layer1/Seq.cpp:218-223`). */
   | { type: 'scroll'; delta: number };
 
 export interface ClickInput {
@@ -100,7 +100,7 @@ const NOTHING: Outcome = { actions: [], drag: null };
 export function click(input: ClickInput): Outcome {
   if (input.row < 0 || input.col < 0) {
     // Outside any cell. Left within cDoubleTime clears; right opens pick_sele
-    // for the active selection (`layer1/Seq.cpp:240-248`).
+    // for the active selection (`packages/engine/layer1/Seq.cpp:240-248`).
     if (input.button === Button.Left && input.sinceLastClickMs < DOUBLE_CLICK_MS) {
       return { actions: [{ type: 'clear' }], drag: null };
     }
@@ -180,10 +180,10 @@ export function click(input: ClickInput): Outcome {
 }
 
 /**
- * `SeekerDrag` (`layer3/Seeker.cpp:527-670`).
+ * `SeekerDrag` (`packages/engine/layer3/Seeker.cpp:527-670`).
  *
  * `col` is already clamped to the pinned row by the caller, because the C pins
- * it too (`LastRow`, `layer1/Seq.cpp:158`).
+ * it too (`LastRow`, `packages/engine/layer1/Seq.cpp:158`).
  */
 export function move(drag: SeqDrag, row: number, col: number, mods: Mods): Outcome {
   if (drag.row !== row || col < 0 || col === drag.lastCol) {
@@ -346,7 +346,7 @@ export function move(drag: SeqDrag, row: number, col: number, mods: Mods): Outco
   return { actions: actions.filter(nonEmptyRange), drag: state };
 }
 
-/** Wheel — `layer1/Seq.cpp:218-223`, exactly one column per notch. */
+/** Wheel — `packages/engine/layer1/Seq.cpp:218-223`, exactly one column per notch. */
 export function wheel(deltaY: number): { type: 'scroll'; delta: number } {
   return { type: 'scroll', delta: deltaY > 0 ? 1 : -1 };
 }

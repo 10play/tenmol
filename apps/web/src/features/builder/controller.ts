@@ -41,19 +41,19 @@ export interface BuilderController {
   wizardClick(index: number): Promise<BuilderState>;
   /**
    * One turn of the sculpting loop PyMOL's idle handler runs for itself
-   * (`layer5/PyMOL.cpp:2424`) — and, with `cycles: 0`, a pure READ of the total
+   * (`packages/engine/layer5/PyMOL.cpp:2424`) — and, with `cycles: 0`, a pure READ of the total
    * strain. The pump does idle (`engine.py:236`), so the engine is already
    * minimising and `sculptTicker.ts` passes 0 rather than iterating beside it.
    */
   sculptTick(cycles?: number): Promise<BuilderSculptTick>;
   /**
    * "A named selection was edited somewhere else" — the engine's
-   * `WizardDoSelect` (`layer1/Wizard.cpp:172-190`), which PyMOL fires only from
+   * `WizardDoSelect` (`packages/engine/layer1/Wizard.cpp:172-190`), which PyMOL fires only from
    * its own mouse paths and never from `cmd.select`.
    *
    * The Builder needs it because `AtomFlagWizard` treats an edit of the
    * `_build_display` selection as an edit of the FIXED/RESTRAINED atom set
-   * (`modules/pmg_qt/builder.py:906-913`), and in this client that selection is
+   * (`packages/engine/modules/pmg_qt/builder.py:906-913`), and in this client that selection is
    * edited by the OBJECT PANEL. Whoever rewrites a named selection calls this.
    */
   selectionEdited(selection: string): Promise<BuilderState>;
@@ -152,7 +152,7 @@ export function isMissingSymbol(error: unknown): boolean {
 
 /**
  * `collectPicked`-shaped guards, so each button can say WHY it is about to arm
- * a wizard instead of acting (`modules/pmg_qt/builder.py:1000-1006` — every
+ * a wizard instead of acting (`packages/engine/modules/pmg_qt/builder.py:1000-1006` — every
  * bottom-row button branches on exactly this).
  */
 export function pickHint(state: BuilderState | null, kind: BuilderActionKind): string {

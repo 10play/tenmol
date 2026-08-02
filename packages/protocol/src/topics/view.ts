@@ -2,7 +2,7 @@
  * Topic `view` — the camera.  OWNER: WP-09.
  *
  * THE ASYMMETRY THAT BREAKS EVERY NAIVE IMPLEMENTATION: `cmd.get_view()`
- * returns **25** floats (`modules/pymol/viewing.py:634`, layout at `:660-676`)
+ * returns **25** floats (`packages/engine/modules/pymol/viewing.py:634`, layout at `:660-676`)
  * while `cmd.set_view()` requires exactly **18**. WP-09's acceptance says that
  * slice lives in exactly one file with a golden test; this is the type that
  * makes the 18 explicit on the wire.

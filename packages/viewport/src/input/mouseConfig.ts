@@ -93,7 +93,7 @@ export function stepSelectionMode(selectionMode: number, forward: boolean): numb
 }
 
 /**
- * The `mouse_config` pop-up, verbatim from `modules/pymol/menu.py:82-101`.
+ * The `mouse_config` pop-up, verbatim from `packages/engine/modules/pymol/menu.py:82-101`.
  *
  * Nine entries in this exact order, including the separator, and note that
  * three of them call `cmd.mouse` rather than `cmd.config_mouse` — those jump to
@@ -101,7 +101,7 @@ export function stepSelectionMode(selectionMode: number, forward: boolean): numb
  * replacing the ring.
  */
 export interface MouseConfigItem {
-  /** PyMOL's popup item kind: 1 = command, 0 = separator (`layer4/PopUp.cpp`). */
+  /** PyMOL's popup item kind: 1 = command, 0 = separator (`packages/engine/layer4/PopUp.cpp`). */
   kind: 0 | 1;
   label: string;
   /** The command string the leaf returns. Executed verbatim through `t:'do'`. */

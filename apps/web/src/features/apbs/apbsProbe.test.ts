@@ -7,11 +7,11 @@
  * "not found" here would not mean the plugin fails too.
  *
  * The expectations below are pinned against the real source:
- *   `data/startup/apbs_gui/electrostatics.py:49-57`  -> APBS_CANDIDATES
- *   `data/startup/apbs_gui/__init__.py:224-231`      -> PDB2PQR_CANDIDATES
+ *   `packages/engine/data/startup/apbs_gui/electrostatics.py:49-57`  -> APBS_CANDIDATES
+ *   `packages/engine/data/startup/apbs_gui/__init__.py:224-231`      -> PDB2PQR_CANDIDATES
  *
  * The values used for "what the backend answers" are the ones measured over a
- * real socket in `bridge/tests/test_wf_apbs.py`: `subproc.which('apbs')` and
+ * real socket in `packages/bridge/tests/test_wf_apbs.py`: `subproc.which('apbs')` and
  * `subproc.which('pdb2pqr')` both `null`, and `cmd.exp_path` returning
  * `$SCHRODINGER/utilities/apbs` unexpanded because the variable is unset.
  */

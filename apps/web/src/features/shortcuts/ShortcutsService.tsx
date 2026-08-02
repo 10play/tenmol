@@ -8,7 +8,7 @@
  * walks `FEATURE_SLOTS` — so the block is portalled into the `.internal-gui`
  * column from here, the service slot WP-23 owns. PyMOL stacks it between the
  * Wizard block and the movie Control block (`OrthoLayoutPanel`,
- * `layer1/Ortho.cpp:2261-2340`); until a real slot exists it lands at the end
+ * `packages/engine/layer1/Ortho.cpp:2261-2340`); until a real slot exists it lands at the end
  * of the column, which is the same place while `movie` and `scenes` are not
  * installed. A registry slot is requested rather than smuggled in.
  */

@@ -4,7 +4,7 @@ import { MENU_BAR } from './menuData';
 import { useBridge } from '../bridge/BridgeContext';
 
 /**
- * Menu bar. Mirrors `PyMOLQtGUI._addmenu` (modules/pmg_qt/pymol_qt_gui.py:295-344):
+ * Menu bar. Mirrors `PyMOLQtGUI._addmenu` (packages/engine/modules/pmg_qt/pymol_qt_gui.py:295-344):
  * the same six item kinds, submenus as flyouts, and every leaf ultimately turning into
  * either a raw command line (`{t:'do'}`) or a dialog request.
  *

@@ -8,7 +8,7 @@
  * `~/.pymolrc` that had never read ~/.pymolrc.
  *
  * Everything below is asserted against the bridge shapes MEASURED in
- * `bridge/tests/test_p11_menus.py` on this tree:
+ * `packages/bridge/tests/test_p11_menus.py` on this tree:
  *
  *   cmd.tenmol_files.pymolrc()          -> {'paths': [], 'home': '/Users/amirangel'}
  *   cmd.tenmol_files.read_text('~/.pymolrc')

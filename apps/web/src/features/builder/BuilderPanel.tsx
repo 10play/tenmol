@@ -1,7 +1,7 @@
 /**
  * The molecular Builder.
  *
- * Upstream this is `BuilderPanelDocked()` (`modules/pmg_qt/builder.py:1573`): a
+ * Upstream this is `BuilderPanelDocked()` (`packages/engine/modules/pmg_qt/builder.py:1573`): a
  * floating `QDockWidget` titled "Builder" holding a three-tab `QTabWidget` over
  * three always-visible action rows. Here it is a floating panel in the shell's
  * `overlay` region, opened from its own tab or from a `tenmol:open-builder`
@@ -11,14 +11,14 @@
  * WHAT LIVES WHERE. Not one line of chemistry is in this file. Every button is
  * a row of `./tables.ts` turned into `{kind, ...params}` and handed to
  * `cmd.builder_action`, which runs the *ported* `_BuilderPanel` handler in
- * `bridge/tenmol_bridge/panels/builder.py`. The reply is the new editor state,
+ * `packages/bridge/tenmol_bridge/panels/builder.py`. The reply is the new editor state,
  * so the pk1..pk4 chips and every button's enablement come from PyMOL, never
  * from a local guess.
  *
  * THINGS THAT ARE DELIBERATELY NOT PRETENDED TO WORK:
  *   - **Clean** is rendered disabled with the reason in its tooltip.
  *     `cmd.clean` raises `IncentiveOnlyException` in this tree
- *     (`modules/pymol/computing.py:20-29`).
+ *     (`packages/engine/modules/pymol/computing.py:20-29`).
  *   - **Undo / Redo** carry a note: `editor.undocontext` is a bare `yield`
  *     here (`editor.py:38-49`), so the actions the Qt panel decorates as
  *     "undoable" are not.
@@ -69,7 +69,7 @@ export const OPEN_EVENT = 'tenmol:open-builder';
  * The two wizards that force the mouse into BOND picking on activation —
  * `cmd.button('single_left','none','PkBd')` (`builder.py:514-563,700-740`).
  * There is no getter for the button table (`ButModeGet` is declared at
- * `layer1/ButMode.h:225` and never bound in `layer4/Cmd.cpp`), so the armed
+ * `packages/engine/layer1/ButMode.h:225` and never bound in `packages/engine/layer4/Cmd.cpp`), so the armed
  * wizard's class name IS the state, and `builder_state` already carries it.
  */
 const BOND_PICK_WIZARDS = new Set(['ValenceWizard', 'UnbondWizard']);
@@ -163,10 +163,10 @@ export function BuilderPanel() {
    * THE SCULPTING READOUT.
    *
    * `sculpting 1` is enough on this backend: the pump's tick calls
-   * `PyMOL_Idle` (`bridge/tenmol_bridge/engine.py:236`), which is where
-   * `ExecutiveSculptIterateAll` lives (`layer5/PyMOL.cpp:2424`), so the engine
+   * `PyMOL_Idle` (`packages/bridge/tenmol_bridge/engine.py:236`), which is where
+   * `ExecutiveSculptIterateAll` lives (`packages/engine/layer5/PyMOL.cpp:2424`), so the engine
    * minimises on its own — 0.6843 A of drift in 2.0 s with no client attached,
-   * measured in `bridge/tests/test_p10_viewport.py`. The panel therefore POLLS
+   * measured in `packages/bridge/tests/test_p10_viewport.py`. The panel therefore POLLS
    * `cmd.builder_sculpt_tick` with 0 cycles while the flag is on, purely to
    * show the strain converging; the moved atoms arrive on the pixel stream and
    * on the 4 Hz geometry diff exactly as any other engine-side change does.
@@ -198,7 +198,7 @@ export function BuilderPanel() {
   /**
    * VIEWPORT CLICKS. `SceneClick` routes a click by the ButMode action, so in
    * EDITING mode the pixel that would select `sele` fills `pk1..pk4` instead
-   * (`layer1/SceneMouse.cpp:404-470`). The client had no such branch: the
+   * (`packages/engine/layer1/SceneMouse.cpp:404-470`). The client had no such branch: the
    * viewport turned every GL-free pick into `cmd.select` and the Builder's
    * `controller.pick()` was reachable only from a test. This is that branch.
    *
@@ -278,7 +278,7 @@ export function BuilderPanel() {
       <button
         type="button"
         className="builder-launch"
-        title="the Builder dock (modules/pmg_qt/builder.py)"
+        title="the Builder dock (packages/engine/modules/pmg_qt/builder.py)"
         onClick={() => setOpen(true)}
       >
         Builder
@@ -665,7 +665,7 @@ export function BuilderPanel() {
             Redo
           </button>
           {state?.undo_is_noop && (
-            <span className="builder__note" title="modules/pymol/editor.py:38-49">
+            <span className="builder__note" title="packages/engine/modules/pymol/editor.py:38-49">
               editor.undocontext is a no-op here — only cmd.undo/redo against the C ring works
             </span>
           )}

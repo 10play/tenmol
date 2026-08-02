@@ -3,7 +3,7 @@
  *
  * The rows are not hand-written here: they come from
  * `MOUSE_CONFIG_MENU`, which `packages/viewport/src/input/modes.test.ts` diffs
- * against `modules/pymol/menu.py` in this tree. So this test is checking the
+ * against `packages/engine/modules/pymol/menu.py` in this tree. So this test is checking the
  * rendering and the dispatch, and the other test is checking the data.
  */
 
@@ -74,7 +74,7 @@ describe('PopupMenu', () => {
       '2-Button Viewing',
       '2-Button Lights',
     ]);
-    // A separator is not clickable (layer4/PopUp.cpp:270-300).
+    // A separator is not clickable (packages/engine/layer4/PopUp.cpp:270-300).
     expect((menu as HTMLElement).querySelectorAll('button')).toHaveLength(8);
   });
 

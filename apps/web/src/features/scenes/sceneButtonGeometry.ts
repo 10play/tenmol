@@ -1,5 +1,5 @@
 /**
- * `SceneDrawButtons` (`layer1/Scene.cpp:2885-3060`) as arithmetic.
+ * `SceneDrawButtons` (`packages/engine/layer1/Scene.cpp:2885-3060`) as arithmetic.
  *
  * THE QUESTION THIS FILE ANSWERS. The parity row asked whether the scene-button
  * overlay is meant to be a pixel-for-pixel port of PyMOL's GL block or a DOM
@@ -12,9 +12,9 @@
  * implementation detail, and a flex toolbar silently has none of them.
  *
  * So this module reproduces the arithmetic exactly and the component uses it
- * for sizing and truncation. Every constant below is `layer1/Scene.cpp`'s or
- * `layer1/Scene.h`'s, and
- * `bridge/tests/test_p9_rest.py::test_scene_button_geometry_matches_Scene_cpp`
+ * for sizing and truncation. Every constant below is `packages/engine/layer1/Scene.cpp`'s or
+ * `packages/engine/layer1/Scene.h`'s, and
+ * `packages/bridge/tests/test_p9_rest.py::test_scene_button_geometry_matches_Scene_cpp`
  * re-reads both files and fails if either side moves.
  *
  * COORDINATES ARE PYMOL'S: origin bottom-left, y increasing upwards, and the
@@ -24,7 +24,7 @@
  * have to flip anything itself.
  */
 
-/* --- `layer1/Scene.cpp:2772-2778`, `layer1/Scene.h:46-47` ---------------- */
+/* --- `packages/engine/layer1/Scene.cpp:2772-2778`, `packages/engine/layer1/Scene.h:46-47` ---------------- */
 
 /** `charWidth = DIP2PIXEL(8)` (`Scene.cpp:2896`). */
 export const SCENE_CHAR_WIDTH_DIP = 8;
@@ -243,7 +243,7 @@ export function layoutSceneButtons(input: SceneButtonLayoutInput): SceneButtonLa
 }
 
 /**
- * `SceneClick`'s scrollbar test (`layer1/SceneMouse.cpp:645,701,1078`): a press
+ * `SceneClick`'s scrollbar test (`packages/engine/layer1/SceneMouse.cpp:645,701,1078`): a press
  * in the left gutter belongs to the scrollbar and never to a button, even when
  * a button's rect overlaps it.
  */
@@ -264,7 +264,7 @@ export function isScrollBarClick(
  * `elem.drawn && elem.rect.contains(x, y)` (`SceneMouse.cpp:651`).
  *
  * `contains` defaults to `proper = true` — STRICT on all four edges
- * (`layer0/Rect.h:28-32`), so a click exactly on a button's boundary belongs to
+ * (`packages/engine/layer0/Rect.h:28-32`), so a click exactly on a button's boundary belongs to
  * no button, and the 1 px seam between two stacked rows (`bottom` of one is
  * `top` of the next) falls through to the camera. Reproduced, not tidied.
  */

@@ -7,10 +7,10 @@
 
 Why this exists
 ---------------
-`layer4/CmdWebGeometry.cpp` (`_cmd.web_get_rep_geometry`, spike 06) already
+`packages/engine/layer4/CmdWebGeometry.cpp` (`_cmd.web_get_rep_geometry`, spike 06) already
 returns PyMOL's own CPU-side buffers, and `packages/protocol/python/tenmol_wire.py`
 already knows the frame layout. What does not exist yet is the piece in the
-middle: nothing in `bridge/tenmol_bridge` joins them up and puts a
+middle: nothing in `packages/bridge/tenmol_bridge` joins them up and puts a
 `cgo-draw-arrays` / `indexed-mesh` frame on the WebSocket. That is the bridge's
 work package, not the viewport's.
 
@@ -25,7 +25,7 @@ So this script is two things:
 NOTE 1 — draw-arrays blocks must be REPACKED. The accessor returns each block's
 sub-arrays separately (`vertex`, `normal`, `rgba`, ...), but `cgo::draw::arrays`
 on the wire is ONE heap block whose sub-arrays are CONSECUTIVE in the order
-`layer1/CGO.cpp:1650-1671` fixes: [vertex 3N][normal 3N][color 4N]
+`packages/engine/layer1/CGO.cpp:1650-1671` fixes: [vertex 3N][normal 3N][color 4N]
 [pickcolor rgba N + index 2N][accessibility N]. `cgoArraysLayout()` on the
 client assumes exactly that, so the producer concatenates in that order and
 declares matching `arraybits`.
@@ -53,7 +53,7 @@ import pymol  # noqa: E402  (import order: pymol sets PYMOL_PATH for chempy)
 import pymol2  # noqa: E402
 import tenmol_wire as wire  # noqa: E402
 
-#: `enum cRep_t`, layer1/Rep.h:48-74 -- the same table as REP_NAMES in
+#: `enum cRep_t`, packages/engine/layer1/Rep.h:48-74 -- the same table as REP_NAMES in
 #: packages/protocol/src/geometry.ts.
 REP_INDEX = {
     "sticks": 0,

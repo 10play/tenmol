@@ -11,11 +11,11 @@
  * keeps the workspace file frozen: no new entry is needed when a package is
  * added, so no work package ever has to edit this file.
  *
- * The upstream PyMOL tree is excluded explicitly -- `testing/` is PyMOL's own
+ * The upstream PyMOL tree is excluded explicitly -- `packages/engine/testing/` is PyMOL's own
  * Python test suite and must never be walked by vitest.
  *
  * Python tests are NOT here. They run under pytest in the bridge venv:
- *   pnpm test:bridge          (== scripts/dev-bridge.sh --exec python -m pytest bridge/tests)
+ *   pnpm test:bridge          (== scripts/dev-bridge.sh --exec python -m pytest packages/bridge/tests)
  */
 import { defineWorkspace } from 'vitest/config';
 
@@ -25,16 +25,16 @@ const EXCLUDE = [
   '**/.venv/**',
   '**/generated/**',
   // upstream PyMOL
-  'build/**',
-  '_custom_build/**',
-  'contrib/**',
-  'data/**',
-  'examples/**',
-  'layer*/**',
-  'modules/**',
-  'ov/**',
-  'test/**',
-  'testing/**',
+  'packages/engine/build/**',
+  'packages/engine/_custom_build/**',
+  'packages/engine/contrib/**',
+  'packages/engine/data/**',
+  'packages/engine/examples/**',
+  'packages/engine/layer*/**',
+  'packages/engine/modules/**',
+  'packages/engine/ov/**',
+  'packages/engine/test/**',
+  'packages/engine/testing/**',
 ];
 
 const DOM = ['**/*.dom.test.{ts,tsx}', '**/__dom__/**/*.test.{ts,tsx}'];

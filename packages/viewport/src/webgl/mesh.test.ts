@@ -25,7 +25,7 @@ describe('stripLineIndices (RepMesh::N -> GL_LINES)', () => {
   });
 });
 
-describe('visibleTriangleIndices (layer2/RepSurface.cpp:209-216)', () => {
+describe('visibleTriangleIndices (packages/engine/layer2/RepSurface.cpp:209-216)', () => {
   const index = new Int32Array([0, 1, 2, 1, 2, 3]);
 
   it('returns the original buffer when there is no visibility array', () => {

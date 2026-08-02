@@ -1,7 +1,7 @@
 /**
  * Row 65 — the Stereo Mode table, checked against the engine's own numbers.
  *
- * Every constant below is pinned by `bridge/tests/test_p11_menus.py`, which
+ * Every constant below is pinned by `packages/bridge/tests/test_p11_menus.py`, which
  * issues all nine leaves against a GL-backed PyMOL and reads `stereo`,
  * `stereo_mode`, `chromadepth` and `stereo_shift` back. This file is the pure
  * half: the client's classification, and the sentences it produces.
@@ -54,7 +54,7 @@ describe('row 65 — the table covers the real submenu, exactly', () => {
     expect([...STEREO_COMMANDS].sort()).toEqual([...harvested].sort());
   });
 
-  it('agrees with `stereo_dict` (modules/pymol/constants.py:130-137)', () => {
+  it('agrees with `stereo_dict` (packages/engine/modules/pymol/constants.py:130-137)', () => {
     // The codes PyMOL's own parser resolves the words to.
     expect(Object.fromEntries(STEREO_COMMANDS.map((c) => [STEREO_LEAVES[c]!.word, STEREO_LEAVES[c]!.code]))).toEqual({
       anaglyph: 10,
@@ -70,7 +70,7 @@ describe('row 65 — the table covers the real submenu, exactly', () => {
   });
 
   it('records the four MEASURED end states, including the two labels that lie', () => {
-    // bridge/tests/test_p11_menus.py::test_stereo_leaves_do_exactly_what_the_client_table_says
+    // packages/bridge/tests/test_p11_menus.py::test_stereo_leaves_do_exactly_what_the_client_table_says
     expect(STEREO_LEAVES['stereo anaglyph']).toMatchObject({ mode: 10, stereoOn: true });
     expect(STEREO_LEAVES['stereo byrow']).toMatchObject({ mode: 6, stereoOn: true });
     // `Chromadepth` is NOT a stereo mode: flag -3 turns stereo OFF.
@@ -97,7 +97,7 @@ describe('row 65 — the table covers the real submenu, exactly', () => {
   });
 
   it('quotes the engine as corroboration, not as the reason', () => {
-    // MEASURED error text, `bridge/tests/test_p11_menus.py::ENGINE_REFUSALS`.
+    // MEASURED error text, `packages/bridge/tests/test_p11_menus.py::ENGINE_REFUSALS`.
     expect(STEREO_UNAVAILABLE['stereo quadbuffer']).toContain("no 'quadbuffer' support detected");
     expect(STEREO_UNAVAILABLE['stereo openvr']).toContain("'openvr' stereo mode not available");
     // The reason itself is the transport, and it survives a `pymol -S` build.

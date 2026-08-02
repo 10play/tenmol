@@ -2,7 +2,7 @@
  * Topic -> store, with sequence-gap detection.
  *
  * `EventMessage.seq` is monotonic PER TOPIC PER CONNECTION
- * (`bridge/tenmol_bridge/session.py: Subscriptions.next_seq`), and it exists for
+ * (`packages/bridge/tenmol_bridge/session.py: Subscriptions.next_seq`), and it exists for
  * exactly one reason: a client that misses an event must be able to tell, and
  * force a resync, rather than render stale state forever. That check lives here.
  *

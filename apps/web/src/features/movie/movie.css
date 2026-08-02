@@ -1,15 +1,15 @@
 /*
  * Movie panel. The timeline palette lives in timeline.ts, straight from the
- * float triples in layer1/View.cpp:170-173, so it is not duplicated here.
+ * float triples in packages/engine/layer1/View.cpp:170-173, so it is not duplicated here.
  */
 
 /*
  * THE PANEL YIELDS TO THE OBJECT LIST, AND SCROLLS INSTEAD OF CLIPPING.
  *
  * PyMOL charges the movie panel `movie_panel_row_height * ExecutiveCountMotions`
- * (`layer1/Movie.cpp:1701-1726`) — MEASURED at 15 px for a six-object 30-frame
+ * (`packages/engine/layer1/Movie.cpp:1701-1726`) — MEASURED at 15 px for a six-object 30-frame
  * session — and charges it to a FULL-WIDTH strip at the bottom of the WINDOW,
- * below the scene (`OrthoReshape`, `layer1/Ortho.cpp:2443-2445`), not to the
+ * below the scene (`OrthoReshape`, `packages/engine/layer1/Ortho.cpp:2443-2445`), not to the
  * 220 px column. `features/registry.ts` is frozen, so this panel cannot move
  * out of the column; what it can do is stop out-ranking the object list.
  * Measured in Chromium at 1280x900, enabling six objects grew this panel from
@@ -94,7 +94,7 @@
 /* --- nine-button control bar ------------------------------------------ */
 
 /*
- * The Control block itself (`layer1/Control.cpp`), `controlHeight` = 20 px.
+ * The Control block itself (`packages/engine/layer1/Control.cpp`), `controlHeight` = 20 px.
  * Chrome: it never shrinks, and it is NOT sticky. Making it sticky under the
  * head was tried and MEASURED WORSE: at a 264 px column the panel is at its
  * 52 px floor, two sticky bars covered 37 of those 52, and five controls (the
@@ -190,7 +190,7 @@
 
 /*
  * The label gutter is on the RIGHT and 64 px wide, because that is what
- * `CMovie::LabelIndent = DIP2PIXEL(8 * 8)` reserves (`layer1/Movie.cpp:1867`)
+ * `CMovie::LabelIndent = DIP2PIXEL(8 * 8)` reserves (`packages/engine/layer1/Movie.cpp:1867`)
  * and every hit test in `MovieClick` subtracts it from `rect.right` before
  * converting x to a frame. Its width is set inline from `panel.labelIndent`
  * so presentation mode (indent 0) collapses it.

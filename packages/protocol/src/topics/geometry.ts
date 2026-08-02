@@ -5,7 +5,7 @@
  * band as a binary frame (`../geometry.ts`), keyed per object / per rep / per
  * state (plan §1.3 constraint 2).
  *
- * `level` is PyMOL's `cRepInv_t` ladder (`layer1/Rep.h:133-184`);
+ * `level` is PyMOL's `cRepInv_t` ladder (`packages/engine/layer1/Rep.h:133-184`);
  * `cRepInvColor` (15) means colours only, `cRepInvRep` (35) / `cRepInvAll`
  * (100) mean rebuild everything. Use `isColorOnlyInvalidation()` from
  * `../geometry` to decide whether to re-pull the whole rep or just the colours.

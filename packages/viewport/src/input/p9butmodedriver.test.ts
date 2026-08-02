@@ -56,7 +56,7 @@ function harness(mode: ModeName, extra: Partial<CameraDriverOptions> = {}) {
 /** `BUT_ACT_CODE` under `noUncheckedIndexedAccess`. */
 const act = (name: string): number => BUT_ACT_CODE[name] ?? -1;
 
-/** Modifier masks (`layer1/Ortho.h:20-22`). */
+/** Modifier masks (`packages/engine/layer1/Ortho.h:20-22`). */
 const SHIFT = 1;
 const CTRL = 2;
 const CTSH = 3;
@@ -109,7 +109,7 @@ describe('the driver resolves every gesture through the ButMode table', () => {
 
   it('re-resolves on EVERY sample, so releasing Shift mid-drag changes the action', () => {
     // `SceneDrag`: `mode = ButModeTranslate(G, I->Button, mod)` on every sample
-    // (`layer1/SceneMouse.cpp:1308`), with the button from the PRESS.
+    // (`packages/engine/layer1/SceneMouse.cpp:1308`), with the button from the PRESS.
     const { driver, calls } = harness('three_button_editing', {
       pick: () => ({ object: 'zz', index: 0 }),
     });

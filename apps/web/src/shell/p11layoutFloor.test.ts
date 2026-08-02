@@ -61,7 +61,7 @@ describe('the object list floor (measured defect, not a parity row)', () => {
 
   it('is a whole number of Executive rows', () => {
     // `ExecutiveDrawPanel` measures the block in rows of
-    // `DIP2PIXEL(internal_gui_control_size)` (`layer3/Executive.cpp:16192`),
+    // `DIP2PIXEL(internal_gui_control_size)` (`packages/engine/layer3/Executive.cpp:16192`),
     // which is 18 and is `--pm-row-h`. A floor that is not a multiple of it
     // would guarantee a half-row nobody can click the middle of.
     expect(ORTHO.controlSize).toBe(18);
@@ -72,7 +72,7 @@ describe('the object list floor (measured defect, not a parity row)', () => {
 
   it('is UNDER what PyMOL gives the same list, so it is a floor and not a claim', () => {
     // MEASURED against the real engine at the browser column's own 644 px
-    // (`bridge/tests/test_p11_layout.py`): PyMOL's Executive block is
+    // (`packages/bridge/tests/test_p11_layout.py`): PyMOL's Executive block is
     // 644 - 20 (Control) - 40 (ButMode) - 0 (Wizard) = 584 px, and 569 with a
     // movie panel active. The floor must stay a long way under both or it stops
     // being a floor and starts starving the panels around it.
@@ -98,8 +98,8 @@ describe('the object list floor (measured defect, not a parity row)', () => {
 describe('what yields instead of the object list', () => {
   it('gives the movie panel a floor of head + Control block + one movie row', () => {
     const global = read(GLOBAL_CSS);
-    // `movie_panel_row_height` (`layer1/SettingInfo.h:722`) and
-    // `controlHeight` (`layer1/Ortho.cpp:2267`).
+    // `movie_panel_row_height` (`packages/engine/layer1/SettingInfo.h:722`) and
+    // `controlHeight` (`packages/engine/layer1/Ortho.cpp:2267`).
     expect(cssVar(global, 'pm-movie-row-h')).toBe('15px');
     expect(cssVar(global, 'pm-control-h')).toBe(`${ORTHO.controlHeight}px`);
     expect(read(MOVIE_CSS)).toContain(
@@ -110,7 +110,7 @@ describe('what yields instead of the object list', () => {
   it('gives the scene bin a floor of head + one control-size row', () => {
     // PyMOL reserves NOTHING for the scene bin — `SceneDrawButtons` paints over
     // the scene and returns early with an empty `SceneVec` (measured in
-    // `bridge/tests/test_p11_layout.py`: storing three scenes moves neither the
+    // `packages/bridge/tests/test_p11_layout.py`: storing three scenes moves neither the
     // scene rectangle nor the Executive block). So its floor is the smallest
     // thing that is still operable: the head and the one row
     // `SceneDrawButtons` clamps `n_disp` to.

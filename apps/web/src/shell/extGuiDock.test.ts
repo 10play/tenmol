@@ -7,7 +7,7 @@
  *
  * The backend half (that `pymol.gui.ext_hide`/`ext_show` are PRINTED no-ops and
  * that `gui` is not addressable over `{t:'call'}`) is measured in
- * `bridge/tests/test_wf_shell.py`.
+ * `packages/bridge/tests/test_wf_shell.py`.
  */
 
 import { describe, expect, it } from 'vitest';

@@ -1,8 +1,8 @@
 /**
  * ADVERSARIAL VERIFICATION of inventory row 295 — the wiring, not the shim.
  *
- * `bridge/tenmol_bridge/panels/files.py` grew a complete `tkFileDialog`
- * replacement and `bridge/tests/test_wf_files.py` proves it blocks and answers
+ * `packages/bridge/tenmol_bridge/panels/files.py` grew a complete `tkFileDialog`
+ * replacement and `packages/bridge/tests/test_wf_files.py` proves it blocks and answers
  * correctly. What NOTHING proved, and what turned out to be false, is that a
  * plugin ever reaches it: `install_tk_dialogs` existed on `FilesApi` and had no
  * caller anywhere in `apps/web/src`, and `files.install()` does not install the

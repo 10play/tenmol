@@ -5,9 +5,9 @@
 # Takes a clean clone with only the platform's native deps installed and leaves
 # behind everything `pnpm dev` needs:
 #
-#   1. bridge/.venv                     python venv, NOT inside git
+#   1. packages/bridge/.venv                     python venv, NOT inside git
 #   2. .deps/mmtf-cpp                   vendored header-only dep, out of tree
-#   3. PyMOL built from THIS tree into bridge/.venv (MMTF + BCIF enabled)
+#   3. PyMOL built from THIS tree into packages/bridge/.venv (MMTF + BCIF enabled)
 #   4. tenmol-bridge installed editable into the same venv
 #   5. pnpm install for the JS workspace
 #   6. .git/info/exclude entries for the turds the PyMOL build drops in the
@@ -16,11 +16,11 @@
 # Then: `pnpm dev` and `curl 127.0.0.1:8765/healthz` -> {"state":"running",...}
 #
 # The build recipe is NOT invented here. It is copied verbatim from the
-# measured spike: docs/webclient/spikes/00-build.md sections 2.2, 3 and 3.1.
+# measured spike: docs/spikes/00-build.md sections 2.2, 3 and 3.1.
 # In particular `--config-settings use-msgpackc=c++11` PLUS a vendored mmtf-cpp
 # on PREFIX_PATH. Do NOT "fix" a build error by switching to
 # `use-msgpackc=no`: that silently drops MMTF and BCIF file I/O, which are
-# parity rows (docs/webclient/00-parity-inventory.md, section 6 File I/O).
+# parity rows (docs/00-parity-inventory.md, section 6 File I/O).
 #
 # Usage:
 #   bash scripts/bootstrap.sh [options]
@@ -29,18 +29,22 @@
 #   --skip-node       do not run pnpm install
 #   --force-pymol     rebuild PyMOL even if `import pymol` already works
 #   --python PATH     interpreter to create the venv from (or $TENMOL_PYTHON)
-#   --venv PATH       venv location (default bridge/.venv, or $TENMOL_VENV)
+#   --venv PATH       venv location (default packages/bridge/.venv, or $TENMOL_VENV)
 #   -q, --quiet       less pip chatter
 #   -h, --help        this text
 #
 # Environment:
 #   TENMOL_PYTHON       interpreter for the venv
 #   TENMOL_VENV         venv path
-#   TENMOL_DEPS_DIR     vendored C++ header dir (default <repo>/.deps)
+#   TENMOL_DEPS_DIR     vendored C++ header dir (default <repo>/packages/engine/.deps)
 #   TENMOL_MMTF_INCLUDE existing mmtf-cpp include dir; skips the git clone
 #
 set -euo pipefail
 
+# TWO roots. `REPO_ROOT` is this project (`web/`); `REPO_ROOT` is the git root,
+# which holds the upstream PyMOL tree, its `setup.py`, and `.git`. The build
+# below runs from REPO_ROOT because that is where `setup.py` is; the venv and
+# the bridge package live under REPO_ROOT.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
@@ -52,8 +56,9 @@ SKIP_NODE=0
 FORCE_PYMOL=0
 QUIET=0
 PYTHON_BIN="${TENMOL_PYTHON:-}"
-VENV="${TENMOL_VENV:-$REPO_ROOT/bridge/.venv}"
-DEPS_DIR="${TENMOL_DEPS_DIR:-$REPO_ROOT/.deps}"
+VENV="${TENMOL_VENV:-$REPO_ROOT/packages/bridge/.venv}"
+# Vendored C++ headers belong to the ENGINE build, so they live beside it.
+DEPS_DIR="${TENMOL_DEPS_DIR:-$REPO_ROOT/packages/engine/.deps}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -124,7 +129,7 @@ if [ "$PLATFORM" = macos ]; then
   info "brew prefix: $BREW_PREFIX"
 
   # spikes/00-build.md section 2.1. catch2 is deliberately NOT required: it is
-  # only used by --testing=true and brew only ships v3, while layerCTest/Test.h:14
+  # only used by --testing=true and brew only ships v3, while packages/engine/layerCTest/Test.h:14
   # wants the v2 umbrella header.
   REQUIRED_BREW=(cmake libpng freetype glew glm netcdf msgpack-cxx libxml2)
   MISSING=()
@@ -238,10 +243,10 @@ if [ -n "${TENMOL_MMTF_INCLUDE:-}" ]; then
 elif [ -f "$MMTF_ROOT/include/mmtf.hpp" ]; then
   ok "already vendored: $MMTF_ROOT/include/mmtf.hpp"
 else
-  # layer3/MoleculeExporter.cpp:16 does #include <mmtf.hpp>. It is header-only,
-  # not in Homebrew, and not in this tree. Upstream CI copies it into include/,
-  # but include/ is upstream and we must not touch it -- so it goes out of tree
-  # and onto PREFIX_PATH, which setup.py:783-796 scans for an include/ subdir.
+  # packages/engine/layer3/MoleculeExporter.cpp:16 does #include <mmtf.hpp>. It is header-only,
+  # not in Homebrew, and not in this tree. Upstream CI copies it into packages/engine/include/,
+  # but packages/engine/include/ is upstream and we must not touch it -- so it goes out of tree
+  # and onto PREFIX_PATH, which setup.py:783-796 scans for an packages/engine/include/ subdir.
   command -v git >/dev/null 2>&1 || die "git is required to vendor mmtf-cpp"
   info "cloning rcsb/mmtf-cpp (header-only) into ${DEPS_DIR#"$REPO_ROOT"/}"
   rm -rf "$DEPS_DIR/mmtf-src" "$MMTF_ROOT"
@@ -281,12 +286,12 @@ else
   info "this compiles ~254 objects; ~16 s on an M4 Max, minutes on CI"
 
   # NOTE: non-editable on purpose. `pip install -e .` drops a 10 MB
-  # modules/pymol/_cmd*.so into the source tree (spikes/00-build.md section 4.3).
+  # packages/engine/modules/pymol/_cmd*.so into the source tree (spikes/00-build.md section 4.3).
   # No --glut (default False keeps _PYMOL_NO_MAIN defined), no --testing
   # (needs Catch2 v2).
   BUILD_LOG="$REPO_ROOT/.tenmol-bootstrap.log"
   if "$PY" -m pip install "${PIP_QUIET[@]}" --no-build-isolation \
-    --config-settings use-msgpackc=c++11 "$REPO_ROOT" >"$BUILD_LOG" 2>&1; then
+    --config-settings use-msgpackc=c++11 "$REPO_ROOT/packages/engine" >"$BUILD_LOG" 2>&1; then
     ok "$("$PY" -c 'import pymol;print(pymol.get_version_message())') built and installed"
     rm -f "$BUILD_LOG"
   else
@@ -297,7 +302,7 @@ else
   fi
 
   # pip leaves an untracked egg-info in the upstream tree (section 4.2).
-  rm -rf "$REPO_ROOT/modules/pymol.egg-info"
+  rm -rf "$REPO_ROOT/packages/engine/modules/pymol.egg-info"
 fi
 
 # ---------------------------------------------------------------------------
@@ -305,12 +310,12 @@ fi
 # ---------------------------------------------------------------------------
 step "tenmol-bridge (editable install)"
 
-if [ -f "$REPO_ROOT/bridge/pyproject.toml" ]; then
-  "$PY" -m pip install "${PIP_QUIET[@]}" -e "$REPO_ROOT/bridge[dev]" >/dev/null ||
-    die "pip install -e bridge/ failed"
+if [ -f "$REPO_ROOT/packages/bridge/pyproject.toml" ]; then
+  "$PY" -m pip install "${PIP_QUIET[@]}" -e "$REPO_ROOT/packages/bridge[dev]" >/dev/null ||
+    die "pip install -e packages/bridge/ failed"
   ok "tenmol_bridge importable: $("$PY" -c 'import tenmol_bridge;print(tenmol_bridge.__version__)')"
 else
-  warn "bridge/pyproject.toml not found -- skipping (WP-02 owns it)"
+  warn "packages/bridge/pyproject.toml not found -- skipping (WP-02 owns it)"
 fi
 
 # ---------------------------------------------------------------------------
@@ -326,10 +331,10 @@ if [ -d "$REPO_ROOT/.git" ]; then
   # .git/info/exclude is local-only and is never merged, so these survive an
   # upstream merge without ever appearing in a diff.
   for pat in \
-    "modules/pymol.egg-info/" \
-    "testing/timings.tab" \
-    "modules/pymol/_cmd*.so" \
-    "modules/chempy/champ/_champ*.so"; do
+    "packages/engine/modules/pymol.egg-info/" \
+    "packages/engine/testing/timings.tab" \
+    "packages/engine/modules/pymol/_cmd*.so" \
+    "packages/engine/modules/chempy/champ/_champ*.so"; do
     if ! grep -qxF "$pat" "$EXCLUDE_FILE"; then
       if [ "$ADDED" = 0 ]; then
         printf '\n# --- added by scripts/bootstrap.sh (tenmol web client) ---\n' \

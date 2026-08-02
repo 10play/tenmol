@@ -2,7 +2,7 @@
  * Topic `menu` — the PyMOL popup-menu engine.  OWNER: WP-13.
  *
  * `pymol.menu.*` resolved over the wire. Every leaf returns a COMMAND STRING
- * (`layer4/PopUp.cpp:471-475`, e.g. `modules/pymol/menu.py:824`), which the
+ * (`packages/engine/layer4/PopUp.cpp:471-475`, e.g. `packages/engine/modules/pymol/menu.py:824`), which the
  * client executes with `{t:'do'}` — allowed from the UI per plan §A6.
  * Declaring `do` console-only made WP-13 and WP-16 unimplementable.
  */

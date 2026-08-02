@@ -38,7 +38,7 @@ describe('createWizardService', () => {
     ]);
     expect(calls[2]?.args).toEqual(['mode']);
     // The `code` string is passed through untouched — never parsed, never
-    // evaluated (layer1/Wizard.cpp:573-577 runs it through PParse server-side).
+    // evaluated (packages/engine/layer1/Wizard.cpp:573-577 runs it through PParse server-side).
     expect(calls[3]?.args).toEqual(['cmd.get_wizard().set_mode(2)']);
     expect(calls[5]?.args).toEqual(['demo', ['reps'], {}]);
     expect(calls[6]?.kwargs).toEqual({ all: true });
@@ -88,7 +88,7 @@ describe('EMPTY_SNAPSHOT', () => {
 });
 
 describe('event mask gating', () => {
-  it('matches modules/pymol/wizard/__init__.py:6-15', () => {
+  it('matches packages/engine/modules/pymol/wizard/__init__.py:6-15', () => {
     // measurement.py:101-106 -> pick | select | dirty
     const measurement = 1 + 2 + 128;
     expect(wizardWants(measurement, 'pick')).toBe(true);

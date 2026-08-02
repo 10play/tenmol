@@ -1,8 +1,8 @@
 /**
  * Topic `dialog` — blocking Python dialogs, hoisted to the browser.  OWNER: WP-18.
  *
- * `modules/pymol/file_dialogs.py:88` uses `exec()`, and the tkinter shim
- * `modules/pmg_qt/mimic_tk.py:36-90` BLOCKS THE CALLING THREAD. So the bridge
+ * `packages/engine/modules/pymol/file_dialogs.py:88` uses `exec()`, and the tkinter shim
+ * `packages/engine/modules/pmg_qt/mimic_tk.py:36-90` BLOCKS THE CALLING THREAD. So the bridge
  * emits this event, the browser answers, and a `Future` unblocks the caller.
  *
  * HARD RULE WITH A DEDICATED TEST (plan §6 WP-18): the request must be issued

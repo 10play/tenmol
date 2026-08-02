@@ -1,5 +1,5 @@
 /**
- * The Lighting Settings panel — `data/startup/lightingsettings_gui/main.py`.
+ * The Lighting Settings panel — `packages/engine/data/startup/lightingsettings_gui/main.py`.
  *
  * Every range, resolution and preset value below is copied from that file
  * (`:151-176` for the slider table, `:69-137` for the five presets). They are

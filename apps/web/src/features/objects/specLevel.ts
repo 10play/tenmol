@@ -1,7 +1,7 @@
 /**
  * The M button's tint — `ObjectGetSpecLevel(rec->obj, SceneGetFrame(G))`.
  *
- * `CExecutive::draw` case 5 (`layer3/Executive.cpp:16362-16381`):
+ * `CExecutive::draw` case 5 (`packages/engine/layer3/Executive.cpp:16362-16381`):
  *
  *     float* button_color = toggleColor2;          // {0.4,0.4,0.6}
  *     spec_level = ObjectGetSpecLevel(rec->obj, SceneGetFrame(G));
@@ -9,7 +9,7 @@
  *     case 2: button_color = activeColor;          // {0.9,0.9,1.0}
  *
  * Level 1 is an interpolated frame, level 2 is a stored key frame
- * (`layer1/View.cpp`), and `-1` means the object has no `ViewElem` at all —
+ * (`packages/engine/layer1/View.cpp`), and `-1` means the object has no `ViewElem` at all —
  * which draws the same as level 0, because the switch has no case for it.
  *
  * The level itself comes from `panels/objects.py:spec_levels`, which reads the

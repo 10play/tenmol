@@ -6,9 +6,9 @@
  *
  *  * `features/menubar/generated/menudata.ts` — HARVESTED. `panels/menus.py`
  *    walks the real `PyMOLDesktopGUI.get_menudata` against a recording `cmd`
- *    proxy; `bridge/tests/test_menus.py` fails if the file drifts.
+ *    proxy; `packages/bridge/tests/test_menus.py` fails if the file drifts.
  *  * `features/settings/menuData.ts` — TRANSCRIBED by hand from
- *    `modules/pymol/_gui.py:491-773` in wave 4, and until this wave the thing
+ *    `packages/engine/modules/pymol/_gui.py:491-773` in wave 4, and until this wave the thing
  *    the panel actually rendered.
  *
  * The panel renders the harvest now. The transcription survives here as an

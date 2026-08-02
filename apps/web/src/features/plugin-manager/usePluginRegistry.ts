@@ -7,14 +7,14 @@
  * only PyMOL's own `~/.pymolpluginsrc.py`. Install-from-file,
  * install-from-URL and repository browse are cut, because those paths download
  * and execute arbitrary Python from the network into the user's interpreter,
- * guarded only by `confirm_network_access()` (`modules/pymol/plugins/
+ * guarded only by `confirm_network_access()` (`packages/engine/modules/pymol/plugins/
  * managergui_qt.py:11`). Exposing that through a localhost web service is a
  * materially worse posture than the desktop app has.
  *
  * No bridge panel is involved: `panels/__init__.py` is a frozen barrel and
  * `plugins` is not in it. Everything here goes through the ordinary dispatcher,
  * whose default rule resolves an unlisted root to `pymol.<root>`
- * (`bridge/tenmol_bridge/dispatch.py:56-59`), so `plugins.findPlugins` is
+ * (`packages/bridge/tenmol_bridge/dispatch.py:56-59`), so `plugins.findPlugins` is
  * literally `pymol.plugins.findPlugins`. Verified over the wire.
  */
 
@@ -103,7 +103,7 @@ export type { CallFn } from './pluginSystem';
  * `~/.pymolpluginsrc.py`; the bridge never calls it, so without this line
  * `autoload` and the preferences are always PyMOL's compiled-in defaults and
  * any later write silently discards the user's saved choices (measured in
- * `bridge/tests/test_wf_plugins.py`). It imports no plugin code.
+ * `packages/bridge/tests/test_wf_plugins.py`). It imports no plugin code.
  */
 export async function loadPluginRegistry(
   call: CallFn,

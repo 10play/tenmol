@@ -9,7 +9,7 @@
  * (`viewing.py:1187`, registered in `cmd.py:41-45`).
  *
  * Three things about that API are load-bearing here and all three are pinned in
- * `bridge/tests/test_wf_camera.py`:
+ * `packages/bridge/tests/test_wf_camera.py`:
  *
  *  1. THERE IS NO GETTER. `pymol._view_dict` is an attribute, and the bridge
  *     dispatcher only invokes callables, so `cmd._pymol._view_dict` and friends
@@ -20,7 +20,7 @@
  *     asked for it instead of in the shared feedback ring.
  *
  *     This is a workaround, not a design. A `get_view_list` export beside
- *     `get_scene_panel` in `bridge/tenmol_bridge/panels/movie.py` would delete
+ *     `get_scene_panel` in `packages/bridge/tenmol_bridge/panels/movie.py` would delete
  *     `parseViewNames` entirely; that file is outside this slot, so the gap is
  *     reported rather than closed.
  *

@@ -7,6 +7,12 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 
 const here = dirname(fileURLToPath(import.meta.url));
+/**
+ * The GIT root, two levels up from `apps/web/`. It was two before this
+ * project's code moved under `web/`, and the name matters: paths built on it
+ * are written `packages/...` (ours) or `packages/engine/test/dat/...` (upstream), so it has
+ * to be the root both of those are relative to.
+ */
 const repoRoot = resolve(here, '..', '..');
 
 /**

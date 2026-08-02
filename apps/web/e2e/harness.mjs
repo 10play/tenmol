@@ -29,6 +29,14 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+/**
+ * The GIT root — three levels up from `apps/web/e2e/`.
+ *
+ * It has to be the git root rather than `web/`: the bridge is launched with
+ * this as its cwd so PyMOL resolves `packages/engine/test/dat/...` (upstream), while the paths
+ * built below are `scripts/...` and `apps/web/...` (ours), and
+ * `node_modules` is at the workspace root. All three only agree here.
+ */
 export const REPO = resolve(HERE, '../../..');
 
 const CHROME_ARGS = [

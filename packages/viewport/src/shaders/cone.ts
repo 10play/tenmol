@@ -2,14 +2,14 @@
  * Cone / conical-frustum impostor GLSL (WebGL2 / GLSL ES 3.00).
  *
  * `CGO_CONE` is `v1[3], v2[3], r1, r2, cap1, cap2, rgb1[3], rgb2[3]`
- * (`layer1/CGO.h:719-731`); the accessor widens the colours to RGBA, so the
+ * (`packages/engine/layer1/CGO.h:719-731`); the accessor widens the colours to RGBA, so the
  * wire instance is 18 floats:
  *
  *   v1[3] v2[3] r1 r2 cap1 cap2 rgba1[4] rgba2[4]
  *
  * PyMOL's GL path TESSELLATES a cone (`CGOConev` -> a fan of triangles), so
  * there is no upstream shader to port. Ray-tracing the frustum per fragment is
- * what the ray tracer does (`cPrimCone`, `layer1/Ray.cpp`) and it is what keeps
+ * what the ray tracer does (`cPrimCone`, `packages/engine/layer1/Ray.cpp`) and it is what keeps
  * the plan's "never tessellate client-side" constraint true for CGO arrows,
  * which are a cone plus a cylinder.
  *

@@ -1,5 +1,5 @@
 /**
- * The Movie menu, ported node-for-node from `modules/pymol/_gui.py:234-375`.
+ * The Movie menu, ported node-for-node from `packages/engine/modules/pymol/_gui.py:234-375`.
  *
  * WHY IT IS PORTED RATHER THAN FETCHED. `PyMOLDesktopGUI.get_menudata()`
  * builds this tree out of Python **closures** (`lambda: self.mvprg(...)`,

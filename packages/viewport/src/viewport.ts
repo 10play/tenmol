@@ -321,7 +321,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
 
   /**
    * `cmd.get_viewport()` is the SCENE rectangle, which is NOT always the window:
-   * `OrthoReshape` (`layer1/Ortho.cpp:2383-2390`) subtracts the movie panel and
+   * `OrthoReshape` (`packages/engine/layer1/Ortho.cpp:2383-2390`) subtracts the movie panel and
    * the internal feedback lines. Measured on this bridge: a window of 1176x644
    * with `internal_gui 0` and `internal_feedback 0` still reports a viewport of
    * 1176x629 as soon as an object has two states, because `movie_panel` is on.
@@ -438,7 +438,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
      * CLIENT-SIDE PICK, only when the backend cannot pick for itself.
      *
      * PyMOL's pick renders a colour buffer and reads pixels
-     * (`layer1/ScenePicking.cpp`), so a bridge with no GL context cannot do it
+     * (`packages/engine/layer1/ScenePicking.cpp`), so a bridge with no GL context cannot do it
      * at all — a click there selects nothing, silently. This resolves the click
      * against the same geometry Mode G is drawing and issues a real selection.
      *
@@ -465,7 +465,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       pickStats.hits++;
       // WHO GETS THE CLICK. `SceneClick` dispatches on the ButMode action, so
       // the same pixel means "select" in viewing mode and "fill pk1..pk4" in
-      // editing mode (`layer1/SceneMouse.cpp:404-470`). A registered route is
+      // editing mode (`packages/engine/layer1/SceneMouse.cpp:404-470`). A registered route is
       // the client's editing branch — the Builder registers one while it is
       // open — and when it takes the hit the default selection must NOT also
       // run, or every editor pick would rewrite `sele` behind the user's back.

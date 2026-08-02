@@ -1,10 +1,10 @@
 /**
- * The quick-button grid of the External GUI — `modules/pmg_qt/pymol_qt_gui.py`
+ * The quick-button grid of the External GUI — `packages/engine/modules/pmg_qt/pymol_qt_gui.py`
  * `:222-271`. FOUR rows, spacing 2, every button carrying `quickbutton=true`
  * and `WA_LayoutUsesWidgetRect` (a macOS Qt workaround with no web analogue).
  *
  * Row 3 is the movie transport (`|<`, `<`, Stop, Play, `>`, `>|`, MClear). It
- * duplicates the in-viewport Control block (`layer1/Control.cpp:298-376`, which
+ * duplicates the in-viewport Control block (`packages/engine/layer1/Control.cpp:298-376`, which
  * is WP-20's) and that duplication is upstream's: the Qt window really does
  * show both. Omitting it here left four of this row's seven commands with no
  * button anywhere in the client, so it is back, wired to the same `cmd.*`
@@ -13,12 +13,12 @@
  * Below the grid sits the progress row (`:273-284`): a progress bar plus a red
  * Abort button wired to `cmd.interrupt` (`:282`), shown only while
  * `cmd.get_progress() >= 0` (`:931-939`). `cmd.interrupt` is
- * `modules/pymol/locking.py:88` — "asynch, no locking", which is exactly why it
+ * `packages/engine/modules/pymol/locking.py:88` — "asynch, no locking", which is exactly why it
  * can be delivered while the engine thread is inside a long C++ call.
  *
  * Buttons go through `session.run()`, i.e. `{t:'do'}`, so each one appears in
  * the console as the command line it is. That is what PyMOL's own log file
- * records for a GUI action (`PLog`, `layer4/PopUp.cpp:471-475`).
+ * records for a GUI action (`PLog`, `packages/engine/layer4/PopUp.cpp:471-475`).
  */
 
 import { useSyncExternalStore } from 'react';
@@ -219,7 +219,7 @@ export function QuickButtons() {
        * the bar and the Abort button). It used to render always, with a
        * disabled Abort — a permanently visible empty bar that says a job is
        * running when none is. MEASURED against a real ray
-       * (`bridge/tests/test_p8_a1.py`): idle is exactly -1.0, and an async
+       * (`packages/bridge/tests/test_p8_a1.py`): idle is exactly -1.0, and an async
        * `ray 900,700` of a protein surface reports 0.35 after 0.16 s and
        * returns to -1.0 when it ends, so the row appears and disappears.
        */}
@@ -240,7 +240,7 @@ export function QuickButtons() {
           <button
             type="button"
             className="quickbutton quickbutton--abort"
-            title="cmd.interrupt (modules/pymol/locking.py:88 — asynchronous, takes no lock)"
+            title="cmd.interrupt (packages/engine/modules/pymol/locking.py:88 — asynchronous, takes no lock)"
             onClick={() => {
               session.stores.feedback.appendClient('interrupt');
               void session.call('interrupt').catch((error: unknown) => {

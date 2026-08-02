@@ -10,15 +10,15 @@
  * WHAT IS AND IS NOT A LOOKUP
  * ---------------------------
  * A PyMOL colour index is not simply an offset into a table. `ColorGetIndex`
- * (`layer1/Color.cpp:661-750`) hands back four *different kinds* of number and
+ * (`packages/engine/layer1/Color.cpp:661-750`) hands back four *different kinds* of number and
  * the client has to be able to tell them apart before it can produce an RGB:
  *
- *   `0 .. 5387`     a real slot in `CColor::Color` (`layer1/Color.cpp:825-1322`)
- *   `-1 .. -7`      the seven keywords (`layer1/Color.h:36-44`)
+ *   `0 .. 5387`     a real slot in `CColor::Color` (`packages/engine/layer1/Color.cpp:825-1322`)
+ *   `-1 .. -7`      the seven keywords (`packages/engine/layer1/Color.h:36-44`)
  *   `<= -10`        a **ramp object**; `ext = -10 - index` (`Color.h:46`)
  *   `& 0xC0000000 == 0x40000000`  an INLINE RGB, 8 bits per channel, packed by
  *                   `Color3fToInt` (`Color.cpp:1883`) and by `spectrumany`
- *                   (`modules/pymol/viewing.py:2053`)
+ *                   (`packages/engine/modules/pymol/viewing.py:2053`)
  *
  * The decoders below are the client half of that, and they are pure: the wire
  * carries indices, this module turns the two *self-describing* kinds (inline
@@ -54,14 +54,14 @@ export interface ColorsPayload {
 
 /**
  * `ColorReset` registers 188 explicit + 5200 generated slots
- * (`layer1/Color.cpp:825-1322`). Measured against this tree:
+ * (`packages/engine/layer1/Color.cpp:825-1322`). Measured against this tree:
  * `len(cmd.get_color_indices(all=1)) == 5388`.
  */
 export const COLOR_TABLE_SIZE = 5388;
 
 /**
  * `ColorGetStatus` returns 1 only for names with no digits
- * (`layer1/Color.cpp:784-807`), and `cmd.get_color_indices()` (mode 1) returns
+ * (`packages/engine/layer1/Color.cpp:784-807`), and `cmd.get_color_indices()` (mode 1) returns
  * exactly those. Measured: 178.
  */
 export const NAMED_COLOR_COUNT = 178;
@@ -70,7 +70,7 @@ export const NAMED_COLOR_COUNT = 178;
  * Index landmarks the Qt menus hardcode. Kept here because they are the cheap
  * runtime proof that the table we fetched is the table PyMOL built — a shifted
  * table would silently mis-colour every object row.
- * (`_gui.py:456-461`, `:632`; `layer1/Color.cpp:35-75`.)
+ * (`_gui.py:456-461`, `:632`; `packages/engine/layer1/Color.cpp:35-75`.)
  */
 export const COLOR_LANDMARKS: Readonly<Record<string, number>> = {
   white: 0,
@@ -84,7 +84,7 @@ export const COLOR_LANDMARKS: Readonly<Record<string, number>> = {
 };
 
 /* ------------------------------------------------------------------ *
- * Special indices — layer1/Color.h:36-47
+ * Special indices — packages/engine/layer1/Color.h:36-47
  * ------------------------------------------------------------------ */
 
 export const C_COLOR_DEFAULT = -1;
@@ -94,7 +94,7 @@ export const C_COLOR_ATOMIC = -4;
 export const C_COLOR_OBJECT = -5;
 export const C_COLOR_FRONT = -6;
 export const C_COLOR_BACK = -7;
-/** Indices <= this are ramp objects. `layer1/Color.h:46`. */
+/** Indices <= this are ramp objects. `packages/engine/layer1/Color.h:46`. */
 export const C_COLOR_EXT_CUTOFF = -10;
 
 export const C_COLOR_TRGB_BITS = 0x40000000;
@@ -105,7 +105,7 @@ export type SpecialColorKeyword =
 
 /**
  * The seven keywords `ColorGetIndex` matches EXACTLY (prefix matching was
- * removed in 2.5 — `layer1/Color.cpp:715-729`).
+ * removed in 2.5 — `packages/engine/layer1/Color.cpp:715-729`).
  *
  * `constant` is false for `auto` and `current`: those two are not constants at
  * all. `ColorGetIndex` runs `ColorGetNext()` / `ColorGetCurrent()`
@@ -149,7 +149,7 @@ export function decodeInlineColor(index: number): [number, number, number] {
 
 /**
  * 0..1 floats -> `0x40RRGGBB`, exactly as `spectrumany` does it
- * (`modules/pymol/viewing.py:2053`: `0x40000000 + r*0x10000 + g*0x100 + b`).
+ * (`packages/engine/modules/pymol/viewing.py:2053`: `0x40000000 + r*0x10000 + g*0x100 + b`).
  */
 export function encodeInlineColor(rgb: readonly [number, number, number]): number {
   return (
@@ -181,7 +181,7 @@ export function colorKind(index: number): ColorKind {
 }
 
 /**
- * `ColorGetName` (`layer1/Color.cpp:759-782`) inverted for the one kind the
+ * `ColorGetName` (`packages/engine/layer1/Color.cpp:759-782`) inverted for the one kind the
  * client can name with no backend at all. Returns null otherwise.
  */
 export function inlineColorName(index: number): string | null {
@@ -220,8 +220,8 @@ export function cssToRgb(text: string): [number, number, number] | null {
 
 /**
  * PyMOL menu labels embed one-digit-per-channel colour escapes — `\900` is
- * red, `\555` mid grey (`modules/pymol/menu.py:519-618`, drawn by
- * `layer1/Text.cpp`). The swatch grid's tile colours are those triples.
+ * red, `\555` mid grey (`packages/engine/modules/pymol/menu.py:519-618`, drawn by
+ * `packages/engine/layer1/Text.cpp`). The swatch grid's tile colours are those triples.
  */
 export function menuSwatchToRgb(three: string): [number, number, number] {
   const digit = (i: number) => {

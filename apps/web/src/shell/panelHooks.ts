@@ -4,7 +4,7 @@
  * THE PROBLEM THIS EXISTS TO SOLVE. `features/registry.ts` is frozen and gives
  * every feature a slot, but nothing gives a feature a HANDLE on another one.
  * `PyMOLDesktopGUI` leaves 20-odd toolkit seams as `= None`
- * (`modules/pymol/_gui.py:13-40`) and Qt fills each of them with a bound method
+ * (`packages/engine/modules/pymol/_gui.py:13-40`) and Qt fills each of them with a bound method
  * of the main window (`pymol_qt_gui.py:878-897`: `settings_edit_all_dialog`,
  * `shortcut_menu_edit_dialog`, `edit_colors_dialog`, `scene_panel_menu_dialog`,
  * …). Here the menu bar is one feature and the dialogs are others, so the menu

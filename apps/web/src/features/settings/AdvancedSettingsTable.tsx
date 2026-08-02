@@ -1,6 +1,6 @@
 /**
  * The advanced settings table — `PyMOL Advanced Settings`
- * (`modules/pmg_qt/advanced_settings_gui.py:8-99`) with the six gaps the Qt one
+ * (`packages/engine/modules/pmg_qt/advanced_settings_gui.py:8-99`) with the six gaps the Qt one
  * has, closed.
  *
  * The Qt dialog is a `QStandardItemModel` of 779 rows behind a
@@ -10,7 +10,7 @@
  * swallowed (`:70-77`). What it does NOT have, and this does:
  *
  *   level      `_cmd.get_setting_level` — never wrapped in `pymol.setting`
- *   default    parsed from `layer1/SettingInfo.h` and validated against the
+ *   default    parsed from `packages/engine/layer1/SettingInfo.h` and validated against the
  *              live table; absent (and SAID to be absent) when unavailable
  *   reset      `cmd.unset`, which restores the DEFAULT since PyMOL 2.5
  *   scope      per-object / per-state reads, gated by the setting's level so a
@@ -61,7 +61,7 @@ export interface ScopeSelection {
  *
  * `atom-state` is here even though `cmd.set` cannot address it: the write goes
  * through `cmd.alter_state`'s `s[...]` instead (`features/settings/atomSettings.ts`,
- * `layer1/P.cpp:455-606`), which is the escape hatch `setting.py:519-526`
+ * `packages/engine/layer1/P.cpp:455-606`), which is the escape hatch `setting.py:519-526`
  * documents and the only path to the 17 atom-state settings.
  *
  * `bond-state` is still absent, and stays absent: no PyMOL API reaches it —
@@ -356,7 +356,7 @@ function Row({
     }
     // A BOND-level write must go through `cmd.set_bond`. `cmd.set` with a
     // selection "will appear to take, but no change will be observed"
-    // (`modules/pymol/setting.py:245-248`) — the exact silent failure this
+    // (`packages/engine/modules/pymol/setting.py:245-248`) — the exact silent failure this
     // table exists to stop.
     const done =
       scope.scope === 'bond'
@@ -509,11 +509,11 @@ function ReinitializeStrip({
  * returned instead of enumerating overrides, because ENUMERATION IS NOT
  * AVAILABLE at this level over the wire: the bridge's `scope` RPC reads
  * `list(s)` inside `cmd.iterate`, whose `s` is bound to the ATOM
- * (`layer1/P.cpp:455-606`), so an atom-state override is invisible to it —
+ * (`packages/engine/layer1/P.cpp:455-606`), so an atom-state override is invisible to it —
  * measured: after `alter_state 1, …, s['label_screen_point']=(1,2,3)`,
  * `iterate` reports no override on that atom and `iterate_state 1` reports
  * index 728. Reading them back needs an `iterate_state` variant of that RPC
- * (`bridge/tenmol_bridge/panels/settings.py:718`), which this feature does not
+ * (`packages/bridge/tenmol_bridge/panels/settings.py:718`), which this feature does not
  * own. Saying so is better than showing "no overrides".
  */
 function AtomStateStrip({ note, scope }: { note: string; scope: ScopeSelection }) {
@@ -537,7 +537,7 @@ function AtomStateStrip({ note, scope }: { note: string; scope: ScopeSelection }
  *
  * `cmd.get_object_settings` gives the object's own CSetting, `iter(s)` inside
  * `cmd.iterate` gives the indices genuinely defined on each atom
- * (`SettingUniqueGetIndicesAsPyList`, `layer1/P.cpp:455-606`) and `cmd.get_bond`
+ * (`SettingUniqueGetIndicesAsPyList`, `packages/engine/layer1/P.cpp:455-606`) and `cmd.get_bond`
  * gives per-bond values. None of the three is a cascading read, so this strip is
  * the only place that answers "did that write land, and where?".
  */
@@ -565,7 +565,7 @@ function OverridesView({
    * `cmd.get_bond` hands back the RAW C value, and PyMOL stores floats as
    * float32: writing 0.7 reads back 0.699999988079071. Rendering that verbatim
    * looks like a bug, so the same `%1.5f` `SettingGetTextPtr` uses
-   * (`layer1/Setting.cpp:1183-1237`) is applied here.
+   * (`packages/engine/layer1/Setting.cpp:1183-1237`) is applied here.
    */
   const render = useCallback(
     (index: number, value: SettingValue): string => {

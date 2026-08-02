@@ -1,5 +1,5 @@
 /**
- * PyMOL's busy box, in DOM — `OrthoBusyDraw` (`layer1/Ortho.cpp:609-724`).
+ * PyMOL's busy box, in DOM — `OrthoBusyDraw` (`packages/engine/layer1/Ortho.cpp:609-724`).
  *
  * 240x60, black, top-left of the viewport, a caption line and a progress bar,
  * shown only while `cmd.get_progress()` is non-negative.  Everything it can
@@ -77,7 +77,7 @@ export function BusyOverlay() {
       aria-valuemax={100}
       aria-valuenow={percent}
       style={{ width: BUSY_WIDTH, height: BUSY_HEIGHT, padding: BUSY_MARGIN }}
-      title="layer1/Ortho.cpp:609-724 — cmd.get_progress(), pushed on the `progress` topic"
+      title="packages/engine/layer1/Ortho.cpp:609-724 — cmd.get_progress(), pushed on the `progress` topic"
     >
       {/* `I->BusyMessage` is C-internal (`OrthoBusyMessage`, `:530`), so this
           says what the client actually knows instead of inventing PyMOL's
@@ -86,7 +86,7 @@ export function BusyOverlay() {
         PyMOL busy — {percent}%
       </div>
       {/* ONE bar. `CmdGetProgress` folds the slow counter into the fast one
-          before dividing (`layer4/Cmd.cpp:4334-4348`); the pair the box draws
+          before dividing (`packages/engine/layer4/Cmd.cpp:4334-4348`); the pair the box draws
           two bars from is not on the wire. */}
       <div
         className="ortho-busy__bar"

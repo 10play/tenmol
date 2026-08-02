@@ -1,14 +1,14 @@
 /**
  * Legacy plugins' blocking file dialogs, hoisted into the browser.
  *
- * WHAT THIS REPLACES.  `modules/pmg_qt/mimic_tk.py:36-108` installs a Qt-backed
+ * WHAT THIS REPLACES.  `packages/engine/modules/pmg_qt/mimic_tk.py:36-108` installs a Qt-backed
  * object as `tkFileDialog` and `tkinter.filedialog` (via a `sys.meta_path`
  * hook) so that every legacy plugin's `askopenfilename` opens a `QFileDialog`
  * and BLOCKS the calling thread until the user answers. Delete that shim and
  * every plugin's Open/Save either hangs on a Tk root that does not exist or
  * pops an invisible native dialog.
  *
- * WHAT REPLACES IT.  `bridge/tenmol_bridge/panels/files.py` installs
+ * WHAT REPLACES IT.  `packages/bridge/tenmol_bridge/panels/files.py` installs
  * `BridgeFileDialog` in exactly the same three places, with the same seven
  * entry points and the same RETURN SHAPES — `str`, `list[str]`, an open file
  * object, `None` — because plugins are written against those (`if not

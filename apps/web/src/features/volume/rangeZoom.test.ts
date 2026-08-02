@@ -1,7 +1,7 @@
 /**
  * `ctrl+R-drag` on the volume ramp canvas — the ARITHMETIC and the BAND.
  *
- * Upstream is three fragments of `modules/pmg_qt/volume.py`:
+ * Upstream is three fragments of `packages/engine/modules/pmg_qt/volume.py`:
  *
  *   :495-499  mouseMoveEvent — `buttons() == RightButton and
  *             modifiers() == ControlModifier` records `zoom_pos` and repaints;

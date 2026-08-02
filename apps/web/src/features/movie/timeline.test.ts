@@ -1,7 +1,7 @@
 /**
  * Movie-panel geometry, palette and mouse grammar.
  *
- * `xToFrame` is a port of `ViewElemXtoFrame` (`layer1/View.cpp:98-105`) and the
+ * `xToFrame` is a port of `ViewElemXtoFrame` (`packages/engine/layer1/View.cpp:98-105`) and the
  * run collapsing is a port of the `cur_level != last_level` state machine in
  * `ViewElemDraw` (`:176-230`). Both are asserted against hand-computed values
  * from those two functions.

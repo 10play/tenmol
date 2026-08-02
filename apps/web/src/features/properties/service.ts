@@ -27,12 +27,12 @@
  * — a Python CALLBACK in `space`. A callback cannot be sent, and neither can
  * the RESULT: `iterate` returns the atom COUNT and mutates `space` server-side,
  * so a dict sent from here is populated in a copy this side never sees
- * (asserted in `bridge/tests/test_properties.py`).
+ * (asserted in `packages/bridge/tests/test_properties.py`).
  *
  * Most rows come from `cmd.get_model(sel)`, whose chempy `Atom` carries all 11
  * identifiers and 12 of the 19 built-ins. The remaining seven —
  * `reps`, `label`, `cartoon`, `protons`, `geom`, `valence`, `color` — come from
- * `cmd.tenmol_props.atom_extras` (`bridge/tenmol_bridge/panels/properties.py`),
+ * `cmd.tenmol_props.atom_extras` (`packages/bridge/tenmol_bridge/panels/properties.py`),
  * the server-side helper the inventory row asked for. `color` is in that list
  * because chempy does NOT have it: this file used to map `atom.color`, so the
  * row rendered from `undefined`.
@@ -48,7 +48,7 @@ import type { Session } from '../../app';
 import type { PropertyRow } from '@tenmol/protocol/topics/dialogs';
 import { KEYS, coerceToPythonLiteral, formatValue, inferOldKind, oneLetter } from './model';
 
-/** `bridge/tenmol_bridge/panels/properties.py`, bootstrapped like the others. */
+/** `packages/bridge/tenmol_bridge/panels/properties.py`, bootstrapped like the others. */
 export const PROPS_NS = 'cmd.tenmol_props';
 export const PROPS_BOOTSTRAP = 'import tenmol_bridge.panels.properties as _tp; _tp.install()';
 
@@ -167,7 +167,7 @@ export async function readPk1(session: Session): Promise<{ model: string; index:
  * The same answer as {@link readPk1} in ONE call, for the follow poll.
  *
  * `cmd.index('?pk1')` returns `[[model, index]]`, or `[]` when nothing is
- * picked. Measured over the socket in `bridge/tests/test_p8_a10.py`, including
+ * picked. Measured over the socket in `packages/bridge/tests/test_p8_a10.py`, including
  * the two things that make it usable on a timer where `readPk1` is not:
  *
  *   * it is ONE round trip, not three (`get_names` + `get_model` +

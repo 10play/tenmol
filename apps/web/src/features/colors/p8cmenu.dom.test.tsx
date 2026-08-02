@@ -5,10 +5,10 @@
  *          entries. They are not aliases of the by-element tiles: `cba` ends
  *          with `cmd.color(color, sel, flags=1)` and they do not, so they leave
  *          the OBJECT colour alone — measured in
- *          `bridge/tests/test_p8_a5.py::test_the_fixed_carbon_shortcuts_leave_the_object_colour_alone`.
+ *          `packages/bridge/tests/test_p8_a5.py::test_the_fixed_carbon_shortcuts_leave_the_object_colour_alone`.
  * row 231  `pymol.menu.mesh_color`'s negative-colour submenu (menu.py:696-712),
  *          which is what a mesh or surface object's C button really opens
- *          (`layer3/Executive.cpp:15249-15256`).
+ *          (`packages/engine/layer3/Executive.cpp:15249-15256`).
  *
  * What this file pins is the WIRE: which call, which arguments, in which order.
  * That the engine then does what the call says is the bridge test's job.

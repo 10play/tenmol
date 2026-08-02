@@ -3,8 +3,8 @@
  *
  * TODO(objects topic): every value here is replaced by the `objects` topic payload
  * (`{ t:'event', topic:'objects', seq, payload }`) once the bridge lands. The shape
- * mirrors `SpecRec` / `PanelRec` (layer3/SpecRec.h:9-37, layer3/ExecutiveDef.h:20-31)
- * as rebuilt by `ExecutiveUpdatePanelList()` (layer3/Executive.cpp:1557-1569).
+ * mirrors `SpecRec` / `PanelRec` (packages/engine/layer3/SpecRec.h:9-37, packages/engine/layer3/ExecutiveDef.h:20-31)
+ * as rebuilt by `ExecutiveUpdatePanelList()` (packages/engine/layer3/Executive.cpp:1557-1569).
  */
 
 /** `SpecRec::type`: cExecAll / cExecObject / cExecSelection. */
@@ -37,7 +37,7 @@ export interface PanelRow {
   isOpen: boolean;
   /**
    * `CObject::getCaption()` -- only ObjectMolecule implements it
-   * (layer2/ObjectMolecule.cpp:386-460): "<coordset name> <state>/<nstates>".
+   * (packages/engine/layer2/ObjectMolecule.cpp:386-460): "<coordset name> <state>/<nstates>".
    */
   caption?: string;
 }
@@ -120,11 +120,11 @@ export const PLACEHOLDER_PANEL: PanelRow[] = [
 ];
 
 /**
- * Mouse-mode block (layer1/ButMode.cpp:192-395). The 5-char codes come from
- * `CButMode::Code` (layer1/ButMode.cpp:497-520).
+ * Mouse-mode block (packages/engine/layer1/ButMode.cpp:192-395). The 5-char codes come from
+ * `CButMode::Code` (packages/engine/layer1/ButMode.cpp:497-520).
  *
  * TODO(butmode): needs `ButModeGet` / `ButModeTranslate` exposed to Python -- see
- * docs/webclient/00-parity-inventory.md §14 items 7/8. Static until then.
+ * docs/00-parity-inventory.md §14 items 7/8. Static until then.
  */
 export interface MouseModeState {
   /** setting `button_mode_name` */

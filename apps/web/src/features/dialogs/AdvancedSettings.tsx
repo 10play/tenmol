@@ -1,5 +1,5 @@
 /**
- * Advanced Settings — `modules/pmg_qt/advanced_settings_gui.py:13-99`.
+ * Advanced Settings — `packages/engine/modules/pmg_qt/advanced_settings_gui.py:13-99`.
  *
  * A filterable two-column table of every PyMOL setting, headers hidden, name
  * column read-only, booleans as checkboxes and everything else as text from

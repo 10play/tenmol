@@ -4,7 +4,7 @@
  *
  * The palette list is `constants_palette.palette_dict` (60 entries in this
  * tree, not the 57 the inventory quotes — checked in
- * `bridge/tests/test_colors.py`). Each entry is `(prefix, digits, first, last)`
+ * `packages/bridge/tests/test_colors.py`). Each entry is `(prefix, digits, first, last)`
  * naming a slice of one of the generated 1000-colour bands, so the preview
  * strip is real: it samples `entries[bandFirst + n]` between `first` and
  * `last`, which is the same arithmetic `_cmd.spectrum` does in C.

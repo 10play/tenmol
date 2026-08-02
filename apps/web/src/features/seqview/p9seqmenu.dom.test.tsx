@@ -1,7 +1,7 @@
 /**
  * Row 341, first open item — the two right-click popups.
  *
- * `SeekerClick` (`layer3/Seeker.cpp:357-395`) branches on ONE condition: is
+ * `SeekerClick` (`packages/engine/layer3/Seeker.cpp:357-395`) branches on ONE condition: is
  * there an active selection AND is this column in it (`col->inverse`)? If so,
  * `MenuActivate2Arg(..., "pick_sele", name, name)` on the SELECTION; otherwise
  * `_seeker` is built from the column's atoms and `seq_option` is raised on that.
@@ -13,7 +13,7 @@
  * is one entry point in the C.
  *
  * The bridge half (which `pymol.menu` function, on which selection, with which
- * title) is `bridge/tests/test_p9_rest.py`.
+ * title) is `packages/bridge/tests/test_p9_rest.py`.
  */
 
 import { act } from 'react';

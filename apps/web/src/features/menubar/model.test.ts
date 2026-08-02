@@ -1,7 +1,7 @@
 /**
  * Model tests, run against the REAL generated tree — not a fixture. If the
  * harvest changes, these move with it, and the bridge suite
- * (`bridge/tests/test_menus.py`) already guarantees the tree matches upstream.
+ * (`packages/bridge/tests/test_menus.py`) already guarantees the tree matches upstream.
  */
 
 import { describe as suite, expect, it } from 'vitest';

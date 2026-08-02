@@ -2,7 +2,7 @@
  * Unit tests for parity area 6 (file I/O).
  *
  * The command builders are checked against strings produced by running the
- * ACTUAL `%`-formatting of `modules/pmg_qt/file_dialogs.py` in CPython — a
+ * ACTUAL `%`-formatting of `packages/engine/modules/pmg_qt/file_dialogs.py` in CPython — a
  * dialog whose preview differs by one backslash writes a different log file
  * than PyMOL would, so these are exact-match assertions, not shape checks.
  */

@@ -1,7 +1,7 @@
 /**
  * Defect **D1**, client side: the Mode-G geometry cache and its lifecycle.
  *
- * The bridge half is proved in `bridge/tests/test_modeg.py` against a real
+ * The bridge half is proved in `packages/bridge/tests/test_modeg.py` against a real
  * PyMOL. This file proves the other half without a browser: that a version
  * table turns into the right DROPs and REFETCHes, that a drop really disposes
  * (via `renderer.apply` on a tombstone), and — the requirement that is easiest

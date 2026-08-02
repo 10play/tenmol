@@ -5,7 +5,7 @@
  * published to it. Waves 4, 7, 8 and 9 each wrote the same sentence against
  * these two rows and each named the same unreachable line,
  * `BridgeServer._on_status`. That line now publishes (proved over the socket in
- * `bridge/tests/test_p10_infra.py`), so this is the other end: the service
+ * `packages/bridge/tests/test_p10_infra.py`), so this is the other end: the service
  * subscribes exactly once, and a pushed event KICKS the cursor-addressed poll
  * instead of waiting up to 200 ms for the next tick of it.
  *
@@ -114,6 +114,6 @@ describe('the settings push (rows 208 and 209)', () => {
     expect(called).not.toContain('cmd.get_setting_updates');
     // And the bridge refuses it anyway (`EXCLUSIVE_TO_BRIDGE`,
     // `policy/base.py:122-128`), asserted over the socket in
-    // `bridge/tests/test_p10_infra.py::test_the_push_does_not_open_a_second_drain`.
+    // `packages/bridge/tests/test_p10_infra.py::test_the_push_does_not_open_a_second_drain`.
   });
 });

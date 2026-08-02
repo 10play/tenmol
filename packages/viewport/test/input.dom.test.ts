@@ -138,7 +138,7 @@ describe('input controller', () => {
     );
 
     // OrthoButton ignores the wheel while a real button is held
-    // (layer1/Ortho.cpp:2503-2510) -- do not even send it.
+    // (packages/engine/layer1/Ortho.cpp:2503-2510) -- do not even send it.
     sent.length = 0;
     element.dispatchEvent(pointerEvent('pointerdown', { clientX: 1, clientY: 1, button: 0 }));
     sent.length = 0;

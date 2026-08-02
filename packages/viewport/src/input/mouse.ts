@@ -23,10 +23,10 @@
  * * `when` is taken from the event, not from send time (`./coords.ts`).
  *
  * Wheel is two frames — DOWN then UP with the same coordinates — exactly as
- * `PyMOLGLWidget.wheelEvent` does (`modules/pmg_qt/pymol_gl_widget.py:194-200`),
+ * `PyMOLGLWidget.wheelEvent` does (`packages/engine/modules/pmg_qt/pymol_gl_widget.py:194-200`),
  * because `ButModeTranslate` maps the wheel slots (12-15, 64-67) by direction
  * and `OrthoButton` suppresses wheel entirely while a real button is held
- * (`layer1/Ortho.cpp:2503-2510`).
+ * (`packages/engine/layer1/Ortho.cpp:2503-2510`).
  */
 
 import type { CameraDriver } from './camera';
@@ -275,7 +275,7 @@ export function createInputController(options: InputControllerOptions): InputCon
     /*
      * A new press starts a new gesture. The anchor is the PRESS POSITION, not
      * "nothing": `SceneClick` stores `I->LastX/LastY` at the click and
-     * `SceneDrag` measures from there (`layer1/SceneMouse.cpp:864-878`), so the
+     * `SceneDrag` measures from there (`packages/engine/layer1/SceneMouse.cpp:864-878`), so the
      * first move of a gesture carries real motion. Anchoring on the first MOVE
      * instead threw that sample away — measured in wave 4 as "11 turns from 12
      * samples". A release clears it, so the next gesture cannot inherit a delta
@@ -497,7 +497,7 @@ export function createInputController(options: InputControllerOptions): InputCon
    *
    * The release goes to the LAST position we forwarded, not to the origin.
    * `SceneButton` classifies the release by distance from the press
-   * (`abs(x - LastX) > 4` / `> 10`, `layer1/Scene.cpp:4113-4155`), so a
+   * (`abs(x - LastX) > 4` / `> 10`, `packages/engine/layer1/Scene.cpp:4113-4155`), so a
    * synthetic up at (0, 0) turns whatever the user was doing into a drag of
    * the full window diagonal: a click on an atom becomes a violent rotation,
    * and `mouse_selection_mode` never sees the click at all. `when` IS `now`,

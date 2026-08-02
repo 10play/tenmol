@@ -18,7 +18,7 @@
  * read both names defensively and left a comment saying the type was wrong.
  * `BridgeServer._on_status` now emits this shape, mirrored by
  * `tenmol_bridge/session.py: progress_payload`, and
- * `bridge/tests/test_p10_infra.py` asserts the exact key set on the wire.
+ * `packages/bridge/tests/test_p10_infra.py` asserts the exact key set on the wire.
  *
  * `label` IS GONE and was not replaced. The busy text lives in
  * `I->BusyMessage` and nothing exports it: `cmd.get_busy` does not exist on
@@ -41,7 +41,7 @@ export interface ProgressPayload {
    * True when the operation exposes an abort path. Equal to `busy` on this
    * backend, and that is a fact about the backend rather than a redundant
    * field: `cmd.interrupt` is "asynch -- no locking"
-   * (`modules/pymol/locking.py:88`), so it lands even while the engine thread
+   * (`packages/engine/modules/pymol/locking.py:88`), so it lands even while the engine thread
    * is inside the C++ call being reported on.
    */
   abortable: boolean;

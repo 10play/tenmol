@@ -2,7 +2,7 @@
  * Pausing the Mode-P stream — PER CLIENT (defect D3c).
  *
  * THE BUG. `paused` is a field of `StreamParams`
- * (`bridge/tenmol_bridge/render/framestream.py:137`), which is PROCESS-WIDE:
+ * (`packages/bridge/tenmol_bridge/render/framestream.py:137`), which is PROCESS-WIDE:
  *
  *     if self.params.paused or not self._subs:      # framestream.py:777
  *         ...

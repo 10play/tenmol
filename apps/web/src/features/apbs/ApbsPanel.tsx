@@ -1,7 +1,7 @@
 /**
  * APBS Electrostatics — v1 stub (WP-25 stub / WP-30 full, critique B1).
  *
- * `data/startup/apbs_gui/` is a real autoloading plugin: 1,405 lines of
+ * `packages/engine/data/startup/apbs_gui/` is a real autoloading plugin: 1,405 lines of
  * `apbs.ui` holding 86 `<widget>` elements — a 7-page `QStackedWidget` (one
  * page per prep method), a 3-tab `QTabWidget`, four "Options >>" reveals and
  * ten buttons — driving subprocess calls to `pdb2pqr` and `apbs`.
@@ -24,7 +24,7 @@
  *    `{}` and `'apbs_gui' in sys.modules` is False. Autoload imports the module
  *    and calls `__init_plugin__`, which calls `addmenuitemqt` — a Qt entry
  *    point that cannot run here. The file is present; nothing has run.
- *    (`bridge/tests/test_wf_apbs.py` pins both halves.)
+ *    (`packages/bridge/tests/test_wf_apbs.py` pins both halves.)
  */
 
 import { useEffect, useState } from 'react';
@@ -41,7 +41,7 @@ import './apbs.css';
 
 /**
  * What the plugin does, as commands. Taken from
- * `data/startup/apbs_gui/creating.py` and `electrostatics.py`: prepare the
+ * `packages/engine/data/startup/apbs_gui/creating.py` and `electrostatics.py`: prepare the
  * structure, run pdb2pqr for charges and radii, run apbs, load the map, then
  * ramp a surface against it.
  */
@@ -62,10 +62,10 @@ util.protein_assign_charges_and_radii("polymer")
 /**
  * The no-external-binary route, which is what most people reaching for this
  * panel actually want. `util.protein_vacuum_esp` is PyMOL's own solver
- * (`modules/pymol/util.py:385-425`): it runs `protein_assign_charges_and_radii`
+ * (`packages/engine/modules/pymol/util.py:385-425`): it runs `protein_assign_charges_and_radii`
  * and then `cmd.map_new(..., "coulomb_local", ...)`, so it needs nothing
  * installed. Verified to run headless through the bridge in
- * `bridge/tests/test_wf_apbs.py` — it produces an `object:map` and an
+ * `packages/bridge/tests/test_wf_apbs.py` — it produces an `object:map` and an
  * `object:ramp` and colours the surface.
  *
  * It is vacuum Coulomb, not Poisson-Boltzmann: no solvent screening, no ionic

@@ -14,7 +14,7 @@
 import { createStore, type Store } from './createStore';
 
 export interface UiState {
-  /** `internal_gui_width` (default 220, `layer1/Ortho.h:24`). */
+  /** `internal_gui_width` (default 220, `packages/engine/layer1/Ortho.h:24`). */
   panelWidth: number;
   /** Height of the External GUI dock (feedback + command line). */
   consoleHeight: number;

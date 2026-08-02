@@ -1,9 +1,9 @@
 /**
  * PyMOL's lighting model, ported.
  *
- * Source: `data/shaders/compute_color_for_light.fs` (`ComputeLighting` /
+ * Source: `packages/engine/data/shaders/compute_color_for_light.fs` (`ComputeLighting` /
  * `ApplyLighting`) and the uniform values `SceneProgramLighting`
- * (`layer1/Scene.cpp:5012-5108`) feeds it.
+ * (`packages/engine/layer1/Scene.cpp:5012-5108`) feeds it.
  *
  * WHAT IS VERBATIM
  *   * `ComputeLighting`: N.L diffuse, half-vector `H = normalize(L + (0,0,1))`,
@@ -26,7 +26,7 @@
  * the settings channel later without touching the GLSL.
  */
 
-/** Defaults from `layer1/SettingInfo.h`: ambient 0.14, direct 0.45, reflect 0.45. */
+/** Defaults from `packages/engine/layer1/SettingInfo.h`: ambient 0.14, direct 0.45, reflect 0.45. */
 export const LIGHT_DEFAULTS = {
   ambient: 0.14,
   direct: 0.45,
@@ -76,7 +76,7 @@ uniform float u_fogEnd;
 uniform float u_fogScale;
 uniform vec3  u_bgColor;
 
-// data/shaders/compute_color_for_light.fs :: ComputeLighting
+// packages/engine/data/shaders/compute_color_for_light.fs :: ComputeLighting
 vec2 ComputeLighting(vec3 normal, vec3 L, float diffuse, float spec, float shine) {
   L = normalize(L);
   float NdotL = dot(normal, L);
@@ -90,7 +90,7 @@ vec2 ComputeLighting(vec3 normal, vec3 L, float diffuse, float spec, float shine
   return vec2(0.0);
 }
 
-// data/shaders/compute_color_for_light.fs :: ApplyLighting
+// packages/engine/data/shaders/compute_color_for_light.fs :: ApplyLighting
 vec4 ApplyLighting(vec4 color, vec3 normal) {
   if (!u_lightingEnabled) return color;
   vec2 lighting = vec2(u_ambient, 0.0);
@@ -101,7 +101,7 @@ vec4 ApplyLighting(vec4 color, vec3 normal) {
   return color;
 }
 
-// data/shaders/compute_fog_color.fs :: ApplyFog
+// packages/engine/data/shaders/compute_fog_color.fs :: ApplyFog
 vec4 ApplyFog(vec4 color, float fog) {
   if (!u_fogEnabled) return color;
   return vec4(mix(u_bgColor, color.rgb, clamp(fog, 0.0, 1.0)), color.a);

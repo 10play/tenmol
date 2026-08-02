@@ -10,7 +10,7 @@
  *
  * The bridge fake below answers `panels/settings.py`'s three calls the way the
  * REAL bridge answered them over a socket while this was written
- * (`bridge/tests/test_p9_shell.py`): `tenmol_settings_status` raises
+ * (`packages/bridge/tests/test_p9_shell.py`): `tenmol_settings_status` raises
  * `no such symbol` until the module is imported, `tenmol_settings_drain(cursor)`
  * takes the cursor as an ARGUMENT and answers "everything since", and
  * `tenmol_settings_values` resolves setting NAMES as well as indices and
@@ -45,7 +45,7 @@ vi.mock('../features/registry', () => ({
 }));
 
 /* ------------------------------------------------------------------ *
- * A fake of `bridge/tenmol_bridge/panels/settings.py`
+ * A fake of `packages/bridge/tenmol_bridge/panels/settings.py`
  * ------------------------------------------------------------------ */
 
 interface FakeBridge {

@@ -2,7 +2,7 @@
  * Topic `movie_panel` — the movie timeline strip.  OWNER: WP-20.
  *
  * Like the object panel, the movie panel is a C++ `Block::draw` surface
- * upstream with no Python readout, so `bridge/tenmol_bridge/panels/movie.py`
+ * upstream with no Python readout, so `packages/bridge/tenmol_bridge/panels/movie.py`
  * is a NEW endpoint (plan §6 WP-12's note applies here too).
  *
  * `movie.produce` / `cmd.mpng` work headless (plan §A2).

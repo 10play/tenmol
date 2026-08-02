@@ -1,5 +1,5 @@
 /**
- * The Scene menu (`modules/pymol/_gui.py:775-805`), node for node.
+ * The Scene menu (`packages/engine/modules/pymol/_gui.py:775-805`), node for node.
  *
  *   Scenes... | Next [PgDn] | Previous [PgUp] | Append | Append> (Camera /
  *   Color / Reps / Reps+Color) | Insert Before | Insert After | Update |

@@ -3,7 +3,7 @@
  *
  * `packages/stores/src/feedback.ts` models the External GUI pane (Qt's
  * `feedback_browser`: a big, scrollable, 5,000-line client-side scrollback).
- * THIS file models the other console, the one `layer1/Ortho.cpp` draws over the
+ * THIS file models the other console, the one `packages/engine/layer1/Ortho.cpp` draws over the
  * scene: a 256-line ring, a 256-entry history ring, a line editor with PyMOL's
  * exact cursor semantics, and the overlay arithmetic that decides how many of
  * those 256 lines are visible at any moment.
@@ -13,7 +13,7 @@
  * one widget's cap (256 or 5,000) and one widget's visibility rule; instead the
  * ortho ring is fed FROM the feedback stream and keeps its own.
  *
- * Everything below is a port with a `layer1/Ortho.cpp` line number. The parts
+ * Everything below is a port with a `packages/engine/layer1/Ortho.cpp` line number. The parts
  * that look wrong are wrong upstream, and are marked:
  *
  *  - `OrthoGetNumberOverlayLines` subtracts `internal_feedback - 1` from the
@@ -45,7 +45,7 @@ export type { ConsoleSettings };
  * ------------------------------------------------------------------ */
 
 /**
- * How `OrthoDrawText` colours a line (`layer1/Ortho.cpp:1658-1673`).
+ * How `OrthoDrawText` colours a line (`packages/engine/layer1/Ortho.cpp:1658-1673`).
  *
  *   prompt  — starts with `PyMOL>` (`strncmp(str, I->Prompt, 6) == 0`).
  *             Drawn in `TextColor`.
@@ -54,7 +54,7 @@ export type { ConsoleSettings };
  *
  * That is the WHOLE of PyMOL's in-viewport classification: there is no error
  * colour in the ortho console, because severity is gone before the string ever
- * reaches the queue (`modules/pymol/colorprinting.py` — `error`, `warning`,
+ * reaches the queue (`packages/engine/modules/pymol/colorprinting.py` — `error`, `warning`,
  * `suggest` and `parrot` are all bare `print`).
  */
 export type OrthoLineKind = 'prompt' | 'output';
@@ -66,7 +66,7 @@ export interface OrthoLine {
   kind: OrthoLineKind;
 }
 
-/** `strncmp(str, I->Prompt, 6) == 0` (`layer1/Ortho.cpp:1661`). */
+/** `strncmp(str, I->Prompt, 6) == 0` (`packages/engine/layer1/Ortho.cpp:1661`). */
 export function orthoLineKind(text: string): OrthoLineKind {
   return text.startsWith(ORTHO_PROMPT) ? 'prompt' : 'output';
 }
@@ -99,7 +99,7 @@ export function caretIndex(line: LineEdit): number {
   return line.cursor < 0 ? line.text.length : line.cursor;
 }
 
-/** `add_normal_char` (`layer1/Ortho.cpp:822-838`). */
+/** `add_normal_char` (`packages/engine/layer1/Ortho.cpp:822-838`). */
 export function insertChar(line: LineEdit, ch: string): LineEdit {
   if (line.cursor >= 0) {
     const at = Math.min(line.cursor, line.text.length);
@@ -111,7 +111,7 @@ export function insertChar(line: LineEdit, ch: string): LineEdit {
   return { text: line.text + ch, cursor: -1 };
 }
 
-/** `case 8: backspace` (`layer1/Ortho.cpp:892-908`). Never past the prompt. */
+/** `case 8: backspace` (`packages/engine/layer1/Ortho.cpp:892-908`). Never past the prompt. */
 export function backspace(line: LineEdit): LineEdit {
   if (line.text.length === 0) return line;
   if (line.cursor >= 0) {
@@ -140,24 +140,24 @@ export function deleteForward(line: LineEdit): LineEdit {
   };
 }
 
-/** Ctrl-A (`layer1/Ortho.cpp:911-917`): only moves when there IS text. */
+/** Ctrl-A (`packages/engine/layer1/Ortho.cpp:911-917`): only moves when there IS text. */
 export function home(line: LineEdit): LineEdit {
   if (line.text.length === 0) return line;
   return { ...line, cursor: 0 };
 }
 
-/** Ctrl-E (`layer1/Ortho.cpp:904-910`). */
+/** Ctrl-E (`packages/engine/layer1/Ortho.cpp:904-910`). */
 export function end(line: LineEdit): LineEdit {
   return { ...line, cursor: -1 };
 }
 
-/** Ctrl-K (`layer1/Ortho.cpp:1000-1008`): truncate at the cursor, then unpin. */
+/** Ctrl-K (`packages/engine/layer1/Ortho.cpp:1000-1008`): truncate at the cursor, then unpin. */
 export function truncate(line: LineEdit): LineEdit {
   if (line.cursor < 0) return line;
   return { text: line.text.slice(0, line.cursor), cursor: -1 };
 }
 
-/** LEFT (`OrthoSpecial`, `layer1/Ortho.cpp:1095-1104`). */
+/** LEFT (`OrthoSpecial`, `packages/engine/layer1/Ortho.cpp:1095-1104`). */
 export function cursorLeft(line: LineEdit): LineEdit {
   let cursor = line.cursor >= 0 ? line.cursor - 1 : line.text.length - 1;
   if (cursor < 0) cursor = 0;
@@ -165,7 +165,7 @@ export function cursorLeft(line: LineEdit): LineEdit {
 }
 
 /**
- * RIGHT (`OrthoSpecial`, `layer1/Ortho.cpp:1105-1113`).
+ * RIGHT (`OrthoSpecial`, `packages/engine/layer1/Ortho.cpp:1105-1113`).
  *
  * UPSTREAM QUIRK, PRESERVED: from the "at end" sentinel the branch is the same
  * `CursorChar = CurChar - 1` as LEFT, so the first RIGHT press after typing
@@ -187,10 +187,10 @@ export interface ConsoleState {
   lines: readonly OrthoLine[];
   /** `I->CurLine`: monotonic, never wrapped. Compared with `AutoOverlayStopLine`. */
   curLine: number;
-  /** `I->AutoOverlayStopLine` (`layer1/Ortho.cpp:85`). */
+  /** `I->AutoOverlayStopLine` (`packages/engine/layer1/Ortho.cpp:85`). */
   autoOverlayStopLine: number;
   /**
-   * `I->SplashFlag` (`layer1/Ortho.cpp:1638`) — forces the WHOLE scrollback
+   * `I->SplashFlag` (`packages/engine/layer1/Ortho.cpp:1638`) — forces the WHOLE scrollback
    * visible until the first click (`OrthoRemoveSplash` from `OrthoButton`,
    * `:2523`) or Esc (`:966-968`).
    *
@@ -236,7 +236,7 @@ export interface ConsoleStore extends Store<ConsoleState> {
   setVisible(visible: boolean): void;
   setLine(line: LineEdit): void;
   /**
-   * `OrthoParseCurrentLine` (`layer1/Ortho.cpp:1035-1059`): push to history,
+   * `OrthoParseCurrentLine` (`packages/engine/layer1/Ortho.cpp:1035-1059`): push to history,
    * clear the line, and cancel the auto-overlay. Returns the submitted text.
    */
   submit(): string;
@@ -317,7 +317,7 @@ export function createConsoleStore(options: ConsoleStoreOptions = {}): ConsoleSt
     submit(): string {
       const state = store.get();
       const text = state.line.text;
-      // `if (buffer[0])` (`layer1/Ortho.cpp:1044`) — an empty line is not
+      // `if (buffer[0])` (`packages/engine/layer1/Ortho.cpp:1044`) — an empty line is not
       // pushed to history and does not scroll the console.
       if (text === '') {
         store.set({ line: EMPTY_LINE });
@@ -373,7 +373,7 @@ export function createConsoleStore(options: ConsoleStoreOptions = {}): ConsoleSt
     },
 
     clear(): void {
-      // `OrthoClear` (`layer1/Ortho.cpp:479-489`) blanks the ring but keeps
+      // `OrthoClear` (`packages/engine/layer1/Ortho.cpp:479-489`) blanks the ring but keeps
       // `CurLine` and the history.
       store.set({ lines: [] });
     },
@@ -384,18 +384,18 @@ export function createConsoleStore(options: ConsoleStoreOptions = {}): ConsoleSt
  * Visibility — the overlay arithmetic
  * ------------------------------------------------------------------ */
 
-/** `OrthoTextVisible` (`layer1/Ortho.cpp:393-398`). */
+/** `OrthoTextVisible` (`packages/engine/layer1/Ortho.cpp:393-398`). */
 export function textVisible(settings: ConsoleSettings): boolean {
   return Boolean(settings.internal_feedback || settings.text || settings.overlay);
 }
 
-/** `OrthoArrowsGrabbed` (`layer1/Ortho.cpp:401-407`). */
+/** `OrthoArrowsGrabbed` (`packages/engine/layer1/Ortho.cpp:401-407`). */
 export function arrowsGrabbed(state: ConsoleState): boolean {
   return state.line.text.length > 0 && textVisible(state.settings);
 }
 
 /**
- * `OrthoGetOverlayStatus` (`layer1/Ortho.cpp:411-423`).
+ * `OrthoGetOverlayStatus` (`packages/engine/layer1/Ortho.cpp:411-423`).
  * Returns the `overlay` setting, or `-1` meaning "auto overlay is active".
  */
 export function overlayStatus(state: ConsoleState): number {
@@ -406,7 +406,7 @@ export function overlayStatus(state: ConsoleState): number {
   return overlay;
 }
 
-/** `OrthoGetNumberOverlayLines` (`layer1/Ortho.cpp:1591-1613`). */
+/** `OrthoGetNumberOverlayLines` (`packages/engine/layer1/Ortho.cpp:1591-1613`). */
 export function numberOverlayLines(state: ConsoleState): number {
   let overlay = overlayStatus(state);
   const internalFeedback = state.settings.internal_feedback;
@@ -425,7 +425,7 @@ export function numberOverlayLines(state: ConsoleState): number {
 
 /**
  * How many lines `OrthoDrawText` actually paints
- * (`layer1/Ortho.cpp:1637-1642`).
+ * (`packages/engine/layer1/Ortho.cpp:1637-1642`).
  */
 export function showLineCount(state: ConsoleState): number {
   if (state.settings.text || state.splash) return state.showLines;
@@ -449,7 +449,7 @@ export interface VisibleOrthoLine extends OrthoLine {
  *
  * `skip_prompt` (`internal_prompt = 0`) drops the input line from the walk
  * entirely, which is why the count starts one slot higher up the ring
- * (`layer1/Ortho.cpp:1630-1631`, `:1646`).
+ * (`packages/engine/layer1/Ortho.cpp:1630-1631`, `:1646`).
  */
 export function visibleOrthoLines(state: ConsoleState): VisibleOrthoLine[] {
   const skipPrompt = state.settings.internal_prompt ? 0 : 1;
@@ -483,7 +483,7 @@ export function visibleOrthoLines(state: ConsoleState): VisibleOrthoLine[] {
 
 /**
  * Which of the two ortho colours a drawn line uses
- * (`layer1/Ortho.cpp:1656-1673`).
+ * (`packages/engine/layer1/Ortho.cpp:1656-1673`).
  *
  * `overlayIsDark` is `length3f(I->OverlayColor) < 0.5`, i.e. the inverse of the
  * background is itself dark — on a white background, where a prompt line above

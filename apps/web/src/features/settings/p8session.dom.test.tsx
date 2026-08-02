@@ -8,8 +8,8 @@
  * The word each label sends is the interesting part, because the labels lie:
  * "Stored Settings" is `reinitialize settings` and "Original Settings" is
  * `reinitialize original_settings`. That pairing is diffed against `_gui.py` in
- * `bridge/tests/test_p8_a5.py::test_the_reinit_codes_and_menu_labels_are_pymols_own`,
- * and the blacklist against `layer1/Setting.cpp` plus a live session dump.
+ * `packages/bridge/tests/test_p8_a5.py::test_the_reinit_codes_and_menu_labels_are_pymols_own`,
+ * and the blacklist against `packages/engine/layer1/Setting.cpp` plus a live session dump.
  */
 
 import { act } from 'react';
@@ -51,7 +51,7 @@ function catalogue(): SettingCatalogue {
       cSettingInit: 798,
       indexDictSize: 780,
       nameListSize: 779,
-      defaultsSource: 'layer1/SettingInfo.h',
+      defaultsSource: 'packages/engine/layer1/SettingInfo.h',
       defaultsNote: '',
       minMaxEnforced: false,
       minMaxNote: '',

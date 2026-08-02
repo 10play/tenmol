@@ -191,7 +191,7 @@ function WizardEventBridge({
 
   return (
     <div className="wizevents" data-testid="wizard-events">
-      <div className="wizevents__head" title="layer1/SceneMouse.cpp:427,468 — WP-10 owns the ray pick">
+      <div className="wizevents__head" title="packages/engine/layer1/SceneMouse.cpp:427,468 — WP-10 owns the ray pick">
         pick seam (until the viewport routes picks here)
       </div>
       <input

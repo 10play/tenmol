@@ -290,7 +290,7 @@ export class PymolConnection {
    * Run a raw PyMOL command line through `cmd.do`.
    *
    * `cmd.do` returns None and prints exceptions instead of raising
-   * (modules/pymol/commanding.py:441-461), so the result is always null and
+   * (packages/engine/modules/pymol/commanding.py:441-461), so the result is always null and
    * errors surface on the `feedback` stream, NOT as an `err` frame.
    */
   do(cmd: string): Promise<null> {

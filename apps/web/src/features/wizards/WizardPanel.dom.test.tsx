@@ -2,7 +2,7 @@
  * The generic renderer, driven by REAL snapshots.
  *
  * Every fixture below is the literal output of `wizards.snapshot` against this
- * build's PyMOL (captured while writing `bridge/tests/test_wizards.py`), so a
+ * build's PyMOL (captured while writing `packages/bridge/tests/test_wizards.py`), so a
  * change in either the wizard modules or the bridge encoding breaks this test
  * rather than quietly changing the UI.
  */
@@ -114,7 +114,7 @@ describe('WizardPanel', () => {
   });
 
   it('fires code on release INSIDE the row and cancels on drag-off', () => {
-    // layer1/Wizard.cpp:568-580 (release) and :519-548 (drag-off cancels).
+    // packages/engine/layer1/Wizard.cpp:568-580 (release) and :519-548 (drag-off cancels).
     const onExec = vi.fn();
     render(<WizardPanel snapshot={MEASUREMENT} onExec={onExec} onMenu={vi.fn()} />);
     const done = container.querySelectorAll('.wizrow--button')[2] as HTMLElement;
@@ -278,7 +278,7 @@ describe('WizardPrompt', () => {
     expect(el.className).toContain('wizprompt--backdrop');
     expect(el.style.top).toBe('15px');
     expect(el.style.left).toBe('15px');
-    // WizardBackColor / WizardTextColor, layer1/Ortho.cpp:2692-2697.
+    // WizardBackColor / WizardTextColor, packages/engine/layer1/Ortho.cpp:2692-2697.
     expect(el.style.background).toBe('rgb(51, 51, 51)');
     expect(el.style.color).toBe('rgb(51, 255, 51)');
   });

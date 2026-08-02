@@ -3,7 +3,7 @@
  *
  * The inventory row said the pressed 0.7 fill and the "within 0.1 of the
  * button colour" fallback were unverified. Both are here as numbers taken from
- * `layer3/Executive.cpp:16176-16190` and `:16155-16160`, and `within3f` is
+ * `packages/engine/layer3/Executive.cpp:16176-16190` and `:16155-16160`, and `within3f` is
  * checked against the SPHERE it really is — the row text ("within 0.1") reads
  * like a per-channel test and it is not.
  */
@@ -42,7 +42,7 @@ describe('the four button fills (Executive.cpp:16176-16190)', () => {
   });
 });
 
-describe('within3f (layer0/Vector.h:480-495)', () => {
+describe('within3f (packages/engine/layer0/Vector.h:480-495)', () => {
   it('is Euclidean and INCLUSIVE, not per-channel', () => {
     // exactly on the sphere
     expect(within3f([0.5, 0.5, 0.5], [0.6, 0.5, 0.5], 0.1)).toBe(true);

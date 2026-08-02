@@ -3,7 +3,7 @@
  *
  * Parity inventory row 54. The Qt original is a `QDockWidget` whose "dockable"
  * toggle is four lines that read like a puzzle
- * (`modules/pmg_qt/pymol_qt_gui.py:457-467`):
+ * (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:457-467`):
  *
  *     if dockWidget.titleBarWidget() is None:   # the REAL title bar is showing
  *         tbw = QtWidgets.QWidget()             # ...replace it with an empty one
@@ -22,7 +22,7 @@
  * "docked, no title bar" when `options.external_gui`, and hidden otherwise
  * (`:186-191`).
  *
- * MEASURED (`bridge/tests/test_wf_shell.py`): the bridge reports
+ * MEASURED (`packages/bridge/tests/test_wf_shell.py`): the bridge reports
  * `options.external_gui == 0` and `options.ext_y == 168`. `external_gui` is
  * forced off by `engine.py` because PyMOL's own external GUI is a Tk/Qt window
  * — the web client IS the external GUI — so the option is NOT read as "start
@@ -31,7 +31,7 @@
  * `pymol.gui.ext_hide()` / `ext_show()` stay callable and are PRINTED no-ops
  * ("ignoring gui.ext_hide"), because `tenmol_bridge/shims.py` makes
  * `gui.get_qtwindow()` return a `BridgeWindow` and PyMOL takes the
- * "a Qt window exists" branch (`modules/pymol/gui.py:42-64`). They are not
+ * "a Qt window exists" branch (`packages/engine/modules/pymol/gui.py:42-64`). They are not
  * reachable over `{t:'call'}`: `gui` is not in `policy/base.py: DEFAULT_ROOTS`.
  * Reported upstream; the browser has no use for them.
  */
@@ -41,7 +41,7 @@
  *
  * Qt adds it to `TopDockWidgetArea`. The shell docks it at the BOTTOM instead,
  * on purpose: the in-viewport prompt and scrollback it duplicates are drawn at
- * the bottom of the scene (`OrthoDrawText`, `layer1/Ortho.cpp:1623-1693`).
+ * the bottom of the scene (`OrthoDrawText`, `packages/engine/layer1/Ortho.cpp:1623-1693`).
  * `left`/`right` reproduce Qt's `dockLocationChanged` re-orientation.
  */
 export type DockArea = 'bottom' | 'left' | 'right';

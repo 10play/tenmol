@@ -20,7 +20,7 @@
  * into PyMOL's prompt at once.
  *
  * The other end of the second path is measured in
- * `bridge/tests/test_p8_a1.py::test_tab_pressed_outside_the_command_line_completes_pymols_own_prompt`,
+ * `packages/bridge/tests/test_p8_a1.py::test_tab_pressed_outside_the_command_line_completes_pymols_own_prompt`,
  * where ASCII 9 really does make PyMOL print " parser: matching commands:".
  */
 

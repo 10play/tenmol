@@ -2,7 +2,7 @@
  * Topic `settings` — the single source of truth for every checkbox and radio
  * in every menu.  OWNER: WP-15.
  *
- * Drained from `cmd.get_setting_updates()` (`modules/pymol/setting.py:440-447`),
+ * Drained from `cmd.get_setting_updates()` (`packages/engine/modules/pymol/setting.py:440-447`),
  * which returns *indices* and CLEARS the queue; the bridge enriches each index.
  *
  * TWO MEASURED TRAPS (plan §1.2):
@@ -19,13 +19,13 @@
  * Vocabulary
  * ------------------------------------------------------------------ */
 
-/** `layer1/Setting.h:113-120`; `blank` is the one retired slot (index 83). */
+/** `packages/engine/layer1/Setting.h:113-120`; `blank` is the one retired slot (index 83). */
 export type SettingKind = 'boolean' | 'int' | 'float' | 'float3' | 'color' | 'string' | 'blank';
 
 /**
- * `SettingLevelGetName` (`layer1/Setting.cpp:83-85`).  A lattice, not a chain:
+ * `SettingLevelGetName` (`packages/engine/layer1/Setting.cpp:83-85`).  A lattice, not a chain:
  * `global < object < object-state`, then `object-state < atom < atom-state` and
- * `object-state < bond < bond-state` as siblings (`layer1/Setting.cpp:55-63`).
+ * `object-state < bond < bond-state` as siblings (`packages/engine/layer1/Setting.cpp:55-63`).
  */
 export type SettingLevel =
   | 'unused'
@@ -56,10 +56,10 @@ export type SettingValue = boolean | number | readonly number[] | string;
 
 /**
  * One row of the static C setting table as the bridge reports it
- * (`bridge/tenmol_bridge/panels/settings.py`).
+ * (`packages/bridge/tenmol_bridge/panels/settings.py`).
  *
  * `index` is FROZEN FOREVER — sessions serialize it
- * (`layer1/SettingInfo.h:5-6`), so it, not the name, is the identity.
+ * (`packages/engine/layer1/SettingInfo.h:5-6`), so it, not the name, is the identity.
  */
 export interface SettingMeta {
   index: number;
@@ -70,20 +70,20 @@ export interface SettingMeta {
   /** Scopes this level may legally be written at.  Anything else is a no-op. */
   scopes: readonly SettingScope[];
   /**
-   * From `layer1/SettingInfo.h`, parsed and validated against the live table;
+   * From `packages/engine/layer1/SettingInfo.h`, parsed and validated against the live table;
    * absent when the header is not next to the bridge.  There is NO C accessor
    * for this (`00-parity-inventory.md` area 5) and none was invented.
    */
   default?: SettingValue;
   /**
    * A HINT, never a limit.  PyMOL clamps only `int` settings and only for
-   * global writes (`layer1/Setting.cpp:1890-1911`); exactly 30 records declare
+   * global writes (`packages/engine/layer1/Setting.cpp:1890-1911`); exactly 30 records declare
    * a range and the two float ones are never enforced at all.  The client
    * therefore ships UNCLAMPED inputs and shows the range as text.
    */
   min?: number;
   max?: number;
-  /** `data/setting_help.csv` — 697 named rows, and this is its first consumer. */
+  /** `packages/engine/data/setting_help.csv` — 697 named rows, and this is its first consumer. */
   help?: string;
 }
 
@@ -148,7 +148,7 @@ export interface SettingScopeReply {
 
 /**
  * `cmd.set` over a selection of atoms "will appear to take, but no change will
- * be observed" for a bond-level setting (`modules/pymol/setting.py:245-248`).
+ * be observed" for a bond-level setting (`packages/engine/modules/pymol/setting.py:245-248`).
  * `cmd.set_bond` / `cmd.unset_bond` / `cmd.get_bond` are the only working path,
  * so the client must know which six names those are and route them.
  */
@@ -215,7 +215,7 @@ export interface SettingServiceStatus {
  * ------------------------------------------------------------------ */
 
 export interface SettingChange {
-  /** Setting index, e.g. 254 = scenes_changed (`layer1/SettingInfo.h:339`). */
+  /** Setting index, e.g. 254 = scenes_changed (`packages/engine/layer1/SettingInfo.h:339`). */
   index: number;
   /** Setting name, e.g. 'scenes_changed'. */
   name: string;
@@ -228,7 +228,7 @@ export interface SettingChange {
    * global settings.
    */
   object?: string;
-  /** `_cmd.get_setting_level` (`layer4/Cmd.cpp:6494`) — no C++ needed (§A9). */
+  /** `_cmd.get_setting_level` (`packages/engine/layer4/Cmd.cpp:6494`) — no C++ needed (§A9). */
   level?: string;
 }
 

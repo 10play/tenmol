@@ -11,12 +11,12 @@
  * between covering the picture and shrinking it, and there was none.
  *
  * WHAT UPSTREAM DOES. `OrthoReshape` treats the sequence viewer as a block that
- * consumes scene height (`layer1/Ortho.cpp:2419,2433`):
+ * consumes scene height (`packages/engine/layer1/Ortho.cpp:2419,2433`):
  *
  *     sceneBottom += seqHeight;     // seq_view_location 1 (bottom)
  *     sceneTop     = seqHeight;     // seq_view_location 0 (top)
  *
- * and `SeqGetHeight` (`layer1/Seq.cpp:190-199`) is `LineHeight * NRow + 4`,
+ * and `SeqGetHeight` (`packages/engine/layer1/Seq.cpp:190-199`) is `LineHeight * NRow + 4`,
  * plus `ScrollBarWidth` when the bar is up — 13*2 + 4 + 16 = 46 px for the
  * session measured above. THE NUMBER IS THE STRIP'S OWN HEIGHT, so this module
  * does not re-derive it from row counts and font metrics that would then have

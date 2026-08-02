@@ -4,17 +4,17 @@
  * WHAT THIS IS, AND WHAT IT DELIBERATELY IS NOT. Sculpting in PyMOL is not a
  * command you run, it is something the process does while it is idle:
  * `PyMOL_Idle` calls `ExecutiveSculptIterateAll(G)` whenever `ControlIdling(G)`
- * is true (`layer5/PyMOL.cpp:2424`), and `ControlIdling` is true exactly when
- * the `sculpting` setting is on (`layer1/Control.cpp:397-403`). The
+ * is true (`packages/engine/layer5/PyMOL.cpp:2424`), and `ControlIdling` is true exactly when
+ * the `sculpting` setting is on (`packages/engine/layer1/Control.cpp:397-403`). The
  * SculptWizard therefore does nothing but set that flag
- * (`modules/pmg_qt/builder.py:145-150`) and let the loop do the work.
+ * (`packages/engine/modules/pmg_qt/builder.py:145-150`) and let the loop do the work.
  *
  * WAVE 9 BELIEVED THE BRIDGE HAD NO SUCH LOOP AND WAS WRONG. `engine.py:236`
  * is `self.p.idle()` inside the pump tick, i.e. `PyMOL_Idle` at the pump rate,
  * so THE ENGINE ALREADY SCULPTS with no client attached. MEASURED on a
  * displaced alanine with no tick, no subscriber and no draw request:
  * **0.6843 A of drift in 2.0 s, and 0.0000 A in the second after
- * `set sculpting, 0`** (`bridge/tests/test_p10_viewport.py`). Ticking with
+ * `set sculpting, 0`** (`packages/bridge/tests/test_p10_viewport.py`). Ticking with
  * cycles here as well ran a SECOND minimiser beside the engine's own, which is
  * why the default is now `cycles: 0` — a call that returns the total strain and
  * provably moves nothing (0-cycle `sculpt_iterate`: strain 169.2976, movement

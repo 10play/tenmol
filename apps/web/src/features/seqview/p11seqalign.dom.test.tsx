@@ -2,7 +2,7 @@
  * Row 341, item (1) — the sequence viewer RENDERING an alignment.
  *
  * The bridge now sends a tag per column, an offset that lines equal tags up,
- * an `unaligned` flag and `row.fill` (`bridge/tests/test_p11_seqview.py`). The
+ * an `unaligned` flag and `row.fill` (`packages/bridge/tests/test_p11_seqview.py`). The
  * thing this file pins is that the component STOPS packing the cells edge to
  * edge the moment that arrives: a flex row would close every hole the alignment
  * opened and put two unrelated residues in the same column.
@@ -23,7 +23,7 @@
  * 20 atoms of PHE. With the alignment disabled mob's F fell back to x = 24.
  * The unaligned lysines came back `rgb(129,129,129)` (the fill grey) in mode 0
  * and `rgb(229,229,229)` (their own colour) in mode 3, which is
- * `layer1/Seq.cpp:325-327` visible on screen.
+ * `packages/engine/layer1/Seq.cpp:325-327` visible on screen.
  */
 
 import { act } from 'react';
@@ -178,7 +178,7 @@ const cellsIn = (line: HTMLElement) =>
 const fillsIn = (line: HTMLElement) =>
   [...line.querySelectorAll('.seqfill')] as HTMLElement[];
 
-/** `layer1/Seq.h:84-88`. */
+/** `packages/engine/layer1/Seq.h:84-88`. */
 const CHAR_WIDTH = 8;
 
 describe('alignment mode leaves the flow layout', () => {

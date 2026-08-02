@@ -1,6 +1,6 @@
 /**
  * Draw / Ray render dialog — the two-page stacked form of
- * `modules/pmg_qt/pymol_qt_gui.py:673` (`forms/render.ui`).
+ * `packages/engine/modules/pmg_qt/pymol_qt_gui.py:673` (`forms/render.ui`).
  *
  * Page 1 picks a size and renders; page 2 saves the result.
  *

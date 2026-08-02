@@ -2,7 +2,7 @@
  * CLIENT-SIDE PICKING — the second of the two reasons the backend still needs a
  * GL context (the other is rasterizing Mode P).
  *
- * Today a click is resolved by `layer1/ScenePicking.cpp`: PyMOL re-renders the
+ * Today a click is resolved by `packages/engine/layer1/ScenePicking.cpp`: PyMOL re-renders the
  * scene with pick colours into the framebuffer and calls `glReadPixels`. That
  * is the ONLY pick path in the tree, and it is why a headless Linux/Windows
  * bridge needs EGL/WGL even if it never shows a pixel to anyone.
@@ -22,7 +22,7 @@
  *   1. The cRange=7 outward square-ring scan (`./ray.ts`).
  *   2. For a triangle mesh, the atom of the LAST index of the hit triangle —
  *      `atom[index[3*t + 2]]` — because the pick pass is FLAT shaded
- *      (`SceneSetupGLPicking`, `layer1/Scene.cpp:5186`) and GL's default
+ *      (`SceneSetupGLPicking`, `packages/engine/layer1/Scene.cpp:5186`) and GL's default
  *      provoking vertex for a triangle is its last one. Taking the nearest
  *      barycentric corner instead scores 10/15 against a real GL pick; taking
  *      the provoking vertex scores 15/15.

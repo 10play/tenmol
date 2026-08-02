@@ -1,5 +1,5 @@
 /**
- * The horizontal window — `CSeq::NSkip` (`layer1/Seq.cpp:290-333`).
+ * The horizontal window — `CSeq::NSkip` (`packages/engine/layer1/Seq.cpp:290-333`).
  *
  * A virtualised row is addressed by a first-column offset, and that offset has
  * to survive the row underneath it changing shape. PyMOL clamps `NSkip` on

@@ -82,7 +82,7 @@ describe('screenRay', () => {
   });
 });
 
-describe('pickOffsets (layer1/ScenePicking.cpp:196-204)', () => {
+describe('pickOffsets (packages/engine/layer1/ScenePicking.cpp:196-204)', () => {
   const offsets = pickOffsets();
 
   it('starts at the click itself', () => {

@@ -12,7 +12,7 @@
  *      claimed before it is sent, so a click on `panel` in a pop-up opens the
  *      window with no round trip at all and nothing appears in the console. It
  *      only covers pop-ups this client renders.
- *   2. THE ENGINE ROUTE. `bridge/tenmol_bridge/panels/volume.py` rebinds
+ *   2. THE ENGINE ROUTE. `packages/bridge/tenmol_bridge/panels/volume.py` rebinds
  *      `cmd.volume_panel` (and its `cmd.keyword` entry, so the typed command
  *      language reaches it too) to a Qt-free shim that RECORDS the request and
  *      prints one tagged line. That line arrives here on the ordinary
@@ -41,11 +41,11 @@ import { openPanel } from '../../shell/panelHooks';
 import { registerLeafHook } from '../pymol-menu/leafHooks';
 import { dialogsStore } from '../dialogs/store';
 
-/** `bridge/tenmol_bridge/panels/volume.py`, as the dispatcher addresses it. */
+/** `packages/bridge/tenmol_bridge/panels/volume.py`, as the dispatcher addresses it. */
 export const VOLUME_NS = 'cmd.tenmol_volume';
 
 /**
- * `/` makes PyMOL's parser treat the rest as Python (`modules/pymol/parser.py`),
+ * `/` makes PyMOL's parser treat the rest as Python (`packages/engine/modules/pymol/parser.py`),
  * and `echo=1` turns on the tagged feedback marker this module listens for.
  */
 export const VOLUME_BOOTSTRAP =
@@ -62,7 +62,7 @@ export interface VolumeEvent {
 }
 
 /**
- * `cmd.volume_panel('vol')` — the leaf `modules/pymol/menu.py:648` builds.
+ * `cmd.volume_panel('vol')` — the leaf `packages/engine/modules/pymol/menu.py:648` builds.
  *
  * Deliberately narrow. `menu.py` builds the argument with `%s` on a value that
  * is already `repr`-quoted (`rsele`), so the only forms that exist are a single

@@ -4,11 +4,11 @@
  * NOT to be confused with `topics/menu.ts` (WP-13), which is the *popup* menu
  * engine: `pymol.menu.*` resolved for a right-click on one object. This module
  * is the eleven top-level application menus, whose source of truth is a single
- * Python literal — `PyMOLDesktopGUI.get_menudata` (`modules/pymol/_gui.py:55`)
- * — walked identically by Qt (`modules/pmg_qt/pymol_qt_gui.py:295-345`
- * `_addmenu`) and Tk (`modules/pmg_tk/skins/normal/__init__.py:1072`).
+ * Python literal — `PyMOLDesktopGUI.get_menudata` (`packages/engine/modules/pymol/_gui.py:55`)
+ * — walked identically by Qt (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:295-345`
+ * `_addmenu`) and Tk (`packages/engine/modules/pmg_tk/skins/normal/__init__.py:1072`).
  *
- * The bridge harvester (`bridge/tenmol_bridge/panels/menus.py`) walks that
+ * The bridge harvester (`packages/bridge/tenmol_bridge/panels/menus.py`) walks that
  * literal against a recording `cmd` proxy, so the ~300 leaves that are Python
  * *callables* upstream arrive here as data. Every node below therefore maps 1:1
  * onto one branch of `_addmenu`, and the client renders it generically — there
@@ -22,7 +22,7 @@
  * @notATopic  NOT A TRANSPORT TOPIC — deliberately not re-exported by the
  * frozen `topics/index.ts` barrel. Reached by its subpath
  * (`@tenmol/protocol/topics/menus`); its events, if any, ride an existing
- * topic. `bridge/tests/test_dispatch.py` looks for this tag.
+ * topic. `packages/bridge/tests/test_dispatch.py` looks for this tag.
  */
 
 /** A menu literal only ever carries scalars (ints, floats, strings). */
@@ -37,7 +37,7 @@ export interface MenuCall {
   /**
    * The upstream call passed `cmd` itself as an argument — always the `_self`
    * parameter (`cmd.util.modernize_rendering(1, cmd)`,
-   * `modules/pymol/util.py:553`). It is dropped: over the wire the bridge's own
+   * `packages/engine/modules/pymol/util.py:553`). It is dropped: over the wire the bridge's own
    * instance is the only `_self` there is.
    */
   selfArg?: boolean;

@@ -109,7 +109,7 @@ export function createConsoleSource(session: Session): ConsoleSource {
         store.setSettings(result.patch);
         // `SettingGenerateSideEffects` case `cSetting_auto_overlay`:
         // `OrthoRemoveAutoOverlay(G); /* always start clean */`
-        // (`layer1/Setting.cpp:2816-2818`). Without this, turning auto_overlay
+        // (`packages/engine/layer1/Setting.cpp:2816-2818`). Without this, turning auto_overlay
         // on reveals the whole backlog instead of only what is printed next.
         if (before !== undefined && result.remote.auto_overlay !== before)
           store.removeAutoOverlay();

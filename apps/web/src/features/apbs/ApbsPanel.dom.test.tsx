@@ -10,7 +10,7 @@
  *  2. saying the plugin "still autoloads", which measurement disproved — the
  *     bridge never calls `pymol.plugins.initialize()`, so `plugins.plugins` is
  *     `[]` and `apbs_gui` is not in `sys.modules`
- *     (`bridge/tests/test_wf_apbs.py::test_the_plugin_is_on_the_path_but_has_NOT_been_imported`);
+ *     (`packages/bridge/tests/test_wf_apbs.py::test_the_plugin_is_on_the_path_but_has_NOT_been_imported`);
  *  3. rendering "not found" when the probe itself failed, which would send a
  *     user off installing software that is already there.
  */

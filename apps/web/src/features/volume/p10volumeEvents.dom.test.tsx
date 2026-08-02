@@ -14,7 +14,7 @@
  *      not;
  *   3. the panel's own writes never come back, because they carry
  *      `_guiupdate: 0` and the shim filters on it (asserted server-side in
- *      `bridge/tests/test_p10_volume.py`, and asserted here as "the reload
+ *      `packages/bridge/tests/test_p10_volume.py`, and asserted here as "the reload
  *      pushed nothing").
  *
  * The wire format is not invented either: the marker strings below are the

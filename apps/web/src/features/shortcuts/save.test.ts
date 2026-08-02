@@ -9,7 +9,7 @@
  *         if save_dict[key][2]:
  *             cmd.set_key(key, save_dict[key][2])
  *
- * — element [2], the user-defined command (`modules/pymol/save_shortcut.py`).
+ * — element [2], the user-defined command (`packages/engine/modules/pymol/save_shortcut.py`).
  *
  * A flat `{key: command}` would round-trip through save/load perfectly and then
  * bind the key to `command[2]`, a single character, at the next startup. There

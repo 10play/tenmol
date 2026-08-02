@@ -2,8 +2,8 @@
  * Inventory rows 256 / 257 / 258 — the import dialogs' remaining half.
  *
  * The bridge halves are measured on the live engine in
- * `bridge/tests/test_p8_a6.py` (the header parse, the Incentive walls, the
- * brix load) and `bridge/tests/test_p9_f1.py` (the FASTA fallback, the brix
+ * `packages/bridge/tests/test_p8_a6.py` (the header parse, the Incentive walls, the
+ * brix load) and `packages/bridge/tests/test_p9_f1.py` (the FASTA fallback, the brix
  * script). What NEITHER can see is the FORM: whether the combo boxes really
  * carry the columns the header produced, whether the weights combo has the
  * blank first entry `file_dialogs.py:161` inserts, and whether the two
@@ -12,7 +12,7 @@
  *
  * Every fixture below is a MEASURED payload, copied from the assertions in
  * `test_p8_a6.py::TestMtzImportDialog` / `TestMaeImportDialog` against
- * `testing/data/4rwb.mtz` and `testing/data/1molecule.mae`.
+ * `packages/engine/testing/data/4rwb.mtz` and `packages/engine/testing/data/1molecule.mae`.
  */
 
 import { act } from 'react';
@@ -58,7 +58,7 @@ function button(label: string): HTMLButtonElement {
  * Row 258 — the MTZ dialog's four combos
  * ------------------------------------------------------------------ */
 
-/** `files.mtz_dialog_info(testing/data/4rwb.mtz)`, measured. */
+/** `files.mtz_dialog_info(packages/engine/testing/data/4rwb.mtz)`, measured. */
 const MTZ_INFO = {
   unavailable: 'load_mtz is Incentive-only in this build',
   amplitudes: ['cryst_1/data_1/FP', 'cryst_1/data_1/FC'],
@@ -138,7 +138,7 @@ describe('row 258 — load_mtz dialog', () => {
  * Row 256 — the Maestro dialog
  * ------------------------------------------------------------------ */
 
-/** `files.mae_dialog_info(testing/data/1molecule.mae)`, measured. */
+/** `files.mae_dialog_info(packages/engine/testing/data/1molecule.mae)`, measured. */
 const MAE_INFO = {
   objectName: '1molecule',
   objectProps: '*',
@@ -217,7 +217,7 @@ describe('row 257 — the o/brix script', () => {
       isosurface: true,
       isosurfaceName: '',
     };
-    // THE SAME BYTES `bridge/tests/test_p9_f1.py::brix_script` feeds to the
+    // THE SAME BYTES `packages/bridge/tests/test_p9_f1.py::brix_script` feeds to the
     // engine, which is what makes that test a test of this string rather than
     // of a hand-written one.
     expect(mapCommand({ ...options, normalizeSetting: 'normalize_o_maps' })).toBe(

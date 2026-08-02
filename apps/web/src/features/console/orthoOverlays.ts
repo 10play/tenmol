@@ -4,7 +4,7 @@
  * `BusyOverlay.tsx` and `OrthoLoopRect.tsx`.
  *
  * ---------------------------------------------------------------------------
- * 1. THE BUSY BOX — `OrthoBusyDraw` (`layer1/Ortho.cpp:609-724`)
+ * 1. THE BUSY BOX — `OrthoBusyDraw` (`packages/engine/layer1/Ortho.cpp:609-724`)
  *
  * A 240x60 black rectangle in the TOP-LEFT corner of the viewport holding a
  * message line and up to two progress bars, drawn straight into `GL_FRONT` so
@@ -13,10 +13,10 @@
  * TWO BARS, ONE NUMBER.  `I->BusyStatus[0..1]` is the SLOW counter and
  * `[2..3]` the FAST one, and the box draws a bar for each.  The only thing
  * Python can see is `cmd.get_progress()`, and `CmdGetProgress`
- * (`layer4/Cmd.cpp:4334-4348`) folds slow into fast and divides — one
+ * (`packages/engine/layer4/Cmd.cpp:4334-4348`) folds slow into fast and divides — one
  * fraction, not two pairs.  So this overlay draws ONE bar, and that is a
  * measured limit of the API rather than a shortcut:
- * `bridge/tests/test_wf_ortho.py::test_the_busy_MESSAGE_and_the_two_BARS_are_not_reachable_from_python`
+ * `packages/bridge/tests/test_wf_ortho.py::test_the_busy_MESSAGE_and_the_two_BARS_are_not_reachable_from_python`
  * shows `cmd.get_busy_status` and friends are not symbols at all.
  *
  * NO MESSAGE, EITHER.  `I->BusyMessage` is written by `OrthoBusyMessage`
@@ -24,16 +24,16 @@
  * therefore the client's own, and says what it actually knows.
  *
  * ---------------------------------------------------------------------------
- * 2. THE MARQUEE — `OrthoDrawLoop` (`layer1/Ortho.cpp:1695-1745`)
+ * 2. THE MARQUEE — `OrthoDrawLoop` (`packages/engine/layer1/Ortho.cpp:1695-1745`)
  *
  * A 1 px `cColorFront` outline of `I->LoopRect`, which `SceneMouse` pushes
- * into Ortho on every drag (`OrthoSetLoopRect`, `layer1/SceneMouse.cpp:44-66`)
+ * into Ortho on every drag (`OrthoSetLoopRect`, `packages/engine/layer1/SceneMouse.cpp:44-66`)
  * and clears on release.  The rect never reaches Python — measured in
  * `test_wf_ortho.py::test_the_marquee_rectangle_is_not_readable_from_python` —
  * so a web client cannot echo the backend's rectangle and has to draw its own
  * from pointer state.  The BACKEND half of the gesture needs nothing new: the
  * forwarded press/drag/release already produce the selection
- * (`bridge/tests/test_box_selection.py`).
+ * (`packages/bridge/tests/test_box_selection.py`).
  *
  * That is why this lives in the console feature: `LoopRect` is Ortho's, drawn
  * by the same `OrthoDoDraw` pass as the console text (`:2024-2040`), and this
@@ -58,7 +58,7 @@ import { isModeName, tableForMode } from '../../../../../packages/viewport/src/i
  * 1. The busy box
  * ------------------------------------------------------------------ */
 
-/** `cBusyWidth` (`layer1/Ortho.cpp:192`). */
+/** `cBusyWidth` (`packages/engine/layer1/Ortho.cpp:192`). */
 export const BUSY_WIDTH = 240;
 /** `cBusyHeight` (`:193`). */
 export const BUSY_HEIGHT = 60;
@@ -89,12 +89,12 @@ export function busyFillWidth(fraction: number): number {
 
 /**
  * Is the box drawn?  `OrthoBusyDraw` is gated by `show_progress` (`:619`), and
- * `get_progress()` is negative unless `PyMOL_GetBusy()` (`layer4/Cmd.cpp:4341`).
+ * `get_progress()` is negative unless `PyMOL_GetBusy()` (`packages/engine/layer4/Cmd.cpp:4341`).
  *
  * The `show_progress` half is belt and braces: measured on a live bridge, the
  * setting silences the DATA as well as the drawing, because `OrthoBusySlow` /
  * `OrthoBusyFast` test it before calling `PyMOL_SetProgress` at all
- * (`layer1/Ortho.cpp:547`, `:577`) — 13 progress frames across two rays with
+ * (`packages/engine/layer1/Ortho.cpp:547`, `:577`) — 13 progress frames across two rays with
  * `show_progress, 0`, every one of them -1.0.
  */
 export function busyVisible(progress: number, showProgress: boolean): boolean {
@@ -121,7 +121,7 @@ export interface LoopBox {
 
 /**
  * `SceneLoopClick` + `SceneLoopDrag` + the normalisation `SceneLoopRelease`
- * does (`layer1/SceneMouse.cpp:44-92`): the press corner is
+ * does (`packages/engine/layer1/SceneMouse.cpp:44-92`): the press corner is
  * `left`/`top`, the live corner is `right`/`bottom`, and the pair is swapped
  * so the rect is well-ordered.  PyMOL's y axis points up and the DOM's points
  * down, so "swap when top < bottom" is min/max here — the same rectangle.
@@ -143,7 +143,7 @@ export type LoopKind = 'add' | 'subtract' | 'set';
 /**
  * The six action codes that start a rubber band, from the `switch` in
  * `SceneClick` that dispatches to `SceneLoopClick`
- * (`layer1/SceneMouse.cpp:803-809`).  Values are `layer1/ButMode.h:44-46`,
+ * (`packages/engine/layer1/SceneMouse.cpp:803-809`).  Values are `packages/engine/layer1/ButMode.h:44-46`,
  * `:58-59`, `:91`.
  */
 export const LOOP_ACTIONS: Readonly<Record<number, LoopKind>> = {
@@ -181,7 +181,7 @@ export function loopKindFor(
 /**
  * `button_mode_name` (what `cmd.get_setting_text` answers, e.g.
  * `3-Button Viewing`) -> the 80-slot table.  The inverse of
- * `mode_name_dict` (`modules/pymol/controlling.py`), falling back to the
+ * `mode_name_dict` (`packages/engine/modules/pymol/controlling.py`), falling back to the
  * three-button viewing table so the first gesture after a page load — before
  * the name has come back — still behaves like a stock PyMOL.
  */
@@ -214,12 +214,12 @@ interface SplashTarget {
  * What the console bar's `splash` button does.
  *
  * `OrthoInit` raises `I->SplashFlag` only when it is handed `showSplash`
- * (`layer1/Ortho.cpp:2729-2731`), and the bridge boots PyMOL with
- * `options.show_splash = 0` (`bridge/tenmol_bridge/engine.py:132`) — measured
+ * (`packages/engine/layer1/Ortho.cpp:2729-2731`), and the bridge boots PyMOL with
+ * `options.show_splash = 0` (`packages/bridge/tenmol_bridge/engine.py:132`) — measured
  * in `test_wf_ortho.py::test_the_bridge_boots_with_the_splash_off` — so a
  * browser never inherits one and the store's flag correctly starts false.
  *
- * `cmd.splash(0)` runs the real `OrthoSplash` (`layer4/Cmd.cpp:2865-2869`), so
+ * `cmd.splash(0)` runs the real `OrthoSplash` (`packages/engine/layer4/Cmd.cpp:2865-2869`), so
  * the banner is PyMOL's own text arriving on the feedback channel rather than
  * a copy that will rot.  Raising the flag then reproduces what the flag DOES:
  * force the whole scrollback visible over the scene (`:1638`, pinned in

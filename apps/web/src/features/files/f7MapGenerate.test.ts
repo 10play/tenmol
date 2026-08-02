@@ -8,7 +8,7 @@
  * dialog on success through either branch, so the setting did nothing. That is
  * what this pins.
  *
- * The bridge half is `bridge/tests/test_f7_legacyfiles.py`, which runs the
+ * The bridge half is `packages/bridge/tests/test_f7_legacyfiles.py`, which runs the
  * generate against a live PyMOL and measures the results these shapes carry:
  * `autoclose_dialogs` is ON by default, this build's generator is compiled out
  * (so `ok:false` with a build note is the everyday answer), and with the
@@ -20,7 +20,7 @@ import { describe, expect, it } from 'vitest';
 import type { MapGenerateResult } from '@tenmol/protocol/topics/files';
 import { mapGenerateOutcome } from './LoadDialogs';
 
-const BUILD_NOTE = 'cmd.map_generate needs MMLIBS: layer3/Executive.cpp:6929-6935 …';
+const BUILD_NOTE = 'cmd.map_generate needs MMLIBS: packages/engine/layer3/Executive.cpp:6929-6935 …';
 
 function result(over: Partial<MapGenerateResult> = {}): MapGenerateResult {
   return {

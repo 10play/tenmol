@@ -1,7 +1,7 @@
 /**
  * Wave 8 — the sequence-viewer offset the wizard-prompt row was missing.
  *
- * `OrthoDrawWizardPrompt` (`layer1/Ortho.cpp:2178-2184`) starts the prompt at
+ * `OrthoDrawWizardPrompt` (`packages/engine/layer1/Ortho.cpp:2178-2184`) starts the prompt at
  * the top of the viewport and subtracts `SeqGetHeight(G)` when the sequence
  * viewer is present AND `seq_view_location` is 0 (top). Both blocks are
  * absolutely positioned inside `.shell__viewport` in this client, so the

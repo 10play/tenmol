@@ -1,15 +1,15 @@
 /**
  * The eleven mouse-mode matrices, the configuration rings and the display
- * names — mirrored from `modules/pymol/controlling.py`.
+ * names — mirrored from `packages/engine/modules/pymol/controlling.py`.
  *
  * GENERATED-BY-HAND-ONCE, CHECKED-BY-TEST-ALWAYS. `modes.test.ts` imports the
- * real `modules/pymol/controlling.py` through the bridge venv and diffs every
+ * real `packages/engine/modules/pymol/controlling.py` through the bridge venv and diffs every
  * entry below against `mode_dict`, `ring_dict`, `mode_name_dict` and
  * `mode_name_list`. If upstream changes a binding, the test fails; it cannot
  * drift silently.
  *
  * WHY MIRROR AT ALL: there is no getter for the C `ButMode` table
- * (`ButModeGet` is not exposed to Python — grepped `modules/`), so the only way
+ * (`ButModeGet` is not exposed to Python — grepped `packages/engine/modules/`), so the only way
  * to render the button x modifier grid is to reproduce what `cmd.mouse()`
  * pushed into it. Plan §A9 settles this as the intended design rather than a
  * workaround, and forbids adding a C++ accessor for it.

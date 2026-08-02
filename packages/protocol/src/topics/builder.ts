@@ -4,12 +4,12 @@
  * 19 v1 *topics*; the Builder is not a topic, it is a request/response surface,
  * and `topics/editor.ts` already holds the pick-state topic payload).
  *
- * The backend is `bridge/tenmol_bridge/panels/builder.py` — a Qt-free port of
- * `modules/pmg_qt/builder.py`, which cannot live in TypeScript because a PyMOL
+ * The backend is `packages/bridge/tenmol_bridge/panels/builder.py` — a Qt-free port of
+ * `packages/engine/modules/pmg_qt/builder.py`, which cannot live in TypeScript because a PyMOL
  * wizard is a **Python object the engine owns**: `cmd.set_wizard(obj)` takes an
  * instance and the pick path calls `obj.do_pick(bondFlag)`.
  *
- * INSTALLATION.  `bridge/tenmol_bridge/panels/__init__.py` is a frozen barrel
+ * INSTALLATION.  `packages/bridge/tenmol_bridge/panels/__init__.py` is a frozen barrel
  * that does not list `builder`, and `server.py`'s `_bridge.*` route table
  * belongs to WP-02, so neither can carry this feature.  What the capability
  * policy already grants is the `cmd` root, and for `pymol2.SingletonPyMOL` the
@@ -20,7 +20,7 @@
  * @notATopic  NOT A TRANSPORT TOPIC — deliberately not re-exported by the
  * frozen `topics/index.ts` barrel. Reached by its subpath
  * (`@tenmol/protocol/topics/builder`); its events, if any, ride an existing
- * topic. `bridge/tests/test_dispatch.py` looks for this tag.
+ * topic. `packages/bridge/tests/test_dispatch.py` looks for this tag.
  */
 
 /** The single `{t:'do'}` line that installs `cmd.builder_*` on the engine. */
@@ -44,9 +44,9 @@ export const BUILDER_RPC = {
  *
  * Upstream there is no such call: `PyMOL_Idle` runs
  * `ExecutiveSculptIterateAll` whenever the `sculpting` setting is on
- * (`layer5/PyMOL.cpp:2424`, `layer1/Control.cpp:397-403`). The bridge pump
+ * (`packages/engine/layer5/PyMOL.cpp:2424`, `packages/engine/layer1/Control.cpp:397-403`). The bridge pump
  * draws but does not idle, so the CLIENT ticks — see
- * `bridge/tenmol_bridge/panels/builder.py:builder_sculpt_tick`.
+ * `packages/bridge/tenmol_bridge/panels/builder.py:builder_sculpt_tick`.
  */
 export interface BuilderSculptTick {
   /** `sculpting` was on, i.e. PyMOL's own idle loop would have iterated. */
@@ -58,12 +58,12 @@ export interface BuilderSculptTick {
   /**
    * `sculpt_auto_center` is on but unreachable this way: the idle loop passes
    * a centre accumulator that `cmd.sculpt_iterate` cannot
-   * (`layer3/Executive.cpp:7117,7170`), so the scene does not follow the atoms.
+   * (`packages/engine/layer3/Executive.cpp:7117,7170`), so the scene does not follow the atoms.
    */
   auto_center_unsupported: boolean;
 }
 
-/** One entry of `pk1`..`pk4`, in click order (`layer3/Editor.h:30-48`). */
+/** One entry of `pk1`..`pk4`, in click order (`packages/engine/layer3/Editor.h:30-48`). */
 export interface BuilderPickedAtom {
   slot: 'pk1' | 'pk2' | 'pk3' | 'pk4' | (string & {});
   object: string;
@@ -77,7 +77,7 @@ export interface BuilderPickedAtom {
   formalCharge: number;
 }
 
-/** `collectPicked` (`modules/pmg_qt/builder.py:1000-1006`), as data. */
+/** `collectPicked` (`packages/engine/modules/pmg_qt/builder.py:1000-1006`), as data. */
 export interface BuilderEditorState {
   picked: BuilderPickedAtom[];
   /** The same list reduced to slot names — what every button branches on. */
@@ -92,7 +92,7 @@ export interface BuilderEditorState {
 
 /**
  * `cmd.edit_mode(1)` sets no boolean: it rotates the current mouse-ring entry
- * from `*_viewing` to `*_editing` (`modules/pymol/controlling.py:688-717`).
+ * from `*_viewing` to `*_editing` (`packages/engine/modules/pymol/controlling.py:688-717`).
  */
 export interface BuilderMouseState {
   button_mode: number;
@@ -137,7 +137,7 @@ export interface BuilderState {
   settings: BuilderSettings;
   /**
    * ALWAYS false in this tree: `cmd.clean` raises `IncentiveOnlyException`
-   * (`modules/pymol/computing.py:20-29`).  The button ships visibly disabled
+   * (`packages/engine/modules/pymol/computing.py:20-29`).  The button ships visibly disabled
    * with {@link BuilderState.clean_reason} as its tooltip.
    */
   clean_available: boolean;
@@ -179,14 +179,14 @@ export type BuilderActionKind =
   | 'setUndoEnabled'
   | 'enableUndoForObjects';
 
-/** How a viewport click is routed (`layer1/SceneMouse.cpp:404-470`). */
+/** How a viewport click is routed (`packages/engine/layer1/SceneMouse.cpp:404-470`). */
 export type BuilderPickMode = 'multi' | 'single' | 'bond';
 
 /**
  * `cmd.builder_tables()` — the declarative button tables, shipped from the
  * backend so the React copy can be *compared* instead of trusted.
  *
- * Row shapes (they mirror `modules/pmg_qt/builder.py` exactly):
+ * Row shapes (they mirror `packages/engine/modules/pmg_qt/builder.py` exactly):
  *   elements / chemRow0Fragments / functionalGroups / rings
  *       `[label, tooltip, symbolOrFragment, geometryOrHydrogenId, valenceOrAnchor, text]`
  *   secondaryStructure  `[label, ss, phi, psi]`
@@ -206,13 +206,13 @@ export interface BuilderTables {
   rnaBases: Array<[string, string, string]>;
   bondOrders: Array<[string, string, string]>;
   settingCheckboxes: Array<[string, string, string, boolean]>;
-  /** Distinct `data/chempy/fragments/<name>.pkl` the Chemical tab can request. */
+  /** Distinct `packages/engine/data/chempy/fragments/<name>.pkl` the Chemical tab can request. */
   fragments: string[];
   /** Any of those that are NOT on disk. Must be empty. */
   missingFragments: string[];
 }
 
-/** Atom geometry codes (`layer2/AtomInfo.h:129-133`). */
+/** Atom geometry codes (`packages/engine/layer2/AtomInfo.h:129-133`). */
 export const GEOMETRY = {
   Single: 1,
   Linear: 2,
@@ -221,5 +221,5 @@ export const GEOMETRY = {
   None: 5,
 } as const;
 
-/** `cmd.flag` numbers used by the Builder (`modules/pymol/editing.py:2848-2861`). */
+/** `cmd.flag` numbers used by the Builder (`packages/engine/modules/pymol/editing.py:2848-2861`). */
 export const ATOM_FLAG = { restrain: 2, fix: 3 } as const;

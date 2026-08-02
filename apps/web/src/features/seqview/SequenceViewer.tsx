@@ -1,5 +1,5 @@
 /**
- * The sequence viewer — PyMOL's `CSeq` block (`layer1/Seq.cpp:259` `CSeq::draw`)
+ * The sequence viewer — PyMOL's `CSeq` block (`packages/engine/layer1/Seq.cpp:259` `CSeq::draw`)
  * as real DOM.
  *
  * PyMOL draws this INSIDE the GL viewport, so it lives in the `viewport` region
@@ -8,7 +8,7 @@
  * renders nothing at all when no enabled object has `seq_view` on, which is the
  * default — exactly like the C++ block.
  *
- * Metrics are PyMOL's (`layer1/Seq.h:84-88`): `LineHeight 13`, `CharWidth 8`,
+ * Metrics are PyMOL's (`packages/engine/layer1/Seq.h:84-88`): `LineHeight 13`, `CharWidth 8`,
  * `CharMargin 2`. A cell is `text.length * CharWidth` wide, so the grid lines
  * up with the character offsets the bridge computed with Seeker's own maths.
  *
@@ -30,7 +30,7 @@ import { applyReservation } from './reserve';
 import { columnRgb, isAligned, rgbCss, windowBase } from './alignment';
 import './seqview.css';
 
-/** `layer1/Seq.h:84-88`. */
+/** `packages/engine/layer1/Seq.h:84-88`. */
 const CHAR_WIDTH = 8;
 const LINE_HEIGHT = 13;
 
@@ -237,7 +237,7 @@ export function SequenceViewer(): React.JSX.Element | null {
             }
             case 'menu': {
               // `MenuActivate2Arg(G, x, y+16, x, y, false, "pick_sele"|
-              // "seq_option", ...)` (`layer3/Seeker.cpp:364,388`). The grammar
+              // "seq_option", ...)` (`packages/engine/layer3/Seeker.cpp:364,388`). The grammar
               // has already decided WHICH of the two this is; the bridge builds
               // the same `pymol.menu` tree the C would have activated.
               const cell = row?.cells[(action as { col: number }).col - (row?.first ?? 0)];
@@ -317,7 +317,7 @@ export function SequenceViewer(): React.JSX.Element | null {
     (event: React.PointerEvent) => {
       // "Outside a cell" is everything in the block that is not a column and not
       // the scrollbar — the header, a label row, the empty tail of a short row.
-      // `SeekerClick` gets `row/col == -1` for all of it (`layer1/Seq.cpp:150`
+      // `SeekerClick` gets `row/col == -1` for all of it (`packages/engine/layer1/Seq.cpp:150`
       // resolves the column and only then dispatches), so an identity test
       // against the container would have made the clear-on-double-click
       // reachable only in the few pixels the container itself paints.
@@ -357,7 +357,7 @@ export function SequenceViewer(): React.JSX.Element | null {
    * ROW 341 item (2) — `seq_view_overlay = 0` RESERVES SCENE SPACE.
    *
    * `OrthoReshape` gives the sequence viewer a band out of the scene rectangle
-   * (`layer1/Ortho.cpp:2419,2433`); this strip is `position: absolute`, so it
+   * (`packages/engine/layer1/Ortho.cpp:2419,2433`); this strip is `position: absolute`, so it
    * took none, and the setting only changed the background's opacity. The
    * height is MEASURED rather than derived: `SeqGetHeight` is a row-count
    * formula in the C's own metrics, and re-deriving it here would mean keeping
@@ -420,10 +420,10 @@ export function SequenceViewer(): React.JSX.Element | null {
    * the width already drawn — so a flex row reproduces the C's geometry for
    * free. Under an alignment the whole point is that a row's columns are NOT
    * contiguous: `panels/seqview.py::align_rows` leaves holes where the other
-   * rows have residues this one does not (`layer3/Seeker.cpp:1583-1793`), and
+   * rows have residues this one does not (`packages/engine/layer3/Seeker.cpp:1583-1793`), and
    * a flex row would close every one of them and destroy the line-up. So the
    * cells are placed at `offset * CHAR_WIDTH` and the holes are filled with
-   * `row.fill`, which is what `CSeq::draw` paints (`layer1/Seq.cpp:488-504`).
+   * `row.fill`, which is what `CSeq::draw` paints (`packages/engine/layer1/Seq.cpp:488-504`).
    *
    * The base is SHARED (`windowBase`): rebasing each row on its own first cell,
    * which is what the non-aligned label path does, would slide the rows back on
@@ -464,7 +464,7 @@ export function SequenceViewer(): React.JSX.Element | null {
         )}
         <span className="seqview__spacer" />
         {error && <span className="seqview__error">{error}</span>}
-        <span title="horizontal scroll — the wheel moves one column, as in layer1/Seq.cpp:218">
+        <span title="horizontal scroll — the wheel moves one column, as in packages/engine/layer1/Seq.cpp:218">
           {first + 1}–{Math.min(first + WINDOW, maxCols)} / {maxCols}
         </span>
       </div>
@@ -521,7 +521,7 @@ export function SequenceViewer(): React.JSX.Element | null {
                 ))}
               {row.cells.map((cell, cellIndex) => {
                 const col = row.first + cellIndex;
-                // `col->inverse` is INVERTED VIDEO in the C (`layer1/Seq.cpp:465-482`):
+                // `col->inverse` is INVERTED VIDEO in the C (`packages/engine/layer1/Seq.cpp:465-482`):
                 // the column's own colour becomes the background and the glyph
                 // goes black. It has to be done here, inline, from the colour
                 // the bridge sent — CSS cannot express it, because
@@ -603,7 +603,7 @@ export function SequenceViewer(): React.JSX.Element | null {
         />
       )}
 
-      {/* The scrollbar doubles as the selection mini-map (`layer1/Seq.cpp:564-696`). */}
+      {/* The scrollbar doubles as the selection mini-map (`packages/engine/layer1/Seq.cpp:564-696`). */}
       <div
         className="seqview__scroll"
         role="scrollbar"
@@ -643,7 +643,7 @@ export function SequenceViewer(): React.JSX.Element | null {
   );
 }
 
-/** Menu labels — `modules/pymol/_gui.py:379-387`. */
+/** Menu labels — `packages/engine/modules/pymol/_gui.py:379-387`. */
 const FORMAT_NAMES: Record<number, string> = {
   0: 'Residue Codes',
   1: 'Residue Names',
@@ -653,7 +653,7 @@ const FORMAT_NAMES: Record<number, string> = {
   5: 'Movie Frames',
 };
 
-/** `seq_view_unaligned_mode`, for the header (`layer3/Seeker.cpp:1590-1596`). */
+/** `seq_view_unaligned_mode`, for the header (`packages/engine/layer3/Seeker.cpp:1590-1596`). */
 const UNALIGNED_NAMES: Record<number, string> = {
   0: 'packed',
   1: 'packed, dimmed',
@@ -688,7 +688,7 @@ function cellTitle(row: SeqviewRow, cell: SeqviewCell): string {
 
 /**
  * Replace the node at `path` with its resolved children — the client half of
- * `SubGetItem` (`layer4/PopUp.cpp:88-110`), which caches what it resolved.
+ * `SubGetItem` (`packages/engine/layer4/PopUp.cpp:88-110`), which caches what it resolved.
  */
 export function graftMenu(
   items: readonly PanelMenuNode[],

@@ -2,7 +2,7 @@
  * WP-12 unit tests: everything the object panel decides without a DOM.
  *
  * The fixtures are VERBATIM from a `cmd.tenmol_objects('snapshot')` transcript
- * against the running bridge (see `bridge/tests/test_objects.py`), so a change
+ * against the running bridge (see `packages/bridge/tests/test_objects.py`), so a change
  * in the Python shape breaks these too instead of drifting silently.
  */
 
@@ -158,7 +158,7 @@ describe('objects store', () => {
  * `\RGB`
  * ------------------------------------------------------------------ */
 
-describe('\\RGB colour codes (layer1/Text.cpp:507-548)', () => {
+describe('\\RGB colour codes (packages/engine/layer1/Text.cpp:507-548)', () => {
   test('three digits set a colour, \\--- resets it', () => {
     expect(parseColorCodes('\\933delete object')).toEqual([
       { text: 'delete object', color: 'rgb(255, 85, 85)' },

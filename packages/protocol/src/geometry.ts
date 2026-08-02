@@ -11,7 +11,7 @@
  *            Measured 3.4 ms/frame at 1280x960 on 1AON (plan §1.3). This is the
  *            correctness baseline and the fallback for every rep Mode G cannot
  *            express.
- *   Mode G — `layer4/CmdWebGeometry.cpp` (plan §4 Task 1) hands PyMOL's own
+ *   Mode G — `packages/engine/layer4/CmdWebGeometry.cpp` (plan §4 Task 1) hands PyMOL's own
  *            CPU-side buffers to three.js. Enabled PER REP with automatic
  *            fallback to Mode P.
  *
@@ -37,21 +37,21 @@
  * existing exporters):
  *
  *  1. Sphere and cylinder primitives are emitted as INSTANCE BUFFERS, never
- *     tessellated. `CGO_SPHERE` (`layer1/CGO.h:99`), `CGO_SHADER_CYLINDER`
+ *     tessellated. `CGO_SPHERE` (`packages/engine/layer1/CGO.h:99`), `CGO_SHADER_CYLINDER`
  *     (`:197`), `CGO_SHADER_CYLINDER_WITH_2ND_COLOR` (`:200`). Tessellating is
  *     exactly how the exporters destroy `mesh`/`dots`/`lines`: a 660-atom 1UBQ
  *     `mesh` became 31,710 cylinders + 63,420 spheres = 31.9 MB `.wrl` /
  *     133.7 MB `.dae`; `dots` became a 658 MB `.dae` (spike 03 §4).
  *  2. Payloads are keyed PER OBJECT, PER REP, PER STATE and carry ATOM INDICES
- *     (`RepSurface::AT`, `layer2/RepSurface.cpp:84`; `CGO_PICK_COLOR`,
- *     `layer1/CGO.h:150-151`). Without that there is no per-rep update, no
+ *     (`RepSurface::AT`, `packages/engine/layer2/RepSurface.cpp:84`; `CGO_PICK_COLOR`,
+ *     `packages/engine/layer1/CGO.h:150-151`). Without that there is no per-rep update, no
  *     recolour-only update, and every change forces a full scene re-pull —
  *     measured: one `cmd.color` on 1AON cost a fresh 1.92 s + 246 MB through
  *     `get_vrml` (spike 03 §3.1).
- *  3. `CGO_DRAW_ARRAYS` blocks (`layer1/CGO.h:167`, struct at `:338-355`) are
+ *  3. `CGO_DRAW_ARRAYS` blocks (`packages/engine/layer1/CGO.h:167`, struct at `:338-355`) are
  *     passed VERBATIM — the heap block laid out by `CGOCombineBeginEnd`
- *     (`layer1/CGO.cpp:1645-1672`) is a three.js BufferGeometry with zero
- *     conversion. The accessor never reads back a VBO (`layer1/CGO.h:183-186`
+ *     (`packages/engine/layer1/CGO.cpp:1645-1672`) is a three.js BufferGeometry with zero
+ *     conversion. The accessor never reads back a VBO (`packages/engine/layer1/CGO.h:183-186`
  *     documents that the CPU copy is deliberately destroyed after upload).
  *
  * Zero runtime dependencies; only pure functions live here.
@@ -61,7 +61,7 @@
  * Rep identity
  * ------------------------------------------------------------------ */
 
-/** `enum cRep_t`, `layer1/Rep.h:48-74`. Values are session-stable. */
+/** `enum cRep_t`, `packages/engine/layer1/Rep.h:48-74`. Values are session-stable. */
 export const Rep = {
   None: -2,
   All: -1,
@@ -88,7 +88,7 @@ export const Rep = {
   Volume: 20,
 } as const;
 
-export const REP_COUNT = 21; // cRepCnt, layer1/Rep.h:73
+export const REP_COUNT = 21; // cRepCnt, packages/engine/layer1/Rep.h:73
 
 /** A `cRep_t` value. Kept as `number`: upstream may add reps. */
 export type RepId = number;
@@ -121,7 +121,7 @@ export function repName(rep: RepId): string {
   return REP_NAMES[rep] ?? `rep${rep}`;
 }
 
-/** `cRepInv_t` ladder, `layer1/Rep.h:133-184`. Higher = more invalidated. */
+/** `cRepInv_t` ladder, `packages/engine/layer1/Rep.h:133-184`. Higher = more invalidated. */
 export const RepInv = {
   None: 0,
   Display: 1,
@@ -222,7 +222,7 @@ export const MODE_G_FALLBACK_REASONS = [
   /** The accessor raised, or the rep produced zero buffers. */
   'extraction-failed',
   /**
-   * `RepCartoon::disposePreshaderCGO` (`layer2/RepCartoon.cpp:83-89,240`) fired
+   * `RepCartoon::disposePreshaderCGO` (`packages/engine/layer2/RepCartoon.cpp:83-89,240`) fired
    * because Mode P renders for real, so the preshader was gone. Plan §1.3:
    * WP-26 must extract from `primitiveCGO` or rebuild — until it does, fall back.
    */
@@ -322,8 +322,8 @@ export function resolveRenderMode(
  * CGO constants (mirrors of the C headers)
  * ------------------------------------------------------------------ */
 
-/** GL primitive modes accepted by CGO_BEGIN, `layer1/CGO.h:68-72` and
- *  `modules/pymol/cgo.py:21-27`. These are the *only* legal `mode` values. */
+/** GL primitive modes accepted by CGO_BEGIN, `packages/engine/layer1/CGO.h:68-72` and
+ *  `packages/engine/modules/pymol/cgo.py:21-27`. These are the *only* legal `mode` values. */
 export const GLMode = {
   Points: 0,
   Lines: 1,
@@ -339,7 +339,7 @@ export function isGLMode(v: unknown): v is GLModeValue {
   return typeof v === 'number' && v >= 0 && v <= 6 && Number.isInteger(v);
 }
 
-/** `arraybits` flags, `layer1/CGO.h:272-277`. */
+/** `arraybits` flags, `packages/engine/layer1/CGO.h:272-277`. */
 export const CGOArrayBit = {
   Vertex: 0x01,
   Normal: 0x02,
@@ -351,10 +351,10 @@ export const CGOArrayBit = {
 
 /**
  * Components per vertex, per sub-array:
- *   VERTEX_POS_SIZE 3 / VERTEX_COLOR_SIZE 4   (layer0/ShaderMgr.h:430-431)
- *   VERTEX_NORMAL_SIZE 3                      (layer1/CGO.cpp:54)
- *   VERTEX_PICKCOLOR_SIZE = 1 (rgba) + 2 (index, bond)  (layer1/CGO.cpp:60-64)
- *   VERTEX_ACCESSIBILITY_SIZE 1               (layer1/CGO.cpp:65)
+ *   VERTEX_POS_SIZE 3 / VERTEX_COLOR_SIZE 4   (packages/engine/layer0/ShaderMgr.h:430-431)
+ *   VERTEX_NORMAL_SIZE 3                      (packages/engine/layer1/CGO.cpp:54)
+ *   VERTEX_PICKCOLOR_SIZE = 1 (rgba) + 2 (index, bond)  (packages/engine/layer1/CGO.cpp:60-64)
+ *   VERTEX_ACCESSIBILITY_SIZE 1               (packages/engine/layer1/CGO.cpp:65)
  */
 export const CGO_VERTEX_POS_SIZE = 3;
 export const CGO_VERTEX_NORMAL_SIZE = 3;
@@ -366,7 +366,7 @@ export const CGO_VERTEX_PICKCOLOR_SIZE =
 export const CGO_VERTEX_ACCESSIBILITY_SIZE = 1;
 export const CGO_VERTEX_TEXCOORD_SIZE = 3;
 
-/** Opcodes referenced by the geometry feed, `layer1/CGO.h:82-270`. */
+/** Opcodes referenced by the geometry feed, `packages/engine/layer1/CGO.h:82-270`. */
 export const CGOOp = {
   Stop: 0x00,
   Null: 0x01,
@@ -392,7 +392,7 @@ export const CGOOp = {
 } as const;
 
 /**
- * `*_SZ` operand counts straight from `layer1/CGO.h`. These describe the C op
+ * `*_SZ` operand counts straight from `packages/engine/layer1/CGO.h`. These describe the C op
  * as stored in the CGO buffer — NOT the wire layout. The wire instance layouts
  * are `INSTANCE_ITEM_SIZE` below, which additionally carry colour (the C ops
  * inherit colour from the preceding `CGO_COLOR`, which a GPU instance buffer
@@ -404,12 +404,12 @@ export const CGOOp = {
  * Reconciling them by making one match the other would corrupt one of the two.
  */
 export const CGO_OP_SIZE: Readonly<Record<string, number>> = {
-  sphere: 4, // CGO_SPHERE_SZ,                       layer1/CGO.h:100
-  ellipsoid: 13, // CGO_ELLIPSOID_SZ,                layer1/CGO.h:126
-  cone: 16, // CGO_CONE_SZ,                          layer1/CGO.h:147
-  pickColor: 2, // CGO_PICK_COLOR_SZ,                layer1/CGO.h:151
-  shaderCylinder: 8, // CGO_SHADER_CYLINDER_SZ,      layer1/CGO.h:198
-  shaderCylinder2ndColor: 13, // ..._WITH_2ND_COLOR_SZ, layer1/CGO.h:201
+  sphere: 4, // CGO_SPHERE_SZ,                       packages/engine/layer1/CGO.h:100
+  ellipsoid: 13, // CGO_ELLIPSOID_SZ,                packages/engine/layer1/CGO.h:126
+  cone: 16, // CGO_CONE_SZ,                          packages/engine/layer1/CGO.h:147
+  pickColor: 2, // CGO_PICK_COLOR_SZ,                packages/engine/layer1/CGO.h:151
+  shaderCylinder: 8, // CGO_SHADER_CYLINDER_SZ,      packages/engine/layer1/CGO.h:198
+  shaderCylinder2ndColor: 13, // ..._WITH_2ND_COLOR_SZ, packages/engine/layer1/CGO.h:201
 };
 
 /* ------------------------------------------------------------------ *
@@ -435,15 +435,15 @@ export type InstanceKind = (typeof INSTANCE_KINDS)[number];
  *                (`geometry-extraction.md:413` — "cx,cy,cz,r,rr,gg,bb,aa")
  *   cylinder 12: ox,oy,oz, ax,ay,az, radius, capbits, r,g,b,a
  *                (`cgo::draw::shadercylinder` = origin[3], axis[3], tube_size,
- *                 cap; `layer1/CGO.h:635-644` — colour appended)
+ *                 cap; `packages/engine/layer1/CGO.h:635-644` — colour appended)
  *   cylinder2 16: ox,oy,oz, ax,ay,az, radius, capbits, r1,g1,b1,a1, r2,g2,b2,a2
- *                (`cgo::draw::shadercylinder2ndcolor`, `layer1/CGO.h:646-658`)
+ *                (`cgo::draw::shadercylinder2ndcolor`, `packages/engine/layer1/CGO.h:646-658`)
  *   cone     18: v1[3], v2[3], radius1, radius2, cap1, cap2, rgba1[4], rgba2[4]
- *                (`cgo::draw::cone`, `layer1/CGO.h:719-731`)
+ *                (`cgo::draw::cone`, `packages/engine/layer1/CGO.h:719-731`)
  *   ellipsoid 16: center[3], m[9] (column-major 3x3), r,g,b,a
- *                (`CGO_ELLIPSOID`, `layer1/CGO.h:125-126`)
+ *                (`CGO_ELLIPSOID`, `packages/engine/layer1/CGO.h:125-126`)
  *   line     14: v1[3], v2[3], rgba1[4], rgba2[4]
- *                (`CGO_LINE` / `CGO_SPLITLINE`, `layer1/CGO.h:212-216`. The
+ *                (`CGO_LINE` / `CGO_SPLITLINE`, `packages/engine/layer1/CGO.h:212-216`. The
  *                 accessor funnels lines, ribbon, nonbonded, cell, extent,
  *                 dashes, angles and dihedrals through this one bucket, so a
  *                 single line primitive covers eight reps.)
@@ -487,12 +487,12 @@ export interface InstanceBuffer {
   data: BufferRef;
   /**
    * int32, one atom index per instance (`CGO_PICK_COLOR` operand 0,
-   * `layer1/CGO.h:150-151`). Required for picking and for per-atom recolour.
+   * `packages/engine/layer1/CGO.h:150-151`). Required for picking and for per-atom recolour.
    */
   atom?: BufferRef;
   /**
    * int32, one bond index per instance (`CGO_PICK_COLOR` operand 1). -1 for
-   * atom-level primitives. Sentinels: `modules/pymol/cgo.py:73-77`.
+   * atom-level primitives. Sentinels: `packages/engine/modules/pymol/cgo.py:73-77`.
    */
   bond?: BufferRef;
 }
@@ -574,7 +574,7 @@ export interface GeometryFrameCommon extends BinaryFrameCommon, GeometryKey {
   /**
    * Optional 4x4 column-major object matrix (`cmd.get_object_matrix`), needed
    * when `matrix_mode != 0` because ObjectMolecule::render applies it
-   * (`layer2/ObjectMolecule.cpp:11265-11269`). Absent means identity.
+   * (`packages/engine/layer2/ObjectMolecule.cpp:11265-11269`). Absent means identity.
    */
   matrix?: readonly number[];
   /**
@@ -589,7 +589,7 @@ export interface GeometryFrameCommon extends BinaryFrameCommon, GeometryKey {
 
 /**
  * `RepSurface`, memcpy'd. Field names map 1:1 onto `struct RepSurface`
- * (`layer2/RepSurface.cpp:59-101`):
+ * (`packages/engine/layer2/RepSurface.cpp:59-101`):
  *
  *   position <- V   (3N float)   normal <- VN  (3N float)
  *   color    <- VC  (3N float)   alpha  <- VA  (N float)
@@ -625,10 +625,10 @@ export interface IndexedMeshHeader extends GeometryFrameCommon {
 }
 
 /**
- * One `cgo::draw::arrays` block (`layer1/CGO.h:338-355`), VERBATIM.
+ * One `cgo::draw::arrays` block (`packages/engine/layer1/CGO.h:338-355`), VERBATIM.
  *
  * `data` points at the heap block whose sub-arrays are laid out CONSECUTIVELY
- * (not interleaved) in this order, per `layer1/CGO.cpp:1650-1671`:
+ * (not interleaved) in this order, per `packages/engine/layer1/CGO.cpp:1650-1671`:
  *   [vertex 3N][normal 3N]?[color 4N]?[pickcolor rgba N + index 2N]?[access N]?
  * Use `cgoArraysLayout()` to get the float offsets.
  */
@@ -1251,10 +1251,10 @@ export interface CgoArraysLayout {
 
 /**
  * Reproduce the block layout of `CGOCombineBeginEnd`
- * (`layer1/CGO.cpp:1650-1671`). Sub-arrays are CONSECUTIVE, not interleaved.
+ * (`packages/engine/layer1/CGO.cpp:1650-1671`). Sub-arrays are CONSECUTIVE, not interleaved.
  *
  * The pick-colour block is itself split: `[rgba: 1*nverts][index+bond: 2*nverts]`
- * (`layer1/CGO.cpp:1665-1668`). `pickColorIndex` is the per-vertex atom mapping
+ * (`packages/engine/layer1/CGO.cpp:1665-1668`). `pickColorIndex` is the per-vertex atom mapping
  * required by plan §1.3 constraint 2.
  */
 export function cgoArraysLayout(arraybits: number, nverts: number): CgoArraysLayout {
@@ -1265,7 +1265,7 @@ export function cgoArraysLayout(arraybits: number, nverts: number): CgoArraysLay
     return sub;
   };
 
-  // CGO_VERTEX_ARRAY is always present (assert at layer1/CGO.cpp:1651).
+  // CGO_VERTEX_ARRAY is always present (assert at packages/engine/layer1/CGO.cpp:1651).
   const vertex = take(CGO_VERTEX_POS_SIZE);
   const layout: CgoArraysLayout = {
     nverts,
@@ -1294,7 +1294,7 @@ export function cgoArraysLayout(arraybits: number, nverts: number): CgoArraysLay
 
 /**
  * Floats per vertex across all sub-arrays of a block — the C struct's
- * `narrays` (`layer1/CGO.h:341-352`), recomputed here so a client can validate
+ * `narrays` (`packages/engine/layer1/CGO.h:341-352`), recomputed here so a client can validate
  * `data.byteLength === narrays * nverts * 4` before uploading to the GPU.
  */
 export function cgoNarrays(arraybits: number): number {

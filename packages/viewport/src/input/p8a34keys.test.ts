@@ -7,11 +7,11 @@
  *   fallbacks.
  *
  * `shortcuts.ts` claimed in its header that "`shortcuts.test.ts` diffs this
- * table against `modules/pymol/shortcut_dict.py`". THAT FILE DID NOT EXIST —
+ * table against `packages/engine/modules/pymol/shortcut_dict.py`". THAT FILE DID NOT EXIST —
  * the claim was stale, and nothing checked the table. This is that diff, and
  * it is stronger than the promised one: `__fixtures__/p8a34-keys.json` is
  * `pymol.shortcut_dict.shortcut_dict_ref` read out of a LIVE engine
- * (`bridge/tests/test_p8_a34.py`, which also asserts every row is present in
+ * (`packages/bridge/tests/test_p8_a34.py`, which also asserts every row is present in
  * `cmd.key_mappings` and fails if the file drifts), not the source file
  * re-parsed.
  *

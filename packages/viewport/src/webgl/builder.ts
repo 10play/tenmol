@@ -10,7 +10,7 @@
  * normals and colours are never touched.
  *
  * WHAT IS NEW, AND WHY (all three found by photographing Mode G against
- * Mode P in a real browser; see `docs/webclient/screenshots/modeg/`):
+ * Mode P in a real browser; see `docs/screenshots/modeg/`):
  *
  *  1. Cone and ellipsoid instances are DRAWN (`./instances.ts`), so the two
  *     kinds the previous build reported as a fallback reason no longer force a
@@ -214,7 +214,7 @@ export function buildGeometry(frame: GeometryFrame, options: BuildOptions = {}):
 
   if (header.matrix && header.matrix.length === 16) {
     // `cmd.get_object_matrix` when `matrix_mode != 0`
-    // (`layer2/ObjectMolecule.cpp:11265-11269`). Column-major, as GL wants it.
+    // (`packages/engine/layer2/ObjectMolecule.cpp:11265-11269`). Column-major, as GL wants it.
     group.matrix.fromArray(header.matrix as number[]);
     group.matrixAutoUpdate = false;
   }

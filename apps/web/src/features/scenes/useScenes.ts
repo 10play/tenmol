@@ -1,7 +1,7 @@
 /**
  * Scene bin state: the list, the thumbnails, and every write.
  *
- * `scenes_changed` is setting **254** (`layer1/SettingInfo.h:339`) and rides
+ * `scenes_changed` is setting **254** (`packages/engine/layer1/SettingInfo.h:339`) and rides
  * the settings drain, so plan §1.5 says no new event is needed — the bridge
  * re-reads `cmd.get_scene_list()` (0.7 us) when it appears. Until WP-15 lands
  * that drain, this hook refreshes after every write and on a slow tick, which

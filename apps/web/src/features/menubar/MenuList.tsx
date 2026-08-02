@@ -3,7 +3,7 @@
  *
  * This is the whole rendering surface of the menu bar — ~700 leaves, eleven
  * top-level menus, none of them written by hand. Every branch below is one
- * branch of `_addmenu` (`modules/pmg_qt/pymol_qt_gui.py:295-345`).
+ * branch of `_addmenu` (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:295-345`).
  *
  * Check and radio state is READ LIVE from `cmd.get_setting_tuple`, never stored
  * in the tree and never kept in component state: Qt does the same through

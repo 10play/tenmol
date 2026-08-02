@@ -8,7 +8,7 @@
  * Builder and Properties are now wired through `shell/panelHooks.ts`; Draw/Ray
  * still is not, because `features/render` publishes no open seam, and the test
  * for it asserts that it SAYS so rather than pretending. The progress row's
- * numbers come from a real ray, measured in `bridge/tests/test_p8_a1.py`
+ * numbers come from a real ray, measured in `packages/bridge/tests/test_p8_a1.py`
  * (idle -1.0; 0.35 after 0.16 s of an async 900x700 surface ray).
  */
 
@@ -179,7 +179,7 @@ describe('the progress row (row 58)', () => {
   it('appears with the ray running and fills to int(progress*100)', () => {
     mount();
     // The number a real async `ray 900, 700` of a protein surface reported
-    // 0.16 s in (`bridge/tests/test_p8_a1.py`).
+    // 0.16 s in (`packages/bridge/tests/test_p8_a1.py`).
     act(() => {
       session.stores.connection.set({ progress: 0.35262593626976013 });
     });

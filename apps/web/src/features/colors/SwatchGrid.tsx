@@ -1,7 +1,7 @@
 /**
  * The "C" menu — `pymol.menu.mol_color` as React.
  *
- * Structure and every command string come from `modules/pymol/menu.py:672-686`
+ * Structure and every command string come from `packages/engine/modules/pymol/menu.py:672-686`
  * and the providers it calls. The top row is the five submenus PyMOL puts
  * before the palette (by element / by chain / by ss / by rep / spectrum, then
  * auto), and below them the 9-group swatch grid of `all_colors_list`

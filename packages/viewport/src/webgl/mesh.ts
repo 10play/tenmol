@@ -3,12 +3,12 @@
  * (line strips), both memcpy'd out of PyMOL.
  *
  * TWO DEFECTS THIS FILE FIXES, both found by photographing Mode G against
- * Mode P in a browser (see `docs/webclient/screenshots/modeg/`):
+ * Mode P in a browser (see `docs/screenshots/modeg/`):
  *
  * D6-vis  `buffers.vis` was ignored, so Mode G drew the WHOLE surface while
  *         PyMOL drew only the visible part. `show surface, resi 1-30` on 1UBQ:
  *         Mode P covered 20.1% of the frame, Mode G 26.0%, IoU 0.774. PyMOL's
- *         rule is `visibility_test()` (`layer2/RepSurface.cpp:209-216`): a
+ *         rule is `visibility_test()` (`packages/engine/layer2/RepSurface.cpp:209-216`): a
  *         triangle survives if ALL three of its vertices are visible, or ANY of
  *         them when `proximity` is set — which is exactly the header's
  *         `proximity` flag. Filtering the index buffer by that rule is the
@@ -18,7 +18,7 @@
  *         through to `Points` and drew the 21,222 line-strip vertices as
  *         21,222 dots — the right silhouette made of the wrong primitive
  *         (IoU 0.484 against Mode P). `RepMesh::N` is a zero-terminated list of
- *         GL_LINE_STRIP run lengths (`layer2/RepMesh.cpp:422-431`), so the
+ *         GL_LINE_STRIP run lengths (`packages/engine/layer2/RepMesh.cpp:422-431`), so the
  *         strips expand to LINE indices: run of n vertices -> n-1 segments.
  *         That is a re-INDEXING of PyMOL's own vertices, not a tessellation.
  *
@@ -109,7 +109,7 @@ export function visibleTriangleIndices(
     const a = index[t * 3] ?? 0;
     const b = index[t * 3 + 1] ?? 0;
     const c = index[t * 3 + 2] ?? 0;
-    // layer2/RepSurface.cpp:209-216
+    // packages/engine/layer2/RepSurface.cpp:209-216
     const ok = proximity
       ? (vis[a] ?? 0) !== 0 || (vis[b] ?? 0) !== 0 || (vis[c] ?? 0) !== 0
       : (vis[a] ?? 0) !== 0 && (vis[b] ?? 0) !== 0 && (vis[c] ?? 0) !== 0;
@@ -228,7 +228,7 @@ export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): Built
     // An `isodot` OBJECT carries the SAME strip layout as an `isomesh` one and
     // means something completely different by it: `ObjectMesh::render` opens
     // GL_POINTS, not GL_LINE_STRIP, when `MeshMode` is `isodot`
-    // (`layer2/ObjectMesh.cpp:768,803`). Measured on a real `isodot` of a
+    // (`packages/engine/layer2/ObjectMesh.cpp:768,803`). Measured on a real `isodot` of a
     // gaussian map: 6,162 vertices in ONE run — so expanding the run as a line
     // strip would draw a single 6,161-segment polyline right through the cloud.
     object = new Points(geometry, material);
@@ -274,7 +274,7 @@ export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): Built
 /**
  * `mesh_width` off the header, or PyMOL's default when the bridge is older
  * than the packer that sends it (`cSetting_mesh_width` is 1.0,
- * `layer1/SettingInfo.h`). A non-positive width would make the mesh vanish, so
+ * `packages/engine/layer1/SettingInfo.h`). A non-positive width would make the mesh vanish, so
  * it falls back too.
  */
 export function meshWidthOf(header: IndexedMeshHeader): number {
@@ -282,7 +282,7 @@ export function meshWidthOf(header: IndexedMeshHeader): number {
   return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? raw : 1;
 }
 
-/** `cIsomeshMode::isodot` (`layer0/PyMOLEnums.h:9-13`). */
+/** `cIsomeshMode::isodot` (`packages/engine/layer0/PyMOLEnums.h:9-13`). */
 export const MESH_TYPE_ISODOT = 1;
 
 /**

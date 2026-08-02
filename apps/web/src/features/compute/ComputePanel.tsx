@@ -8,7 +8,7 @@
  *
  * The one that matters is `protein_vacuum_esp`: it MUTATES the structure —
  * deleting alt-conformers and residues it cannot assign charges to
- * (`modules/pymol/util.py:335-383`) — before creating `_e_chg` / `_e_map` /
+ * (`packages/engine/modules/pymol/util.py:335-383`) — before creating `_e_chg` / `_e_map` /
  * `_e_pot`. B9 requires the UI to warn before that and to surface the
  * diagnostics it prints. It is behind a confirm step, and its console output is
  * where PyMOL puts it.
@@ -43,7 +43,7 @@ type Row = {
  *
  * Not decoration, and not a guess at a round trip: PyMOL's console output does
  * not come back with the RPC reply. It is drained by the bridge's status thread
- * at `status_hz` (10 Hz, `bridge/tenmol_bridge/config.py`) and pushed as
+ * at `status_hz` (10 Hz, `packages/bridge/tenmol_bridge/config.py`) and pushed as
  * `{t:'feedback'}` frames, so the last lines of a run land AFTER the promise
  * resolves. Measured on `util.protein_vacuum_esp`: the four diagnostic lines
  * arrive across ~0.3 s either side of the reply. 800 ms is two status ticks of

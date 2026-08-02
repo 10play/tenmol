@@ -2,10 +2,10 @@
  * Ellipsoid impostor GLSL (WebGL2 / GLSL ES 3.00).
  *
  * PyMOL has NO ellipsoid shader: `RepEllipsoid` only exists on the ray-tracing
- * path (`CRay::ellipsoid3fv`, `layer1/Ray.cpp:7173`) and the GL path tessellates
+ * path (`CRay::ellipsoid3fv`, `packages/engine/layer1/Ray.cpp:7173`) and the GL path tessellates
  * it into a CGO sphere approximation. The accessor therefore ships us exactly
  * what the ray tracer gets — `CGO_ELLIPSOID` = `centre[3], r, n1[3], n2[3],
- * n3[3]` (`layer1/CGO.cpp:896-918`) — and this shader ray-traces the same
+ * n3[3]` (`packages/engine/layer1/CGO.cpp:896-918`) — and this shader ray-traces the same
  * quadric per fragment, which is both cheaper and more accurate than any
  * tessellation.
  *
@@ -16,7 +16,7 @@
  * `A^-1 = diag(1/L_i^2) A^T` — three dot products, no matrix inverse.
  *
  * The impostor quad is the SPHERE quad of radius `max(L_i)`, including
- * `outer_tangent_adjustment()` from `data/shaders/sphere.vs`, so a perspective
+ * `outer_tangent_adjustment()` from `packages/engine/data/shaders/sphere.vs`, so a perspective
  * silhouette is never clipped.
  */
 
@@ -41,7 +41,7 @@ out vec3 v_point;      // eye space
 out mat3 v_axes;       // eye-space A = [n1 n2 n3] (columns, NOT normalised)
 out vec3 v_invLen2;    // 1 / L_i^2
 
-// data/shaders/sphere.vs :: outer_tangent_adjustment
+// packages/engine/data/shaders/sphere.vs :: outer_tangent_adjustment
 vec2 outer_tangent_adjustment(vec3 center, float radius_sq) {
   vec2 xy_dist = vec2(length(center.xz), length(center.yz));
   vec2 cos_a = clamp(center.z / xy_dist, -1., 1.);

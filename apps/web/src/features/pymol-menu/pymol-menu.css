@@ -1,5 +1,5 @@
 /*
- * PyMOL pop-up. `layer4/PopUp.cpp` draws a plain filled rect with a 1px border
+ * PyMOL pop-up. `packages/engine/layer4/PopUp.cpp` draws a plain filled rect with a 1px border
  * and 1 line of text per row; the palette is the internal-GUI one, so the DOM
  * version uses the same tokens as the object panel rather than inventing a
  * "web" menu look.

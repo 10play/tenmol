@@ -52,7 +52,7 @@ describe('strip / fan re-indexing', () => {
 function cgoFrameWithBlock(): Uint8Array {
   const nverts = 4;
   const arraybits = CGOArrayBit.Normal | CGOArrayBit.Color;
-  // [vertex 3N][normal 3N][color 4N], CONSECUTIVE (layer1/CGO.cpp:1650-1671)
+  // [vertex 3N][normal 3N][color 4N], CONSECUTIVE (packages/engine/layer1/CGO.cpp:1650-1671)
   const floats = new Float32Array(3 * nverts + 3 * nverts + 4 * nverts);
   for (let i = 0; i < nverts; i++) {
     floats[i * 3] = i;

@@ -4,7 +4,7 @@
  * The one behaviour that is not generic window bookkeeping is the per-name
  * cache: `colorramping.volume_panel` keeps ONE panel per volume name in
  * `_volume_windows_qt` and calls `show()` + `raise_()` on the second request
- * (`modules/pymol/colorramping.py:170-190`). Opening the same volume twice must
+ * (`packages/engine/modules/pymol/colorramping.py:170-190`). Opening the same volume twice must
  * therefore raise, not duplicate.
  */
 

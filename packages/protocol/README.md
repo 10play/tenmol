@@ -1,6 +1,6 @@
 # `@tenmol/protocol` — the wire contract
 
-WP-01 (plan `docs/webclient/03-implementation-plan.md` §6, wave 0).
+WP-01 (plan `docs/03-implementation-plan.md` §6, wave 0).
 
 Pure types, constants and pure functions. **Zero runtime dependencies**, no I/O,
 importable from the browser, from Node, from a worker and from a test.
@@ -17,7 +17,7 @@ importable from the browser, from Node, from a worker and from a test.
 | `src/topics/index.ts`     | The barrel + `TopicPayloads`. **Frozen.**                                                                                                                                         |
 | `src/topics/<name>.ts`    | 19 modules, one owner each.                                                                                                                                                       |
 | `python/tenmol_wire.py`   | Reference **producer** implementation of the binary-frame codec, for the bridge.                                                                                                  |
-| `test/roundtrip.test.ts`  | Encodes in Python, decodes here, asserts `zeroCopyPos === true`.                                                                                                                  |
+| `packages/engine/test/roundtrip.test.ts`  | Encodes in Python, decodes here, asserts `zeroCopyPos === true`.                                                                                                                  |
 
 ## Two rules that are not negotiable
 
@@ -80,5 +80,5 @@ pnpm --filter @tenmol/protocol test        # python encode -> ts decode round tr
 ```
 
 The test shells out to `python3` (override with `TENMOL_PYTHON`) to run
-`test/make_fixtures.py`, which encodes five frames with `python/tenmol_wire.py`.
+`packages/engine/test/make_fixtures.py`, which encodes five frames with `python/tenmol_wire.py`.
 No fixtures are checked in, so the two implementations cannot silently drift.

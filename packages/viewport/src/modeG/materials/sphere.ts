@@ -1,5 +1,5 @@
 /**
- * Sphere impostor material — a port of `data/shaders/sphere.vs` + `sphere.fs`.
+ * Sphere impostor material — a port of `packages/engine/data/shaders/sphere.vs` + `sphere.fs`.
  *
  * A sphere is ONE instance of a 4-vertex quad. It is never tessellated: PyMOL
  * ray-traces it per fragment and writes `gl_FragDepth`, which is why PyMOL
@@ -43,7 +43,7 @@ out vec3 v_sphereCenter;
 out float v_radius2;
 out vec3 v_point;
 
-// data/shaders/sphere.vs :: outer_tangent_adjustment
+// packages/engine/data/shaders/sphere.vs :: outer_tangent_adjustment
 vec2 outer_tangent_adjustment(vec3 center, float radius_sq) {
   vec2 xy_dist = vec2(length(center.xz), length(center.yz));
   vec2 cos_a = clamp(center.z / xy_dist, -1., 1.);

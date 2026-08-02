@@ -4,7 +4,7 @@
  *
  * The engine's own idle loop sculpts — 0.6843 A of drift in 2.0 s with no
  * client tick, no pixel subscriber and no draw request
- * (`bridge/tests/test_p10_viewport.py`) — so a client that also passes
+ * (`packages/bridge/tests/test_p10_viewport.py`) — so a client that also passes
  * `sculpting_cycles` on a timer doubles the iteration rate and the strain it
  * prints is not the strain the engine is converging on. `sculptTicker.ts` is
  * therefore a READOUT: 0 cycles, which `cmd.sculpt_iterate` answers with the

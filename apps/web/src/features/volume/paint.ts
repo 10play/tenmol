@@ -1,6 +1,6 @@
 /**
  * The ramp canvas painter — one pass, in `paintEvent`'s order
- * (`modules/pmg_qt/volume.py:250-266`):
+ * (`packages/engine/modules/pmg_qt/volume.py:250-266`):
  *
  *   grid -> axes (+ the three value boxes) -> [clip] histogram [unclip]
  *        -> colour dots -> zoom band

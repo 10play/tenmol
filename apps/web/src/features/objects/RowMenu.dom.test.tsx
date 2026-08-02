@@ -2,8 +2,8 @@
  * The popup engine, driven by REAL `pymol.menu` output.
  *
  * Every fixture below is the literal JSON `cmd.tenmol_objects('menu', ...)`
- * answered on this build (captured while writing `bridge/tests/test_objects.py`),
- * so a change in `modules/pymol/menu.py` or in the bridge's serialisation breaks
+ * answered on this build (captured while writing `packages/bridge/tests/test_objects.py`),
+ * so a change in `packages/engine/modules/pymol/menu.py` or in the bridge's serialisation breaks
  * this test rather than quietly changing the UI.
  */
 
@@ -97,7 +97,7 @@ function menu(items: PanelMenuNode[], over: Partial<React.ComponentProps<typeof 
   );
 }
 
-describe('PopUp codes (layer4/PopUp.cpp:270-300)', () => {
+describe('PopUp codes (packages/engine/layer4/PopUp.cpp:270-300)', () => {
   it('0 = separator, 1 = item, 2 = title', () => {
     render(menu(MOL_SHOW));
     expect(container.querySelectorAll('.rowmenu__sep')).toHaveLength(1);

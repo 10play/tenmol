@@ -6,7 +6,7 @@
  *   node / pnpm / workspace install
  *   the venv, `import pymol`, `import tenmol_bridge`
  *   offscreen GL context creation (the exact CGL+FBO recipe from
- *     docs/webclient/spikes/04-picking.md section 2 -- not re-derived)
+ *     docs/spikes/04-picking.md section 2 -- not re-derived)
  *   the dev ports
  *
  * Exit codes: 0 all required checks pass, 1 a required check failed.
@@ -21,6 +21,8 @@ import { createServer } from 'node:net';
 import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// The repo root: `scripts/` sits directly under it. Everything is rooted
+// here — `packages/engine/` (upstream) and `packages/`, `apps/` (ours).
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 const argv = process.argv.slice(2);
 const JSON_OUT = argv.includes('--json');
@@ -89,7 +91,7 @@ add(
 // --------------------------------------------------------------------------
 const venvCandidates = [
   process.env.TENMOL_VENV && join(process.env.TENMOL_VENV, 'bin', 'python'),
-  join(REPO, 'bridge', '.venv', 'bin', 'python'),
+  join(REPO, 'packages', 'bridge', '.venv', 'bin', 'python'),
   join(REPO, '.venv', 'bin', 'python'),
 ].filter(Boolean);
 const PY = venvCandidates.find((p) => existsSync(p)) ?? '';
@@ -155,7 +157,7 @@ pyCheck(
 );
 
 // --------------------------------------------------------------------------
-// offscreen GL -- verbatim from docs/webclient/spikes/04-picking.md section 2
+// offscreen GL -- verbatim from docs/spikes/04-picking.md section 2
 // --------------------------------------------------------------------------
 const GL_PROBE = String.raw`
 import sys, ctypes, platform
@@ -243,7 +245,7 @@ for (const [port, who] of [
 // repo hygiene
 // --------------------------------------------------------------------------
 try {
-  const dirty = sh('git', ['status', '--porcelain', '--', 'modules', 'testing', 'layer0'], {
+  const dirty = sh('git', ['status', '--porcelain', '--', 'packages/engine/modules', 'packages/engine/testing', 'packages/engine/layer0'], {
     cwd: REPO,
   });
   add(

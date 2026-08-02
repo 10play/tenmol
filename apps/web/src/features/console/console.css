@@ -5,7 +5,7 @@
  *
  * Severity colours are chosen to match how PyMOL colours the same text in the
  * viewport-drawn console: errors red, warnings amber, the `PyMOL>` echo in the
- * same salmon as the mouse-mode heading (`{1.0,0.5,0.5}`, layer1/ButMode.cpp),
+ * same salmon as the mouse-mode heading (`{1.0,0.5,0.5}`, packages/engine/layer1/ButMode.cpp),
  * client-origin lines dim so a button press is never mistaken for engine output.
  */
 
@@ -116,7 +116,7 @@
 /* ------------------------------------------------------------------ *
  * The in-viewport console (OrthoConsole)
  *
- * `OrthoDrawText` (layer1/Ortho.cpp:1623-1693) draws bottom-left over the
+ * `OrthoDrawText` (packages/engine/layer1/Ortho.cpp:1623-1693) draws bottom-left over the
  * scene, `cOrthoLeftMargin` = 3 px in, `cOrthoBottomMargin` = 5 px up, line
  * height `cOrthoLineHeight` = 12 px, character cell 8 px wide.
  *
@@ -174,7 +174,7 @@
   margin-bottom: 4px; /* `if (lcount == adjust_at) y += 4` */
 }
 
-/* `I->TextColor` = {0.83, 0.83, 1.0} (layer1/Ortho.cpp:2702-2704). */
+/* `I->TextColor` = {0.83, 0.83, 1.0} (packages/engine/layer1/Ortho.cpp:2702-2704). */
 .ortho__line--text {
   color: #d4d4ff;
 }
@@ -204,7 +204,7 @@
 /* ------------------------------------------------------------------ *
  * The busy box (BusyOverlay)
  *
- * `OrthoBusyDraw` (layer1/Ortho.cpp:645-660): a black quad from (0, Height)
+ * `OrthoBusyDraw` (packages/engine/layer1/Ortho.cpp:645-660): a black quad from (0, Height)
  * to (cBusyWidth, Height - cBusyHeight) — i.e. flush into the TOP-LEFT corner,
  * 240x60, with a 10 px margin and white contents. The sizes are inline styles
  * so the C constants live in exactly one place (`orthoOverlays.ts`).
@@ -233,7 +233,7 @@
 }
 
 /* `glBegin(GL_LINE_LOOP)` around the bar, then a filled strip inside it
-   (`layer1/Ortho.cpp:668-687`). */
+   (`packages/engine/layer1/Ortho.cpp:668-687`). */
 .ortho-busy__bar {
   box-sizing: border-box;
   border: 1px solid #fff;
@@ -247,8 +247,8 @@
 /* ------------------------------------------------------------------ *
  * The rubber band (OrthoLoopRect)
  *
- * `OrthoDrawLoop` (layer1/Ortho.cpp:1695-1745) draws four 1 px strips in
- * `cColorFront`, which is `1 - bg_rgb` (`layer1/Color.cpp:1758-1762`). The
+ * `OrthoDrawLoop` (packages/engine/layer1/Ortho.cpp:1695-1745) draws four 1 px strips in
+ * `cColorFront`, which is `1 - bg_rgb` (`packages/engine/layer1/Color.cpp:1758-1762`). The
  * viewport background is black here, so that is white — the same reasoning
  * `.ortho__line--overlay` already uses.
  * ------------------------------------------------------------------ */

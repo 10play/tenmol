@@ -15,16 +15,16 @@
  * correction is recorded rather than quietly applied.
  *
  * The defect was real: `get_volume_histogram` was listed in
- * `bridge/tenmol_bridge/codec.py`'s `BLOB_RETURNS`, and
+ * `packages/bridge/tenmol_bridge/codec.py`'s `BLOB_RETURNS`, and
  * `EngineBlobWriter._array_blob` insists on a numpy array, while
- * `CmdGetVolumeHistogram` (`layer4/Cmd.cpp:738-752`) returns a plain Python
+ * `CmdGetVolumeHistogram` (`packages/engine/layer4/Cmd.cpp:738-752`) returns a plain Python
  * list of `bins + 4` floats — so every call answered
  *
  *     NotSerializable: get_volume_histogram returned list, expected a numpy array
  *
  * `codec.py` no longer lists it (it carries a comment saying why), and the call
  * now answers 68 inline floats. Measured over a real socket in
- * `bridge/tests/test_p8_a10.py`, which also RE-CREATES the old defect with a
+ * `packages/bridge/tests/test_p8_a10.py`, which also RE-CREATES the old defect with a
  * monkeypatch and gets that exact message back, so "fixed" is a measurement of
  * this build and not a memory of a commit.
  *
@@ -87,7 +87,7 @@ export async function applyPreset(session: Session, name: string, preset: string
  *
  * The inventory row said "the list is a client constant, not a live read of
  * `pymol.colorramping.namedramps` (no cmd getter exists)". The second half is
- * wrong, and the refutation is `modules/pymol/menu.py:643-653`:
+ * wrong, and the refutation is `packages/engine/modules/pymol/menu.py:643-653`:
  *
  *     def vol_color(self_cmd, sele):
  *         from pymol.colorramping import namedramps
@@ -97,13 +97,13 @@ export async function applyPreset(session: Session, name: string, preset: string
  * `menu` IS in `policy/base.py`'s `DEFAULT_ROOTS`, so this resolves through the
  * ordinary dispatcher, while `colorramping` is not and answers `NotAllowed:
  * 'colorramping' is not an addressable namespace` (both measured in
- * `bridge/tests/test_p8_a10.py`). `self_cmd` is unused by this particular
+ * `packages/bridge/tests/test_p8_a10.py`). `self_cmd` is unused by this particular
  * provider, which is why `null` is a legal first argument.
  *
  * It is a LIVE read and not a prettier constant: registering a ramp with
  * `cmd.volume_ramp_new` makes it appear here on the next call, measured.
  *
- * Row kinds are PyMOL's popup kinds (`layer4/PopUp.cpp`): 2 title, 0
+ * Row kinds are PyMOL's popup kinds (`packages/engine/layer4/PopUp.cpp`): 2 title, 0
  * separator, 1 leaf. The `panel` leaf is filtered out of the DROPDOWN because
  * it is not a ramp — it opens the editor, and it is live now, wired through
  * `menuBridge.ts` where the menu that owns it is dispatched.
@@ -132,7 +132,7 @@ export interface PresetList {
  * The preset list, three tiers, tried in order. NEVER THROWS.
  *
  *   1. `cmd.tenmol_volume.ramps()` — `sorted(pymol.colorramping.namedramps)`,
- *      read server-side by `bridge/tenmol_bridge/panels/volume.py`. This is the
+ *      read server-side by `packages/bridge/tenmol_bridge/panels/volume.py`. This is the
  *      "bridge getter returning `namedramps` keys" the inventory row's target
  *      column asked for, and the only tier that can tell a registered ramp from
  *      a built-in one.
@@ -199,13 +199,13 @@ export interface HistogramFetch {
  *   1. `cmd.get_volume_histogram(name)` — the real thing, and on this build it
  *      is the one that runs: 68 inline floats, `[min, max, mean, stdev, h0..h63]`,
  *      of which `min` and `max` arrive bit-identical to the captured fixture
- *      (`bridge/tests/test_p8_a10.py`). 2956 of the field's 2992 voxels are
+ *      (`packages/bridge/tests/test_p8_a10.py`). 2956 of the field's 2992 voxels are
  *      binned — the rest fall outside PyMOL's own +/- `volume_data_range` trim.
  *   2. `cmd.get_volume_field(name)` + `histogramFromField` — a verbatim port of
  *      the C histogram, proved bar-for-bar in `ramp.test.ts`. The array arrives
  *      as a blob handle, and `GET /blob/{id}` from the page is CROSS-ORIGIN
  *      (`http://localhost:5210` -> `http://127.0.0.1:8810`) while
- *      `bridge/tenmol_bridge/server.py` installs no CORS middleware (grep:
+ *      `packages/bridge/tenmol_bridge/server.py` installs no CORS middleware (grep:
  *      no `add_middleware` at all), so the browser refuses to read the
  *      response: measured in wave 4, `TypeError: Failed to fetch`. One
  *      `Access-Control-Allow-Origin` header on `/blob` turns this tier on.
@@ -266,7 +266,7 @@ async function histogramViaField(session: Session, name: string): Promise<Histog
   const dtype = value.meta?.dtype ?? 'float32';
   if (dtype !== 'float32') throw new Error(`unsupported volume field dtype ${dtype}`);
   // `ExecutiveGetHistogram` trims to +/- `volume_data_range` standard deviations
-  // (`layer3/Executive.cpp:4730-4733`), so the per-object setting has to be read
+  // (`packages/engine/layer3/Executive.cpp:4730-4733`), so the per-object setting has to be read
   // or the reported range will not match PyMOL's.
   const limit = await session
     .call<string>('get', ['volume_data_range', name])

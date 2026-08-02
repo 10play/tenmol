@@ -2,7 +2,7 @@
  * The output pane.
  *
  * Qt: a read-only `QPlainTextEdit` named `feedback_browser`
- * (`modules/pmg_qt/pymol_qt_gui.py:122-124`), monospace, appended from
+ * (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:122-124`), monospace, appended from
  * `cmd._get_feedback()` on a 500 ms timer (`:941-958`). Here the timer is gone —
  * the bridge pushes `{t:'feedback', lines:[...]}` from its 10 Hz status thread.
  *
@@ -24,13 +24,13 @@
  *     only when the click left no selection behind.
  *
  * Long lines are hard-split by PyMOL itself at ~1018 chars regardless of
- * `wrap_output` (`OrthoLineLength` fail-safe, `layer1/Ortho.cpp:1099-1104`), and
+ * `wrap_output` (`OrthoLineLength` fail-safe, `packages/engine/layer1/Ortho.cpp:1099-1104`), and
  * `wrap_output` itself is applied server-side before the line is queued (see
  * `@tenmol/protocol/topics/console`), so one feedback entry is NOT always one
  * logical line — hence no line numbering, and hence `white-space: pre` rather
  * than any CSS wrapping that would fight PyMOL's own.
  *
- * ANSI: `OrthoFeedbackOut` (`layer1/Ortho.cpp:1148-1150`) strips escapes unless
+ * ANSI: `OrthoFeedbackOut` (`packages/engine/layer1/Ortho.cpp:1148-1150`) strips escapes unless
  * `colored_feedback` is on, so with it on the escapes arrive here intact —
  * verified: `print("\\033[31mRED\\033[0m")` gives `"RED"` at 0 and the raw
  * escapes at 1. Colouring them is this component's job.

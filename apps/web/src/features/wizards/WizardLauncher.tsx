@@ -1,14 +1,14 @@
 /**
  * Launching a wizard.
  *
- * The Qt build launches wizards from the menubar (`modules/pymol/_gui.py:834-864`)
- * and from ten places in the viewport context menu (`modules/pymol/menu.py`).
+ * The Qt build launches wizards from the menubar (`packages/engine/modules/pymol/_gui.py:834-864`)
+ * and from ten places in the viewport context menu (`packages/engine/modules/pymol/menu.py`).
  * WP-14 owns the menubar and WP-13 the context menus, so until those land this
  * feature carries the same list itself — built from the catalog the BRIDGE
  * reports, not from a hardcoded array, so a third-party module dropped into
- * `modules/pymol/wizard/` appears here too (`_wizard()` imports
+ * `packages/engine/modules/pymol/wizard/` appears here too (`_wizard()` imports
  * `pymol.wizard.<name>` and instantiates `name.capitalize()`,
- * `modules/pymol/wizarding.py:35,41`).
+ * `packages/engine/modules/pymol/wizarding.py:35,41`).
  *
  * Every entry is dispatched as the exact command line PyMOL's own menu uses
  * (`wizard measurement`, `wizard demo, reps`, `replace_wizard demo, finish`),

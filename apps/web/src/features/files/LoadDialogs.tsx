@@ -1,5 +1,5 @@
 /**
- * The format-specific import dialogs of `modules/pmg_qt/file_dialogs.py`.
+ * The format-specific import dialogs of `packages/engine/modules/pmg_qt/file_dialogs.py`.
  *
  * Each one is a 1:1 port of a `pmg_qt/forms/*.ui` form plus the `get_command()`
  * that renders its live preview. They emit a **command string** through
@@ -509,7 +509,7 @@ export function mapGenerateOutcome(result: MapGenerateResult): {
 }
 
 /**
- * `PyMOLMapLoad` (`modules/pmg_tk/PyMOLMapLoad.py:10-345`) — the legacy Tk
+ * `PyMOLMapLoad` (`packages/engine/modules/pmg_tk/PyMOLMapLoad.py:10-345`) — the legacy Tk
  * "PyMOL Map Generation" dialog, rebuilt.
  *
  * Three Pmw groups, kept: Column Labels (amplitudes / phases / weights, the
@@ -525,7 +525,7 @@ export function mapGenerateOutcome(result: MapGenerateResult): {
  *     and the Tk dialog goes on to isomesh an object that does not exist. The
  *     bridge answers with `created`, read back from `cmd.get_names()`.
  *  2. This tree compiles the generator out (`NO_MMLIBS`,
- *     `layer3/Executive.cpp:6929-6935`), so it fails on every input. The banner
+ *     `packages/engine/layer3/Executive.cpp:6929-6935`), so it fails on every input. The banner
  *     says so up front instead of letting the user find out.
  *
  * The dialog is still offered, because the failure is a BUILD property: a tree

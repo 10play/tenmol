@@ -1,6 +1,6 @@
 /**
  * The colour editor — `PyMOLQtGUI.edit_colors_dialog`
- * (`modules/pmg_qt/pymol_qt_gui.py:547-611`) over `pmg_qt/forms/colors.ui`.
+ * (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:547-611`) over `pmg_qt/forms/colors.ui`.
  *
  * Widget-for-widget: a sorted list of the **178 digit-free** names (the Qt
  * dialog populates from `cmd.get_color_indices()`, not `all=1`) plus whatever
@@ -29,7 +29,7 @@
  * Additions the Qt dialog does not have, all of which the inventory row asks
  * for: a search box over the list, a hex field accepting `0xRRGGBB` / `#RRGGBB`
  * (the `0x` form is what `ColorGetIndex` itself parses,
- * `layer1/Color.cpp:704-712`), the seven special-colour chips, and the HSV
+ * `packages/engine/layer1/Color.cpp:704-712`), the seven special-colour chips, and the HSV
  * picker below.
  *
  * THE HSV PICKER (row 72's last open item, "HSV/RGB picker replacing 3 sliders
@@ -322,7 +322,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
               if (parsed) setRgb(parsed);
             }}
             onBlur={() => setHexDraft(null)}
-            title="0xRRGGBB is what ColorGetIndex itself parses (layer1/Color.cpp:704-712); the value lands on the spinboxes' 2-decimal grid, so #ff8800 settles as #ff8700"
+            title="0xRRGGBB is what ColorGetIndex itself parses (packages/engine/layer1/Color.cpp:704-712); the value lands on the spinboxes' 2-decimal grid, so #ff8800 settles as #ff8700"
           />
         </label>
 

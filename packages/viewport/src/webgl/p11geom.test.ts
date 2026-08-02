@@ -2,15 +2,15 @@
  * Parity row 372: an `isomesh`/`isodot` OBJECT now arrives as a mesh frame, and
  * the two mean DIFFERENT primitives by the same buffers.
  *
- * The C++ side (`layer4/CmdWebGeometry.cpp`) serves `ObjectMeshState::N` / `::V`
+ * The C++ side (`packages/engine/layer4/CmdWebGeometry.cpp`) serves `ObjectMeshState::N` / `::V`
  * through the envelope `RepMesh` already used, so `buildIndexedMesh` draws an
  * isomesh with no change at all. `isodot` is the trap: it carries the identical
  * `strip` buffer and `ObjectMesh::render` opens GL_POINTS for it
- * (`layer2/ObjectMesh.cpp:768,803`), so expanding the runs as line strips draws
+ * (`packages/engine/layer2/ObjectMesh.cpp:768,803`), so expanding the runs as line strips draws
  * a polyline through the whole dot cloud.
  *
- * MEASURED on a real gaussian map of `test/dat/pept.pdb` (the bridge half is
- * `bridge/tests/test_p11_geom.py`):
+ * MEASURED on a real gaussian map of `packages/engine/test/dat/pept.pdb` (the bridge half is
+ * `packages/bridge/tests/test_p11_geom.py`):
  *   isomesh 1.0 sigma -> 12,536 vertices in 212 runs
  *   isodot  1.0 sigma ->  6,162 vertices in ONE run
  * so the isodot frame is exactly the shape that goes most wrong.

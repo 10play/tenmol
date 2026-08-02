@@ -1,7 +1,7 @@
 /**
  * WP-01 acceptance test: encode in Python, decode in TypeScript, zero copy.
  *
- * `test/make_fixtures.py` writes five binary frames using
+ * `packages/engine/test/make_fixtures.py` writes five binary frames using
  * `python/tenmol_wire.py` — the normative producer-side implementation the
  * bridge will use. This file decodes them with `@tenmol/protocol` and asserts:
  *

@@ -1,16 +1,16 @@
 /*
- * The sequence viewer block. Metrics are PyMOL's own (`layer1/Seq.h:84-88`):
+ * The sequence viewer block. Metrics are PyMOL's own (`packages/engine/layer1/Seq.h:84-88`):
  * LineHeight 13, CharWidth 8, ScrollBarWidth 16, CharMargin 2.
  *
  * `seq_view_location` 0 puts it at the top of the viewport and 1 at the bottom
- * (`layer1/Ortho.cpp:2181`, `:2418`); `seq_view_overlay` draws it OVER the
- * scene instead of reserving space (`layer1/Seq.cpp:282-289`).
+ * (`packages/engine/layer1/Ortho.cpp:2181`, `:2418`); `seq_view_overlay` draws it OVER the
+ * scene instead of reserving space (`packages/engine/layer1/Seq.cpp:282-289`).
  */
 
 /*
  * z-index: PyMOL stacks the Seq block ABOVE the scene — `OrthoDoDraw` draws
  * blocks after the scene and the seq block owns its strip outright
- * (`layer1/Ortho.cpp:2404-2420`), so nothing in the viewport may sit over it.
+ * (`packages/engine/layer1/Ortho.cpp:2404-2420`), so nothing in the viewport may sit over it.
  * The viewport slot's diagnostic HUD is `z-index: 10`
  * (`apps/web/src/features/viewport/viewport.css:22`) at `top: 8px`, i.e.
  * exactly on top of a `seq_view_location = 0` strip, and it swallowed the
@@ -117,7 +117,7 @@
 /*
  * ALIGNMENT MODE. The flex row above packs the cells edge to edge, which is
  * right when `offset` is contiguous and WRONG the moment an alignment opens
- * holes in a row (`layer3/Seeker.cpp:1583-1793` places every column at the
+ * holes in a row (`packages/engine/layer3/Seeker.cpp:1583-1793` places every column at the
  * offset its tag earns, and the holes are what `row.fill` paints). So the row
  * becomes a positioning context and every cell gets an explicit `left`.
  *
@@ -135,7 +135,7 @@
 }
 
 /*
- * `row->fill` — `layer1/Seq.cpp:488-504` repeats `seq_view_fill_char` across
+ * `row->fill` — `packages/engine/layer1/Seq.cpp:488-504` repeats `seq_view_fill_char` across
  * the run in `seq_view_fill_color`. NOT clickable: the C never hit-tests it
  * (`SeekerClick` resolves a COLUMN, and a fill entry is not one), so it must
  * not swallow the pointer from the cell a user is aiming at.
@@ -173,7 +173,7 @@
 }
 
 /*
- * `col->inverse` is INVERTED VIDEO in the C (`layer1/Seq.cpp:465-482`). The
+ * `col->inverse` is INVERTED VIDEO in the C (`packages/engine/layer1/Seq.cpp:465-482`). The
  * real swap is inline in `SequenceViewer.tsx`, from the colour the bridge sent
  * for that column; this is only the fallback for a column whose colour index is
  * missing from `payload.colors`. It must NOT be `background: currentcolor` —

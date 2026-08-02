@@ -4,7 +4,7 @@
  * NOT a topic module — `topics/index.ts` is frozen and already carries the
  * three v1 movie topics (`frame`, `scenes`, `movie_panel`), which stay exactly
  * as WP-01 wrote them. This module is the *request/response* half: the shapes
- * returned by the four aggregate endpoints `bridge/tenmol_bridge/panels/movie.py`
+ * returned by the four aggregate endpoints `packages/bridge/tenmol_bridge/panels/movie.py`
  * binds onto the `cmd` namespace. It is reached by its subpath —
  * `import type { ... } from '@tenmol/protocol/topics/movie'` — which
  * `package.json`'s `"./topics/*"` export already resolves.
@@ -23,7 +23,7 @@
  * @notATopic  NOT A TRANSPORT TOPIC — deliberately not re-exported by the
  * frozen `topics/index.ts` barrel. Reached by its subpath
  * (`@tenmol/protocol/topics/movie`); its events, if any, ride an existing
- * topic. `bridge/tests/test_dispatch.py` looks for this tag.
+ * topic. `packages/bridge/tests/test_dispatch.py` looks for this tag.
  */
 
 /* ------------------------------------------------------------------ *
@@ -72,7 +72,7 @@ export interface MovieStatus {
   nframes: number;
   /** `cmd.get_movie_length()` — 0 when no `mset` program is defined. */
   length: number;
-  /** `MoviePlaying` (`layer1/Movie.cpp:540`) — false while locked. */
+  /** `MoviePlaying` (`packages/engine/layer1/Movie.cpp:540`) — false while locked. */
   playing: boolean;
   /** `cmd.get_movie_locked()`. */
   locked: boolean;
@@ -87,7 +87,7 @@ export interface MovieStatus {
  * timeline — on demand
  * ------------------------------------------------------------------ */
 
-/** `CViewElem::specification_level` (`layer1/View.h:24`). */
+/** `CViewElem::specification_level` (`packages/engine/layer1/View.h:24`). */
 export const SPEC_NONE = 0;
 export const SPEC_INTERPOLATED = 1;
 export const SPEC_KEY = 2;
@@ -108,7 +108,7 @@ export interface MovieCell {
 }
 
 /**
- * One row of `ExecutiveMotionDraw` (`layer3/Executive.cpp:697`).
+ * One row of `ExecutiveMotionDraw` (`packages/engine/layer3/Executive.cpp:697`).
  * `object === ''` is the camera row (`cExecAll`).
  */
 export interface MovieRow {
@@ -117,7 +117,7 @@ export interface MovieRow {
    * The gutter label `ViewElemDraw` is given: `'camera'` for the camera row,
    * the object name for an object row, and `'states'` for the synthetic row
    * `ExecutiveCountMotions` invents when there are no motions at all but the
-   * scene has more than one frame (`layer1/Movie.cpp:1845`).
+   * scene has more than one frame (`packages/engine/layer1/Movie.cpp:1845`).
    */
   label: string;
   spec: SpecLevel[];
@@ -136,7 +136,7 @@ export interface MoviePanel {
   height: number;
   /** `CMovie::MatrixFlag` — a programmed initial orientation exists. */
   matrix: boolean;
-  /** `ExecutiveCountMotions()` (`layer3/Executive.cpp:664`) === `rows.length`. */
+  /** `ExecutiveCountMotions()` (`packages/engine/layer3/Executive.cpp:664`) === `rows.length`. */
   motions: number;
   /** `presentation` setting: the C panel collapses to the camera row alone. */
   presentation: boolean;
@@ -157,7 +157,7 @@ export interface MoviePanel {
  * scenes
  * ------------------------------------------------------------------ */
 
-/** `MovieScene::storemask` bit names (`layer3/MovieScene.cpp:207-213`). */
+/** `MovieScene::storemask` bit names (`packages/engine/layer3/MovieScene.cpp:207-213`). */
 export type SceneStore = 'view' | 'color' | 'active' | 'rep' | 'frame' | 'thumbnail';
 
 export interface SceneRecord {
@@ -180,7 +180,7 @@ export interface ScenePanelPayload {
  * `cmd.get_scene_thumbnail_png(name)`.
  *
  * `encoding` is load-bearing. `MovieSceneStore` resizes the thumbnail and then
- * defers the capture (`layer3/MovieScene.cpp:225-232`), so a read before the
+ * defers the capture (`packages/engine/layer3/MovieScene.cpp:225-232`), so a read before the
  * deferred draw lands returns 220*124*4 = 109,120 raw zero bytes and only
  * afterwards the PNG. `ready === false` means "ask again", not "black image".
  */
@@ -276,7 +276,7 @@ export interface MovieProduceResult extends MovieProducePlan {
  * ------------------------------------------------------------------ */
 
 /**
- * One token of the `mset` specification (`modules/pymol/moving.py:691`).
+ * One token of the `mset` specification (`packages/engine/modules/pymol/moving.py:691`).
  *
  * The parser is reproduced client-side ONLY to preview the frame->state table
  * before the user commits; the raw string is always what goes over the wire.

@@ -1,6 +1,6 @@
 /**
  * The Keyboard Shortcut Menu, ported from
- * `modules/pmg_qt/shortcut_menu_gui.py:43-415`.
+ * `packages/engine/modules/pmg_qt/shortcut_menu_gui.py:43-415`.
  *
  * Reproduced: the 700x700 window, the live Filter, the Refresh button with its
  * exact tooltip, the three-column table (Key / Command (click to edit) /
@@ -11,14 +11,14 @@
  * "do not show this again" checkbox.
  *
  * WRITES ARE PYTHON'S. Every mutation is `cmd.set_key(key, command)`
- * (`modules/pymol/controlling.py:719-797`) — delete is `set_key(key, '')` and
+ * (`packages/engine/modules/pymol/controlling.py:719-797`) — delete is `set_key(key, '')` and
  * reset is `set_key(key, default)`, exactly as `delete_selected` /
  * `reset_selected` do (`shortcut_menu_gui.py:216-273`). Validation therefore
  * stays in Python; the client's `validateShortcutName` only saves a round trip.
  *
  * READS ARE NOT. `cmd.key_mappings` and `cmd.shortcut_dict` are plain dicts and
  * the bridge dispatcher resolves CALLABLES only
- * (`bridge/tenmol_bridge/dispatch.py:276`), so there is no way to read the live
+ * (`packages/bridge/tenmol_bridge/dispatch.py:276`), so there is no way to read the live
  * mapping today. The table is therefore seeded from the mirrored default table
  * (`@tenmol/viewport/input`, diffed against `shortcut_dict.py` by test) and
  * tracks this session's edits. Refresh re-seeds. That gap is real and is
@@ -28,7 +28,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-/** `bridge/tenmol_bridge/panels/shortcuts.py`. */
+/** `packages/bridge/tenmol_bridge/panels/shortcuts.py`. */
 const SHORTCUTS_NS = 'cmd.tenmol_shortcuts';
 const SHORTCUTS_BOOTSTRAP = 'import tenmol_bridge.panels.shortcuts as _ts; _ts.install()';
 
@@ -177,7 +177,7 @@ export function ShortcutEditor({ onClose }: { onClose: () => void }) {
    * own tooltip ("reflect any external changes") was untrue: a `set_key` from
    * the command line, a pymolrc or a plugin was invisible. `cmd.key_mappings`
    * is an attribute and the dispatcher resolves callables only, so the read
-   * goes through `cmd.tenmol_shortcuts` (`bridge/tenmol_bridge/panels/
+   * goes through `cmd.tenmol_shortcuts` (`packages/bridge/tenmol_bridge/panels/
    * shortcuts.py`), bootstrapped the way the other panels are.
    *
    * A binding whose value is a Python CALLABLE is shown by name and left

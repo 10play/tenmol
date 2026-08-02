@@ -40,7 +40,7 @@ jobs:
     - name: Get additional sources
       run: |
         git clone --depth 1 https://github.com/rcsb/mmtf-cpp.git
-        cp -R mmtf-cpp/include/* include/
+        cp -R mmtf-cpp/include/* packages/engine/include/
 
     - name: Build
       run: |
@@ -51,7 +51,7 @@ jobs:
 
     - name: Test
       run: |
-        pymol -ckqy testing/testing.py --run all
+        pymol -ckqy packages/engine/testing/testing.py --run all
 
 
   build-Windows:
@@ -168,5 +168,5 @@ jobs:
     - name: Test
       run: |
         source activate $CONDA_ENV_NAME
-        pymol -ckqy testing/testing.py --run all
+        pymol -ckqy packages/engine/testing/testing.py --run all
 

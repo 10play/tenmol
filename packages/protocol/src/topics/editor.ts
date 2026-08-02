@@ -5,7 +5,7 @@
  * (`pk1`..`pk4`), so that state is a topic rather than a per-click query.
  *
  * `cmd.clean` raises `IncentiveOnlyException` in this tree
- * (`modules/pymol/computing.py:29`, plan §B7): the Clean button ships VISIBLY
+ * (`packages/engine/modules/pymol/computing.py:29`, plan §B7): the Clean button ships VISIBLY
  * DISABLED with a tooltip, not silently broken.
  */
 

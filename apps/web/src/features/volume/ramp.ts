@@ -1,6 +1,6 @@
 /**
  * The volume colour-ramp editor's arithmetic, ported VERBATIM from
- * `modules/pmg_qt/volume.py`.
+ * `packages/engine/modules/pmg_qt/volume.py`.
  *
  * Every function here has a named upstream counterpart and the same result for
  * the same input. That is not pedantry: the numbers this module produces are
@@ -256,13 +256,13 @@ export function normalizeHistogram(
 /**
  * Reduce a raw volume field to the SAME `[min, max, mean, stdev, h0..hN]`
  * vector `cmd.get_volume_histogram` returns — a line-for-line port of
- * `ObjectMapStateGetHistogram` (`layer2/ObjectMap.cpp:291-361`).
+ * `ObjectMapStateGetHistogram` (`packages/engine/layer2/ObjectMap.cpp:291-361`).
  *
  * This was written because the bridge could not deliver that call at all:
  * `codec.BLOB_RETURNS` routed `get_volume_histogram` to a blob writer that
  * demands a numpy array, while the C function returns a plain Python list.
  * THAT IS FIXED — `cmd.get_volume_histogram` now answers 68 inline floats, and
- * `bridge/tests/test_p8_a10.py` both measures it and re-creates the old defect
+ * `packages/bridge/tests/test_p8_a10.py` both measures it and re-creates the old defect
  * with a monkeypatch to get the old `NotSerializable: get_volume_histogram
  * returned list, expected a numpy array` back. So this is now the FALLBACK, for
  * an older bridge; it stays because `cmd.get_volume_field` IS a numpy array and

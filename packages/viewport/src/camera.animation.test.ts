@@ -1,9 +1,9 @@
 /**
  * The camera ANIMATION contract — `00-parity-inventory.md:337`.
  *
- * `test/camera.test.ts` is the golden test for the view MATRIX; this is the
+ * `packages/engine/test/camera.test.ts` is the golden test for the view MATRIX; this is the
  * golden test for the view's CLOCK. Every constant asserted here was measured
- * over the WebSocket against a real PyMOL in `bridge/tests/test_f7_camera.py`:
+ * over the WebSocket against a real PyMOL in `packages/bridge/tests/test_f7_camera.py`:
  *
  *   * `int(duration * 30) + 1` distinct `get_view()[11]` values during a sweep
  *     — 4 / 16 / 31 for 0.1 / 0.5 / 1.0 s, polling at ~4 kHz
@@ -51,7 +51,7 @@ describe('animation key frames', () => {
     expect(animationKeyFrames(0.1)).toBe(3);
     expect(animationKeyFrames(0.5)).toBe(15);
     expect(animationKeyFrames(1.0)).toBe(30);
-    // `if (target < 1) target = 1` (`layer1/Scene.cpp:406`): a 10 ms sweep is
+    // `if (target < 1) target = 1` (`packages/engine/layer1/Scene.cpp:406`): a 10 ms sweep is
     // one jump, not zero.
     expect(animationKeyFrames(0.01)).toBe(1);
     expect(animationKeyFrames(0)).toBe(0);

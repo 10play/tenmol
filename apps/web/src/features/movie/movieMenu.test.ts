@@ -1,6 +1,6 @@
 /**
  * The Movie menu tree, checked against the enumeration in
- * `00-parity-inventory.md` §7 and against `modules/pymol/_gui.py:234-375`.
+ * `00-parity-inventory.md` §7 and against `packages/engine/modules/pymol/_gui.py:234-375`.
  *
  * The inventory states the counts explicitly — "Append (14 durations),
  * Program > Camera Loop (Nutate 10 entries, X-Rock/Y-Rock 15 each, X-Roll/

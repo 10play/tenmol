@@ -2,10 +2,10 @@
  * The console scrollback.
  *
  * THE CONSTRAINT THAT SHAPES THIS FILE: `cmd._get_feedback()` is a DESTRUCTIVE,
- * single-consumer read (`modules/pymol/internal.py:596-606`; plan §1.2 measured
+ * single-consumer read (`packages/engine/modules/pymol/internal.py:596-606`; plan §1.2 measured
  * two interleaved consumers as `consumerA saw: [468]`, `consumerB saw: []`).
  * The bridge is that consumer, and PyMOL keeps no readable scrollback of its own
- * (`I->Line[]` is a 256-entry ring at `layer1/Ortho.cpp:62` with no Python
+ * (`I->Line[]` is a 256-entry ring at `packages/engine/layer1/Ortho.cpp:62` with no Python
  * route). So the scrollback, its ordering, its sequence numbers and the handling
  * of the bridge's replay-on-subscribe are ALL the client's problem. They are
  * this file.
@@ -23,7 +23,7 @@
  * the tail of what we already hold, so a reconnect appends only what was said
  * while we were away.
  *
- * Severity is INFERRED, never carried: `modules/pymol/colorprinting.py` routes
+ * Severity is INFERRED, never carried: `packages/engine/modules/pymol/colorprinting.py` routes
  * `error`, `warning`, `suggest` and `parrot` all to plain `print`, so severity
  * is gone before the string reaches the Ortho queue (plan §1.2). The patterns
  * below are the ones observed in spike 02 §8 (`e13.out`), not invented.

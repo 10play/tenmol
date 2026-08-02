@@ -9,7 +9,7 @@
  * the engine alone.
  *
  * Three engine behaviours drive the assertions, and all three are measured over
- * a live socket in `bridge/tests/test_p8_a10.py` rather than read off the
+ * a live socket in `packages/bridge/tests/test_p8_a10.py` rather than read off the
  * source:
  *
  *  1. `pref_set` ends in `set_pref_changed()`, which tests `instantsave` AFTER

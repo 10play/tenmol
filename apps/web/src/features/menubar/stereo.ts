@@ -2,7 +2,7 @@
  * `Display ▸ Stereo Mode` — what the nine leaves actually do, and where.
  *
  * THE DECISION THIS FILE RECORDS. Stereo is a property of PyMOL's OWN renderer:
- * `ExecutiveStereo` (`layer3/Executive.cpp:9545-9585`) sets `stereo_mode` and
+ * `ExecutiveStereo` (`packages/engine/layer3/Executive.cpp:9545-9585`) sets `stereo_mode` and
  * calls `SceneSetStereo`, and everything downstream happens inside the engine's
  * GL context. This client has two ways of putting that scene on screen — the
  * server-rendered pixel stream (Mode P) and client-side three.js geometry
@@ -18,7 +18,7 @@
  * `quadbuffer` asks the display for two GL colour buffers and `openvr` asks a
  * VR runtime for a head-mounted display. The bridge's frame transport is one
  * `glReadBuffer(GL_COLOR_ATTACHMENT0)` per frame off a single offscreen FBO
- * (`bridge/tenmol_bridge/render/framestream.py:905`) encoded as one JPEG/PNG —
+ * (`packages/bridge/tenmol_bridge/render/framestream.py:905`) encoded as one JPEG/PNG —
  * there is no second buffer to carry the second eye and no HMD on the far end of
  * a WebSocket. A `pymol -S` build would make PyMOL stop erroring and would still
  * change nothing the browser could show. Every other mode packs both eyes into a
@@ -62,7 +62,7 @@ export type StereoCarrier = 'composite' | 'two-buffers' | 'hmd' | 'monoscopic';
 export interface StereoLeaf {
   /** The `stereo <word>` argument, i.e. the `stereo_dict` key. */
   word: string;
-  /** `stereo_dict` value (`modules/pymol/constants.py:130-137`). */
+  /** `stereo_dict` value (`packages/engine/modules/pymol/constants.py:130-137`). */
   code: number;
   /** `stereo_mode` the engine ends in, or null when the leaf sets none. */
   mode: number | null;
@@ -269,7 +269,7 @@ export function stereoNote(command: string, after: StereoState, reps: ClientReps
   if (leaf.word === 'chromadepth') {
     return (
       ' stereo chromadepth is not a stereo mode: it sets chromadepth 1 and turns stereo OFF ' +
-      `(layer3/Executive.cpp:9548) — ${stereoScope(reps)}`
+      `(packages/engine/layer3/Executive.cpp:9548) — ${stereoScope(reps)}`
     );
   }
   if (leaf.word === 'swap' && !on) {

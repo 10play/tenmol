@@ -1,7 +1,7 @@
 /**
  * Wave 6, area 8 — the React half of four inventory rows, driven by REAL
  * snapshots captured from this build over the bridge socket
- * (`bridge/tests/test_wf_wizards.py` asserts the same numbers server-side).
+ * (`packages/bridge/tests/test_wf_wizards.py` asserts the same numbers server-side).
  *
  * What these pin, in order:
  *

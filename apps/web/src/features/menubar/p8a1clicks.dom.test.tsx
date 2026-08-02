@@ -10,7 +10,7 @@
  * was untested for exactly these items.
  *
  * Every label and every command string below comes from the harvested tree
- * (`generated/menudata.ts` <- `modules/pymol/_gui.py:196-233` and `:806-829`),
+ * (`generated/menudata.ts` <- `packages/engine/modules/pymol/_gui.py:196-233` and `:806-829`),
  * looked up rather than retyped, so this cannot drift from upstream silently.
  */
 

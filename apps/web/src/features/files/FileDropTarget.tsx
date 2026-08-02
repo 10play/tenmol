@@ -72,7 +72,7 @@ export function FileDropTarget() {
      * `panels/files.py::BridgeFileDialog` only reaches a plugin once
      * `install_tk_dialogs` has run: `files.install()` deliberately does NOT
      * install it (that would put `tkFileDialog` in `sys.modules` for every
-     * bridge process, which `bridge/tests/test_wf_plugins.py` asserts against).
+     * bridge process, which `packages/bridge/tests/test_wf_plugins.py` asserts against).
      * Nothing was calling it, so `import tkinter.filedialog` inside PyMOL still
      * resolved to the REAL module — and that is not a cosmetic difference:
      * MEASURED on macOS, a plugin worker thread calling the real

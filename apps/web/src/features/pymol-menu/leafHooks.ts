@@ -2,14 +2,14 @@
  * The menu-leaf interception seam.
  *
  * WHAT A LEAF IS. A PyMOL pop-up row of kind 1 carries a COMMAND STRING and
- * choosing it executes that string verbatim (`layer4/PopUp.cpp:471-475`). This
+ * choosing it executes that string verbatim (`packages/engine/layer4/PopUp.cpp:471-475`). This
  * client honours that literally: `PopupMenu` sends the string through
  * `session.run(command)`, i.e. a `{t:'do'}` frame, and PyMOL echoes it into the
  * console itself. That is right for the ~99 % of leaves that are ordinary
  * commands, and it is exactly wrong for the handful that name a Qt entry point
  * the web client implements in the browser instead.
  *
- * THE ONE THAT FORCED THIS. `modules/pymol/menu.py:648` builds
+ * THE ONE THAT FORCED THIS. `packages/engine/modules/pymol/menu.py:648` builds
  *
  *     [1, 'panel', 'cmd.volume_panel(%s)' % rsele]
  *
@@ -30,7 +30,7 @@
  *   * `cmd.edit_pymolrc` / text-editor leaves, if PyMOL ever emits one;
  *   * intercepting `cmd.quit()` to ask the browser first;
  *   * a client-side implementation of any leaf whose command assumes a desktop
- *     toolkit, without editing `modules/pymol/menu.py` and so without diverging
+ *     toolkit, without editing `packages/engine/modules/pymol/menu.py` and so without diverging
  *     from upstream's menu data.
  *
  * WHERE IT IS *NOT* CONSULTED, and this is a live gap rather than an omission:
@@ -39,7 +39,7 @@
  * on its own `RowMenu` — and `C > volume` is where `menu.vol_color`'s `panel`
  * leaf actually appears. That file belongs to another work package. The
  * volume panel is reachable from it anyway, because the ENGINE-side shim
- * (`bridge/tenmol_bridge/panels/volume.py`) turns the executed command into an
+ * (`packages/bridge/tenmol_bridge/panels/volume.py`) turns the executed command into an
  * event the browser acts on; this seam is the local, zero-round-trip path and
  * the general facility, not the only route.
  */

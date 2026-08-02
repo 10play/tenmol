@@ -7,10 +7,10 @@
  * different thing entirely.)  This module is the shared wire vocabulary for the
  * dialogs that are pulled on demand:
  *
- *   * the VOLUME colour-ramp editor  (`modules/pmg_qt/volume.py`, 877 lines)
- *   * the properties inspector       (`modules/pmg_qt/properties_dialog.py`)
- *   * the advanced settings table    (`modules/pmg_qt/advanced_settings_gui.py`)
- *   * the text editor                (`modules/pmg_qt/TextEditor.py`)
+ *   * the VOLUME colour-ramp editor  (`packages/engine/modules/pmg_qt/volume.py`, 877 lines)
+ *   * the properties inspector       (`packages/engine/modules/pmg_qt/properties_dialog.py`)
+ *   * the advanced settings table    (`packages/engine/modules/pmg_qt/advanced_settings_gui.py`)
+ *   * the text editor                (`packages/engine/modules/pmg_qt/TextEditor.py`)
  *
  * Import it by path — `@tenmol/protocol/topics/dialogs` — exactly as the
  * package's `./topics/*` export declares.
@@ -20,7 +20,7 @@
  * @notATopic  NOT A TRANSPORT TOPIC — deliberately not re-exported by the
  * frozen `topics/index.ts` barrel. Reached by its subpath
  * (`@tenmol/protocol/topics/dialogs`); its events, if any, ride an existing
- * topic. `bridge/tests/test_dispatch.py` looks for this tag.
+ * topic. `packages/bridge/tests/test_dispatch.py` looks for this tag.
  */
 
 /* ------------------------------------------------------------------ *
@@ -32,9 +32,9 @@
  *
  * PyMOL's own storage order is the flat 5-tuple `value, r, g, b, alpha`
  * (`ExecutiveGetVolumeRamp` -> `colorramping.ramp_expand`,
- * `modules/pymol/colorramping.py:236-262`), while the Qt widget keeps tuples of
+ * `packages/engine/modules/pymol/colorramping.py:236-262`), while the Qt widget keeps tuples of
  * `(x, y, r, g, b)` where `x` is the data value and `y` is the alpha
- * (`modules/pmg_qt/volume.py:747-767`).  We keep PyMOL's field NAMES and the
+ * (`packages/engine/modules/pmg_qt/volume.py:747-767`).  We keep PyMOL's field NAMES and the
  * widget's separation, so neither conversion is ever guessed at.
  *
  * `r`/`g`/`b`/`alpha` are 0..1 floats, never 0..255.
@@ -61,7 +61,7 @@ export type FlatVolumeRamp = readonly number[];
 
 /**
  * `cmd.get_volume_histogram(name, bins=64)` -> `[min, max, mean, stdev,
- * h0 .. h(bins-1)]` (`modules/pymol/querying.py:62-72`, C
+ * h0 .. h(bins-1)]` (`packages/engine/modules/pymol/querying.py:62-72`, C
  * `ExecutiveGetHistogram`).  Length is `bins + 4`.
  *
  * WIRE HAZARD, measured on this tree: the bridge lists `get_volume_histogram`
@@ -82,8 +82,8 @@ export const HISTOGRAM_HEADER = 4;
 
 /**
  * Named ramps registered in `pymol.colorramping.namedramps`
- * (`modules/pymol/colorramping.py:17-54`) and offered by the internal object
- * menu at `A > volume` (`modules/pymol/menu.py:644-654`).  `volume_ramp_new`
+ * (`packages/engine/modules/pymol/colorramping.py:17-54`) and offered by the internal object
+ * menu at `A > volume` (`packages/engine/modules/pymol/menu.py:644-654`).  `volume_ramp_new`
  * adds more at runtime, so this is the *built-in* set, not the whole set — ask
  * the bridge for the live keys when you can.
  */
@@ -96,7 +96,7 @@ export type BuiltinVolumeRamp = (typeof BUILTIN_VOLUME_RAMPS)[number];
 
 /**
  * The eight editable branches of `PropsDialog`'s fixed tree
- * (`modules/pmg_qt/properties_dialog.py:69-117`).  The branch is what decides
+ * (`packages/engine/modules/pmg_qt/properties_dialog.py:69-117`).  The branch is what decides
  * which `cmd.*` call an edit turns into (`:150-227`) and which unset call the
  * Delete key turns into (`:229-286`), so it travels with every row.
  */
@@ -191,8 +191,8 @@ export const PROPERTY_READONLY_KEYS = ['model', 'index', 'state', 'oneletter'] a
 
 /**
  * `cmd.get_setting_tuple(index)` answers `(type, values)`; the type constants
- * are the `cSetting_*` enum of `layer0/Setting.h` as consumed by
- * `modules/pmg_qt/advanced_settings_gui.py:60-80`.
+ * are the `cSetting_*` enum of `packages/engine/layer0/Setting.h` as consumed by
+ * `packages/engine/modules/pmg_qt/advanced_settings_gui.py:60-80`.
  */
 export const SETTING_TYPE = {
   Boolean: 1,
@@ -219,7 +219,7 @@ export interface AdvancedSettingRow {
  * ------------------------------------------------------------------ */
 
 /**
- * The exclusive Syntax menu of `modules/pmg_qt/TextEditor.py:60-74`.  There is
+ * The exclusive Syntax menu of `packages/engine/modules/pmg_qt/TextEditor.py:60-74`.  There is
  * no `pmg_qt/syntax/plain.py` in this tree, so "Plain Text" means "no
  * highlighting", not "a plain highlighter".
  */

@@ -1,7 +1,7 @@
 /**
  * `PyMOL>` prompt + command entry — the External GUI one.
  *
- * Widget parity: `CommandLineEdit` (`modules/pmg_qt/pymol_qt_gui.py:1085`)
+ * Widget parity: `CommandLineEdit` (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:1085`)
  * behind a `QLabel("PyMOL>")` (`:141-143`). Key handling is
  * `lineeditKeyPressEventFilter` (`:421-438`):
  *
@@ -12,13 +12,13 @@
  *   Enter     -> submit (deliberately NOT `returnPressed`, `:432-434`)
  *
  * Tab is PyMOL's own completion, one round trip, and the handler is a literal
- * translation of `modules/pymol/_gui.py:899-903`:
+ * translation of `packages/engine/modules/pymol/_gui.py:899-903`:
  *
  *     st = self.cmd._parser.complete(self.command_get())
  *     if st:
  *         self.command_set(st); self.command_set_cursor(len(st))
  *
- * `Parser.complete` (`modules/pymol/parser.py:524-596`) returns the completed
+ * `Parser.complete` (`packages/engine/modules/pymol/parser.py:524-596`) returns the completed
  * LINE or None, and *prints* the candidate list through `colorprinting.suggest`
  * (`parser.py:63-67`). Those printed lines are console output like any other:
  * `pcatch` puts them in PyMOL's line buffer and they arrive on the `feedback`
@@ -44,7 +44,7 @@
  * The offline echo lives in `session.run()`.
  *
  * The unhandled Ctrl/Alt chords go to `cmd._ctrl` / `cmd._alt` / `cmd._ctsh`
- * exactly as the in-viewport prompt's do (`layer1/Ortho.cpp:760-820`), so a
+ * exactly as the in-viewport prompt's do (`packages/engine/layer1/Ortho.cpp:760-820`), so a
  * user's `set_key` bindings still fire from the focused command line. Qt gets
  * that for free because OrthoKey sees the key anyway; a browser input does not.
  */
@@ -66,7 +66,7 @@ import {
 } from './dragPreview';
 
 /**
- * `cmd._parser.complete` — granted by `bridge/tenmol_bridge/policy/grants/
+ * `cmd._parser.complete` — granted by `packages/bridge/tenmol_bridge/policy/grants/
  * wp-11-console.py`. `@tenmol/client` exports the same constant as
  * `COMPLETE_FN`, but `packages/client/src/index.ts` does not re-export it yet,
  * so it is spelled out here.
@@ -378,7 +378,7 @@ export function CommandLine() {
   );
 }
 
-/** Verbatim from `modules/pmg_qt/pymol_qt_gui.py:145-157`. */
+/** Verbatim from `packages/engine/modules/pmg_qt/pymol_qt_gui.py:145-157`. */
 const COMMAND_LINE_TOOLTIP = `Command Input Area
 
 Get the list of commands by hitting <TAB>

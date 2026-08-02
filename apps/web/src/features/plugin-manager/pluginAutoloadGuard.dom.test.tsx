@@ -6,10 +6,10 @@
  * so the two claims that carry the safety of this feature were unpinned:
  *
  *  1. **A missing key means ENABLED.** `PluginInfo.autoload` is
- *     `autoload.get(self.name, True)` (`modules/pymol/plugins/__init__.py`), and
+ *     `autoload.get(self.name, True)` (`packages/engine/modules/pymol/plugins/__init__.py`), and
  *     the live bridge answered `plugins.autoload.copy() == {}` with both shipped
  *     plugins reporting `i.autoload == True`
- *     (`bridge/tests/test_wf_plugins.py`, console tags TENMOLWF29/30). A
+ *     (`packages/bridge/tests/test_wf_plugins.py`, console tags TENMOLWF29/30). A
  *     checkbox that defaulted to unchecked would tell the user every plugin is
  *     switched off.
  *  2. **The write is refused when the scan failed.** `setAutoload` ends in

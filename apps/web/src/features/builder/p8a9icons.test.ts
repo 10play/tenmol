@@ -13,8 +13,8 @@ import { RINGS } from './tables';
 import { RING_ICONS } from './ringIcons';
 
 const REPO = join(import.meta.dirname, '../../../../..');
-const BITMAPS = join(REPO, 'data/pmg_tk/bitmaps/builder');
-const QT_BUILDER = join(REPO, 'modules/pmg_qt/builder.py');
+const BITMAPS = join(REPO, 'packages/engine/data/pmg_tk/bitmaps/builder');
+const QT_BUILDER = join(REPO, 'packages/engine/modules/pmg_qt/builder.py');
 
 const decode = (dataUrl: string): Buffer => {
   const marker = 'data:image/gif;base64,';
@@ -32,7 +32,7 @@ describe('the ring icons are the shipped GIFs', () => {
 
   it.each(
     RINGS.map((ring) => [ring.icon] as const),
-  )('%s is byte-identical to data/pmg_tk/bitmaps/builder/%s.gif', (icon) => {
+  )('%s is byte-identical to packages/engine/data/pmg_tk/bitmaps/builder/%s.gif', (icon) => {
     const onDisk = readFileSync(join(BITMAPS, `${icon}.gif`));
     const inlined = decode(RING_ICONS[icon]!.src);
     expect(inlined.equals(onDisk)).toBe(true);

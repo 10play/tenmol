@@ -2,9 +2,9 @@
  * The `mset` preview parser, checked against PyMOL's own loop.
  *
  * The expectations below are not invented: every one is the output of
- * `modules/pymol/moving.py:731-763` executed on the same string (and the
+ * `packages/engine/modules/pymol/moving.py:731-763` executed on the same string (and the
  * 90-frame case is additionally verified end to end against a live engine in
- * `bridge/tests/test_movie.py::test_mset_program_matches_client_preview`, which
+ * `packages/bridge/tests/test_movie.py::test_mset_program_matches_client_preview`, which
  * asserts `count_frames()` and the real frame->state table).
  */
 

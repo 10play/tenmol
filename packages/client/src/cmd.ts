@@ -11,9 +11,9 @@
  * A hand-written typed surface covers ~15 commands below, for autocomplete,
  * doc-comments and return types.
  *
- * >>> THE FULL TYPED SURFACE WILL BE GENERATED from `modules/pymol/api.py`
+ * >>> THE FULL TYPED SURFACE WILL BE GENERATED from `packages/engine/modules/pymol/api.py`
  * >>> (404 exported symbols, plus the `util` / `movie` / `gui` namespace
- * >>> modules at modules/pymol/api.py:487-489) into
+ * >>> modules at packages/engine/modules/pymol/api.py:487-489) into
  * >>> `packages/client/src/generated/`. Do not hand-expand this file beyond
  * >>> the common commands; add to the generator instead
  * >>> (01-architecture.md:787 — generated files are never hand-edited).
@@ -114,9 +114,9 @@ export interface CmdInternals {
   /**
    * Tab completion — PyMOL's own, over the wire.
    *
-   * `cmd._parser.complete(line)` (`modules/pymol/parser.py:524-596`) returns
+   * `cmd._parser.complete(line)` (`packages/engine/modules/pymol/parser.py:524-596`) returns
    * the COMPLETED LINE, or `null` when it could not complete. Callers should do
-   * exactly what every PyMOL front end does (`modules/pymol/_gui.py:899-903`):
+   * exactly what every PyMOL front end does (`packages/engine/modules/pymol/_gui.py:899-903`):
    * if the answer is a non-empty string, replace the line and put the cursor at
    * the end; otherwise leave the line alone.
    *
@@ -145,7 +145,7 @@ export interface TypedPymolCmd {
   /**
    * `cmd.load(filename, object='', state=0, format='', finish=1, discrete=-1,
    * quiet=1, multiplex=None, zoom=-1, partial=0, mimic=1, object_props=None,
-   * atom_props=None)` — modules/pymol/importing.py:643.
+   * atom_props=None)` — packages/engine/modules/pymol/importing.py:643.
    *
    * NOTE: `filename` is a path ON THE SERVER. Browser-side files must be
    * uploaded first; the backend takes paths, not blobs.
@@ -225,7 +225,7 @@ export interface TypedPymolCmd {
 
   /**
    * `cmd.refresh()` — viewing.py:1750, i.e. `ExecutiveDrawNow`
-   * (layer3/Executive.cpp:11521). This is what drains the deferred queue that
+   * (packages/engine/layer3/Executive.cpp:11521). This is what drains the deferred queue that
    * mouse input, deferred images and rep rebuilds sit in
    * (02-completeness-critique.md:10-44), so the bridge — not the client —
    * decides when it runs. Call it from the UI only when you know why.
@@ -275,13 +275,13 @@ export interface TypedPymolCmd {
   ): Promise<Json>;
 }
 
-/** Namespace modules re-exported by the api (`modules/pymol/api.py:487-489`). */
+/** Namespace modules re-exported by the api (`packages/engine/modules/pymol/api.py:487-489`). */
 export interface KnownNamespaces {
-  /** modules/pymol/util.py — cbc, cbag, protein_vacuum_esp, ... */
+  /** packages/engine/modules/pymol/util.py — cbc, cbag, protein_vacuum_esp, ... */
   util: CmdNamespace;
-  /** modules/pymol/movie.py — produce, roll, nutate, ... */
+  /** packages/engine/modules/pymol/movie.py — produce, roll, nutate, ... */
   movie: CmdNamespace;
-  /** modules/pymol/gui.py */
+  /** packages/engine/modules/pymol/gui.py */
   gui: CmdNamespace;
 }
 

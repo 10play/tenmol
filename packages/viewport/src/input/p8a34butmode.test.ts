@@ -13,7 +13,7 @@
  * `__fixtures__/p8a34-butmode.json` is not hand-written. It is what PyMOL's own
  * `cmd.button` handed to `_cmd.button` for every row of every `mode_dict`
  * entry, captured by spying on the C entry point in a live engine
- * (`bridge/tests/test_p8_a34.py`, which fails if the file drifts). So this file
+ * (`packages/bridge/tests/test_p8_a34.py`, which fails if the file drifts). So this file
  * is a genuine cross-language diff, not a mirror checked against itself.
  */
 

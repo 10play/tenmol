@@ -1,7 +1,7 @@
 /**
  * Syntax tokenisers for the text editor's three modes.
  *
- * `modules/pmg_qt/TextEditor.py:47-58` imports `pmg_qt.syntax.<filetype>` and
+ * `packages/engine/modules/pmg_qt/TextEditor.py:47-58` imports `pmg_qt.syntax.<filetype>` and
  * uses its `Highlighter`. There are only two such modules in this tree —
  * `syntax/python.py` and `syntax/pml.py` — so **"Plain Text" silently means no
  * highlighting**, and that is reproduced here rather than fixed.

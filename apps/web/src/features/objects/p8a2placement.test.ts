@@ -1,5 +1,5 @@
 /**
- * Wave 8 — `PopPlaceChild`'s side-flip (`layer1/Pop.cpp:111-150`).
+ * Wave 8 — `PopPlaceChild`'s side-flip (`packages/engine/layer1/Pop.cpp:111-150`).
  *
  * The numbers below are the C ones: the child overlaps its parent by 2 px on
  * whichever side it lands, `PopFitBlock` keeps a 3 px margin, and the flip is

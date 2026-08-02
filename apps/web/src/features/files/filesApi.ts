@@ -1,5 +1,5 @@
 /**
- * The typed client for `cmd.tenmol_files` (`bridge/tenmol_bridge/panels/files.py`).
+ * The typed client for `cmd.tenmol_files` (`packages/bridge/tenmol_bridge/panels/files.py`).
  *
  * INSTALLATION, and why it looks like this: the file-I/O service cannot be a
  * `_bridge.*` route, because `_bridge.*` is dispatched inside `server.py`,
@@ -7,7 +7,7 @@
  * cannot be a policy grant file, for the same reason. What IS available is the
  * `cmd` namespace: the policy allows any three-segment dotted path under an
  * addressable root whose interior segment is not private
- * (`bridge/tenmol_bridge/policy/base.py`). So the bridge module attaches
+ * (`packages/bridge/tenmol_bridge/policy/base.py`). So the bridge module attaches
  * itself to `pymol.cmd` as `cmd.tenmol_files`, and the client bootstraps it
  * with exactly one `{t:'do'}` of a Python line — PyMOL's parser runs a
  * non-keyword line as Python. One round trip, no shared file touched.

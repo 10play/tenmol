@@ -1,7 +1,7 @@
 /**
  * `OrthoKey` / `OrthoSpecial` as a pure function.
  *
- * `layer1/Ortho.cpp:841-1031` (`OrthoKey`) and `:1063-1118` (`OrthoSpecial`)
+ * `packages/engine/layer1/Ortho.cpp:841-1031` (`OrthoKey`) and `:1063-1118` (`OrthoSpecial`)
  * are one big switch over an ASCII code plus a GLUT modifier mask. This module
  * translates a browser `KeyboardEvent` into the same decisions and returns an
  * {@link OrthoAction} for the component to perform — so every branch is
@@ -19,7 +19,7 @@
  * TWO DELIBERATE DEPARTURES, both because the browser is not GLUT:
  *
  *  1. macOS Cmd is NOT mapped to `cmd._cmmd`. `OrthoKeyCmmd` exists
- *     (`layer1/Ortho.cpp:775-787`) but nothing in this tree ever calls it —
+ *     (`packages/engine/layer1/Ortho.cpp:775-787`) but nothing in this tree ever calls it —
  *     `OrthoKey` has no `mod` branch for it — and Cmd+R / Cmd+W / Cmd+Q are the
  *     browser's, not ours. Cmd is left alone.
  *  2. ALT is only claimed when the key produces no printable character.
@@ -87,12 +87,12 @@ export function mapOrthoKey(event: OrthoKeyEvent, state: ConsoleState): OrthoAct
   if (metaKey) return { kind: 'none' };
 
   /* ---- OrthoSpecial: the arrow keys ------------------------------------
-   * The gate is in `PyMOL_Special` (`layer5/PyMOL.cpp:2371-2383`), NOT in
+   * The gate is in `PyMOL_Special` (`packages/engine/layer5/PyMOL.cpp:2371-2383`), NOT in
    * `OrthoSpecial`, and it is asymmetric: UP/DOWN are grabbed
    * UNCONDITIONALLY, LEFT/RIGHT only when `OrthoArrowsGrabbed`
-   * (`layer1/Ortho.cpp:401-407` — text entered AND text visible). An ungrabbed
+   * (`packages/engine/layer1/Ortho.cpp:401-407` — text entered AND text visible). An ungrabbed
    * arrow falls through to `_special`, i.e. the movie/scene key bindings
-   * (`modules/pymol/shortcut_dict.py`: 'left' -> `_ backward`), which is
+   * (`packages/engine/modules/pymol/shortcut_dict.py`: 'left' -> `_ backward`), which is
    * WP-23's surface — so this module returns `none` and does not eat them.
    *
    * The inventory row summarises this as "Up/Down recall history, Left/Right
@@ -199,7 +199,7 @@ export function mapOrthoKey(event: OrthoKeyEvent, state: ConsoleState): OrthoAct
 }
 
 /**
- * `case 13` on an empty line with a movie (`layer1/Ortho.cpp:966-984`).
+ * `case 13` on an empty line with a movie (`packages/engine/layer1/Ortho.cpp:966-984`).
  * Split out because the component must ask `cmd.count_frames()` first —
  * `MovieGetLength(G)` guards the whole branch.
  */

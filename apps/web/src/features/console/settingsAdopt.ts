@@ -3,7 +3,7 @@
  *
  * ---------------------------------------------------------------------------
  * THE PROBLEM, MEASURED. The bridge permanently forces two settings to 0 at
- * startup — `bridge/tenmol_bridge/engine.py:129-130` (invocation options) and
+ * startup — `packages/bridge/tenmol_bridge/engine.py:129-130` (invocation options) and
  * `:175-183` (`cmd.set` after start):
  *
  *     options.internal_gui = 0
@@ -14,7 +14,7 @@
  *
  * and it is right to: `OrthoReshape` subtracts the feedback band and
  * `MovieGetPanelHeight()` from the scene rectangle
- * (`layer1/Ortho.cpp:2383-2390`), so a non-zero `internal_feedback` makes
+ * (`packages/engine/layer1/Ortho.cpp:2383-2390`), so a non-zero `internal_feedback` makes
  * `cmd.get_viewport()` disagree with the browser canvas and every mouse
  * coordinate wrong (spike 04 §7.1). PyMOL's own in-viewport GUI is off because
  * the WEB CLIENT draws it now.

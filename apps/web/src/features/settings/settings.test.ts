@@ -5,7 +5,7 @@
  * `setting.tenmol_settings_catalogue()` on this build, captured through the
  * bridge. It is what lets the Setting-menu transcription be checked name by
  * name against the real setting table — a typo in one of the 71 setting names
- * copied out of `modules/pymol/_gui.py` would otherwise show up as a menu entry
+ * copied out of `packages/engine/modules/pymol/_gui.py` would otherwise show up as a menu entry
  * that silently does nothing.
  */
 
@@ -132,7 +132,7 @@ function catalogueOf(settings: SettingMeta[]): SettingCatalogue {
       cSettingInit: 798,
       indexDictSize: settings.length + 1,
       nameListSize: settings.length,
-      defaultsSource: 'layer1/SettingInfo.h',
+      defaultsSource: 'packages/engine/layer1/SettingInfo.h',
       defaultsNote: '',
       minMaxEnforced: false,
       minMaxNote: '',
@@ -159,7 +159,7 @@ describe('Setting menu transcription', () => {
   });
 
   it('binds EXACTLY the settings `_gui.py`\'s Setting menu binds', () => {
-    // Extracted from `modules/pymol/_gui.py:491-773` by matching every
+    // Extracted from `packages/engine/modules/pymol/_gui.py:491-773` by matching every
     // ('check'|'radio', label, setting, ...) node and every
     // transparency_menu(setting) call, minus `transparency_mode` and
     // `two_sided_lighting`, which appear only inside the composite preset
@@ -596,7 +596,7 @@ describe('createSettingsSource', () => {
     const reply = await source.setBond(bondMeta, '0.7', 'wp15 and name CA');
 
     // `cmd.set` here "will appear to take, but no change will be observed"
-    // (`modules/pymol/setting.py:245-248`), so it must not be the call made.
+    // (`packages/engine/modules/pymol/setting.py:245-248`), so it must not be the call made.
     expect(backend.calls.some((c) => c.fn === 'cmd.set')).toBe(false);
     const wrote = backend.calls.find((c) => c.fn === 'cmd.set_bond');
     expect(wrote?.args).toEqual([231, 0.7, 'wp15 and name CA', null, 0]);
@@ -664,10 +664,10 @@ describe('a setting write is not cosmetic (row 209)', () => {
   }
 
   it('kicks the object poller on every drain that reports a change', async () => {
-    // `SettingGenerateSideEffects` (`layer1/Setting.cpp:1872-2400`) invalidates
+    // `SettingGenerateSideEffects` (`packages/engine/layer1/Setting.cpp:1872-2400`) invalidates
     // reps, reloads shaders and rebuilds scene members after EVERY write. The
     // bridge's own answer to that is content-addressed and arrives on the
-    // `geometry` topic — MEASURED (bridge/tests/test_f7_layout.py): a
+    // `geometry` topic — MEASURED (packages/bridge/tests/test_f7_layout.py): a
     // `stick_radius` write produced `{rep 0, level 100, reason 'changed'}`
     // within one 4 Hz scan, while seven layout settings produced nothing at
     // all. The object panel has no such channel, so the drain is its only

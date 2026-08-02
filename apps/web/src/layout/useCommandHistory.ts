@@ -2,7 +2,7 @@ import { useCallback, useRef } from 'react';
 
 /**
  * Command-line history, a direct port of `PyMOLDesktopGUI` in
- * modules/pymol/_gui.py:895-941. Behaviour is deliberately identical, including the
+ * packages/engine/modules/pymol/_gui.py:895-941. Behaviour is deliberately identical, including the
  * odd bits:
  *
  *  - slot 0 is always a scratch buffer holding the currently typed text

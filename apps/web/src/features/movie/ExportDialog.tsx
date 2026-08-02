@@ -2,7 +2,7 @@
  * Movie export: numbered PNGs (`cmd.mpng`) and encoded movies
  * (`cmd.movie.produce`).
  *
- * Form fields follow the Qt dialog (`modules/pmg_qt/file_dialogs.py:691`):
+ * Form fields follow the Qt dialog (`packages/engine/modules/pmg_qt/file_dialogs.py:691`):
  * width/height seeded from `get_viewport()`, 720p/480p/360p presets clamped to
  * <= 16:9, an encoder combo, a quality spinbox seeded from `movie_quality` and
  * disabled for ''/convert, a `ray` checkbox seeded from `ray_trace_frames`, and
@@ -14,7 +14,7 @@
  * after a modal `mpng` raised, and cleared 0.16 s later. `cmd.movie_export_png`
  * on the bridge runs `MoviePNG`'s own synchronous loop inside one pump task
  * instead, so the engine is never observably wedged. See
- * `bridge/tenmol_bridge/panels/movie.py`.
+ * `packages/bridge/tenmol_bridge/panels/movie.py`.
  */
 
 import { useEffect, useRef, useState } from 'react';

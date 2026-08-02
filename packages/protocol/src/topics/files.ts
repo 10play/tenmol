@@ -16,7 +16,7 @@
  * ============================================================================
  * THE BACKEND SURFACE
  *
- * Everything below is served by `bridge/tenmol_bridge/panels/files.py`, which
+ * Everything below is served by `packages/bridge/tenmol_bridge/panels/files.py`, which
  * installs itself onto `pymol.cmd` as `cmd.tenmol_files` (three dotted
  * segments = the policy's maximum, and `cmd` is an addressable root, so no
  * policy grant and no `server.py` edit is required). The client bootstraps it
@@ -27,16 +27,16 @@
  * and then calls `{t:'call', fn:'cmd.tenmol_files.<method>'}`.
  *
  * Why a server-side picker at all: every load/save path in PyMOL is a real
- * server path string (`cmd.load` -> `exp_path`, `modules/pymol/importing.py:751`;
- * `cmd.save`, `modules/pymol/exporting.py:836-838`) and format dispatch is on
+ * server path string (`cmd.load` -> `exp_path`, `packages/engine/modules/pymol/importing.py:751`;
+ * `cmd.save`, `packages/engine/modules/pymol/exporting.py:836-838`) and format dispatch is on
  * the extension, not the content (`importing.py:41-109`). A browser `File` blob
- * has neither. `docs/webclient/file-io.md` §0.
+ * has neither. `docs/file-io.md` §0.
  * ============================================================================
  *
  * @notATopic  NOT A TRANSPORT TOPIC — deliberately not re-exported by the
  * frozen `topics/index.ts` barrel. Reached by its subpath
  * (`@tenmol/protocol/topics/files`); its events, if any, ride an existing
- * topic. `bridge/tests/test_dispatch.py` looks for this tag.
+ * topic. `packages/bridge/tests/test_dispatch.py` looks for this tag.
  */
 
 /** Dotted prefix for every call in this area. */
@@ -94,7 +94,7 @@ export interface FsPlace {
  * -------------------------------------------------------------------------- */
 
 /**
- * Which modal `load_dialog` would open (`modules/pmg_qt/file_dialogs.py:33-77`).
+ * Which modal `load_dialog` would open (`packages/engine/modules/pmg_qt/file_dialogs.py:33-77`).
  * `plain` means "no dialog, just `cmd.load`".
  */
 export type LoadDialogKind =
@@ -135,9 +135,9 @@ export interface FileClassification {
    * root, `__import__` an arbitrary module and call its `__launch__`, launch a
    * browser, report the port to a remote URL, delete itself, and start a second
    * HTTP server in the process the bridge already serves from
-   * (`modules/pymol/importing.py:516-615`).
+   * (`packages/engine/modules/pymol/importing.py:516-615`).
    *
-   * MEASURED (`bridge/tests/test_wf_files.py`): handing `cmd.load` a file whose
+   * MEASURED (`packages/bridge/tests/test_wf_files.py`): handing `cmd.load` a file whose
    * only content is the word `delete` deleted that file, with no prompt. The
    * refusal is a real gate, not a label.
    */
@@ -223,7 +223,7 @@ export interface MtzDialogInfo {
  * -------------------------------------------------------------------------- */
 
 /**
- * `PyMOLMapLoad`'s form, as data (`modules/pmg_tk/PyMOLMapLoad.py:10-175`).
+ * `PyMOLMapLoad`'s form, as data (`packages/engine/modules/pmg_tk/PyMOLMapLoad.py:10-175`).
  *
  * Distinct from {@link MtzDialogInfo}, which serves the OTHER MTZ dialog
  * (`load_mtz`, Incentive-only): this one carries the Pmw `"None"` weights
@@ -252,7 +252,7 @@ export interface MapGenerateInfo {
   /**
    * `null` until something has tried. Nothing static can answer it: this tree
    * compiles `ExecutiveMapGenerate` out under `NO_MMLIBS`
-   * (`layer3/Executive.cpp:6929-6935`) and the Python wrapper cannot see that.
+   * (`packages/engine/layer3/Executive.cpp:6929-6935`) and the Python wrapper cannot see that.
    */
   supported: boolean | null;
   buildNote: string;
@@ -303,7 +303,7 @@ export interface PresentationPreset {
   current: Record<string, string>;
   /**
    * `cmd.full_screen` ALWAYS raises — `CmdFullScreen`
-   * (`layer4/Cmd.cpp:5352-5362`) returns an `ok` flag it never assigns. So
+   * (`packages/engine/layer4/Cmd.cpp:5352-5362`) returns an `ok` flag it never assigns. So
    * `ok` here is false on every platform and every build.
    */
   fullScreen: { attempted: boolean; ok: boolean; error: string | null };
@@ -384,7 +384,7 @@ export interface SaveMoleculeInfo {
 
 /**
  * One `(filename, selection, state)` triple of `cmd.multifilenamegen`
- * (`modules/pymol/exporting.py:735-781`).
+ * (`packages/engine/modules/pymol/exporting.py:735-781`).
  */
 export interface MultiFileTarget {
   filename: string;
@@ -410,7 +410,7 @@ export interface MultiFileNames {
  * `cmd.tenmol_files.produce` — `pymol.movie.produce` run with fd 0 detached.
  *
  * The wrapper is not a nicety: `movie._encode` spawns the encoder with no
- * `stdin=` (`modules/pymol/movie.py:770-800`), so `ffmpeg` inherits and eats
+ * `stdin=` (`packages/engine/modules/pymol/movie.py:770-800`), so `ffmpeg` inherits and eats
  * the bridge's own stdin and the server shuts down mid-export.
  */
 export interface ProduceResult {
@@ -588,7 +588,7 @@ export interface FilesHello {
  * -------------------------------------------------------------------------- */
 
 /**
- * `getSaveFileNameWithExt` (`modules/pymol/Qt/utils.py:229-246`): if the typed
+ * `getSaveFileNameWithExt` (`packages/engine/modules/pymol/Qt/utils.py:229-246`): if the typed
  * BASENAME contains no `.`, append the first `*.ext` found in the filter.
  * Reimplemented here rather than round-tripping so the save dialog can show the
  * final name as the user types.

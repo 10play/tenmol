@@ -162,7 +162,7 @@ export async function runAction(rt: MenuRuntime, action: MenuAction): Promise<vo
  * A check/radio click. Qt fires `cmd.set(name, value, log=1, quiet=0)` for a
  * radio (`pymol_qt_gui.py:331-333`) and `cmd.set(index, …, log=1, quiet=0)` for
  * a SettingAction (`:1058-1062`). Only the first argument differs — index vs
- * name — and `cmd.set` accepts either (`modules/pymol/setting.py:185`,
+ * name — and `cmd.set` accepts either (`packages/engine/modules/pymol/setting.py:185`,
  * `_get_index` handles digits). The name is used here because it needs no
  * `cmd.setting._get_index` round trip, which the policy would refuse anyway
  * (private interior segment, `policy/base.py`).

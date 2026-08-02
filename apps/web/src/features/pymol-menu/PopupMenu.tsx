@@ -1,7 +1,7 @@
 /**
  * A PyMOL pop-up, rendered as DOM.
  *
- * Reproduced from `layer4/PopUp.cpp`:
+ * Reproduced from `packages/engine/layer4/PopUp.cpp`:
  *  * row code 0 = separator bar, 1 = clickable leaf, 2 = non-clickable title
  *    (`:270-300`);
  *  * choosing a leaf executes its command string (`:471-475`) — so the leaf is

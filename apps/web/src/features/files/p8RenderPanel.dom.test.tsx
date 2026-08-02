@@ -5,7 +5,7 @@
  * left the Draw button annotated UNVERIFIED because `draw 886, 314` was
  * recorded as having killed the bridge once.
  *
- * `bridge/tests/test_p8_a6.py::TestDrawPath` refutes that on the engine side:
+ * `packages/bridge/tests/test_p8_a6.py::TestDrawPath` refutes that on the engine side:
  * `draw 400, 300` AND `draw 886, 314` both answer ok, leave the viewport at
  * 800x600, and leave a prior image of exactly the requested size for
  * `cmd.png(prior=1)` to save. This is the other half — that the button really

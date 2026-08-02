@@ -1,7 +1,7 @@
 /*
  * The ButMode block. Metrics and colours come from the C: cButModeLineHeight
- * (layer1/ButMode.h:217, DIP2PIXEL(12)), and the four text colours
- * ButModeInit sets (layer1/ButMode.cpp:557-573):
+ * (packages/engine/layer1/ButMode.h:217, DIP2PIXEL(12)), and the four text colours
+ * ButModeInit sets (packages/engine/layer1/ButMode.cpp:557-573):
  *   TextColor  (0.2, 1.0, 0.2)  green   — "Mouse Mode" / "Selecting"
  *   TextColor1 (0.5, 0.5, 1.0)  blue    — the row and column headers
  *   TextColor2 (0.8, 0.8, 0.8)  grey    — the 5-char action cells

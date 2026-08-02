@@ -3,20 +3,20 @@
  *
  * TWO FACTS THE CLIENT CANNOT ASK THE BACKEND FOR.
  *
- * 1. `is_session_blacklisted` (`layer1/Setting.cpp:627-686`) is a `static bool`
+ * 1. `is_session_blacklisted` (`packages/engine/layer1/Setting.cpp:627-686`) is a `static bool`
  *    in an anonymous-ish translation unit. It is not wrapped, not exported and
  *    not reachable from Python — there is no `cmd.is_session_blacklisted`. So
  *    the list below is a PORT, and it is checked two ways in
- *    `bridge/tests/test_p8_a5.py`: against the C source, and against the engine
+ *    `packages/bridge/tests/test_p8_a5.py`: against the C source, and against the engine
  *    (a blacklisted setting, once defined, still never appears in
  *    `cmd.get_session()['settings']`, because `SettingAsPyList` filters through
  *    exactly this predicate).
  *
- * 2. The reinit codes are a dict in `modules/pymol/commanding.py:350-356` that
+ * 2. The reinit codes are a dict in `packages/engine/modules/pymol/commanding.py:350-356` that
  *    `cmd.reinitialize` looks the WORD up in. Sending the word is right;
  *    sending the number would be sending an implementation detail.
  *
- * The four menu entries are `modules/pymol/_gui.py:126-132`, verbatim including
+ * The four menu entries are `packages/engine/modules/pymol/_gui.py:126-132`, verbatim including
  * the labels — and the labels are not the words: PyMOL's "Stored Settings" runs
  * `reinitialize settings` (code 1) and its "Original Settings" runs
  * `reinitialize original_settings` (code 3). Getting those two the wrong way
@@ -74,7 +74,7 @@ export const REINITIALIZE_MENU: readonly ReinitEntry[] = [
 
 /**
  * The system-dependent settings `is_session_blacklisted` names one by one
- * (`layer1/Setting.cpp:634-683`), in source order. Everything at the `unused`
+ * (`packages/engine/layer1/Setting.cpp:634-683`), in source order. Everything at the `unused`
  * LEVEL is blacklisted too, but by rule rather than by name — see
  * `isSessionBlacklisted`.
  */

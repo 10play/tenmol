@@ -179,7 +179,7 @@ afterEach(() => {
 describe('main window shell (row 53)', () => {
   it('is a grid of menubar / main / dock / status, with the viewport in the middle', () => {
     // No QSplitter, QToolBar or QStatusBar exists in the Qt window
-    // (asserted on the source in bridge/tests/test_wf_shell.py); the shell is a
+    // (asserted on the source in packages/bridge/tests/test_wf_shell.py); the shell is a
     // CSS grid with hand-rolled separators plus one deliberate ADDITION, the
     // status strip, which reports the transport a desktop PyMOL never had.
     expect(q('.shell')).not.toBeNull();
@@ -193,7 +193,7 @@ describe('main window shell (row 53)', () => {
   it('tracks setting 440 into document.title', async () => {
     // Qt: setting_callbacks[440] -> setWindowTitle("PyMOL (" + basename + ")").
     // MEASURED: 440 IS session_file and cmd.save(*.pse) writes the absolute
-    // path into it (bridge/tests/test_wf_shell.py).
+    // path into it (packages/bridge/tests/test_wf_shell.py).
     expect(document.title).toBe('PyMOL');
     expect(calls.some((c) => c.fn === 'cmd.get' && c.args[0] === 'session_file')).toBe(true);
 
@@ -320,7 +320,7 @@ describe('internal GUI column (row 88)', () => {
   it('pushes internal_gui back to 0 when PyMOL reports it ON, exactly once', async () => {
     // Someone typed `set internal_gui, 1` at the prompt. Our column obeys; the
     // engine's duplicate does not get to exist. MEASURED
-    // (bridge/tests/test_f7_layout.py): the write is inert until the next
+    // (packages/bridge/tests/test_f7_layout.py): the write is inert until the next
     // canvas resize and only THEN takes 220px off the scene, so there is no
     // event at the point of damage to diagnose it by — the correction has to
     // happen when the value is first seen.

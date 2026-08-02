@@ -1,15 +1,15 @@
 /**
  * Browser `KeyboardEvent` -> PyMOL key codes.
  *
- * The reference implementation is `modules/pmg_qt/keymapping.py:10-97`; every
+ * The reference implementation is `packages/engine/modules/pmg_qt/keymapping.py:10-97`; every
  * branch below names the line it reproduces. Nothing here decides what a key
  * DOES — that is `PyMOL_Key`/`PyMOL_Special` -> `OrthoKey`/`OrthoSpecial` ->
  * `cmd._ctrl`/`_alt`/`_ctsh`/`_special` -> `cmd.key_mappings`
- * (`modules/pymol/internal.py:426-511`). The client only translates and
+ * (`packages/engine/modules/pymol/internal.py:426-511`). The client only translates and
  * forwards, exactly as the Qt widget does.
  *
  * The transport is the same `_button` call the mouse uses, multiplexed on
- * `state` (`layer5/PyMOL.cpp:2896-2917`):
+ * `state` (`packages/engine/layer5/PyMOL.cpp:2896-2917`):
  *
  *     state -1  ascii key      -> PyMOL_Key
  *     state -2  GLUT special   -> PyMOL_Special
@@ -25,7 +25,7 @@ export const KEY_STATE_ASCII = -1;
 export const KEY_STATE_SPECIAL = -2;
 
 /**
- * `keyMap` (`modules/pmg_qt/keymapping.py:10-17`), keyed by `KeyboardEvent.key`
+ * `keyMap` (`packages/engine/modules/pmg_qt/keymapping.py:10-17`), keyed by `KeyboardEvent.key`
  * instead of by Qt key enum.
  */
 export const KEY_MAP: Readonly<Record<string, number>> = {
@@ -38,9 +38,9 @@ export const KEY_MAP: Readonly<Record<string, number>> = {
 };
 
 /**
- * `specialMap` (`modules/pmg_qt/keymapping.py:19-41`) — the GLUT special codes,
- * identical to `internal.special_key_codes` (`modules/pymol/internal.py:398-421`)
- * and `layer0/os_gl_glut_pretend.h:14-21`.
+ * `specialMap` (`packages/engine/modules/pmg_qt/keymapping.py:19-41`) — the GLUT special codes,
+ * identical to `internal.special_key_codes` (`packages/engine/modules/pymol/internal.py:398-421`)
+ * and `packages/engine/layer0/os_gl_glut_pretend.h:14-21`.
  */
 export const SPECIAL_MAP: Readonly<Record<string, number>> = {
   ArrowLeft: 100,
@@ -91,7 +91,7 @@ export const SPECIAL_KEY_NAMES: Readonly<Record<number, string>> = {
   108: 'insert',
 };
 
-/** `internal.modifier_keys` (`modules/pymol/internal.py:390-396`), mask-indexed. */
+/** `internal.modifier_keys` (`packages/engine/modules/pymol/internal.py:390-396`), mask-indexed. */
 export const MODIFIER_KEYS: readonly string[] = ['', 'SHFT', 'CTRL', 'CTSH', 'ALT'];
 
 /**
@@ -128,7 +128,7 @@ export interface KeyButtonArgs {
 }
 
 /**
- * `keyPressEventToPyMOLButtonArgs` (`modules/pmg_qt/keymapping.py:61-97`).
+ * `keyPressEventToPyMOLButtonArgs` (`packages/engine/modules/pmg_qt/keymapping.py:61-97`).
  *
  * Returns `null` when Qt would drop the event (`k > 255 or k < 0`,
  * `keymapping.py:91-93`) — including a bare modifier press, which Qt never
@@ -191,7 +191,7 @@ export function modifierPrefix(mod: number): string | null {
 /**
  * A key event -> PyMOL shortcut notation (`CTRL-A`, `ALT-3`, `CTSH-pgup`,
  * `left`), mirroring `shortcut_menu_gui.keyevent_to_string` /
- * `process_keyevent_string` (`modules/pmg_qt/shortcut_menu_gui.py:32-41,300-342`).
+ * `process_keyevent_string` (`packages/engine/modules/pmg_qt/shortcut_menu_gui.py:32-41,300-342`).
  *
  * Returns null for a key PyMOL cannot bind.
  */
@@ -228,7 +228,7 @@ export function keyEventToShortcutName(ev: KeyEventLike): string | null {
 }
 
 /**
- * `ShortcutManager.reserved_keys` (`modules/pymol/shortcut_manager.py:21`).
+ * `ShortcutManager.reserved_keys` (`packages/engine/modules/pymol/shortcut_manager.py:21`).
  * The Create-New dialog silently rejects these (`shortcut_menu_gui.py:288-290`).
  */
 export const RESERVED_KEYS: readonly string[] = [
@@ -245,7 +245,7 @@ export function isReservedKey(name: string): boolean {
 }
 
 /**
- * `cmd.set_key`'s validation (`modules/pymol/controlling.py:771-797`), so the
+ * `cmd.set_key`'s validation (`packages/engine/modules/pymol/controlling.py:771-797`), so the
  * editor can refuse before the round trip instead of after it.
  */
 export function validateShortcutName(name: string): string | null {

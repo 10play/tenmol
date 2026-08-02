@@ -1,5 +1,5 @@
 /**
- * The volume ramp maths, checked against `modules/pmg_qt/volume.py` and against
+ * The volume ramp maths, checked against `packages/engine/modules/pmg_qt/volume.py` and against
  * REAL engine output.
  *
  * `__fixtures__/engine-volume.json` was captured from this tree's PyMOL, not
@@ -102,7 +102,7 @@ describe('histogram', () => {
     const theirs = fixture.histogram;
     expect(mine.length).toBe(theirs.length);
     // min / max / mean / stdev. `max` is `mean + limit*stdev` and C accumulates
-    // `sum`/`sumsq` in FLOAT32 (`layer2/ObjectMap.cpp:296`) while JS is float64,
+    // `sum`/`sumsq` in FLOAT32 (`packages/engine/layer2/ObjectMap.cpp:296`) while JS is float64,
     // so the two agree to ~3e-5 and no further. Every BAR is still identical,
     // which is what the drawing depends on.
     expect(mine[0]).toBeCloseTo(theirs[0]!, 5);

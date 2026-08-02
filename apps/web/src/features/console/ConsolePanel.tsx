@@ -1,12 +1,12 @@
 /**
  * The External GUI: output pane + command line + quick buttons.
  *
- * `modules/pmg_qt/pymol_qt_gui.py:118-284` — a dock widget holding a
+ * `packages/engine/modules/pmg_qt/pymol_qt_gui.py:118-284` — a dock widget holding a
  * `QPlainTextEdit`, a `QLabel("PyMOL>")` + `CommandLineEdit`, and a 4-row grid
  * of quick buttons with a progress row.
  *
  * It also mounts {@link OrthoConsole}, which is NOT part of this dock: it is
- * PyMOL's own in-viewport console (`layer1/Ortho.cpp:1623-1693`), portalled
+ * PyMOL's own in-viewport console (`packages/engine/layer1/Ortho.cpp:1623-1693`), portalled
  * over `.shell__viewport`. Both consoles exist in the Qt build at the same
  * time, reading the same 256-line ring, and they are mounted together here
  * because the slot registry gives one feature exactly one region.
@@ -25,7 +25,7 @@ import { showSplash } from './orthoOverlays';
 import './console.css';
 
 /**
- * `getMonospaceFont()` (`modules/pmg_qt/pymol_qt_gui.py:53-63`) picks Monaco on
+ * `getMonospaceFont()` (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:53-63`) picks Monaco on
  * macOS, Consolas on Windows and "Monospace" elsewhere, and the output pane has
  * a `Select Font...` context-menu entry (`:963-975`). A browser cannot
  * enumerate installed fonts, so the choice is offered as the same three
@@ -65,14 +65,14 @@ export function ConsolePanel() {
       <div className="extgui__console" style={{ ['--pm-font-mono' as string]: font }}>
         <div className="console__bar">
           <span className="console__bar-title">Output</span>
-          <span className="console__bar-count" title="ortho ring: 256 lines (layer1/Ortho.cpp:62)">
+          <span className="console__bar-count" title="ortho ring: 256 lines (packages/engine/layer1/Ortho.cpp:62)">
             {lineCount} lines · ortho {orthoLines}/256
           </span>
           <span className="console__bar-spacer" />
           <button
             type="button"
             className={`console__bar-btn${orthoVisible ? ' is-on' : ''}`}
-            title="draw PyMOL's in-viewport console over the scene (layer1/Ortho.cpp:1623)"
+            title="draw PyMOL's in-viewport console over the scene (packages/engine/layer1/Ortho.cpp:1623)"
             onClick={() => source.store.setVisible(!orthoVisible)}
           >
             ortho
@@ -125,7 +125,7 @@ export function ConsolePanel() {
             clear
           </button>
           {/* The splash, made reachable. `OrthoInit` raises `SplashFlag` only
-              when it is given `showSplash` (`layer1/Ortho.cpp:2729-2731`) and
+              when it is given `showSplash` (`packages/engine/layer1/Ortho.cpp:2729-2731`) and
               the bridge boots with `options.show_splash = 0`
               (`engine.py:132`, measured in `test_wf_ortho.py`), so a browser
               never inherits one. `cmd.splash(0)` runs the real `OrthoSplash`

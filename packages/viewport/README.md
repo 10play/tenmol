@@ -16,7 +16,7 @@ viewport.setRepMode(Rep.Sphere, 'geometry'); // per-rep Mode G, falls back by it
 | | Mode P | Mode G |
 |---|---|---|
 | who draws | PyMOL, into an offscreen FBO, with its own shaders | three.js, in the browser |
-| what travels | encoded bitmaps (`PixelFrameHeader`) | PyMOL's own CPU-side buffers (`layer4/CmdWebGeometry.cpp`) |
+| what travels | encoded bitmaps (`PixelFrameHeader`) | PyMOL's own CPU-side buffers (`packages/engine/layer4/CmdWebGeometry.cpp`) |
 | fidelity | 100 % by construction — volume, slice, labels, ray, every setting | the reps the accessor can express |
 | default | **yes** | opt-in per rep |
 | cost | 3.4 ms/frame at 1280x960 on 1AON (plan §1.3) | one upload per rep, then local |
@@ -50,25 +50,25 @@ tools/pull_geometry.py  accessor -> wire frames (dev fixtures + bridge reference
 ## Things that are easy to get wrong (all measured, not assumed)
 
 * **`view[17] > 0` means ORTHOSCOPIC.** `SceneGetView` writes
-  `ortho ? fov : -fov` (`layer1/Scene.cpp:902`), so PyMOL's default perspective
+  `ortho ? fov : -fov` (`packages/engine/layer1/Scene.cpp:902`), so PyMOL's default perspective
   camera reports `-20`. Reading the sign the other way renders Mode G ~3 %
   large — caught by comparing the two modes' silhouettes in a real browser
   (IoU 0.83 -> 0.96 after the fix).
 * **`cmd.get_viewport()` != the window.** `OrthoReshape`
-  (`layer1/Ortho.cpp:2383-2390`) subtracts `MovieGetPanelHeight()` and the
+  (`packages/engine/layer1/Ortho.cpp:2383-2390`) subtracts `MovieGetPanelHeight()` and the
   internal feedback lines. Measured: a 1176x644 window reports 1176x629 as soon
   as an object has two states, because `movie_panel` is on. Mode P letterboxes
   into that rectangle (top-anchored — PyMOL's origin is bottom-left and the
   panel is at the bottom) and Mode G sets its GL viewport to match.
 * **The Y flip happens in CSS pixels, before the dpr multiply**, and `int()`
-  truncates (`modules/pmg_qt/pymol_gl_widget.py:169-176`).
+  truncates (`packages/engine/modules/pmg_qt/pymol_gl_widget.py:169-176`).
 * **Drags may be coalesced, never reordered.** Dropping an intermediate
   position is invisible to `SceneDrag`; reordering corrupts the backend's drag
   state. The pending drag is always flushed before a button event.
 * **The wheel is a DOWN/UP pair** and is not sent at all while a button is
-  held, because `OrthoButton` drops it (`layer1/Ortho.cpp:2503-2510`).
+  held, because `OrthoButton` drops it (`packages/engine/layer1/Ortho.cpp:2503-2510`).
 * **Spheres and cylinders are instanced impostors**, ports of
-  `data/shaders/sphere.*` and `cylinder.*`, with `gl_FragDepth`. Client-side
+  `packages/engine/data/shaders/sphere.*` and `cylinder.*`, with `gl_FragDepth`. Client-side
   tessellation is what turned 1UBQ `mesh` into 31,710 cylinders in the
   exporters (spike 03 §4); it is not done here. Strips and fans ARE re-indexed
   to triangles, which is the same geometry, because three.js draws
@@ -80,8 +80,8 @@ The C++ accessor has landed; the bridge-side producer has not. To drive Mode G
 with real geometry:
 
 ```bash
-bridge/.venv/bin/python packages/viewport/tools/pull_geometry.py \
-    --pdb test/dat/1tii.pdb --out .tenmol/frames \
+packages/bridge/.venv/bin/python packages/viewport/tools/pull_geometry.py \
+    --pdb packages/engine/test/dat/1tii.pdb --out .tenmol/frames \
     --rep cartoon --rep sticks --rep spheres --rep surface
 
 # then, with `pnpm dev` running:
@@ -90,7 +90,7 @@ open 'http://127.0.0.1:5173/?viewportFixtures=m.cartoon.bin&viewportModeP=off'
 
 `tools/pull_geometry.py` is also the executable reference for the bridge
 producer: it shows the two places a naive accessor -> wire mapping goes wrong
-(draw-arrays sub-arrays must be concatenated in `layer1/CGO.cpp:1650-1671`
+(draw-arrays sub-arrays must be concatenated in `packages/engine/layer1/CGO.cpp:1650-1671`
 order; the pick slot is not shipped).
 
 ## Tests

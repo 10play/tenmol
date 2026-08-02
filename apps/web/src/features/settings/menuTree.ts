@@ -1,12 +1,12 @@
 /**
  * The DATA half of the declarative menu-data renderer.
  *
- * `get_menudata` (`modules/pymol/_gui.py:55-58`) is toolkit-independent on
+ * `get_menudata` (`packages/engine/modules/pymol/_gui.py:55-58`) is toolkit-independent on
  * purpose: Qt walks it in `pymol_qt_gui.py:353` and Tk in
  * `pmg_tk/skins/normal/__init__.py:1072`. This client walks the same literal —
- * not a transcription of it. `bridge/tenmol_bridge/panels/menus.py` runs the
+ * not a transcription of it. `packages/bridge/tenmol_bridge/panels/menus.py` runs the
  * real `get_menudata` against a recording `cmd` proxy and emits
- * `features/menubar/generated/menudata.ts`; `bridge/tests/test_menus.py` fails
+ * `features/menubar/generated/menudata.ts`; `packages/bridge/tests/test_menus.py` fails
  * if that file drifts from a fresh harvest.
  *
  * WHY THE IMPORT CROSSES A FEATURE. The harvested tree is one document with
@@ -48,7 +48,7 @@ export function menuSubtree(label: string): readonly MenuNode[] {
 }
 
 /**
- * `layer1/Setting.h:113-120` order, which is what `get_setting_tuple` returns
+ * `packages/engine/layer1/Setting.h:113-120` order, which is what `get_setting_tuple` returns
  * and what `SettingAction` switches on (`pymol_qt_gui.py:1069-1075`).
  * `blank` is the retired slot (index 83) and is checkable by nothing.
  */

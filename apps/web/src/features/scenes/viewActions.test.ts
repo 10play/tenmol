@@ -2,7 +2,7 @@
  * Named camera views — the command strings, and the listing parser.
  *
  * Every fixture message below is a LITERAL capture from a live bridge, asserted
- * on the backend side in `bridge/tests/test_wf_camera.py`
+ * on the backend side in `packages/bridge/tests/test_wf_camera.py`
  * (`test_the_only_machine_readable_listing_is_a_failed_lookup`). If PyMOL's
  * `Shortcut.auto_err` ever changes shape, that test fails first and this one
  * follows, instead of the panel quietly showing an empty list forever.

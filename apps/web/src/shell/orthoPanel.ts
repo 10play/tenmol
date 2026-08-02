@@ -4,10 +4,10 @@
  * Parity inventory rows 88 (internal GUI layout column) and 103 (control-bar
  * left gutter). Everything here is a transcription of C++ that the bridge
  * cannot execute, because the bridge holds `internal_gui` at 0 on purpose
- * (`bridge/tenmol_bridge/engine.py:126-131`) — PyMOL's own column would eat the
+ * (`packages/bridge/tenmol_bridge/engine.py:126-131`) — PyMOL's own column would eat the
  * scene rectangle and every forwarded mouse coordinate would be wrong.
  *
- * WHAT WAS MEASURED (`bridge/tests/test_wf_shell.py`, 800x600 window,
+ * WHAT WAS MEASURED (`packages/bridge/tests/test_wf_shell.py`, 800x600 window,
  * `display_scale_factor` 1):
  *
  *     internal_gui 0                  -> scene 800x600
@@ -21,10 +21,10 @@
  *
  * The `-20` row is the reason `clampInternalGuiWidth` exists: `cmd.set` stores
  * whatever it is handed, and only the C++ DRAG handler clamps
- * (`layer1/Control.cpp:263-276`). A splitter that wrote an unclamped width back
+ * (`packages/engine/layer1/Control.cpp:263-276`). A splitter that wrote an unclamped width back
  * would hand PyMOL a scene wider than the canvas.
  *
- * WHAT WAS MEASURED IN WAVE 7 (`bridge/tests/test_f7_layout.py`, same window).
+ * WHAT WAS MEASURED IN WAVE 7 (`packages/bridge/tests/test_f7_layout.py`, same window).
  * The block heights below used to be transcription; they are now readings, off
  * two instruments `cmd` does not have — the framebuffer (`PixelReadback`) and
  * the input path (which block answers a click IS that block's rectangle):
@@ -50,13 +50,13 @@
  */
 
 /**
- * The DIP constants. `layer1/Ortho.h:24-26`, `layer1/Control.cpp:36-46`,
- * `layer1/ButMode.cpp:72-78`, `layer1/Wizard.cpp:254-258`.
+ * The DIP constants. `packages/engine/layer1/Ortho.h:24-26`, `packages/engine/layer1/Control.cpp:36-46`,
+ * `packages/engine/layer1/ButMode.cpp:72-78`, `packages/engine/layer1/Wizard.cpp:254-258`.
  */
 export const ORTHO = {
   /** `cOrthoRightSceneMargin` and the `internal_gui_width` default. */
   internalGuiWidth: 220,
-  /** `controlHeight` in `OrthoLayoutPanel` (`layer1/Ortho.cpp:2265`). */
+  /** `controlHeight` in `OrthoLayoutPanel` (`packages/engine/layer1/Ortho.cpp:2265`). */
   controlHeight: 20,
   /** `ButModeGetHeight` without / with `mouse_grid`. */
   butModeHeight: 40,
@@ -66,7 +66,7 @@ export const ORTHO = {
   /** `cOrthoLineHeight`, `cOrthoBottomSceneMargin`. */
   lineHeight: 12,
   bottomSceneMargin: 18,
-  /** `internal_gui_control_size` default (`layer1/SettingInfo.h`). */
+  /** `internal_gui_control_size` default (`packages/engine/layer1/SettingInfo.h`). */
   controlSize: 18,
   /** The `+ 4` in `LineHeight * NLine + 4`. */
   wizardPad: 4,
@@ -76,10 +76,10 @@ export const ORTHO = {
   controlBoxSize: 17,
 } as const;
 
-/** `(now - LastClickTime) < 0.35` (`layer1/Control.cpp:452`). */
+/** `(now - LastClickTime) < 0.35` (`packages/engine/layer1/Control.cpp:452`). */
 export const GUTTER_DOUBLE_CLICK_MS = 350;
 
-/** `internal_gui_mode` (`layer1/Ortho.cpp:2396-2407`). */
+/** `internal_gui_mode` (`packages/engine/layer1/Ortho.cpp:2396-2407`). */
 export const INTERNAL_GUI_MODE = {
   /** Opaque: reserves `internal_gui_width` from the scene rectangle. */
   Default: 0,
@@ -106,7 +106,7 @@ export interface OrthoPanelInput {
 
 /**
  * Block heights, in the order `OrthoLayoutPanel` stacks them BOTTOM-UP
- * (`layer1/Ortho.cpp:2261-2340`). The React column renders them top-down, so
+ * (`packages/engine/layer1/Ortho.cpp:2261-2340`). The React column renders them top-down, so
  * the field order here is Executive, Wizard, ButMode, Control — the reverse of
  * the C++ margin computation and the same as the DOM.
  *
@@ -117,7 +117,7 @@ export interface OrthoPanelInput {
  * `--butmode-line`, and `features/movie` sets no fixed height at all. So the
  * column is CSS flow, and only the WIDTH (`internal_gui_width`) and the ORDER
  * are parity-exact today. Reported; the totals are MEASURED against the real
- * engine in `bridge/tests/test_f7_layout.py` and tested here so the numbers
+ * engine in `packages/bridge/tests/test_f7_layout.py` and tested here so the numbers
  * exist for whoever closes that gap, and so a future change to
  * `ButModeGetHeight` is caught.
  */
@@ -132,7 +132,7 @@ export function butModeHeight(mouseGrid: boolean): number {
   return mouseGrid ? ORTHO.butModeGridHeight : ORTHO.butModeHeight;
 }
 
-/** `LineHeight * NLine + 4`, and 0 with no wizard (`layer1/Wizard.cpp:253-259`). */
+/** `LineHeight * NLine + 4`, and 0 with no wizard (`packages/engine/layer1/Wizard.cpp:253-259`). */
 export function wizardHeight(lines: number, controlSize: number = ORTHO.controlSize): number {
   return lines > 0 ? controlSize * lines + ORTHO.wizardPad : 0;
 }
@@ -155,7 +155,7 @@ export function wizardHeight(lines: number, controlSize: number = ORTHO.controlS
  * WHAT UPSTREAM DOES, and it decides the shape of the fix rather than taste.
  * `OrthoLayoutPanel` (above) makes the EXECUTIVE BLOCK the residual and sizes
  * everything else from a constant or from its own content. MEASURED against
- * the real engine in `bridge/tests/test_p11_layout.py`, in a PyMOL window of
+ * the real engine in `packages/bridge/tests/test_p11_layout.py`, in a PyMOL window of
  * exactly the browser column's 644 px:
  *
  *     Executive block, no movie          584 px   (90.7% of the column)
@@ -163,7 +163,7 @@ export function wizardHeight(lines: number, controlSize: number = ORTHO.controlS
  *     scene bin (`scene_buttons`)          0 px   with 0 scenes AND with 3
  *
  * The last line answers the question the web column poses: `SceneDrawButtons`
- * (`layer1/Scene.cpp:2885`) draws into the SCENE's rectangle and returns
+ * (`packages/engine/layer1/Scene.cpp:2885`) draws into the SCENE's rectangle and returns
  * immediately when `SceneVec` is empty, so the 217 px `.scpanel` was taking
  * with zero scenes stored is 217 px more than PyMOL reserves.
  *
@@ -175,11 +175,11 @@ export function wizardHeight(lines: number, controlSize: number = ORTHO.controlS
  *
  * So the floor is stated from the two constants that DO outrank the Executive
  * block inside the column, and it is their maximum: `controlHeight` (20,
- * `layer1/Ortho.cpp:2267`) plus the larger `ButModeGetHeight` (124, with
+ * `packages/engine/layer1/Ortho.cpp:2267`) plus the larger `ButModeGetHeight` (124, with
  * `mouse_grid`; measured by click in `test_f7_layout.py` as the band y=20..143).
  * **The object list is never handed less height than the blocks that outrank it
  * can ever take between them.** 144 px is 8 rows of `ExecLineHeight`
- * (`internal_gui_control_size`, 18 — `layer3/Executive.cpp:16192`), and it is
+ * (`internal_gui_control_size`, 18 — `packages/engine/layer3/Executive.cpp:16192`), and it is
  * 24.6% of the 584 px PyMOL gives the same list at the same column height, so
  * it is a floor rather than a claim of parity.
  *
@@ -205,15 +205,15 @@ export function layoutInternalGui(input: OrthoPanelInput): OrthoPanelLayout {
 
 /**
  * The settings whose ONLY side effect is `OrthoCommandIn(G, "viewport")`
- * (`layer1/Setting.cpp:2824-2833`), and what that is worth to a browser.
+ * (`packages/engine/layer1/Setting.cpp:2824-2833`), and what that is worth to a browser.
  *
  * `SettingGenerateSideEffects` runs after every write and is a ~500-line switch
  * over the setting index. These seven share one branch, and that branch queues
  * the `viewport` command — which with no arguments ends in `PyMOL_NeedReshape`
- * (`layer5/PyMOL.cpp:2511-2536`), a request to the WINDOWING SYSTEM to resize
+ * (`packages/engine/layer5/PyMOL.cpp:2511-2536`), a request to the WINDOWING SYSTEM to resize
  * the window. The bridge is not a windowing system, so nothing happens.
  *
- * MEASURED (`bridge/tests/test_f7_layout.py`), and both halves matter:
+ * MEASURED (`packages/bridge/tests/test_f7_layout.py`), and both halves matter:
  *
  *     set mouse_grid, 1         -> not one pixel of the column moves, and a
  *                                  click at y=100 still misses the ButMode
@@ -313,7 +313,7 @@ export function clampInternalGuiWidth(width: number, max = 600): number {
  *
  * `SaveWidth` is the whole subtlety: a double click with no saved width
  * COLLAPSES and remembers; a double click with one RESTORES and forgets; and a
- * DRAG clears it (`I->SaveWidth = 0`, `layer1/Control.cpp:272`), so the next
+ * DRAG clears it (`I->SaveWidth = 0`, `packages/engine/layer1/Control.cpp:272`), so the next
  * double click collapses instead of restoring a width the user has since moved
  * away from.
  */
@@ -337,7 +337,7 @@ export const GUTTER_INITIAL: GutterState = {
  *
  * THE TIMER ANCHOR IS NOT RESET BY A DOUBLE CLICK. `CControl::click` assigns
  * `I->LastClickTime` **only** in the `else` branch — the one that arms the drag
- * (`layer1/Control.cpp:466-467`) — and the collapse/restore branch sets
+ * (`packages/engine/layer1/Control.cpp:466-467`) — and the collapse/restore branch sets
  * `I->SkipRelease = true`, which then also skips the second assignment in
  * `CControl::release` (`:377-380`). So the 0.35 s window is anchored on the last
  * ARMING gesture and every click inside it toggles.
@@ -463,7 +463,7 @@ export function adoptShellSettings(
  * `internal_gui` is the one setting where adopting the user's intent is not the
  * end of the job. Typing `set internal_gui, 1` at the web prompt means "show me
  * the block column", and the React column is what shows it — but the write also
- * leaves PyMOL's own copy armed. MEASURED (`bridge/tests/test_f7_layout.py`):
+ * leaves PyMOL's own copy armed. MEASURED (`packages/bridge/tests/test_f7_layout.py`):
  * the write changes nothing at all on its own, because it only queues
  * `viewport` (see `LAYOUT_SETTINGS`); the damage lands on the NEXT CANVAS
  * RESIZE, when `OrthoReshape` takes 220 px off the scene and the browser's
@@ -497,7 +497,7 @@ export interface InvocationOptions {
 
 /**
  * `QMainWindow.resize(win_x + (220 if internal_gui), win_y + (246 if
- * external_gui else 18))` (`modules/pmg_qt/pymol_qt_gui.py:93-95`).
+ * external_gui else 18))` (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:93-95`).
  *
  * Kept as executable documentation, NOT as a sizing rule: MEASURED, the bridge
  * reports `win_x, win_y = 640, 480` — the invocation defaults — while the
@@ -515,7 +515,7 @@ export function qtInitialWindowSize(options: InvocationOptions): { width: number
 
 /**
  * The window title Qt keeps in sync with setting 440, `session_file`
- * (`modules/pmg_qt/pymol_qt_gui.py:112-115`).
+ * (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:112-115`).
  *
  * Qt registers a callback that only ever fires on a CHANGE, so a fresh session
  * (where `session_file` is `''`) keeps the default window title rather than

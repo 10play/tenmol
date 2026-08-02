@@ -1,5 +1,5 @@
 {
-  "source": "Lib/colorsys.py, the module modules/pymol/viewing.py:1971 imports",
+  "source": "Lib/colorsys.py, the module packages/engine/modules/pymol/viewing.py:1971 imports",
   "roundTrip": [
     {
       "rgb": [

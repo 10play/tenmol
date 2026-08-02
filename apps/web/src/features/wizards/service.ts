@@ -1,14 +1,14 @@
 /**
  * The wizard RPCs, as a thin typed surface over `session.call`.
  *
- * Every symbol here is served by `bridge/tenmol_bridge/panels/wizards.py` and
- * granted by `bridge/tenmol_bridge/policy/grants/wp-16.py`. There is no
+ * Every symbol here is served by `packages/bridge/tenmol_bridge/panels/wizards.py` and
+ * granted by `packages/bridge/tenmol_bridge/policy/grants/wp-16.py`. There is no
  * client-side model of a wizard: PyMOL owns the state, the browser draws what
  * the snapshot says and sends tags/codes back verbatim.
  *
  * The one rule that must never be broken here: **`code` is never evaluated in
  * the browser.** It is PyMOL command language run by `PParse`
- * (`layer1/Wizard.cpp:573-577`) — `sculpting.py:175` carries raw inline Python,
+ * (`packages/engine/layer1/Wizard.cpp:573-577`) — `sculpting.py:175` carries raw inline Python,
  * `demo.py:42` carries a keyword line. It goes back out as a string.
  */
 

@@ -1,7 +1,7 @@
 /**
  * Plugin Manager.
  *
- * Mirrors the three tabs of `modules/pymol/plugins/managergui_qt.py:34-415`
+ * Mirrors the three tabs of `packages/engine/modules/pymol/plugins/managergui_qt.py:34-415`
  * that do not execute network-fetched code: Installed, Settings, Startup Paths.
  * The Install-New-Plugin and Repositories tabs are deliberately absent and say
  * so on screen — an unbuilt feature must be VISIBLY unbuilt (registry.ts).

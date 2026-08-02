@@ -3,13 +3,13 @@
  *
  * The engine has no window, so the browser is the authority on size and the
  * bridge is the authority on what it actually managed to allocate. The
- * handshake, per `docs/webclient/input-mouse-keyboard.md` §2:
+ * handshake, per `docs/input-mouse-keyboard.md` §2:
  *
  *   1. `{t:'input',kind:'reshape',width,height,force}` in DEVICE pixels
  *      (`_cmd._reshape` -> `PyMOL_Reshape` -> `G->Option->winX/winY` +
- *      `OrthoReshape`, `layer5/PyMOL.cpp:2397-2405`);
+ *      `OrthoReshape`, `packages/engine/layer5/PyMOL.cpp:2397-2405`);
  *   2. `cmd.set('display_scale_factor', round(dpr))` — drives `_gScaleFactor`
- *      (`layer1/Setting.cpp:2946-2951`) and therefore `DIP2PIXEL()`, which
+ *      (`packages/engine/layer1/Setting.cpp:2946-2951`) and therefore `DIP2PIXEL()`, which
  *      sizes every internal-GUI hit rectangle. Setting it triggers
  *      `OrthoCommandIn(G, "viewport")`, so it goes AFTER the reshape.
  *

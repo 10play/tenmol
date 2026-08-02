@@ -1,13 +1,13 @@
 /**
  * `<ColorEditor>` — the browser's `edit_colors_dialog`
- * (`modules/pmg_qt/pymol_qt_gui.py:547-611`, `pmg_qt/forms/colors.ui`).
+ * (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:547-611`, `pmg_qt/forms/colors.ui`).
  *
  * What is pinned here is the WIRING the Qt dialog gets from its nine
  * `connect()` calls: list -> name, name -> RGB, slider <-> spinbox, spinbox ->
  * swatch, and Apply -> `cmd.do`. The engine-side facts those depend on
  * (`get_color_index('re') == 4`, `get_color_tuple(-6) is None`, a `cmd.do` with
  * an embedded newline running both commands) are measured live in
- * `bridge/tests/test_wf_colors.py`.
+ * `packages/bridge/tests/test_wf_colors.py`.
  */
 
 import { act } from 'react';

@@ -2,7 +2,7 @@
  * The headless half of PyMOL's plugin engine, reachable over the bridge.
  *
  * Inventory rows 76 / 77 / 463. Everything here is measured against a live
- * bridge in `bridge/tests/test_wf_plugins.py`; the numbers quoted in the
+ * bridge in `packages/bridge/tests/test_wf_plugins.py`; the numbers quoted in the
  * comments are from that run, not from reading the source.
  *
  * WHAT DOES NOT EXIST HERE, AND WHY
@@ -46,7 +46,7 @@ export type CallFn = <T>(fn: string, args?: readonly unknown[]) => Promise<T>;
 /**
  * `plugins.initialize(-2)` — register every discovered plugin, load none.
  *
- * `autoload = (pmgapp != -2)` in `modules/pymol/plugins/__init__.py`, so `-2`
+ * `autoload = (pmgapp != -2)` in `packages/engine/modules/pymol/plugins/__init__.py`, so `-2`
  * is the one mode that reads `~/.pymolpluginsrc.py` and builds a `PluginInfo`
  * per file **without importing any plugin module**. Verified: after the call,
  * `sorted(plugins.plugins)` is `['apbs_gui', 'lightingsettings_gui']`, both
@@ -134,7 +134,7 @@ export type PreferenceKey = 'verbose' | 'instantsave';
  * `True` and the change dies with the process. Turning it back ON saves
  * immediately, including everything else that drifted in the meantime.
  *
- * Measured, not deduced, in `bridge/tests/test_p8_a10.py`.
+ * Measured, not deduced, in `packages/bridge/tests/test_p8_a10.py`.
  *
  * The panel has to say which of the two happened before it happens, which is
  * why this is a pure function and not a comment.
@@ -215,7 +215,7 @@ export function addPath(paths: readonly string[], candidate: string): string[] {
  * The re-read is not belt-and-braces. `set_startup_path` ends in
  * `else: print(' Error: set_startup_path failed')` for anything that is not a
  * list, so a bad argument answers `t: ok` with `result: null` — exactly what a
- * successful call answers. Measured in `bridge/tests/test_p8_a10.py`. The only
+ * successful call answers. Measured in `packages/bridge/tests/test_p8_a10.py`. The only
  * way to know is to ask again.
  */
 export async function setStartupPaths(

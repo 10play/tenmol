@@ -47,7 +47,7 @@ export type EngineState = 'running' | 'headless' | 'degraded' | 'unknown';
 export interface BridgeHello {
   pymolVersion: string;
   protocolVersion: number;
-  /** `running` | `headless` | `degraded` — see `bridge/tenmol_bridge/engine.py`. */
+  /** `running` | `headless` | `degraded` — see `packages/bridge/tenmol_bridge/engine.py`. */
   state?: string;
   width?: number;
   height?: number;

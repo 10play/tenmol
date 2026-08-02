@@ -3,7 +3,7 @@
  *
  * `CSeq::draw` paints the scrollbar strip with one coloured tick per contiguous
  * run of `col->inverse`, one horizontal band per non-label row
- * (`layer1/Seq.cpp:564-696`) — so the scrollbar tells you where in a 6,000
+ * (`packages/engine/layer1/Seq.cpp:564-696`) — so the scrollbar tells you where in a 6,000
  * column row your selection actually is. Same idea here, and it is the only
  * navigation aid a virtualised row has.
  */

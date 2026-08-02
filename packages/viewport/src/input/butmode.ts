@@ -3,9 +3,9 @@
  * every press.
  *
  * WHY THIS IS TYPESCRIPT AND NOT A BRIDGE CALL. `ButModeGet`/`ButModeTranslate`
- * exist in C (`layer1/ButMode.h:225`, `layer1/ButMode.cpp:603`) and are **not**
- * exposed to Python — grepped `modules/`, only the write path `cmd.button`
- * (`modules/pymol/controlling.py:799-868`) exists. Plan §A9 settles this: the
+ * exist in C (`packages/engine/layer1/ButMode.h:225`, `packages/engine/layer1/ButMode.cpp:603`) and are **not**
+ * exposed to Python — grepped `packages/engine/modules/`, only the write path `cmd.button`
+ * (`packages/engine/modules/pymol/controlling.py:799-868`) exists. Plan §A9 settles this: the
  * authoritative binding table is the PYTHON one (`controlling.mode_dict`,
  * `mouse_ring`, `mode_name_dict`), applied via `cmd.button()`, with the current
  * mode read from `cmd.get('button_mode')` / `cmd.get('button_mode_name')`. No
@@ -15,8 +15,8 @@
  * the "Picking Atoms (and Joints)" line without a new endpoint.
  *
  * The mirror is not trusted blindly: `butmode.test.ts` and `modes.test.ts`
- * diff every table here against the real `modules/pymol/controlling.py` and
- * `layer1/ButMode.cpp` in the tree.
+ * diff every table here against the real `packages/engine/modules/pymol/controlling.py` and
+ * `packages/engine/layer1/ButMode.cpp` in the tree.
  *
  * WRITES STILL GO TO PYTHON. `cmd.button(button, modifier, action)` owns the
  * bit-packing and the `Shortcut` abbreviation matcher; `buttonSlot()` below is
@@ -24,10 +24,10 @@
  */
 
 /* ------------------------------------------------------------------ *
- * Action codes — `layer1/ButMode.h:23-113`, names `controlling.py:57-123`
+ * Action codes — `packages/engine/layer1/ButMode.h:23-113`, names `controlling.py:57-123`
  * ------------------------------------------------------------------ */
 
-/** `cButModeNothing` (`layer1/ButMode.h:23`) — the slot is unbound. */
+/** `cButModeNothing` (`packages/engine/layer1/ButMode.h:23`) — the slot is unbound. */
 export const BUT_MODE_NOTHING = -1;
 
 /** Action name (as `cmd.button` spells it, lower-cased) -> action code. */
@@ -91,12 +91,12 @@ export const BUT_ACT_CODE: Readonly<Record<string, number>> = {
   mvzl: 56,
 };
 
-/** `cButModeCount` (`layer1/ButMode.h:107`). */
+/** `cButModeCount` (`packages/engine/layer1/ButMode.h:107`). */
 export const BUT_MODE_COUNT = 57;
 
 /**
  * The 5-character on-screen label of every action code, byte for byte as
- * `ButModeInit` writes it (`layer1/ButMode.cpp:500-555`). The trailing space is
+ * `ButModeInit` writes it (`packages/engine/layer1/ButMode.cpp:500-555`). The trailing space is
  * part of the label: the block draws the four columns by concatenation
  * (`ButMode.cpp:249-260`), so trimming it silently narrows the grid.
  *
@@ -167,7 +167,7 @@ export const ACTION_LABEL: readonly string[] = (() => {
   return labels;
 })();
 
-/** `BLANK_STR` in `CButMode::draw` (`layer1/ButMode.cpp:107`). */
+/** `BLANK_STR` in `CButMode::draw` (`packages/engine/layer1/ButMode.cpp:107`). */
 export const BLANK_LABEL = '     ';
 
 /** One line of prose per action, for the mouse-config dropdowns and tooltips. */
@@ -297,7 +297,7 @@ export function buttonSlot(button: string, modifier: string): number {
   return 16 + buttonNum - 4 + modNum * 6;
 }
 
-/** `cButModeInputCount` (`layer1/ButMode.h:216`). */
+/** `cButModeInputCount` (`packages/engine/layer1/ButMode.h:216`). */
 export const BUT_MODE_INPUT_COUNT = 80;
 
 /** A fresh, wholly unbound 80-slot table (`ButModeInit`, `ButMode.cpp:497-499`). */
@@ -306,10 +306,10 @@ export function emptyButModeTable(): number[] {
 }
 
 /* ------------------------------------------------------------------ *
- * Resolution — `ButModeTranslate` (`layer1/ButMode.cpp:603-757`)
+ * Resolution — `ButModeTranslate` (`packages/engine/layer1/ButMode.cpp:603-757`)
  * ------------------------------------------------------------------ */
 
-/** `layer0/os_gl_glut.h:21-28` + `os_gl_glut_pretend.h:24-26`. */
+/** `packages/engine/layer0/os_gl_glut.h:21-28` + `os_gl_glut_pretend.h:24-26`. */
 export const GlutButton = {
   Left: 0,
   Middle: 1,
@@ -324,7 +324,7 @@ export const GlutButton = {
   DoubleRight: 202,
 } as const;
 
-/** Wheel-only pseudo actions (`layer1/ButMode.h:106-113`), never stored in a slot. */
+/** Wheel-only pseudo actions (`packages/engine/layer1/ButMode.h:106-113`), never stored in a slot. */
 export const WheelAction = {
   ScaleSlabShrink: 101,
   ScaleSlabExpand: 102,
@@ -337,10 +337,10 @@ export const WheelAction = {
 } as const;
 
 /**
- * `ButModeTranslate(G, button, mod)` — verbatim (`layer1/ButMode.cpp:603-757`).
+ * `ButModeTranslate(G, button, mod)` — verbatim (`packages/engine/layer1/ButMode.cpp:603-757`).
  *
  * `table` is the 80-slot array; `button` is a `GlutButton`; `mod` is the
- * `cOrtho` mask (SHIFT 1, CTRL 2, ALT 4, `layer1/Ortho.h:20-22`).
+ * `cOrtho` mask (SHIFT 1, CTRL 2, ALT 4, `packages/engine/layer1/Ortho.h:20-22`).
  *
  * Returns an action code, one of the 101..108 wheel pseudo-actions, or
  * `BUT_MODE_NOTHING` when the gesture is unbound.
@@ -432,7 +432,7 @@ export function butModeTranslate(
 }
 
 /**
- * `ButModeCheckPossibleSingleClick` (`layer1/ButMode.cpp:583-601`): true iff the
+ * `ButModeCheckPossibleSingleClick` (`packages/engine/layer1/ButMode.cpp:583-601`): true iff the
  * SINGLE slot matching a physical button is bound.
  */
 export function checkPossibleSingleClick(
@@ -449,7 +449,7 @@ export function checkPossibleSingleClick(
 }
 
 /* ------------------------------------------------------------------ *
- * The on-screen grid — `CButMode::draw` (`layer1/ButMode.cpp:224-360`)
+ * The on-screen grid — `CButMode::draw` (`packages/engine/layer1/ButMode.cpp:224-360`)
  * ------------------------------------------------------------------ */
 
 /**
@@ -494,9 +494,9 @@ export function slotLabel(table: readonly number[], slot: number): string {
 
 /**
  * The seven selection levels: the label the ButMode block prints
- * (`layer1/ButMode.cpp:370-392`) and the selection-expansion keyword
- * `SceneGetSeleModeKeyword` hands to the selector (`layer1/Scene.cpp:460-468`).
- * Default is 1, Residues (`layer1/SettingInfo.h:449`).
+ * (`packages/engine/layer1/ButMode.cpp:370-392`) and the selection-expansion keyword
+ * `SceneGetSeleModeKeyword` hands to the selector (`packages/engine/layer1/Scene.cpp:460-468`).
+ * Default is 1, Residues (`packages/engine/layer1/SettingInfo.h:449`).
  */
 export interface SelectionLevel {
   value: number;
@@ -516,7 +516,7 @@ export const SELECTION_LEVELS: readonly SelectionLevel[] = [
 ];
 
 /**
- * The bottom line of the ButMode block (`layer1/ButMode.cpp:363-393`).
+ * The bottom line of the ButMode block (`packages/engine/layer1/ButMode.cpp:363-393`).
  *
  * When single-left resolves to `pkat` the block shows
  * `Picking Atoms (and Joints)` and clicking it does NOT cycle the level

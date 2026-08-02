@@ -1,7 +1,7 @@
 /**
  * PyMOL's inline text colour markup, `\RGB`.
  *
- * `TextStartsWithColorCode` (`layer1/Text.cpp:507-521`): a code is a backslash
+ * `TextStartsWithColorCode` (`packages/engine/layer1/Text.cpp:507-521`): a code is a backslash
  * followed by **three digits 0-9**, or by `---` which resets to the default
  * colour. `TextSetColorFromCode` (`:530-548`) maps each digit `d` to `d / 9.0`.
  * There is no escape and no terminator: the code is exactly four characters and

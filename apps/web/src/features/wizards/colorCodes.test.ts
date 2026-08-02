@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { colorFromCode, isColorCodeAt, parseColorCodes, stripColorCodes } from './colorCodes';
 
 /**
- * Grammar from `layer1/Text.cpp:507-548`. The literals below are the real
+ * Grammar from `packages/engine/layer1/Text.cpp:507-548`. The literals below are the real
  * strings the wizards emit: `appearance.py:38-53` builds every colour label
  * with its own swatch, `cleanup.py:133` uses `\999Ligand:\000 `,
  * `renaming.py:12` uses `\999<old>\--- to: \999`.

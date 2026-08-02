@@ -1,6 +1,6 @@
 /**
  * `<name> - Volume Color Map Editor` — the container of `_VolumePanel`
- * (`modules/pmg_qt/volume.py:811-877`).
+ * (`packages/engine/modules/pmg_qt/volume.py:811-877`).
  *
  * Layout, top to bottom: the object/preset header (the web equivalent of
  * reaching the panel through `A > volume`), the ramp canvas, and the button row

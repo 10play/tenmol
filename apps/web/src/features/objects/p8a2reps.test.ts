@@ -2,8 +2,8 @@
  * Wave 8 — "which reps are already on" for the S/H menus.
  *
  * The command strings below are the literal ones `pymol.menu.rep_action`
- * (`modules/pymol/menu.py:145-176`) builds, whitespace included, and the rep
- * numbers are `pymol.constants.repres`. `bridge/tests/test_p8_a2.py` re-checks
+ * (`packages/engine/modules/pymol/menu.py:145-176`) builds, whitespace included, and the rep
+ * numbers are `pymol.constants.repres`. `packages/bridge/tests/test_p8_a2.py` re-checks
  * the mask table against the LIVE `pymol.constants.repmasks` so this file
  * cannot drift from the engine unnoticed.
  */

@@ -2,8 +2,8 @@
  * The one open PyMOL pop-up.
  *
  * PyMOL has exactly one pop-up at a time: `MenuActivate*` pushes a `CPopUp`
- * block onto Ortho and the previous one is dismissed (`layer4/PopUp.cpp:263`,
- * `layer4/Menu.cpp`). Modelling that as a module singleton — rather than as
+ * block onto Ortho and the previous one is dismissed (`packages/engine/layer4/PopUp.cpp:263`,
+ * `packages/engine/layer4/Menu.cpp`). Modelling that as a module singleton — rather than as
  * local state in whichever component opened it — is what lets the ButMode
  * block, the object panel and (later) a scene strip all raise a menu without
  * knowing about each other, and guarantees that opening a second one closes
@@ -11,14 +11,14 @@
  *
  * The payload is PyMOL's own menu shape: a list of `[code, label, command]`
  * rows where code 0 is a separator, 1 a clickable leaf and 2 a non-clickable
- * title (`layer4/PopUp.cpp:270-300`), and a leaf's `command` is a COMMAND
+ * title (`packages/engine/layer4/PopUp.cpp:270-300`), and a leaf's `command` is a COMMAND
  * STRING executed verbatim (`:471-475`) — which is why plan §A6 had to allow
  * `t:'do'` from the UI at all.
  */
 
 import { createStore, type Store } from '@tenmol/stores';
 
-/** `[code, label, command]` exactly as `modules/pymol/menu.py` returns it. */
+/** `[code, label, command]` exactly as `packages/engine/modules/pymol/menu.py` returns it. */
 export type PymolMenuRow = readonly [code: number, label: string, command: string];
 
 export interface PymolMenuState {

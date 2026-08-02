@@ -1,6 +1,6 @@
 /**
- * The Properties Inspector — `modules/pmg_qt/properties_dialog.py` and the form
- * it loads, `modules/pmg_qt/forms/props.ui`.
+ * The Properties Inspector — `packages/engine/modules/pmg_qt/properties_dialog.py` and the form
+ * it loads, `packages/engine/modules/pmg_qt/forms/props.ui`.
  *
  * Header (`props.ui:20-77`, wired at `properties_dialog.py:119-145`): an Object
  * combo from `cmd.get_object_list()`, a State spin (1 .. count_states), an Atom
@@ -84,7 +84,7 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
   /** setting index -> name. `get_name_list()` is NOT index-ordered (779 names,
    *  higher indices), so the two public list getters are zipped instead:
    *  `setting.get_name_list()` and `setting.get_index_list()` both come from the
-   *  same `index_dict` (`modules/pymol/setting.py:39-81`) and therefore agree
+   *  same `index_dict` (`packages/engine/modules/pymol/setting.py:39-81`) and therefore agree
    *  positionally. */
   const settingNames = useRef<Map<number, string>>(new Map());
 
@@ -207,8 +207,8 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
    * and there is no way to make one from here. The `selection` topic exists and
    * ACCEPTS a subscription — which is the trap, because a client can wire
    * itself up, see `subscribed: true` and wait forever — but nothing in
-   * `bridge/tenmol_bridge` ever publishes to it. Asserted, not assumed, in
-   * `bridge/tests/test_p8_a10.py`.
+   * `packages/bridge/tenmol_bridge` ever publishes to it. Asserted, not assumed, in
+   * `packages/bridge/tests/test_p8_a10.py`.
    *
    * So this is a poll, exactly as `features/scenes/useScenes.ts` stands in for
    * the scenes drain, and it costs ONE `cmd.index('?pk1')` per tick — the whole

@@ -7,9 +7,9 @@
  * them before it reaches the wire; the client switches on `kind`, never on the
  * free-form `type` string.
  *
- *   CmdException    `pymol.CmdException`            modules/pymol/__init__.py:468
- *   QuietException  `pymol.parsing.QuietException`  modules/pymol/parsing.py:71
- *   IncentiveOnly   `pymol.IncentiveOnlyException`  modules/pymol/__init__.py:482
+ *   CmdException    `pymol.CmdException`            packages/engine/modules/pymol/__init__.py:468
+ *   QuietException  `pymol.parsing.QuietException`  packages/engine/modules/pymol/parsing.py:71
+ *   IncentiveOnly   `pymol.IncentiveOnlyException`  packages/engine/modules/pymol/__init__.py:482
  *                   (subclass of CmdException — classify it FIRST, plan §B7)
  *   NotAllowed      bridge capability-policy rejection            plan §A6
  *   NotSerializable return value not in the codec table           plan §B8
@@ -60,7 +60,7 @@ export function kindForPythonException(typeName: string): ErrorKind {
 /**
  * True when the failure is the user's own expected control flow rather than a
  * defect: `QuietException` is how PyMOL's parser aborts a command *silently*
- * (`modules/pymol/parsing.py:71`). The console must not raise a toast for it.
+ * (`packages/engine/modules/pymol/parsing.py:71`). The console must not raise a toast for it.
  */
 export function isQuiet(kind: ErrorKind): boolean {
   return kind === 'QuietException';

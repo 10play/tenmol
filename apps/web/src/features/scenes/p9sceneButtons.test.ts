@@ -2,12 +2,12 @@
  * Row 333 — the three pieces of `SceneDrawButtons` the overlay never had:
  * the 8-dip character cell, `max_char` truncation and the vertical scrollbar.
  *
- * THE EXPECTED NUMBERS BELOW ARE DERIVED BY HAND from `layer1/Scene.cpp`, not
+ * THE EXPECTED NUMBERS BELOW ARE DERIVED BY HAND from `packages/engine/layer1/Scene.cpp`, not
  * copied from a run of the code under test; each one carries the expression it
  * comes from. The constants themselves are cross-checked against the C source
  * at test time by
- * `bridge/tests/test_p9_rest.py::test_scene_button_geometry_matches_Scene_cpp`,
- * which re-reads `layer1/Scene.cpp`, `layer1/Scene.h` and this module — so a
+ * `packages/bridge/tests/test_p9_rest.py::test_scene_button_geometry_matches_Scene_cpp`,
+ * which re-reads `packages/engine/layer1/Scene.cpp`, `packages/engine/layer1/Scene.h` and this module — so a
  * `#define` that moves upstream fails there, and a formula that moves here
  * fails below.
  */

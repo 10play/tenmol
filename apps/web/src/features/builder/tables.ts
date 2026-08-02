@@ -1,15 +1,15 @@
 /**
  * The Builder's button tables — a straight transcription of
- * `modules/pmg_qt/builder.py:1074-1112, 1132-1154, 1176-1224, 1226-1264`.
+ * `packages/engine/modules/pmg_qt/builder.py:1074-1112, 1132-1154, 1176-1224, 1226-1264`.
  *
  * There is a second copy of these tables on the backend
- * (`bridge/tenmol_bridge/panels/builder.py`), on purpose: the panel must render
+ * (`packages/bridge/tenmol_bridge/panels/builder.py`), on purpose: the panel must render
  * instantly, offline, without a round trip, and the backend must be able to
  * validate a request that did not come from this panel. Two copies drift, so
  * {@link diffTables} compares them at runtime and the panel SHOWS the drift
  * instead of quietly disagreeing with the engine.
  *
- * "The React layer never contains chemistry logic" (`docs/webclient/builder.md`
+ * "The React layer never contains chemistry logic" (`docs/builder.md`
  * §10): every entry here is data, and the only thing the component does with it
  * is turn it into a button that dispatches `{kind, ...}`.
  */
@@ -21,7 +21,7 @@ export interface ElementButton {
   label: string;
   tooltip: string;
   symbol: string;
-  /** `layer2/AtomInfo.h:129-133`: 1 Single, 2 Linear, 3 Planar, 4 Tetrahedral. */
+  /** `packages/engine/layer2/AtomInfo.h:129-133`: 1 Single, 2 Linear, 3 Planar, 4 Tetrahedral. */
   geometry: number;
   valence: number;
   /** The text the ReplaceWizard puts in its prompt. */
@@ -231,7 +231,7 @@ export const AMINO_ACIDS_ROW1: readonly string[] = [
   'Lys', 'Met', 'Phe', 'Pro', 'Ser', 'Thr', 'Trp', 'Tyr', 'Val', 'NMe', 'NHH',
 ];
 
-/** ss = index + 1; phi/psi from `modules/pymol/editor.py:151-162`. */
+/** ss = index + 1; phi/psi from `packages/engine/modules/pymol/editor.py:151-162`. */
 export const SECONDARY_STRUCTURE: readonly { label: string; ss: number; phi: number; psi: number }[] =
   [
     { label: 'Alpha Helix', ss: 1, phi: -57.0, psi: -47.0 },
@@ -362,7 +362,7 @@ export function diffTables(remote: BuilderTables | null): string[] {
     remote.rnaBases,
   );
   if (remote.missingFragments.length > 0) {
-    problems.push(`fragments missing from data/chempy/fragments: ${remote.missingFragments.join(', ')}`);
+    problems.push(`fragments missing from packages/engine/data/chempy/fragments: ${remote.missingFragments.join(', ')}`);
   }
   return problems;
 }

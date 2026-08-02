@@ -49,10 +49,10 @@ export type JsonObject = { [key: string]: Json };
  *
  * Mirrors of the values the PyMOL C core expects through
  * `_cmd._button(COb, button, state, x, y, mod)` and
- * `_cmd._drag(COb, x, y, mod)` (`modules/pymol2/__init__.py:46-50`).
+ * `_cmd._drag(COb, x, y, mod)` (`packages/engine/modules/pymol2/__init__.py:46-50`).
  * ------------------------------------------------------------------ */
 
-/** `layer0/os_gl_glut_pretend.h:24-26`, `layer0/os_gl_glut.h:21-22`. */
+/** `packages/engine/layer0/os_gl_glut_pretend.h:24-26`, `packages/engine/layer0/os_gl_glut.h:21-22`. */
 export const MouseButton = {
   Left: 0,
   Middle: 1,
@@ -62,7 +62,7 @@ export const MouseButton = {
 } as const;
 export type MouseButtonValue = (typeof MouseButton)[keyof typeof MouseButton];
 
-/** `layer0/os_gl_glut_pretend.h:11-12` (P_GLUT_DOWN / P_GLUT_UP). */
+/** `packages/engine/layer0/os_gl_glut_pretend.h:11-12` (P_GLUT_DOWN / P_GLUT_UP). */
 export const ButtonState = {
   Down: 0,
   Up: 1,
@@ -71,7 +71,7 @@ export type ButtonStateValue = (typeof ButtonState)[keyof typeof ButtonState];
 
 /**
  * PyMOL modifier bitmask, exactly as the Qt front-end builds it in
- * `modules/pmg_qt/keymapping.py:50-54` (shift 0x1, ctrl/meta 0x2, alt 0x4).
+ * `packages/engine/modules/pmg_qt/keymapping.py:50-54` (shift 0x1, ctrl/meta 0x2, alt 0x4).
  */
 export const Modifier = {
   None: 0x0,
@@ -105,7 +105,7 @@ export function modifierMask(ev: {
  *
  * `fn` is a dotted path resolved against the `cmd` namespace by the bridge:
  * `'fragment'`, `'util.cbc'`, `'movie.produce'` — the same namespace modules
- * exported at `modules/pymol/api.py:487-489`.
+ * exported at `packages/engine/modules/pymol/api.py:487-489`.
  *
  * `quiet` is NOT forced (plan §A6 / critique C4): several parity rows depend on
  * `quiet=0` output reaching the console.
@@ -122,9 +122,9 @@ export interface CallMessage {
  * Execute a raw PyMOL command line through `cmd.do`.
  *
  * `cmd.do` returns None and prints exceptions instead of raising
- * (`modules/pymol/commanding.py:441-461`), so `ok.result` is always null.
+ * (`packages/engine/modules/pymol/commanding.py:441-461`), so `ok.result` is always null.
  * Allowed from the UI (plan §A6): every `pymol.menu` popup leaf and every
- * wizard button returns a *command string* (`layer4/PopUp.cpp:471-475`).
+ * wizard button returns a *command string* (`packages/engine/layer4/PopUp.cpp:471-475`).
  */
 export interface DoMessage {
   id: number;
@@ -255,7 +255,7 @@ export type AnyEventMessage = { [K in Topic]: EventMessage<K> }[Topic];
 
 /**
  * Console output drained from `cmd._get_feedback()`
- * (`modules/pymol/internal.py:596-606`). Append-only, never coalesced: reading
+ * (`packages/engine/modules/pymol/internal.py:596-606`). Append-only, never coalesced: reading
  * the queue destroys it, so a dropped frame is a permanently lost line.
  */
 export interface FeedbackMessage {
@@ -270,7 +270,7 @@ export interface HelloMessage {
   protocolVersion: number;
   /**
    * Whether this bridge build has the Mode-G geometry accessor
-   * (`layer4/CmdWebGeometry.cpp`, plan §4 Task 1). When false the client must
+   * (`packages/engine/layer4/CmdWebGeometry.cpp`, plan §4 Task 1). When false the client must
    * stay in Mode P for every rep.
    */
   modeG?: boolean;

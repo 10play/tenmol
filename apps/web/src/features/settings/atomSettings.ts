@@ -4,16 +4,16 @@
  * WHY THIS EXISTS. `cmd.set(name, value, selection)` reaches the ATOM level and
  * stops there. There is no `cmd.set` spelling that reaches the ATOM-STATE
  * level at all: `SettingWrapper` is bound to `(atom)` inside `alter` and to
- * `(atom, state)` inside `alter_state` (`layer1/P.cpp:455-606`), and the
+ * `(atom, state)` inside `alter_state` (`packages/engine/layer1/P.cpp:455-606`), and the
  * atom-state table is a different `SettingUnique` keyed by the coordinate, so
  * the 17 atom-state settings (`label_position`, `label_screen_point`,
  * `label_bg_color`, …) are unreachable from every other API the client has.
- * `modules/pymol/setting.py:519-526` documents exactly one escape hatch for
+ * `packages/engine/modules/pymol/setting.py:519-526` documents exactly one escape hatch for
  * them, and it is this one:
  *
  *     alter_state 1, *, del s[728]
  *
- * MEASURED over the WebSocket, `bridge/tests/test_p8_a5.py`:
+ * MEASURED over the WebSocket, `packages/bridge/tests/test_p8_a5.py`:
  *
  *     alter       "p8x and name CA", "s['sphere_scale']=3.5"          -> 1
  *     alter_state 1, "p8x and name CB", "s['label_screen_point']=…"   -> 1
@@ -47,7 +47,7 @@ export interface AtomSettingWrite {
  * A value as a Python literal for the `s[...] = …` right-hand side.
  *
  * `SettingWrapper::__setitem__` funnels into `SettingSetFromPyObject`
- * (`layer1/Setting.cpp`), which switches on the setting's declared type — an
+ * (`packages/engine/layer1/Setting.cpp`), which switches on the setting's declared type — an
  * int for `cSetting_boolean`/`int`/`color`, a float, or a 3-tuple. It does NOT
  * do PyMOL's command-line coercion, so `'on'`, `'red'` and `[1,2,3]` all have
  * to be turned into the right Python object here.
@@ -125,7 +125,7 @@ export function atomSettingWrite(
  * `del s['name']` — the documented escape hatch, and the ONLY way to remove an
  * atom-state override. `cmd.unset` does not reach that level: `unset_deep`
  * covers object / object-state / atom / bond and explicitly not atom-state
- * (`modules/pymol/setting.py:290-322`).
+ * (`packages/engine/modules/pymol/setting.py:290-322`).
  */
 export function atomSettingDelete(
   meta: SettingMeta,

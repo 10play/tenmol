@@ -2,7 +2,7 @@
  * Screen-space point GLSL (WebGL2 / GLSL ES 3.00) — the `dots` rep.
  *
  * WHY THIS EXISTS (measured, not assumed): `cSetting_dot_radius` defaults to 0
- * (`layer1/SettingInfo.h`), and at radius 0 `RepDot` does not draw spheres at
+ * (`packages/engine/layer1/SettingInfo.h`), and at radius 0 `RepDot` does not draw spheres at
  * all — it draws `GL_POINTS` of `dot_width` pixels. The accessor honours that
  * faithfully: a `dots` frame for 1UBQ arrives as 15,040 `sphere` instances with
  * `w == 0` and a header carrying `pointSize: 2, dotSize: 0`.

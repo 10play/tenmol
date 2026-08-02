@@ -5,7 +5,7 @@
  * All three are portalled onto `.shell__viewport`, so every test here creates
  * that element; a missing host must render nothing rather than throw.
  *
- * The engine facts behind them are measured in `bridge/tests/test_wf_ortho.py`:
+ * The engine facts behind them are measured in `packages/bridge/tests/test_wf_ortho.py`:
  * a live 0.7 s ray pushed `progress` frames of 0.35 -> 0.45 -> 0.53 and then
  * -1.0, `show_progress, 0` made every frame -1.0, and neither `LoopRect` nor
  * `SplashFlag` is readable from Python.
@@ -136,7 +136,7 @@ describe('<BusyOverlay>', () => {
   });
 
   it('draws ONE bar, because the API folds the two counters into one number', async () => {
-    // `CmdGetProgress` (`layer4/Cmd.cpp:4334-4348`) folds slow into fast; the
+    // `CmdGetProgress` (`packages/engine/layer4/Cmd.cpp:4334-4348`) folds slow into fast; the
     // box's second bar cannot be reconstructed. Pinned so a future two-bar
     // rewrite has to add the binding first.
     mount(<BusyOverlay />);
@@ -264,7 +264,7 @@ describe('<OrthoLoopRect>', () => {
 
   it('does not start on a press that landed on another ortho block', async () => {
     // `OrthoButton` hands the click to the block under the cursor
-    // (`layer1/Ortho.cpp:2530-2600`); the console band eats it and the scene
+    // (`packages/engine/layer1/Ortho.cpp:2530-2600`); the console band eats it and the scene
     // never sees a press, so there is no rubber band to draw.
     mount(<OrthoLoopRect />);
     await settle();

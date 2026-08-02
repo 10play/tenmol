@@ -2,7 +2,7 @@
  * The popup a toggle button opens — driven entirely by JSON from
  * `pymol.menu.<name>`, never by a table in this file.
  *
- * `layer4/PopUp.cpp` semantics reproduced here:
+ * `packages/engine/layer4/PopUp.cpp` semantics reproduced here:
  *   code 0        separator bar          (`:270-300`)
  *   code 1        clickable item
  *   code 2        non-clickable title
@@ -13,7 +13,7 @@
  *   leaf          logs the command string and PParses it (`:471-475`) — here
  *                 `session.run(command)`, i.e. `{t:'do'}`, so the console shows
  *                 the same `PyMOL>` line the Qt build's log file gets
- *   `\RGB`        text colour escapes (`layer1/Text.cpp:507-548`), including
+ *   `\RGB`        text colour escapes (`packages/engine/layer1/Text.cpp:507-548`), including
  *                 the `\933` that makes every delete/remove leaf red
  *
  * Sticky ("passive") mode: PyMOL makes a menu passive when the press and the
@@ -248,7 +248,7 @@ function MenuList({
 }
 
 /**
- * One submenu, placed by `PopPlaceChild` (`layer1/Pop.cpp:111-150`): the
+ * One submenu, placed by `PopPlaceChild` (`packages/engine/layer1/Pop.cpp:111-150`): the
  * inherited side first, the other side when the first one had to be clamped.
  */
 function SubMenu({

@@ -12,7 +12,7 @@
  *           and streams encoded bitmaps. Correctness baseline, default, and the
  *           automatic fallback for every rep Mode G cannot draw.
  *   Mode G  three.js draws PyMOL's OWN geometry, pulled through
- *           `layer4/CmdWebGeometry.cpp`: `cgo::draw::arrays` blocks used
+ *           `packages/engine/layer4/CmdWebGeometry.cpp`: `cgo::draw::arrays` blocks used
  *           verbatim, spheres/cylinders as INSTANCED impostor draws (never
  *           tessellated client-side), `RepSurface` as an indexed mesh.
  *
@@ -196,7 +196,7 @@ export interface ViewportStats {
   /**
    * `cmd.get_viewport()` — the SCENE rectangle inside the canvas. Equal to
    * width/height unless PyMOL is reserving room at the bottom of the window
-   * (movie panel, internal feedback: `layer1/Ortho.cpp:2383-2390`).
+   * (movie panel, internal feedback: `packages/engine/layer1/Ortho.cpp:2383-2390`).
    */
   sceneWidth: number;
   sceneHeight: number;

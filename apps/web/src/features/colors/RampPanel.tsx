@@ -1,10 +1,10 @@
 /**
- * Colour ramps — `cmd.ramp_new` / `ramp_update` (`modules/pymol/creating.py:374-518`)
+ * Colour ramps — `cmd.ramp_new` / `ramp_update` (`packages/engine/modules/pymol/creating.py:374-518`)
  * — and volume ramps, which are a different mechanism with a similar name
- * (`modules/pymol/colorramping.py`).
+ * (`packages/engine/modules/pymol/colorramping.py`).
  *
  * A ramp is a real object (`object:ramp`) registered as a colour EXTENSION
- * (`ColorRegisterExt`, `layer1/Color.cpp:347-365`); its colour index is
+ * (`ColorRegisterExt`, `packages/engine/layer1/Color.cpp:347-365`); its colour index is
  * `-10 - slot`. Verified against a live PyMOL: after
  * `ramp_new r1, m1, [-1,0,1], [red,white,blue]`, `get_color_index('r1')`
  * answers **-10**. That index can then be used anywhere a colour can — which is
@@ -97,7 +97,7 @@ export function RampPanel({ palette }: { palette: PaletteState }) {
         {palette.ramps.map((ramp) => (
           <div className="cramp__row" key={ramp.name}>
             <code>{ramp.name}</code>
-            <span title="ColorRegisterExt: index = -10 - slot (layer1/Color.h:46)">
+            <span title="ColorRegisterExt: index = -10 - slot (packages/engine/layer1/Color.h:46)">
               colour index {ramp.index} (ext {-10 - ramp.index})
             </span>
             <button

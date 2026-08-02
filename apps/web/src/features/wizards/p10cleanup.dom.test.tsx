@@ -4,7 +4,7 @@
  * This row has said "the panel itself is unverifiable here" since wave 4,
  * because `cmd.wizard('cleanup')` raises `CmdException` at construction unless
  * `$OE_DIR/bin/szybki` exists, and no OpenEye install does on this machine.
- * `bridge/tests/test_p10_wizards.py` closes that: it puts a stub executable at
+ * `packages/bridge/tests/test_p10_wizards.py` closes that: it puts a stub executable at
  * `$OE_DIR/bin/szybki` that honours the same file contract, launches the wizard
  * for real and drives `run()`/`undo()`/`redo()` end to end.
  *
@@ -70,7 +70,7 @@ function firePointer(target: Element, type: 'pointerdown' | 'pointerup') {
   });
 }
 
-/** The ligand `bridge/tests/test_p10_wizards.py` builds with `fragment ala`. */
+/** The ligand `packages/bridge/tests/test_p10_wizards.py` builds with `fragment ala`. */
 const LIGAND = 'p10cleanup_lig';
 
 /**
@@ -148,7 +148,7 @@ describe('row 371 — the Cleanup wizard renders through the generic panel', () 
     const popup = container.querySelector('.wizrow--popup') as HTMLElement;
     expect(popup.textContent).not.toContain('\\');
     // `TextSetColorFromCode` maps each digit to d/9 of full scale: 999 is white,
-    // 000 is black (`layer1/Text.cpp:530-548`).
+    // 000 is black (`packages/engine/layer1/Text.cpp:530-548`).
     const spans = [...popup.querySelectorAll('span[style]')];
     expect(spans.map((span) => (span as HTMLElement).style.color)).toEqual([
       'rgb(255, 255, 255)',
@@ -160,9 +160,9 @@ describe('row 371 — the Cleanup wizard renders through the generic panel', () 
   });
 
   it('sends Run / Undo / Redo / Refresh back as their exact code strings', () => {
-    // These four strings are what `bridge/tests/test_p10_wizards.py` executes
+    // These four strings are what `packages/bridge/tests/test_p10_wizards.py` executes
     // through `wizards.exec_code` to drive the real szybki round trip; the
-    // browser never evaluates them (`layer1/Wizard.cpp:573-577`).
+    // browser never evaluates them (`packages/engine/layer1/Wizard.cpp:573-577`).
     const onExec = vi.fn();
     render(<WizardPanel snapshot={CLEANUP} onExec={onExec} onMenu={vi.fn()} />);
 

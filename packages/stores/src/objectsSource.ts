@@ -112,8 +112,8 @@ export function createObjectsSource(options: ObjectsSourceOptions): ObjectsSourc
 /**
  * Every mutation the panel can perform, as the single `cmd.*` call PyMOL's own
  * panel logs for it. The strings are what `ExecutiveSpecSetVisibility`
- * (`layer3/Executive.cpp:15413-15487`) and the popup leaves
- * (`layer4/PopUp.cpp:471-475`) put in the log file, which is exactly what the
+ * (`packages/engine/layer3/Executive.cpp:15413-15487`) and the popup leaves
+ * (`packages/engine/layer4/PopUp.cpp:471-475`) put in the log file, which is exactly what the
  * console shows the user here.
  */
 export interface PanelAction {

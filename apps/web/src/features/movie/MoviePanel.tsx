@@ -2,12 +2,12 @@
  * Slot `movie`, region `internal-gui`. Plan §6 WP-20.
  *
  * Everything PyMOL's movie surface does, as DOM:
- *   the nine-button control bar (`layer1/Control.cpp:288`)
+ *   the nine-button control bar (`packages/engine/layer1/Control.cpp:288`)
  *   the frame scrollbar and the frame/state readout
- *   the movie panel / timeline (`layer1/Movie.cpp:1488`)
+ *   the movie panel / timeline (`packages/engine/layer1/Movie.cpp:1488`)
  *   the Movie menu (`_gui.py:234`)
  *   mset / mdo / mview / mmove editors
- *   rock + sweep settings (`layer1/Control.cpp:415`)
+ *   rock + sweep settings (`packages/engine/layer1/Control.cpp:415`)
  *   export (`cmd.mpng`, `cmd.movie.produce`)
  *
  * THE CLIENT NEVER ADVANCES A FRAME. Every number below is read back from

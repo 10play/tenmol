@@ -1,5 +1,5 @@
 /**
- * The Text Editor — `modules/pmg_qt/TextEditor.py:18-195`.
+ * The Text Editor — `packages/engine/modules/pmg_qt/TextEditor.py:18-195`.
  *
  * Qt builds a `QMainWindow` with a File menu (Open Ctrl+O, Save Ctrl+S, Save
  * as… Ctrl+Shift+S), an EXCLUSIVE Syntax menu (Python / PML / Plain Text), a

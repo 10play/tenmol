@@ -6,16 +6,16 @@
  * neither `apbs` nor `pdb2pqr` ships with PyMOL and neither is installed here.
  * A panel that only *asserts* that in prose is unfalsifiable and goes stale the
  * day someone installs them, so the panel measures it instead — through
- * `subproc.which`, granted by `bridge/tenmol_bridge/policy/grants/wp-25-apbs.py`.
+ * `subproc.which`, granted by `packages/bridge/tenmol_bridge/policy/grants/wp-25-apbs.py`.
  *
  * The candidate lists below are NOT invented: they are exactly what the Qt
  * plugin looks for, so a "found" here means the plugin would find the same
  * file.
  *
  *   apbs      `shutil.which('apbs')`, else `$SCHRODINGER/utilities/apbs`
- *             — `data/startup/apbs_gui/electrostatics.py:49-57`
+ *             — `packages/engine/data/startup/apbs_gui/electrostatics.py:49-57`
  *   pdb2pqr   `pdb2pqr`, `pdb2pqr30`, `pdb2pqr_cli` in that order
- *             — `data/startup/apbs_gui/__init__.py:224-231`
+ *             — `packages/engine/data/startup/apbs_gui/__init__.py:224-231`
  *
  * One deliberate difference, stated because it is a behaviour change and not
  * an oversight: the plugin's `$SCHRODINGER` branch uses `os.path.exists`, while
@@ -57,7 +57,7 @@ export interface ApbsProbe {
  *
  * `$`-prefixed candidates go through `cmd.exp_path` first, which is how PyMOL
  * expands `$SCHRODINGER` / `$PYMOL_DATA` everywhere else
- * (`modules/pymol/parsing.py`). When the variable is unset, `exp_path` returns
+ * (`packages/engine/modules/pymol/parsing.py`). When the variable is unset, `exp_path` returns
  * the string unchanged and `which` then answers `null` for it, which is the
  * correct answer.
  */

@@ -1,7 +1,7 @@
 /**
  * The four row-button fills and the name-colour rule, as data.
  *
- * `CExecutive::draw` (`layer3/Executive.cpp:16176-16190`) declares the fills
+ * `CExecutive::draw` (`packages/engine/layer3/Executive.cpp:16176-16190`) declares the fills
  * once and picks one per row (`:16443-16463`):
  *
  *   pressed   {0.7,0.7,0.7}   `rec->hilight == 1`, or the pointer is over the
@@ -20,7 +20,7 @@
  *     }
  *     return default_rgb;
  *
- * `within3f` (`layer0/Vector.h:480-495`) is a EUCLIDEAN test with per-axis
+ * `within3f` (`packages/engine/layer0/Vector.h:480-495`) is a EUCLIDEAN test with per-axis
  * early-outs — `sqrt(dr^2+dg^2+db^2) <= 0.1`, not a per-channel one — so a
  * colour can differ by 0.09 on all three channels (distance 0.156) and still
  * be used. This file reproduces exactly that, including the `<=`.

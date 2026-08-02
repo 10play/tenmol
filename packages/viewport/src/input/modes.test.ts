@@ -1,6 +1,6 @@
 /**
  * Diff the mirrored mouse-mode tables against the real
- * `modules/pymol/controlling.py` (imported in the bridge venv). Plan §A9 makes
+ * `packages/engine/modules/pymol/controlling.py` (imported in the bridge venv). Plan §A9 makes
  * the Python table authoritative; this is the test that keeps the mirror
  * honest.
  */
@@ -39,7 +39,7 @@ function tables(): PythonTables {
   );
 }
 
-describe('mirror of modules/pymol/controlling.py', () => {
+describe('mirror of packages/engine/modules/pymol/controlling.py', () => {
   it('has all eleven mode matrices, row for row and in order', () => {
     if (!hasPython) return;
     const python = tables();
@@ -112,7 +112,7 @@ describe('ring cycling (controlling.py:609-686)', () => {
   });
 });
 
-describe('mouse_config context menu (modules/pymol/menu.py:82-101)', () => {
+describe('mouse_config context menu (packages/engine/modules/pymol/menu.py:82-101)', () => {
   it('is nine entries in upstream order, with the separator in the middle', () => {
     expect(MOUSE_CONFIG_MENU.map((item) => item.label)).toEqual([
       '3-Button Motions',

@@ -12,7 +12,7 @@
  * on this bridge in wave 8). Ctrl-V was a guaranteed no-op.
  *
  * Wave 9 also had the CONDITION backwards: it wrote that `cmd.paste` is reached
- * "only for the Ctrl-V chord on an EMPTY line". `layer1/Ortho.cpp:1015` is
+ * "only for the Ctrl-V chord on an EMPTY line". `packages/engine/layer1/Ortho.cpp:1015` is
  * `if (I->CurChar != I->PromptChar)` — i.e. paste when text HAS been typed, and
  * the CHORD on an empty line. `orthoKeys.ts:183-186` already had it right.
  *
@@ -31,7 +31,7 @@ import { createFeedbackStore } from '@tenmol/stores';
 import { createConsoleStore, type ConsoleStore } from '@tenmol/stores/console';
 import { SessionContext, type Session } from '../../app';
 
-// The band measures its host (`I->ShowLines`, `layer1/Ortho.cpp:2380`); jsdom
+// The band measures its host (`I->ShowLines`, `packages/engine/layer1/Ortho.cpp:2380`); jsdom
 // has no ResizeObserver.
 class FakeResizeObserver {
   observe(): void {}
@@ -201,7 +201,7 @@ describe('pasting into the in-viewport prompt', () => {
       ortho().dispatchEvent(event);
     });
     await tick();
-    // `layer1/Ortho.cpp:1015-1021`: an empty line is OrthoKeyControl, i.e. the
+    // `packages/engine/layer1/Ortho.cpp:1015-1021`: an empty line is OrthoKeyControl, i.e. the
     // user's own CTRL-V binding, not a clipboard read.
     expect(call).toHaveBeenCalledWith('cmd._ctrl', ['V']);
     expect(call).not.toHaveBeenCalledWith('cmd.paste');

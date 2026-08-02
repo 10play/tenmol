@@ -127,10 +127,10 @@ jobs:
 
       - name: bridge pytest suite
         run: |
-          if [ -d bridge/tests ] && ls bridge/tests/test_*.py >/dev/null 2>&1; then
-            bash scripts/dev-bridge.sh --exec python -m pytest bridge/tests -q
+          if [ -d packages/bridge/tests ] && ls packages/bridge/tests/test_*.py >/dev/null 2>&1; then
+            bash scripts/dev-bridge.sh --exec python -m pytest packages/bridge/tests -q
           else
-            echo "no bridge/tests yet (WP-02 owns them) -- skipping"
+            echo "no packages/bridge/tests yet (WP-02 owns them) -- skipping"
           fi
 
       - name: acceptance -- bridge answers /healthz

@@ -2,7 +2,7 @@
 /**
  * tenmol ownership lint (WP-00 (f) stub; WP-27 owns the CI-grade version).
  *
- * docs/webclient/03-implementation-plan.md section 6 is the machine-readable
+ * docs/03-implementation-plan.md section 6 is the machine-readable
  * source of truth for file ownership: every work package lists the paths it
  * owns exclusively, and "a WP that needs a change elsewhere reports it, it does
  * not make it" (section 5.1, rule 1). This script parses that section and fails
@@ -28,8 +28,9 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// The repo root: `scripts/` sits directly under it.
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
-const PLAN = join(REPO, 'docs', 'webclient', '03-implementation-plan.md');
+const PLAN = join(REPO, 'docs', '03-implementation-plan.md');
 
 // ---------------------------------------------------------------------------
 // argv
@@ -94,11 +95,11 @@ function expandBraces(pattern) {
 const TOP_DIRS = [
   'packages/',
   'apps/',
-  'bridge/',
+  'packages/bridge/',
   'tools/',
   'scripts/',
   'docs/',
-  'layer4/',
+  'packages/engine/layer4/',
   '.github/',
 ];
 function resolveExcept(base, tok) {

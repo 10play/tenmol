@@ -2,18 +2,18 @@
  * Row 415 — the sculpting loop the bridge does not run.
  *
  * `sculpting 1` is not an instruction to sculpt, it is a flag PyMOL's idle
- * handler reads (`layer1/Control.cpp:397-403`, `layer5/PyMOL.cpp:2424`).
+ * handler reads (`packages/engine/layer1/Control.cpp:397-403`, `packages/engine/layer5/PyMOL.cpp:2424`).
  *
  * CORRECTED IN WAVE 10: this file used to say "the bridge pump draws and never
  * idles, so on this backend the flag on its own moves nothing". It does idle
  * (`engine.py:236`) and the flag alone moves atoms — 0.6843 A in 2.0 s with no
- * client, measured in `bridge/tests/test_p10_viewport.py`. The loop below is
+ * client, measured in `packages/bridge/tests/test_p10_viewport.py`. The loop below is
  * therefore a strain READOUT (0 cycles, see `p10sculptpoll.test.ts`), but its
  * lifecycle rules are unchanged and each one is here because breaking it is a
  * real failure mode.
  *
  * The engine half — that a tick really does move atoms, and stops moving them
- * once the object is deactivated — is `bridge/tests/test_p9_rest.py`.
+ * once the object is deactivated — is `packages/bridge/tests/test_p9_rest.py`.
  */
 
 import { describe, expect, it, vi } from 'vitest';

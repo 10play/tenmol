@@ -59,7 +59,7 @@ export function getSettingsService(session: Session): SettingsService {
     store,
     onChanged: (indices, full) => {
       // A setting write is NOT cosmetic: SettingGenerateSideEffects
-      // (`layer1/Setting.cpp:1872-1930`) invalidates reps, reloads shaders and
+      // (`packages/engine/layer1/Setting.cpp:1872-1930`) invalidates reps, reloads shaders and
       // rebuilds scene members. The object panel's poller is the cheapest
       // handle we have on "re-read what PyMOL now thinks", so kick it.
       if (full || indices.length > 0) session.poller.kick();

@@ -2,7 +2,7 @@
 /**
  * tenmol parity coverage (WP-00 (f) STUB).
  *
- * docs/webclient/00-parity-inventory.md is the definition of done: 351 rows,
+ * docs/00-parity-inventory.md is the definition of done: 351 rows,
  * every one carrying a checkbox in the first table cell. This reads those
  * checkboxes and reports coverage per area.
  *
@@ -25,8 +25,9 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// The repo root: `scripts/` sits directly under it.
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
-const INVENTORY = join(REPO, 'docs', 'webclient', '00-parity-inventory.md');
+const INVENTORY = join(REPO, 'docs', '00-parity-inventory.md');
 
 const argv = process.argv.slice(2);
 const JSON_OUT = argv.includes('--json');
@@ -117,7 +118,7 @@ if (JSON_OUT) {
   console.log(
     JSON.stringify(
       {
-        inventory: 'docs/webclient/00-parity-inventory.md',
+        inventory: 'docs/00-parity-inventory.md',
         totals,
         areas: [...byArea].map(([a, e]) => ({ area: a, ...e })),
       },
@@ -131,7 +132,7 @@ if (JSON_OUT) {
   }
 } else {
   const width = Math.max(...[...byArea.keys()].map((a) => a.length), 10);
-  console.log('\nparity coverage  (docs/webclient/00-parity-inventory.md)\n');
+  console.log('\nparity coverage  (docs/00-parity-inventory.md)\n');
   console.log(`  ${'area'.padEnd(width)}  done  part  open   n/a  total`);
   for (const [a, e] of byArea) {
     console.log(

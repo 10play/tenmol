@@ -54,7 +54,7 @@ import { MenuBar } from './MenuBar';
 /**
  * Every leaf of `File`, in tree order, submenu paths joined with ` > `.
  *
- * This is upstream's list (`modules/pymol/_gui.py:80-140`) as harvested, plus
+ * This is upstream's list (`packages/engine/modules/pymol/_gui.py:80-140`) as harvested, plus
  * the `Open Recent…` placeholder row that stands in for the recent-files DB.
  */
 const FILE_LEAVES = [

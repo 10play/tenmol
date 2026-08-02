@@ -56,7 +56,7 @@ function key(
 }
 
 /* ------------------------------------------------------------------ *
- * ANSI  (layer0/Util.cpp:238-250, layer1/Ortho.cpp:1148-1150)
+ * ANSI  (packages/engine/layer0/Util.cpp:238-250, packages/engine/layer1/Ortho.cpp:1148-1150)
  * ------------------------------------------------------------------ */
 
 describe('ANSI escapes', () => {
@@ -103,7 +103,7 @@ describe('ANSI escapes', () => {
 });
 
 /* ------------------------------------------------------------------ *
- * wrap_output  (layer1/Ortho.cpp:1080-1118)
+ * wrap_output  (packages/engine/layer1/Ortho.cpp:1080-1118)
  * ------------------------------------------------------------------ */
 
 describe('wrapOutput', () => {
@@ -162,7 +162,7 @@ describe('the ortho scrollback ring', () => {
     expect(state.lines[0]?.text).toBe('line 44');
     expect(state.lines[255]?.text).toBe('line 299');
     // CurLine keeps counting past the ring, because auto_overlay is computed
-    // from the difference (layer1/Ortho.cpp:1596-1600).
+    // from the difference (packages/engine/layer1/Ortho.cpp:1596-1600).
     expect(state.curLine).toBe(300);
   });
 
@@ -181,7 +181,7 @@ describe('the ortho scrollback ring', () => {
 });
 
 /* ------------------------------------------------------------------ *
- * Overlay arithmetic  (layer1/Ortho.cpp:1591-1642)
+ * Overlay arithmetic  (packages/engine/layer1/Ortho.cpp:1591-1642)
  * ------------------------------------------------------------------ */
 
 function stateWith(patch: Partial<ConsoleState>): ConsoleState {
@@ -226,7 +226,7 @@ describe('overlay / auto_overlay / text', () => {
     store.removeAutoOverlay();
     store.addOutput(['a', 'b', 'c']);
     expect(numberOverlayLines(store.get())).toBe(3);
-    // `OrthoRemoveAutoOverlay` from `OrthoButton` (layer1/Ortho.cpp:2524).
+    // `OrthoRemoveAutoOverlay` from `OrthoButton` (packages/engine/layer1/Ortho.cpp:2524).
     store.removeAutoOverlay();
     expect(numberOverlayLines(store.get())).toBe(0);
   });
@@ -244,7 +244,7 @@ describe('overlay / auto_overlay / text', () => {
     // The store starts with `splash: false` on purpose (see its doc comment):
     // the bridge has already drained PyMOL's banner before a browser connects,
     // so a `true` default would just bury the viewport on every page load.
-    // The flag itself still behaves exactly as `layer1/Ortho.cpp:1638` does.
+    // The flag itself still behaves exactly as `packages/engine/layer1/Ortho.cpp:1638` does.
     const store = createConsoleStore();
     store.setShowLines(30);
     expect(showLineCount(store.get())).toBe(1);
@@ -299,7 +299,7 @@ describe('visibleOrthoLines', () => {
     expect(orthoLineColor({ kind: 'prompt', lcount: 1 }, settings, false)).toBe('text');
     expect(orthoLineColor({ kind: 'output', lcount: 2 }, settings, false)).toBe('overlay');
     // A prompt line ABOVE the internal-feedback band on a light background
-    // falls back to the overlay colour (`layer1/Ortho.cpp:1666-1671`).
+    // falls back to the overlay colour (`packages/engine/layer1/Ortho.cpp:1666-1671`).
     expect(orthoLineColor({ kind: 'prompt', lcount: 3 }, settings, true)).toBe('overlay');
     // internal_gui_mode != Default paints everything in OverlayColor (`:1659`).
     expect(orthoLineColor({ kind: 'prompt', lcount: 1 }, settings, false, false)).toBe('overlay');
@@ -307,7 +307,7 @@ describe('visibleOrthoLines', () => {
 });
 
 /* ------------------------------------------------------------------ *
- * The line editor  (layer1/Ortho.cpp:822-1031)
+ * The line editor  (packages/engine/layer1/Ortho.cpp:822-1031)
  * ------------------------------------------------------------------ */
 
 describe('the ortho line editor', () => {
@@ -344,7 +344,7 @@ describe('the ortho line editor', () => {
 
   it('reproduces the RIGHT-arrow quirk: from "at end" it moves LEFT', () => {
     // `case P_GLUT_KEY_RIGHT` takes the same `CursorChar = CurChar - 1` branch
-    // as LEFT when the cursor is unpinned (layer1/Ortho.cpp:1105-1113).
+    // as LEFT when the cursor is unpinned (packages/engine/layer1/Ortho.cpp:1105-1113).
     expect(cursorRight({ text: 'abcd', cursor: -1 })).toEqual({ text: 'abcd', cursor: 3 });
     expect(cursorRight({ text: 'abcd', cursor: 3 })).toEqual({ text: 'abcd', cursor: 4 });
     expect(cursorRight({ text: 'abcd', cursor: 4 })).toEqual({ text: 'abcd', cursor: 4 });
@@ -354,7 +354,7 @@ describe('the ortho line editor', () => {
 });
 
 /* ------------------------------------------------------------------ *
- * History  (layer1/Ortho.cpp:1035-1094)
+ * History  (packages/engine/layer1/Ortho.cpp:1035-1094)
  * ------------------------------------------------------------------ */
 
 describe('the ortho history ring', () => {
@@ -407,7 +407,7 @@ describe('the ortho history ring', () => {
 });
 
 /* ------------------------------------------------------------------ *
- * Key dispatch  (layer1/Ortho.cpp:841-1031, layer5/PyMOL.cpp:2371-2383)
+ * Key dispatch  (packages/engine/layer1/Ortho.cpp:841-1031, packages/engine/layer5/PyMOL.cpp:2371-2383)
  * ------------------------------------------------------------------ */
 
 describe('mapOrthoKey', () => {
@@ -474,7 +474,7 @@ describe('mapOrthoKey', () => {
       kind: 'command',
       line: 'rewind;mplay',
     });
-    // In presentation mode it is `cmd.scene('','next')` (layer1/Ortho.cpp:860).
+    // In presentation mode it is `cmd.scene('','next')` (packages/engine/layer1/Ortho.cpp:860).
     const pres = withLine('', { settings: { ...CONSOLE_SETTING_DEFAULTS, presentation: 1 } });
     expect(mapOrthoKey(key(' '), pres)).toEqual({ kind: 'command', line: "scene '', next" });
     // With text on the line it is just a space.
@@ -609,7 +609,7 @@ describe('mapOrthoKey', () => {
 });
 
 /* ------------------------------------------------------------------ *
- * Drag-enter preview  (modules/pmg_qt/pymol_qt_gui.py:1085-1122)
+ * Drag-enter preview  (packages/engine/modules/pmg_qt/pymol_qt_gui.py:1085-1122)
  * ------------------------------------------------------------------ */
 
 describe('command-line drag preview', () => {
@@ -648,7 +648,7 @@ describe('command-line drag preview', () => {
 
 /* ------------------------------------------------------------------ *
  * Which polled values the console believes
- * (bridge/tenmol_bridge/engine.py:129-130, :175-183)
+ * (packages/bridge/tenmol_bridge/engine.py:129-130, :175-183)
  * ------------------------------------------------------------------ */
 
 describe('adoptSettings', () => {

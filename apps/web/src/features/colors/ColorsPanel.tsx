@@ -138,7 +138,7 @@ export function ColorsPanel() {
  * `cmd.space(space, gamma)` — `importing.py:227-288`.
  *
  * The whole point of this tab is the refetch. `ColorRec::LutColor`
- * (`layer1/Color.h:58-59`) means `get_color_tuple` returns the LUT-MAPPED
+ * (`packages/engine/layer1/Color.h:58-59`) means `get_color_tuple` returns the LUT-MAPPED
  * value, so every cached RGB in the client is stale the moment this runs.
  * Verified against a live PyMOL: `red` reads `(1, 0, 0)`, then after
  * `space greyscale` it reads `(0.343, 0.331, 0.331)`.

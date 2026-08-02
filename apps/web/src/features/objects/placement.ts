@@ -1,5 +1,5 @@
 /**
- * Submenu side-flip and pop-up scrolling — `layer1/Pop.cpp` as data.
+ * Submenu side-flip and pop-up scrolling — `packages/engine/layer1/Pop.cpp` as data.
  *
  * PLACEMENT (`PopPlaceChild`, `Pop.cpp:111-150`). A child menu is laid out on
  * the side its parent's `PlacementAffinity` says, `right` for the first one
@@ -21,10 +21,10 @@
  * scroll and it is not proportional to the wheel delta.
  */
 
-/** `#define cPopMargin 3` (`layer1/Pop.cpp:24`). */
+/** `#define cPopMargin 3` (`packages/engine/layer1/Pop.cpp:24`). */
 export const POP_MARGIN = 3;
 
-/** `scroll_dy = 10` (`layer4/PopUp.cpp:438`). */
+/** `scroll_dy = 10` (`packages/engine/layer4/PopUp.cpp:438`). */
 export const POP_SCROLL_PX = 10;
 
 export type Affinity = 'left' | 'right';

@@ -111,7 +111,7 @@ export function createPixelPresenter(options: PixelPresenterOptions): PixelPrese
     // CONTAIN, ANCHORED TOP-LEFT — never stretch.
     //
     // The frame is not always the size of the canvas. `cmd.get_viewport()` is
-    // the SCENE rectangle, and `OrthoReshape` (`layer1/Ortho.cpp:2383-2390`)
+    // the SCENE rectangle, and `OrthoReshape` (`packages/engine/layer1/Ortho.cpp:2383-2390`)
     // subtracts `MovieGetPanelHeight()` and the internal feedback lines from
     // the window: measured 1176x629 inside a 1176x644 window as soon as an
     // object has two states and PyMOL puts its movie panel up. That rectangle

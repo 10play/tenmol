@@ -2,11 +2,11 @@
  * The movie panel: one row per motion track, drawn with PyMOL's own palette.
  *
  * Rows come from `get_movie_panel()`, which reproduces `ExecutiveMotionDraw`
- * (`layer3/Executive.cpp:692`): row 0 is the camera (`cExecAll`), then one row
+ * (`packages/engine/layer3/Executive.cpp:692`): row 0 is the camera (`cExecAll`), then one row
  * per object whose `ViewElem` is non-null. Cells are drawn by
  * `timeline.ts:drawRow`, a port of `ViewElemDraw`.
  *
- * The mouse grammar is `MovieClick`/`MovieDrag` (`layer1/Movie.cpp:1488-1690`)
+ * The mouse grammar is `MovieClick`/`MovieDrag` (`packages/engine/layer1/Movie.cpp:1488-1690`)
  * and it emits the identical command strings that the C panel emits through
  * `PParse`, so a log file cannot tell the two apart:
  *
@@ -35,9 +35,9 @@ import {
 import { panelGesture, transport, type MovieAction } from './movieSource';
 
 /**
- * `movie_panel_row_height`'s default (`layer1/SettingInfo.h`), used only until
+ * `movie_panel_row_height`'s default (`packages/engine/layer1/SettingInfo.h`), used only until
  * the first `get_movie_panel()` payload lands. After that the row height is the
- * SETTING, because `MovieGetPanelHeight` (`layer1/Movie.cpp:1714`) is
+ * SETTING, because `MovieGetPanelHeight` (`packages/engine/layer1/Movie.cpp:1714`) is
  * `row_height * ExecutiveCountMotions()` and the Ctrl+Shift wheel
  * (`MovieClick:1561`) writes that setting — a DOM panel with a hard-coded row
  * height accepts the gesture and then does not move.
@@ -46,7 +46,7 @@ const ROW_H = 15;
 const GAP = 2;
 
 /**
- * `CMovie::LabelIndent = DIP2PIXEL(8 * 8)` (`layer1/Movie.cpp:1867`) — the
+ * `CMovie::LabelIndent = DIP2PIXEL(8 * 8)` (`packages/engine/layer1/Movie.cpp:1867`) — the
  * right-hand gutter that holds the row label. It is not decoration: every hit
  * test in `MovieClick`/`MovieDrag` runs `tmpRect.right -= I->LabelIndent`
  * first (`:1495`), so the strip that maps to frames is 64 px narrower than the

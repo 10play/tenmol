@@ -2,7 +2,7 @@
  * `do_key` / `do_special` input for the wizards that implement a hand-rolled
  * line editor.
  *
- * `WizardDoKey(k,x,y,mod)` (`layer5/PyMOL.cpp:2356` -> `layer1/Wizard.cpp:328`)
+ * `WizardDoKey(k,x,y,mod)` (`packages/engine/layer5/PyMOL.cpp:2356` -> `packages/engine/layer1/Wizard.cpp:328`)
  * passes an **ASCII int**, and the implementers compare against exactly these:
  * 8/127 backspace, 10/13 enter, 27 escape, 32 space, `> 32` printable
  * (`pseudoatom.py:20-36`, `renaming.py:20-39`, `box.py:423-437`,
@@ -48,7 +48,7 @@ export function asciiFor(event: {
   return code;
 }
 
-/** cOrtho modifier bitmask (`layer0/os_gl_glut_pretend.h`): SHIFT 1 CTRL 2 ALT 4. */
+/** cOrtho modifier bitmask (`packages/engine/layer0/os_gl_glut_pretend.h`): SHIFT 1 CTRL 2 ALT 4. */
 export function modifiersFor(event: {
   shiftKey: boolean;
   ctrlKey: boolean;

@@ -9,8 +9,8 @@
  * behaves exactly as it did before.
  *
  * The rows are not invented. `[1, 'panel', "cmd.volume_panel('p10leafvol')"]`
- * is what `modules/pymol/menu.py:648` builds and what
- * `bridge/tests/test_p10_volume.py` reads back off a real socket.
+ * is what `packages/engine/modules/pymol/menu.py:648` builds and what
+ * `packages/bridge/tests/test_p10_volume.py` reads back off a real socket.
  */
 
 import { act } from 'react';
@@ -187,7 +187,7 @@ describe('MenuHost — the always-mounted registration point', () => {
     // The command PyMOL's own menu emits never left the browser...
     expect(run).not.toHaveBeenCalled();
     // ...and the window it names is open, titled the way `_VolumePanel.__init__`
-    // titles it (`modules/pmg_qt/volume.py:822`).
+    // titles it (`packages/engine/modules/pmg_qt/volume.py:822`).
     const windows = dialogsStore.get().windows;
     expect(windows.map((w) => w.key)).toEqual([`volume:${VOLUME}`]);
     expect(windows[0]!.title).toBe(`${VOLUME} - Volume Color Map Editor`);

@@ -11,7 +11,7 @@
  *
  * The key format is `<kind>` for singletons and `<kind>:<arg>` for the ones
  * PyMOL itself caches per object: `colorramping._volume_windows_qt` keeps ONE
- * volume panel per volume name (`modules/pymol/colorramping.py:170-179`), and
+ * volume panel per volume name (`packages/engine/modules/pymol/colorramping.py:170-179`), and
  * so does this.
  */
 

@@ -6,7 +6,7 @@
  *
  *  The original v1 plan was "PyMOL draws the strip into the framebuffer and the
  *  client positions a hit-testing overlay", because `SeekerUpdate`
- *  (`layer3/Seeker.cpp:969`) only runs inside `OrthoDoDraw` and the model has no
+ *  (`packages/engine/layer3/Seeker.cpp:969`) only runs inside `OrthoDoDraw` and the model has no
  *  Python readout.  That plan does not survive contact with the requirement:
  *  the overlay would need the same `char2col` geometry it cannot see, so it
  *  could not hit-test, and in Mode G there is no server-rendered strip at all.
@@ -18,11 +18,11 @@
  *      `flags`, and those two are exactly what `SeekerFindColor` (`:908`) and
  *      the polymer/organic/guide tests need.
  *    - `cmd.get_model` is NOT a substitute: `CoordSetAtomToChemPyAtom`
- *      (`layer2/CoordSet.cpp:1057-1140`) emits no `color` at all.
- *    - `cmd.get_fastastr` (`modules/pymol/exporting.py:170`) is not one either:
+ *      (`packages/engine/layer2/CoordSet.cpp:1057-1140`) emits no `color` at all.
+ *    - `cmd.get_fastastr` (`packages/engine/modules/pymol/exporting.py:170`) is not one either:
  *      polymers only, no colours, no atom indices, no selection state, no gaps.
  *
- *  So `bridge/tenmol_bridge/panels/seqview.py` rebuilds `CSeqRow`/`CSeqCol` from
+ *  So `packages/bridge/tenmol_bridge/panels/seqview.py` rebuilds `CSeqRow`/`CSeqCol` from
  *  `cmd`, and this file is that model's wire shape: real cells with text,
  *  colour, atom indices and a selected flag — a DOM sequence viewer, not an
  *  overlay.
@@ -35,7 +35,7 @@
  * ("a virtualized grid using the same offset math").
  */
 
-/** `seq_view_format` (setting 357).  `layer3/Seeker.cpp:1259-1484`. */
+/** `seq_view_format` (setting 357).  `packages/engine/layer3/Seeker.cpp:1259-1484`. */
 export const SeqFormat = {
   /** One-letter residue codes; water is `O`; organic/inorganic fall back to resn. */
   ResidueCodes: 0,
@@ -74,15 +74,15 @@ export type SeqGapModeValue = (typeof SeqGapMode)[keyof typeof SeqGapMode];
  *
  * TWO independent things, which is why there are six values:
  *
- *  - LAYOUT (`layer3/Seeker.cpp:1590-1596`): 0/1/2 pack every row's untagged
+ *  - LAYOUT (`packages/engine/layer3/Seeker.cpp:1590-1596`): 0/1/2 pack every row's untagged
  *    columns into ONE shared column; 3/4/5 give each row its own — `stagger`.
- *  - COLOUR (`layer1/Seq.cpp:420-449`): 0/3 paint an unaligned column in
+ *  - COLOUR (`packages/engine/layer1/Seq.cpp:420-449`): 0/3 paint an unaligned column in
  *    `seq_view_unaligned_color` flat, 1/4 average it with the background, 2/5
  *    average it with `seq_view_unaligned_color`.
  *
  * `seq_view_unaligned_color` left at its default of -1 resolves to
  * `seq_view_fill_color` — except in mode 3, where it stays -1 and the column
- * keeps its own colour (`layer1/Seq.cpp:323-332`).
+ * keeps its own colour (`packages/engine/layer1/Seq.cpp:323-332`).
  */
 export const SeqUnalignedMode = {
   /** Packed; flat unaligned colour. */
@@ -101,13 +101,13 @@ export const SeqUnalignedMode = {
 export type SeqUnalignedModeValue =
   (typeof SeqUnalignedMode)[keyof typeof SeqUnalignedMode];
 
-/** `layer3/Seeker.cpp:1590-1596` — only 3/4/5 stagger. */
+/** `packages/engine/layer3/Seeker.cpp:1590-1596` — only 3/4/5 stagger. */
 export function seqUnalignedStagger(mode: number): boolean {
   return mode !== 0 && mode !== 1 && mode !== 2;
 }
 
 /**
- * `SelModeKW`, `layer1/Scene.cpp:459-467`, indexed by `mouse_selection_mode`.
+ * `SelModeKW`, `packages/engine/layer1/Scene.cpp:459-467`, indexed by `mouse_selection_mode`.
  * The keyword the selection algebra wraps every term in.
  */
 export const SEL_MODE_KEYWORDS = [
@@ -120,12 +120,12 @@ export const SEL_MODE_KEYWORDS = [
   'bca.',
 ] as const;
 
-/** `_seeker` / `_seeker_center` — `layer3/Seeker.h:25-27`. */
+/** `_seeker` / `_seeker_center` — `packages/engine/layer3/Seeker.h:25-27`. */
 export const SEQ_TEMP_SELE = '_seeker';
 export const SEQ_TEMP_CENTER_SELE = '_seeker_center';
 
 /**
- * One column — `CSeqCol` (`layer1/Seq.h:25-37`).
+ * One column — `CSeqCol` (`packages/engine/layer1/Seq.h:25-37`).
  *
  * Boolean and numeric fields are OMITTED when false/zero: a 1,200-cell window
  * is sent 30 times a second and the defaults are the common case.
@@ -153,7 +153,7 @@ export interface SeqviewCell {
   tag?: number;
   /**
    * `col->unaligned` — set by the alignment pass on every column with no tag
-   * (`layer3/Seeker.cpp:1658`).  Drives the colour, not the position.
+   * (`packages/engine/layer3/Seeker.cpp:1658`).  Drives the colour, not the position.
    */
   unaligned?: boolean;
   resi?: string;
@@ -162,7 +162,7 @@ export interface SeqviewCell {
 }
 
 /**
- * One `row->fill` run — `layer1/Seq.cpp:488-504` paints `width` copies of
+ * One `row->fill` run — `packages/engine/layer1/Seq.cpp:488-504` paints `width` copies of
  * `seq_view_fill_char` at `offset`, in `seq_view_fill_color`.  These are the
  * dashes under a residue another row has and this one does not.
  */
@@ -182,7 +182,7 @@ export interface SeqviewLabel {
   text: string;
 }
 
-/** One object's row — `CSeqRow` (`layer1/Seq.h:42-57`). */
+/** One object's row — `CSeqRow` (`packages/engine/layer1/Seq.h:42-57`). */
 export interface SeqviewRow {
   object: string;
   /** `cmd.get_object_color_index`; -1 when the object has none. */
@@ -216,7 +216,7 @@ export interface SeqviewRow {
 export interface SeqviewPayload {
   /** True when at least one enabled object has `seq_view` on. */
   visible: boolean;
-  /** `seq_view_location`: 0 = top, 1 = bottom (`layer1/Ortho.cpp:2181`). */
+  /** `seq_view_location`: 0 = top, 1 = bottom (`packages/engine/layer1/Ortho.cpp:2181`). */
   location: number;
   /** `seq_view_overlay` — draw over the scene instead of reserving space. */
   overlay: boolean;
@@ -231,10 +231,10 @@ export interface SeqviewPayload {
   /** `SceneGetSeleModeKeyword` — one of `SEL_MODE_KEYWORDS`. */
   seleMode: string;
   /**
-   * `ExecutiveGetActiveAlignment` (`layer3/Executive.cpp:3403`) — the
+   * `ExecutiveGetActiveAlignment` (`packages/engine/layer3/Executive.cpp:3403`) — the
    * `seq_view_alignment` object, or the first enabled one, or ''.  Non-empty is
    * exactly the C's `align_sele >= 0`: rows are laid out by tag, and gaps are
-   * suppressed (`layer3/Seeker.cpp:1235`).
+   * suppressed (`packages/engine/layer3/Seeker.cpp:1235`).
    */
   alignment: string;
   /** `seq_view_unaligned_mode` — see `SeqUnalignedMode`. */
@@ -267,7 +267,7 @@ export interface SeqviewSelectResult {
 }
 
 /**
- * `SeekerSelectionToggle` (`layer3/Seeker.cpp:203-221`) — the three forms.
+ * `SeekerSelectionToggle` (`packages/engine/layer3/Seeker.cpp:203-221`) — the three forms.
  * Reimplemented here so the client can show the user what it is about to run
  * before the round trip; the bridge builds the same string and is authoritative.
  */

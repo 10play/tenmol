@@ -264,7 +264,7 @@ const act = (
 
 /**
  * The nine control-bar buttons, with `CControl::release`'s exact semantics
- * (`layer1/Control.cpp:288-380`) including the strings it PLogs.
+ * (`packages/engine/layer1/Control.cpp:288-380`) including the strings it PLogs.
  */
 export const transport = {
   /** Button 0: `SceneSetFrame(G,4,0)` — absolute, with movie command. */
@@ -324,7 +324,7 @@ export const program = {
   purge: () => act('cmd.mset', [], 'cmd.mset()', { invalidatesPanel: true }),
 } as const;
 
-/** `cmd.mview` — the 10 actions of `modules/pymol/moving.py:160`. */
+/** `cmd.mview` — the 10 actions of `packages/engine/modules/pymol/moving.py:160`. */
 export const MVIEW_ACTIONS = [
   'store',
   'clear',
@@ -383,7 +383,7 @@ export const range = {
 
 /**
  * The five writes the movie PANEL itself issues, byte-identical to the strings
- * `CMovie::release` hands to `PParse`/`PLog` (`layer1/Movie.cpp:1616-1699`).
+ * `CMovie::release` hands to `PParse`/`PLog` (`packages/engine/layer1/Movie.cpp:1616-1699`).
  *
  * Separate from `range` above on purpose: `range` is the editor form, where an
  * empty object box means "leave the argument off and take PyMOL's default".
@@ -419,7 +419,7 @@ export const panelGesture = {
       kwargs: { first, last, object },
       invalidatesPanel: true,
     }),
-  /** Ctrl+Shift wheel (`layer1/Movie.cpp:1561-1564`). */
+  /** Ctrl+Shift wheel (`packages/engine/layer1/Movie.cpp:1561-1564`). */
   rowHeight: (value: number) =>
     act('cmd.set', ['movie_panel_row_height', value], `cmd.set('movie_panel_row_height',${value})`, {
       invalidatesPanel: true,

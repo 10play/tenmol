@@ -2,12 +2,12 @@
  * The object panel ("names list", the Executive block).
  *
  * In PyMOL this is drawn by C++ INSIDE the GL viewport (`CExecutive::draw`,
- * `layer3/Executive.cpp:16116-16541`). Here it is real DOM, fed by
- * `bridge/tenmol_bridge/panels/objects.py` through `panelSource.ts`, with the
+ * `packages/engine/layer3/Executive.cpp:16116-16541`). Here it is real DOM, fed by
+ * `packages/bridge/tenmol_bridge/panels/objects.py` through `panelSource.ts`, with the
  * two-call poll in `@tenmol/stores/objectsSource` as the fallback when that
  * endpoint is unreachable.
  *
- * Row anatomy, left to right (`docs/webclient/internal-gui.md` §1.2):
+ * Row anatomy, left to right (`docs/internal-gui.md` §1.2):
  *   group [+]/[-] | indent (nest_level × 8px) | name button | caption |
  *   A S H L C (M) toggles, each 17 px wide, right-aligned
  *

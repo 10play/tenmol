@@ -1,11 +1,11 @@
 import { useBridge } from '../bridge/BridgeContext';
 
 /**
- * The quick-button grid of the External GUI -- modules/pmg_qt/pymol_qt_gui.py:222-271.
+ * The quick-button grid of the External GUI -- packages/engine/modules/pmg_qt/pymol_qt_gui.py:222-271.
  * Four rows, `spacing 2`, every button carrying `quickbutton=true`.
  * Row 3 (the movie transport) is intentionally omitted here: it is the same set of
  * actions as the Control block, which the shell renders bottom-right where PyMOL draws
- * it (layer1/Control.cpp).
+ * it (packages/engine/layer1/Control.cpp).
  *
  * Below the grid sits the progress row (:273-284): a QProgressBar plus a red `Abort`
  * button wired to `cmd.interrupt`, shown only while `cmd.get_progress() >= 0`

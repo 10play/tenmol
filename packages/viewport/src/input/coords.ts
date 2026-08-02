@@ -1,7 +1,7 @@
 /**
  * Browser coordinates -> PyMOL window coordinates.
  *
- * `PyMOLGLWidget._event_x_y_mod` (`modules/pmg_qt/pymol_gl_widget.py:169-176`):
+ * `PyMOLGLWidget._event_x_y_mod` (`packages/engine/modules/pmg_qt/pymol_gl_widget.py:169-176`):
  *
  *     (int(fb_scale * pos.x()),
  *      int(fb_scale * (self.height() - pos.y())),
@@ -62,7 +62,7 @@ export function toPymolPoint(
  * PyMOL measures double-click (0.35 s), single-click (0.25 s / the 0.15 s
  * `SingleClickDelay` floor) and the 4 px / 10 px drag thresholds backend-side
  * against `UtilGetSeconds` at the moment the event is *enqueued*
- * (`layer1/Scene.cpp:4113-4155`). Any queueing we do on the client shows up as
+ * (`packages/engine/layer1/Scene.cpp:4113-4155`). Any queueing we do on the client shows up as
  * jitter in those measurements unless `when` carries the real event time.
  *
  * `event.timeStamp` is relative to `performance.timeOrigin` in every modern

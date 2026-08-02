@@ -5,10 +5,10 @@
  * WHY IT LOOKS LIKE THIS
  * ----------------------
  * PyMOL has no settings *push*.  `cmd.get_setting_updates()`
- * (`layer1/Setting.cpp:1121-1147`) returns the changed indices AND CLEARS the
+ * (`packages/engine/layer1/Setting.cpp:1121-1147`) returns the changed indices AND CLEARS the
  * flags while iterating, so the first reader wins and every other reader sees
  * `[]`.  The bridge's status thread owns that call, and
- * `bridge/tenmol_bridge/panels/settings.py` taps it: the client reads a
+ * `packages/bridge/tenmol_bridge/panels/settings.py` taps it: the client reads a
  * cumulative, cursor-addressed log instead of the drain.  Consequences the code
  * below depends on:
  *
@@ -20,8 +20,8 @@
  *    empty drain as proof of quiescence (plan §1.2).
  *
  * NOTHING HERE IS OPTIMISTIC.  A write can silently no-op at the wrong level
- * (`layer3/Executive.cpp:12279-12286` warns and writes anyway), an int global
- * can be clamped behind your back (`layer1/Setting.cpp:1890-1911`) and
+ * (`packages/engine/layer3/Executive.cpp:12279-12286` warns and writes anyway), an int global
+ * can be clamped behind your back (`packages/engine/layer1/Setting.cpp:1890-1911`) and
  * `SettingGenerateSideEffects` can invalidate geometry.  So every `set` is
  * followed by a read-back of the same index and the store shows what PyMOL
  * says, not what the user typed.
@@ -96,7 +96,7 @@ export interface SettingsStore extends Store<SettingsState> {
  *
  * `state` is PyMOL's 1-BASED state, the convention `cmd.set`, `cmd.get` and
  * `cmd.get_setting_tuple` all take (each does `int(state) - 1` before calling C,
- * `modules/pymol/setting.py:381,398`): `0` = not state-specific, `1` = the first
+ * `packages/engine/modules/pymol/setting.py:381,398`): `0` = not state-specific, `1` = the first
  * state. Passing -1 here would reach C as -2.
  */
 export function valueKey(index: number, object = '', state = 0): string {
@@ -175,7 +175,7 @@ export function indexSettings(catalogue: SettingCatalogue | null): {
 }
 
 /**
- * `setting._get_index` (`modules/pymol/setting.py:63-70`) in the browser:
+ * `setting._get_index` (`packages/engine/modules/pymol/setting.py:63-70`) in the browser:
  * an int, a digit string, an exact name, or an UNAMBIGUOUS prefix.  Ambiguity
  * is an error there (`Shortcut.auto_err`) and null here — the caller must not
  * guess, because guessing writes the wrong setting.
@@ -200,7 +200,7 @@ export function resolveSettingName(
 
 /**
  * The advanced table's filter.  The Qt original is a `QSortFilterProxyModel`
- * regex over both columns (`modules/pmg_qt/advanced_settings_gui.py:83-99`), so
+ * regex over both columns (`packages/engine/modules/pmg_qt/advanced_settings_gui.py:83-99`), so
  * a regex is tried first and a plain substring is the fallback for the (common)
  * case where the user typed something that is not valid regex.
  */
@@ -222,7 +222,7 @@ export function filterSettings(
   );
 }
 
-/** Scopes a level may be written at (`layer1/Setting.cpp:55-96`). */
+/** Scopes a level may be written at (`packages/engine/layer1/Setting.cpp:55-96`). */
 const SCOPES_BY_LEVEL: Record<SettingLevel, readonly SettingScope[]> = {
   unused: [],
   global: ['global'],
@@ -243,7 +243,7 @@ export function scopesForLevel(level: SettingLevel): readonly SettingScope[] {
  *
  * PyMOL does not refuse a wrong-level write: it prints
  * `" Setting-Warning: '%s' is a %s-level setting"` and performs a write that
- * then has no effect (`layer3/Executive.cpp:12279-12286`).  The UI disables the
+ * then has no effect (`packages/engine/layer3/Executive.cpp:12279-12286`).  The UI disables the
  * scope instead, so the user never hits the silent no-op.
  */
 export function canWriteAt(meta: SettingMeta, scope: SettingScope): boolean {
@@ -254,7 +254,7 @@ export function canWriteAt(meta: SettingMeta, scope: SettingScope): boolean {
  * Coercion — mirrors setting._validate_value (setting.py:83-112)
  * ------------------------------------------------------------------ */
 
-/** `boolean_dict` (`modules/pymol/setting.py:50-59`). */
+/** `boolean_dict` (`packages/engine/modules/pymol/setting.py:50-59`). */
 const BOOLEAN_WORDS: Record<string, number> = {
   true: 1,
   false: 0,
@@ -353,7 +353,7 @@ export function coerceSettingValue(kind: SettingKind, raw: unknown): SettingValu
 }
 
 /**
- * `SettingGetTextPtr` (`layer1/Setting.cpp:1183-1237`) for values the client
+ * `SettingGetTextPtr` (`packages/engine/layer1/Setting.cpp:1183-1237`) for values the client
  * already holds.  Used ONLY for optimistic-free previews (a slider being
  * dragged); the authoritative text always comes from `cmd.get`.
  */
@@ -456,7 +456,7 @@ export interface SettingsSource {
   /**
    * `cmd.set_bond` — the ONLY write that reaches a bond-level setting. Using
    * `cmd.set` with a selection here "will appear to take, but no change will be
-   * observed" (`modules/pymol/setting.py:245-248`).
+   * observed" (`packages/engine/modules/pymol/setting.py:245-248`).
    */
   setBond(
     meta: SettingMeta,

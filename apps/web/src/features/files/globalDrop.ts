@@ -1,7 +1,7 @@
 /**
  * Drag & drop onto the window, decided as pure functions.
  *
- * `modules/pmg_qt/pymol_gl_widget.py:256-270` accepts URL mime data on the GL
+ * `packages/engine/modules/pmg_qt/pymol_gl_widget.py:256-270` accepts URL mime data on the GL
  * widget: local URLs go through `toLocalFile()`, remote ones are passed as
  * strings, and each is handed to `gui.load_dialog(url)`.
  *
@@ -81,9 +81,9 @@ export function dialogNeededFor(info: Pick<FileClassification, 'dialog'>): strin
  *  * `refused` — the client declines on purpose. Today that is `.pwg`, and it
  *    is not a theoretical worry: `cmd.load` on a file whose whole content is
  *    the word `delete` DELETES THAT FILE, measured over the socket in
- *    `bridge/tests/test_wf_files.py`. The same parser opens ports, imports
+ *    `packages/bridge/tests/test_wf_files.py`. The same parser opens ports, imports
  *    arbitrary modules and starts a second HTTP server
- *    (`modules/pymol/importing.py:516-615`). A drag-and-drop is exactly how a
+ *    (`packages/engine/modules/pymol/importing.py:516-615`). A drag-and-drop is exactly how a
  *    hostile `.pwg` would arrive.
  *  * `unavailable` — the loader raises in this build (`.stl`, `.vis`, `.mae`…).
  *    `FilesPanel` already refuses these; the drop handler did not, so a dropped

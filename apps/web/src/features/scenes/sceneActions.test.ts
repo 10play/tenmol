@@ -1,7 +1,7 @@
 /**
  * Scene writes and the motion menus — the exact command strings PyMOL emits.
  *
- * These matter more than they look: `layer4/PopUp.cpp:471-475` executes menu
+ * These matter more than they look: `packages/engine/layer4/PopUp.cpp:471-475` executes menu
  * leaves as *command strings*, and `SceneClickButton` / `MovieClick` PLog the
  * same strings. If the DOM version emits something else, a `.pml` log recorded
  * through the web client stops replaying in the Qt client.

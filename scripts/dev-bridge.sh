@@ -4,7 +4,7 @@
 # Usage:
 #   scripts/dev-bridge.sh                        # ws://127.0.0.1:8765/ws
 #   scripts/dev-bridge.sh --port 8799            # any `python -m tenmol_bridge` flag
-#   scripts/dev-bridge.sh --exec python -m pytest bridge/tests -q
+#   scripts/dev-bridge.sh --exec python -m pytest packages/bridge/tests -q
 #   TENMOL_VENV=/path/to/venv scripts/dev-bridge.sh
 #
 # Venv resolution order:
@@ -13,12 +13,16 @@
 #   3. <repo>/.venv
 #
 # If there is no venv, run `bash scripts/bootstrap.sh` once. It builds PyMOL
-# from this tree (docs/webclient/spikes/00-build.md section 3) into bridge/.venv.
+# from this tree (docs/spikes/00-build.md section 3) into packages/bridge/.venv.
 
 set -euo pipefail
 
+# TWO roots. `REPO_ROOT` is this project (`web/`); `REPO_ROOT` is the git root,
+# which also holds the upstream PyMOL tree. The bridge is run FROM the repo root
+# (see the `cd` below) because PyMOL resolves `packages/engine/test/dat/...` and friends
+# relative to it, but everything this project owns hangs off `REPO_ROOT`.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BRIDGE_DIR="$REPO_ROOT/bridge"
+BRIDGE_DIR="$REPO_ROOT/packages/bridge"
 
 # --exec <cmd...>: run an arbitrary command inside the venv instead of the
 # bridge itself (used by `pnpm test:bridge`).
@@ -68,7 +72,7 @@ export VIRTUAL_ENV="$VENV"
 export PATH="$VENV/bin:$PATH"
 unset PYTHONHOME || true
 
-# Run from the repo root, with bridge/ on PYTHONPATH so the package imports
+# Run from the repo root, with packages/bridge/ on PYTHONPATH so the package imports
 # even when it has not been pip-installed into the venv yet.
 cd "$REPO_ROOT"
 export PYTHONPATH="$BRIDGE_DIR${PYTHONPATH:+:$PYTHONPATH}"

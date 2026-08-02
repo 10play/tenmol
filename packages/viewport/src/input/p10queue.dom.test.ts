@@ -5,10 +5,10 @@
  * "strictly ordered and lossless — a single WebSocket for input, never parallel
  * channels", and OPTIONALLY a client timestamp so the bridge can supply
  * `SceneClick`'s `when`. Waves 8 and 9 measured the ordering over the real
- * socket (`bridge/tests/test_p8_a34.py`: 64 of 64 ascending on one socket,
+ * socket (`packages/bridge/tests/test_p8_a34.py`: 64 of 64 ascending on one socket,
  * reordered across two) and reported the optional half unreachable — `Cmd_Button`
- * parses exactly "Oiiiii" (`layer4/Cmd.cpp:3631`) and `PyMOL_Button` has no
- * timestamp parameter (`layer5/PyMOL.h:265`), so PyMOL stamps arrival itself.
+ * parses exactly "Oiiiii" (`packages/engine/layer4/Cmd.cpp:3631`) and `PyMOL_Button` has no
+ * timestamp parameter (`packages/engine/layer5/PyMOL.h:265`), so PyMOL stamps arrival itself.
  *
  * What was never asserted is the half that lives here: that this side emits ONE
  * ordered stream through ONE sink and loses nothing — and it turns out it did
@@ -118,7 +118,7 @@ describe('the input queue is one ordered, lossless channel', () => {
     element.dispatchEvent(pointerEvent('pointermove', { clientX: 5, clientY: 0 })); // flushed
     element.dispatchEvent(pointerEvent('pointermove', { clientX: 9, clientY: 0 })); // pending
     // `OrthoButton` ignores the wheel entirely while a real button is held
-    // (`layer1/Ortho.cpp:2503-2510`), so this must produce NO frame at all —
+    // (`packages/engine/layer1/Ortho.cpp:2503-2510`), so this must produce NO frame at all —
     // and it must not disturb the pending position either.
     element.dispatchEvent(pointerEvent('wheel', { clientX: 9, clientY: 0, deltaY: -120 }));
     element.dispatchEvent(pointerEvent('pointerup', { clientX: 9, clientY: 0, button: 0 }));

@@ -1,5 +1,5 @@
 /**
- * The client half of `bridge/tenmol_bridge/panels/objects.py`.
+ * The client half of `packages/bridge/tenmol_bridge/panels/objects.py`.
  *
  * WHY THERE IS A BOOTSTRAP CALL
  * =============================
@@ -81,7 +81,7 @@ export const PANEL_SYMBOL = 'tenmol_objects';
 
 /**
  * The bootstrap line. `/` makes PyMOL's parser treat the rest as Python
- * (`modules/pymol/parser.py`), which is the only way to import a module into
+ * (`packages/engine/modules/pymol/parser.py`), which is the only way to import a module into
  * the engine from the wire.
  */
 export const BOOTSTRAP =

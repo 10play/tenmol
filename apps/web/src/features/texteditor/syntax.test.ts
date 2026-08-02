@@ -1,6 +1,6 @@
 /**
  * The text editor's syntax modes and filename rules
- * (`modules/pmg_qt/TextEditor.py:36-58`, `modules/pmg_qt/syntax/pml.py`).
+ * (`packages/engine/modules/pmg_qt/TextEditor.py:36-58`, `packages/engine/modules/pmg_qt/syntax/pml.py`).
  */
 
 import { describe, expect, it } from 'vitest';

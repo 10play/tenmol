@@ -2,7 +2,7 @@
  * @tenmol/protocol — codec configuration.
  *
  * WP-01, plan §6 and §B8. The TypeScript half of the contract that
- * `bridge/tenmol_bridge/codec.py` (WP-02) implements.
+ * `packages/bridge/tenmol_bridge/codec.py` (WP-02) implements.
  *
  * PRINCIPLE (plan §B8): the codec table is EXPLICIT and CLOSED. Anything not in
  * it is a `{kind:'NotSerializable'}` error, never a silent `repr()`.
@@ -18,7 +18,7 @@
  *
  * HARD RULE the bridge must honour and this file documents so nobody forgets:
  * `cmd.get_coordset(..., copy=0)` returns a LIVE VIEW onto C++ memory
- * (`layer2/CoordSet.cpp:326-361`; measured as a `(4779,3)` float32 view in
+ * (`packages/engine/layer2/CoordSet.cpp:326-361`; measured as a `(4779,3)` float32 view in
  * 0.021 s). The codec COPIES BEFORE RELEASING THE API LOCK, always. A view that
  * escapes the lock is a use-after-free.
  *

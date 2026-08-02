@@ -35,7 +35,7 @@ describe('the fixed tree (properties_dialog.py:69-117)', () => {
     /*
      * The Incentive-only branch is PRESENT upstream (`properties_dialog.py`
      * lists it in the fixed tree) and hidden in open-source Qt builds. `p.all`
-     * works in this build — measured in `bridge/tests/test_properties.py` —
+     * works in this build — measured in `packages/bridge/tests/test_properties.py` —
      * so it is shown, between the built-ins and Settings as upstream orders it.
      */
     expect(tree[2]!.groups.map((g) => g.label)).toEqual([

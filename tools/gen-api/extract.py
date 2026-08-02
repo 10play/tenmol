@@ -1,10 +1,10 @@
 """Dump the live `cmd` API as JSON, from INSIDE a running PyMOL.
 
-    bridge/.venv/bin/python tools/gen-api/extract.py > tools/gen-api/api-schema.json
+    packages/bridge/.venv/bin/python tools/gen-api/extract.py > tools/gen-api/api-schema.json
 
-WHY IT HAS TO RUN INSIDE PYMOL. `modules/pymol/api.py` is a re-export manifest
+WHY IT HAS TO RUN INSIDE PYMOL. `packages/engine/modules/pymol/api.py` is a re-export manifest
 with no function bodies (405 import entries, 404 unique — asserted in
-`bridge/tests/test_api_surface.py`), so parsing it statically yields names and
+`packages/bridge/tests/test_api_surface.py`), so parsing it statically yields names and
 nothing else. Signatures, defaults and docstrings live in the modules it
 imports from, and several are wrapped by decorators that only `inspect.unwrap`
 sees through. Importing PyMOL is the cheap way to get all of it correct.

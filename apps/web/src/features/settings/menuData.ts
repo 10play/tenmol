@@ -1,6 +1,6 @@
 /**
  * The Setting menu, transcribed from `PyMOLDesktopGUI.get_menudata`
- * (`modules/pymol/_gui.py:491-773`) — the toolkit-independent nested list both
+ * (`packages/engine/modules/pymol/_gui.py:491-773`) — the toolkit-independent nested list both
  * the Qt and the Tk front ends consume (`pymol_qt_gui.py:353`,
  * `pmg_tk/skins/normal/__init__.py:1072`).
  *

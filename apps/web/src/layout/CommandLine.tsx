@@ -5,7 +5,7 @@ import { useCommandHistory } from './useCommandHistory';
 /**
  * `PyMOL>` prompt + command entry.
  *
- * Widget parity: `CommandLineEdit` (modules/pmg_qt/pymol_qt_gui.py:1087) behind a
+ * Widget parity: `CommandLineEdit` (packages/engine/modules/pmg_qt/pymol_qt_gui.py:1087) behind a
  * `QLabel("PyMOL>")` (:141-143). Key handling is
  * `lineeditKeyPressEventFilter` (:421-438):
  *
@@ -19,7 +19,7 @@ import { useCommandHistory } from './useCommandHistory';
  * feedback. Over the wire a submit is `{ id, t:'do', cmd }`.
  *
  * TODO(completion): Tab needs a server-side RPC. Completion requires `cmd.kwhash`,
- * `cmd.auto_arg` AND the local filesystem (modules/pymol/parser.py:524-593), so it
+ * `cmd.auto_arg` AND the local filesystem (packages/engine/modules/pymol/parser.py:524-593), so it
  * cannot be done in the browser. It is `cmd._parser.complete(text)` -> a full
  * replacement string.
  *
@@ -45,7 +45,7 @@ export function CommandLine() {
     if (!cmd) return;
     history.push(cmd);
     // PyMOL itself echoes the line as "PyMOL>..." on the feedback topic
-    // (OrthoAddOutput, layer1/Ortho.cpp) -- measured against the real bridge, a
+    // (OrthoAddOutput, packages/engine/layer1/Ortho.cpp) -- measured against the real bridge, a
     // `{t:'do'}` always comes back as {"t":"feedback","lines":["PyMOL>..."]}.
     // So only echo locally when the socket is down and nothing will come back.
     if (bridge.status !== 'open') bridge.appendFeedback([`PyMOL>${cmd}`]);
@@ -100,7 +100,7 @@ export function CommandLine() {
   );
 }
 
-/** Verbatim from modules/pmg_qt/pymol_qt_gui.py:145-157. */
+/** Verbatim from packages/engine/modules/pmg_qt/pymol_qt_gui.py:145-157. */
 const COMMAND_LINE_TOOLTIP = `Command Input Area
 
 Get the list of commands by hitting <TAB>

@@ -3,12 +3,12 @@
  * columns, every cell a dropdown over the 56 nameable actions.
  *
  * Writes go through `cmd.button(button, modifier, action)` with STRING names
- * (`modules/pymol/controlling.py:799-868`) — never through a re-implemented bit
+ * (`packages/engine/modules/pymol/controlling.py:799-868`) — never through a re-implemented bit
  * packing — so Python owns both the arithmetic and the `Shortcut` abbreviation
  * matcher. `buttonSlot()` is used here only to place a value in the grid.
  *
  * HONESTY NOTE, and it is a real limitation: there is no getter for the C
- * `ButMode` table (`ButModeGet` is not exposed to Python; grepped `modules/`).
+ * `ButMode` table (`ButModeGet` is not exposed to Python; grepped `packages/engine/modules/`).
  * The matrix therefore shows what `cmd.mouse(<current mode>)` PUT there, plus
  * the edits made in this panel this session, and it says so on screen. A cell
  * changed by a script or a plugin cannot be seen. Fixing that needs a bridge

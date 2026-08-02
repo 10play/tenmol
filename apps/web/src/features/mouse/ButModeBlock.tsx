@@ -2,7 +2,7 @@
  * The ButMode block — PyMOL's mouse-mode panel, as DOM.
  *
  * It is a faithful port of `CButMode::draw` / `CButMode::click`
- * (`layer1/ButMode.cpp:196-360`, `:147-188`), not a re-imagining:
+ * (`packages/engine/layer1/ButMode.cpp:196-360`, `:147-188`), not a re-imagining:
  *
  *   line 1        `Mouse Mode  <button_mode_name>`
  *   lines 2-7     the 5-char action grid, only when `mouse_grid` is set

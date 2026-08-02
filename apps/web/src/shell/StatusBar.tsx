@@ -1,7 +1,7 @@
 /**
  * The status strip.
  *
- * Qt PyMOL has no status bar (`docs/webclient/qt-main-window.md` §5), so this is
+ * Qt PyMOL has no status bar (`docs/qt-main-window.md` §5), so this is
  * an addition — justified by the one thing a desktop PyMOL never had to show: a
  * transport. It reports, left to right:
  *

@@ -200,7 +200,7 @@ export function SettingsPanel() {
                   ))}
                   <span
                     className="setmenu__source"
-                    title={`${MENUDATA_SOURCE} — harvested by bridge/tenmol_bridge/panels/menus.py`}
+                    title={`${MENUDATA_SOURCE} — harvested by packages/bridge/tenmol_bridge/panels/menus.py`}
                   >
                     get_menudata
                   </span>

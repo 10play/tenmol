@@ -2,7 +2,7 @@
  * The parts of the movie-panel grammar that the first pass left out, and the
  * export dialog's encoder table.
  *
- * Everything asserted here has a counterpart in `bridge/tests/test_wf_movie.py`
+ * Everything asserted here has a counterpart in `packages/bridge/tests/test_wf_movie.py`
  * that runs the resulting command against a live PyMOL — this file pins the
  * *choice* of command, that file pins its *effect*. The pairs that matter:
  *

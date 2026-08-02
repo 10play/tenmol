@@ -1,7 +1,7 @@
 /**
  * The wire form of a numpy array, and how to read it.
  *
- * `bridge/tenmol_bridge/codec.py` encodes `cmd.get_coords` and
+ * `packages/bridge/tenmol_bridge/codec.py` encodes `cmd.get_coords` and
  * `cmd.get_coordset` — the zero-copy coordinate path — as
  * `{__ndarray__, shape, dtype, encoding, data}`.
  *

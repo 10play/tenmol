@@ -49,7 +49,7 @@ def main(outdir: str) -> None:
 
     # ------------------------------------------------------------------ #
     # 1. indexed-mesh: RepSurface, 4 verts / 2 triangles.
-    #    Field names map onto struct RepSurface (layer2/RepSurface.cpp:59-101):
+    #    Field names map onto struct RepSurface (packages/engine/layer2/RepSurface.cpp:59-101):
     #    position<-V normal<-VN color<-VC alpha<-VA index<-T atom<-AT vis<-Vis
     # ------------------------------------------------------------------ #
     position = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]
@@ -97,7 +97,7 @@ def main(outdir: str) -> None:
 
     # ------------------------------------------------------------------ #
     # 2. cgo-draw-arrays: one GL_TRIANGLE_STRIP block, passed VERBATIM.
-    #    Sub-arrays are CONSECUTIVE, not interleaved (layer1/CGO.cpp:1650-1671):
+    #    Sub-arrays are CONSECUTIVE, not interleaved (packages/engine/layer1/CGO.cpp:1650-1671):
     #      [vertex 3N][normal 3N][color 4N][pick rgba N][pick index 2N]
     # ------------------------------------------------------------------ #
     nverts = 3

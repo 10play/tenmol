@@ -1,11 +1,11 @@
 /**
  * The wizard prompt overlay.
  *
- * `WizardRefresh` calls `get_prompt()` (`layer1/Wizard.cpp:205`) and hands the
+ * `WizardRefresh` calls `get_prompt()` (`packages/engine/layer1/Wizard.cpp:205`) and hands the
  * lines to `OrthoSetWizardPrompt`; `OrthoDrawWizardPrompt`
- * (`layer1/Ortho.cpp:2124-2218`) draws them at the TOP-LEFT of the viewport,
+ * (`packages/engine/layer1/Ortho.cpp:2124-2218`) draws them at the TOP-LEFT of the viewport,
  * driven by the global setting `wizard_prompt_mode` (default 1,
- * `layer1/SettingInfo.h:461`):
+ * `packages/engine/layer1/SettingInfo.h:461`):
  *
  *   0  suppressed entirely            (`Ortho.cpp:2142`)
  *   1  text + opaque backdrop rect    (`:2193-2218`, WizardBackColor 0.2,0.2,0.2)
@@ -43,11 +43,11 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ColorCodedText } from './ColorCodedText';
 
-/** `cWizardTopMargin` / `cWizardLeftMargin` (`layer1/Ortho.cpp:200-201`). */
+/** `cWizardTopMargin` / `cWizardLeftMargin` (`packages/engine/layer1/Ortho.cpp:200-201`). */
 export const WIZARD_MARGIN = 15;
-/** `WizardTextColor` (`layer1/Ortho.cpp:2695-2697`). */
+/** `WizardTextColor` (`packages/engine/layer1/Ortho.cpp:2695-2697`). */
 export const WIZARD_TEXT_COLOR = 'rgb(51, 255, 51)';
-/** `WizardBackColor` (`layer1/Ortho.cpp:2692-2694`). */
+/** `WizardBackColor` (`packages/engine/layer1/Ortho.cpp:2692-2694`). */
 export const WIZARD_BACK_COLOR = 'rgb(51, 51, 51)';
 
 export interface WizardPromptProps {

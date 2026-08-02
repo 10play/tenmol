@@ -1,13 +1,13 @@
 # Linux offscreen GL validation for the web client bridge.
 #
-# The one thing docs/webclient/spikes/07-cross-platform-gl.md could not do for a
-# long time: actually RUN bridge/tenmol_bridge/glcontext/egl.py. It is now run
+# The one thing docs/spikes/07-cross-platform-gl.md could not do for a
+# long time: actually RUN packages/bridge/tenmol_bridge/glcontext/egl.py. It is now run
 # for real, both in a local container (`bash scripts/test-gl-linux.sh`) and here
 # on ubuntu-latest, which has no GPU and no X server -- which is the point.
 #
 # Mesa's EGL_MESA_platform_surfaceless + llvmpipe needs neither. It gives a
 # desktop OpenGL 4.x COMPATIBILITY context, which is what PyMOL requires:
-# layer1/ScenePicking.cpp:283,306 call glPushMatrix/glPopMatrix and :234,272
+# packages/engine/layer1/ScenePicking.cpp:283,306 call glPushMatrix/glPopMatrix and :234,272
 # call glShadeModel, none of which exist in GLES.
 #
 # Separate from webclient-ci.yml on purpose: that one's real job is macOS/CGL,
@@ -22,18 +22,18 @@ on:
   push:
     branches: [master, web-client, "wp-*"]
     paths:
-      - "bridge/tenmol_bridge/glcontext/**"
-      - "bridge/tenmol_bridge/render/**"
+      - "packages/bridge/tenmol_bridge/glcontext/**"
+      - "packages/bridge/tenmol_bridge/render/**"
       - "scripts/test-gl-linux.sh"
       - "scripts/bootstrap.sh"
       - ".github/workflows/webclient-gl-linux.yml"
-      - "layer0/**"
-      - "layer1/**"
-      - "layer5/**"
+      - "packages/engine/layer0/**"
+      - "packages/engine/layer1/**"
+      - "packages/engine/layer5/**"
       - "setup.py"
   pull_request:
     paths:
-      - "bridge/tenmol_bridge/glcontext/**"
+      - "packages/bridge/tenmol_bridge/glcontext/**"
       - "scripts/test-gl-linux.sh"
       - ".github/workflows/webclient-gl-linux.yml"
   workflow_dispatch:
@@ -127,7 +127,7 @@ jobs:
           path: .deps
           key: mmtf-cpp-${{ runner.os }}-v1
 
-      - name: bootstrap (builds PyMOL from this tree into bridge/.venv)
+      - name: bootstrap (builds PyMOL from this tree into packages/bridge/.venv)
         run: bash scripts/bootstrap.sh --skip-node --python "$(command -v python)"
 
       - name: the build did not dirty the tree
@@ -151,4 +151,4 @@ jobs:
           if-no-files-found: warn
 
       - name: bridge pytest suite (no regressions from the GL work)
-        run: bridge/.venv/bin/python -m pytest bridge/tests -q
+        run: packages/bridge/.venv/bin/python -m pytest packages/bridge/tests -q

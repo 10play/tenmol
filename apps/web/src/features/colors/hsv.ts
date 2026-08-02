@@ -13,7 +13,7 @@
  *         'rgb': ((lambda *rgb: rgb), (lambda *rgb: rgb)),
  *     }
  *
- * — `modules/pymol/viewing.py:1971-1976`, the table behind
+ * — `packages/engine/modules/pymol/viewing.py:1971-1976`, the table behind
  * `spectrum … interpolation=hsv`. So `spectrumany` walking from red to blue
  * through HSV and this editor's H slider move through the same intermediate
  * colours, and neither is an approximation of the other.
@@ -30,7 +30,7 @@
  *     difference, and getting it wrong turns magenta (h ≈ 0.83) into h ≈ -0.17.
  *
  * PINNED ACROSS BOTH LANGUAGES: `__fixtures__/p9a1hsv.json` holds the vectors,
- * `bridge/tests/test_p9_shell.py` asserts `colorsys` produces them INSIDE the
+ * `packages/bridge/tests/test_p9_shell.py` asserts `colorsys` produces them INSIDE the
  * engine, and `p9a1hsv.test.ts` asserts these functions do. Neither side owns a
  * private copy of the answers.
  */

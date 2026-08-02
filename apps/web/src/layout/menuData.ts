@@ -1,10 +1,10 @@
 /**
  * The menu-bar data model.
  *
- * Ground truth is `PyMOLDesktopGUI.get_menudata` in `modules/pymol/_gui.py:55-900`
- * (NOT `modules/pymol/menu.py`, which drives the in-viewport right-click popups --
- * see docs/webclient/qt-main-window.md §0). The item grammar below mirrors the tuple
- * grammar consumed by `_addmenu` in `modules/pmg_qt/pymol_qt_gui.py:295-344`:
+ * Ground truth is `PyMOLDesktopGUI.get_menudata` in `packages/engine/modules/pymol/_gui.py:55-900`
+ * (NOT `packages/engine/modules/pymol/menu.py`, which drives the in-viewport right-click popups --
+ * see docs/qt-main-window.md §0). The item grammar below mirrors the tuple
+ * grammar consumed by `_addmenu` in `packages/engine/modules/pmg_qt/pymol_qt_gui.py:295-344`:
  *
  *   ('separator',)                              -> { kind: 'separator' }
  *   ('menu', label, [items])                    -> { kind: 'menu' }

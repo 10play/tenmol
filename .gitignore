@@ -51,9 +51,11 @@ __pycache__
 # ---------------------------------------------------------------------------
 # scripts/bootstrap.sh work areas (never committed)
 #   .deps/  vendored out-of-tree C++ headers (mmtf-cpp) -- see spikes/00-build.md
-#           section 2.2. They must NOT go into include/, which is upstream.
+#           section 2.2. They must NOT go into packages/engine/include/, which is upstream.
 # ---------------------------------------------------------------------------
-/.deps/
+/packages/engine/.deps/
+/packages/engine/build/
+/.scratch/
 /.tenmol-bootstrap.log
 
 # ---------------------------------------------------------------------------
@@ -62,10 +64,10 @@ __pycache__
 # local-only and therefore survives an upstream merge; they are listed here as
 # well so a contributor who never ran bootstrap still gets a clean status.
 # ---------------------------------------------------------------------------
-modules/pymol.egg-info/
-modules/pymol/_cmd*.so
-modules/chempy/champ/_champ*.so
-testing/timings.tab
+packages/engine/modules/pymol.egg-info/
+packages/engine/modules/pymol/_cmd*.so
+packages/engine/modules/chempy/champ/_champ*.so
+packages/engine/testing/timings.tab
 
 # ---------------------------------------------------------------------------
 # os / editor

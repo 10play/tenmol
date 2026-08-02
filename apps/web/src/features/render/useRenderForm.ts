@@ -1,7 +1,7 @@
 /**
  * The Draw/Ray form's derived state.
  *
- * `modules/pmg_qt/pymol_qt_gui.py:673` keeps FIVE mutually-dependent widgets in
+ * `packages/engine/modules/pmg_qt/pymol_qt_gui.py:673` keeps FIVE mutually-dependent widgets in
  * sync — width px, height px, width units, height units, dpi — plus an
  * aspect-ratio lock, and it does it by writing back into the other widgets from
  * every editingFinished handler. The write-backs re-enter, so it needs an

@@ -7,7 +7,7 @@
  *
  *  1. **Row 103, the double-click timer anchor.** `CControl::click` writes
  *     `I->LastClickTime` ONLY in the branch that arms a drag
- *     (`layer1/Control.cpp:466-467`); the collapse/restore branch sets
+ *     (`packages/engine/layer1/Control.cpp:466-467`); the collapse/restore branch sets
  *     `I->SkipRelease = true`, which also skips the second write in
  *     `CControl::release` (`:377-380`). `gutterClick` used to restart the timer
  *     on every click, and the whole existing suite passed either way — so the
@@ -22,7 +22,7 @@
  *     `conn.sendInput` — no `{t:'input'}` frame leaves the browser.
  *
  * Everything else in those two rows was re-measured over the socket
- * (`bridge/tests/test_wf_shellverify.py`) and in a real headless browser, and
+ * (`packages/bridge/tests/test_wf_shellverify.py`) and in a real headless browser, and
  * held.
  */
 

@@ -27,7 +27,7 @@
  *   menubar        the top strip
  *   viewport       the GL surface and anything drawn over it
  *   internal-gui   PyMOL's right-hand column — the blocks `OrthoLayoutPanel()`
- *                  stacks bottom-up (`layer1/Ortho.cpp:2261-2340`): Executive,
+ *                  stacks bottom-up (`packages/engine/layer1/Ortho.cpp:2261-2340`): Executive,
  *                  Wizard, ButMode, Control
  *   external-gui   the bottom dock (feedback + command line + quick buttons)
  *   overlay        dialogs and floating panels

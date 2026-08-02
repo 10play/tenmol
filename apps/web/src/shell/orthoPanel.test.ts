@@ -5,7 +5,7 @@
  * arithmetic rather than DOM.
  *
  * Every number here has a MEASURED counterpart in
- * `bridge/tests/test_wf_shell.py`, run against the real engine over the socket:
+ * `packages/bridge/tests/test_wf_shell.py`, run against the real engine over the socket:
  * the 220 px reservation, the 5 px floor, the fact that `cmd.set` does not
  * clamp, and setting 440 being `session_file`. This file pins the client-side
  * reimplementation; that file pins the backend it reimplements.
@@ -38,7 +38,7 @@ import {
 
 describe('the block stack (row 88)', () => {
   it('stacks Control 20, ButMode 40, and gives the rest to Executive', () => {
-    // MEASURED (bridge/tests/test_f7_layout.py), not transcribed: in an
+    // MEASURED (packages/bridge/tests/test_f7_layout.py), not transcribed: in an
     // 800x600 window with the column on, a click at y=44 cycles button_mode and
     // one at y=43 cycles mouse_selection_mode -- the `dy < 2` split in
     // CButMode::click, which puts the block's bottom edge at 20. The top edge
@@ -55,13 +55,13 @@ describe('the block stack (row 88)', () => {
     const stack = layoutInternalGui({ height: 600, mouseGrid: true, wizardLines: 0 });
     expect(stack.butMode).toBe(124);
     expect(stack.executive).toBe(600 - 20 - 124);
-    // `ButModeGetHeight`, layer1/ButMode.cpp:72-78. MEASURED: with mouse_grid
+    // `ButModeGetHeight`, packages/engine/layer1/ButMode.cpp:72-78. MEASURED: with mouse_grid
     // the band's top edge moves 59 -> 143, so the Executive block starts at 144.
     expect([butModeHeight(false), butModeHeight(true)]).toEqual([40, 124]);
   });
 
   it('gives the Wizard block internal_gui_control_size * NLine + 4', () => {
-    // layer1/Wizard.cpp:253-258. Default control size 18.
+    // packages/engine/layer1/Wizard.cpp:253-258. Default control size 18.
     // MEASURED: a 2-row `message` wizard draws in y 60..99 (18*2 + 4 = 40) and
     // at control size 40 the same block's rows are 40 px apart (40*2 + 4 = 84,
     // top edge 143) -- both factors, and the `+ 4` that is not DIP-scaled.
@@ -105,9 +105,9 @@ describe('the block stack (row 88)', () => {
 
 describe('the relayout rule (rows 88, 209)', () => {
   it('names the seven settings that only take effect on a reshape', () => {
-    // `layer1/Setting.cpp:2824-2833` — one branch, one `OrthoCommandIn(G,
+    // `packages/engine/layer1/Setting.cpp:2824-2833` — one branch, one `OrthoCommandIn(G,
     // "viewport")`, and the bridge has no windowing system to answer it. The
-    // list is asserted against the C++ itself in bridge/tests/test_f7_layout.py.
+    // list is asserted against the C++ itself in packages/bridge/tests/test_f7_layout.py.
     expect([...LAYOUT_SETTINGS]).toEqual([
       'internal_gui_mode',
       'internal_gui_width',
@@ -130,7 +130,7 @@ describe('the relayout rule (rows 88, 209)', () => {
     // The user's intent (show the column) is honoured by the UI store; PyMOL's
     // duplicate is refused, because the write is inert until the next canvas
     // resize and then takes 220px off the scene under a canvas that did not
-    // move. MEASURED in bridge/tests/test_f7_layout.py.
+    // move. MEASURED in packages/bridge/tests/test_f7_layout.py.
     expect(shellSettingWriteBacks({ internal_gui: 1 })).toEqual({ internal_gui: 0 });
     expect(shellSettingWriteBacks({ internal_gui: 0 })).toEqual({});
     expect(shellSettingWriteBacks({})).toEqual({});
@@ -176,7 +176,7 @@ describe('the gutter (row 103)', () => {
   });
 
   it('a drag clears SaveWidth, so the next double click collapses again', () => {
-    // `I->SaveWidth = 0` in CControl::drag (layer1/Control.cpp:272). Without it
+    // `I->SaveWidth = 0` in CControl::drag (packages/engine/layer1/Control.cpp:272). Without it
     // a double click after a drag would restore a width the user moved away
     // from, which is the bug the C++ avoids.
     const collapsed = gutterClick(gutterClick(GUTTER_INITIAL, 1000).state, 1100).state;

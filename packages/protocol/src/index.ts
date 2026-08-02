@@ -22,7 +22,7 @@
  * package fills in its own module and edits nothing shared.
  *
  * A Python reference implementation of the binary-frame codec lives in
- * `python/tenmol_wire.py` in this package; `test/roundtrip.test.ts` encodes
+ * `python/tenmol_wire.py` in this package; `packages/engine/test/roundtrip.test.ts` encodes
  * with it and decodes here.
  */
 

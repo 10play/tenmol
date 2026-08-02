@@ -1,11 +1,11 @@
 /**
  * The Camera Motion / Object Motion context menus.
  *
- * Ported from `modules/pymol/menu.py` — `camera_motion` (`:108`),
+ * Ported from `packages/engine/modules/pymol/menu.py` — `camera_motion` (`:108`),
  * `obj_motion` (`:126`), `camera_store_with_scene` (`:54`),
  * `store_with_state` (`:62`) and `smooth` (`:103`) — including the exact
  * command strings, which is the point: `PopUp` leaves are command strings
- * (`layer4/PopUp.cpp:471-475`) and these are byte-identical to them, so they
+ * (`packages/engine/layer4/PopUp.cpp:471-475`) and these are byte-identical to them, so they
  * can go straight to `cmd.do`.
  *
  * `frame` here is the string PyMOL passes down, which is the **0-based**

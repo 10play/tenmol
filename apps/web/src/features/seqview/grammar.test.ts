@@ -2,7 +2,7 @@
  * The Seeker mouse grammar, checked against the C++ it is transcribed from.
  *
  * The load-bearing case is the drag DIRECTION FLIP (`SeekerDrag`,
- * `layer3/Seeker.cpp:539-620`): dragging out from the anchor selects, dragging
+ * `packages/engine/layer3/Seeker.cpp:539-620`): dragging out from the anchor selects, dragging
  * back UNSELECTS what the outbound leg selected rather than toggling it again,
  * and crossing the anchor undoes the whole far side before painting the near
  * one. A naive `[min(start,col), max(start,col)]` implementation looks right on
@@ -134,7 +134,7 @@ describe('SeekerClick — outside any cell', () => {
     expect(actions).toEqual([]);
   });
 
-  it('right outside opens pick_sele for the active selection (`layer1/Seq.cpp:240`)', () => {
+  it('right outside opens pick_sele for the active selection (`packages/engine/layer1/Seq.cpp:240`)', () => {
     const { actions } = click(
       at({ row: -1, col: -1, button: Button.Right, hasActiveSele: true }),
     );
@@ -208,7 +208,7 @@ describe('SeekerDrag — left', () => {
     expect(outcome.actions).toEqual([]);
   });
 
-  it('is pinned to the row the press started on (`layer1/Seq.cpp:158`)', () => {
+  it('is pinned to the row the press started on (`packages/engine/layer1/Seq.cpp:158`)', () => {
     const { drag } = click(at({ col: 10 }));
     expect(move(drag!, 1, 12, { shift: false, ctrl: false }).actions).toEqual([]);
   });
@@ -249,7 +249,7 @@ describe('SeekerDrag — middle', () => {
 });
 
 describe('wheel', () => {
-  it('scrolls exactly one column per notch (`layer1/Seq.cpp:218-223`)', () => {
+  it('scrolls exactly one column per notch (`packages/engine/layer1/Seq.cpp:218-223`)', () => {
     expect(wheel(120)).toEqual({ type: 'scroll', delta: 1 });
     expect(wheel(-3)).toEqual({ type: 'scroll', delta: -1 });
   });

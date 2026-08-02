@@ -24,7 +24,7 @@ import { join } from 'node:path';
 
 import { REPO, openApp } from './harness.mjs';
 
-const PDB = 'test/dat/1tii.pdb';
+const PDB = 'packages/engine/test/dat/1tii.pdb';
 
 /**
  * The PyMOL command line, by its own class.
@@ -249,9 +249,9 @@ export const tests = [
   },
   {
     /**
-     * The menu bar is DATA, not markup: `modules/pymol/menu.py` generates most
+     * The menu bar is DATA, not markup: `packages/engine/modules/pymol/menu.py` generates most
      * of it at runtime and every leaf is a command string executed with
-     * `cmd.do` (`layer4/PopUp.cpp:471-475`). So the thing worth asserting is
+     * `cmd.do` (`packages/engine/layer4/PopUp.cpp:471-475`). So the thing worth asserting is
      * not that buttons exist but that a leaf reaches PyMOL and that check state
      * comes from settings rather than local React state.
      */
@@ -346,7 +346,9 @@ export const tests = [
       // Directory rows descend on a SINGLE click (`PathPicker.tsx:267`) and are
       // rendered with a `▸` prefix, so match on that — an exact-text match on
       // the bare name matches nothing, and a double click fires two navigations.
-      for (const dir of ['test', 'dat']) {
+      // `packages/engine/` first: the upstream PyMOL tree, and therefore its `test/dat`
+      // fixtures, moved under it when the repo was reorganised.
+      for (const dir of ['packages', 'engine', 'test', 'dat']) {
         await page
           .locator('.fpick__row--dir')
           .filter({ hasText: new RegExp(`^▸${dir}$`) })
@@ -361,7 +363,7 @@ export const tests = [
       assert(crumbs.includes('dat'), `picker did not navigate: ${crumbs.join('/')}`);
 
       const file = page.locator('.fdlg').getByText('1tii.pdb', { exact: true }).last();
-      assert((await file.count()) > 0, '1tii.pdb not listed in test/dat');
+      assert((await file.count()) > 0, '1tii.pdb not listed in packages/engine/test/dat');
       await file.click();
       await page.waitForTimeout(500);
       await page
@@ -387,7 +389,7 @@ export const tests = [
     async fn({ stack, assert }) {
       const page = await openApp(stack);
       await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
-      await run(page, 'load test/dat/1tii.pdb, ubq', 2400);
+      await run(page, 'load packages/engine/test/dat/1tii.pdb, ubq', 2400);
 
       await run(page, 'wizard measurement', 1800);
       const measure = await page.evaluate(
@@ -473,7 +475,7 @@ export const tests = [
     async fn({ stack, assert }) {
       const page = await openApp(stack);
       await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
-      await run(page, 'load test/dat/1tii.pdb, mv', 2400);
+      await run(page, 'load packages/engine/test/dat/1tii.pdb, mv', 2400);
       await run(page, 'mset 1 x30', 1400);
       await run(page, 'frame 5', 1200);
 
@@ -517,7 +519,7 @@ export const tests = [
     async fn({ stack, assert }) {
       const page = await openApp(stack);
       await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
-      await run(page, 'load test/dat/1tii.pdb, sq', 2400);
+      await run(page, 'load packages/engine/test/dat/1tii.pdb, sq', 2400);
       await run(page, 'set seq_view, 1', 1800);
 
       const width = await page.evaluate(() => {
@@ -545,7 +547,7 @@ export const tests = [
     async fn({ stack, assert }) {
       const page = await openApp(stack);
       await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
-      await run(page, 'load test/dat/1tii.pdb, cl', 2400);
+      await run(page, 'load packages/engine/test/dat/1tii.pdb, cl', 2400);
       await run(page, 'color green, cl', 1500);
 
       // Scope to THIS object. Counting globally picks up other specs' objects,
@@ -587,7 +589,7 @@ export const tests = [
     async fn({ stack, assert }) {
       const page = await openApp(stack);
       await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
-      await run(page, 'load test/dat/1tii.pdb, ip', 2400);
+      await run(page, 'load packages/engine/test/dat/1tii.pdb, ip', 2400);
 
       const mode = await ask(page, "cmd.get('button_mode_name')");
       await page.locator('.butmode-host').first().click();
@@ -641,7 +643,7 @@ export const tests = [
       const health = await (await fetch(stack.healthz)).json();
       assert(health.gl?.available === false, 'this stack was supposed to have no GL');
 
-      await run(page, 'load test/dat/1tii.pdb, gf', 2600);
+      await run(page, 'load packages/engine/test/dat/1tii.pdb, gf', 2600);
       await run(page, 'hide everything', 900);
       await run(page, 'show cartoon', 1800);
       await run(page, 'orient', 1600);
@@ -777,7 +779,7 @@ export const tests = [
     /**
      * INVENTORY ROW 98 — the object panel's modifier gestures, in a browser.
      *
-     * `layer3/Executive.cpp:15260-15332` gives a row seven different meanings
+     * `packages/engine/layer3/Executive.cpp:15260-15332` gives a row seven different meanings
      * depending on which button is down and which modifiers are held. Wave 8
      * drove all seven as pointer events in jsdom and the row stayed partial for
      * one stated reason: none of the six MODIFIED ones had ever been driven by
@@ -972,7 +974,7 @@ export const tests = [
      * The fix and its justification: `shell/orthoPanel.ts: EXECUTIVE_MIN_HEIGHT`
      * (144 px = `controlHeight` 20 + the larger `ButModeGetHeight` 124), with
      * the PyMOL heights it is measured against in
-     * `bridge/tests/test_p11_layout.py` (the Executive block is 584 px of a
+     * `packages/bridge/tests/test_p11_layout.py` (the Executive block is 584 px of a
      * 644 px column upstream; the scene bin reserves 0).
      *
      * NOTHING HERE IS COSMETIC. Every assertion is "a user can reach this",
@@ -1132,7 +1134,7 @@ export const tests = [
 
         //    3b. AND EVERY ROW IS REACHABLE, scrolling included. A list longer
         //        than its panel is allowed to scroll — PyMOL's own Executive
-        //        block does, `layer3/Executive.cpp:16219-16224`. It is not
+        //        block does, `packages/engine/layer3/Executive.cpp:16219-16224`. It is not
         //        allowed to render a row that belongs to nobody.
         const unreachable = s.scrolled.filter((r) => !r.reached).map((r) => r.text);
         assert(
@@ -1197,7 +1199,7 @@ export const tests = [
      * Row 341 item (2) — `seq_view_overlay = 0` RESERVES SCENE SPACE.
      *
      * `OrthoReshape` takes the sequence viewer's height out of the scene
-     * rectangle when overlay is off (`layer1/Ortho.cpp:2419` `sceneBottom +=
+     * rectangle when overlay is off (`packages/engine/layer1/Ortho.cpp:2419` `sceneBottom +=
      * seqHeight`, `:2433` `sceneTop = seqHeight`). This client drew the strip
      * `position: absolute` over the canvas and changed only its background
      * opacity, so the setting did nothing you could measure: MEASURED before
@@ -1232,7 +1234,7 @@ export const tests = [
         });
 
       try {
-        await run(page, 'load test/dat/pept.pdb, p12seq', 2400);
+        await run(page, 'load packages/engine/test/dat/pept.pdb, p12seq', 2400);
         // ESTABLISH the baseline, do not assume it. All 21 specs share one
         // bridge and `seq_view` is a GLOBAL setting: the sequence-viewer spec
         // above turns it on and leaves it on, so this one arrived to a strip

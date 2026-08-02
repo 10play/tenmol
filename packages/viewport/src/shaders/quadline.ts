@@ -9,7 +9,7 @@
  * pixel wide whatever the setting said.
  *
  * PyMOL hit the same wall in its own GL 3.3 core path and solved it with
- * `trilines` (`data/shaders/trilines.vs`, `layer1/CGO.cpp:7452`): each segment
+ * `trilines` (`packages/engine/data/shaders/trilines.vs`, `packages/engine/layer1/CGO.cpp:7452`): each segment
  * becomes two triangles, offset perpendicular to the segment IN SCREEN SPACE by
  * half the line width. This is that shader, with two differences that are
  * bookkeeping rather than maths:
@@ -29,7 +29,7 @@
  * exactly perpendicular to the segment in pixel space. The unit test
  * `p11meshwidth.test.ts` re-derives both facts from the shader's own algebra.
  *
- * Unlit on purpose: `mesh_lighting` defaults to 0 (`layer1/SettingInfo.h`) and
+ * Unlit on purpose: `mesh_lighting` defaults to 0 (`packages/engine/layer1/SettingInfo.h`) and
  * `RepMesh` ships no normals, exactly like `trilines.fs`, which applies fog and
  * nothing else.
  */

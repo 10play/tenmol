@@ -6,7 +6,7 @@
  * bands; nothing could browse them. What is pinned here is that every one of
  * the 5388 built-in slots is reachable in a bounded number of clicks, that the
  * region table matches the live engine (that half lives in
- * `bridge/tests/test_p8_a5.py::test_the_twelve_colour_regions_are_where_ColorReset_puts_them`,
+ * `packages/bridge/tests/test_p8_a5.py::test_the_twelve_colour_regions_are_where_ColorReset_puts_them`,
  * which reads THIS table out of `palette.ts`), and that a tile is
  * `cmd.color_deep`, not `cmd.color`.
  */

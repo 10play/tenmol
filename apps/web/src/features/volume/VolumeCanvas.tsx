@@ -1,6 +1,6 @@
 /**
  * The interactive 2D ramp canvas — the browser half of
- * `modules/pmg_qt/volume.py`'s `VolumeEditorWidget`.
+ * `packages/engine/modules/pmg_qt/volume.py`'s `VolumeEditorWidget`.
  *
  * All arithmetic is in `ramp.ts` and all drawing is in `paint.ts`; this file is
  * only the event model. Qt's mouse vocabulary maps onto pointer events like

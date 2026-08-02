@@ -2,21 +2,21 @@ import type { FrameState } from './placeholderData';
 import { useBridge } from '../bridge/BridgeContext';
 
 /**
- * Movie / frame control bar -- the Control block, layer1/Control.cpp.
+ * Movie / frame control bar -- the Control block, packages/engine/layer1/Control.cpp.
  *
- * `NButton = 9` (layer1/Control.cpp:62), evenly spaced, box size
+ * `NButton = 9` (packages/engine/layer1/Control.cpp:62), evenly spaced, box size
  * `cControlBoxSize = DIP2PIXEL(17)`. Order and actions are exactly
- * layer1/Control.cpp:298-376 (see docs/webclient/internal-gui.md §4):
+ * packages/engine/layer1/Control.cpp:298-376 (see docs/internal-gui.md §4):
  *
  *   0 |<   rewind        1 <    back        2 [] mstop
  *   3 >    mplay/mstop   4 >    forward     5 >| ending (Ctrl -> middle)
  *   6 S    seq_view      7 v    rock        8 F  full_screen
  *
- * "Lit" states (ActiveColor {0.65,0.65,0.65}, layer1/Control.cpp:645-649):
+ * "Lit" states (ActiveColor {0.65,0.65,0.65}, packages/engine/layer1/Control.cpp:645-649):
  * 6 when seq_view, 3 when MoviePlaying, 7 when rock.
  *
  * Not implemented here: the left-gutter "nub" that live-resizes `internal_gui_width`
- * and collapses the panel on double click (layer1/Control.cpp:448-469) -- the shell's
+ * and collapses the panel on double click (packages/engine/layer1/Control.cpp:448-469) -- the shell's
  * column splitter covers the resize, and the collapse gesture belongs with it.
  */
 

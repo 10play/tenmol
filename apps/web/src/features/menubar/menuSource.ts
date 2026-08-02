@@ -1,5 +1,5 @@
 /**
- * The client half of `bridge/tenmol_bridge/panels/menus.py`.
+ * The client half of `packages/bridge/tenmol_bridge/panels/menus.py`.
  *
  * The panel binds itself onto the live `cmd` when the bootstrap line runs, so
  * the first call may legitimately fail with `no such symbol`; that failure is
@@ -9,7 +9,7 @@
  *
  * Everything here degrades: the menu TREE has a checked-in generated copy that
  * is byte-identical to what the endpoint returns (proved by
- * `bridge/tests/test_menus.py::test_generated_typescript_matches_a_fresh_harvest`),
+ * `packages/bridge/tests/test_menus.py::test_generated_typescript_matches_a_fresh_harvest`),
  * so a bridge that refuses the bootstrap still renders a complete menu bar. The
  * live endpoint buys three things the generated copy cannot: the ~110 setting
  * values in ONE round trip instead of 111, the `~/.pymol/recent.db` list, and
@@ -21,7 +21,7 @@ import type { MenuSettingValue, MenusPayload } from '@tenmol/protocol/topics/men
 /** Must match `panels/menus.py:ATTRIBUTE`. */
 export const PANEL_SYMBOL = 'tenmol_menus';
 
-/** `/` makes PyMOL's parser treat the rest as Python (`modules/pymol/parser.py`). */
+/** `/` makes PyMOL's parser treat the rest as Python (`packages/engine/modules/pymol/parser.py`). */
 export const BOOTSTRAP = '/from tenmol_bridge.panels.menus import install;install()';
 
 export interface MenuSourceOptions {

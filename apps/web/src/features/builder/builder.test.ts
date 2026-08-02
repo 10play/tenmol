@@ -1,8 +1,8 @@
 /**
  * Node-side tests for the Builder's data and transport halves.
  *
- * The interesting assertions here are the ones that read `modules/pmg_qt/
- * builder.py` and `bridge/tenmol_bridge/panels/builder.py` off disk: two
+ * The interesting assertions here are the ones that read `packages/engine/modules/pmg_qt/
+ * builder.py` and `packages/bridge/tenmol_bridge/panels/builder.py` off disk: two
  * hand-maintained copies of a 60-button table WILL drift, and the only test
  * that catches it is one that compares them.
  */
@@ -28,15 +28,15 @@ import {
 import type { BuilderState, BuilderTables } from '@tenmol/protocol/topics/builder';
 
 const REPO = join(import.meta.dirname, '../../../../..');
-const QT_BUILDER = join(REPO, 'modules/pmg_qt/builder.py');
-const BRIDGE_BUILDER = join(REPO, 'bridge/tenmol_bridge/panels/builder.py');
+const QT_BUILDER = join(REPO, 'packages/engine/modules/pmg_qt/builder.py');
+const BRIDGE_BUILDER = join(REPO, 'packages/bridge/tenmol_bridge/panels/builder.py');
 
 const qtSource = readFileSync(QT_BUILDER, 'utf8');
 const bridgeSource = readFileSync(BRIDGE_BUILDER, 'utf8');
 
 /* ------------------------------------------------------------------ tables */
 
-describe('the button tables mirror modules/pmg_qt/builder.py', () => {
+describe('the button tables mirror packages/engine/modules/pmg_qt/builder.py', () => {
   it('has the ten element buttons of Chemical row 0, tooltip typo included', () => {
     expect(ELEMENTS.map((e) => e.label)).toEqual([
       'H', 'C', 'N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I',

@@ -15,7 +15,7 @@
  *
  * `tenmol_menus('menus')` is REFUSED here so the assertions run against the
  * checked-in generated tree, which is byte-identical to a fresh harvest
- * (`bridge/tests/test_menus.py`).
+ * (`packages/bridge/tests/test_menus.py`).
  */
 
 import { act } from 'react';
@@ -35,7 +35,7 @@ import { MenuBar } from './MenuBar';
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-/** MEASURED over the socket, `bridge/tests/test_p9_shell.py`. */
+/** MEASURED over the socket, `packages/bridge/tests/test_p9_shell.py`. */
 const INDEX = { orthoscopic: 23, valence: 64, line_smooth: 43, bg_rgb: 6 } as const;
 
 interface Fake {

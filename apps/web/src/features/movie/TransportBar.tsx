@@ -2,7 +2,7 @@
  * The internal-GUI control bar — nine equal-width buttons.
  *
  * `CControl::draw` lays out nine buttons hit-tested as `(9*x)/width`
- * (`layer1/Control.cpp:224`), and `CControl::release` (`:288-380`) defines what
+ * (`packages/engine/layer1/Control.cpp:224`), and `CControl::release` (`:288-380`) defines what
  * each one does. Reproduced here as real DOM, with the modifier variants:
  *
  *   0 |<     rewind        `SceneSetFrame(G,4,0)`

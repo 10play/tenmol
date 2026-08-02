@@ -8,7 +8,7 @@
  * The lighting/fog chunk is NOT duplicated: every fragment shader here takes it
  * as a parameter and `../materials` passes `LIGHTING_GLSL` from
  * `../modeG/materials/lighting.ts`, which is the single port of
- * `data/shaders/compute_color_for_light.fs`.
+ * `packages/engine/data/shaders/compute_color_for_light.fs`.
  *
  * (`quadline` is the one whose wrapper lives in `../webgl/quadlines.ts`
  * instead: its material is inseparable from the geometry that feeds it — the

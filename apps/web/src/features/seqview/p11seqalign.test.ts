@@ -1,12 +1,12 @@
 /**
  * Row 341, item (1) — the client half of alignment mode, as pure functions.
  *
- * The geometry belongs to the bridge (`bridge/tests/test_p11_seqview.py` pins
- * `align_rows` against `layer3/Seeker.cpp:1583-1793`). What is decided HERE is
+ * The geometry belongs to the bridge (`packages/bridge/tests/test_p11_seqview.py` pins
+ * `align_rows` against `packages/engine/layer3/Seeker.cpp:1583-1793`). What is decided HERE is
  * what `CSeq::draw` decides at paint time:
  *
  *   - the colour of an unaligned column, which is `seq_view_unaligned_mode`'s
- *     OTHER job (`layer1/Seq.cpp:322-338` resolves the colour, `:420-449`
+ *     OTHER job (`packages/engine/layer1/Seq.cpp:322-338` resolves the colour, `:420-449`
  *     blends it), and
  *   - the shared base every row is positioned against, without which two rows
  *     whose windows start at different offsets slide back on top of each other.
@@ -46,7 +46,7 @@ function cell(over: Partial<SeqviewCell> = {}): SeqviewCell {
   return { text: 'A', color: 4, offset: 0, atoms: [1], ...over };
 }
 
-describe('seqUnalignedStagger — layer3/Seeker.cpp:1590-1596', () => {
+describe('seqUnalignedStagger — packages/engine/layer3/Seeker.cpp:1590-1596', () => {
   it('is false for 0/1/2 and true for 3/4/5', () => {
     expect([0, 1, 2, 3, 4, 5].map(seqUnalignedStagger)).toEqual([
       false,
@@ -59,7 +59,7 @@ describe('seqUnalignedStagger — layer3/Seeker.cpp:1590-1596', () => {
   });
 });
 
-describe('columnRgb — layer1/Seq.cpp:420-449', () => {
+describe('columnRgb — packages/engine/layer1/Seq.cpp:420-449', () => {
   it('leaves an ALIGNED column its own colour in every mode', () => {
     for (const unalignedMode of [0, 1, 2, 3, 4, 5]) {
       expect(columnRgb(cell({ tag: 7 }), payload({ unalignedMode }))).toEqual([1, 0, 0]);
@@ -89,7 +89,7 @@ describe('columnRgb — layer1/Seq.cpp:420-449', () => {
   });
 
   it('keeps the column`s own colour in mode 3, where the index stays -1', () => {
-    // `case 3: unaligned_color_index = -1;` (`layer1/Seq.cpp:325-327`) — the
+    // `case 3: unaligned_color_index = -1;` (`packages/engine/layer1/Seq.cpp:325-327`) — the
     // bridge has already resolved it, so this is the -1 arriving.
     expect(
       columnRgb(

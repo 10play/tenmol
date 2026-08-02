@@ -7,7 +7,7 @@
  * There is still no subscription and this file does not pretend otherwise. The
  * `selection` topic accepts a subscription and NOTHING publishes to it —
  * asserted over a live socket in
- * `bridge/tests/test_p8_a10.py::test_the_selection_topic_publishes_nothing_when_pk1_moves`.
+ * `packages/bridge/tests/test_p8_a10.py::test_the_selection_topic_publishes_nothing_when_pk1_moves`.
  * So the panel polls `cmd.index('?pk1')`, and the three things that make a poll
  * either work or be a disaster are what this file measures:
  *

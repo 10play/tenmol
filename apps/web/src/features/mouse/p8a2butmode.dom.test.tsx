@@ -3,7 +3,7 @@
  * right-click opening `mouse_config`, REVERSE cycling (Shift / right button /
  * wheel-back), and the `mouse_grid` matrix toggle.
  *
- * All three come straight out of `CButMode::click` (`layer1/ButMode.cpp:149-
+ * All three come straight out of `CButMode::click` (`packages/engine/layer1/ButMode.cpp:149-
  * 188`), and one of them was WRONG before this test existed: the `dy < 2`
  * branch — the bottom two lines — has no right-button case at all, so a right
  * click there cycles the selection level BACKWARD. The component opened the
@@ -191,7 +191,7 @@ describe('the mouse_grid matrix', () => {
       [...el.children].map((cell) => cell.textContent?.trim()),
     );
     // `Buttons L M R Wheel` then the six rows of 5-char codes for
-    // 3-Button Viewing (`modules/pymol/controlling.py:mode_dict`).
+    // 3-Button Viewing (`packages/engine/modules/pymol/controlling.py:mode_dict`).
     expect(rows[0]).toEqual(['Buttons', 'L', 'M', 'R', 'Wheel']);
     expect(rows[1]).toEqual(['& Keys', 'Rota', 'Move', 'MovZ', 'Slab']);
     expect(rows[2]).toEqual(['Shft', '+Box', '-Box', 'Clip', 'MovS']);

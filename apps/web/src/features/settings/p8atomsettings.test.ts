@@ -3,7 +3,7 @@
  *
  * Row 211's gap clause: "NOT done: alter/alter_state writes and the atom-STATE
  * level (no cmd.set path exists)". This file pins the expression builder; the
- * engine end is `bridge/tests/test_p8_a5.py`, which sends these exact strings
+ * engine end is `packages/bridge/tests/test_p8_a5.py`, which sends these exact strings
  * over the WebSocket and reads the result back with `cmd.iterate_state`:
  *
  *     alter_state 1, sel, s['label_screen_point']=(1.0, 2.0, 3.0)   -> (1,2,3)

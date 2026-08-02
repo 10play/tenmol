@@ -5,7 +5,7 @@
  * decisions that panel makes, including the ones its UI makes unreachable (an
  * out-of-range move, a blank path) but a future caller could still hit.
  *
- * Every engine fact quoted below is measured in `bridge/tests/test_p8_a10.py`.
+ * Every engine fact quoted below is measured in `packages/bridge/tests/test_p8_a10.py`.
  */
 
 import { describe, expect, it, vi } from 'vitest';

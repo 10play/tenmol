@@ -1,16 +1,16 @@
 /**
  * The rubber-band selection rectangle — `OrthoDrawLoop`
- * (`layer1/Ortho.cpp:1695-1745`), drawn here as a 1 px CSS box over the
+ * (`packages/engine/layer1/Ortho.cpp:1695-1745`), drawn here as a 1 px CSS box over the
  * viewport instead of four `cColorFront` quads in the ortho CGO.
  *
  * IT HAS TO BE LOCAL.  `I->LoopRect` is written by `SceneLoopClick` /
  * `SceneLoopDrag` and mirrored into Ortho by `OrthoSetLoopRect`
- * (`layer1/SceneMouse.cpp:44-66`); nothing publishes it, and
+ * (`packages/engine/layer1/SceneMouse.cpp:44-66`); nothing publishes it, and
  * `test_wf_ortho.py::test_the_marquee_rectangle_is_not_readable_from_python`
  * measures that there is no getter to add to the pump.  The SELECTION is
  * unaffected: the press/drag/release this component watches are the same
  * events `@tenmol/viewport` forwards, and `ExecutiveSelectRect` still makes
- * the selection in the C (`bridge/tests/test_box_selection.py`).
+ * the selection in the C (`packages/bridge/tests/test_box_selection.py`).
  *
  * IT NEVER TOUCHES THE EVENTS.  Listeners are `capture: true, passive: true`
  * on the viewport host and on `window`; nothing is prevented, stopped or
@@ -84,7 +84,7 @@ export function OrthoLoopRect() {
       if (event.pointerType === 'touch') return;
       // A press that lands on another ortho BLOCK never reaches the scene:
       // `OrthoButton` gives the click to the block under the cursor
-      // (`layer1/Ortho.cpp:2530-2600`), so the console band and the busy box
+      // (`packages/engine/layer1/Ortho.cpp:2530-2600`), so the console band and the busy box
       // swallow it and no rubber band starts.
       const target = event.target;
       if (target instanceof Element && target.closest('.ortho, .ortho-busy')) return;

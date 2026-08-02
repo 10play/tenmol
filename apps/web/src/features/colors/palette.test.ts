@@ -2,7 +2,7 @@
  * Colour-table unit tests.
  *
  * The values asserted here are not invented: every expectation was read off a
- * live PyMOL 3.2.0a built from this tree (see `bridge/tests/test_colors.py`,
+ * live PyMOL 3.2.0a built from this tree (see `packages/bridge/tests/test_colors.py`,
  * which asserts the same facts against the engine instead of against a fake).
  * Duplication is deliberate — this file proves the CLIENT logic, that one
  * proves the FACTS.
@@ -48,7 +48,7 @@ function fakeTable(size: number): { name: string; rgb: [number, number, number] 
   // The landmark indices PyMOL's menus hardcode, then exactly enough further
   // digit-free names to reach the real count of 178, then filler whose names
   // contain digits — which is precisely what `ColorGetStatus` uses to decide
-  // whether a slot appears in `get_color_indices()` (layer1/Color.cpp:784-807).
+  // whether a slot appears in `get_color_indices()` (packages/engine/layer1/Color.cpp:784-807).
   const named: Record<number, string> = {
     0: 'white',
     1: 'black',
@@ -123,7 +123,7 @@ function fakeCall(size = COLOR_TABLE_SIZE) {
 }
 
 /* ------------------------------------------------------------------ *
- * Encoding — layer1/Color.h:36-47
+ * Encoding — packages/engine/layer1/Color.h:36-47
  * ------------------------------------------------------------------ */
 
 describe('special and encoded colour indices', () => {
@@ -366,7 +366,7 @@ describe('sampleBand', () => {
 
 /* ------------------------------------------------------------------ *
  * The ported menu tables — shape only; the VALUES are diffed against the
- * running PyMOL in bridge/tests/test_colors.py.
+ * running PyMOL in packages/bridge/tests/test_colors.py.
  * ------------------------------------------------------------------ */
 
 describe('ported menu tables', () => {

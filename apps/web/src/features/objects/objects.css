@@ -1,7 +1,7 @@
 /*
  * Object panel additions. The row anatomy (.objrow, .objrow__name,
  * .objrow__op--a..m) is in src/styles/global.css, straight from the C++ colour
- * triples in layer3/Executive.cpp:16121-16127 and :16261-16334.
+ * triples in packages/engine/layer3/Executive.cpp:16121-16127 and :16261-16334.
  */
 
 /*
@@ -68,14 +68,14 @@
  * Executive block can ever take from the column between them, and 8 rows of
  * `--pm-row-h`. Derivation and the measured PyMOL heights it is compared
  * against: `shell/orthoPanel.ts: EXECUTIVE_MIN_HEIGHT`, measured in
- * `bridge/tests/test_p11_layout.py`, guarded in `apps/web/e2e/smoke.e2e.mjs`.
+ * `packages/bridge/tests/test_p11_layout.py`, guarded in `apps/web/e2e/smoke.e2e.mjs`.
  *
  * It is on the LIST rather than on `.objpanel` because `.objpanel__head` is a
  * web addition with no PyMOL counterpart; PyMOL's Executive block is the rows.
  *
  * Beyond the floor the list still scrolls, which is what PyMOL does too:
  * `ExecutiveDrawPanel` shows `n_disp = height / ExecLineHeight` rows and puts a
- * scrollbar up as soon as `n_ent > n_disp` (`layer3/Executive.cpp:16219-16224`).
+ * scrollbar up as soon as `n_ent > n_disp` (`packages/engine/layer3/Executive.cpp:16219-16224`).
  */
 .objpanel__rows {
   flex: 1 1 auto;
@@ -289,7 +289,7 @@
  * ------------------------------------------------------------------- */
 
 /* `PopPlaceChild` puts the child at `parentRight - 2` on the right side and
- * `parentLeft - width + 2` on the left (layer1/Pop.cpp:111-150); in flow terms
+ * `parentLeft - width + 2` on the left (packages/engine/layer1/Pop.cpp:111-150); in flow terms
  * that is `left: 100%` and `right: 100%` with the 2 px overlap. */
 .rowmenu__panel--right {
   left: calc(100% - 2px);
@@ -320,7 +320,7 @@
 }
 
 /* internal_gui_mode != Default inverts the pop-up: text {0,0,0} on {1,1,1},
- * and the title bar goes {0.3,0.3,0.6} -> {1,1,1} (layer4/PopUp.cpp:144-164,
+ * and the title bar goes {0.3,0.3,0.6} -> {1,1,1} (packages/engine/layer4/PopUp.cpp:144-164,
  * :813-826). */
 .rowmenu.is-light {
   background: rgb(255, 255, 255);

@@ -12,7 +12,7 @@ structures load through `cmd.load`, the frames come off PyMOL's own FBO.
 
 Exit codes are distinct on purpose: `0` all passed, `1` a test failed (the
 product is broken), `2` the stack could not start (this machine cannot run the
-suite — no `bridge/.venv`, no cached chromium). CI needs to tell those apart.
+suite — no `packages/bridge/.venv`, no cached chromium). CI needs to tell those apart.
 
 ## Why it looks like this
 

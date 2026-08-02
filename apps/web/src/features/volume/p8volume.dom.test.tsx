@@ -6,7 +6,7 @@
  * need more than that:
  *
  *   * *"the red histogram polyline draws 0 px because no histogram can be
- *     fetched"* — it can. `bridge/tests/test_p8_a10.py` proves
+ *     fetched"* — it can. `packages/bridge/tests/test_p8_a10.py` proves
  *     `cmd.get_volume_histogram` answers 68 inline floats over a real socket
  *     AND re-creates the old `BLOB_RETURNS` defect with a monkeypatch to show
  *     the assertion is not vacuous. This file takes those same bytes — read
@@ -83,7 +83,7 @@ const SESSION = {
     }
     if (fn === 'get_volume_field') throw new Error('no blob store in this test');
     // `menu.vol_color(None, name)` -- the live named-ramp list, in the exact
-    // shape the engine answers with (measured in bridge/tests/test_p8_a10.py).
+    // shape the engine answers with (measured in packages/bridge/tests/test_p8_a10.py).
     if (fn === 'menu.vol_color') {
       if (presetRows instanceof Error) throw presetRows;
       return presetRows;

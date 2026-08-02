@@ -20,13 +20,13 @@
     "typecheck": "pnpm -r run typecheck",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "test:bridge": "bash -c 'if [ -d bridge/tests ]; then bash scripts/dev-bridge.sh --exec python -m pytest bridge/tests -q; else echo \"no bridge/tests yet (WP-02 owns them) - skipping\"; fi'",
+    "test:bridge": "bash -c 'if [ -d packages/bridge/tests ]; then bash scripts/dev-bridge.sh --exec python -m pytest packages/bridge/tests -q; else echo \"no packages/bridge/tests yet (WP-02 owns them) - skipping\"; fi'",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "ownership": "node scripts/ownership.mjs",
     "parity": "node scripts/parity.mjs",
-    "format": "prettier --write --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml vitest.workspace.ts \"scripts/*.mjs\" \"apps/**/*\" \"packages/**/*\" docs/webclient/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
-    "format:check": "prettier --check --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml vitest.workspace.ts \"scripts/*.mjs\" \"apps/**/*\" \"packages/**/*\" docs/webclient/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
+    "format": "prettier --write --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml vitest.workspace.ts \"scripts/*.mjs\" \"apps/**/*\" \"packages/**/*\" docs/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
+    "format:check": "prettier --check --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml vitest.workspace.ts \"scripts/*.mjs\" \"apps/**/*\" \"packages/**/*\" docs/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
     "clean": "rm -rf .turbo *.tsbuildinfo apps/*/dist apps/*/.turbo apps/*/*.tsbuildinfo apps/*/node_modules packages/*/dist packages/*/.turbo packages/*/*.tsbuildinfo packages/*/node_modules node_modules"
   },
   "devDependencies": {

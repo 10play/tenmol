@@ -2,19 +2,19 @@
 #
 # tenmol web client -- Linux offscreen GL acceptance test (spike 07 §3).
 #
-# Proves, by RUNNING it, that bridge/tenmol_bridge/glcontext/egl.py gives PyMOL
+# Proves, by RUNNING it, that packages/bridge/tenmol_bridge/glcontext/egl.py gives PyMOL
 # a real desktop-OpenGL context with no GPU, no X/Wayland and no /dev/dri:
 #
 #   1. EGL_MESA_platform_surfaceless display + eglBindAPI(EGL_OPENGL_API)
 #   2. a desktop GL context (NOT GLES), one FBO bound before PyMOL's first draw
 #   3. glReadPixels of a known clear colour
-#   4. the FBO *name* survives resize (PyMOL latches it -- layer5/PyMOL.cpp:2236)
+#   4. the FBO *name* survives resize (PyMOL latches it -- packages/engine/layer5/PyMOL.cpp:2236)
 #   5. EGL's thread rules: cross-thread steal refused, hand-off works
 #   6. eglTerminate refcounting: releasing one context does not kill another
 #   7. a REAL PyMOL cartoon render read back non-blank
 #   8. the backend pick pass (ScenePicking) actually selects atoms
 #
-# On Linux it can run directly against bridge/.venv. Anywhere else (this was
+# On Linux it can run directly against packages/bridge/.venv. Anywhere else (this was
 # developed on macOS) it runs the whole thing inside a Debian container with
 # Mesa llvmpipe, which is also exactly what .github/workflows/webclient-gl-linux.yml
 # does on ubuntu-latest without the container.
@@ -28,7 +28,7 @@
 #   --image NAME      image tag to build/reuse (default tenmol-gl-linux:test)
 #   --rebuild         force a fresh image build
 #   --out DIR         where to drop the rendered PNGs (default .tenmol-gl-out)
-#   --python PATH     interpreter for --native (default bridge/.venv/bin/python)
+#   --python PATH     interpreter for --native (default packages/bridge/.venv/bin/python)
 #   -h, --help        this text
 #
 # Exit status is the validator's: 0 = every assertion held.
@@ -160,7 +160,7 @@ check("every pixel is non-blank",
       all(buf[k] for k in range(0, W * H * 4, 4)))
 
 # -------------------------------------------------------------- 4. resize
-section("4. resize keeps the FBO NAME (layer5/PyMOL.cpp:2236)")
+section("4. resize keeps the FBO NAME (packages/engine/layer5/PyMOL.cpp:2236)")
 ids = [ctx.fbo]
 for w_, h_ in ((640, 480), (1280, 800), (400, 300), (W, H)):
     ctx.resize(w_, h_)
@@ -288,7 +288,7 @@ else:
     print("  wrote               : %s (%d bytes)" % (dst, len(png)))
 
     # ------------------------------------------------------- 8. pick pass
-    section("8. the backend pick pass (layer1/ScenePicking.cpp)")
+    section("8. the backend pick pass (packages/engine/layer1/ScenePicking.cpp)")
     def pump(seconds):
         end = time.time() + seconds
         while time.time() < end:
@@ -400,7 +400,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \\
 RUN python3 -m venv /venv \\
     && /venv/bin/pip install -q --upgrade pip "numpy>=2.0" "setuptools>=69.2.0" "cmake>=3.13.3"
 # header-only mmtf-cpp, OUT of the source tree and onto PREFIX_PATH
-# (scripts/bootstrap.sh step 3; include/ is upstream and must not be touched)
+# (scripts/bootstrap.sh step 3; packages/engine/include/ is upstream and must not be touched)
 RUN git clone --depth 1 --quiet https://github.com/rcsb/mmtf-cpp.git /tmp/mmtf-src \\
     && mkdir -p /deps/mmtf-cpp && cp -R /tmp/mmtf-src/include /deps/mmtf-cpp/include \\
     && rm -rf /tmp/mmtf-src && test -f /deps/mmtf-cpp/include/mmtf.hpp

@@ -10,7 +10,7 @@
  *
  * Registry change requested: an `internal-gui` slot `butmode` ordered between
  * `wizards` (20) and `movie` (30), matching `OrthoLayoutPanel`'s bottom-up
- * stack (`layer1/Ortho.cpp:2261-2340`). Reported, not smuggled in.
+ * stack (`packages/engine/layer1/Ortho.cpp:2261-2340`). Reported, not smuggled in.
  */
 
 export { ButModeBlock } from './ButModeBlock';

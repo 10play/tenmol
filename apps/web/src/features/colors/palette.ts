@@ -1,14 +1,14 @@
 /**
  * The client-side colour table.
  *
- * PyMOL has no bulk colour accessor: `CmdGetColor` (`layer4/Cmd.cpp:1321-1391`)
+ * PyMOL has no bulk colour accessor: `CmdGetColor` (`packages/engine/layer4/Cmd.cpp:1321-1391`)
  * returns the 5388 `(name, index)` pairs in one call (mode 2) and the RGB one
  * colour at a time (mode 0). So the palette is 1 + 5388 calls.
  *
  * MEASURED, against the real bridge on this machine (`scripts/dev-bridge.sh`,
  * PyMOL 3.2.0a): pipelining all 5388 `cmd.get_color_tuple` calls over the
  * WebSocket costs **184 ms** (29k calls/s) — the pump batches up to 256 tasks
- * per 60 Hz tick (`bridge/tenmol_bridge/pump.py:_max_batch`), so the whole
+ * per 60 Hz tick (`packages/bridge/tenmol_bridge/pump.py:_max_batch`), so the whole
  * table lands in ~21 ticks. That is why this fetches everything instead of
  * lazily sampling: an index that is not in the cache is a colour the object
  * panel or Mode G cannot draw, and 184 ms once per session is cheaper than
@@ -16,7 +16,7 @@
  *
  * It has to happen more than once per session, which is the other reason the
  * loader lives here rather than in a `useEffect`: `cmd.space()` rewrites
- * `ColorRec::LutColor` (`layer1/Color.cpp:1680`) and `get_color_tuple` then
+ * `ColorRec::LutColor` (`packages/engine/layer1/Color.cpp:1680`) and `get_color_tuple` then
  * returns the LUT-mapped value, so EVERY entry can change. Verified: after
  * `space greyscale`, `red` reads `(0.343, 0.331, 0.331)` instead of
  * `(1, 0, 0)`.
@@ -164,7 +164,7 @@ export async function loadPalette(
  * The seven keywords, resolved through the backend every time.
  *
  * `auto` and `current` are not constants: `ColorGetIndex` runs `ColorGetNext`
- * / `ColorGetCurrent` (`layer1/Color.cpp:140,156`) and returns a real table
+ * / `ColorGetCurrent` (`packages/engine/layer1/Color.cpp:140,156`) and returns a real table
  * index that moves as objects are created. Measured on a fresh session,
  * `get_color_index('auto')` answered **26**, not -2. `front`/`back` are
  * genuine specials whose RGB depends on `bg_rgb` (`ColorUpdateFront`,
@@ -199,7 +199,7 @@ export async function loadSpecials(call: CallFn): Promise<SpecialColor[]> {
 
 /**
  * Live `object:ramp` objects. There is no `cmd.get_ramps()`; `pymol.menu`'s
- * own `menucontext` does exactly this scan (`modules/pymol/menu.py:33-36`).
+ * own `menucontext` does exactly this scan (`packages/engine/modules/pymol/menu.py:33-36`).
  */
 export async function loadRamps(call: CallFn): Promise<RampInfo[]> {
   const names = await call<unknown>('get_names', ['objects']).catch(() => null);
@@ -248,7 +248,7 @@ export function resolveColor(state: PaletteState, index: number): ResolvedColor 
   }
   if (kind === 'ramp') {
     // Ramp colour is evaluated PER VERTEX from (position, state)
-    // (`ColorGetRamped`, layer1/Color.cpp:189-218), so there is no single RGB
+    // (`ColorGetRamped`, packages/engine/layer1/Color.cpp:189-218), so there is no single RGB
     // and the client must not invent one. Naming it is all we can honestly do.
     const slot = rampSlot(index);
     const ramp = state.ramps.find((r) => r.index === index);
@@ -307,7 +307,7 @@ export function compareColorNames(a: string, b: string): number {
  *
  * The Qt dialog fills it from `cmd.get_color_indices()` — mode 1,
  * `ColorGetStatus(a) == 1`, i.e. **names with no digit in them**
- * (`layer4/Cmd.cpp:1341`, `layer1/Color.cpp:784-800`) — and then APPENDS every
+ * (`packages/engine/layer4/Cmd.cpp:1341`, `packages/engine/layer1/Color.cpp:784-800`) — and then APPENDS every
  * name its own Apply button creates, whether or not it has a digit
  * (`pymol_qt_gui.py:596-600`).
  *
@@ -360,7 +360,7 @@ export function quantiseChannels(rgb: Rgb): Rgb {
  *
  * `toFixed(2)` for `%.2f`: MEASURED equal on all 357 values this dialog can
  * produce — the 101 slider positions k/100 and the 256 hex values k/255 — see
- * `bridge/tests/test_wf_colors.py::test_toFixed_2_is_pythons_percent_2f`.
+ * `packages/bridge/tests/test_wf_colors.py::test_toFixed_2_is_pythons_percent_2f`.
  */
 export function applyLine(name: string, rgb: Rgb): string {
   return `set_color ${name}, [${rgb.map((v) => v.toFixed(2)).join(', ')}]\nrecolor`;
@@ -379,7 +379,7 @@ export interface NameLookup {
  *
  * The dialog does `get_color_index(name)` then `get_color_tuple(index)` on every
  * keystroke, and `ColorGetIndex` is much more than a dictionary lookup
- * (`layer1/Color.cpp:661-748`). MEASURED against the live engine:
+ * (`packages/engine/layer1/Color.cpp:661-748`). MEASURED against the live engine:
  *
  *     'red'      -> 4          exact
  *     'RED'      -> 4          case-insensitive
@@ -398,7 +398,7 @@ export interface NameLookup {
  * THE GUARD IS `index < 0`, NOT `index == -1`. The Qt dialog only tests -1
  * (`pymol_qt_gui.py:558`), but `atomic`/`object`/`front`/`back` resolve to
  * -4/-5/-6/-7 and `cmd.get_color_tuple` returns None for all of them (mode 0 is
- * `if(index >= 0)`, `layer4/Cmd.cpp:1336`) — measured, with a
+ * `if(index >= 0)`, `packages/engine/layer4/Cmd.cpp:1336`) — measured, with a
  * `cmd-Error: Unknown color '-6'.` on the console. `rgb[0]` on None then raises
  * TypeError inside the `textChanged` handler, so typing "front" into the
  * desktop dialog's name box throws. Here it is simply ignored.
@@ -423,7 +423,7 @@ export async function resolveColorName(
 
 /**
  * The generated bands. `ColorReset` lays them out contiguously
- * (`layer1/Color.cpp:1089-1185`); the picker shows them behind an "advanced"
+ * (`packages/engine/layer1/Color.cpp:1089-1185`); the picker shows them behind an "advanced"
  * toggle because 5000 swatches is not a palette, it is a wall.
  */
 export const GENERATED_BANDS: readonly { prefix: string; first: number; count: number }[] = [
@@ -436,13 +436,13 @@ export const GENERATED_BANDS: readonly { prefix: string; first: number; count: n
 
 /**
  * The whole built-in table, cut into the regions `ColorReset` lays down in
- * order (`layer1/Color.cpp:825-1322`). This is what the "advanced" browser
+ * order (`packages/engine/layer1/Color.cpp:825-1322`). This is what the "advanced" browser
  * pages through — 5388 tiles is not a palette, but 5388 tiles you can only
  * SAMPLE is not browsable either, and `spectrum`/`ramp_new`/`set_color` all
  * take these names.
  *
  * Every boundary below is asserted against the live table, name by name, in
- * `bridge/tests/test_p8_a5.py::test_the_twelve_colour_regions_are_where_ColorReset_puts_them`.
+ * `packages/bridge/tests/test_p8_a5.py::test_the_twelve_colour_regions_are_where_ColorReset_puts_them`.
  * `first`/`count` — the last index is `first + count - 1`.
  */
 export interface ColorRegion {

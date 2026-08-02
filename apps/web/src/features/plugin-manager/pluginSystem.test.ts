@@ -2,7 +2,7 @@
  * The headless plugin-engine accessors (inventory rows 76 / 463).
  *
  * Every fixture here is a shape MEASURED over the wire against a live bridge in
- * `bridge/tests/test_wf_plugins.py` — the symbol names, the argument shapes and
+ * `packages/bridge/tests/test_wf_plugins.py` — the symbol names, the argument shapes and
  * the error kinds are the real ones, so a rename on the Python side breaks this
  * file instead of silently breaking the panel.
  */
@@ -70,7 +70,7 @@ describe('isAutoloadEnabled', () => {
 describe('setAutoload', () => {
   it('reproduces the property setter: update then set_pref_changed', async () => {
     // `autoload[self.name] = bool(value); set_pref_changed()`
-    // (modules/pymol/plugins/__init__.py). Both halves, in that order — the
+    // (packages/engine/modules/pymol/plugins/__init__.py). Both halves, in that order — the
     // save serialises the dict, so it has to come second.
     const { call, calls } = recorder();
     await setAutoload(call, 'apbs_gui', false);

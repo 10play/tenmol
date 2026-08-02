@@ -303,7 +303,7 @@ export function buildGeometry(frame: GeometryFrame): BuiltGeometry {
 
   if (header.matrix && header.matrix.length === 16) {
     // `cmd.get_object_matrix` when `matrix_mode != 0`
-    // (`layer2/ObjectMolecule.cpp:11265-11269`). Column-major, as GL wants it.
+    // (`packages/engine/layer2/ObjectMolecule.cpp:11265-11269`). Column-major, as GL wants it.
     group.matrix.fromArray(header.matrix as number[]);
     group.matrixAutoUpdate = false;
   }

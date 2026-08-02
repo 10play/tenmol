@@ -3,8 +3,8 @@
  * below is unit-testable against the real generated tree.
  *
  * The tree itself is `generated/menudata.ts`, harvested from
- * `PyMOLDesktopGUI.get_menudata` (`modules/pymol/_gui.py:55`) by
- * `bridge/tenmol_bridge/panels/menus.py`. Nothing here hard-codes a menu item.
+ * `PyMOLDesktopGUI.get_menudata` (`packages/engine/modules/pymol/_gui.py:55`) by
+ * `packages/bridge/tenmol_bridge/panels/menus.py`. Nothing here hard-codes a menu item.
  */
 
 import {
@@ -30,7 +30,7 @@ export interface HookOwner {
 }
 
 /**
- * The `= None` seams of `PyMOLDesktopGUI` (`modules/pymol/_gui.py:13-38`) plus
+ * The `= None` seams of `PyMOLDesktopGUI` (`packages/engine/modules/pymol/_gui.py:13-38`) plus
  * the three stateful helpers. Qt fills every one of them with a `QFileDialog`
  * or a dialog class; in this client each belongs to the work package that owns
  * the corresponding surface, and a hook nobody has implemented renders as a

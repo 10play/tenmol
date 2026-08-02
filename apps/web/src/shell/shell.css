@@ -11,7 +11,7 @@
 /* Feature slots ------------------------------------------------------- */
 
 /*
- * The scene rectangle. `OrthoReshape` (`layer1/Ortho.cpp:2419,2433`) takes the
+ * The scene rectangle. `OrthoReshape` (`packages/engine/layer1/Ortho.cpp:2419,2433`) takes the
  * sequence viewer's height OUT of it when `seq_view_overlay` is 0
  * (`sceneBottom += seqHeight` / `sceneTop = seqHeight`), and the padding below
  * is how that arrives here.
@@ -248,7 +248,7 @@
 
 /* Internal GUI column: the OrthoLayoutPanel stack order ------------------
  *
- * NOT HERE, ON PURPOSE. `OrthoLayoutPanel` (layer1/Ortho.cpp:2261-2340) stacks
+ * NOT HERE, ON PURPOSE. `OrthoLayoutPanel` (packages/engine/layer1/Ortho.cpp:2261-2340) stacks
  * bottom-up Control, ButMode, Wizard, Executive, so top-down the column is
  * Executive, Wizard, ButMode, Control — but the ButMode block is PORTALLED in
  * by `features/shortcuts` (the registry is frozen and declares no slot for it)

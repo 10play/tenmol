@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tenmol-bridge"
+version = "0.1.0"
+description = "PyMOL <-> tenmol web client bridge (WebSocket, protocol v1)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "See repository LICENSE" }
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "websockets>=12",
+    # Mode P's motion codec. encode.py ships a stdlib zlib PNG fallback so the
+    # stream still produces a LOSSLESS still without Pillow, but jpeg/webp -
+    # i.e. everything under 25 ms/frame - need it.
+    "pillow>=10",
+]
+
+# NOTE: "pymol" is deliberately NOT a dependency. It is built from this repo
+# (docs/spikes/00-build.md) and installed into the same venv; pip
+# cannot resolve it from an index. The bridge degrades gracefully when it is
+# missing so the front-end stays developable - see README.md.
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+]
+
+[project.scripts]
+tenmol-bridge = "tenmol_bridge.__main__:main"
+
+[tool.setuptools]
+packages = [
+    "tenmol_bridge",
+    "tenmol_bridge.render",
+    "tenmol_bridge.glcontext",
+    "tenmol_bridge.policy",
+    "tenmol_bridge.panels",
+    "tenmol_bridge.state",
+]
+
+# NON-.py FILES THAT MUST TRAVEL WITH THE PACKAGE.  setuptools ships *.py and
+# nothing else unless it is told otherwise: before this stanza a built wheel
+# held 43 .py files and ZERO .json, and `panels/setting_catalog.json` -- the
+# build-time asset row 00:203 exists for -- was simply absent from every
+# installed layout.  That is not cosmetic.  `panels/settings.py` falls back to
+# parsing `packages/engine/layer1/SettingInfo.h` + `packages/engine/data/setting_help.csv`, and a HEADER IS NOT
+# IN A WHEEL: `setting_info_path()` only ever looks next to this source
+# checkout, so an installed bridge reported `defaultsSource: null` and 0 of 779
+# settings carrying a default value.  Asserted against a REAL BUILT ARTEFACT by
+# packages/bridge/tests/test_p11_infra2.py, which runs the PEP 517 hook and reads the
+# wheel and the sdist back with `zipfile`/`tarfile` -- monkeypatching a path
+# inside the source tree cannot see this failure, which is why it went unnoticed.
+[tool.setuptools.package-data]
+"tenmol_bridge.panels" = ["*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# -s (capture=no) is MANDATORY, not a preference.  pytest's global capture
+# re-assigns sys.stdout around every test phase, which silently un-installs
+# pcatch (it IS sys.stdout after pcatch._install(), packages/engine/layer1/P.cpp:2667) and the
+# Python half of the PyMOL console vanishes.  conftest.py enforces it too.
+addopts = "-ra -s"
+markers = [
+    "gl: needs a real offscreen GL context (on macOS, a logged-in user session with WindowServer). Gate these the way the ray image-diff tests are gated.",
+    "engine: boots the one and only SingletonPyMOL in this process",
+]

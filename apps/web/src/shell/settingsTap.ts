@@ -2,7 +2,7 @@
  * The settings PUSH channel — `setting_callbacks` without Qt.
  *
  * WHAT QT DOES, and why anything is needed at all. `update_feedback`
- * (`modules/pmg_qt/pymol_qt_gui.py:941-968`) runs on a timer that re-arms at
+ * (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:941-968`) runs on a timer that re-arms at
  * 500 ms and, after draining the console, does this:
  *
  *     for index in cmd.get_setting_updates():
@@ -17,7 +17,7 @@
  * and the consumer then READS those settings. This module is that shape.
  *
  * WHY IT IS NOT `cmd.get_setting_updates`. That call is destructive — it clears
- * the flags while iterating (`layer1/Setting.cpp:1121-1147`) — and the bridge's
+ * the flags while iterating (`packages/engine/layer1/Setting.cpp:1121-1147`) — and the bridge's
  * status thread owns it (`policy/base.py: EXCLUSIVE_TO_BRIDGE`). What the
  * client reads is `panels/settings.py`'s TAP: a cumulative, cursor-addressed
  * log of what the status thread saw. Two facts make a second consumer safe, and
@@ -53,7 +53,7 @@ const FN = {
   values: 'setting.tenmol_settings_values',
 } as const;
 
-/** `/` makes PyMOL's parser treat the rest as Python (`modules/pymol/parser.py`). */
+/** `/` makes PyMOL's parser treat the rest as Python (`packages/engine/modules/pymol/parser.py`). */
 export const SETTINGS_TAP_BOOTSTRAP = '/import tenmol_bridge.panels.settings as _s;_s.install()';
 
 /** `session_file`, MEASURED: `setting._get_index('session_file')` is 440. */

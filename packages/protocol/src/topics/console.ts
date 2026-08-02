@@ -20,7 +20,7 @@
  * this before "fixing" the client to wrap or to strip:
  *
  *  1. `wrap_output` IS APPLIED SERVER-SIDE, BEFORE THE LINE IS QUEUED.
- *     `OrthoAddOutput` (`layer1/Ortho.cpp:1080-1118`) splits into `I->Line[]`
+ *     `OrthoAddOutput` (`packages/engine/layer1/Ortho.cpp:1080-1118`) splits into `I->Line[]`
  *     and `OrthoNewLine` pushes each piece to the feedback queue
  *     (`:1139`). So the client receives lines ALREADY WRAPPED and must not
  *     wrap again. Verified:
@@ -30,13 +30,13 @@
  *       -> feedback lines: "A","BC","DE","FG","HI",... (2 chars each)
  *
  *     Two characters, not twenty: `wrap_output` is declared `REC_b`
- *     (`layer1/SettingInfo.h:276`), so `SettingGetGlobal_b` collapses 20 to 1
+ *     (`packages/engine/layer1/SettingInfo.h:276`), so `SettingGetGlobal_b` collapses 20 to 1
  *     and the `cc > wrap` test fires on every second character. That is an
  *     upstream quirk, it is what the Qt console shows, and {@link wrapOutput}
  *     reproduces it exactly so a client-origin line wraps the same way.
  *
  *  2. `colored_feedback` DECIDES WHETHER ANSI SURVIVES THE QUEUE.
- *     `OrthoFeedbackOut` (`layer1/Ortho.cpp:1148-1150`) calls
+ *     `OrthoFeedbackOut` (`packages/engine/layer1/Ortho.cpp:1148-1150`) calls
  *     `UtilStripANSIEscapes` unless `colored_feedback` is on. Verified with
  *     `print("\033[31mRED\033[0m plain")`:
  *
@@ -52,32 +52,32 @@
  * @notATopic  NOT A TRANSPORT TOPIC — deliberately not re-exported by the
  * frozen `topics/index.ts` barrel. Reached by its subpath
  * (`@tenmol/protocol/topics/console`); its events, if any, ride an existing
- * topic. `bridge/tests/test_dispatch.py` looks for this tag.
+ * topic. `packages/bridge/tests/test_dispatch.py` looks for this tag.
  */
 
 /* ------------------------------------------------------------------ *
  * The ring geometry
  * ------------------------------------------------------------------ */
 
-/** `#define OrthoSaveLines 0xFF` (`layer1/Ortho.cpp:62`) — 256 lines. */
+/** `#define OrthoSaveLines 0xFF` (`packages/engine/layer1/Ortho.cpp:62`) — 256 lines. */
 export const ORTHO_SAVE_LINES = 256;
 
-/** `#define OrthoHistoryLines 0xFF` (`layer1/Ortho.cpp:63`) — 256 entries. */
+/** `#define OrthoHistoryLines 0xFF` (`packages/engine/layer1/Ortho.cpp:63`) — 256 entries. */
 export const ORTHO_HISTORY_LINES = 256;
 
-/** `OrthoLineType` is `char[1024]` (`layer0/os_python.h` / `layer1/Ortho.h`). */
+/** `OrthoLineType` is `char[1024]` (`packages/engine/layer0/os_python.h` / `packages/engine/layer1/Ortho.h`). */
 export const ORTHO_LINE_LENGTH = 1024;
 
 /** The prompt `OrthoRestorePrompt` writes, compared with `strncmp(..., 6)`. */
 export const ORTHO_PROMPT = 'PyMOL>';
 
-/** `#define cOrthoLineHeight DIP2PIXEL(12)` (`layer1/Ortho.h:26`). */
+/** `#define cOrthoLineHeight DIP2PIXEL(12)` (`packages/engine/layer1/Ortho.h:26`). */
 export const ORTHO_LINE_HEIGHT = 12;
-/** `#define cOrthoCharWidth DIP2PIXEL(8)` (`layer1/Ortho.cpp:65`). */
+/** `#define cOrthoCharWidth DIP2PIXEL(8)` (`packages/engine/layer1/Ortho.cpp:65`). */
 export const ORTHO_CHAR_WIDTH = 8;
-/** `#define cOrthoLeftMargin DIP2PIXEL(3)` (`layer1/Ortho.cpp:66`). */
+/** `#define cOrthoLeftMargin DIP2PIXEL(3)` (`packages/engine/layer1/Ortho.cpp:66`). */
 export const ORTHO_LEFT_MARGIN = 3;
-/** `#define cOrthoBottomMargin DIP2PIXEL(5)` (`layer1/Ortho.cpp:67`). */
+/** `#define cOrthoBottomMargin DIP2PIXEL(5)` (`packages/engine/layer1/Ortho.cpp:67`). */
 export const ORTHO_BOTTOM_MARGIN = 5;
 
 /* ------------------------------------------------------------------ *
@@ -87,8 +87,8 @@ export const ORTHO_BOTTOM_MARGIN = 5;
 /**
  * Every setting `OrthoDrawText` / `OrthoGetNumberOverlayLines` /
  * `OrthoAddOutput` / `OrthoFeedbackOut` consults, with its real index from
- * `layer1/SettingInfo.h`. The indices matter because `cmd.get_setting_updates()`
- * reports indices, not names (`modules/pymol/setting.py:440`).
+ * `packages/engine/layer1/SettingInfo.h`. The indices matter because `cmd.get_setting_updates()`
+ * reports indices, not names (`packages/engine/modules/pymol/setting.py:440`).
  */
 export const CONSOLE_SETTING_INDEX = {
   /** `REC_i(128, internal_feedback, global, 1)` — lines always shown. */
@@ -111,7 +111,7 @@ export const CONSOLE_SETTING_INDEX = {
 
 /**
  * Two settings that are not console settings but that `OrthoKey` branches on
- * (`layer1/Ortho.cpp:855-874`, `:986-999`), so the in-viewport prompt cannot
+ * (`packages/engine/layer1/Ortho.cpp:855-874`, `:986-999`), so the in-viewport prompt cannot
  * dispatch a key without them:
  *
  *   presentation — SPACE runs `cmd.scene('','next')` instead of `mtoggle`, and
@@ -142,7 +142,7 @@ export const CONSOLE_SETTING_NAMES = Object.keys(
 
 export type ConsoleSettings = Record<ConsoleSettingName, number>;
 
-/** The `layer1/SettingInfo.h` defaults, verbatim. */
+/** The `packages/engine/layer1/SettingInfo.h` defaults, verbatim. */
 export const CONSOLE_SETTING_DEFAULTS: ConsoleSettings = {
   internal_feedback: 1,
   wrap_output: 0,
@@ -169,7 +169,7 @@ export function consoleSettingByIndex(index: number): ConsoleSettingName | null 
  * ------------------------------------------------------------------ */
 
 /**
- * Port of `UtilStripANSIEscapes` (`layer0/Util.cpp:238-250`), character for
+ * Port of `UtilStripANSIEscapes` (`packages/engine/layer0/Util.cpp:238-250`), character for
  * character: an escape run is `ESC [` followed by bytes in `[0x20,0x40)` and
  * then exactly one more byte. Note the C loop consumes the terminating byte
  * unconditionally, so a truncated `"\x1b["` at end of string eats nothing else
@@ -399,7 +399,7 @@ function q6(v: number): number {
  * ------------------------------------------------------------------ */
 
 /**
- * Port of the wrapping loop in `OrthoAddOutput` (`layer1/Ortho.cpp:1080-1118`).
+ * Port of the wrapping loop in `OrthoAddOutput` (`packages/engine/layer1/Ortho.cpp:1080-1118`).
  *
  * `wrap` is what `SettingGetGlobal_b(cSetting_wrap_output)` returns, i.e. 0 or
  * 1 — see the file header. `\r`/`\n` always break a line. The

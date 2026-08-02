@@ -6,7 +6,7 @@
  * handler used to classify a dropped file, ask `dialogNeededFor` and then send
  * `load <path>` — and a `.pwg` classifies as `plain`, so it went straight
  * through to `cmd.load`, which EXECUTES it (measured in
- * `bridge/tests/test_wf_files.py`: a `.pwg` containing only the word `delete`
+ * `packages/bridge/tests/test_wf_files.py`: a `.pwg` containing only the word `delete`
  * deleted itself). A drag-and-drop from a web page is exactly how a hostile
  * `.pwg` would arrive.
  */

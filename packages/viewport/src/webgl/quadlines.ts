@@ -11,14 +11,14 @@
  * quadline.ts` is that shader; this file is the geometry and the material.
  *
  * THE WIDTH IS NOT THE SETTING. `RepMesh::render` draws with
- * `SceneGetDynamicLineWidth(info, I->Width)` (`layer2/RepMesh.cpp:535`, and
- * `layer1/CGOGL.cpp:1095` for the shader path), and `dynamic_width` is ON by
- * default (`layer1/SettingInfo.h:710`). The rasterised width is therefore
+ * `SceneGetDynamicLineWidth(info, I->Width)` (`packages/engine/layer2/RepMesh.cpp:535`, and
+ * `packages/engine/layer1/CGOGL.cpp:1095` for the shader path), and `dynamic_width` is ON by
+ * default (`packages/engine/layer1/SettingInfo.h:710`). The rasterised width is therefore
  *
  *     clamp(dynamic_width_factor / vertex_scale, min, max) * mesh_width
  *
  * with `vertex_scale` = model units per pixel at the origin of rotation
- * (`SceneGetScreenVertexScale`, `layer1/Scene.cpp:3667`). That is a CAMERA
+ * (`SceneGetScreenVertexScale`, `packages/engine/layer1/Scene.cpp:3667`). That is a CAMERA
  * quantity, so it cannot be baked into a cached geometry frame: the bridge
  * sends the raw setting and the factor is recomputed here on every draw, from
  * the projection matrix and the viewport, in `onBeforeRender`.
@@ -52,19 +52,19 @@ import { QUADLINE_FRAG, QUADLINE_VERT } from '../shaders/quadline';
 /** Floats per segment: v1[3], v2[3], rgba1[4], rgba2[4]. */
 export const QUADLINE_ITEM_SIZE = 14;
 
-/* `layer1/SettingInfo.h:711-713`. Global settings with no wire slot yet; the
+/* `packages/engine/layer1/SettingInfo.h:711-713`. Global settings with no wire slot yet; the
  * same treatment `FOG_START` and `DEFAULT_NONBONDED_SIZE` already get. */
 export const DYNAMIC_WIDTH_FACTOR = 0.06;
 export const DYNAMIC_WIDTH_MIN = 0.75;
 export const DYNAMIC_WIDTH_MAX = 2.5;
-/** `R_SMALL4` (`layer0/os_predef.h`), the floor `SceneGetScreenVertexScale` uses. */
+/** `R_SMALL4` (`packages/engine/layer0/os_predef.h`), the floor `SceneGetScreenVertexScale` uses. */
 const R_SMALL4 = 1e-4;
 
 /**
  * `SceneGetScreenVertexScale(G, nullptr)` — model units per pixel at the
  * origin of rotation — recovered from the projection matrix.
  *
- * `ratio = depth * GetFovWidth(G) / Scene->Height` (`layer1/Scene.cpp:3667`).
+ * `ratio = depth * GetFovWidth(G) / Scene->Height` (`packages/engine/layer1/Scene.cpp:3667`).
  *
  * ORTHO is exact: `projectionMatrix()` builds `m[5] = 1 / (|view[11]| *
  * fovWidth / 2)`, so `depth * fovWidth` is `2 / m[5]` with nothing assumed.
@@ -98,7 +98,7 @@ export function vertexScaleOf(p: ArrayLike<number>, heightPx: number): number {
 }
 
 /**
- * `SceneGetDynamicLineWidth` (`layer1/Scene.cpp:5416-5433`), verbatim.
+ * `SceneGetDynamicLineWidth` (`packages/engine/layer1/Scene.cpp:5416-5433`), verbatim.
  *
  * @param vertexScale model units per pixel
  * @param width the raw setting (`mesh_width`, `line_width`, ...)
@@ -158,7 +158,7 @@ export function quadLineRecords(
  * the perpendicular from `self - other`, which negates when the corner sits on
  * `v2`, so `(v2, +1)` lands on the far side from `(v1, +1)`. `trilines` has
  * exactly the same property and answers it by choosing the diagonal to match:
- * `trilinesBufferAddVertices` (`layer1/CGO.cpp:7479`) emits the uv codes
+ * `trilinesBufferAddVertices` (`packages/engine/layer1/CGO.cpp:7479`) emits the uv codes
  * `1,3,0` then `3,2,1`, i.e. `(A,+) (B,+) (A,-)` then `(B,+) (B,-) (A,+)`.
  * That is this index list, de-duplicated to four corners.
  *

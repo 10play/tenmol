@@ -5,7 +5,7 @@
  * The 25-float array below is a real `_cmd.get_view()` from this tree (1UBQ,
  * `orient`); the 18-float array is what `cmd.get_view()` returned for the same
  * camera, i.e. `r[0:3] + r[4:7] + r[8:11] + r[16:25]`
- * (`modules/pymol/viewing.py:731`). Both were captured with
+ * (`packages/engine/modules/pymol/viewing.py:731`). Both were captured with
  * `packages/viewport/tools/pull_geometry.py`.
  */
 

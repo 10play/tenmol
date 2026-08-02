@@ -1,7 +1,7 @@
 /**
  * The declarative menu-data renderer.
  *
- * `get_menudata` (`modules/pymol/_gui.py:55-58`) exists precisely so that the
+ * `get_menudata` (`packages/engine/modules/pymol/_gui.py:55-58`) exists precisely so that the
  * menu is toolkit-independent: Qt walks it in `pymol_qt_gui.py:353` and Tk in
  * `pmg_tk/skins/normal/__init__.py:1072`. This is the third consumer, and it
  * interprets the node kinds as DATA — a `check` is a check because the DATA
@@ -10,9 +10,9 @@
  *
  * WHAT CHANGED, and why it matters. The nodes are now the HARVESTED ones
  * (`features/menubar/generated/menudata.ts`, produced by
- * `bridge/tenmol_bridge/panels/menus.py` from the real `get_menudata`), not a
+ * `packages/bridge/tenmol_bridge/panels/menus.py` from the real `get_menudata`), not a
  * transcription of `_gui.py` living in this directory. A transcription can be
- * right and still rot; this cannot drift without `bridge/tests/test_menus.py`
+ * right and still rot; this cannot drift without `packages/bridge/tests/test_menus.py`
  * going red.
  *
  * Radio state is a comparison against the LIVE value, never a local selection:

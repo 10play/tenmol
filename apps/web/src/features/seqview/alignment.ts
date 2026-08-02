@@ -2,17 +2,17 @@
  * The alignment half of the sequence viewer, as pure functions.
  *
  * The BRIDGE owns the geometry: `panels/seqview.py::align_rows` is
- * `SeekerUpdate`'s second pass (`layer3/Seeker.cpp:1583-1793`) and it has
+ * `SeekerUpdate`'s second pass (`packages/engine/layer3/Seeker.cpp:1583-1793`) and it has
  * already put every column at the character offset its tag earns, and emitted
  * `row.fill` for the runs the C stores in `row->fill`. What is left on this
- * side is exactly what `CSeq::draw` does at paint time (`layer1/Seq.cpp:322-449`,
+ * side is exactly what `CSeq::draw` does at paint time (`packages/engine/layer1/Seq.cpp:322-449`,
  * `:488-504`): pick the colour for an unaligned column, and repeat
  * `seq_view_fill_char` across a fill run.
  */
 
 import type { SeqviewCell, SeqviewPayload } from '@tenmol/protocol';
 
-/** `average3f` (`layer0/Vector.h`) — the blend both dim modes use. */
+/** `average3f` (`packages/engine/layer0/Vector.h`) — the blend both dim modes use. */
 export function average3f(a: readonly number[], b: readonly number[]): number[] {
   return [0, 1, 2].map((i) => ((a[i] ?? 0) + (b[i] ?? 0)) * 0.5);
 }
@@ -26,7 +26,7 @@ export function rgbCss(triple: readonly number[] | undefined): string | undefine
 }
 
 /**
- * The 0..1 RGB a column is drawn in — `layer1/Seq.cpp:420-449`.
+ * The 0..1 RGB a column is drawn in — `packages/engine/layer1/Seq.cpp:420-449`.
  *
  * An unaligned column only deviates when `seq_view_unaligned_color` resolved to
  * a real index (it does NOT in mode 3 at the default, `:323-332`), and then:

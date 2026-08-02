@@ -1,7 +1,7 @@
 /**
  * Inventory row 76, option (b) — the client half.
  *
- * The bridge half is `bridge/tests/test_p10_rest.py`, which drives the REAL
+ * The bridge half is `packages/bridge/tests/test_p10_rest.py`, which drives the REAL
  * upstream `PmwMenuBar` in a subprocess and measures the JSON it produces. The
  * fixtures below are that JSON, copied from a run rather than invented:
  * `plugins.addmenuitem('My Tool|Run', fn)` plus a `-` separator plus a
