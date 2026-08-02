@@ -1,23 +1,19 @@
-# tenmol web client — docs index
+# docs
 
-This directory holds the design record for replacing PyMOL's Qt front-end with a React web app,
-while keeping the PyMOL C++/Python engine in this repository unchanged.
+What is in this directory, and what each file is for.
 
-**Deployment model:** local desktop replacement. One PyMOL process, one browser client, on
-`localhost`, with full filesystem access. Not a multi-tenant server.
-
-## Read in this order
-
-| Doc                                                            | What it is                                                                                                                      |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| [`02-completeness-critique.md`](./02-completeness-critique.md) | **Read first.** Adversarial review of the two synthesis docs. 8 blockers (A1–A8), 9 majors, 6 minors, all cited to `file:line`. |
-| [`00-parity-inventory.md`](./00-parity-inventory.md)           | 351 feature rows — the definition of done. Every Qt-GUI affordance, its source, and the backend symbol behind it.               |
-| [`01-architecture.md`](./01-architecture.md)                   | Proposed monorepo, wire protocol, work-package split. Note: §6 predates this root tooling — see "Deviations" below.             |
-| [`spikes/00-build.md`](./spikes/00-build.md)                   | Executed build spike (macOS arm64). PyMOL 3.2.0a0 builds and imports headless. §6 has three findings that constrain the bridge. |
+| File                                                       | What it is                                                                                                                                                                                                                         |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`architecture.md`](./architecture.md)               | **How the system works.** Process and threads, boot order, offscreen GL, the wire, the capability policy, change detection, the two render modes, picking, and what this fork changes in the engine. Start here.                   |
+| [`build-and-tooling.md`](./build-and-tooling.md)           | How the PyMOL engine compiles, what `scripts/bootstrap.sh` does and why, the failure catalogue, the JS toolchain and CI.                                                                                                           |
+| [`feature-parity.md`](./feature-parity.md)       | The definition of done: one checkbox per Qt-GUI affordance, each citing the upstream `file:line` it came from and the backend symbol behind it. `node scripts/parity.mjs` reads those checkboxes and scores them — 365 rows today. |
+| [`code-ownership.md`](./code-ownership.md) | Machine-readable input to `scripts/ownership.mjs`, and nothing else. The historical file-ownership partition between the parallel work packages that built the client. Keep the name: the path is hardcoded in the script.         |
 
 ## Area maps
 
-Each map is a grounded inventory of one Qt/Tk surface, produced before the synthesis docs.
+Twelve grounded inventories of the Qt/Tk front-end, each read out of the upstream source before any
+of it was replaced. They are the requirements spec behind the parity inventory: when a row is
+terse, the map behind it has the exact strings, the exact pixel maths, and every argument.
 
 - [`qt-main-window.md`](./qt-main-window.md) — `pmg_qt` main window, menus, docks, toolbars
 - [`internal-gui.md`](./internal-gui.md) — the OpenGL-drawn internal GUI (Ortho, object panel, popups)
@@ -30,99 +26,27 @@ Each map is a grounded inventory of one Qt/Tk surface, produced before the synth
 - [`builder.md`](./builder.md) — the molecular builder / editor
 - [`wizards.md`](./wizards.md) — the wizard framework and every bundled wizard
 - [`file-io.md`](./file-io.md) — load/save/export filters, recent files, file dialogs
-- [`build-and-tooling.md`](./build-and-tooling.md) — how PyMOL builds, and what the JS toolchain must do
+- [`build-and-tooling.md`](./build-and-tooling.md) — doubles as the twelfth map
 
-## Repository layout
+## `spikes/`
 
-```
-tenmol/
-├─ packages/engine/layer0/ … packages/engine/layer5/  packages/engine/modules/  packages/engine/data/  packages/engine/ov/  setup.py   # upstream PyMOL — do not modify
-├─ apps/web/                                           # @tenmol/web — the React app (Vite)
-├─ packages/                                           # @tenmol/protocol, client, ui, viewport
-├─ packages/bridge/                                             # Python bridge process (PyMOL side)
-├─ scripts/dev-bridge.sh                               # starts the bridge for `pnpm dev`
-└─ docs/                                     # this directory
-```
+Executed experiments, with the numbers they produced. The design decisions in
+`architecture.md` cite these, and source comments cite them by number — they are the evidence,
+so they are kept as written rather than updated.
 
-Root tooling (owned here): `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `.npmrc`,
-`.prettierrc`, `eslint.config.js`.
+## `screenshots/`
 
-## Running the stack
+Captured viewport output, referenced from the specs that produced it.
 
-Requirements: **Node ≥ 22**, **pnpm 9** (`packageManager` pins `pnpm@9.15.4`), and a Python
-interpreter with this tree's PyMOL installed into it (see `spikes/00-build.md` §3–4 for the exact
-build that was verified on macOS arm64).
+## Elsewhere in the repo
 
-```bash
-pnpm install          # once, from the repo root
-pnpm dev              # bridge + web app together (concurrently, --kill-others)
-```
+Each package documents its own internals; those READMEs are more detailed than anything here.
 
-`pnpm dev` runs two processes:
-
-| Process  | Command                         | Notes                                                                              |
-| -------- | ------------------------------- | ---------------------------------------------------------------------------------- |
-| `bridge` | `bash scripts/dev-bridge.sh`    | Python; owns the single PyMOL process. Serves `ws://127.0.0.1:8765/ws` by default. |
-| `web`    | `pnpm --filter @tenmol/web dev` | Vite dev server, `http://localhost:5173`.                                          |
-
-`scripts/dev-bridge.sh` is owned by the bridge package, takes any `python -m tenmol_bridge` flag,
-and looks for its interpreter in `$TENMOL_VENV`, then `packages/bridge/.venv`, then `.venv`. Build PyMOL
-into that venv first.
-
-Either process exiting tears down the other (`--kill-others`), so you never debug a UI talking to
-a dead engine. Ctrl-C tears down both. To run just one side: `pnpm dev:bridge` or `pnpm dev:web`.
-
-Other root scripts:
-
-| Script           | Does                                                              |
-| ---------------- | ----------------------------------------------------------------- |
-| `pnpm build`     | `pnpm -r run build` across every workspace project                |
-| `pnpm typecheck` | `pnpm -r run typecheck`                                           |
-| `pnpm lint`      | ESLint 9 flat config over `apps/` + `packages/` only              |
-| `pnpm format`    | Prettier over root tooling, `apps/`, `packages/`, and this README |
-| `pnpm clean`     | Removes `dist/`, `.turbo/`, `*.tsbuildinfo`, and `node_modules/`  |
-
-The Python side (bridge, tests) is deliberately **not** a pnpm workspace project; it is driven by
-`scripts/dev-bridge.sh` and its own `pyproject.toml`.
-
-## Conventions the root tooling enforces
-
-- **The upstream PyMOL tree is never linted or formatted.** `eslint.config.js` ignores
-  `packages/engine/layer0/`–`packages/engine/layer5/`, `packages/engine/modules/`, `packages/engine/data/`, `packages/engine/ov/`, `packages/engine/contrib/`, `packages/engine/examples/`, `packages/engine/include/`, `packages/engine/test/`,
-  `packages/engine/testing/`, `build/`, `packages/engine/_custom_build/`, `docs/`; the Prettier scripts name their targets
-  explicitly instead of using `.`. A `pnpm format` must never produce a diff in a PyMOL source file.
-- **Path aliases resolve to package sources**, not to build output:
-  `@tenmol/protocol`, `@tenmol/client`, `@tenmol/ui`, `@tenmol/viewport` → `packages/*/src`
-  (see `tsconfig.base.json`). Subpath imports (`@tenmol/protocol/topics`) work too.
-- **`tsconfig.base.json` does not set `composite`.** Each package that wants project references
-  opts in locally (`"composite": true` + `rootDir`/`outDir` + `references`). Setting `composite`
-  in the shared base makes any app that imports package _sources_ through a path alias fail with
-  `TS6307: File … is not listed within the file list of project …`; this was reproduced and is why
-  the flag lives in the packages instead. `declaration`, `declarationMap` and `incremental` are in
-  the base, so opting in is a three-line change.
-- **Strictness:** `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`,
-  `noFallthroughCasesInSwitch`, `verbatimModuleSyntax`, `isolatedModules`. `noUnusedLocals` /
-  `noUnusedParameters` are deliberately left to ESLint (as warnings) so a work-in-progress file
-  still typechecks.
-
-## Deviations from `01-architecture.md` §6
-
-`01-architecture.md` was written before this root existed; where they disagree, the files win.
-
-| `01` §6                              | Actual                                                        |
-| ------------------------------------ | ------------------------------------------------------------- |
-| pnpm root at `webclient/`            | pnpm root at the repo root                                    |
-| `@pymol/*` package scope             | `@tenmol/*`                                                   |
-| `pnpm@10.4.1`, node `>=20.11`        | `pnpm@9.15.4`, node `>=22` (what is installed here)           |
-| `turbo run build` / `turbo.json`     | `pnpm -r run build` — no Turborepo dependency                 |
-| workspace globs include `tools/*`    | `apps/*` and `packages/*` only (add `tools/*` when it exists) |
-| `composite: true` in the shared base | opted into per package (see above)                            |
-| `scripts/dev.mjs`                    | `concurrently` + `scripts/dev-bridge.sh`                      |
-
-## Open blockers that this tooling does not solve
-
-From `02-completeness-critique.md`, still unresolved and owned by the packages/bridge/viewport work:
-A1 (the draw/refresh pump), A2 (`ModalDraw` deadlock), A3 (sequence-viewer model source),
-A4 (`pymol.glutThread` must be set or ordering is fiction), A5 (server- vs client-side picking),
-A6 (the dispatcher deny-list contradicts required features). `spikes/00-build.md` §6.1 adds a hard
-constraint: `_cmd._draw()` **segfaults** without a GL context, and takes the process with it.
+|                               |                                                        |
+| ----------------------------- | ------------------------------------------------------ |
+| `packages/bridge/README.md`   | the Python bridge: threads, the pump, dispatch, policy |
+| `packages/protocol/README.md` | the wire contract, frame by frame                      |
+| `packages/stores/README.md`   | client state                                           |
+| `packages/viewport/README.md` | the canvas and both render modes                       |
+| `apps/web/README.md`          | the app shell and window layout                        |
+| `apps/web/e2e/README.md`      | the end-to-end suite and how to run one spec           |

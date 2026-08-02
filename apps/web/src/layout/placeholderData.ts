@@ -124,7 +124,7 @@ export const PLACEHOLDER_PANEL: PanelRow[] = [
  * `CButMode::Code` (packages/engine/layer1/ButMode.cpp:497-520).
  *
  * TODO(butmode): needs `ButModeGet` / `ButModeTranslate` exposed to Python -- see
- * docs/00-parity-inventory.md §14 items 7/8. Static until then.
+ * docs/feature-parity.md §14 items 7/8. Static until then.
  */
 export interface MouseModeState {
   /** setting `button_mode_name` */

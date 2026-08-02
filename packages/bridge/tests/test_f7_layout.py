@@ -1,6 +1,6 @@
 """Parity area 2/5 — the internal GUI block column, and setting side effects.
 
-Inventory rows pinned here (``docs/00-parity-inventory.md``):
+Inventory rows pinned here (``docs/feature-parity.md``):
 
 * **88** Internal GUI layout column — Executive / Wizard / ButMode / Control,
   ``packages/engine/layer1/Ortho.cpp:2261-2340``.

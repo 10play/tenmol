@@ -1,6 +1,6 @@
 """Parity area 7 — the camera command surface, and WHEN it lands.
 
-Inventory row ``00-parity-inventory.md:337``: zoom / center / orient / origin /
+Inventory row ``feature-parity.md:337``: zoom / center / orient / origin /
 clip / turn / move / reset / viewport / stereo / full_screen.
 
 ``test_wf_camera.py`` already pins what each command *does* to the 18-float view

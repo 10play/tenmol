@@ -1,22 +1,25 @@
-# File I/O — feature map for the React web client
+# File I/O
 
-Area owner: `file-io`
-Scope: everything the desktop PyMOL GUI does with the filesystem and the network:
-open/load, format-specific import dialogs, save/export, sessions (.pse/.psw), partial
-session merge, recent files, log files and script execution, image export, movie export,
-and `fetch` from the PDB.
+Everything the desktop PyMOL GUI does with the filesystem and the network: open/load,
+format-specific import dialogs, save/export, sessions (`.pse`/`.psw`), partial session merge,
+recent files, log files and script execution, image export, movie export, and `fetch` from the PDB.
+All references are `path:line` in `packages/engine/`, which is unmodified upstream. Anything that
+could not be verified is marked **UNVERIFIED**.
 
-All references below are `path:line` in this repo, read directly. Anything I could not
-verify is marked **UNVERIFIED**.
+**Where the port stands.** `packages/bridge/tenmol_bridge/panels/files.py` serves the whole
+surface as `cmd.tenmol_files.<method>`, typed in `packages/protocol/src/topics/files.ts` and
+called from `apps/web/src/features/files/filesApi.ts`. The dialogs are
+`LoadDialogs.tsx`, `SaveDialogs.tsx`, `ImageDialogs.tsx`, `ToolsDialogs.tsx`, `PathPicker.tsx`,
+`FileDropTarget.tsx`, `globalDrop.ts` and `PluginDialogHost.tsx` in the same directory.
 
 ---
 
-## 0. Executive recommendation (the coherent model)
+## 0. The model
 
-> **Server-managed working directory + a React-rendered server-side path picker, with
-> browser upload/download as opt-in escape hatches. No native OS dialogs.**
+**Server-managed working directory, a client-rendered server-side path picker, and
+upload/download as opt-in escape hatches. No native OS dialogs.**
 
-Rationale, grounded in how the code actually works:
+Grounded in how the code actually works:
 
 1. Every load/save path in PyMOL is a **real server-side path string**. `cmd.load`
    calls `_self.exp_path(filename)` (`packages/engine/modules/pymol/importing.py:751`) which expands
@@ -50,11 +53,11 @@ Concretely:
 | Drop a file from the OS onto the browser | Browser gives us a `File` (no path). Upload to `POST /fs/upload` → server writes into the working dir (or a `~/.pymol/uploads` scratch dir) → then run the normal `load_dialog` flow on the resulting path. Mirrors `pymol_gl_widget.py:262-270`. |
 | "I want the file on my laptop, not on the server" | `GET /fs/download?path=…` streaming any server file the user just wrote (PNG, PSE, PDB, MP4). Optional convenience; the primary flow is still "write to server path". |
 | Working directory | `cmd.cd` / `cmd.pwd` (`packages/engine/modules/pymol/externing.py:32,56`) are the source of truth; React shows it in a status bar and the picker starts there. "File Browser" menu item (`packages/engine/modules/pymol/_gui.py:121`) becomes "reveal in picker", not `open .`. |
-| Plugin dialogs | Plugins import `tkinter.filedialog`, which is shimmed to Qt (`packages/engine/modules/pmg_qt/mimic_tk.py:36-90,108`). The web bridge must provide the same *blocking* shim backed by a round-trip to the React picker, or every legacy plugin breaks. |
+| Plugin dialogs | Plugins import `tkinter.filedialog`, which upstream shims to Qt (`packages/engine/modules/pmg_qt/mimic_tk.py:36-90,108`). The bridge provides the same *blocking* shim backed by a round trip to the client picker (`panels/files.py::install_tk_filedialog`), so legacy plugins keep working. |
 
 ---
 
-## 1. Menu inventory (File menu) — must be reproduced 1:1
+## 1. Menu inventory (File menu)
 
 Source: `packages/engine/modules/pymol/_gui.py:80-133` (toolkit-independent menu data, consumed by
 `packages/engine/modules/pmg_qt/pymol_qt_gui.py:295-357`).
@@ -219,7 +222,7 @@ Behaviour worth preserving:
 `vis`, `moe`, `phypo`. Everything else goes to `pymol.internal._load`
 (`packages/engine/modules/pymol/internal.py:346-386`) and thence to C.
 
-### 3.5 Other load entry points (API surface the bridge must expose)
+### 3.5 Other load entry points
 | API | Ref | Note |
 | --- | --- | --- |
 | `cmd.loadall(pattern, group=…)` | `importing.py:1513-1542` | glob on the **server**; needs `fs.glob` in the picker |
@@ -613,7 +616,7 @@ magic bytes. `load_dialog` deliberately skips the `initialdir` update for URLs
 
 ---
 
-## 9. Web behaviour decision table
+## 9. Behaviour, per menu entry
 
 | Operation | Mechanism in the web app |
 | --- | --- |
@@ -633,39 +636,50 @@ magic bytes. `load_dialog` deliberately skips the `initialdir` update for URLs
 | Run Script… | **Server path picker**; note it also `cd`s. Uploading a script is possible but changes `cd` semantics — warn |
 | Working Directory ▸ Change | Server directory picker → `cmd.cd` |
 | Working Directory ▸ File Browser | Replace `cmd.system('open .')` with "reveal in the in-app picker" (a browser cannot open Finder) |
-| New PyMOL Window | No analogue (single process, single client). Replace with a disabled/hidden item or "open a second browser tab" that is explicitly read-only. **Decision needed** |
+| New PyMOL Window | No analogue (single process, single client); the item is not offered |
 | Plugin `tkinter.filedialog` calls | Bridge-side shim that blocks the calling thread while React shows the picker (same contract as `mimic_tk._qtFileDialog`, `packages/engine/modules/pmg_qt/mimic_tk.py:36-90`) |
 
-### Proposed bridge FS API (new; none of this exists today)
-`fs.cwd()`, `fs.cd(path)`, `fs.home()`, `fs.list(path, {globs})`, `fs.stat(path)`,
-`fs.mkdir(path)`, `fs.exists(path)`, `fs.initialdir get/set`,
-`POST /fs/upload` (multipart → server path), `GET /fs/download?path=`,
-`recent.list()`, `recent.add(path)`.
-The only pre-existing directory-ish primitives are `cmd.ls` (prints only,
-`externing.py:73-110`) and `cmd.system`; neither returns structured data, so a new
-service module is required. `pymol.pymolhttpd.PymolHttpd`
-(`packages/engine/modules/pymol/pymolhttpd.py:441-520`) already serves a document root and JSON-wrapped
-`cmd` calls and is worth reading as prior art, but it is a separate legacy server.
+### The bridge FS API
+
+None of this existed upstream: the only directory-ish primitives are `cmd.ls` (prints only,
+`externing.py:73-110`) and `cmd.system`, and neither returns structured data.
+`packages/bridge/tenmol_bridge/panels/files.py` installs a `cmd.tenmol_files` namespace, so every
+method is an ordinary `{t:'call', fn:'cmd.tenmol_files.<method>'}`:
+
+`pwd`, `chdir`, `home`, `expand`, `initialdir` / `set_initialdir`, `browse`, `stat`, `mkdir`,
+`glob_paths`, `places`, `recent` / `recent_add`, `classify`, `note_open`, `plan_open`,
+`load_formats`, `load_capabilities`, `save_formats`, `unavailable`, `refused`, plus the
+per-format dialog descriptors (`traj_dialog_info`, `map_dialog_info`, `aln_dialog_info`,
+`mae_dialog_info`, `mtz_dialog_info`, `map_generate_info`) and `produce` /
+`multifilenamegen` for movie export. Bulk bytes ride `POST /upload` and `GET /blob/{id}` on the
+HTTP side rather than the WebSocket.
+
+`pymol.pymolhttpd.PymolHttpd` (`packages/engine/modules/pymol/pymolhttpd.py:441-520`) serves a
+document root and JSON-wrapped `cmd` calls and was read as prior art; it is a separate legacy
+server and is not used (see `docs/cmd-api-rpc.md` §5).
 
 ---
 
-## 10. Risks
+## 10. Constraints this area lives under
 
 1. **`.pwg` files launch a second HTTP server** and can `launch <module>` arbitrary
    Python, open a browser, and even `os.unlink` themselves
-   (`importing.py:516-615`). In a web deployment this is a remote-code-execution shaped
-   feature; recommend refusing `.pwg` in the web client.
+   (`importing.py:516-615`). `.pwg` is refused (`panels/files.py::refused`).
 2. **Session security wizard**: `.pse` files with movie commands trigger a modal
-   accept/decline flow (`importing.py:178-180`, `wizard/security.py`). The React client
-   must implement it or sessions silently execute embedded commands.
+   accept/decline flow (`importing.py:178-180`, `wizard/security.py`). It is a normal wizard,
+   so it renders through the generic wizard protocol (`docs/wizards.md` §7.24); without it,
+   sessions would silently execute embedded commands.
 3. **`run`/`@`/`system`/`cd` are full local code execution.** Acceptable for a local
-   desktop replacement, catastrophic if the bridge ever binds to a non-loopback
-   interface. Bind to `127.0.0.1` and require a token.
+   desktop replacement, catastrophic if the bridge ever binds to a non-loopback interface —
+   which is why the transport is loopback + token + `Origin` allow-list
+   (`docs/cmd-api-rpc.md` §8.1).
 4. **Movie/mpng and log files are inherently server-side**; any UX that implies "save to
    my Downloads folder" will be wrong for them.
 5. **Blocking dialogs**: `ask_partial` uses `exec()` (`file_dialogs.py:88`) and the
-   tkinter shim is blocking. The bridge must support request/response round-trips that
-   suspend a Python thread without deadlocking the `cmd` lock (`_self.lockcm`).
+   `tkinter.filedialog` shim is blocking. `panels/files.py::DialogBroker` suspends the calling
+   Python thread on a round trip without deadlocking the `cmd` lock (`_self.lockcm`), and
+   `install_tk_filedialog` puts the same contract behind `mimic_tk._qtFileDialog`'s API so legacy
+   plugins keep working.
 6. **Formats that don't work in this build**: `mae` load, `load_mtz`, `vis`, `moe`,
    `phypo` all raise `IncentiveOnlyException`
    (`importing.py:31-33,1620,1641-1643,1511`); `.mtl` export raises
@@ -676,15 +690,15 @@ service module is required. `pymol.pymolhttpd.PymolHttpd`
    `file_autoload_mtz` (`_gui.py:13`, no implementation), unused `url` in
    `file_save_aln` (`file_dialogs.py:851`).
 8. **`new_window`** spawns a new OS process (`_gui.py:41-53`) and is reachable from the
-   File menu *and* from the partial-session dialog (`file_dialogs.py:96`). One backend
-   process ⇒ this path needs an explicit product decision.
+   File menu *and* from the partial-session dialog (`file_dialogs.py:96`). One backend process
+   means that path is not offered.
 9. **Encoder availability** (`ffmpeg`, `mpeg_encode`, `convert`) is probed with
-   `shutil.which` on the server (`movie.py:824-844`); the React dialog must query the
-   server for capabilities instead of assuming.
+   `shutil.which` on the server (`movie.py:824-844`), so the export dialog asks the server for
+   capabilities rather than assuming (`cmd.get_movie_encoders`).
 10. **Large transfers**: `.pse` of a big system, CCP4 maps and MP4s are tens to hundreds
-    of MB. Downloads must stream, not go through the WebSocket JSON channel.
+    of MB, so they ride `/blob` and `/upload` rather than the WebSocket JSON channel.
 11. **`cmd.save` throws on unknown extensions** (`exporting.py:841-843`) despite the
-    docstring's PDB-fallback claim — validate the extension client-side.
+    docstring's PDB-fallback claim, so the extension is validated before the call.
 12. **Path encoding**: `cmd.as_pathstr`/`exp_path` (`cmd.py:112-125`) do Windows-specific
-    decoding and `$VAR`/`~` expansion. The React picker must send raw strings and let the
-    server expand, not pre-resolve.
+    decoding and `$VAR`/`~` expansion, so the picker sends raw strings and lets the server expand
+    them (`cmd.tenmol_files.expand`) rather than pre-resolving.

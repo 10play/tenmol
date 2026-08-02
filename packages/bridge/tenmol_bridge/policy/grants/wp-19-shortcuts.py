@@ -1,6 +1,6 @@
 """WP-19 (keyboard shortcuts) — persisting the shortcut table.
 
-`00-parity-inventory.md` row "Keyboard Shortcut Menu: create / delete / reset /
+`feature-parity.md` row "Keyboard Shortcut Menu: create / delete / reset /
 reset-all / save" ends in a Save button. Qt's is
 `shortcut_menu_gui.py` -> `pymol.save_shortcut.save_shortcuts(dict)`, which
 writes `~/.pymol/shortcuts_save.json`; `load_and_set` reads it back at startup

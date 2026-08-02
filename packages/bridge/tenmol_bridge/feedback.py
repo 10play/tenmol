@@ -16,12 +16,12 @@ It also returns ``None`` (not ``[]``) when ``lock_attempt`` fails
 TODO(spike-02): does a headless bridge get ANY feedback?
 -------------------------------------------------------
 ``OrthoFeedbackIn`` is gated on ``G->Option->pmgui`` (``packages/engine/layer1/Ortho.cpp:493-497``)
-and ``pmgui = !no_gui`` (``packages/engine/layer1/P.cpp:1820``).  ``01-architecture.md:38-49``
-and ``02-completeness-critique.md`` §A5/blockers flag this as the reason the web
+and ``pmgui = !no_gui`` (``packages/engine/layer1/P.cpp:1820``).  ``architecture.md:38-49``
+and ``docs/spikes/feedback.md`` records the measurement behind this: the web
 console could be permanently blank.
 
 Measured on this machine (darwin/arm64, PyMOL 3.2.0a0 from
-``docs/spikes/00-build.md``'s venv), with ``pymol2.SingletonPyMOL``
+``docs/spikes/build.md``'s venv), with ``pymol2.SingletonPyMOL``
 and default options (``pymol.invocation.options.no_gui == 0`` => ``pmgui == 1``):
 ``cmd._get_feedback()`` returned 22 lines including the splash banner and the
 ``PyMOL>print('hello from do')`` command echo.  So feedback DOES flow in the

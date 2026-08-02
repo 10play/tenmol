@@ -2,7 +2,7 @@
 /**
  * tenmol ownership lint (WP-00 (f) stub; WP-27 owns the CI-grade version).
  *
- * docs/03-implementation-plan.md section 6 is the machine-readable
+ * docs/code-ownership.md section 6 is the machine-readable
  * source of truth for file ownership: every work package lists the paths it
  * owns exclusively, and "a WP that needs a change elsewhere reports it, it does
  * not make it" (section 5.1, rule 1). This script parses that section and fails
@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 
 // The repo root: `scripts/` sits directly under it.
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
-const PLAN = join(REPO, 'docs', '03-implementation-plan.md');
+const PLAN = join(REPO, 'docs', 'code-ownership.md');
 
 // ---------------------------------------------------------------------------
 // argv

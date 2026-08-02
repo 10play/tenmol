@@ -203,7 +203,7 @@ export function viewChanged(a: ViewMatrix | null, b: ViewMatrix | null, eps = 1e
 /* ==========================================================================
  * Camera ANIMATION — when the backend camera actually arrives.
  *
- * `00-parity-inventory.md:337`, measured over the socket in
+ * `feature-parity.md:337`, measured over the socket in
  * `packages/bridge/tests/test_f7_camera.py`. Everything below is the client-side half of
  * those measurements; none of it is guesswork.
  *

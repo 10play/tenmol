@@ -69,7 +69,7 @@ export const viewActions = {
    * `animate` defaults to -1, which is PyMOL's own default: the camera sweeps
    * for `animation_duration` (0.75 s) when `animation` is on, and jumps when it
    * is off. The animation runs SERVER-SIDE — the client must not tween as well
-   * or the two interpolations fight (`00-parity-inventory.md:330`).
+   * or the two interpolations fight (`feature-parity.md:330`).
    */
   recall: (key: string, animate = -1) => view([key, 'recall'], { animate }),
   /** Ctrl-click / rapid browse: no sweep whatever the settings say. */

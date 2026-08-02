@@ -1,10 +1,41 @@
 # Spike 06 — The C++ geometry accessor (`_cmd.web_get_rep_geometry`)
 
-**Status: IMPLEMENTED AND VERIFIED.** Plan `03-implementation-plan.md` §4 tasks 1 and 2 are done.
+**Status: IMPLEMENTED AND VERIFIED.** Plan `code-ownership.md` §4 tasks 1 and 2 are done.
 The product owner moved Mode G onto the critical path; this is the C++ that makes it possible.
 
 Every number and transcript below was produced on this machine by running the scripts named in §9.
 Nothing is inferred from source reading alone.
+
+> ## STATUS — re-verified on 2026-08-02
+>
+> **§7 is the live contract and is unchanged.** `_cmd.web_get_rep_geometry(_self._COb, object,
+> state, rep, update=1)`, the six-value `status` vocabulary, the `object|rep|state` cache key and
+> the `kind` payload shapes are exactly what `packages/bridge/tenmol_bridge/render/modeg.py`
+> consumes today — that module names this spike in its own docstring. **§5's fidelity numbers
+> (10,472/10,472 and 6,454/6,454 triangles, max delta ~1.2e-5 Å against `get_vrml(2)`) and §6's
+> speed-ups are the reason Mode G exists and have not been re-litigated.**
+>
+> **§0 counts are historical.** The file is **2,660 lines**, not 1,451, and `Cmd.cpp` now carries
+> **10** guarded lines in 2 blocks, not 7 — spike 08 added `web_get_versions` and
+> `web_resolve_pick` to the same two sentinel regions this spike created.
+>
+> **§10's gap list is largely CLOSED, by spike 08 and by the wave after it.** Read
+> [`08-native-changes.md`](./08-native-changes.md) §4–§5 before acting on any of it:
+>
+> | §10 item | today |
+> | --- | --- |
+> | 1. `labels` unsupported | **still true, and deliberate** — a label is text plus a font stack, not geometry (08 §5.3). Mode P renders labels. |
+> | 2. `slice`, `volume`, `callback` unsupported | **still true, and deliberate** (08 §5.3): all three are a texture, not vertices. |
+> | 2. `cell`, `cgo`, `dashes`, `angles`, `dihedrals` unsupported | **CLOSED** (08 §5.1). Plus `extent`, which this spike does not list at all. |
+> | 3. Non-molecular objects unsupported | **PARTLY CLOSED.** `ObjectCGO` and `ObjectMesh` (isomesh/isodot) are both served now; `ObjectSurface` and `ObjectMap` are not. |
+> | 4. Pick colours unshippable | **still true, and it stopped mattering** — 08 §3 proved the `(atom index, bond)` pair resolves a pick client-side **exactly**: 18/18 on spheres, 15/15 on surface, against a real GL pick. |
+> | 5. No dirty tracking | **CLOSED** — `_cmd.web_get_versions`, 1.5 µs per idle poll (08 §2). |
+> | 6. `CGO_ALPHA_TRIANGLE` counted, not decoded | unchanged, and it has still never appeared in a measured rep. |
+>
+> §8.1's merge-check instruction still holds but the script is gone: run
+> `packages/bridge/.venv/bin/python -m pytest packages/bridge/tests -q` instead, and if any rep
+> reports `layout-mismatch`, re-diff that struct against `namespace mirror`. The nine mirrors in
+> §8.1's table are all still present; spike 08 added a tenth, `mirror::RepDistLines`.
 
 ---
 
@@ -149,7 +180,7 @@ the bridge must call it from the engine thread with the API lock held (§7).
 
 ### 3.1 Empirically: the payload is byte-identical before and after 30 real GL frames
 
-Run on the headless CGL + FBO context from `spikes/04-picking.md` §3 (`GL: ('Apple', 'Apple M4 Max',
+Run on the headless CGL + FBO context from `spikes/picking.md` §3 (`GL: ('Apple', 'Apple M4 Max',
 '2.1 Metal - 89.4')`, `use_shaders=on`, so the reps genuinely were converted to VBOs):
 
 ```
@@ -504,7 +535,7 @@ own `packages/engine/layer2/`.
 
 ## 9. Reproducing
 
-Build (identical to `spikes/00-build.md` §3, no additional flags):
+Build (identical to `spikes/build.md` §3, no additional flags):
 
 ```bash
 SCRATCH=/private/tmp/claude-501/-Users-amirangel-Documents-GitHub-tenmol/177b7067-f921-4a11-839c-84d8a16f6415/scratchpad
@@ -537,7 +568,7 @@ FAILED (failures=1, errors=1, skipped=276)
 ======================== 57 passed, 31 skipped in 0.21s ========================
 ```
 
-Identical to the `spikes/00-build.md` §0 baseline (`testglTF` needs an external `collada2gltf`
+Identical to the `spikes/build.md` §0 baseline (`testglTF` needs an external `collada2gltf`
 binary; `symop_py` is a pre-existing upstream failure). `git status --porcelain` shows only
 `M packages/engine/layer4/Cmd.cpp` and `?? packages/engine/layer4/CmdWebGeometry.cpp` from this work package.
 

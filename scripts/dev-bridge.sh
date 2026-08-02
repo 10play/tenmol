@@ -13,7 +13,7 @@
 #   3. <repo>/.venv
 #
 # If there is no venv, run `bash scripts/bootstrap.sh` once. It builds PyMOL
-# from this tree (docs/spikes/00-build.md section 3) into packages/bridge/.venv.
+# from this tree (docs/spikes/build.md section 3) into packages/bridge/.venv.
 
 set -euo pipefail
 

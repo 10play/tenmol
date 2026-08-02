@@ -83,7 +83,7 @@ confusingly.  We detect it up front and raise ``NoOffscreenGL`` with
    only OpenGL 1.1 and everything else comes from ``wglGetProcAddress``.
 
    The manual Windows acceptance procedure is
-   ``docs/spikes/07-cross-platform-gl.md`` §4.
+   ``docs/spikes/cross-platform-gl.md`` §4.
 """
 
 from __future__ import annotations

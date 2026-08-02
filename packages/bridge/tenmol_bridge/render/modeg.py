@@ -1,7 +1,7 @@
 """Mode G: serve ``_cmd.web_get_rep_geometry`` over the wire.
 
 The C++ accessor landed (WP-26, ``packages/engine/layer4/CmdWebGeometry.cpp``, documented in
-``docs/spikes/06-geometry-accessor.md``).  This module is the *only*
+``docs/spikes/geometry-accessor.md``).  This module is the *only*
 thing between it and ``packages/protocol``: it takes the accessor's Python dict
 and re-frames it as an ``IndexedMeshHeader`` or a ``CgoDrawArraysHeader`` binary
 frame that ``decodeBinaryFrame`` / ``geometryFrameProblems`` accept, keyed per

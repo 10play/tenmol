@@ -1,9 +1,9 @@
 """The capability policy (plan §A6).  A grant policy, NOT a deny-list.
 
-``01-architecture.md:357-364`` proposed denying ``system``, ``run``, ``spawn``,
+``architecture.md:357-364`` proposed denying ``system``, ``run``, ``spawn``,
 ``quit``, ``_quit``, ``cd``, everything starting with ``_``, and declaring
 ``t:'do'`` console-only.  That is **deleted**.  Each of those denials removed a
-feature ``00-parity-inventory.md`` requires:
+feature ``feature-parity.md`` requires:
 
 =========================  ====================================================
 denied                     feature it broke
@@ -172,7 +172,7 @@ DANGEROUS: Dict[str, str] = {
 CONFIRM_ONCE: FrozenSet[str] = frozenset({"system"})
 
 #: Executed by the bridge, not by PyMOL.  ``cmd.quit`` would take the C
-#: ``exit()`` path (``spikes/00-build.md`` §6.2), skipping ``atexit`` and
+#: ``exit()`` path (``spikes/build.md`` §6.2), skipping ``atexit`` and
 #: ``Py_FinalizeEx`` and killing the server with the browser still attached.
 ROUTED: FrozenSet[str] = frozenset({"quit", "_quit"})
 

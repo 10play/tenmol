@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 # NOTE: "pymol" is deliberately NOT a dependency. It is built from this repo
-# (docs/spikes/00-build.md) and installed into the same venv; pip
+# (docs/spikes/build.md) and installed into the same venv; pip
 # cannot resolve it from an index. The bridge degrades gracefully when it is
 # missing so the front-end stays developable - see README.md.
 

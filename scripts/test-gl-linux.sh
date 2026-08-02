@@ -17,7 +17,7 @@
 # On Linux it can run directly against packages/bridge/.venv. Anywhere else (this was
 # developed on macOS) it runs the whole thing inside a Debian container with
 # Mesa llvmpipe, which is also exactly what .github/workflows/webclient-gl-linux.yml
-# does on ubuntu-latest without the container.
+# does on the ubuntu runners without the container.
 #
 # Usage:
 #   bash scripts/test-gl-linux.sh [options]
@@ -25,9 +25,13 @@
 #   --native          run against this machine's python/venv (Linux only)
 #   --quick           skip the PyMOL build; validate EGL + FBO + readback only
 #   --runtime NAME    docker | podman | nerdctl   (default: first one found)
-#   --image NAME      image tag to build/reuse (default tenmol-gl-linux:test)
+#   --image NAME      image tag to build/reuse
+#                     (default tenmol-gl-linux:quick / :full -- the two images
+#                      have DIFFERENT contents and must not share a tag)
 #   --rebuild         force a fresh image build
-#   --out DIR         where to drop the rendered PNGs (default .tenmol-gl-out)
+#   --out DIR         where to drop the rendered PNGs
+#                     (default $TMPDIR/tenmol-gl-out -- outside the repo, so a
+#                      run cannot leave a committable turd behind)
 #   --python PATH     interpreter for --native (default packages/bridge/.venv/bin/python)
 #   -h, --help        this text
 #
@@ -41,9 +45,13 @@ NATIVE=0
 QUICK=0
 REBUILD=0
 RUNTIME=""
-IMAGE="tenmol-gl-linux:test"
-OUT_DIR="$REPO_ROOT/.tenmol-gl-out"
-PYTHON_BIN="$REPO_ROOT/bridge/.venv/bin/python"
+IMAGE=""
+# NOT inside the repo. `.tenmol-gl-out` is not in .gitignore, so the documented
+# default used to leave two untracked PNGs in the working tree after every run
+# -- and .github/workflows/webclient-gl-linux.yml asserts the tree stays clean.
+# Same reasoning as apps/web/vite.config.ts's frame directory.
+OUT_DIR="${TMPDIR:-/tmp}/tenmol-gl-out"
+PYTHON_BIN="$REPO_ROOT/packages/bridge/.venv/bin/python"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -55,13 +63,24 @@ while [ $# -gt 0 ]; do
     --out) OUT_DIR="$2"; shift ;;
     --python) PYTHON_BIN="$2"; shift ;;
     -h | --help)
-      sed -n '2,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      sed -n '2,36p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *) echo "test-gl-linux: unknown option $1 (try --help)" >&2; exit 2 ;;
   esac
   shift
 done
+
+# The --quick image is Mesa + system python3 and has NO /venv and NO PyMOL; the
+# full image builds PyMOL into /venv. They are DIFFERENT images, so they must
+# not share a tag -- with one tag, a full run after a quick run "reused" the
+# quick image and died with
+#   exec: "/venv/bin/python": stat /venv/bin/python: no such file or directory
+# which says nothing about the actual cause. Default the tag per mode. Resolved
+# after parsing so `--quick` may follow `--image`.
+if [ -z "$IMAGE" ]; then
+  IMAGE="tenmol-gl-linux:$([ "$QUICK" = 1 ] && echo quick || echo full)"
+fi
 
 if [ -t 1 ]; then
   C_B=$'\033[1m'; C_G=$'\033[32m'; C_Y=$'\033[33m'; C_R=$'\033[31m'; C_0=$'\033[0m'
@@ -342,8 +361,8 @@ if [ "$NATIVE" = 1 ]; then
   say "native run: $($PYTHON_BIN -V)"
   export TENMOL_GL_OUT="$OUT_DIR"
   export TENMOL_GL_QUICK="$QUICK"
-  export TENMOL_TEST_PDB="$REPO_ROOT/test/dat/1tii.pdb"
-  export PYTHONPATH="$REPO_ROOT/bridge${PYTHONPATH:+:$PYTHONPATH}"
+  export TENMOL_TEST_PDB="$REPO_ROOT/packages/engine/test/dat/1tii.pdb"
+  export PYTHONPATH="$REPO_ROOT/packages/bridge${PYTHONPATH:+:$PYTHONPATH}"
   exec "$PYTHON_BIN" "$WORK/validate_gl.py"
 fi
 
@@ -358,16 +377,31 @@ fi
 [ -n "$RUNTIME" ] || die "no container runtime found (docker/podman/nerdctl) and
     this is not Linux, so --native is unavailable. Install Docker Desktop,
     colima, podman or OrbStack -- or just push: .github/workflows/webclient-gl-linux.yml
-    runs exactly this validation on ubuntu-latest."
+    runs exactly this validation on ubuntu-22.04 and ubuntu-24.04."
 "$RUNTIME" info >/dev/null 2>&1 || die "$RUNTIME is installed but its daemon is
     not reachable. Start it and retry."
 say "runtime: $RUNTIME ($("$RUNTIME" --version 2>/dev/null | head -1))"
 
 # --- build context: tracked files only, from the WORKING TREE -------------
+#
+# `git ls-files` lists what the INDEX knows about, which includes files deleted
+# in the working tree but not yet committed. tar then aborts the whole run with
+# `Cannot stat: No such file or directory` and this script reported only "could
+# not pack the source tree" -- observed for real, mid-refactor, with one deleted
+# doc. Skip what is gone and say so; the container needs sources, not an
+# opinion about the developer's staging area.
 say "packing sources (tracked files, working-tree state)"
 command -v git >/dev/null 2>&1 || die "git is required to build the image context"
-( cd "$REPO_ROOT" && git ls-files -z | tar -czf "$WORK/src.tar.gz" --null -T - ) ||
-  die "could not pack the source tree"
+(
+  cd "$REPO_ROOT" || exit 1
+  git ls-files -z | while IFS= read -r -d '' f; do
+    if [ -e "$f" ]; then
+      printf '%s\0' "$f"
+    else
+      printf '    skipping %s (tracked, deleted in the working tree)\n' "$f" >&2
+    fi
+  done | tar -czf "$WORK/src.tar.gz" --null -T -
+) || die "could not pack the source tree"
 printf '    %s\n' "$(du -h "$WORK/src.tar.gz" | cut -f1) of sources"
 
 MESA_PKGS="libegl1 libegl-mesa0 libgl1 libglx-mesa0 libgl1-mesa-dri libopengl0 libglvnd0"
@@ -385,7 +419,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \\
 WORKDIR /src
 COPY src.tar.gz /tmp/src.tar.gz
 RUN tar -xzf /tmp/src.tar.gz -C /src && rm /tmp/src.tar.gz
-ENV PYTHONPATH=/src/bridge
+ENV PYTHONPATH=/src/packages/bridge
 ENV LIBGL_ALWAYS_SOFTWARE=1
 ENV GALLIUM_DRIVER=llvmpipe
 EOF
@@ -411,9 +445,9 @@ RUN tar -xzf /tmp/src.tar.gz -C /src && rm /tmp/src.tar.gz
 # bearing: use-msgpackc=no would silently drop MMTF and BCIF I/O.
 ENV PREFIX_PATH=/usr:/usr/local:/deps/mmtf-cpp
 RUN /venv/bin/pip install -q --no-build-isolation \\
-      --config-settings use-msgpackc=c++11 /src \\
+      --config-settings use-msgpackc=c++11 /src/packages/engine \\
     && /venv/bin/python -c "import pymol; print(pymol.get_version_message())"
-RUN /venv/bin/pip install -q -e /src/bridge
+RUN /venv/bin/pip install -q -e /src/packages/bridge
 ENV LIBGL_ALWAYS_SOFTWARE=1
 ENV GALLIUM_DRIVER=llvmpipe
 EOF
@@ -441,8 +475,8 @@ set +e
   -v "$OUT_DIR:/out" \
   -e TENMOL_GL_OUT=/out \
   -e TENMOL_GL_QUICK="$QUICK" \
-  -e TENMOL_TEST_PDB=/src/test/dat/1tii.pdb \
-  -e PYTHONPATH=/src/bridge \
+  -e TENMOL_TEST_PDB=/src/packages/engine/test/dat/1tii.pdb \
+  -e PYTHONPATH=/src/packages/bridge \
   -w /tmp \
   "$IMAGE" "$PY_IN_IMAGE" /validate_gl.py
 STATUS=$?

@@ -1,17 +1,26 @@
-# Internal GUI (viewport-drawn panels) — feature map for the React web client
+# Internal GUI (the panels PyMOL draws inside the viewport)
 
-Area owner: `internal-gui`.
 Scope: everything PyMOL draws **itself inside the OpenGL viewport** as 2D "Blocks" —
 the right-hand object panel ("names list"), its A/S/H/L/C/M popup menus, the mouse-mode
 block, the movie/frame control bar, the movie timeline panel, the in-scene scene bar,
 the wizard panel, the in-viewport command prompt + feedback scrollback, the popup-menu
 engine itself, the busy/progress box and the splash.
 
-Everything here is **read-only source analysis**. All line references were opened and read.
+Read-only source analysis of `packages/engine/`, which is unmodified upstream. All line
+references were opened and read.
+
+**Where the port stands.** The internal GUI is turned off in the engine (`internal_gui 0`,
+`internal_feedback 0` at bridge boot) and rebuilt as components: object panel
+`apps/web/src/features/objects/`, popup menus `apps/web/src/features/pymol-menu/`, mouse-mode
+block `apps/web/src/features/mouse/ButModeBlock.tsx`, transport + timeline
+`apps/web/src/features/movie/`, scene bar `apps/web/src/features/scenes/`, wizard block
+`apps/web/src/features/wizards/`, prompt + scrollback + busy overlay
+`apps/web/src/features/console/`. The layout of §0 is reproduced in
+`apps/web/src/shell/orthoPanel.ts` and `apps/web/src/shell/extGuiDock.ts`.
 
 ---
 
-## 0. Layout model (must be reproduced by the React shell)
+## 0. Layout model
 
 `OrthoLayoutPanel()` — `packages/engine/layer1/Ortho.cpp:2261-2340` — stacks the internal-GUI blocks in a
 right-hand column, bottom-up:
@@ -51,17 +60,17 @@ Modifier bit masks: `cOrthoSHIFT 1`, `cOrthoCTRL 2`, `cOrthoALT 4` — `packages
 
 ## 1. Object panel ("names list", the Executive block)
 
-Implementation: `CExecutive::draw` `packages/engine/layer3/Executive.cpp:16116-16541`,
-`CExecutive::click` `packages/engine/layer3/Executive.cpp:14943-15320`,
-`CExecutive::drag` `packages/engine/layer3/Executive.cpp:15610-16114`,
-`CExecutive::release` `packages/engine/layer3/Executive.cpp:15509-15607`,
-`CExecutive::reshape` `packages/engine/layer3/Executive.cpp:16542-16550`.
+Implementation: `CExecutive::draw` `packages/engine/layer3/Executive.cpp:16167-16559`,
+`CExecutive::click` `packages/engine/layer3/Executive.cpp:14994-15424`,
+`CExecutive::drag` `packages/engine/layer3/Executive.cpp:15661-16013`,
+`CExecutive::release` `packages/engine/layer3/Executive.cpp:15560-15658`,
+`CExecutive::reshape` `packages/engine/layer3/Executive.cpp:16593-16602`.
 
 ### 1.1 Row model
 
 Rows come from `CExecutive::Panel`, a `std::vector<PanelRec>`
 (`packages/engine/layer3/ExecutiveDef.h:20-31`, `packages/engine/layer3/ExecutiveDef.h:79`) rebuilt by
-`ExecutiveUpdatePanelList()` `packages/engine/layer3/Executive.cpp:1557-1569`. Each `PanelRec` carries
+`ExecutiveUpdatePanelList()` `packages/engine/layer3/Executive.cpp:1565-1577`. Each `PanelRec` carries
 `spec` (the `SpecRec`), `nest_level`, `is_group`, `is_open`.
 
 `SpecRec` (`packages/engine/layer3/SpecRec.h:9-37`) fields that drive the row:
@@ -71,145 +80,143 @@ Rows come from `CExecutive::Panel`, a `std::vector<PanelRec>`
 * `sele_color`, `in_scene`, `in_panel`, `grid_slot`
 
 Row height = `internal_gui_control_size` px (default 18, `packages/engine/layer1/SettingInfo.h:411`);
-`ExecLineHeight` is read per draw at `packages/engine/layer3/Executive.cpp:16141-16142`.
+`ExecLineHeight` is read per draw at `packages/engine/layer3/Executive.cpp:16192-16193`.
 
 ### 1.2 What a row draws (left→right)
 
 1. **Scroll bar** on the far left when `n_ent > n_disp`
-   (`packages/engine/layer3/Executive.cpp:16171-16204`, `16215-16221`); width
-   `ExecScrollBarWidth = DIP2PIXEL(13)`, margin `DIP2PIXEL(1)` — `packages/engine/layer3/Executive.cpp:6074-6075`.
+   (`packages/engine/layer3/Executive.cpp:16222-16255`, `16266-16272`); width
+   `ExecScrollBarWidth = DIP2PIXEL(13)`, margin `DIP2PIXEL(1)` — `packages/engine/layer3/Executive.cpp:6090-6091`.
 2. **Group open/close button** `[+]` / `[-]`, `DIP2PIXEL(15)` wide, only when
-   `panel->is_group` — `packages/engine/layer3/Executive.cpp:16360-16386`. `-` when open, `+` when closed.
-3. **Indent** `nest_level * DIP2PIXEL(8)` — `packages/engine/layer3/Executive.cpp:16348`.
-4. **Name button** (a 3D-bevel rect, `draw_button()` `packages/engine/layer3/Executive.cpp:16016-16091`).
+   `panel->is_group` — `packages/engine/layer3/Executive.cpp:16411-16437`. `-` when open, `+` when closed.
+3. **Indent** `nest_level * DIP2PIXEL(8)` — `packages/engine/layer3/Executive.cpp:16399`.
+4. **Name button** (a 3D-bevel rect, `draw_button()` `packages/engine/layer3/Executive.cpp:16015-16098`).
    Fill colour:
    * pressed / hovered: `pressedColor {0.7,0.7,0.7}`
    * enabled (and all ancestor groups enabled): `enabledColor {0.5,0.5,0.5}`
    * enabled but an ancestor group is disabled: `cloakedColor {0.35,0.35,0.35}`
    * disabled: `disabledColor {0.25,0.25,0.25}`
-   — `packages/engine/layer3/Executive.cpp:16121-16127`, `16388-16406`.
-5. **Name text**. Selections are wrapped in `(` `)` —
-   `packages/engine/layer3/Executive.cpp:16437-16441`, `16460-16465`. If the name is prefixed by its group
-   name and `group_full_member_names`=0, the prefix is stripped
-   (`packages/engine/layer3/Executive.cpp:16421-16434`); with `group_arrow_prefix`=1 a `^|` glyph is drawn
-   instead (`packages/engine/layer3/Executive.cpp:16444-16451`). Text colour from
-   `getNameColor()` `packages/engine/layer3/Executive.cpp:16093-16114` driven by
+   — `packages/engine/layer3/Executive.cpp:16173-16176`, `16439-16461`.
+5. **Name text**. Selections are wrapped in `(` `)`. If the name is prefixed by its group
+   name and `group_full_member_names`=0 (`packages/engine/layer3/Executive.cpp:16196`), the prefix
+   is stripped; with `group_arrow_prefix`=1 (`:16197`) a `^|` glyph is drawn instead. Text colour
+   from `getNameColor()` `packages/engine/layer3/Executive.cpp:16117-16164` driven by
    `internal_gui_name_color_mode` (0 default text colour, 1 first carbon atom colour,
    2 object colour; falls back to default if within 0.1 of the button colour).
-6. **Caption** in `captionColor {0.3,0.9,0.3}` after the name, for objects only —
-   `packages/engine/layer3/Executive.cpp:16467-16487`. Content from `CObject::getCaption()`; only
+6. **Caption** in `captionColor {0.3,0.9,0.3}` (`packages/engine/layer3/Executive.cpp:16179`) after the
+   name, for objects only — drawn at `:16532-16545`. Content from `CObject::getCaption()`; only
    `ObjectMolecule` implements it (`packages/engine/layer2/ObjectMolecule.cpp:386-460`,
    base returns nullptr `packages/engine/layer1/PyMOLObject.h:135`) producing
    `"<coordset name> <colorcode><state>/<nstates>"`, colour-coded `\789` when the object
    has a frozen `state` setting and `\993` when discrete, controlled by
    `state_counter_mode`.
 7. **A S H L C (M) toggle buttons** on the right, each `ExecToggleWidth = DIP2PIXEL(17)`
-   wide, `ExecToggleSize = DIP2PIXEL(16)` — `packages/engine/layer3/Executive.cpp:3267-3273`,
-   drawn at `packages/engine/layer3/Executive.cpp:16261-16334`. Button count is `get_op_cnt()`:
+   wide, `ExecToggleSize = DIP2PIXEL(16)` — `packages/engine/layer3/Executive.cpp:3280-3281`,
+   drawn at `packages/engine/layer3/Executive.cpp:16312-16390`. Button count is `get_op_cnt()`:
    **5 normally, 6 (adds "M") when `button_mode_name == "3-Button Motions"`** —
-   `packages/engine/layer3/Executive.cpp:1749-1756`.
+   `packages/engine/layer3/Executive.cpp:1757-1764`.
    Per-button fills: A `{0.5,0.5,1.0}`, S `{0.6,0.6,0.8}`, H `{0.4,0.4,0.6}`,
    L `{0.5,0.5,1.0}`, C = rainbow gradient (nullptr `inside` → 4-colour quad,
    `packages/engine/layer3/Executive.cpp:16074-16090`), M = colour by motion "spec level"
-   (0→`{0.4,0.4,0.6}`, 1→`{0.6,0.6,0.8}`, 2→`activeColor {0.9,0.9,1.0}`) —
-   `packages/engine/layer3/Executive.cpp:16318-16334`.
+   (0→`{0.4,0.4,0.6}`, 1→`{0.6,0.6,0.8}`, 2→`activeColor {0.9,0.9,1.0}`, `:16182`) —
+   `packages/engine/layer3/Executive.cpp:16369-16390`.
    These buttons are compiled out entirely under `_PYMOL_NOPY`
-   (`packages/engine/layer3/Executive.cpp:16255`) because they call Python for their menus.
+   (`packages/engine/layer3/Executive.cpp:16306`) because they call Python for their menus.
 
 Panel background/edge and the 1px separator line at `Width - internal_gui_width`:
 `OrthoDrawInternalGUIBG()` `packages/engine/layer1/Ortho.cpp:1561-1584`.
 
 ### 1.3 Click semantics on the toggle buttons
 
-`CExecutive::click` `packages/engine/layer3/Executive.cpp:14992-15258`. The hit column index
+`CExecutive::click` `packages/engine/layer3/Executive.cpp:14994-15424`. The hit column index
 `t = (rect.right - x - 1) / ExecToggleWidth`, then `t = op_cnt - t - 1`, giving
 0=A, 1=S, 2=H, 3=L, 4=C, 5=M. Each dispatches `MenuActivate*` with a Python menu-builder
 name from `packages/engine/modules/pymol/menu.py` and the row's object/selection name (`namesele`):
 
 | Btn | Row type / object type | Menu function called |
 |---|---|---|
-| A | `cExecAll` | `all_action` (`Executive.cpp:15019`) |
-| A | selection | `sele_action` (`:15022`) |
-| A | group | `group_action` (`:15027`) |
-| A | molecule | `mol_action` (`:15031`) |
-| A | map | `map_action` (`:15035`) |
-| A | surface | `surface_action` (`:15039`) |
-| A | mesh | `mesh_action` (`:15043`) |
-| A | measurement / CGO / callback / alignment / volume | `simple_action` (`:15051`) |
-| A | slice | `slice_action` (`:15055`) |
-| A | gadget (ramp) | `ramp_action` (`:15059`) |
-| S | all | `mol_show` with `"all"` (`:15069`) |
-| S | selection, group, molecule | `mol_show` (`:15072`, `:15078`) |
-| S | CGO / alignment | `cgo_show` (`:15082`) |
-| S | measurement | `measurement_show` (`:15085`) |
-| S | map | `map_show` (`:15089`) |
-| S | mesh | `mesh_show` (`:15092`) |
-| S | surface | `surface_show` (`:15095`) |
-| S | slice | `slice_show` (`:15099`) |
-| S | volume | `volume_show` (`:15103`) |
-| H | (mirror of S) | `mol_hide`/`cgo_hide`/`measurement_hide`/`map_hide`/`mesh_hide`/`surface_hide`/`slice_hide`/`volume_hide` (`:15113-15147`) |
-| L | all | `mol_labels` with `"(all)"` (`:15157`) |
-| L | selection, group, molecule | `mol_labels` (`:15160`, `:15166`) |
-| L | measurement / map / surface / mesh / slice | **no menu** (empty cases, `:15169-15176`) |
-| C | all, selection, group, molecule | `mol_color` (`:15184`, `:15190`) |
-| C | map / CGO / alignment | `general_color` (`:15195`) |
-| C | mesh | `mesh_color` (`:15199`) |
-| C | surface | `mesh_color` with 2nd arg `"surface"` (`:15203`) |
-| C | measurement | `measurement_color` (`:15207`) |
-| C | slice | `slice_color` (`:15211`) |
-| C | volume | `vol_color` (`:15215`) |
-| C | gadget | `ramp_color` (`:15218`) |
-| M | all | `camera_motion` (0 args) (`:15228`) |
-| M | selection | nothing (`:15230`) |
-| M | group/molecule/measurement/map/surface/CGO/mesh | `obj_motion` (`:15242`) |
+| A | `cExecAll` | `all_action` (`Executive.cpp:15070`) |
+| A | selection | `sele_action` (`:15073`) |
+| A | group | `group_action` (`:15079`) |
+| A | molecule | `mol_action` (`:15083`) |
+| A | map | `map_action` (`:15087`) |
+| A | surface | `surface_action` (`:15091`) |
+| A | mesh | `mesh_action` (`:15095`) |
+| A | measurement / CGO / callback / alignment / volume | `simple_action` (`:15103`) |
+| A | slice | `slice_action` (`:15107`) |
+| A | gadget (ramp) | `ramp_action` (`:15111`) |
+| S | all | `mol_show` with `"all"` (`:15120`) |
+| S | selection, group, molecule | `mol_show` (`:15123`, `:15129`) |
+| S | CGO / alignment | `cgo_show` (`:15133`) |
+| S | measurement | `measurement_show` (`:15137`) |
+| S | map | `map_show` (`:15140`) |
+| S | mesh | `mesh_show` (`:15143`) |
+| S | surface | `surface_show` (`:15147`) |
+| S | slice | `slice_show` (`:15151`) |
+| S | volume | `volume_show` (`:15155`) |
+| H | (mirror of S) | `mol_hide`/`cgo_hide`/`measurement_hide`/`map_hide`/`mesh_hide`/`surface_hide`/`slice_hide`/`volume_hide` (`:15164-15198`) |
+| L | all | `mol_labels` with `"(all)"` (`:15208`) |
+| L | selection, group, molecule | `mol_labels` (`:15211`, `:15218`) |
+| L | measurement / map / surface / mesh / slice | **no menu** (empty cases, `:15220-15227`) |
+| C | all, selection, group, molecule | `mol_color` (`:15235`, `:15241`) |
+| C | map / CGO / alignment | `general_color` (`:15247`) |
+| C | mesh | `mesh_color` (`:15251`) |
+| C | surface | `mesh_color` with 2nd arg `"surface"` (`:15254`) |
+| C | measurement | `measurement_color` (`:15259`) |
+| C | slice | `slice_color` (`:15263`) |
+| C | volume | `vol_color` (`:15266`) |
+| C | gadget | `ramp_color` (`:15270`) |
+| M | all | `camera_motion` (0 args) (`:15279`) |
+| M | selection | nothing (`:15281`) |
+| M | group/molecule/measurement/map/surface/CGO/mesh | `obj_motion` (`:15294`) |
 
 `MenuActivate*` (`packages/engine/layer4/Menu.cpp:29-124`) calls `pymol.menu.<name>(cmd, *args)` and feeds
 the returned list to `PopUpNew`.
 
 ### 1.4 Click semantics on the name / group control
 
-`packages/engine/layer3/Executive.cpp:15260-15315`:
+`packages/engine/layer3/Executive.cpp:15300-15412`:
 * Hit test: "on the name" when `(xx-1)/DIP2PIXEL(8) > nest_level` (`> nest_level+1` for
   groups); otherwise "on the group control".
 * **Left button on name** → `DragMode=Visibility`, `ToggleMode=DeferVisibility`
   (toggle is applied on release). Modifier variants:
   * `Shift+Ctrl` → `HoverActivate` + zoom-on-hover; immediately enables the row and
-    `ExecutiveWindowZoom` (`:15277-15288`)
-  * `Shift` → `ImmediateVisibility`, toggles at once (`:15289-15292`)
-  * `Ctrl` → `HoverActivate` (enable-only, exclusive-ish) (`:15293-15299`)
+    `ExecutiveWindowZoom` (`:15323-15334`)
+  * `Shift` → `ImmediateVisibility`, toggles at once (`:15336-15337`)
+  * `Ctrl` → `HoverActivate` (enable-only, exclusive-ish) (`:15338-15344`)
 * **Middle button on name** → `DragMode=VisibilityWithCamera`:
-  * plain → `CenterActivateDeactivatePrevious`, runs `ExecutiveCenter` (`:15321-15325`)
-  * `Ctrl` → `ZoomActivateDeactivatePrevious`, runs `ExecutiveWindowZoom` (`:15311-15316`)
+  * plain → `CenterActivateDeactivatePrevious`, runs `ExecutiveCenter` (`:15376`)
+  * `Ctrl` → `ZoomActivateDeactivatePrevious`, runs `ExecutiveWindowZoom` (`:15362`)
   * `Ctrl+Shift` → `ZoomExclusiveActivate`: `ExecutiveSetObjVisib("all", false)` then
-    enable only this row (`:15317-15322`)
-* **Right button on name** → `DragMode=Reorder` (drag to reorder / re-group).
+    enable only this row (`:15368`)
+* **Right button on name** → `DragMode=Reorder` (drag to reorder / re-group) (`:15392`).
 * **Left on group `[+]/[-]`** → `hilight=2`, `PressedWhat=2`; on release logs
   `cmd.group("<name>",action='open'|'close')` and calls `ExecutiveGroup(...,5,1)` —
-  `packages/engine/layer3/Executive.cpp:15570-15580`.
+  `packages/engine/layer3/Executive.cpp:15620-15627`.
 * **Mouse wheel** anywhere in the panel scrolls the list by ±1 row —
-  `packages/engine/layer3/Executive.cpp:14965-14972`.
+  `packages/engine/layer3/Executive.cpp:15017-15023`.
 * When `internal_gui_mode != Default` and `y < HowFarDown` (below the last row), the click
-  is forwarded to the Scene block — `packages/engine/layer3/Executive.cpp:14959-14963`.
+  is forwarded to the Scene block — `packages/engine/layer3/Executive.cpp:15010-15014`.
 
 Drag-visibility band-select: dragging vertically toggles every row between `Pressed` and
-`Over` (`packages/engine/layer3/Executive.cpp:15680-15740`). Reorder drag emits
+`Over` (`packages/engine/layer3/Executive.cpp:15727-15809`). Reorder drag emits
 `cmd.order("<a> <b>", location="upper"|"current")` and/or `group <parent>, <child>` /
-`ungroup <child>` — `packages/engine/layer3/Executive.cpp:15845-15870`.
+`ungroup <child>` — `packages/engine/layer3/Executive.cpp:15928-15960`.
 
-Release path: `ExecutiveSpecSetVisibility()` `packages/engine/layer3/Executive.cpp:15413-15487` is the
+Release path: `ExecutiveSpecSetVisibility()` `packages/engine/layer3/Executive.cpp:15474-15541` is the
 single mutation point; it logs `cmd.enable('x')` / `cmd.disable('x')` /
 `cmd.enable('all')` / `cmd.disable('all')`, respects `active_selections` (hides other
 selections when one is enabled) and calls `SceneObjectAdd/Del`.
 
-### 1.5 Panel-level behaviours to reproduce
+### 1.5 Panel-level behaviours
 
 * `hide_underscore_names` (default 1, `packages/engine/layer1/SettingInfo.h:558`) hides `_`-prefixed recs.
 * `ExecutiveManageObject` sets `visible=1` for new objects except maps (`visible=0`) —
-  `packages/engine/layer3/Executive.cpp:14830-14840`.
+  `packages/engine/layer3/Executive.cpp:14885-14894`.
 * `auto_hide_selections` / `auto_show_selections` (defaults 1/1,
-  `packages/engine/layer1/SettingInfo.h:162-163`) — `packages/engine/layer3/Executive.cpp:14786`, `14921-14925`.
+  `packages/engine/layer1/SettingInfo.h:162-163`) — `packages/engine/layer3/Executive.cpp:14841`, `14982-14986`.
 * `group_auto_mode` auto-creates/attaches groups from dotted names —
-  `ExecutiveDoAutoGroup` `packages/engine/layer3/Executive.cpp:14715-14758`.
+  `ExecutiveDoAutoGroup` `packages/engine/layer3/Executive.cpp:14766-14811`.
 
 ---
 
@@ -693,11 +700,11 @@ All of the following were verified to exist in this tree.
 
 | Need | API | Source |
 |---|---|---|
-| Row names, in SpecRec order | `cmd.get_names(type, enabled_only, selection)` with `type` ∈ objects / selections / all / public / public_objects / public_selections / public_nongroup_objects / public_group_objects / nongroup_objects / group_objects | `packages/engine/modules/pymol/querying.py:1155-1199`; C: `ExecutiveGetNames` `packages/engine/layer3/Executive.cpp:8851-8945` |
+| Row names, in SpecRec order | `cmd.get_names(type, enabled_only, selection)` with `type` ∈ objects / selections / all / public / public_objects / public_selections / public_nongroup_objects / public_group_objects / nongroup_objects / group_objects | `packages/engine/modules/pymol/querying.py:1155-1199`; C: `ExecutiveGetNames` `packages/engine/layer3/Executive.cpp:8873-8960` |
 | Row kind | `cmd.get_type(name)` → `object:molecule`, `object:map`, `object:mesh`, `object:slice`, `object:surface`, `object:measurement`, `object:cgo`, `object:group`, `object:volume`, `selection` | `packages/engine/modules/pymol/querying.py:1206-1240` |
 | All names of one kind | `cmd.get_names_of_type('object:group')` | `packages/engine/modules/pymol/querying.py:1459-1485` |
-| **enabled + reps + colour, all rows at once** | `cmd.get_vis()` → `{name: [visible:int, [], [rep_indices] | None, color_index | None]}` | `packages/engine/modules/pymol/viewing.py:899-901`; C: `ExecutiveGetVisAsPyDict` `packages/engine/layer3/Executive.cpp:4481-4512` (rep list built by `getRepArrayFromBitmask` `:4514-4525`; `_`-prefixed recs are skipped) |
-| Restore that state | `cmd.set_vis(dict)` | `packages/engine/modules/pymol/viewing.py:903-905`; C: `ExecutiveSetVisFromPyDict` `packages/engine/layer3/Executive.cpp:4559-…` |
+| **enabled + reps + colour, all rows at once** | `cmd.get_vis()` → `{name: [visible:int, [], [rep_indices] | None, color_index | None]}` | `packages/engine/modules/pymol/viewing.py:899-901`; C: `ExecutiveGetVisAsPyDict` `packages/engine/layer3/Executive.cpp:4496-4527` (rep list built by `getRepArrayFromBitmask` `:4529-4540`; `_`-prefixed recs are skipped) |
+| Restore that state | `cmd.set_vis(dict)` | `packages/engine/modules/pymol/viewing.py:903-905`; C: `ExecutiveSetVisFromPyDict` `packages/engine/layer3/Executive.cpp:4574` |
 | Enabled-only listing | `cmd.get_names('objects', enabled_only=1)` | used by `menu.enable_disable` `packages/engine/modules/pymol/menu.py:1613-1629` |
 | Object colour index | `cmd.get_object_color_index(name)` | `packages/engine/modules/pymol/querying.py:819-823` |
 | Colour index → RGB | `cmd.get_color_tuple(name_or_index)` | `packages/engine/modules/pymol/querying.py:825-841` |
@@ -718,38 +725,39 @@ All of the following were verified to exist in this tree.
   `cmd.*` query.** `PanelRec.nest_level` / `is_open` live only in C
   (`packages/engine/layer3/ExecutiveDef.h:20-31`) and `SpecRec::group_name` is only serialised through
   `cmd.get_session(partial=1)['names']` — element 6 of each rec is `group_name`
-  (`ExecutiveGetExecObjectAsPyList` `packages/engine/layer3/Executive.cpp:5362-5432`,
-  `ExecutiveGetExecSeleAsPyList` `:5435-5453`), and `ObjectGroup.OpenOrClosed` is element 1
+  (`ExecutiveGetExecObjectAsPyList` `packages/engine/layer3/Executive.cpp:5377-5448`,
+  `ExecutiveGetExecSeleAsPyList` `:5450-5468`), and `ObjectGroup.OpenOrClosed` is element 1
   of the group's own list (`ObjectGroupAsPyList` `packages/engine/layer2/ObjectGroup.cpp:60-73`).
-  `cmd.get_session` is far too heavy to poll. **The bridge needs a new small read-only
-  endpoint** (e.g. a Python helper walking `cmd.get_names('all')` +
-  `cmd.get_session(names, partial=1)`, or a new `_cmd` accessor) — flagged as a risk.
+  `cmd.get_session` is far too heavy to poll, so the bridge supplies the panel model itself in
+  `packages/bridge/tenmol_bridge/panels/objects.py` rather than reading `PanelRec`.
 * There is **no push notification** for panel changes in the Python build:
-  `ReportEnabledChange` (`packages/engine/layer3/Executive.cpp:313-322`) only invokes
-  `G->enabledCallback` under `_PYMOL_LIB`. Polling (or a new hook) is required.
+  `ReportEnabledChange` (`packages/engine/layer3/Executive.cpp:313-326`) only invokes
+  `G->enabledCallback` under `_PYMOL_LIB`. The fork bumps `m_web_enable_version` at the top of
+  that same function (`:315-319`), which is what `_cmd.web_get_versions` reports, so the client
+  polls four counters instead of diffing names.
 * `sele_color` (per-selection indicator colour) is in `SpecRec` but has no `cmd` getter.
 * `cmd.get_vis()` reports `visible` per rec but **not** the "cloaked" state (enabled but an
   ancestor group is disabled); that has to be derived client-side from group membership,
-  matching `packages/engine/layer3/Executive.cpp:16392-16406`.
+  matching `packages/engine/layer3/Executive.cpp:16443-16461`.
 
 ---
 
-## 12. Notes for the React implementation
+## 12. Consequences for the port
 
-* Menus should be fetched from the backend as data (`pymol.menu.*` → JSON), **not**
-  re-declared in TypeScript: the entries embed `cmd.*` source strings and are generated
-  from live state (scene lists, ramp lists, object lists, colour list). Each selected leaf
-  is executed via `cmd.do(<command string>)` — which is exactly what
-  `packages/engine/layer4/PopUp.cpp:471-475` does (`PLog` + `PParse`).
+* Menus are fetched from the backend as data (`pymol.menu.*` → JSON), **not** re-declared in
+  TypeScript: the entries embed `cmd.*` source strings and are generated from live state (scene
+  lists, ramp lists, object lists, colour list). Each selected leaf is executed via
+  `cmd.do(<command string>)` — which is exactly what `packages/engine/layer4/PopUp.cpp:471-475`
+  does (`PLog` + `PParse`). See `apps/web/src/features/pymol-menu/menuStore.ts`.
 * Lazy sub-menus (`lambda: copy_to(...)`, `lambda: move_to_group(...)`,
   `menu.py:1182`, `:1208`, `:1235`, `:1269-1270`, `:1299`, `:1315`, `:1402`, `:1438`,
-  `:1455`, `:1468`, `:1740`, `:1776`) must be expanded on demand, mirroring
+  `:1455`, `:1468`, `:1740`, `:1776`) are expanded on demand, mirroring
   `SubGetItem` `packages/engine/layer4/PopUp.cpp:88-110`.
-* Text colour codes `\RGB` must be parsed into spans (`packages/engine/layer1/Text.cpp:507-548`); they
-  appear in menu labels (`del_col`/`rem_col` = `\933`, `menu.py:21-22`), object captions,
-  and wizard prompts.
+* Text colour codes `\RGB` are parsed into spans (`packages/engine/layer1/Text.cpp:507-548`,
+  ported in `apps/web/src/features/wizards/colorCodes.ts`); they appear in menu labels
+  (`del_col`/`rem_col` = `\933`, `menu.py:21-22`), object captions, and wizard prompts.
 * The panel is the *only* place where drag-reorder/regroup exists; it emits real
-  `cmd.order` / `group` / `ungroup` commands, so the React tree can be optimistic then
-  re-read.
+  `cmd.order` / `group` / `ungroup` commands, so the tree can be optimistic and then re-read
+  (`apps/web/src/features/objects/placement.ts`).
 * Modifier semantics (Shift/Ctrl/Ctrl+Shift on left and middle mouse over a row) are
   non-obvious and are part of the product; see §1.4.

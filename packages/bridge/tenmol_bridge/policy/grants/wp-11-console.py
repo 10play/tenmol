@@ -1,6 +1,6 @@
 """WP-11 (console) — tab completion.
 
-`00-parity-inventory.md` row "Command line ▸ Tab completion" is PyMOL's own
+`feature-parity.md` row "Command line ▸ Tab completion" is PyMOL's own
 `Parser.complete` (`packages/engine/modules/pymol/parser.py:524-596`), reached exactly the way
 every PyMOL front end reaches it::
 

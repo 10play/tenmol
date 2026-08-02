@@ -14,7 +14,34 @@ picking, `get_click_string`, `cmd.png`, `cmd.draw`, `cmd.ray`, and `cmd.mpng`'s 
 Everything below was executed on this machine. All transcripts are verbatim.
 Scripts: `/private/tmp/claude-501/.../scratchpad/pick/e1..e14*.py` (throwaway, not in the repo).
 
----
+> ## STATUS — re-read against the tree on 2026-08-02
+>
+> **§2 and §3 are the most load-bearing prose in `docs/`, because they are COPIED INTO SHIPPED
+> CODE.** `packages/bridge/tenmol_bridge/glcontext/cgl.py` says in its own docstring that it is
+> "`docs/spikes/picking.md` §2/§3 verbatim, promoted to a module", and `scripts/doctor.mjs:160`
+> says "verbatim from docs/spikes/picking.md section 2" above a byte-for-byte copy of the
+> pixel-format attribute tuple and the FBO loop. **Renumbering or rewriting §2 or §3 breaks the
+> provenance of two shipped files.** Do not.
+>
+> **§7 and §8 are done, with two exceptions worth naming:**
+>
+> * §7.3's last residual risk — "**Linux/Windows parity is a separate spike**" — is **answered for
+>   Linux**: [`07-cross-platform-gl.md`](./07-cross-platform-gl.md) §2.8 reproduces this spike's
+>   picking result on real Linux under EGL, 3/3 clicks. Windows is still unanswered.
+> * §8 item 8 ("gate the picking tests behind a logged-in macOS session") landed as the `gl`
+>   pytest marker in `packages/bridge/pyproject.toml:69`, whose text is this item almost word for
+>   word.
+>
+> **The one thing §6 got wrong, and it is worth knowing.** §6.5's verdict table says client-side
+> picking "requires new C++ (pick-data extraction)" and is "strictly worse". The C++ was then
+> written ([`08-native-changes.md`](./08-native-changes.md) §3) and the comparison was **measured
+> rather than argued**: resolving the shipped `(atom index, bond)` pair client-side reproduces a
+> real GL pick **18/18 on spheres and 15/15 on surface** — but only after porting two rules this
+> spike's §5 half-names and 08 §3.3/§3.4 pin down: the `cRange = 7` outward **ring scan** (a click
+> snaps to anything within ~7 px, so an exact ray test scores 16/18) and the **flat-shaded
+> provoking vertex** (a triangle hit reports its LAST corner, not the nearest; nearest scores
+> 10/15). Everything else in §6 — the 16 pick sources, `cPickableNoPick`/`Through`, and that
+> picking drives 21 `ButMode` actions and not just selection — still stands.
 
 ## 0. TL;DR
 
@@ -80,8 +107,11 @@ if (PyMOL_GetIdleAndReady(G->PyMOL) && !SettingGetGlobal_b(G, cSetting_suspend_d
 (`packages/engine/layer5/PyMOL.cpp:2412-2416`). `DrawnFlag` is set only inside `PyMOL_Draw`
 (`packages/engine/layer5/PyMOL.cpp:2325,2328`).
 
-> **Correction to `docs/spikes/00-build.md` §"ACTION REQUIRED" item (1) and to
-> `02-completeness-critique.md` A1.** A never-`draw()` bridge does not merely lose picking — it
+> **Correction to `docs/spikes/build.md` §6.1 and to
+> the deferred-draw blocker.** (This bullet used to cite a section of
+> `00-build.md`; there has never been one — the finding it means is §6.1, "`_cmd._draw()`
+> SEGFAULTS without a GL context", and the recommendations it means are §7.)
+> A never-`draw()` bridge does not merely lose picking — it
 > never drains *any* deferred work: no clicks, no drags, no deferred `cmd.png`, no deferred ray.
 > The pump **must** call `PyMOL_Draw` (`_cmd._draw`) at least 3 times interleaved with
 > `PyMOL_Idle` before the first user event, and then on every tick.
@@ -359,7 +389,7 @@ cmd.ray(800,600)   -> 0.020 s
 cmd.png            -> 95613 bytes at 1920x1080
 ```
 
-`cmd.mpng` (the `ModalDraw` path that `02-completeness-critique.md` A2 flags as a hang):
+`cmd.mpng` (the `ModalDraw` path, which hangs without a draw pump):
 
 ```
 == cmd.mpng (ModalDraw path) ==
@@ -447,7 +477,7 @@ So the choice really is: give the backend a GL context, or reimplement picking s
 
 ## 6. Evaluating the client-side alternative (and why it loses)
 
-`01-architecture.md:497-504` proposes three.js raycasting. Concretely, here is what that costs.
+`architecture.md:497-504` proposes three.js raycasting. Concretely, here is what that costs.
 
 ### 6.1 The CGO pick *colour* cannot be shipped — it is a per-frame draw-order counter
 
@@ -491,7 +521,7 @@ wire, and the resolve call `pick_resolve(object, state, index, bond)` is trivial
 
 **But no such extraction exists today** — it requires new C++ in exactly the files WP-06 claims
 exclusively (`packages/engine/layer4/CmdWebGeometry.cpp` + the `Cmd.cpp` method table), which re-creates the
-WP-06 ordering hazard from `02-completeness-critique.md` A9.
+ordering hazard: the pick buffer must be rebuilt before it is read.
 
 ### 6.3 What the client would have to reimplement
 
@@ -585,7 +615,7 @@ No new C++: `cmd.get_names('selections')`, `cmd.count_atoms('sele')`, `cmd.get_m
 `cmd.index('sele')` all work immediately after the pick drains. For the richer
 "what did I just click" payload, bind a button to `clik` and read `_cmd.get_click_string(G, 1)`
 (§3.3) — it already carries object/state/index/bond/resn/resi/name/alt/segi/chain and the 3D
-position. **`00-parity-inventory.md` §14 item 6 ("new C for `get_click_string`") is wrong: the C
+position. **`feature-parity.md` §14 item 6 ("new C for `get_click_string`") is wrong: the C
 already exists and is already in the method table (`packages/engine/layer4/Cmd.cpp:6451`). All that is missing is
 a Python wrapper.**
 
@@ -611,14 +641,15 @@ a Python wrapper.**
 
 ## 8. Changes other owners must make (reported, not applied)
 
-1. **`01-architecture.md:497-504`** — "Our picking is therefore client-side (three.js raycast)"
-   must be replaced by backend-authoritative picking. `00-parity-inventory.md:519` is correct.
+1. **`architecture.md:497-504`** — "Our picking is therefore client-side (three.js raycast)"
+   must be replaced by backend-authoritative picking. `feature-parity.md:519` is correct.
    Critique **A5 resolves in favour of 00**.
-2. **`01-architecture.md:47-52,251`** — "never calls `p.draw()`" must be deleted. The pump
+2. **`architecture.md:47-52,251`** — "never calls `p.draw()`" must be deleted. The pump
    **must** call `PyMOL_Draw` every tick, on the GL-owning thread, at ≥ 33 Hz. Without it nothing
    deferred ever executes (§1). This also resolves critique **A1** and **A3** (`SeqUpdate` runs
    from `OrthoDoDraw`, `packages/engine/layer1/Ortho.cpp:1882`) and **A2** (`ModalDraw`, §3.4).
-3. **`docs/spikes/00-build.md` "ACTION REQUIRED" items (1) and (2)** are wrong and must
+3. **`docs/spikes/build.md` §6.1 and §6.3** (this item used to cite an `"ACTION REQUIRED"`
+   section that does not exist in that file) are wrong and must
    be amended: `_cmd._draw` does **not** segfault "headless" — it segfaults when
    `options.no_gui == 0` *and no GL context is current*. With a CGL context it is required.
    `_cmd._refresh` does not exist, but `cmd.refresh()` is **not** a substitute for `_draw`
@@ -633,7 +664,7 @@ a Python wrapper.**
    `packages/engine/modules/pmg_qt/pymol_qt_gui.py:1245-1252`.
 6. **WP-06 (geometry)** — no longer blocks picking. Per-vertex pick data extraction is now
    optional (hover-highlight only).
-7. **`00-parity-inventory.md` §14 item 6** — drop "new C++ needed for `get_click_string`"; only a
+7. **`feature-parity.md` §14 item 6** — drop "new C++ needed for `get_click_string`"; only a
    Python wrapper is missing.
 8. **CI** — the offscreen-GL picking tests require a logged-in macOS user session. They cannot
    run on a headless CI runner without a console session; gate them the same way the ray

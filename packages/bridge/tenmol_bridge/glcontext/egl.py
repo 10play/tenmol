@@ -52,7 +52,7 @@ undefined.  ``*EXT`` is kept as a fallback for pre-GL-3.0 drivers.
 
 Constants in this file were taken from the Khronos registry, not from memory:
 ``EGL/egl.h``, ``EGL/eglext.h``, ``xml/gl.xml``.  See
-``docs/spikes/07-cross-platform-gl.md`` §"Provenance".
+``docs/spikes/cross-platform-gl.md`` §"Provenance".
 
 Status
 ------
@@ -68,7 +68,7 @@ by that run are fixed here: ``eglTerminate`` is now reference-counted per
 driver), and cross-thread hand-off now has an explicit
 :meth:`EGLContext.release_current`, because EGL -- unlike WGL -- refuses
 ``eglMakeCurrent`` with ``EGL_BAD_ACCESS`` while another thread holds the
-context.  Full transcript: ``docs/spikes/07-cross-platform-gl.md``
+context.  Full transcript: ``docs/spikes/cross-platform-gl.md``
 §2.7 (the defects) and §2.8 (the run); §2.9 is an independent re-run by a second
 session that was told to distrust this notice, and reproduced it.
 Reproduce with ``bash scripts/test-gl-linux.sh``.
@@ -261,7 +261,7 @@ _egl_singletons: Dict[str, "_EGL"] = {}
 #: So a naive ``release()`` that always terminates kills every other context on
 #: the same display.  Measured on Mesa 22.3.6 / llvmpipe (Debian bookworm,
 #: container): with two contexts open, ``a.release()`` made ``b.make_current()``
-#: fail with ``EGL_BAD_DISPLAY``.  See spikes/07-cross-platform-gl.md §3.4.
+#: fail with ``EGL_BAD_DISPLAY``.  See spikes/cross-platform-gl.md §3.4.
 _display_refs: Dict[int, int] = {}
 _display_lock = threading.Lock()
 
@@ -430,7 +430,7 @@ class GLFunctions:
 
         # Optional extras.  glGetStringi only exists on GL 3.0+; glClear /
         # glClearColor are GL 1.0 and are here so the platform validation
-        # scripts in docs/spikes/07-cross-platform-gl.md can prove
+        # scripts in docs/spikes/cross-platform-gl.md can prove
         # "render then glReadPixels" without booting PyMOL.
         self.glGetStringi = self._bind("glGetStringi", c_char_p, (c_uint, c_uint))
         # render/framestream.py:PixelReadback looks these two up on ctx.gl and
@@ -962,7 +962,7 @@ class EGLContext:
     """A windowless EGL context owning exactly one FBO.
 
     Thread affinity is **stricter than CGL's**, and this was measured, not
-    assumed (Mesa 22.3.6/llvmpipe, spikes/07-cross-platform-gl.md §3.4):
+    assumed (Mesa 22.3.6/llvmpipe, spikes/cross-platform-gl.md §3.4):
 
     * ``eglMakeCurrent`` binds to the calling thread, so construct on the
       engine thread.

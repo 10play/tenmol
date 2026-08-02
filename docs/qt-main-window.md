@@ -1,7 +1,16 @@
-# Area map: `qt-main-window` (Qt application shell → React app shell)
+# The Qt application shell
 
-Read-only survey of the PyMOL Qt main-window shell in this repo, for the React/pnpm rebuild.
-Every claim below is anchored to a `file:line` that was actually opened.
+Read-only survey of PyMOL's Qt main window: layout, menu bar, command line, feedback area, quick
+buttons, dialogs, startup and shutdown. Every claim is anchored to a `file:line` in
+`packages/engine/`, which is unmodified upstream.
+
+**Where the port stands.** The shell is `apps/web/src/shell/` (`AppShell.tsx`, `extGuiDock.ts`,
+`orthoPanel.ts`, `StatusBar.tsx`, `ConnectionOverlay.tsx`); the menu bar is
+`apps/web/src/features/menubar/` with the menu data generated into
+`apps/web/src/features/menubar/generated/menudata.ts`; the command line and feedback log are
+`apps/web/src/features/console/`; dialogs are `apps/web/src/features/dialogs/` and
+`apps/web/src/features/render/`; the seams §12 lists are filled by
+`packages/bridge/tenmol_bridge/shims.py`.
 
 Primary sources read:
 
@@ -14,9 +23,9 @@ Primary sources read:
 
 ---
 
-## 0. IMPORTANT CORRECTION: menus are **not** generated from `packages/engine/modules/pymol/menu.py`
+## 0. Menus are **not** generated from `packages/engine/modules/pymol/menu.py`
 
-The task brief asks to "note where menus are generated dynamically from `packages/engine/modules/pymol/menu.py`". Grepping shows this is **not** the case for the main window:
+A common assumption, and wrong for the main window:
 
 - The Qt menu bar is built from `self.get_menudata(cmd)` at `packages/engine/modules/pmg_qt/pymol_qt_gui.py:353`.
 - `get_menudata` is defined at `packages/engine/modules/pymol/_gui.py:55` on the toolkit-independent mixin `PyMOLDesktopGUI` (`packages/engine/modules/pymol/_gui.py:9`), which `PyMOLQtGUI` inherits (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:31`).
@@ -46,8 +55,8 @@ There are **no `QSplitter`s** in the main window. Layout is `QMainWindow` + dock
 | Base title set at startup | `pymol_qt_gui.py:1224` (`window.setWindowTitle("PyMOL")`) | |
 | Full-screen toggle hides menubar + non-floating ext window | `pymol_qt_gui.py:472-494` | remembers `_ext_window_visible` (`pymol_qt_gui.py:47`) |
 
-### Web plan
-`AppShell` React component: CSS-grid/flex root, `<Viewport>` (three.js canvas) as the "central widget", and a dockable/resizable `ExternalGuiPanel` (react-mosaic / dockview / custom). Dock state (area, floating, visible) is pure client state; only `viewport` size changes must be echoed to the backend (`cmd.reshape` / `cmd.viewport`, see §12).
+### In the port
+`apps/web/src/shell/AppShell.tsx`: CSS-grid/flex root, `<Viewport>` (three.js canvas) as the "central widget", and a dockable/resizable `ExternalGuiPanel` (react-mosaic / dockview / custom). Dock state (area, floating, visible) is pure client state; only `viewport` size changes must be echoed to the backend (`cmd.reshape` / `cmd.viewport`, see §12).
 
 ---
 
@@ -66,8 +75,8 @@ Behaviours:
 - Menu entries `Display ▸ External GUI ▸ Toggle dockable` (shortcut `Ctrl+E`) and `▸ Visible` (the dock's own `toggleViewAction`, re-labelled "Visible") are appended **imperatively after** the data-driven menu build (`pymol_qt_gui.py:377-384`).
 - `pymol.gui.ext_hide` / `ext_show` explicitly **no-op with a printed "ignoring gui.ext_hide"** when a Qt window exists (`packages/engine/modules/pymol/gui.py:44-66`).
 
-### Web plan
-A `ExternalGuiPanel` React component with three modes (`docked-top | docked-side | floating | hidden`), persisted in client state, plus `Ctrl+E` binding. `ext_hide`/`ext_show` stay no-ops; the bridge should still surface them so scripts don't error.
+### In the port
+`apps/web/src/shell/extGuiDock.ts` drives a dock with modes (`docked-top | docked-side | floating | hidden`), persisted in client state, plus `Ctrl+E` binding. `ext_hide`/`ext_show` stay no-ops; the bridge should still surface them so scripts don't error.
 
 ---
 
@@ -75,7 +84,7 @@ A `ExternalGuiPanel` React component with three modes (`docked-top | docked-side
 
 Widget: `CommandLineEdit(QLineEdit)` at `pymol_qt_gui.py:1087`, instantiated at `pymol_qt_gui.py:120-121` with `objectName="command_line"`; prefixed by a `QLabel("PyMOL>")` with `objectName="command_label"` (`pymol_qt_gui.py:141-143`).
 
-Tooltip text (must be reproduced verbatim), `pymol_qt_gui.py:145-157`:
+Tooltip text, reproduced verbatim, `pymol_qt_gui.py:145-157`:
 
 ```
 Command Input Area
@@ -137,8 +146,8 @@ The alternative `QCompleter(cmd.kwhash.keywords)` path exists but is **commented
 - `dropEvent`: accepts the proposed action (the text is already there).
 - `dragMoveEvent`: overridden to a no-op.
 
-### Web plan
-`CommandInput` React component (controlled `<input>`), a `useCommandHistory` hook mirroring `_gui.py:895-941` exactly (255 cap, slot-0 scratch, prefix search), and a `bridge.complete(text)` RPC that proxies `cmd._parser.complete` (server-side, because it needs `kwhash`, `auto_arg` **and the local filesystem**). HTML5 drag events reproduce the preview-insert/restore semantics. Complexity: the completion RPC must be synchronous-feeling (debounce + optimistic).
+### In the port
+`apps/web/src/features/console/CommandLine.tsx` with `useCommandHistory.ts` mirroring `_gui.py:895-942` exactly (255 cap, slot-0 scratch, prefix search), and completion proxied to `cmd._parser.complete` server-side, because it needs `kwhash`, `auto_arg` **and the local filesystem**. HTML5 drag events reproduce the preview-insert/restore semantics (`dragPreview.ts`).
 
 ---
 
@@ -158,8 +167,8 @@ The alternative `QCompleter(cmd.kwhash.keywords)` path exists but is **commented
 
 Note: `colorprinting.text2html` in this build does *not* translate PyMOL's `\933`-style color escapes (see `packages/engine/modules/pymol/menu.py:21-23` for those codes); `error/warning/suggest/parrot` are plain `print` aliases (`colorprinting.py:28-31`).
 
-### Web plan
-Replace polling with a WebSocket **push** channel: the bridge drains `cmd._get_feedback()` on a 100–500 ms tick and emits `{type:'feedback', lines:[...]}`; similarly emits `{type:'settings', changed:{index:value}}` from `cmd.get_setting_updates()`. React `<FeedbackLog>` = virtualized list, monospace, auto-scroll-on-bottom, selectable text, font-size preference persisted client-side.
+### In the port
+Polling is replaced by push: the bridge drains `cmd._get_feedback()` on its status tick and publishes the `feedback` topic, and publishes `settings` from the `cmd.get_setting_updates()` tap (see `docs/settings-colors.md` D3). `apps/web/src/features/console/FeedbackLog.tsx` renders it — monospace, auto-scroll-on-bottom, selectable, with the font size held client-side.
 
 ---
 
@@ -410,7 +419,7 @@ Backing store — **sqlite**, `packages/engine/modules/pymol/_gui.py:975-1032`:
 - Modifier mask (`keymapping.py:44-58`): Shift=0x1, Meta **or** Ctrl=0x2, Alt=0x4.
 - Ctrl-<key> without text ⇒ `k = key - 64`; Alt-<key> ⇒ `k = key`; keys outside 0..255 are dropped (`keymapping.py:84-96`).
 
-Saved user shortcuts: `pymol.save_shortcut.load_and_set(self.cmd)` at window construction (`pymol_qt_gui.py:419`), which reads `~/.pymol/shortcuts_save.json` and calls `cmd.set_key(key, value[2])` per entry (`packages/engine/modules/pymol/save_shortcut.py:6, 38-71`). The returned dict is stored as `self.saved_shortcuts` and handed to `PyMOLShortcutMenu` (`pymol_qt_gui.py:888`).
+Saved user shortcuts: `pymol.save_shortcut.load_and_set(self.cmd)` at window construction (`pymol_qt_gui.py:419`), which reads `~/.pymol/shortcuts_save.json` and calls `cmd.set_key(key, value[2])` per entry (`packages/engine/modules/pymol/save_shortcut.py:6`, `:65-72`). The returned dict is stored as `self.saved_shortcuts` and handed to `PyMOLShortcutMenu` (`pymol_qt_gui.py:888`).
 
 ---
 
@@ -439,8 +448,8 @@ Saved user shortcuts: `pymol.save_shortcut.load_and_set(self.cmd)` at window con
 
 Detection of this shim elsewhere: `'pmg_qt.mimic_tk' in sys.modules` at `packages/engine/modules/pymol/plugins/installation.py:155` and `legacysupport.py:43, 135, 153`.
 
-### Web plan
-Legacy Tk plugins **cannot** be ported. Decide explicitly: either (a) drop `Plugin ▸ Legacy Plugins` and keep only a Qt→React plugin API, or (b) keep the plugin process headless in Python and let plugins register *menu descriptors* (label path, id) over the bridge, with the React menu rendering them and RPCing back on click. Option (b) preserves `addmenuitem('A|B|C', fn)` semantics with a JSON tree; option (a) is much cheaper.
+### In the port
+Legacy Tk plugins cannot run in a browser, so the plugin code stays headless in Python and plugins register *menu descriptors* (label path, id) over the bridge; the client renders them and calls back on click (`apps/web/src/features/plugin-manager/legacyMenu.ts`, `LegacyPlugins.tsx`). That preserves `addmenuitem('A|B|C', fn)` semantics as a JSON tree.
 
 ---
 
@@ -500,15 +509,15 @@ Two independent drop targets:
    - if the file ends in `.psw` ⇒ `cmd.set('presentation')`, `cmd.set('internal_gui', 0)`, `cmd.set('internal_feedback', 0)`, `cmd.full_screen('on')`;
    - then `window.load_dialog(ev.file())`.
 
-### Web plan
-Browser drops give `File` objects, **not paths**. Since the backend is local with full filesystem access, the bridge needs two paths: (a) if the drop carries a real path (Electron/Tauri, or `text/uri-list` from a native app) send the path and call `load_dialog`; (b) otherwise upload the bytes to the bridge, write to a temp dir, and load from there. The `.psw` presentation branch and the "open in a new instance" branch are process-level and should be re-scoped (new browser tab ⇒ new backend process, or just refuse).
+### In the port
+Browser drops give `File` objects, **not paths**. The backend is local with full filesystem access, so there are two paths: a drop carrying a real path (`text/uri-list` from a native app) sends the path and calls `load_dialog`; otherwise the bytes are uploaded to `/upload`, written to a temp dir and loaded from there. `apps/web/src/features/files/globalDrop.ts` and `FileDropTarget.tsx` implement it. The `.psw` presentation branch and the "open in a new instance" branch are process-level and are not reproduced.
 
 ---
 
 ## 11. Application startup and shutdown flow
 
 ### Startup (`execapp`, `pymol_qt_gui.py:1193-1267`)
-Entered from `pymol.launch` (`packages/engine/modules/pymol/__init__.py:415-425`): if `options.gui == 'pmg_qt'` and not `no_gui`/`testing`, `from pmg_qt import pymol_qt_gui; return pymol_qt_gui.execapp()`; on `ImportError` it prints `Qt not available (...), using GLUT/Tk interface` and falls back to `pmg_tk`. `no_gui` goes to `_launch_no_gui()` (`__init__.py:386-403`), which spins `p.draw()` until idle conditions clear.
+Entered from `pymol.launch` (`packages/engine/modules/pymol/__init__.py:405-425`): if `options.gui == 'pmg_qt'` and not `no_gui`/`testing`, `from pmg_qt import pymol_qt_gui; return pymol_qt_gui.execapp()`; on `ImportError` it prints `Qt not available (...), using GLUT/Tk interface` and falls back to `pmg_tk`. `no_gui` goes to `_launch_no_gui()` (`__init__.py:386-403`), which spins `p.draw()` until idle conditions clear.
 
 `execapp` steps, in order:
 1. `sys.excepthook = traceback.print_exception` — "don't let exceptions stop PyMOL" (`:1200-1202`);
@@ -549,11 +558,11 @@ Commands/APIs this area calls (all confirmed present):
 
 Engine-loop APIs (from `pymol_gl_widget.py`): `pymol.start()`, `pymol.idle()`, `pymol.getRedisplay()`, `pymol.draw()`, `pymol.reshape(w,h,True)`, `pymol.button(...)`, `pymol.drag(...)`.
 
-**Bridge hooks the backend expects the front end to provide** (currently monkey-patched in `execapp`): `pymol.cmd._copy_image`, `pymol.cmd._call_in_gui_thread`, `pymol.cmd._call_with_opengl_context`, `pymol.gui.createlegacypmgapp`, and the overloaded `cmd.viewport` / `cmd.full_screen`. `pymol.gui.get_qtwindow()` (`packages/engine/modules/pymol/gui.py:28-36`) is queried by `cmd.window` (`viewing.py:1450`), `pymol.gui.save_as`/`save_image` (`gui.py:70-92`) and `plugins/legacysupport.py:76`. **These are the exact seams the Python bridge service must fill.**
+**Bridge hooks the backend expects the front end to provide** (currently monkey-patched in `execapp`): `pymol.cmd._copy_image`, `pymol.cmd._call_in_gui_thread`, `pymol.cmd._call_with_opengl_context`, `pymol.gui.createlegacypmgapp`, and the overloaded `cmd.viewport` / `cmd.full_screen`. `pymol.gui.get_qtwindow()` (`packages/engine/modules/pymol/gui.py:28-36`) is queried by `cmd.window` (`viewing.py:1450`), `pymol.gui.save_as`/`save_image` (`gui.py:70-92`) and `plugins/legacysupport.py:76`. **These are the exact seams the bridge fills** — `packages/bridge/tenmol_bridge/shims.py`.
 
 ---
 
-## 13. Risks and contradictions vs the target architecture
+## 13. Constraints this area lives under
 
 1. `pymol.cmd._call_with_opengl_context` (`pymol_qt_gui.py:1245-1252`) makes the **backend** depend on a live, current OpenGL context in the GUI process. With rendering moved to the browser there is no such context in Python. Anything routed through it (shader-dependent operations, `ray`/`draw`/`png` in some paths) must either get a headless/offscreen GL context in the Python process or fail loudly.
 2. `_copy_image` writes a PNG to a temp file and pushes it to the OS clipboard (`pymol_qt_gui.py:1170-1185`). In the browser this becomes a base64 data transfer + `navigator.clipboard.write(ClipboardItem)`, which requires a user gesture and HTTPS/localhost.
@@ -570,10 +579,34 @@ Engine-loop APIs (from `pymol_gl_widget.py`): `pymol.start()`, `pymol.idle()`, `
 13. `pymolviewport` resizes the *window* to satisfy `cmd.viewport w, h` (`pymol_qt_gui.py:62-81`). A browser cannot resize its own window reliably; `cmd.viewport` must instead resize the canvas element and report the achieved size back.
 14. Drag-and-drop of files from the OS gives no path in a plain browser (§10).
 
-## 14. Open questions
+## 14. Decisions this map fed
 
-- Does `file_dialogs.load_dialog` call `recent_filenames_add`? (Only `session_save_as` does so in `pymol_qt_gui.py`; confirm in the file-dialogs area, `packages/engine/modules/pmg_qt/file_dialogs.py:33`.)
-- Where should `Open Recent` live — keep the server-side `~/.pymol/recent.db` (`_gui.py:986`) or mirror in browser storage? Server-side is more faithful.
-- Should the web app expose `Display ▸ Internal GUI` / `Internal Prompt` / `Internal Feedback` / `Overlay` at all, given the internal ortho GUI is being replaced by React? (These are settings `internal_gui`, `internal_prompt`, `internal_feedback`, `overlay`, `_gui.py:409-418`.)
-- Stereo modes (`_gui.py:420-433`): which, if any, are reproducible in WebGL/WebXR? `stereo openvr` almost certainly must be dropped.
-- What replaces `Setting ▸ Keyboard Shortcuts...` persistence (`~/.pymol/shortcuts_save.json`, `save_shortcut.py:6`) — server-side file (faithful) or browser storage?
+- **`file_dialogs.load_dialog` does not add to the recent list.** Only `session_save_as` calls
+  `recent_filenames_add` in `pymol_qt_gui.py`. The bridge does not reimplement the recent-files
+  store: it binds PyMOL's own unbound `_recent_filenames_lazy_init` / `recent_filenames` /
+  `recent_filenames_add` (`packages/engine/modules/pymol/_gui.py:975-1032`) onto its own carrier,
+  so `~/.pymol/recent.db` keeps the same schema and prune behaviour
+  (`packages/bridge/tenmol_bridge/panels/files.py`).
+- **`Open Recent` stays server-side.** `~/.pymol/recent.db` (`_gui.py:986`) is the store; nothing
+  is mirrored into browser storage.
+- **`Display ▸ Internal GUI` / `Internal Prompt` / `Internal Feedback` / `Overlay` are still in
+  the menu** (`internal_gui`, `internal_prompt`, `internal_feedback`, `overlay`, `_gui.py:409-418`)
+  but the bridge holds `internal_gui` at 0 deliberately, because `get_viewport()` must equal the
+  requested size. `apps/web/src/shell/orthoPanel.ts` records the measured effect of each value.
+- **Stereo modes** (`_gui.py:420-433`) are kept live and annotated rather than pruned, because the
+  menu tree is harvested rather than hand-written. `apps/web/src/features/menubar/stereo.ts`
+  records which ones the engine actually honours, including the two that answer `ok` and then
+  report an error only as a feedback line (`quadbuffer`, `openvr`), and the two whose labels lie
+  upstream (`Chromadepth` turns stereo *off*; `Swap Sides` touches neither `stereo` nor
+  `stereo_mode`).
+- **`Setting ▸ Keyboard Shortcuts...` persistence stays server-side.**
+  `~/.pymol/shortcuts_save.json` *is* `cmd.shortcut_dict`, written verbatim by
+  `save_shortcut.save_shortcuts` (`packages/engine/modules/pymol/save_shortcut.py`), so the editor
+  calls that function rather than inventing a format
+  (`apps/web/src/features/shortcuts/ShortcutEditor.tsx`). Reading the *live* bindings needed a
+  bridge module: `cmd.key_mappings` is a plain dict attribute and the dispatcher resolves callables
+  only, so `packages/bridge/tenmol_bridge/panels/shortcuts.py` reduces each binding to
+  `{kind, command, callable}` — a `(function, args, kwargs)` value cannot cross the wire.
+- **Legacy Tk plugins** register menu descriptors over the bridge and the client renders them
+  (`apps/web/src/features/plugin-manager/LegacyPlugins.tsx`, `legacyMenu.ts`), preserving
+  `addmenuitem('A|B|C', fn)` semantics as a JSON tree.

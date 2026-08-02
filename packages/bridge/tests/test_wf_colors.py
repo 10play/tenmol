@@ -1,6 +1,6 @@
 """The Colours EDITOR dialog — ``Setting > Colors...`` — against a live PyMOL.
 
-Row 72 of ``docs/00-parity-inventory.md``.  The desktop dialog is
+Row 72 of ``docs/feature-parity.md``.  The desktop dialog is
 ``PyMOLQtGUI.edit_colors_dialog`` (``packages/engine/modules/pmg_qt/pymol_qt_gui.py:547-611``)
 over ``packages/engine/modules/pmg_qt/forms/colors.ui``: a sorted list, a name box, three
 spinboxes, three sliders, a swatch and Apply.  Nine ``connect()`` calls hold it

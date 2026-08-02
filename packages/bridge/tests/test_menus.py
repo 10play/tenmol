@@ -217,7 +217,7 @@ def test_help_menu_is_urls_plus_about(tree: Dict[str, Any]) -> None:
         for _, node in walk(children(tree, "/Help"))
         if node["kind"] == "command" and node["action"]["type"] == "url"
     ]
-    # NOTE: 00-parity-inventory.md says "11 `webbrowser.open` entries"; the real
+    # NOTE: feature-parity.md says "11 `webbrowser.open` entries"; the real
     # count is TWELVE (3 site links + 3 doc links + 3 Topics + mailing list +
     # sponsorship + citing).  The tree is the authority, not the inventory.
     assert len(urls) == 12
@@ -413,7 +413,7 @@ def test_a_check_item_round_trips_through_the_wire(ws: Any) -> None:
 def test_bg_rgb_is_a_COLOR_setting_not_float3(ws: Any) -> None:
     """MEASURED CORRECTION to the area docs.
 
-    `00-parity-inventory.md` and `qt-main-window.md` describe the Display >
+    `feature-parity.md` and `qt-main-window.md` describe the Display >
     Background radios (White 0 / Light Grey 134 / Grey 104 / Black 1) as if
     `bg_rgb` were a float3 whose first component Qt compares.  It is not: this
     build reports type 5 (cSetting_color) and `get_setting_tuple` returns a

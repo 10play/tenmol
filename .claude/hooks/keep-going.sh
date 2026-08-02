@@ -14,7 +14,7 @@ cd "$ROOT" 2>/dev/null || exit 0
 
 # Installed in USER settings so it loads without a session restart, which means
 # it fires in every project. Inert anywhere that is not this repo.
-[ -f "scripts/parity.mjs" ] && [ -f "docs/00-parity-inventory.md" ] || exit 0
+[ -f "scripts/parity.mjs" ] && [ -f "docs/feature-parity.md" ] || exit 0
 
 STATE_DIR=".claude/.state"
 COUNT_FILE="$STATE_DIR/keep-going-count"
@@ -62,9 +62,9 @@ fi
 # --- block ------------------------------------------------------------------
 REASON="Do not stop to ask whether to continue. ${OPEN} of ${TOTAL} parity rows are still open (${DONE} done, ${PARTIAL} partial).
 
-Pick up the next work package from docs/03-implementation-plan.md section 6 and implement it. Respect the file-ownership boundaries there; run 'pnpm ownership' if unsure who owns a file.
+Pick up the next work package from docs/code-ownership.md section 6 and implement it. Respect the file-ownership boundaries there; run 'pnpm ownership' if unsure who owns a file.
 
-Before finishing a package: pnpm typecheck && pnpm build && pnpm lint, plus the bridge suite (packages/bridge/.venv/bin/python -m pytest packages/bridge/tests -q) and pnpm test. Tick the rows you genuinely verified in docs/00-parity-inventory.md so this check advances -- do not tick rows you did not test.
+Before finishing a package: pnpm typecheck && pnpm build && pnpm lint, plus the bridge suite (packages/bridge/.venv/bin/python -m pytest packages/bridge/tests -q) and pnpm test. Tick the rows you genuinely verified in docs/feature-parity.md so this check advances -- do not tick rows you did not test.
 
 Only stop if you are blocked on something that genuinely requires the user's decision, in which case say so plainly and touch .claude/STOP first. (keep-going ${n}/${MAX})"
 

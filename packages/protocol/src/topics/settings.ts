@@ -72,7 +72,7 @@ export interface SettingMeta {
   /**
    * From `packages/engine/layer1/SettingInfo.h`, parsed and validated against the live table;
    * absent when the header is not next to the bridge.  There is NO C accessor
-   * for this (`00-parity-inventory.md` area 5) and none was invented.
+   * for this (`feature-parity.md` area 5) and none was invented.
    */
   default?: SettingValue;
   /**

@@ -1,14 +1,30 @@
 # Linux offscreen GL validation for the web client bridge.
 #
-# The one thing docs/spikes/07-cross-platform-gl.md could not do for a
+# The one thing docs/spikes/cross-platform-gl.md could not do for a
 # long time: actually RUN packages/bridge/tenmol_bridge/glcontext/egl.py. It is now run
 # for real, both in a local container (`bash scripts/test-gl-linux.sh`) and here
-# on ubuntu-latest, which has no GPU and no X server -- which is the point.
+# on the ubuntu runners below, which have no GPU and no X server -- the point.
 #
 # Mesa's EGL_MESA_platform_surfaceless + llvmpipe needs neither. It gives a
 # desktop OpenGL 4.x COMPATIBILITY context, which is what PyMOL requires:
 # packages/engine/layer1/ScenePicking.cpp:283,306 call glPushMatrix/glPopMatrix and :234,272
 # call glShadeModel, none of which exist in GLES.
+#
+# This workflow is KEPT rather than deleted because the claim was checked, not
+# assumed. `bash scripts/test-gl-linux.sh` was run to completion in a
+# debian:bookworm-slim container with no GPU, no X and no /dev/dri, and every
+# assertion held:
+#
+#   surfaceless / api=gl / desktopGL=True / ARB fbo entry points
+#   renderer   llvmpipe (LLVM 15.0.6, 128 bits)
+#   version    4.5 (Compatibility Profile) Mesa 22.3.6
+#   PyMOL      1tii.pdb, 5684 atoms, cartoon drawn in 163 ms, glGetError=0
+#   readback   13578 / 76800 pixels non-black through PixelReadback
+#   picking    3/3 clicks selected a CA atom through ScenePicking
+#
+# So the "no offscreen GL implementation for Linux" line a developer sees comes
+# from scripts/doctor.mjs, whose GL probe is a hard-coded CGL recipe with no
+# other branch. That is the DOCTOR's limitation. egl.py works.
 #
 # Separate from webclient-ci.yml on purpose: that one's real job is macOS/CGL,
 # this one is the Linux half of the cross-platform story and it is allowed to
@@ -24,18 +40,36 @@ on:
     paths:
       - "packages/bridge/tenmol_bridge/glcontext/**"
       - "packages/bridge/tenmol_bridge/render/**"
+      # engine.py owns GL context setup and the GL-less fallback, so a
+      # regression there is exactly what this job exists to catch. It was
+      # missing from this filter, which meant the job would not run for it.
+      - "packages/bridge/tenmol_bridge/engine.py"
       - "scripts/test-gl-linux.sh"
       - "scripts/bootstrap.sh"
       - ".github/workflows/webclient-gl-linux.yml"
       - "packages/engine/layer0/**"
       - "packages/engine/layer1/**"
       - "packages/engine/layer5/**"
-      - "setup.py"
+      - "packages/engine/setup.py"
+  # Same list as the push trigger, deliberately. When it was the shorter one, a
+  # PR touching scripts/bootstrap.sh or layer1 skipped this check and the push
+  # that merged it ran it -- so the breakage was found on master rather than on
+  # the branch that caused it.
   pull_request:
     paths:
       - "packages/bridge/tenmol_bridge/glcontext/**"
+      - "packages/bridge/tenmol_bridge/render/**"
+      # engine.py owns GL context setup and the GL-less fallback, so a
+      # regression there is exactly what this job exists to catch. It was
+      # missing from this filter, which meant the job would not run for it.
+      - "packages/bridge/tenmol_bridge/engine.py"
       - "scripts/test-gl-linux.sh"
+      - "scripts/bootstrap.sh"
       - ".github/workflows/webclient-gl-linux.yml"
+      - "packages/engine/layer0/**"
+      - "packages/engine/layer1/**"
+      - "packages/engine/layer5/**"
+      - "packages/engine/setup.py"
   workflow_dispatch:
 
 concurrency:
@@ -85,7 +119,7 @@ jobs:
 
       - name: egl.probe() -- diagnostics before any assertion
         run: |
-          PYTHONPATH=bridge python3 -c "
+          PYTHONPATH=packages/bridge python3 -c "
           import json
           from tenmol_bridge.glcontext import egl
           print(json.dumps(egl.probe(), indent=2))"
@@ -104,7 +138,9 @@ jobs:
   egl-pymol:
     name: EGL + a real PyMOL render
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    # A PyMOL build plus the 1851-test bridge suite, which alone takes ~9
+    # minutes on a fast laptop. 60 was cutting it close.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
 
@@ -121,11 +157,17 @@ jobs:
             cmake libfreetype6-dev libglew-dev libglm-dev libmsgpack-dev \
             libnetcdf-dev libpng-dev libxml2-dev
 
+      # scripts/bootstrap.sh vendors these into packages/engine/.deps (its
+      # DEPS_DIR default). The pre-monorepo path `.deps` is where nothing has
+      # been written since the reorg, so that cache never hit and mmtf-cpp was
+      # re-cloned on every run. The key is distinct from any older one on
+      # purpose: same key + different contents would restore into the wrong
+      # place depending on which workflow populated it first.
       - name: cache vendored mmtf-cpp headers
         uses: actions/cache@v4
         with:
-          path: .deps
-          key: mmtf-cpp-${{ runner.os }}-v1
+          path: packages/engine/.deps
+          key: mmtf-cpp-${{ runner.os }}-engine-v2
 
       - name: bootstrap (builds PyMOL from this tree into packages/bridge/.venv)
         run: bash scripts/bootstrap.sh --skip-node --python "$(command -v python)"

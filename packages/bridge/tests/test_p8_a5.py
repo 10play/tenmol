@@ -1,7 +1,7 @@
 """Wave 8, area 5 — settings & colours, the gaps waves 4-7 left open.
 
 Six claims, each measured against the LIVE engine over the real WebSocket,
-each the gap clause of one PARTIAL row in ``docs/00-parity-inventory.md``:
+each the gap clause of one PARTIAL row in ``docs/feature-parity.md``:
 
     row 223  the 5388-slot table is BROWSABLE, not just sampled: the twelve
              regions ``ColorReset`` lays down are where ``palette.ts`` says.

@@ -1,15 +1,84 @@
 # Spike 08 — Native (C++) wave 2: change counters, pick data, missing instances
 
-**Status: IMPLEMENTED AND VERIFIED.** Plan `03-implementation-plan.md` §4 Task 6 (ReprVersion),
+**Status: IMPLEMENTED AND VERIFIED.** Plan `code-ownership.md` §4 Task 6 (ReprVersion),
 §4 Task 3 (pick data) and the instance half of defect D6 are done.
 
 Every number, transcript and table below was produced on this machine by running the scripts
 named in §7. Nothing is inferred from source reading alone. Where something is *not* verified it
 says so in those words.
 
+> ## STATUS — re-verified against the C++ on 2026-08-02
+>
+> `packages/engine/layer4/CmdWebGeometry.cpp` **has been extended twice since this spike was
+> written**, so §0's diffstat is stale. What is still exactly true, and what moved:
+>
+> **STILL TRUE, re-measured today.**
+>
+> * **The merge-surface guarantee, to the line.** Counting lines inside
+>   `tenmol web client -- BEGIN … END` blocks today: `Executive.cpp` 10 blocks / 64 lines,
+>   `ExecutiveDef.h` 1 block / 19 lines, `Cmd.cpp` 2 blocks / 10 lines = **93 guarded lines, zero
+>   unterminated blocks** — the same three numbers §6 recorded. `BEGIN` and `END` counts match in
+>   every file. Zero upstream lines removed.
+> * **`_cmd.web_get_versions` payload shape** (§2). Live keys today:
+>   `changed, counters, objects, recomputed, rehashed, serial, walks`; per object
+>   `enabled, n_atom, n_state, reps, type, version`. Exactly §2's contract.
+> * **`_cmd.web_resolve_pick` payload shape** (§3.1). Live keys today:
+>   `atom, bond, bond_atoms, coord, describe, index, message, object, ok, pick_kind, selection,
+>   state, status`. `resolve(1tii, index=10, bond=cPickableAtom)` → `status ok`,
+>   `selection u`11`, `describe /u///HOH`11/O`, `pick_kind atom`.
+> * **§5.2's status table.** Re-run on 1tii with every rep shown: `labels → unsupported`;
+>   `slice`/`volume`/`callback`/`cgo` → `not-built`; `cell` → `ok` from `CoordSet::UnitCellCGO`;
+>   `extent` → `ok` from `CObject::ExtentMin/ExtentMax`; `ellipsoids` → `empty` on a structure
+>   with no ANISOU; everything else `ok`.
+>
+> **CHANGED — §0 and §6 understate the file.**
+>
+> * `CmdWebGeometry.cpp` is now **2,660 lines**, not the "+1012" of §0 (spike 06 created it at
+>   1,451). The three upstream files are untouched beyond the 93 guarded lines above, so the
+>   growth is entirely inside the file upstream does not have.
+> * **A whole object type was added that §5 does not mention: `ObjectMesh`** — the
+>   `isomesh`/`isodot` OBJECTS the density wizard builds. They own no `CoordSet` and no `Rep`, so
+>   nothing in §5's molecular path could reach them. There are now two arms:
+>   `extractObjectMesh()` reads `ObjectMeshState::{N,V,VC}` and reuses `extractMesh`'s
+>   `kind: "mesh"` envelope, adding `source: "ObjectMeshState::V"`, `level` and `map_name`; and a
+>   matching arm in the object signature so `web_get_versions` lists a `mesh|<state>` row for
+>   them. Measured today on `pept.pdb` + `map_new` + `isomesh`/`isodot`:
+>   ```
+>   msh  status=ok kind=mesh source=ObjectMeshState::V n_vert=12536 n_strip=212 mesh_type=0 width=1.0 level=1.0 map=m
+>   dot  status=ok kind=mesh source=ObjectMeshState::V n_vert=6162  n_strip=1   mesh_type=1 width=2.0 level=1.0 map=m
+>   versions msh type=3 reps=['mesh|0']      versions dot type=3 reps=['mesh|0']
+>   hide mesh, msh  ->  not-built ("mesh rep is hidden for this object")
+>   ```
+> * **`Width` is now hashed in TWO signature arms, and the second one is a bug this spike's design
+>   would have shipped.** §2.1 says the signature is a content hash of the rep's CPU geometry —
+>   but `mesh_width` changes **no vertex**, so `web_get_versions` never bumped `mesh|<state>` and
+>   the client's version poll, which gates every geometry pull, never refetched. Measured in the
+>   code comment at `CmdWebGeometry.cpp:1776`: Mode P went 22,780 → 36,444 ink pixels while Mode G
+>   stayed at 22,771 with `geometryFrames` stuck at 1. Both arms now hash it — `repSignature`'s
+>   `cRepMesh` arm hashes `RepMesh::Width`, and the `ObjectMesh` arm hashes the `mesh_width` /
+>   `dot_width` *setting* (an object-level setting, not state). Confirmed live today:
+>   `set mesh_width, 3, msh` takes `mesh|0` from `{version: 1}` to `{version: 2}` with
+>   `changed=True`. **This is the same class of hole §5.1 already recorded for
+>   `dash_radius`/`dash_width`; treat "a setting that changes appearance but no vertex" as the
+>   standing failure mode of a pure content hash.**
+> * **§6's mirror table lists one mirror; there are ten**, all in `namespace mirror` at the top of
+>   the file: `RepSurface`, `RepCartoon`, `RepCylBond`, `RepWireBond`, `RepRibbon`, `RepNonbonded`,
+>   `RepNonbondedSphere`, `RepEllipsoid`, `RepMesh` (all from spike 06 §8.1) plus this spike's
+>   `RepDistLines`. `extractObjectMesh` needs **no** mirror: `ObjectMesh.h` is a public header.
+> * §7's `t*.py` probe scripts lived in a session scratchpad and are **gone**. The behaviour they
+>   proved is pinned in `packages/bridge/tests/` instead — `test_p11_geom.py` is the isomesh /
+>   `ObjectMesh` suite.
+>
+> **STALE PATHS IN THE C++, reported not applied** (`packages/engine/` is upstream and not this
+> file's to edit): `CmdWebGeometry.cpp:8`, `:38`, `:2087` and `:2421` still cite
+> `docs/webclient/spikes/…`, the pre-monorepo path. The files are at `docs/spikes/…`.
+
 ---
 
 ## 0. TL;DR
+
+> The `CmdWebGeometry.cpp` row below is **the size at the time of this spike**. The file is 2,660
+> lines today; the three upstream files are unchanged. See the STATUS block above.
 
 | | |
 |---|---|
@@ -300,7 +369,7 @@ Sentinels behave:
 ### 3.2 The round trip, against a REAL GL pick
 
 Ground truth is a genuine `ScenePicking.cpp` pick-colour render + `glReadPixels` on the headless
-CGL + FBO context from `spikes/04-picking.md` §3 (`GL: 2.1 Metal - 89.4 / Apple M4 Max`), read out
+CGL + FBO context from `spikes/picking.md` §3 (`GL: 2.1 Metal - 89.4 / Apple M4 Max`), read out
 through `_cmd.get_click_string`. The client-side answer is produced in pure Python from **only** the
 `web_get_rep_geometry` buffers plus `packages/viewport/src/camera.ts`'s view maths — it never looks
 at the GL result.
@@ -562,6 +631,9 @@ Everything else the plan listed is now supported.
 
 ## 6. Upstream-merge surface
 
+> The `CmdWebGeometry.cpp` line in this diffstat is historical (see STATUS). **The three upstream
+> rows and the 93-guarded-line audit below were re-run on 2026-08-02 and are exact.**
+
 ```
  packages/engine/layer3/Executive.cpp      |   69 ++++
  packages/engine/layer3/ExecutiveDef.h     |   20 +
@@ -597,7 +669,7 @@ Run `t3_instances.py` at each merge; a `layout-mismatch` names the file that cha
 
 ## 7. Reproducing
 
-Build (unchanged from `spikes/00-build.md`):
+Build (unchanged from `spikes/build.md`):
 
 ```bash
 bash scripts/bootstrap.sh --force-pymol

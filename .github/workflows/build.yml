@@ -1,3 +1,13 @@
+# Upstream PyMOL's own CI: it builds the C++ core and runs PyMOL's test suite.
+#
+# In this fork the project lives in packages/engine/, so the pip targets below
+# name that directory instead of the repo root. The test steps additionally set
+# `working-directory: packages/engine`, which is NOT cosmetic: parts of the
+# suite load data by a path relative to the CWD rather than to __file__ -- see
+# packages/engine/testing/tests/api/test_editing.py, `cmd.load("testing/data/1rx1.pdb")`.
+# Upstream satisfied that by running from its repo root; packages/engine is the
+# same directory here. Do not "simplify" these back to root-relative paths.
+
 name: CI
 
 on: [push, pull_request]
@@ -45,13 +55,14 @@ jobs:
     - name: Build
       run: |
         pip install --upgrade pip
-        pip install -v --config-settings testing=True '.[dev]'
+        pip install -v --config-settings testing=True './packages/engine[dev]'
       env:
         DEBUG: 1
 
     - name: Test
+      working-directory: packages/engine
       run: |
-        pymol -ckqy packages/engine/testing/testing.py --run all
+        pymol -ckqy testing/testing.py --run all
 
 
   build-Windows:
@@ -105,9 +116,10 @@ jobs:
     - name: Build PyMOL
       run: |
         conda activate $env:CONDA_ENV_NAME
-        pip install -v --config-settings testing=True .[dev]
+        pip install -v --config-settings testing=True './packages/engine[dev]'
 
     - name: Test
+      working-directory: packages/engine
       run: |
         conda activate $env:CONDA_ENV_NAME
         pymol -ckqy testing\testing.py --run all
@@ -163,10 +175,11 @@ jobs:
       run: |
         source activate $CONDA_ENV_NAME
         export MACOSX_DEPLOYMENT_TARGET=12.0
-        pip install -v --config-settings testing=True '.[dev]'
+        pip install -v --config-settings testing=True './packages/engine[dev]'
 
     - name: Test
+      working-directory: packages/engine
       run: |
         source activate $CONDA_ENV_NAME
-        pymol -ckqy packages/engine/testing/testing.py --run all
+        pymol -ckqy testing/testing.py --run all
 

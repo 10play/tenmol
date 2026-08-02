@@ -1,8 +1,18 @@
-# Molecular Builder — full feature map for the React web client
+# The molecular builder
 
-Area: **builder** (the "Builder" dock widget + the molecular editor state machine behind it).
+The Builder dock widget and the molecular editor state machine behind it, read out of
+`packages/engine/`, which is unmodified upstream.
 
-Authoritative sources actually read for this document:
+**Where the port stands.** `apps/web/src/features/builder/` (`BuilderPanel.tsx`, `controller.ts`,
+`tables.ts`, `ringIcons.ts`, `sculptTicker.ts`, `viewportPicking.ts`) over
+`packages/bridge/tenmol_bridge/panels/builder.py` and
+`packages/protocol/src/topics/{builder,editor}.ts`. Every button press goes to
+`cmd.builder_action` and the reply *is* the new state, so the client never keeps a shadow copy of
+`pk1..pk4`; a 4 Hz poll covers state the panel did not cause (a viewport pick, a `set valence, 0`
+typed in the console, a wizard armed by a script). The 13 action wizards of §6 render through the
+generic wizard protocol — see `docs/wizards.md` §8.
+
+Sources read:
 
 | file | what it is |
 |---|---|
@@ -23,7 +33,7 @@ Entry point: `pmg_qt/pymol_qt_gui.py:613 open_builder_panel()` → `pmg_qt/build
 
 ---
 
-## 0. Architecture verdict for this area
+## 0. Architecture of this area
 
 **The Builder is 100% a control-plane surface.** Every single button issues `cmd.*` calls; nothing about it needs client-side geometry. The 3D consequences (new atoms, bonds, sculpt CGO bumps) come back as ordinary object/rep updates through the geometry channel that the viewport agent owns. **No contradiction with the target architecture.**
 
@@ -227,7 +237,7 @@ Backing dihedrals in `editor.attach_amino_acid` (`editor.py:151-162`):
 | 4 flat (**not exposed in the Qt combo**) | 180.0 | 180.0 |
 | ss<0 | falls back to the `secondary_structure` setting (`SettingInfo.h:242`, default 2, range 1..4) | |
 
-### 4c. `editor.attach_amino_acid` semantics (`editor.py:98-292`) — must be preserved verbatim on the backend
+### 4c. `editor.attach_amino_acid` semantics (`editor.py:98-292`)
 
 Signature: `attach_amino_acid(selection, amino_acid, center=0, animate=-1, object="", hydro=-1, ss=-1)`.
 
@@ -414,7 +424,7 @@ Note the truncation bug: the truncated list including the literal `"[N more]"` p
 
 ---
 
-## 6. The wizard layer (13 classes) — viewport-internal GUI to be cloned in React
+## 6. The wizard layer (13 classes)
 
 ### 6.0 Base machinery
 
@@ -588,7 +598,7 @@ Note: the local `verb` dict (`builder.py:953`, `{2:"Restrain", 3:"Fix"}`) is com
 | macro | name | meaning |
 |---|---|---|
 | `cEditorSele1..4` | `pk1`, `pk2`, `pk3`, `pk4` | the picked atoms, in click order |
-| `cEditorSet` | `pkset` | union of all picked atoms (built by `SelectorSubdivide`, `packages/engine/layer3/Selector.cpp:4548`) |
+| `cEditorSet` | `pkset` | union of all picked atoms (built by `SelectorSubdivide`, `packages/engine/layer3/Selector.cpp:4202`) |
 | `cEditorBond` | `pkbond` | the two atoms of the picked bond (`Selector.cpp:4323`) |
 | `cEditorRes` | `pkresi` | `byres <single picked>` |
 | `cEditorChain` | `pkchain` | `bychain <single picked>` |
@@ -601,7 +611,7 @@ Note: the local `verb` dict (`builder.py:953`, `{2:"Restrain", 3:"Fix"}`) is com
 | `cEditorMeasure` | `_auto_measure` | the auto distance/angle/dihedral object |
 | `cEditorDrag` | `_drag` | drag selection |
 
-### 7b. Pick assignment order (`packages/engine/layer3/Editor.cpp:499-536 EditorGetNextMultiatom`)
+### 7b. Pick assignment order (`EditorGetNextMultiatom`, `packages/engine/layer3/Editor.cpp:498-536`)
 
 Next pick goes to the first free slot in order `pk1 → pk2 → pk3 → pk4`. **Once all four are taken, further picks overwrite `pk4`** (the round-robin variant is commented out). Clicking an already-picked atom in atom-pick mode *unpicks* it (`EditorDeselectIfSelected`, `Editor.cpp:356-392`; message *"You unpicked <atom>."*).
 
@@ -683,7 +693,7 @@ Grouped, all verified in this tree:
 
 ---
 
-## 9. Known defects in the source (decide: clone or fix, but document either way)
+## 9. Known defects in the source
 
 1. `builder.py:417` calls `editor.combine_monomer()` — **this function does not exist** in `packages/engine/modules/pymol/editor.py` (grep-verified; only wizard *methods* named `combine_monomer` exist at `builder.py:402/491/511`). `BioPolymerWizard.do_pick` mode 1 therefore raises `AttributeError`.
 2. `builder.py:512` calls `editor.combine_nucleotide(...)` — **also does not exist** in `editor.py`.
@@ -699,11 +709,11 @@ Grouped, all verified in this tree:
 12. `AtomFlagWizard.do_pick` uses the double negative `if not(active_sele not in ...)` (`builder.py:856`).
 13. Tooltip typo `"Chlorrine"` (`builder.py:1082`); `"Napthylene"`/`napthylene` fragment misspelling throughout (`builder.py:1109`, and the on-disk `napthylene.pkl`).
 14. `editor.attach_nuc_acid` has an in-source `FIXME` about using `selection` as a name (`editor.py:838-840`), and `extend_nuc_acid` has a `FIXME` about the undocumented `tmp_connect` precondition (`editor.py:867-868`).
-15. `packages/engine/data/chempy/fragments/utpB.pkl` does **not** exist (all other `{a,c,g,t,u}tp{A,B}` and duplex fragments do). Only reachable if RNA form B is ever allowed; `attach_nuc_acid` currently forces RNA→form A (`editor.py:803-805`), so it is latent.
+15. `packages/engine/data/chempy/fragments/utpA.pkl` does **not** exist (all other `{a,c,g,t,u}tp{A,B}` and duplex fragments do). Only reachable if RNA form B is ever allowed; `attach_nuc_acid` currently forces RNA→form A (`editor.py:803-805`), so it is latent.
 
 ---
 
-## 10. React clone plan (summary)
+## 10. Where each surface lives now
 
 - **`<BuilderPanel/>`** — a dockable/floating panel. `Tabs` = Chemical | Protein | Nucleic Acid; the last contains nested `Tabs` DNA | RNA. Below the tabs, three fixed toolbars.
 - **Button data lives in one declarative table** mirroring `builder.py:1074-1112`, `1132-1135`, `1176-1210`, `1226-1265`. Each entry: `{label, tooltip, icon?, action: {kind, args}}`. The React layer never contains chemistry logic.
@@ -716,10 +726,26 @@ Grouped, all verified in this tree:
 
 ---
 
-## 11. Open questions for the team
+## 11. Decisions this map fed
 
-1. `cmd.clean` is incentive-only here. Ship the `Clean` button disabled, or wire an open-source MMFF94 minimizer (e.g. Open Babel) behind the same `cmd.clean(selection, message=..., async_=1)` signature?
-2. `undocontext` is a no-op in this tree (`editor.py:38-49`), so most `undoablemethod`-decorated actions are **not** actually undoable; only `cmd.undo`/`cmd.redo` against the C ring buffer work. Do we implement a real undo context on the bridge side, or accept parity with open-source?
-3. Sculpting is a continuous per-frame process. Do we stream coordinates at a fixed rate, or run `sculpt_iterate` on a bridge-side timer and push coordinate deltas?
-4. Should the web Builder expose `ss=4` (flat) and `secondary_structure` setting values that the Qt combo hides?
-5. Are the two dead `combine_monomer`/`combine_nucleotide` code paths worth resurrecting (they'd need new backend functions), or should the panel entries stay absent?
+1. **`cmd.clean` stays incentive-only.** It raises `IncentiveOnlyException` in this tree
+   (`computing.py:20`), so the bridge lists it in
+   `packages/bridge/tenmol_bridge/incentive_only.py` and the client shows the button as
+   unavailable rather than failing at click time. No open-source minimiser was substituted behind
+   the same signature.
+2. **`undocontext` is a no-op in this tree** (`editor.py:38-49`), so most `undoablemethod`-decorated
+   actions are not actually undoable; only `cmd.undo`/`cmd.redo` against the C ring buffer work.
+   The port keeps parity with open-source rather than inventing a bridge-side undo context.
+3. **Sculpting is not streamed on a client timer.** `PyMOL_Idle` calls
+   `ExecutiveSculptIterateAll(G)` whenever `ControlIdling(G)` is true
+   (`packages/engine/layer5/PyMOL.cpp:2424`, `packages/engine/layer1/Control.cpp:397-403`), and the
+   bridge's pump calls `idle()` every tick — so the engine sculpts with no client attached
+   (measured: 0.68 A of drift in 2.0 s with no tick, no subscriber and no draw request; 0.0000 A
+   after `set sculpting, 0`). Ticking `sculpt_iterate` with cycles on the client ran a second
+   minimiser beside the engine's own, so `apps/web/src/features/builder/sculptTicker.ts` defaults
+   to `cycles: 0` — a call that returns total strain and provably moves nothing. Moved atoms reach
+   the user the same way every other engine-side change does.
+4. **The `ss` combo exposes what the Qt combo exposes.** `ss=4` (flat) and raw
+   `secondary_structure` values stay out of the panel; they remain reachable from the command line.
+5. **`combine_monomer` / `combine_nucleotide` stay dead.** Both would need new backend functions,
+   so the panel entries remain absent, as they are in Qt.

@@ -1,22 +1,33 @@
-# Web client CI (WP-00).
+# Web client CI.
 #
-# Separate from .github/workflows/build.yml, which is upstream PyMOL's own CI and
-# must not be touched. This one runs the bootstrap the docs promise, then the JS
-# gates and the bridge's pytest suite.
+# Separate from .github/workflows/build.yml, which is upstream PyMOL's own CI.
+# This one runs the gates the web-client half of the repo depends on: the JS
+# suite plus the three repo linters on Linux, and the real thing -- PyMOL built
+# from packages/engine/ plus the bridge's pytest suite -- on macOS.
 #
-# macOS is the primary job: offscreen GL is CGL there (spikes/04-picking.md), and
-# it is the only platform the v1 viewport is verified on. GitHub's macOS runners
-# have no logged-in window server, so hardware CGL context creation can fail --
+# PATHS. Everything below is the post-monorepo layout:
+#   apps/web/          React app         packages/engine/   upstream PyMOL
+#   packages/bridge/   Python bridge     packages/{protocol,client,stores,viewport}
+#   scripts/  tools/  docs/
+#
+# NO paths-ignore. Skipping CI for docs-only pushes is tempting, but two of the
+# gates below PARSE docs/: scripts/parity.mjs reads docs/feature-parity.md
+# and scripts/ownership.mjs reads docs/code-ownership.md. A docs-only
+# commit can break CI, so a docs-only commit has to run CI.
+#
+# macOS is the primary platform: offscreen GL is CGL there and it is the only
+# platform the viewport is verified on. GitHub's macOS runners have no
+# logged-in window server, so hardware CGL context creation can fail -- the two
 # GL-dependent steps are therefore reported but not fatal, exactly like the ray
-# image-diff suites (WP-27).
+# image-diff suites. Everything that does NOT need GL is a hard gate.
+#
+# e2e is deliberately absent: it lives in its own workflow.
 name: webclient-ci
 
 on:
   push:
     branches: [master, web-client, "wp-*"]
-    paths-ignore: ["docs/**", "**/*.md"]
   pull_request:
-    paths-ignore: ["docs/**", "**/*.md"]
   workflow_dispatch:
 
 concurrency:
@@ -24,22 +35,36 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PNPM_VERSION: 9.15.4
   NODE_VERSION: "22"
+  PYTHON_VERSION: "3.13"
+  # Bump to invalidate the built-engine cache by hand (a Homebrew or Xcode
+  # change that the source hash cannot see).
+  CACHE_EPOCH: v1
 
 jobs:
   # -------------------------------------------------------------------------
-  # Fast gates that need no PyMOL build: ~1 minute.
+  # Fast gates that need no PyMOL build.
+  #
+  # Every step here is a gate. Nothing in this job merely reports: a linter
+  # whose failure is ignored is decoration.
   # -------------------------------------------------------------------------
   static:
-    name: lint / typecheck / build / unit
+    name: lint / typecheck / build / unit / linters
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v4
         with:
-          version: ${{ env.PNPM_VERSION }}
+          # scripts/ownership.mjs --base needs a merge-base with the target
+          # branch, and the default shallow checkout has neither the base ref
+          # nor common history. fetch-depth: 0 makes actions/checkout use the
+          # all-branches refspec.
+          fetch-depth: 0
+
+      # No `version:` input: package.json's "packageManager" field is the
+      # single source of truth and pnpm/action-setup@v4 reads it. Two pinned
+      # versions drift.
+      - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v6
         with:
@@ -48,108 +73,285 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # ---- gate: committed codegen is still committed ---------------------
+      #
+      # .gitignore line 3 is upstream's bare `generated`, which git matches at
+      # ANY depth and which therefore swallows packages/*/src/generated/ --
+      # codegen output that IS committed so a fresh clone typechecks without
+      # running tools/gen-api first. The re-include block below it is load
+      # bearing and easy to lose in a merge.
+      #
+      # packages/protocol/src/generated/api.ts is the file that exists today;
+      # git check-ignore needs no file on disk, it matches the path against the
+      # rules, so the probe creates nothing. Exit 0 from check-ignore means
+      # "this path is ignored", which is the failure.
       - name: gitignore does not swallow committed codegen
         run: |
-          mkdir -p packages/client/src/generated
-          echo 'export const _probe = 1;' > packages/client/src/generated/_ci_probe.ts
-          if git check-ignore -q packages/client/src/generated/_ci_probe.ts; then
-            echo "::error::packages/*/src/generated/ is git-ignored again -- see .gitignore"
-            git check-ignore -v packages/client/src/generated/_ci_probe.ts
+          set -euo pipefail
+          tracked="$(git ls-files 'packages/*/src/generated/*')"
+          if [ -z "$tracked" ]; then
+            echo "::error::no committed codegen under packages/*/src/generated/ -- has .gitignore started swallowing it?"
             exit 1
           fi
-          rm -f packages/client/src/generated/_ci_probe.ts
+          echo "tracked codegen:"
+          echo "$tracked" | sed 's/^/  /'
+          probe=packages/protocol/src/generated/_ci_probe.ts
+          if git check-ignore -q "$probe"; then
+            echo "::error::packages/*/src/generated/ is git-ignored again -- see the re-include block in .gitignore"
+            git check-ignore -v "$probe"
+            exit 1
+          fi
+          echo "a new file at $probe would be tracked: OK"
 
       - run: pnpm lint
 
       - run: pnpm typecheck
 
-      - run: pnpm -r run build
+      - run: pnpm build
 
-      - run: pnpm test
+      # The full web suite: both vitest projects (node + jsdom), see
+      # vitest.workspace.ts.
+      #
+      # `pnpm test:ci`, NOT `pnpm test`. `pnpm test` is
+      # `vitest run --passWithNoTests` and both projects set
+      # `passWithNoTests: true`, so it exits 0 when the include glob matches
+      # NOTHING. Measured: breaking only the jsdom project's glob drops 710
+      # tests and `pnpm test` still reports success at exit 0. The glob is two
+      # path levels deep and this repo was reorganised into that shape
+      # recently, so that is a live risk, and it fails in the one direction
+      # nobody checks — green.
+      #
+      # `test:ci` runs the same suite and then asserts a floor on tests and
+      # files. See scripts/test-floor.mjs.
+      - run: pnpm test:ci
 
-      - name: parity coverage (informational)
-        run: pnpm parity
+      # ---- gate: parity scoreboard ----------------------------------------
+      #
+      # `node scripts/parity.mjs` on its own ALWAYS exits 0 -- it only prints.
+      # The gate is `--min N`, which fails when fewer than N rows are checked.
+      # N is the current baseline (362 done of 365), so a row regressing from
+      # [x] to [ ] or [~] is a red build and bumping this number is a conscious
+      # decision. Reading docs/feature-parity.md at all is the other half
+      # of the gate: a moved or malformed inventory throws here.
+      - name: parity scoreboard
+        run: |
+          set -euo pipefail
+          node scripts/parity.mjs
+          node scripts/parity.mjs --min 362
 
+      # ---- gate: drain lint -----------------------------------------------
+      #
+      # tools/parity/drain_lint.py exits 1 on a violation, so it gates as-is.
+      # Pure stdlib (ast): it needs the runner's python3 and nothing else -- no
+      # venv, no PyMOL -- which is why it runs in this job and not the macOS
+      # one. Paths are passed explicitly so this matches what a developer runs.
+      - name: drain lint (single-consumer PyMOL reads)
+        run: |
+          set -euo pipefail
+          python3 --version
+          python3 tools/parity/drain_lint.py packages/bridge/tenmol_bridge packages/bridge/tests
+
+      # ---- gate: ownership -------------------------------------------------
+      #
+      # Two halves, because the script has two useful modes and only one of
+      # them applies on every branch:
+      #
+      #  1. Always: the plan must still parse. scripts/ownership.mjs builds its
+      #     rules from section 6 of docs/code-ownership.md, and if that
+      #     table breaks the script does not error -- it finds no owners and
+      #     passes everything. `--list` exits 2 when the work package is not
+      #     found, which is exactly the "section 6 stopped parsing" signal.
+      #  2. On wp-NN-* branches: the real cross-WP diff check.
+      #
+      # The WP is passed explicitly rather than inferred. The script's own
+      # inference reads `git rev-parse --abbrev-ref HEAD`, which is the literal
+      # string "HEAD" on a pull_request checkout, and github.ref_name is
+      # "<n>/merge" there -- either would silently disable this gate on every PR.
       - name: ownership lint
-        # The WP is inferred from the branch name (wp-07-shell -> WP-07). On
-        # master/web-client there is nothing to attribute, so it is skipped.
-        if: startsWith(github.ref_name, 'wp-')
         env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-        run: pnpm ownership --base "origin/$DEFAULT_BRANCH"
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          BASE_REF: ${{ github.base_ref || github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          node scripts/ownership.mjs --list WP-00 > /dev/null
+          echo "docs/code-ownership.md section 6 parses"
+
+          num="$(printf '%s' "$BRANCH" | sed -n 's/^[Ww][Pp][-_]\([0-9]\{1,2\}\).*$/\1/p')"
+          if [ -z "$num" ]; then
+            echo "branch '$BRANCH' is not a wp-NN-* branch: nothing to attribute, skipping the diff check"
+            exit 0
+          fi
+          # 10# forces base 10. Without it bash's printf reads a leading zero
+          # as octal, so `wp-08-*` and `wp-09-*` fail with "invalid octal
+          # number" and fall through to WP-00 -- the wrong work package.
+          wp="$(printf 'WP-%02d' "$((10#$num))")"
+          if ! git rev-parse --verify --quiet "origin/$BASE_REF" > /dev/null; then
+            git fetch --no-tags --quiet origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF"
+          fi
+          echo "checking $BRANCH ($wp) against origin/$BASE_REF"
+          TENMOL_WP="$wp" node scripts/ownership.mjs --base "origin/$BASE_REF"
 
   # -------------------------------------------------------------------------
-  # The real thing: bootstrap builds PyMOL from this tree and the bridge boots.
+  # The real thing: PyMOL is built from packages/engine/ into
+  # packages/bridge/.venv and the bridge's pytest suite runs against it.
   # -------------------------------------------------------------------------
   bootstrap-macos:
     name: bootstrap + bridge (macOS)
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      - name: native deps (Homebrew)
-        run: |
-          brew list --versions cmake libpng freetype glew glm netcdf msgpack-cxx libxml2 || true
-          brew install cmake libpng freetype glew glm netcdf msgpack-cxx libxml2
-
-      - name: cache vendored mmtf-cpp headers
-        uses: actions/cache@v4
+      # Pinned so the cache key below can name the interpreter exactly.
+      # scripts/bootstrap.sh would otherwise pick one itself (Homebrew's
+      # python@3.13, then /usr/bin/python3.x, then whatever `python3` is) and
+      # whichever it happened to find would silently become part of the cached
+      # artefact.
+      - uses: actions/setup-python@v6
         with:
-          path: .deps
-          key: mmtf-cpp-${{ runner.os }}-v1
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: bootstrap
-        run: bash scripts/bootstrap.sh
+      - name: resolve build identity
+        id: ident
+        run: |
+          set -euo pipefail
+          full="$(python -c 'import sys;print("%d.%d.%d" % sys.version_info[:3])')"
+          echo "python=$full" >> "$GITHUB_OUTPUT"
+          echo "python-bin=$(command -v python)" >> "$GITHUB_OUTPUT"
+          echo "python $full at $(command -v python)"
 
+      # The set scripts/bootstrap.sh requires (it dies listing anything
+      # missing). catch2 is deliberately absent: it is only needed by
+      # --testing=true, and brew ships v3 while layerCTest wants v2.
+      # Build or restore the engine. One definition, shared with
+      # webclient-e2e.yml so the two cannot use different cache keys and
+      # compile PyMOL twice per PR. See .github/actions/engine-venv.
+      - name: engine venv
+        id: engine
+        uses: ./.github/actions/engine-venv
+        with:
+          cache-epoch: ${{ env.CACHE_EPOCH }}
+
+      # Checked here, immediately after bootstrap and before anything else
+      # runs, so the blame is unambiguous: nothing but bootstrap has touched
+      # the tree yet.
+      #
+      # bootstrap writes only to git-ignored paths (packages/bridge/.venv,
+      # packages/engine/.deps) and removes the egg-info pip drops in the
+      # upstream tree. Anything else here is the build polluting
+      # packages/engine/, which is upstream and must stay pristine. It also
+      # catches `pnpm install` (bootstrap step 7) editing pnpm-lock.yaml.
       - name: repo is still clean after the build
         run: |
-          git status --porcelain
-          test -z "$(git status --porcelain)" || {
+          set -euo pipefail
+          if [ -n "$(git status --porcelain)" ]; then
             echo "::error::bootstrap dirtied the working tree"
+            git status --porcelain
+            git diff --stat
             exit 1
-          }
+          fi
+          echo "working tree clean"
 
+      # ---- gate: the venv really holds an engine built from THIS tree -------
+      #
+      # The safety net under the cache. Same probe scripts/doctor.mjs runs,
+      # needs no GL, and catches both a broken restore and the one build
+      # mistake bootstrap warns about at length: `use-msgpackc=no` still
+      # imports fine and still writes a 0-byte .mmtf. The version banner
+      # carries the git sha the engine was built at; it is printed, not
+      # asserted, because a cache hit from an older commit with identical
+      # engine sources is correct and expected.
+      - name: engine sanity (import, version, MMTF round-trip)
+        run: |
+          set -euo pipefail
+          packages/bridge/.venv/bin/python - <<'PY'
+          import os, tempfile
+          import pymol, pymol2
+          print(pymol.get_version_message())
+          print("pymol:", pymol.__file__)
+          with pymol2.PyMOL() as p:
+              c = p.cmd
+              c.fragment("ala")
+              f = os.path.join(tempfile.mkdtemp(), "probe.mmtf")
+              c.save(f)
+              n = os.path.getsize(f)
+              c.delete("all")
+              c.load(f)
+              atoms = c.count_atoms("all")
+              print("mmtf round-trip: %d bytes, %d atoms" % (n, atoms))
+              assert n > 0, "0-byte .mmtf: this engine was built without msgpack (MMTF/BCIF are parity rows)"
+              assert atoms == 10, "expected 10 atoms back, got %d" % atoms
+          PY
+          packages/bridge/.venv/bin/python -c 'import tenmol_bridge;print("tenmol_bridge", tenmol_bridge.__version__)'
+
+      # GL context creation needs a window server the runner does not have, so
+      # doctor's `offscreen GL` check fails here and takes the script's exit
+      # code with it. Report it; do not fail the job on it. Everything else
+      # doctor checks is already a hard gate above.
       - name: doctor
-        # GL context creation needs a window server the runner does not have;
-        # report it, do not fail the job on it.
         continue-on-error: true
-        run: pnpm run doctor
+        run: node scripts/doctor.mjs
 
+      # ---- gate: the bridge suite ------------------------------------------
+      #
+      # The same run as locally
+      # (`packages/bridge/.venv/bin/python -m pytest packages/bridge/tests -q`)
+      # -- scripts/dev-bridge.sh is that plus the venv on PATH, packages/bridge
+      # on PYTHONPATH and PYTHONUNBUFFERED=1, and it is what `pnpm test:bridge`
+      # calls.
+      #
+      # The previous version of this step wrapped the run in `if [ -d ... ]`
+      # and echoed "skipping" otherwise, so a mis-pathed workflow was a GREEN
+      # build. The directory is now asserted instead. -q keeps the log
+      # readable; packages/bridge/pyproject.toml's `-ra -s` still prints a
+      # reason for every non-pass (and -s is mandatory -- conftest.py refuses
+      # to run with pytest's capture on, because it un-installs pcatch). The
+      # junit XML goes to RUNNER_TEMP so it cannot dirty the tree, and is
+      # uploaded whether the step passed or failed.
       - name: bridge pytest suite
         run: |
-          if [ -d packages/bridge/tests ] && ls packages/bridge/tests/test_*.py >/dev/null 2>&1; then
-            bash scripts/dev-bridge.sh --exec python -m pytest packages/bridge/tests -q
-          else
-            echo "no packages/bridge/tests yet (WP-02 owns them) -- skipping"
-          fi
+          set -euo pipefail
+          test -d packages/bridge/tests || {
+            echo "::error::packages/bridge/tests does not exist -- this workflow is mis-pathed"
+            exit 1
+          }
+          bash scripts/dev-bridge.sh --exec python -m pytest packages/bridge/tests -q \
+            --junitxml="$RUNNER_TEMP/pytest-bridge.xml"
 
+      - name: upload bridge pytest report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-bridge-${{ github.run_id }}
+          path: ${{ runner.temp }}/pytest-bridge.xml
+          if-no-files-found: warn
+
+      # Same caveat as `doctor`: with no window server the pump can come up
+      # degraded and never reach state=running. Keep the evidence, do not
+      # red-flag the branch.
       - name: acceptance -- bridge answers /healthz
+        continue-on-error: true
         run: |
-          bash scripts/dev-bridge.sh --port 8765 > bridge.log 2>&1 &
-          for i in $(seq 1 60); do
+          bash scripts/dev-bridge.sh --port 8765 > "$RUNNER_TEMP/bridge.log" 2>&1 &
+          for _ in $(seq 1 60); do
             sleep 1
-            if curl -sf --max-time 2 http://127.0.0.1:8765/healthz > health.json; then break; fi
+            if curl -sf --max-time 2 http://127.0.0.1:8765/healthz > "$RUNNER_TEMP/health.json"; then break; fi
           done
-          cat health.json; echo
-          grep -q '"state":[[:space:]]*"running"' health.json || {
+          cat "$RUNNER_TEMP/health.json" 2>/dev/null || echo '(no /healthz response in 60 s)'
+          echo
+          grep -q '"state":[[:space:]]*"running"' "$RUNNER_TEMP/health.json" 2>/dev/null || {
             echo "::error::/healthz did not report state=running"
             exit 1
           }
           echo "healthz OK"
-        # Same caveat as `doctor`: on a runner with no window server the pump can
-        # come up degraded. Keep the evidence, do not red-flag the branch.
-        continue-on-error: true
 
       - name: bridge log
         if: always()
-        run: tail -50 bridge.log || true
+        run: tail -50 "$RUNNER_TEMP/bridge.log" || true

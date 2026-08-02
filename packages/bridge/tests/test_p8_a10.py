@@ -2,7 +2,7 @@
 
 WHAT THIS FILE IS FOR
 ---------------------
-Five rows in ``docs/00-parity-inventory.md`` §10 carry a gap clause
+Five rows in ``docs/feature-parity.md`` §10 carry a gap clause
 that is about the ENGINE, not about React, and each one is answered here by a
 measurement rather than by reading source:
 

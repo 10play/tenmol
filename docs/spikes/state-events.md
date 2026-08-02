@@ -1,5 +1,30 @@
 # Spike 05 — State change detection for the web-client bridge
 
+> ## STATUS — re-read against the tree on 2026-08-02
+>
+> **§1–§7 are the design the bridge shipped and they still describe it.** The two-channel split of
+> §5 (blocking `APIEnter` queries on the engine thread, the three non-blocking drains anywhere
+> else), the single-owner rule of §3, and the "`_get_feedback()` returns `None`, not `[]`" trap are
+> all live constraints, not history.
+>
+> **§8 IS SUPERSEDED. Do not implement it.** It was a ranked wish-list of C++ that had not been
+> written; [`08-native-changes.md`](./08-native-changes.md) then wrote something deliberately
+> different, and §8's top recommendation is the one that was **rejected on evidence**:
+>
+> | §8 item | what actually happened |
+> | --- | --- |
+> | **8.1** patch `SettingRec::setChanged()` — "highest value, ~4 lines" | **REJECTED, on purpose.** 08 §1.3: `Setting.h` is included by ~everything (a full-tree rebuild at every upstream merge) and `setChanged()` fires for `bg_rgb`, `ray_trace_mode` and the movie panel, i.e. it manufactures false wake-ups. The 113 `ExecutiveInvalidateRep` call sites *inside* `Setting.cpp` are what actually rebuild a rep, and one bump at `ExecutiveInvalidateRep` covers all of them. |
+> | **8.2** `ExecutiveNamesVersion` | **Built, as `m_web_panel_version`** — plus `m_web_enable_version` and `m_web_name_version`. 08 §1.1/§1.2. §8.2's "two sites need their own bump" was right in substance and wrong in detail: the choke point for enable/disable is `ReportEnabledChange`, not `ExecutiveSpecEnable`. |
+> | **8.3** `ReprVersion` / `ColorVersion` | **Built, as `m_web_rep_version` + a 64-bit FNV-1a content signature per rep.** 08 §2. §8.3's five bump sites would have **missed `show`/`hide` entirely** — that path drives `OMOP_VISI`/`ObjectSetRepVisMask` directly and never reaches `ExecutiveInvalidateRep` (08 §1.2). |
+> | **8.4** do not add a Notify bus; bound the feedback queue in the bridge, not in C++ | **still correct, still followed.** |
+>
+> The consequence for §2/§6: the poll's blind spots (per-atom colour, per-atom reps, `alter`,
+> coordinate edits) no longer need the §7.3 command-echo channel to be *correct* — a per-rep
+> version bump sees all four. §7.3 remains a useful latency optimisation, not the only defence.
+>
+> Everything here was measured with a session scratchpad venv that no longer exists; use
+> `packages/bridge/.venv/bin/python`.
+
 Status: **BLOCKER RESOLVED — no new C++ is required for v1.** Polling at 30 Hz costs
 **0.25 % of one core** on a 52 k-atom / 11-object scene. Two real problems remain, and neither
 is "polling is too slow": (a) **consume-once drains** force a single-owner rule, and (b) **the
@@ -391,7 +416,7 @@ Rules, each forced by a measurement above:
 * **The bridge is the sole owner of the three drains.** `get_setting_updates()` (global **and**
   per-object), `_get_feedback()` and `getRedisplay()` are destructive. No plugin, no
   `pymol.rpc`, no `pymolhttpd` may run alongside. `pcatch._install()` must be called at startup.
-  Nothing else in the process may call them — enforce with a lint rule over `webclient/`.
+  Nothing else in the process may call them — enforce with a lint rule over `packages/bridge/`.
 * **`_get_feedback() is None` means "locked, retry"**, not "empty".
 * Never let the feedback queue go undrained (unbounded, §3.4).
 
@@ -558,16 +583,16 @@ channel, which in turn makes the bridge robust to `.pml` scripts and to a future
 
 ## 9. Consequences for other owners (reported, not applied)
 
-1. `docs/01-architecture.md` — the bridge must be **single-threaded for state queries**
+1. `docs/architecture.md` — the bridge must be **single-threaded for state queries**
    with a **separate non-blocking status thread**. A "poller thread + command thread" design
    stalls for the full duration of `ray`/surface builds (measured 3.8 s and 5.2 s).
-2. `01-architecture.md` — the bridge is the **exclusive owner** of `get_setting_updates()`
+2. `architecture.md` — the bridge is the **exclusive owner** of `get_setting_updates()`
    (global *and* per-object), `_get_feedback()` and `getRedisplay(reset=True)`. Any design that
    also runs `pymol.rpc`, `pymolhttpd`, or a Qt GUI in the same process is broken. Add a lint rule.
-3. `01-architecture.md` / `wizards.md` — the wizard event mask **cannot** be used as the bridge's
+3. `architecture.md` / `wizards.md` — the wizard event mask **cannot** be used as the bridge's
    change feed (single stack, user-owned, draw-pumped, misses delete/select). Wizards remain a
    proxied feature, not infrastructure.
-4. `00-parity-inventory.md` — the object panel, wizard panel and scene bin have **no Python data
+4. `feature-parity.md` — the object panel, wizard panel and scene bin have **no Python data
    feed today** (they are C++ `Block::draw` surfaces). Those rows need explicit "new bridge
    endpoint required" flags, not "wire up existing API".
 5. Whoever owns `internal-gui.md` / geometry extraction: `cmd.get_vis()` is object-level only —

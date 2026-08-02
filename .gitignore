@@ -26,6 +26,14 @@ build
 !packages/*/src/generated/**
 !tools/*/generated/
 !tools/*/generated/**
+# ...and the app's, which this list MISSED for the whole life of the project.
+# `apps/web/src/features/menubar/generated/menudata.ts` existed on every
+# developer machine and was never committed, so a fresh clone could not
+# typecheck: CI died on "Cannot find module './generated/menudata'" and
+# `webclient-ci` had therefore never once passed. The re-inclusions above are
+# anchored at `packages/*/src/`, which the app has never matched.
+!apps/*/src/**/generated/
+!apps/*/src/**/generated/**
 
 # ---------------------------------------------------------------------------
 # web client (pnpm monorepo)

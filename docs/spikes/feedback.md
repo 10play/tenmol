@@ -1,5 +1,25 @@
 # Spike 02 — Headless feedback capture
 
+> ## STATUS — re-verified on 2026-08-02: **STILL TRUE, IN FULL**
+>
+> This is the spike that has aged best. §1's two rules are implemented verbatim in
+> `packages/bridge/tenmol_bridge/engine.py`, with this file's reasoning in the comments beside
+> them: `options.no_gui = 0` at `:125` (with `-c` explicitly rejected at `:121-123`),
+> `options.internal_gui = 0` / `internal_feedback = 0` at `:129-130`, `pymol2.SingletonPyMOL()`
+> at `:142` under a comment that repeats §1 rule 2, and `_install_pcatch()` at `:162`. §9's
+> ordering trap — uninstall `pcatch` **before** `p.stop()`, because `SingletonPyMOLGlobals` is
+> nulled first — is at `:404-407` and cites "spike 02 §9".
+>
+> §9's `FeedbackCapture` was a *reference* implementation; the shipped code is
+> `tenmol_bridge/feedback.py` + `engine.py`, not a copy of it. The behaviours §4 and §8 pin —
+> destructive single-consumer read, `None` (not `[]`) on a lock miss, the unbounded queue, the
+> ~1018-char hard split, the line-prefix classification table — are the reason that module has
+> the shape it has.
+>
+> Two citation fixes, made in place below: §11 items 1 and 2 pointed at an
+> `"action item (3)"` of `00-build.md` that has never existed; the finding they mean is
+> `00-build.md` §5.1/§5.3 and its recommendations are §7.
+
 **Status: BLOCKER RESOLVED.** Full PyMOL console parity is achievable headless, with **zero C++
 changes**, provided the bridge does two specific things. Both are non-obvious and both are the
 opposite of what the current build/architecture docs assume.
@@ -297,7 +317,7 @@ Headless PyMOL console-feedback capture for the web client bridge.
 
 Verified against pymol 3.2.0a0 (git 159ed88), CPython 3.13.3, macOS arm64.
 
-Why this shape (all empirically established, see docs/spikes/02-feedback.md):
+Why this shape (all empirically established, see docs/spikes/feedback.md):
 
   * packages/engine/layer1/Ortho.cpp:492-499 -- OrthoFeedbackIn() only queues when G->Option->pmgui.
     pmgui is derived from `not invocation.options.no_gui` (packages/engine/layer1/P.cpp:1820).
@@ -556,21 +576,22 @@ stdout restored, this must appear on the real terminal
 
 These are reported, not applied — the files belong to other agents.
 
-1. **`docs/spikes/00-build.md` and `docs/build-and-tooling.md`** — the
+1. **`docs/spikes/build.md` and `docs/build-and-tooling.md`** — the
    canonical smoke test `pymol.finish_launching(['pymol','-cq'])` and any bridge startup using
    `-c`/`-cq` must not be carried into the bridge. `-c` permanently disables console feedback.
    Keep `-cq` for CI smoke tests only.
-2. **`docs/spikes/00-build.md`, action item (3)** — "must use `pymol2.PyMOL()`, not
+2. **`docs/spikes/build.md` §5.1 and §5.3** (this item used to cite an "action item (3)" that
+   does not exist in that file) — "must use `pymol2.PyMOL()`, not
    `pymol.finish_launching()`" is half right. It must be **`pymol2.SingletonPyMOL()`**.
    `pymol2.PyMOL()` breaks `pcatch` and silently destroys all Python console output.
-3. **`docs/01-architecture.md`** — the bridge must set
+3. **`docs/architecture.md`** — the bridge must set
    `no_gui=0, internal_gui=0, internal_feedback=0, external_gui=0` on
    `pymol.invocation.options` *before* `start()`. Setting them afterwards has no effect (options
    are copied into `CPyMOLOptions` at `_cmd._new`).
-4. **`docs/01-architecture.md` / `internal-gui.md`** — the console feature rows should
+4. **`docs/architecture.md` / `internal-gui.md`** — the console feature rows should
    record that `_get_feedback()` is a destructive single-consumer read and that scrollback,
    sequence numbers and replay are the bridge's responsibility, not PyMOL's.
 5. **`docs/internal-gui.md`** — progress reporting is a separate channel
    (`cmd.get_progress()`), not part of the feedback stream.
-6. **`docs/02-completeness-critique.md`** — BLOCKER "headless feedback capture" can be
+6. **Headless feedback capture** — the blocker this spike was written to answer can be
    marked resolved; no C++ change required.

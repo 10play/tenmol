@@ -1,7 +1,7 @@
 """Setting side effects — ``SettingGenerateSideEffects`` seen from the wire.
 
 Parity row: *"Setting side effects / geometry invalidation"*
-(``docs/00-parity-inventory.md``), whose React plan reads
+(``docs/feature-parity.md``), whose React plan reads
 
     "Bridge emits a geometry-invalidation event alongside ``settings.changed``
      so the three.js layer re-requests serialized meshes/CGO.  Settings must

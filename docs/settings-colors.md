@@ -1,12 +1,15 @@
-# Settings & Colors — PyMOL → React Web Client Map
+# Settings and colors
 
-Area owner doc. Every claim below is anchored to a `file:line` that was actually read in this repo
-(`/Users/amirangel/Documents/GitHub/tenmol`, branch `master`, commit `5e8bfca5`).
-Read-only survey — no source outside `docs/` was touched.
+Map of PyMOL's setting table, its change-notification machinery, and the colour/ramp system.
+Every claim is anchored to a `file:line` in `packages/engine/`, which is unmodified upstream.
 
-Target architecture assumed: PyMOL backend stays as-is (one local Python process), a Python bridge
-exposes `cmd` over WebSocket/HTTP, the viewport is client-side three.js drawing PyMOL-computed
-geometry, and all Qt/Tk/internal-GUI panels become React.
+**Where the port stands.** Introspection and values:
+`packages/bridge/tenmol_bridge/panels/settings.py` (`catalogue()`, `values()`, `drain()`), typed in
+`packages/protocol/src/topics/settings.ts`, consumed by `apps/web/src/features/settings/`
+(`service.ts`, `SettingsPanel.tsx`, `AdvancedSettingsTable.tsx`, `SettingMenu.tsx`,
+`LightingPanel.tsx`, `atomSettings.ts`) and stored in `packages/stores/src/settings.ts`.
+Colours and ramps: `packages/bridge/tenmol_bridge/panels/colors.py` and
+`apps/web/src/features/colors/`.
 
 ---
 
@@ -125,12 +128,12 @@ Value coercion rules — `packages/engine/modules/pymol/setting.py:83-112`:
 - int/float: strings that look boolean are converted first, then `int()`/`float()`.
 - float3: list/tuple passthrough; string with commas goes through `cmd.safe_eval`
   (`packages/engine/modules/pymol/constants.py:106-117`), otherwise whitespace split; always returns 3 floats.
-- color: `str(value)` — resolution happens in C (`SettingSet_color`, `packages/engine/layer1/Setting.cpp:1728-1760`).
+- color: `str(value)` — resolution happens in C (`SettingSet_color`, `packages/engine/layer1/Setting.cpp:1740-1770`).
 - string: outermost matching quotes stripped.
 
-### A4. Read/write semantics the web client must reproduce
+### A4. Read/write semantics
 
-**Resolution order.** `_SettingGetFirstDefined` (`packages/engine/layer1/Setting.cpp:3272-3281`): `set1` (most
+**Resolution order.** `_SettingGetFirstDefined` (`packages/engine/layer1/Setting.cpp:3273-3282`): `set1` (most
 specific) → `set2` → `G->Setting` (global). `ExecutiveGetSettingOfType`
 (`packages/engine/layer3/Executive.cpp:7995-8021`) resolves `object` → object CSetting, `state >= 0` → object-state
 CSetting, and errors `object "%s" not found` / `object "%s" lacks state %d`.
@@ -193,7 +196,7 @@ The Tk path does the same via `pmg_tk/Setting.py:145-150` (`Setting.refresh()` o
 `active_dict`), backed by `PymolVar`/`ListVarItem`/`ColorVar` two-way Tk variables
 (`pmg_tk/Setting.py:28-100`).
 
-**Risk:** if the bridge polls `get_setting_updates()` and any other component (a plugin, the Qt
+**Consequence:** if the bridge polls `get_setting_updates()` and any other component (a plugin, the Qt
 window if still alive) also polls it, updates are lost — the flag is cleared by whoever reads
 first. The bridge must own this call exclusively.
 
@@ -689,15 +692,14 @@ def settings_catalogue():
 
 `get_setting_level` returns the level **name** (`"global"`, `"object"`, `"object-state"`, `"atom"`,
 `"atom-state"`, `"bond"`, `"bond-state"`). Defaults, min/max and help text are **not** reachable
-from Python at all; three options, in order of preference:
-
-1. Add a small C accessor beside `CmdGetSettingLevel` (`packages/engine/layer4/Cmd.cpp:4403`) exporting
-   `SettingInfo[index]` default + `hasMinMax()` bounds. Cheapest correct fix, but touches C++.
-2. Snapshot defaults at process start by calling `cmd.reinitialize('original_settings')` in a
-   scratch instance and recording `cmd.get_setting_tuple(i)` for all 779. Expensive and mutates state.
-3. Parse `packages/engine/layer1/SettingInfo.h` + `packages/engine/data/setting_help.csv` at build time into a static JSON asset
-   shipped with the web app. Zero backend risk; goes stale if the C table changes. **Recommended
-   for v1**, with a runtime assert that `len(catalogue) == 779`.
+from Python at all — `SettingInfo` is `static` in `Setting.cpp` and nothing exports it. Three ways
+out were considered: a new C accessor beside `CmdGetSettingLevel`
+(`packages/engine/layer4/Cmd.cpp:4403`); snapshotting defaults by calling
+`cmd.reinitialize('original_settings')` in a scratch instance; or reading the header that generates
+the table. The third shipped: `packages/bridge/tenmol_bridge/panels/settings.py` parses
+`packages/engine/layer1/SettingInfo.h` for defaults and min/max and
+`packages/engine/data/setting_help.csv` for help text, and reports `defaultsSource: null` when
+neither is readable rather than inventing values. No C accessor was added.
 
 Wire schema (bridge → client, sent once, cached in a React context):
 
@@ -737,19 +739,23 @@ interface SettingMeta {
 
 ### D3. Change propagation
 
-Server side, one owner polls `cmd.get_setting_updates()` (`setting.py:440`) at ~100 ms and pushes a
-`settings.changed` event `{index, type, value, text}` per changed index (fetching values with
-`get_setting_tuple`). Mirror the Qt design (`pymol_qt_gui.py:952-956`) but push instead of poll to
-the browser. Because the read clears flags, **no other component may call it**.
+Exactly one component calls `cmd.get_setting_updates()` (`setting.py:440`): the bridge's status
+thread (`packages/bridge/tenmol_bridge/pump.py`). Because the read clears the flags, a second
+caller would silently steal updates. `panels/settings.py::install` therefore does not call it — it
+*wraps* it with a pass-through that records what the status thread received, and the client reads
+that recording through a cursor. Two delivery channels, one cursor: the `settings` topic pushes
+within one status interval, and the 5 Hz poll is an idempotent backstop that cannot lose an index
+the push missed. This mirrors the Qt design (`pymol_qt_gui.py:952-956`) without a second drain.
 
-Object/state-scoped panels additionally poll `cmd.get_setting_updates(object, state)`.
+The no-argument call is the only one recorded. `get_setting_updates(name, state)` targets one
+object's state-level `CSetting` — a different channel the status thread does not poll.
 
-Colors have **no change feed**. `set_color`, `ramp_new`, `space` and session loads all mutate the
-palette silently. The bridge must re-broadcast `colors.list()` after any of
+Colours have **no change feed** at all: `set_color`, `ramp_new`, `space` and session loads mutate
+the palette silently. The palette is therefore re-fetched after any of
 `set_color | ramp_new | ramp_update | space | load | reinitialize | set_session`, mirroring the
 `_invalidate_color_sc` invalidation points (`internal.py:584`, `viewing.py:2210`, `creating.py:486`).
 
-### D4. React component inventory
+### D4. Component inventory
 
 | component | replaces | contract |
 |---|---|---|
@@ -781,7 +787,7 @@ once (name → index → rgb) after `colors.list(all=1)` + batched `get_color_tu
 
 ---
 
-## RISKS
+## Constraints this area lives under
 
 1. `cmd.get_setting_updates()` clears the `changed` flags as it reads (`packages/engine/layer1/Setting.cpp:1128-1132`).
    Two pollers = lost updates. The bridge must be the only caller, and any surviving Qt window must
@@ -820,16 +826,25 @@ once (name → index → rgb) after `colors.list(all=1)` + batched `get_color_tu
     the current advanced table**, which only reads globals. Feature parity with the desktop C menu
     (`menu.rep_setting_lists`) requires per-object/per-selection scope.
 
-## OPEN QUESTIONS
+## Decisions this map fed
 
-- Is adding a C accessor for `SettingInfo` default/min/max acceptable, or is the C++ layer frozen?
-- Should `packages/engine/data/setting_help.csv` (875 rows, currently orphaned) become the tooltip source, and who
-  keeps it in sync with the 779 live settings? (row count ≠ setting count — needs a reconciliation pass)
-- Do we keep the `log=1, quiet=0` behaviour of menu writes so the browser command log mirrors
-  desktop PyMOL's `.pml` log?
-- Does the web client need per-bond settings UI at all (only 6 bond-level settings exist:
-  `stick_radius`, `stick_color`, `line_color`, plus the three others in `menu.rep_setting_lists`)?
-- Should the 5200 generated colors (`s000…`, `w000…`, `o000…`) be exposed in the picker, or hidden
-  behind "advanced" like `get_color_indices()` already does?
-- How are `atomic`/`object`/`front`/`back`/`default`/`auto`/`current` presented in a color picker
-  that is otherwise an RGB widget?
+- **No C accessor for `SettingInfo` default/min/max.** The header is parsed instead
+  (`packages/bridge/tenmol_bridge/panels/settings.py`); see D1.
+- **`packages/engine/data/setting_help.csv` (875 rows, zero upstream consumers) is the tooltip
+  source.** Row count does not equal setting count, so entries are matched by name and a missing
+  row yields no tooltip rather than a wrong one.
+- **Menu writes keep `log=1, quiet=0`** so the browser's command log mirrors desktop PyMOL's
+  `.pml` log.
+- **Per-object and per-selection scope is offered wherever the level allows it**
+  (`apps/web/src/features/settings/atomSettings.ts`), because 179 settings are
+  atom/atom-state/bond/bond-state/object level and the Qt advanced table only ever read globals
+  (constraint 14).
+- **The generated bands (`s000…`, `r`, `c`, `w`, `o`) sit behind an "advanced" toggle**, not in
+  the default palette: `apps/web/src/features/colors/SwatchGrid.tsx` is
+  `pymol.menu.all_colors_list` (80 tiles) and `BandGrid.tsx` pages through the remaining 5388
+  slots. They cannot be dropped — `spectrum`, `ramp_new` and the `constants_palette` palettes are
+  expressed in those names.
+- **`atomic`/`object`/`front`/`back` are guarded on `index < 0`, not `index == -1`.** They resolve
+  to -4/-5/-6/-7 and `cmd.get_color_tuple` returns `None` for all of them
+  (`packages/engine/layer4/Cmd.cpp:1336`); the Qt dialog tests only -1
+  (`pymol_qt_gui.py:558`) and raises `TypeError` on the others.

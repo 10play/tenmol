@@ -7,6 +7,39 @@ Everything below was executed on this machine. Every transcript is real output, 
 Follow-on doc: `docs/build-and-tooling.md` (the prior analysis this spike executes and
 corrects).
 
+> ## STATUS — read this before §6.1
+>
+> **The recipe shipped. `scripts/bootstrap.sh` IS this document**, and cites it in six comments,
+> by section: §1, §2.1 (why `catch2` is deliberately absent), §2.2 (the vendored mmtf-cpp
+> headers), §3, §3.1 twice (`--no-build-isolation`, and the keg-only libxml2) and §4.3 (copying
+> `_cmd*.so` into the
+> source tree). `scripts/dev-bridge.sh` cites §3 and `scripts/doctor.mjs` cites §5.2's 877-byte
+> MMTF round trip. The venv it builds is **`packages/bridge/.venv`** — substitute that for every
+> `<SCRATCH>/venv/bin/python` below; the scratchpad interpreter in §0/§3/§8 is gone.
+>
+> ### §6.1 is AMENDED, not overturned — and getting this backwards costs a wave
+>
+> "`_cmd._draw()` SEGFAULTS without a GL context" is true as stated but reads as "never call
+> `_draw`", and the architecture was written that way for a while. The precise rule, from
+> [`04-picking.md`](./04-picking.md) §1 and `docs/code-ownership.md:103-107`:
+>
+> * `_cmd._draw` segfaults **only** when `options.no_gui == 0` (⇒ `HaveGUI = pmgui = 1`) **and no
+>   GL context is current** — at the `glGetString` on `packages/engine/layer5/PyMOL.cpp:2307`.
+> * With a current GL context it is not merely safe, it is **mandatory**. `ExecutiveDrawNow` is
+>   the only caller of `OrthoExecDeferred`, and `PyMOL_GetIdleAndReady` only becomes true after
+>   `PyMOL_Draw` has set `DrawnFlag` three times. A bridge that never draws drains **no** deferred
+>   work at all: no clicks, no drags, no deferred `cmd.png`, no deferred ray. `cmd.refresh()` is
+>   **not** a substitute — `CmdRefresh` never sets `DrawnFlag`.
+> * §6.1's own remedy paragraph ("the rasterisation path for a headless backend is `cmd.ray()` +
+>   `cmd.png()` … not PyMOL's GL renderer") is therefore true only of a **context-free** bridge.
+>   The bridge that shipped creates a context first and drives `_draw` every tick.
+>
+> §6.2 (C `exit()` skips `atexit` and `Py_FinalizeEx`) and §6.3 (`_cmd._refresh` does not exist)
+> are unchanged and are cited from `tenmol_bridge/dispatch.py:354` and `policy/base.py:175`.
+>
+> §7's four recommendations are all **done**; their paths were `webclient/…` and are corrected in
+> place below.
+
 ---
 
 ## 0. TL;DR
@@ -493,14 +526,14 @@ These are reported, not applied.
    ```
    Without this, every `pip install` leaves `packages/engine/modules/pymol.egg-info/` as untracked and
    `git status` is never clean. Whoever owns dev-environment setup should do this in
-   `webclient/scripts/bootstrap.sh`.
+   `scripts/bootstrap.sh`.
 
-2. **`webclient/scripts/bootstrap.sh`** (owner: build/tooling agent) should use
+2. **`scripts/bootstrap.sh`** (owner: build/tooling agent) should use
    `--config-settings use-msgpackc=c++11` **with** an out-of-tree vendored `mmtf-cpp` on
    `PREFIX_PATH`, not `use-msgpackc=no`. The `no` path silently disables MMTF and BCIF file I/O,
-   which are rows in `00-parity-inventory.md`.
+   which are rows in `feature-parity.md`.
 
-3. **`docs/01-architecture.md`** (owner: architecture agent) — if it describes driving
+3. **`docs/architecture.md`** (owner: architecture agent) — if it describes driving
    `_cmd._draw` from the bridge, that is unimplementable headless (§6.1) and needs revising.
 
 4. **CI**: do not gate on ray-traced image-diff tests on macOS/arm64 (§5.5), and do not use

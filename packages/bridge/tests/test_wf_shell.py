@@ -1,6 +1,6 @@
 """Parity area 1/2 — window shell, External GUI dock, internal GUI column, gutter.
 
-Inventory rows pinned here (``docs/00-parity-inventory.md``):
+Inventory rows pinned here (``docs/feature-parity.md``):
 
 * **53** Main window shell / dock layout (``packages/engine/modules/pmg_qt/pymol_qt_gui.py:88``)
 * **54** External GUI dock: toggle dockable / visible (``:171``)

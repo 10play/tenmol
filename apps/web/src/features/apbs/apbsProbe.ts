@@ -1,7 +1,7 @@
 /**
  * "Is APBS actually usable on this machine?", asked rather than assumed.
  *
- * The parity row for the APBS dialog (`00-parity-inventory.md`, the
+ * The parity row for the APBS dialog (`feature-parity.md`, the
  * "5 stacked pages, 86 widgets" row) defers the port with the argument that
  * neither `apbs` nor `pdb2pqr` ships with PyMOL and neither is installed here.
  * A panel that only *asserts* that in prose is unfalsifiable and goes stale the

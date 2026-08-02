@@ -2,7 +2,7 @@
 
 Everything in this module runs on ONE thread — the engine thread owned by
 :mod:`tenmol_bridge.pump`.  It is a direct transcription of
-``docs/03-implementation-plan.md`` §1.1, whose steps are reproduced
+``docs/code-ownership.md`` §1.1, whose steps are reproduced
 in :meth:`Engine.boot` in order, with the citations that justify each one.
 
 The single most important fact in the project: **the pump must call

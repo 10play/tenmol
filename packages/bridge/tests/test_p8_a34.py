@@ -1,7 +1,7 @@
 """Wave 8 — closing the gap clauses of the areas 3 / 4 / 11 partial rows.
 
 Every test here exists to answer ONE sentence in
-``docs/00-parity-inventory.md``. The sentence is quoted in the
+``docs/feature-parity.md``. The sentence is quoted in the
 docstring so a reader can check the test against the claim it retires.
 
 Run::

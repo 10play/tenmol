@@ -1,26 +1,34 @@
-# Wizards — full map for the React web client
+# Wizards — the PyMOL wizard surface
 
-Area owner doc. Scope: `packages/engine/modules/pymol/wizard/` (every file), `packages/engine/modules/pymol/wizarding.py`,
+Map of PyMOL's wizard machinery. Scope: `packages/engine/modules/pymol/wizard/` (every file),
+`packages/engine/modules/pymol/wizarding.py`,
 `packages/engine/layer1/Wizard.{h,cpp}`, the wizard prompt renderer in `packages/engine/layer1/Ortho.cpp`, the pop-up menu
 renderer in `packages/engine/layer4/PopUp.cpp`, wizard event dispatch sites in `packages/engine/layer1/SceneMouse.cpp`,
 `packages/engine/layer3/Seeker.cpp`, `packages/engine/layer3/Executive.cpp`, `packages/engine/layer5/PyMOL.cpp`, and the Wizard menubar in
 `packages/engine/modules/pymol/_gui.py`.
 
-Everything below is grounded in file:line that I read. Where I could not find something, I say so.
+Everything below is grounded in `file:line` read out of `packages/engine/`, which is unmodified
+upstream. Where something could not be found, the text says so.
+
+**Where the port stands.** The protocol described here is implemented and shipping:
+`packages/bridge/tenmol_bridge/panels/wizards.py` (snapshot/menu/event/exec, mask gating,
+callable-submenu resolution), `packages/protocol/src/topics/wizard.ts` (wire shapes),
+`apps/web/src/features/wizards/` (`WizardPanel`, `WizardPrompt`, `WizardPopupMenu`,
+`WizardKeyCapture`, `ColorCodedText`, `service.ts`, `useWizard.ts`).
 
 ---
 
-## 0. TL;DR for the implementer
+## 0. TL;DR
 
 A wizard is a **plain Python object** living on a stack inside the C++ core
 (`CWizard::Wiz`, `packages/engine/layer1/Wizard.cpp:69`). It is *not* a widget. The C++ core pulls a
 **declarative panel description** and a **declarative prompt** out of it by calling five
 Python methods, and pushes **events** into it by calling ~10 more.
 
-Therefore: **do not port 26 wizards one by one.** Port the *protocol* once
-(`<WizardPanel/>` + `<WizardPrompt/>` + `<WizardPopupMenu/>` React components), and all 26
-wizards — plus the 15 builder wizards in `packages/engine/modules/pmg_qt/builder.py` and any third-party
-plugin wizard — render for free.
+That is why there is no per-wizard code in the port: the *protocol* is implemented once
+(`<WizardPanel/>` + `<WizardPrompt/>` + `<WizardPopupMenu/>`), and all 26 bundled wizards —
+plus the builder wizards in `packages/engine/modules/pmg_qt/builder.py` and any third-party
+plugin wizard — render through it.
 
 The five "render" methods (confirmed against source):
 
@@ -144,7 +152,8 @@ Live users: `cleanup.py:133` `"\\999Ligand:\\000 "`, `appearance.py:39-52`
 `annotation.py:86-93`. `message.py:7` even has a regex `_nuke_color_re` to strip them
 for console echo.
 
-**React needs a shared `parseColorCodes(str) -> ReactNode[]` helper.**
+Ported as the shared `\RGB` parser in `apps/web/src/features/wizards/colorCodes.ts`, rendered by
+`apps/web/src/features/wizards/ColorCodedText.tsx`.
 
 ---
 
@@ -199,8 +208,9 @@ Third element semantics:
 - **`str`** → a PyMOL command; on release `PLog` + `PParse` (`PopUp.cpp:471-473`).
 - **`list`** → nested submenu (`I->Sub[a]`, `:247`); opens on hover/click (`:459`).
 - **callable** → *lazy* submenu. `SubGetItem` (`PopUp.cpp:88-105`) detects a non-list, calls
-  it with no arguments, memoises the result in place. **The bridge must replicate this**:
-  a menu payload can only be serialized after resolving callables.
+  it with no arguments, memoises the result in place. The bridge replicates this in
+  `panels/wizards.py::_encode_menu`: a menu payload can only be serialized after resolving
+  callables.
 
 Real menus in the tree cover all three shapes: nested list submenus in
 `mutagenesis.py:130-133` (ARG…/LYS…/HIS… grouped rotamer submenus), `openvr.py:15-29`
@@ -240,21 +250,23 @@ regenerates values from `cmd.auto_arg` shortcuts on every open (`:100-103`) — 
   with this call.
 - `cmd.dirty_wizard()` — `wizarding.py:146` → `WizardDirty` `Wizard.cpp:94`: sets a flag so
   the *next* `WizardUpdate` (`:101`) does a refresh. Used by `annotation.py:11,14,17`.
-- `WizardUpdate` (`Wizard.cpp:101`) runs once per render pass from
-  `packages/engine/layer3/Executive.cpp:11533` and additionally fires `do_dirty` / `do_frame` / `do_state` /
+- `WizardUpdate` (`Wizard.cpp:101`) runs once per render pass from `ExecutiveDrawNow`
+  (`packages/engine/layer3/Executive.cpp:11555`) and additionally fires `do_dirty` / `do_frame` / `do_state` /
   `do_position` / `do_view` by comparing against `LastUpdated*` cached values (`:106-125`).
 - `cmd.reinitialize()` clears the stack: `WizardSet(G, nullptr, false)` at
-  `packages/engine/layer3/Executive.cpp:16586`.
+  `packages/engine/layer3/Executive.cpp:16637`.
 - Python API export list: `packages/engine/modules/pymol/api.py:283-290`.
 - Only `refresh_wizard` and `replace_wizard` are registered as command-language keywords
   (`packages/engine/modules/pymol/keywords.py:223,228`) — `wizard` itself is auto-registered elsewhere;
   `cmd.wizard` is definitely reachable as a command (`demo.py:429` `self.cmd.do("_ wizard")`).
 
-**Critical gap for the bridge:** there is **no Python-visible "wizard changed" callback**.
-`WizardRefresh` is C pulling from Python. The bridge must either (a) wrap
-`cmd.refresh_wizard` / `cmd.set_wizard` / `cmd.dirty_wizard` in its own `cmd` proxy and emit
-a WS event after each, or (b) poll `get_panel`/`get_prompt` on a timer. (a) is preferred and
-is safe because *every* wizard calls `self.cmd.refresh_wizard()` after mutating state.
+**There is no Python-visible "wizard changed" callback.** `WizardRefresh` is C pulling from
+Python, so nothing on the Python side is notified. The bridge therefore wraps
+`cmd.refresh_wizard` / `set_wizard` / `set_wizard_stack` / `dirty_wizard` and bumps a version
+counter (`packages/bridge/tenmol_bridge/panels/wizards.py`, `install()` / `bump()`); the client
+polls the cheap `wizards.probe` and only pulls `wizards.snapshot` when the version moved. That
+is safe because *every* wizard calls `self.cmd.refresh_wizard()` after mutating state, and it
+is necessary because `get_panel`/`get_prompt` have side effects (see §9.3 rules 4 and 5).
 
 ---
 
@@ -269,7 +281,7 @@ because **all pick/select dispatch currently happens in C++ during mouse handlin
   `:545` is the non-bond fallback.
 - Click-select (`cButModeSeleSet` etc.): `packages/engine/layer1/SceneMouse.cpp:135` and `:357` →
   `WizardDoSelect(G, selName, state)`.
-- Rectangle/box select: `packages/engine/layer3/Executive.cpp:7548` → `WizardDoSelect(G, selName)`.
+- Rectangle/box select: `packages/engine/layer3/Executive.cpp:7563` → `WizardDoSelect(G, selName)`.
 - Sequence-viewer select: `packages/engine/layer3/Seeker.cpp:150` and `:231` → `WizardDoSelect(G, selName)`.
 - Keyboard: `packages/engine/layer5/PyMOL.cpp:2356` → `WizardDoKey`; `:2369` → `WizardDoSpecial`.
 - Scene changed: `packages/engine/layer1/Scene.cpp:4812` → `WizardDoScene`.
@@ -283,16 +295,17 @@ used at `measurement.py:317,332,355,381`).
 Both also **PLog the exact Python replay line**:
 `"cmd.get_wizard().do_pick(1)"` / `"cmd.get_wizard().do_pick(0)"` (`Wizard.cpp:319-321`) and
 `"cmd.get_wizard().do_select('''%s''')"` (`Wizard.cpp:185`).
-**That log line *is* the web replay contract.** The browser, after doing a client-side ray
-pick, tells the bridge which atom was hit; the bridge does the equivalent of the C editor
-work (`cmd.edit(...)` / `cmd.select("pk1", ...)`) then calls
-`cmd.get_wizard().do_pick_state(state)` followed by `cmd.get_wizard().do_pick(bondFlag)`.
+That log line is the replay contract the web path reproduces: the browser, after a
+client-side ray pick, tells the bridge which atom was hit; the bridge does the equivalent of
+the C editor work (`cmd.edit(...)` / `cmd.select("pk1", ...)`) then calls
+`cmd.get_wizard().do_pick_state(state)` followed by `cmd.get_wizard().do_pick(bondFlag)`
+(`packages/bridge/tenmol_bridge/panels/wizards.py::event`).
 
-Also note the C++ layer honours the event mask **before** calling Python
-(`CWizard::isEventType`, `Wizard.cpp:140`) — the bridge must re-implement that gate, or it
-will call `do_pick` on wizards that never asked for picks (e.g. `annotation.py:7` masks
-`scene|state|frame` only, `pseudoatom.py:17` masks `key` only, `command.py:149-152` returns
-`0` unless in text-input mode).
+The C++ layer honours the event mask **before** calling Python
+(`CWizard::isEventType`, `Wizard.cpp:140`); the bridge re-implements that gate, because
+without it `do_pick` would reach wizards that never asked for picks (e.g. `annotation.py:7`
+masks `scene|state|frame` only, `pseudoatom.py:17` masks `key` only, `command.py:149-152`
+returns `0` unless in text-input mode).
 
 ---
 
@@ -990,81 +1003,90 @@ Prompt is `self.message` or `None` (`:23-28`).
 
 ## 8. Related wizards outside `packages/engine/modules/pymol/wizard/`
 
-`packages/engine/modules/pmg_qt/builder.py` defines **15 more `Wizard` subclasses** that use the identical
-panel/prompt/do_pick contract, driven by the Builder GUI:
+`packages/engine/modules/pmg_qt/builder.py` defines **19 more `Wizard` subclasses** that use the
+identical panel/prompt/do_pick contract, driven by the Builder GUI:
 `ActionWizard` (`:39`), `CleanWizard` (`:89`), `SculptWizard` (`:134`),
 `RepeatableActionWizard` (`:228`), `ReplaceWizard` (`:266`), `AttachWizard` (`:302`),
 `BioPolymerWizard` (`:368`), `AminoAcidWizard` (`:473`), `NucleicAcidWizard` (`:494`),
 `ValenceWizard` (`:514`), `ChargeWizard` (`:566`), `InvertWizard` (`:607`),
 `BondWizard` (`:646`), `UnbondWizard` (`:700`), `HydrogenWizard` (`:743`),
-`RemoveWizard` (`:808`). They call `self.cmd.set_wizard(self, replace=1)` (`:56`, `:254`)
-to swap themselves onto the stack. **They are in the Builder agent's area, but they get the
-generic wizard renderer for free** — flag this cross-dependency.
+`RemoveWizard` (`:808`), `AtomFlagWizard` (`:844`), `FixAtomWizard` (`:982`),
+`RestAtomWizard` (`:986`). They call `self.cmd.set_wizard(self, replace=1)` (`:56`, `:254`)
+to swap themselves onto the stack, so they render through the same generic renderer with no
+builder-specific code. See `docs/builder.md` for the surface that drives them and
+`apps/web/src/features/builder/` for the port.
 
 ---
 
-## 9. The generic React contract
+## 9. The generic contract, as ported
 
-### 9.1 Bridge RPCs (all thin wrappers over confirmed APIs)
+### 9.1 Bridge RPCs
+
+Served by `packages/bridge/tenmol_bridge/panels/wizards.py`, granted by
+`packages/bridge/tenmol_bridge/policy/grants/wp-16.py`, typed in
+`packages/protocol/src/topics/wizard.ts` (`WIZARD_RPC`), called from
+`apps/web/src/features/wizards/service.ts`. Each is a thin wrapper over a confirmed API:
 
 ```
-wizard.launch(name: string, args: any[], kwargs: object) -> void
-    # -> cmd.wizard(name, *args, **kwargs)          wizarding.py:62
-wizard.replace(name, args, kwargs) -> void
-    # -> cmd.replace_wizard(...)                    wizarding.py:94
-wizard.dismiss() -> void
-    # -> cmd.set_wizard()                           wizarding.py:110 (None pops+cleanup)
+wizards.launch(name, args, kwargs)   -> cmd.wizard(name, *args, **kwargs)   wizarding.py:62
+wizards.replace(name, args, kwargs)  -> cmd.replace_wizard(...)             wizarding.py:94
+wizards.dismiss()                    -> cmd.set_wizard()                    wizarding.py:110
+                                        (None pops the top and runs cleanup)
 
-wizard.snapshot() -> {
-    depth: int,                     # len(cmd.get_wizard_stack())   wizarding.py:166
-    cls:   string,                  # top.__class__.__name__
-    module:string,                  # top.__class__.__module__
-    panel: [[int, string, string]], # top.get_panel()   (may be None or [])
-    prompt:[string] | null,         # top.get_prompt()
-    eventMask: int,                 # top.get_event_mask()
+wizards.probe()    -> cheap {version, depth}; version bumps from the wrapped
+                      refresh_wizard / set_wizard / set_wizard_stack / dirty_wizard
+wizards.snapshot() -> {
+    depth,        # len(cmd.get_wizard_stack())          wizarding.py:166
+    cls, module,  # top.__class__.__name__ / __module__
+    panel,        # top.get_panel()      (may be None or [])
+    prompt,       # top.get_prompt()     (may be None)
+    eventMask,    # top.get_event_mask()
 }
 
-wizard.menu(tag: string) -> MenuItem[] | null
-    # -> cmd.get_wizard().get_menu(tag), then RESOLVE CALLABLES recursively
-    #    (mirrors packages/engine/layer4/PopUp.cpp:88-105)
-    # MenuItem = { code: 0|1|2, text: string, command?: string, submenu?: MenuItem[] }
+wizards.menu(tag) -> MenuItem[] | null
+    # cmd.get_wizard().get_menu(tag), then callables resolved recursively,
+    # mirroring packages/engine/layer4/PopUp.cpp:88-105
+    # MenuItem = { code: 0|1|2, text, command?, submenu? }
 
-wizard.exec(code: string) -> void
-    # -> server-side cmd.do(code) / PParse equivalent.  packages/engine/layer1/Wizard.cpp:573-576
-    # NEVER evaluate `code` in the browser.
+wizards.exec_code(code)
+    # server-side PParse equivalent.  packages/engine/layer1/Wizard.cpp:573-576
+    # `code` is NEVER evaluated in the browser.
 
-wizard.event(kind, payload) -> void
+wizards.event(kind, payload)
     # kind in: pick | select | key | special | scene | state | frame | dirty | view | position
-    # bridge MUST gate on (eventMask & bit) exactly like CWizard::isEventType
-    #                                              packages/engine/layer1/Wizard.cpp:140-143, 177, 311, 331, ...
+    # gated on (eventMask & bit) exactly like CWizard::isEventType
+    #                          packages/engine/layer1/Wizard.cpp:140-143, 177, 311, 331, ...
+wizards.catalog()  -> the Wizard menubar tree (_gui.py:834-864) as JSON
 ```
 
-Push channel (server → client): `wizard.changed` carrying a fresh `snapshot()`.
-Emitted from a wrapped `cmd.refresh_wizard` / `cmd.set_wizard` / `cmd.dirty_wizard`.
+There is no server→client push topic for wizards; the client polls `wizards.probe` and only
+pulls `wizards.snapshot` when the version moved. That is forced by §9.3 rules 4 and 5:
+`get_panel()` and `get_prompt()` have side effects, so they cannot be called speculatively.
 
-### 9.2 React components
+### 9.2 Components (`apps/web/src/features/wizards/`)
 
-- `<WizardPanel/>` — renders `snapshot.panel`. One row component per type:
-  `0` → `<Spacer/>`, `1` → `<WizardLabel/>`, `2` → `<WizardButton/>` (press state on
-  pointerdown, fire `wizard.exec(code)` on pointerup-inside), `3` → `<WizardPopupButton/>`
-  (opens `<WizardPopupMenu/>` fed by `wizard.menu(code)` — **fetched on open, never cached**,
-  because `density.py:160`, `filter.py:236`, `command.py:87` rebuild menus live).
-  Row height = `internal_gui_control_size` (mirror `packages/engine/layer1/Wizard.cpp:255`).
-- `<WizardPrompt/>` — top-left viewport overlay, honours `wizard_prompt_mode` 0/1/2/3
+- `WizardPanel.tsx` — renders `snapshot.panel`. One row per type: `0` spacer, `1` label,
+  `2` button (press state on pointerdown, `wizards.exec_code(code)` on pointerup-inside),
+  `3` popup button (opens `WizardPopupMenu` fed by `wizards.menu(code)` — **fetched on open,
+  never cached**, because `density.py:160`, `filter.py:236`, `command.py:87` rebuild menus
+  live). Row height mirrors `internal_gui_control_size` (`packages/engine/layer1/Wizard.cpp:255`).
+- `WizardPrompt.tsx` — top-left viewport overlay, honours `wizard_prompt_mode` 0/1/2/3
   (`packages/engine/layer1/Ortho.cpp:2136-2190`), default text color `rgb(51,255,51)` and backdrop
   `rgb(51,51,51)` (`packages/engine/layer1/Ortho.cpp:2692-2697`).
-- `<WizardPopupMenu/>` — codes 0/1/2 → separator / item / title
+- `WizardPopupMenu.tsx` — codes 0/1/2 → separator / item / title
   (`packages/engine/layer4/PopUp.cpp:293-320`); nested `submenu` opens on hover; leaf runs
-  `wizard.exec(command)`.
-- `<ColorCodedText/>` — shared `\RGB` / `\---` parser (`packages/engine/layer1/Text.cpp:507-548`).
-- `<WizardStack/>` — the panel stack; `snapshot.depth > 1` means nested wizards
+  `wizards.exec_code(command)`.
+- `ColorCodedText.tsx` + `colorCodes.ts` — the `\RGB` / `\---` parser
+  (`packages/engine/layer1/Text.cpp:507-548`).
+- `WizardsPanel.tsx` — the stack; `snapshot.depth > 1` means nested wizards
   (`packages/engine/layer1/Wizard.cpp:280-282`).
-- `<WizardTextInput/>` — synthesizes `do_key(k,x,y,mod)` from real keystrokes for the four
+- `WizardKeyCapture.tsx` — synthesizes `do_key(k,x,y,mod)` from real keystrokes for the four
   wizards that implement a hand-rolled line editor (`box.py:423`, `renaming.py:20`,
   `pseudoatom.py:20`, `command.py:166`). ASCII codes are what they compare against:
   8/127 backspace, 10/13 enter, 27 escape, 32 space, `>32` printable.
+- `WizardLauncher.tsx` — the Wizard menubar (`_gui.py:834-864`) fed by `wizards.catalog`.
 
-### 9.3 Rules the renderer must obey (each derived from real source)
+### 9.3 Rules the renderer obeys (each derived from real source)
 
 1. **Panel may be `None` or `[]`.** `dragging.py:104-105` returns `None`;
    `message.py:36` returns `[]`. C treats both as height 0 (`Wizard.cpp:254-259`).
@@ -1085,11 +1107,22 @@ Emitted from a wrapped `cmd.refresh_wizard` / `cmd.set_wizard` / `cmd.dirty_wiza
 11. **All wizard methods are optional** — probe with `hasattr` semantics
     (`Wizard.cpp:162`), never assume presence.
 12. **Wizards can dismiss themselves** from a handler (`dragging.py:52`) and can
-    **push other wizards** (`openvr.py:31-36`, `demo.py:42-53`) — the client must reconcile
+    **push other wizards** (`openvr.py:31-36`, `demo.py:42-53`) — the client reconciles
     from the pushed snapshot, not from optimistic local state.
 
 ---
 
-## 10. Risks / open questions
+## 10. Wizards that stay out of reach
 
-Listed in the structured return value.
+Three bundled wizards cannot run in this deployment, for reasons in their own source rather
+than in the port:
+
+- `cleanup.py` — `__init__` raises `pymol.CmdException` unless an OpenEye `szybki` binary is
+  found under `$OE_DIR`/`$OEDIR` (`:13-34`, `:52-54`), so the wizard never opens.
+- `openvr.py` — launched only by the core when stereo mode switches to OpenVR
+  (`packages/engine/layer1/Scene.cpp:1126-1128`); there is no OpenVR stereo path here.
+- `benchmark.py` — measures GL blit and raytrace throughput of the local GL window
+  (`:349-367`); the numbers describe the bridge's offscreen context, not the browser.
+
+`distance.py` is dead by upstream's own rewrite: `cmd.wizard("distance")` is rewritten to
+`measurement` (`wizarding.py:88-89`). It is kept for session compatibility only.

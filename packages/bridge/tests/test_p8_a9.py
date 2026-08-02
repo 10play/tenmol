@@ -1,7 +1,7 @@
 """Wave 8, parity area 9 (Builder) — the gaps wave 4 measured but left open.
 
 Every test here closes one clause of a `[~]` row in
-``docs/00-parity-inventory.md`` §9, and every claim is an OBSERVATION
+``docs/feature-parity.md`` §9, and every claim is an OBSERVATION
 of the live engine over the product WebSocket, not a reading of the source:
 
 * the editor's ``_auto_measure`` / ``_pkdihe`` transients and the

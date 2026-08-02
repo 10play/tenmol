@@ -5,6 +5,40 @@
 Nothing here is inferred from source reading alone. Where I quote source, it is only to explain a
 result I already measured.
 
+> ## STATUS — one conclusion in here is WRONG, and it is in §0
+>
+> **The verdict stands: new C++ was mandatory, and it was written**
+> ([`06-geometry-accessor.md`](./06-geometry-accessor.md)). Everything this spike measured about
+> the **existing exporters** is still true and is still the reason Mode G needs an accessor rather
+> than `get_vrml` — identity loss (§4.2), silent drops of ellipsoids/labels/volume/alpha (§4.1,
+> §4.3), primitive substitution for lines/mesh/dots (§4), ASCII blow-up (§8) and zero dirty
+> tracking (§3.1). `packages/protocol/README.md` and `packages/protocol/src/geometry.ts` both cite
+> this file for exactly those numbers.
+>
+> **What is OVERTURNED: §0's fourth paragraph and §9, "in a headless build there is no GL raster
+> path at all" / "Pixel streaming is not a fallback; it is not a product".**
+>
+> That is an artefact of the harness, not a property of PyMOL. This spike ran with **no GL
+> context** — §1 records `cmd.get_renderer() -> ('', '', '')` and §9 records it again — so
+> `cmd.png(..., ray=0)` silently fell through to the CPU ray tracer, which is why `ray=0` and
+> `ray=1` produced identical bytes in identical time. With the CGL context that
+> [`04-picking.md`](./04-picking.md) §2 later proved exists, `cmd.get_renderer()` returns
+> `('Apple', 'Apple M4 Max', '2.1 Metal - 89.4')` and **the same call is 0.075 s, a 123×
+> difference**. `docs/code-ownership.md:201-215` is where the two spikes finally met and
+> is the authority; server-side pixels ("Mode P") are a shipped render mode, not an impossibility.
+>
+> **The safe way to read §9:** every number in it is correct *for a bridge with no GL context*, and
+> in that configuration it remains the reason a GL-free backend cannot serve interactive pixels
+> — which is exactly the trade-off [`07-cross-platform-gl.md`](./07-cross-platform-gl.md) §10 later
+> measured on both paths.
+>
+> Two smaller notes. §7's `pymol._cache` "stopgap" was **never shipped** and should not be
+> revived — the accessor supersedes it entirely. §7.3's real bug (`TypeError: unhashable type:
+> 'list'` on stderr for every surface build at `cache_mode >= 2`) is still live upstream —
+> `PyObject_Hash` is still at `packages/engine/layer1/P.cpp:1321` and the swallowing `PyErr_Print`
+> has drifted one line, to `:1375` — and is still a reason not to treat the bridge's stderr as a
+> health signal.
+
 ---
 
 ## 0. Verdict
@@ -442,9 +476,9 @@ These are reported, not applied — I do not own those files.
    'list'` on every write (§7.3).
 6. `geometry-extraction.md:597-599` open question about `_PYMOL_NO_RAY` — answered: ray export is
    compiled in (all five exporters and `cmd.ray` run).
-7. `01-architecture.md` — any work package that assumes a server-side raster fallback must be
+7. `architecture.md` — any work package that assumes a server-side raster fallback must be
    re-costed at ray-tracer speed: **9.2 s/frame at 640×480 for a 59k-atom cartoon** (§9).
-8. `01-architecture.md` WP for geometry — must state that `cmd.rebuild()` does **not** build
+8. `architecture.md` WP for geometry — must state that `cmd.rebuild()` does **not** build
    geometry (§2); the trigger is `cmd.refresh()` or any exporter call.
 
 ---

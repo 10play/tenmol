@@ -1,6 +1,6 @@
 """macOS offscreen GL: CGL legacy-2.1 context, no drawable, + one FBO.
 
-This is ``docs/spikes/04-picking.md`` §2/§3 verbatim, promoted to a
+This is ``docs/spikes/picking.md`` §2/§3 verbatim, promoted to a
 module.  It is ~20 lines of ``ctypes`` against ``OpenGL.framework`` and needs
 no window, no ``NSApplication``, no Qt, no GLUT, no OSMesa and no ANGLE (none
 of which brew even ships on macOS — spike 04 §2).

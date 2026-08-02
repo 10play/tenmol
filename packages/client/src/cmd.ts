@@ -16,7 +16,7 @@
  * >>> modules at packages/engine/modules/pymol/api.py:487-489) into
  * >>> `packages/client/src/generated/`. Do not hand-expand this file beyond
  * >>> the common commands; add to the generator instead
- * >>> (01-architecture.md:787 — generated files are never hand-edited).
+ * >>> (architecture.md:787 — generated files are never hand-edited).
  *
  * Until then the split is explicit, and stated plainly:
  *
@@ -227,7 +227,7 @@ export interface TypedPymolCmd {
    * `cmd.refresh()` — viewing.py:1750, i.e. `ExecutiveDrawNow`
    * (packages/engine/layer3/Executive.cpp:11521). This is what drains the deferred queue that
    * mouse input, deferred images and rep rebuilds sit in
-   * (02-completeness-critique.md:10-44), so the bridge — not the client —
+   * (`packages/engine/layer1/Ortho.cpp:268` `OrthoExecDeferred`), so the bridge — not the client —
    * decides when it runs. Call it from the UI only when you know why.
    */
   refresh(): Promise<Json>;
@@ -255,8 +255,8 @@ export interface TypedPymolCmd {
    *
    * For typed reads prefer the public family
    * `get_setting_boolean|int|float|text|tuple` (setting.py:408-447).
-   * `cmd.get_setting_str` does NOT exist anywhere in this tree
-   * (02-completeness-critique.md:200-206) — do not call it.
+   * `cmd.get_setting_str` does NOT exist anywhere in this tree — verified by
+   * grep over `packages/engine/modules/pymol/setting.py`; do not call it.
    */
   get_setting(name: string, object?: string, state?: number): Promise<Json>;
 
@@ -265,7 +265,8 @@ export interface TypedPymolCmd {
    * — setting.py:185.
    *
    * Menu check/radio items must pass `{log: 1, quiet: 0}` so the action reaches
-   * the log and the console (02-completeness-critique.md:294-296).
+   * the log and the console (`packages/engine/modules/pymol/setting.py:185`,
+   * where both default to the silent values).
    */
   set(
     name: string,

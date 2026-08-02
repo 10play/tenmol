@@ -6,7 +6,7 @@
  *   node / pnpm / workspace install
  *   the venv, `import pymol`, `import tenmol_bridge`
  *   offscreen GL context creation (the exact CGL+FBO recipe from
- *     docs/spikes/04-picking.md section 2 -- not re-derived)
+ *     docs/spikes/picking.md section 2 -- not re-derived)
  *   the dev ports
  *
  * Exit codes: 0 all required checks pass, 1 a required check failed.
@@ -132,7 +132,7 @@ pyCheck(
 
 // MMTF/BCIF are parity rows. A `use-msgpackc=no` build still imports fine and
 // still saves a 0-byte .mmtf much later, so probe the round-trip explicitly
-// (spikes/00-build.md section 5.2 does exactly this: 877 bytes, 10 atoms back).
+// (spikes/build.md section 5.2 does exactly this: 877 bytes, 10 atoms back).
 pyCheck(
   'pymol MMTF/BCIF',
   [
@@ -157,7 +157,7 @@ pyCheck(
 );
 
 // --------------------------------------------------------------------------
-// offscreen GL -- verbatim from docs/spikes/04-picking.md section 2
+// offscreen GL -- verbatim from docs/spikes/picking.md section 2
 // --------------------------------------------------------------------------
 const GL_PROBE = String.raw`
 import sys, ctypes, platform

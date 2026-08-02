@@ -1,19 +1,23 @@
-# Area: dialogs-volume-properties-scenes
+# Dialogs: volume, properties, scenes, shortcuts, settings, text editor
 
 Scope: `packages/engine/modules/pmg_qt/volume.py`, `packages/engine/modules/pmg_qt/properties_dialog.py`,
 `packages/engine/modules/pmg_qt/scene_bin_gui.py`, `packages/engine/modules/pmg_qt/shortcut_menu_gui.py`,
 `packages/engine/modules/pmg_qt/advanced_settings_gui.py`, `packages/engine/modules/pmg_qt/TextEditor.py`,
-plus a full inventory of `packages/engine/modules/pmg_qt/forms/*.ui`.
+plus a full inventory of `packages/engine/modules/pmg_qt/forms/*.ui`. All of it read out of
+`packages/engine/`, which is unmodified upstream. Line numbers are 1-indexed.
 
-Everything below was read in the tree at commit `5e8bfca5`. Line numbers are
-1-indexed and refer to the current files.
+None of these dialogs owns a GL context. The only pixel-producing dependency is the scene
+thumbnail (`get_scene_thumbnail` returns a PNG byte buffer produced server-side,
+`packages/engine/layer4/Cmd.cpp:1159-1173`), which crosses the wire as bytes.
 
-Target architecture assumed: PyMOL backend stays in Python/C++, a bridge exposes
-`cmd` over WebSocket/HTTP, React reimplements every Qt widget. Nothing in this
-area contradicts that architecture — none of these dialogs owns a GL context.
-The only pixel-producing dependency is the scene thumbnail (`get_scene_thumbnail`
-returns a PNG byte buffer produced server-side, `packages/engine/layer4/Cmd.cpp:1159-1173`),
-which is trivially transportable as base64.
+**Where the port stands.** Volume editor: `apps/web/src/features/volume/` over
+`packages/bridge/tenmol_bridge/panels/volume.py`. Properties inspector:
+`apps/web/src/features/properties/` over `panels/properties.py`. Scene panel:
+`apps/web/src/features/scenes/`. Shortcut menu: `apps/web/src/features/shortcuts/` over
+`panels/shortcuts.py`. Advanced settings: `apps/web/src/features/dialogs/AdvancedSettings.tsx` and
+`apps/web/src/features/settings/AdvancedSettingsTable.tsx`. Text editor:
+`apps/web/src/features/texteditor/`. The `.ui` forms of §7 are hosted by
+`apps/web/src/features/dialogs/DialogWindow.tsx` and `modals.tsx`.
 
 ---
 
@@ -620,7 +624,7 @@ earlier design; do not port unless product wants it.
 - After each `populateData` the selection model is re-connected
   (`shortcut_menu_gui.py:188`) — repeated connects accumulate.
 
-### 4.5 `cmd.set_key` contract (validation the web UI must mirror)
+### 4.5 `cmd.set_key` contract
 
 `packages/engine/modules/pymol/controlling.py:719-796`:
 - `key.rpartition('-')` -> modifier must be in
@@ -793,7 +797,7 @@ obvious from the `.py` files; the owning agent for `file_dialogs.py` /
 
 ---
 
-## 8. Bridge / API surface required by this area
+## 8. Bridge / API surface for this area
 
 Getters: `get_volume_histogram`, `volume_color` (getter form) /
 `get_volume_color`, `get_object_list`, `get_state`, `get_object_ttt`,
@@ -810,20 +814,20 @@ Setters/commands: `volume_color` (setter form), `volume_ramp_new`,
 the mutable dicts `cmd.key_mappings` (`controlling.py:795`) and
 `cmd.shortcut_dict` (`shortcut_manager.py:18`).
 
-Events the bridge must push (currently done by direct widget calls that will not
-exist on the web):
+Four changes reach the Qt dialogs by direct widget calls, which have no web equivalent, so each
+became a bridge-published change instead:
 1. volume ramp changed externally -> `colorramping.py:170-179` calls
-   `panel.widget().editor.setColors(ramplist)`. Needs a `volume_ramp_changed`
-   event keyed by object name.
-2. scene list / order / thumbnails changed -> currently discovered by the paint
-   and window-activate polling in `scene_bin_gui.py:102-113`. Needs a
-   `scenes_changed` event.
-3. settings changed from the command line -> Advanced Settings has **no** refresh
-   at all today; `pymol_qt_gui.py:110-115` shows the existing
-   `setting_callbacks` mechanism (index -> callable) that the bridge should
-   generalize.
-4. picked atom (`pk1`) changed -> Properties Inspector currently only reads pk1
-   on open and on Refresh (`properties_dialog.py:324-328`, `406-415`).
+   `panel.widget().editor.setColors(ramplist)`. In the port the ramp is re-read per object
+   (`packages/bridge/tenmol_bridge/panels/volume.py`, `apps/web/src/features/volume/ramp.ts`).
+2. scene list / order / thumbnails changed -> Qt discovers this by paint-time and
+   window-activate polling (`scene_bin_gui.py:102-113`); the port carries it on the `scenes`
+   topic (`packages/protocol/src/topics/scenes.ts`).
+3. settings changed from the command line -> Advanced Settings has **no** refresh at all in Qt;
+   `pymol_qt_gui.py:110-115` shows the `setting_callbacks` mechanism (index -> callable) that the
+   `settings` topic generalises (see `docs/settings-colors.md` D3).
+4. picked atom (`pk1`) changed -> the Properties Inspector only reads pk1 on open and on Refresh
+   (`properties_dialog.py:324-328`, `406-415`); the port re-reads it from the selection topic
+   (`apps/web/src/features/properties/service.ts`).
 
 File-system side effects (localhost assumption is required): shortcut persistence
 to `~/.pymol/shortcuts_save.json` (`save_shortcut.py:6`), and the Text Editor's

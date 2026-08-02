@@ -351,7 +351,7 @@ class Dispatcher:
     def _route(self, symbol: str) -> "concurrent.futures.Future[CallResult]":
         """``quit`` / ``_quit`` -> bridge shutdown, never the C ``exit()`` path.
 
-        ``spikes/00-build.md`` §6.2: PyMOL tears the process down with C
+        ``spikes/build.md`` §6.2: PyMOL tears the process down with C
         ``exit()``, skipping ``atexit`` and ``Py_FinalizeEx``; the browser would
         see the socket vanish with no explanation and nothing would be flushed.
         """

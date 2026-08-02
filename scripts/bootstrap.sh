@@ -16,11 +16,11 @@
 # Then: `pnpm dev` and `curl 127.0.0.1:8765/healthz` -> {"state":"running",...}
 #
 # The build recipe is NOT invented here. It is copied verbatim from the
-# measured spike: docs/spikes/00-build.md sections 2.2, 3 and 3.1.
+# measured spike: docs/spikes/build.md sections 2.2, 3 and 3.1.
 # In particular `--config-settings use-msgpackc=c++11` PLUS a vendored mmtf-cpp
 # on PREFIX_PATH. Do NOT "fix" a build error by switching to
 # `use-msgpackc=no`: that silently drops MMTF and BCIF file I/O, which are
-# parity rows (docs/00-parity-inventory.md, section 6 File I/O).
+# parity rows (docs/feature-parity.md, section 6 File I/O).
 #
 # Usage:
 #   bash scripts/bootstrap.sh [options]
@@ -128,7 +128,7 @@ if [ "$PLATFORM" = macos ]; then
   BREW_PREFIX="$(brew --prefix)"
   info "brew prefix: $BREW_PREFIX"
 
-  # spikes/00-build.md section 2.1. catch2 is deliberately NOT required: it is
+  # spikes/build.md section 2.1. catch2 is deliberately NOT required: it is
   # only used by --testing=true and brew only ships v3, while packages/engine/layerCTest/Test.h:14
   # wants the v2 umbrella header.
   REQUIRED_BREW=(cmake libpng freetype glew glm netcdf msgpack-cxx libxml2)
@@ -176,7 +176,7 @@ pick_python() {
   # Prefer an explicit, non-shimmed interpreter. `python3` on a dev machine is
   # very often a pyenv shim or an anaconda python, and setup.py:288 is_conda_env()
   # changes its prefix search when sys.prefix looks conda-ish
-  # (spikes/00-build.md section 1).
+  # (spikes/build.md section 1).
   local cand
   for ver in 3.13 3.12 3.11 3.10; do
     if [ -n "$BREW_PREFIX" ]; then
@@ -222,7 +222,7 @@ PY="$VENV/bin/python"
 [ -x "$PY" ] || die "no interpreter at $PY"
 
 # Build-time deps must be present *before* the PyMOL build, because we pass
-# --no-build-isolation (spikes/00-build.md section 3.1).
+# --no-build-isolation (spikes/build.md section 3.1).
 info "installing build requirements (pip, numpy, setuptools, cmake)"
 "$PY" -m pip install "${PIP_QUIET[@]}" --upgrade \
   pip "numpy>=2.0" "setuptools>=69.2.0" "cmake>=3.13.3" >/dev/null ||
@@ -274,7 +274,7 @@ else
   if [ "$PLATFORM" = macos ]; then
     PREFIX_PATH="$BREW_PREFIX:$BREW_PREFIX/opt/libxml2:$MMTF_ROOT"
     # brew's libxml2 is keg-only: without its prefix, libxml/parser.h is not
-    # found and -lxml2 does not resolve (spikes/00-build.md section 3.1).
+    # found and -lxml2 does not resolve (spikes/build.md section 3.1).
     MACOS_MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
     export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-$MACOS_MAJOR.0}"
     info "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET"
@@ -286,7 +286,7 @@ else
   info "this compiles ~254 objects; ~16 s on an M4 Max, minutes on CI"
 
   # NOTE: non-editable on purpose. `pip install -e .` drops a 10 MB
-  # packages/engine/modules/pymol/_cmd*.so into the source tree (spikes/00-build.md section 4.3).
+  # packages/engine/modules/pymol/_cmd*.so into the source tree (spikes/build.md section 4.3).
   # No --glut (default False keeps _PYMOL_NO_MAIN defined), no --testing
   # (needs Catch2 v2).
   BUILD_LOG="$REPO_ROOT/.tenmol-bootstrap.log"

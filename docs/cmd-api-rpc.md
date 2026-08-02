@@ -1,12 +1,18 @@
-# cmd API + RPC bridge contract
+# The `cmd` API, and the RPC contract over it
 
-Area: `cmd-api-rpc`. Defines the backend↔frontend contract for the React web client.
-Everything below is grounded in files in this repo; every claim carries a `file:line`.
+Map of PyMOL's `cmd` surface: what it contains, how command strings are parsed, how feedback
+escapes, what the two bundled RPC servers do, and what the C++ core can and cannot notify about.
+Every claim carries a `file:line` out of `packages/engine/`, which is unmodified upstream.
 Where an API does **not** exist, it is called out explicitly as **DOES NOT EXIST**.
 
-Target architecture assumed: one local PyMOL Python process, one browser client, localhost,
-full filesystem access, Python bridge exposing `cmd` over WebSocket/HTTP, three.js rendering
-geometry that PyMOL already computed.
+Deployment: one local PyMOL process, one browser client, loopback only, full filesystem access.
+
+**Where the port stands.** The bridge described in §8 is built:
+`packages/bridge/tenmol_bridge/` (`server.py` transport, `session.py` envelope, `dispatch.py`
+resolution, `policy/` capability grants, `pump.py` the engine thread, `codec.py`, `blobs.py`,
+`feedback.py`). The wire types are `packages/protocol/src/envelope.ts` +
+`packages/protocol/src/topics/`; the generated API descriptor of §9 is
+`packages/protocol/src/generated/api.ts`; the client is `packages/client/src/`.
 
 ---
 
@@ -104,7 +110,7 @@ programmatic API extraction** and is the model the TS generator should follow.
 
 ## 2. How command strings are parsed and executed (`parser.py` / `parsing.py`)
 
-There are **two entirely different execution paths**, and the bridge must expose both.
+There are **two entirely different execution paths**, and the bridge exposes both.
 
 ### 2.1 Path A — string command line (`cmd.do` → C → `parser.parse`)
 
@@ -226,7 +232,7 @@ the ambiguity list to the feedback stream. A web autocomplete dropdown needs the
 list as data. See §8.4.
 
 Command history is pure Python and GUI-side: `_setup_history`, `back`, `forward`, `back_search`,
-`_jump_history`, 255-entry cap (`packages/engine/modules/pymol/_gui.py:894-940`). Trivially reimplemented in React.
+`_jump_history`, 255-entry cap (`packages/engine/modules/pymol/_gui.py:894-942`). Trivially reimplemented in React.
 
 ---
 
@@ -240,13 +246,13 @@ Command history is pure Python and GUI-side: `_setup_history`, `back`, `forward`
 startup (`packages/engine/modules/pmg_qt/pymol_gl_widget.py:104-105`).
 
 `PCatchWrite` gates on `Feedback(G, FB_Python, FB_Output)` and pushes to
-`OrthoAddOutput` (`packages/engine/layer1/P.cpp:2663-2673`); `PCatchWritelines` does the same per sequence item
+`OrthoAddOutput` (`packages/engine/layer1/P.cpp:2663-2673`); `PCatchWritelines` (`:2676`) does the same per sequence item
 (`packages/engine/layer1/P.cpp:2676-2699`).
 
 ### 4.2 The Ortho feedback queue
 
 `OrthoFeedbackIn(G, buffer)` pushes onto `I->feedback` **only when `G->Option->pmgui` is true**
-(`packages/engine/layer1/Ortho.cpp:492-499`). `OrthoFeedbackOut(G, ortho)` pops one string and strips ANSI escapes
+(`packages/engine/layer1/Ortho.cpp:492-500`). `OrthoFeedbackOut(G, ortho)` (`:502`) pops one string and strips ANSI escapes
 unless the `colored_feedback` setting is on (`packages/engine/layer1/Ortho.cpp:501-515`, decl `packages/engine/layer1/Ortho.h:115`).
 
 `_cmd.get_feedback` (`CmdGetFeedback`, `packages/engine/layer4/Cmd.cpp:3866-3899`, registered `:6463`) pops **one**
@@ -288,10 +294,10 @@ reaches the Ortho queue — everything arrives as one undifferentiated string st
 
 `cmd.get_progress(reset=0)` → `_cmd.get_progress` (`packages/engine/modules/pymol/monitoring.py:5-7`,
 `packages/engine/layer4/Cmd.cpp:4315-4345`, registered `:6486`), backed by `PyMOL_GetProgress` /
-`PyMOL_GetProgressChanged` (`packages/engine/layer5/PyMOL.cpp:1862-1880`). Returns a float; `<0` means idle
+`PyMOL_GetProgressChanged` (`packages/engine/layer5/PyMOL.cpp:1874-1880`, alongside `PyMOL_GetProgress` at `:1862`). Returns a float; `<0` means idle
 (Qt hides the bar, `packages/engine/modules/pmg_qt/pymol_qt_gui.py:931-939`).
 `cmd.ready()` wraps `_cmd.ready` (`packages/engine/modules/pymol/monitoring.py:9-11`).
-Busy text lives only in C: `OrthoBusyMessage` (`packages/engine/layer1/Ortho.cpp:534-539`), `OrthoBusySlow`
+Busy text lives only in C: `OrthoBusyMessage` (`packages/engine/layer1/Ortho.cpp:530-539`), `OrthoBusySlow`
 (`packages/engine/layer1/Ortho.cpp:542`) — **not exposed to Python**.
 
 ---
@@ -364,7 +370,7 @@ Only via `.pwg` files: `importing._processPWG` (`packages/engine/modules/pymol/i
 `PymolHttpd(port, root, logging, wrap_native, headers=headers)` and `.start()`s it
 (`packages/engine/modules/pymol/importing.py:592-597`), optionally opening a browser (`:598-601`).
 
-### 5.4 Verdict
+### 5.4 Why it was not built on
 
 **Replace, do not build on.** Concretely: no WebSocket and therefore no server→client push; no
 streaming of feedback; POST bodies discarded (`:89-91`); every argument arrives as a string with
@@ -406,7 +412,7 @@ convention, the `label`→`label2` no-eval substitution, and the localhost check
   (`packages/engine/modules/pymol/invocation.py:184`, `:453`) which defers
   `'_do__ /import pymol.rpc;pymol.rpc.launch_XMLRPC()'` (`packages/engine/modules/pymol/invocation.py:521-522`)
 
-### 6.1 Verdict
+### 6.1 Why it was not built on
 
 **Replace.** XML-RPC is synchronous request/response only, has no binary type (base64-bloated),
 no push, no streaming, no kwargs (XML-RPC is positional-only — so `cmd.load(f, object='x')` is
@@ -420,7 +426,7 @@ unreachable via the generic instance registration), and `register_instance` on a
 
 ---
 
-## 7. What the C++ layer can emit TODAY (honest inventory)
+## 7. What the C++ layer can emit
 
 ### 7.1 Exists
 
@@ -450,7 +456,7 @@ unreachable via the generic instance registration), and `register_instance` on a
 declaration, the definition, and the call site. It is *the right hook shape* but is not usable
 from Python today.
 
-### 7.2 DOES NOT EXIST — must be added
+### 7.2 DOES NOT EXIST
 
 A repo-wide grep for `Notify`/`notify` across `layer0`–`layer5` returns **zero matches**. There is
 no event bus in the C++ core. The following have **no notification whatsoever**:
@@ -475,7 +481,7 @@ no event bus in the C++ core. The following have **no notification whatsoever**:
    (`packages/engine/modules/pymol/wizarding.py:156-174`); `dirty_wizard` (`:146`) sets a C flag, no Python signal.
 9. **Undo/redo stack changed** — `cmd.undo`/`redo`/`push_undo` exist (`packages/engine/modules/pymol/api.py:223`,
    `:227`, `:256`) with no depth query and no event.
-10. **Busy message text** — `OrthoBusyMessage` is C-internal (`packages/engine/layer1/Ortho.cpp:534-539`).
+10. **Busy message text** — `OrthoBusyMessage` is C-internal (`packages/engine/layer1/Ortho.cpp:530-539`).
 11. **Severity/category on feedback lines** — `colorprinting.error/warning/suggest/parrot` are all
     `print` (`packages/engine/modules/pymol/colorprinting.py:27-31`); the stream is untyped text.
 12. **Return value from a parsed command line** — `cmd.do()` returns `None`
@@ -484,17 +490,19 @@ no event bus in the C++ core. The following have **no notification whatsoever**:
 
 ---
 
-## 8. Proposal: the bridge
+## 8. The bridge
 
 ### 8.1 Process & transport
 
-Single Python process, launched headless-but-`pmgui`-enabled so `OrthoFeedbackIn` actually
-queues (`packages/engine/layer1/Ortho.cpp:494`). Use `pymol2.PyMOL()` (`packages/engine/modules/pymol2/__init__.py:79-131`) rather
-than the module singleton so multiple sessions stay possible; `PyMOL.cmd` is a `pymol2.cmd2.Cmd`
-proxy that builds its own keyword/shortcut tables (`packages/engine/modules/pymol2/cmd2.py:57-78`).
+Single Python process, launched with `pmgui` enabled so `OrthoFeedbackIn` actually queues
+(`packages/engine/layer1/Ortho.cpp:494`). It uses `pymol2.SingletonPyMOL`, **not**
+`pymol2.PyMOL` (`packages/engine/modules/pymol2/__init__.py:79-131`): `pcatch` writes through the
+file-scope `SingletonPyMOLGlobals` pointer (`packages/engine/layer1/P.cpp:2667`), so a non-singleton
+instance loses stdout capture. `PyMOL.cmd` is a `pymol2.cmd2.Cmd` proxy that builds its own
+keyword/shortcut tables (`packages/engine/modules/pymol2/cmd2.py:57-78`).
 
 - **HTTP/1.1 on `127.0.0.1:<port>`** (bind explicitly to loopback, unlike `rpc.py:430`) for:
-  - `GET /health` → `{version, renderer, pid}` from `cmd.get_version()`
+  - `GET /healthz` → `{version, renderer, pid}` from `cmd.get_version()`
     (`packages/engine/modules/pymol/api.py:147`) and `cmd.get_renderer()` (`packages/engine/modules/pymol/api.py:142`)
   - `GET /schema` → the generated API descriptor (§9)
   - `GET /blob/{id}` and `POST /blob` for large payloads (PNG from `cmd.png`
@@ -593,16 +601,19 @@ candidate list instead of returning it (`packages/engine/modules/pymol/parser.py
 
 Two options, in order of preference:
 
-1. **Reimplement in the bridge (recommended).** Duplicate the 60-line dispatch of
-   `Parser._complete` (`packages/engine/modules/pymol/parser.py:528-593`) but return
+1. **Reimplement in the bridge.** Duplicate the 60-line dispatch of
+   `Parser._complete` (`packages/engine/modules/pymol/parser.py:528-596`) but return
    `{ "prefix": str, "candidates": [str], "kind": "command"|"selection"|"color"|"setting"|"file"|…,
    "commonPrefix": str }`. All inputs are public: `cmd.kwhash` (`packages/engine/modules/pymol/cmd.py:332`),
    `cmd.auto_arg` (`packages/engine/modules/pymol/cmd.py:380`), and `Shortcut.interpret(keyword, mode)`
    (`packages/engine/modules/pymol/shortcut.py`, used at `packages/engine/modules/pymol/parser.py:58`). `kind` comes for free —
    it is the `type_name` element of each `auto_arg` triple
    (`packages/engine/modules/pymol/completing.py:52-66`).
-2. Temporarily wrap `cmd._parser.complete(st)` (`packages/engine/modules/pymol/parser.py:524-526`) and scrape the
-   printed lines out of the feedback queue. Fragile; use only to bootstrap.
+2. Wrap `cmd._parser.complete(st)` (`packages/engine/modules/pymol/parser.py:524-526`) and read the
+   printed candidate list out of the feedback queue. This is what shipped: the console calls
+   `cmd._parser.complete` (granted in `packages/bridge/tenmol_bridge/policy/grants/wp-11-console.py`)
+   and pairs the completed string with the feedback lines
+   (`apps/web/src/features/console/CommandLine.tsx`).
 
 Also expose `t:"usage"` → run the `?` path: `parsing.dump_arg(name, arg_names, nreq)`
 (`packages/engine/modules/pymol/parsing.py:311-327`) reimplemented to *return* the usage string, giving the web
@@ -612,9 +623,9 @@ And `t:"help"` → `cmd.keyword[name][0].__doc__` / `cmd.help_only[name][0].__do
 `helping.help` does (`packages/engine/modules/pymol/helping.py:62-87`) and `write_html_ref` does in bulk
 (`packages/engine/modules/pymol/cmd.py:285-307`).
 
-### 8.5 Change events — concrete plan
+### 8.5 Change events
 
-Given §7.2, events must be built in **three tiers**.
+Given §7.2, change detection is built in **three tiers**.
 
 **Tier 0 — free today, no C++ change.** A bridge-side "tick" task (default 100 ms, coalesced,
 suspended when no client is connected) that:
@@ -645,43 +656,46 @@ snapshot and emit only deltas:
 | `scenes` | `cmd.get_scene_list()` | `packages/engine/modules/pymol/viewing.py:919` |
 | `selection` | `cmd.get_names('public_selections')` + `cmd.count_atoms(name)` per selection | `packages/engine/modules/pymol/querying.py:1155`, `packages/engine/modules/pymol/api.py:97` |
 | `wizard` | `cmd.get_wizard_stack()` and the wizard's prompt/panel | `packages/engine/modules/pymol/wizarding.py:166-174` |
-| `colors` | `cmd.get_color_indices()` (only when `_invalidate_color_sc` would fire) | `packages/engine/modules/pymol/internal.py:575-591` |
+| `colors` | `cmd.get_color_indices()` (only when `_invalidate_color_sc` would fire) | `packages/engine/modules/pymol/internal.py:584-591` |
 
 Gate all of Tier 1 behind the redisplay dirty bit so an idle session costs ~one syscall per tick.
 Cost concern: `view` at 100 ms is fine; `objects` on a 500-object session is not — key it to the
 dirty bit and to a "mutating call just completed" hint from the dispatcher (any `m` not starting
 with `get_`/`count_`).
 
-**Tier 2 — C++ additions required (the honest gap list).** Each is a small, additive change; none
-of them exist today.
+**Tier 2 — C++ additions.** Tier 0 + Tier 1 shipped first (pure Python, zero C++ risk, works
+against an unmodified backend). Three of the seven items below then landed in the engine, each
+inside a `/* tenmol web client -- BEGIN/END */` sentinel block so the diff against upstream is
+greppable:
 
-1. `ExecutiveInvalidatePanelList`-adjacent hook: bump a global `u32 ObjectListVersion` whenever a
-   `SpecRec` is added/removed/renamed/reordered, and expose `_cmd.get_change_counters()` returning
-   `{objects, enabled, view, frame, selection, scene, color, setting}`. Then Tier 1 becomes
-   "compare 8 integers" instead of "diff N object names". This is the single highest-value change.
-2. Make `ReportEnabledChange` unconditional (drop `#ifdef _PYMOL_LIB`,
-   `packages/engine/layer3/Executive.cpp:315-319`) and add a Python binding that appends
-   `(name, visible)` to a queue drainable via a new `_cmd.get_events()` — reusing the exact
-   pattern of `OrthoFeedbackIn`/`OrthoFeedbackOut` (`packages/engine/layer1/Ortho.cpp:492-515`), which is already
-   a proven, lock-safe, drain-on-poll queue.
-3. Bump a view counter in `SceneSetView`/`SceneRotate`/`SceneTranslate` so mouse-driven camera
-   moves are detectable without a per-tick 18-float compare.
-4. Emit a typed `pick` event from `PyMOL_SetClickReady` (`packages/engine/layer5/PyMOL.cpp:2594-2600`) — the data
-   is already there (`name, index, button, mod, x, y`), and `PyMOL_GetClickString`
-   (`packages/engine/layer5/PyMOL.cpp:2624-2640`) is already surfaced as `_cmd.get_click_string`
-   (`packages/engine/layer4/Cmd.cpp:6451`) but has **zero Python callers today**. Wiring it is nearly free.
-5. Carry severity through feedback: give `colorprinting.error/warning/suggest/parrot`
-   (`packages/engine/modules/pymol/colorprinting.py:27-31`) real implementations that prefix a sentinel, and have
-   `OrthoFeedbackOut` (`packages/engine/layer1/Ortho.cpp:501-515`) preserve it, so the web console can colour
-   lines instead of receiving undifferentiated text.
-6. Remove or make configurable the `G->Option->pmgui` gate on `OrthoFeedbackIn`
-   (`packages/engine/layer1/Ortho.cpp:494`) so a headless bridge still gets output.
-7. Return `parser.result` (`packages/engine/modules/pymol/parser.py:292`) through `_cmd.do` so `t:"do"` can
-   deliver a value instead of always `null`.
-
-**Recommendation:** ship Tier 0 + Tier 1 first (pure Python, zero C++ risk, works against an
-unmodified backend), then land Tier 2 item 1 (change counters) which alone removes ~90 % of the
-polling cost, then items 2/4.
+1. **Landed.** Four monotonic counters on `struct CExecutive` — `m_web_panel_version`,
+   `m_web_enable_version`, `m_web_name_version`, `m_web_rep_version`
+   (`packages/engine/layer3/ExecutiveDef.h:89-98`), bumped at
+   `ExecutiveInvalidatePanelList` (`Executive.cpp:1521`), `ReportEnabledChange` (`:315`),
+   the rename path (`:3686`), `ExecutiveUpdateCoordDepends` (`:1931`) and the transform paths
+   (`:7695`, `:7717`). Read through `_cmd.web_get_versions`
+   (`packages/engine/layer4/Cmd.cpp:6472`, implementation `packages/engine/layer4/CmdWebGeometry.cpp`). This alone
+   turns Tier 1 from "diff N object names" into "compare four integers", which is what made an
+   idle session cost ~1 us per poll. Consumed by
+   `packages/bridge/tenmol_bridge/state/repversions.py`.
+2. **Partly landed.** `ReportEnabledChange` (`Executive.cpp:313`) now bumps
+   `m_web_enable_version` for *every* enable and disable; the `#ifdef _PYMOL_LIB` callback above
+   it is untouched. No `_cmd.get_events()` queue was added — the counter made one unnecessary.
+3. **Not landed.** There is still no view counter in `SceneSetView`/`SceneRotate`/`SceneTranslate`;
+   the camera is detected by comparing the 18-float `get_view()` with an epsilon (Tier 1).
+4. **Landed differently.** Rather than emit an event from `PyMOL_SetClickReady`
+   (`packages/engine/layer5/PyMOL.cpp:2594-2600`), the client resolves a pick it already made
+   against the engine through `_cmd.web_resolve_pick` (`Cmd.cpp:6473`). `_cmd.get_click_string`
+   (`Cmd.cpp:6451`) still has zero Python callers upstream.
+5. **Not landed.** `colorprinting.error/warning/suggest/parrot`
+   (`packages/engine/modules/pymol/colorprinting.py:27-31`) are still bare `print`, so the stream
+   is untyped text; the bridge classifies lines itself in
+   `packages/bridge/tenmol_bridge/feedback.py`.
+6. **Not needed.** The `G->Option->pmgui` gate on `OrthoFeedbackIn` (`packages/engine/layer1/Ortho.cpp:494`)
+   stands; the bridge boots with `pmgui` enabled so the queue fills (§8.1).
+7. **Not landed.** `parser.result` (`packages/engine/modules/pymol/parser.py:292`) is still not
+   returned through `_cmd.do`, so a `do` frame still resolves to `null` and the result surfaces as
+   feedback text.
 
 ### 8.6 Key bindings
 
@@ -689,7 +703,7 @@ polling cost, then items 2/4.
 `cmd.key_mappings` (`packages/engine/modules/pymol/cmd.py:345`, defaults from `keyboard.get_default_keys()`).
 Invocation from C goes through `cmd._special` / `_ctrl` / `_alt` / `_ctsh`
 (`packages/engine/modules/pymol/internal.py:447-511`), which resolve via `_invoke_key`
-(`packages/engine/modules/pymol/internal.py:427-445`) and fall back to matching **scene names** and **view names**
+(`packages/engine/modules/pymol/internal.py:427-446`) and fall back to matching **scene names** and **view names**
 (`packages/engine/modules/pymol/internal.py:470-483`). Special-key numeric codes are GLUT's, mapped in
 `special_key_codes` (`packages/engine/modules/pymol/internal.py:398-423`) with modifier prefixes
 `''/SHFT/CTRL/CTSH/ALT` (`packages/engine/modules/pymol/internal.py:390-396`).
@@ -703,7 +717,11 @@ React key handler send `{t:"key", key:"CTRL-C"}` which the bridge routes to
 
 ## 9. Generating the TypeScript client from Python
 
-**Do not hand-write 404 method signatures.** Generate them.
+404 method signatures are generated, not hand-written. The generator lives in `tools/gen-api/`
+(`extract.py`, `emit.mjs`, `api-schema.json`) and its output is
+`packages/protocol/src/generated/api.ts`. Signatures come from a **live** PyMOL via
+`inspect.signature`, not from parsing `api.py` — which is a re-export manifest with no function
+bodies.
 
 ### 9.1 Reality of the source material
 
@@ -739,9 +757,16 @@ React key handler send `{t:"key", key:"CTRL-C"}` which the bridge routes to
 
 ```
 tools/gen-api/
-  extract.py     # runs INSIDE pymol -cq, dumps api-schema.json
+  extract.py     # runs INSIDE a live PyMOL, dumps api-schema.json
   api-schema.json
-  emit.ts        # reads api-schema.json, writes packages/pymol-client/src/generated/
+  emit.mjs       # reads api-schema.json, writes packages/protocol/src/generated/api.ts
+```
+
+Regenerate with:
+
+```bash
+packages/bridge/.venv/bin/python tools/gen-api/extract.py > tools/gen-api/api-schema.json
+node tools/gen-api/emit.mjs tools/gen-api/api-schema.json packages/protocol/src/generated/api.ts
 ```
 
 **Step 1 — `extract.py`** (a build-time script, run under `pymol -cq extract.py`, never shipped):
@@ -798,7 +823,7 @@ Everything this script touches is verified above to exist: `cmd.auto_arg` (`pack
 3. default-value type: `1`/`0` on a param named `quiet`/`updates`/`animate`/`hand`/`ray` →
    `boolean | 0 | 1`; other ints → `number`; strings → `string`; tuples → fixed-length tuple
 4. `ARGUMENTS` docstring line `name = int: …` / `= str:` / `= float:` / `= list:` — parsed with the
-   same uppercase-section walk `write_html_ref` uses (`packages/engine/modules/pymol/cmd.py:290-303`)
+   same uppercase-section walk `write_html_ref` (`packages/engine/modules/pymol/cmd.py:211`) uses (`:290-303`)
 5. name heuristics: `state`/`frame`/`width`/`height`/`dpi`→`number`, `filename`/`prefix`→`string`,
    `*_sele`/`selection*`→`Selection`
 6. fallback `ApiValue = string | number | boolean | null | ApiValue[] | {[k:string]:ApiValue}`
@@ -839,6 +864,8 @@ is the reason to generate rather than hand-write.
 
 ### 9.3 Runtime client shape
 
+`packages/client/src/` implements this over `packages/protocol/src/envelope.ts`.
+
 ```ts
 class PymolClient {
   call<T = unknown>(m: string, a?: unknown[], k?: Record<string, unknown>): Promise<T>;
@@ -858,58 +885,41 @@ wrappers, not 404.
 
 ---
 
-## 10. Risks
+## 10. Constraints this area lives under
 
-1. **`G->Option->pmgui` gates the feedback queue** (`packages/engine/layer1/Ortho.cpp:492-499`). A headless bridge
-   gets zero console output until this is addressed. Verify empirically before committing to
-   Tier 0.
-2. **No change notifications exist at all** (`grep -r Notify layer0..layer5` ⇒ 0 hits). The whole
-   event story is polling until Tier 2 lands. Object-list diffing is O(objects) per tick.
+1. **`G->Option->pmgui` gates the feedback queue** (`packages/engine/layer1/Ortho.cpp:492-499`), so
+   a bridge that boots without `pmgui` gets zero console output. The bridge enables it (§8.1).
+2. **No change notifications exist at all** (`grep -r Notify layer0..layer5` gives 0 hits), so the
+   whole event story is polling. §8.5 Tier 2 item 1 is what keeps that affordable: four integers
+   instead of an O(objects) diff per tick.
 3. **`cmd.do` swallows return values and exceptions** (`packages/engine/modules/pymol/parser.py:465-481`,
-   `packages/engine/modules/pymol/commanding.py:441-475`). Any UI feature built on the `do` path is blind to
-   failure.
-4. **Both existing bridges are unauthenticated.** `rpc.py:441` `register_instance(cmd)` plus
+   `packages/engine/modules/pymol/commanding.py:441-475`), so anything built on the `do` path is blind to
+   failure. That is why `do` is the console path only and UI actions take the typed `call` path.
+4. **Both bundled bridges are unauthenticated.** `rpc.py:441` `register_instance(cmd)` plus
    `rpc.py:422-430` (no localhost binding) is remote code execution by design. `pymolhttpd`'s
-   `127.0.` check (`:63-67`) does not stop a hostile web page in the user's own browser.
-   The new bridge must ship auth from commit one.
+   `127.0.` check (`:63-67`) does not stop a hostile web page in the user's own browser. The
+   replacement ships a token, an `Origin` allow-list and a loopback peer check together.
 5. **`LITERAL1`/`LITERAL2` commands `eval` user strings** (`alter`, `iterate`, `alter_state`,
    `iterate_state`, `label`, `alias`, `set_key` — `packages/engine/modules/pymol/keywords.py:16,19,21,144,145,147,257`).
-   `pymolhttpd` already dodged `label` by substituting `label2` (`:473`). Full parity with the
-   desktop app means shipping an arbitrary-Python-execution surface to a browser.
+   `pymolhttpd` dodged `label` by substituting `label2` (`:473`). Parity with the desktop app means
+   an arbitrary-Python surface reachable from the browser; the transport is what bounds it, which
+   is why §8.1 spends its security budget there rather than on a symbol deny-list.
 6. **`prepare_call` does no type coercion** (`packages/engine/modules/pymol/parsing.py:329-421`); functions coerce
    internally and inconsistently. Sending a JSON number where PyMOL expected a string usually
-   works but is untested territory for all 404 functions.
-7. **Six type annotations in the entire API** means generated types are ~70 % heuristic. Expect a
-   long tail of wrong signatures; the override table and CI drift check are the mitigation.
+   works but is untested across all 404 functions.
+7. **Six type annotations in the entire API**, so generated types are largely heuristic. The
+   override table and the CI drift check in §9 are what keep the long tail honest.
 8. **`new_command` has zero callers** (`packages/engine/modules/pymol/commanding.py:722`). It is the intended
-   modern path but is unexercised; adopting it broadly is a migration project, not a given.
+   modern path but is unexercised upstream.
 9. **Threading.** `cmd` is protected by `lock_api`/`lockcm` (`packages/engine/modules/pymol/cmd.py:135-142`,
    `packages/engine/modules/pymol/locking.py`) and `cmd._get_feedback` can return `None` under contention
-   (`packages/engine/modules/pymol/internal.py:605`). Any async dispatcher must respect `lockcm`, and
-   `_call_in_gui_thread` is a plain passthrough in the module singleton
-   (`packages/engine/modules/pymol/cmd.py:164-165`) — Qt overrides it (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:1243-1251`).
-   The bridge needs its own main-thread marshaller for anything touching GL.
+   (`packages/engine/modules/pymol/internal.py:605`). `_call_in_gui_thread` is a plain passthrough in the
+   module singleton (`packages/engine/modules/pymol/cmd.py:164-165`) — Qt overrides it
+   (`packages/engine/modules/pmg_qt/pymol_qt_gui.py:1243-1251`). The bridge marshals everything that
+   touches the engine onto one thread (`packages/bridge/tenmol_bridge/pump.py`).
 10. **Deprecated stdlib usage in `pymolhttpd`** (`Event.isSet` `:490`/`:502`, `Thread.setDaemon`
-    `:497`) means it will break on newer Pythons regardless; there is no "just keep it" option.
+    `:497`) breaks on newer Pythons regardless of anything this port does.
 11. **The `.pwg` launch path** (`packages/engine/modules/pymol/importing.py:516-610`) is the only way `pymolhttpd`
-    starts. If any user workflow depends on `.pwg`, retiring `pymolhttpd` breaks it.
-12. **`rpc.py` shadows `cmd.label` and `cmd.rotate`** (`packages/engine/modules/pymol/rpc.py:463-465`). Any client
-    written against XML-RPC has the wrong semantics for those two; do not port such clients
-    verbatim.
-
-## 11. Open questions
-
-- Does the shipped build define `_PYMOL_LIB`? If yes, `ReportEnabledChange`
-  (`packages/engine/layer3/Executive.cpp:315-319`) is live and Tier 2 item 2 is cheaper than estimated.
-- Is `pmgui` settable independently of an actual GL context, so a bridge can get feedback without
-  a window? (`packages/engine/layer1/Ortho.cpp:494`)
-- Should `t:"do"` be exposed at all, or should the web console parse client-side and always take
-  the typed `call` path? Client-side parsing means reimplementing `parser._parse`
-  (`packages/engine/modules/pymol/parser.py:182-481`) in TypeScript — large, but it would give per-command error
-  reporting and return values that `cmd.do` cannot.
-- Where do `LITERAL`-mode Python expressions (`alter`/`iterate` bodies) get evaluated in a
-  web-first product — server-side with the current `eval`, or restricted to a safe expression
-  subset?
-- Does the wizard system (`packages/engine/modules/pymol/wizarding.py`, `packages/engine/modules/pymol/wizard/`) get an RPC
-  contract of its own, or does the React side reimplement each wizard? `get_wizard_stack`
-  (`packages/engine/modules/pymol/wizarding.py:166-174`) returns live Python objects, which do not serialise.
+    starts, so any workflow that depends on `.pwg` depends on `pymolhttpd`.
+12. **`rpc.py` shadows `cmd.label` and `cmd.rotate`** (`packages/engine/modules/pymol/rpc.py:463-465`), so a
+    client written against XML-RPC has the wrong semantics for those two.

@@ -46,7 +46,7 @@ DEFAULTS AND MIN/MAX
 --------------------
 There is **no** Python or C API for a setting's default or its min/max: the data
 lives in the static C table ``SettingInfo[]`` and nothing exports it
-(``00-parity-inventory.md`` area 5 row 2 records this as a missing C++
+(``feature-parity.md`` area 5 row 2 records this as a missing C++
 accessor).  No API is invented here.  Instead the header that GENERATES that
 table, ``packages/engine/layer1/SettingInfo.h``, is parsed — at BUILD time into
 ``panels/setting_catalog.json`` (:func:`build_asset`), and at run time straight

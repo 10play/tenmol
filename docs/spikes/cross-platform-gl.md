@@ -1,5 +1,36 @@
 # Spike 07 — Cross-platform offscreen GL (Linux EGL, Windows WGL)
 
+## THE ANSWER, if you came here for one
+
+> ### Linux offscreen GL: **YES. WORKS. MEASURED ON REAL LINUX, THREE TIMES.**
+>
+> `EGL_MESA_platform_surfaceless` gives PyMOL a **desktop OpenGL 4.5 (Compatibility Profile)**
+> context with **no GPU, no `/dev/dri`, no `DISPLAY`, no X server, no Wayland** — Mesa 22.3.6 /
+> llvmpipe is the whole dependency, and every distro ships it. In that context PyMOL **rendered**
+> a 5,684-atom cartoon of `packages/engine/test/dat/1tii.pdb` with `glGetError() == 0` and
+> 13,578/76,800 non-black pixels, and the backend pick pass **selected an atom on 3 of 3 clicks**.
+> GLEW printed nothing and `use_shaders` stayed `on`.
+>
+> Verbatim transcript: **§2.8**. Independently re-run from scratch by a second pass that was told
+> to distrust §2.8: **§2.9**, identical to the pixel. Re-run a **third** time on **2026-08-02**,
+> after the monorepo reorganisation, to prove the validator still finds its own sources:
+> **§2.10**, every value identical again. What is *not* covered is in **§4.1** and is
+> narrow: only llvmpipe, only Mesa 22.3.6, only arm64 — no NVIDIA `EGL_EXT_platform_device` on the
+> proprietary driver, no radeonsi/iris/zink, no non-glvnd stack.
+>
+> **Reproduce in one command:** `bash scripts/test-gl-linux.sh` (needs Docker/podman anywhere), or
+> `--quick` for EGL only in ~1 min, or `--native` on an actual Linux box.
+> CI runs the identical validator on `ubuntu-latest` via `.github/workflows/webclient-gl-linux.yml`.
+>
+> ### Windows offscreen GL: **UNVERIFIED. `wgl.py` HAS NEVER EXECUTED.**
+>
+> It has been reviewed line by line against the WGL/Win32 ABI and **six** defects were fixed by
+> inspection, one of them a real cdecl-vs-`__stdcall` bug over the entire framebuffer group (§8.3).
+> Reviewed is not run. **§4.2** is the honest list of what a Windows run would settle and **§6.4**
+> is the manual procedure. Do not describe this platform as working.
+
+---
+
 **Status: LINUX VERIFIED FOR REAL. WINDOWS STILL UNVERIFIED.**
 
 * **Linux / `egl.py` — RUN, on real Linux, end to end.** In a `debian:bookworm-slim`
@@ -24,7 +55,7 @@
 Everything in §5 was executed on macOS and every transcript is verbatim; everything in
 §2.8 was executed on Linux and is verbatim.
 
-This closes the deferral in `03-implementation-plan.md:149` ("Linux (EGL surfaceless / GLX
+This closes the deferral in `code-ownership.md:149` ("Linux (EGL surfaceless / GLX
 pbuffer) and Windows (WGL + hidden window) are a **separate spike**") and in
 `04-picking.md:600-601`. Product-owner decision 2: cross-platform offscreen GL is funded now.
 
@@ -393,6 +424,43 @@ was confirmed to import under a **bare `python3` with no bridge dependencies ins
 `egl-surfaceless` job installs no Python packages, so anything heavier in
 `tenmol_bridge/__init__.py` would have made that job red on the first push).
 
+### 2.10 Third reproduction — 2026-08-02, after the monorepo reorganisation
+
+Re-run because §2.8/§2.9 predate the move to `packages/`, and a validator that no longer finds
+its own sources is a silent pass waiting to happen. `bash scripts/test-gl-linux.sh --quick`, host
+macOS arm64 / Docker 27.4.0, guest `debian:bookworm-slim` linux/arm64. **Every value is identical
+to §2.8's, to the digit:**
+
+```
+== 2. surfaceless desktop-GL context =============================
+  eglPlatform : surfaceless      eglVersion : 1.5      surface : pbuffer
+  api : gl    desktopGL : True   renderer : llvmpipe (LLVM 15.0.6, 128 bits)
+  version : 4.5 (Compatibility Profile) Mesa 22.3.6
+  fbo : 1   colorBits : [8, 8, 8, 8]   depthBits : 24
+  fboEntryPoints : ARB            extensionCount : 302
+== 3. clear + glReadPixels =======================================
+  pixel (0,0) : [64, 128, 191, 255]        glGetError : 0
+== 4. resize keeps the FBO NAME ==================================
+  fbo ids across 4 resizes: [1, 1, 1, 1, 1]
+== 5. EGL thread affinity ========================================
+  cross-thread steal : refused: eglMakeCurrent failed: EGL_BAD_ACCESS
+  release_current() then another thread binds it            PASS  [1]
+== 6. two contexts on one EGLDisplay =============================
+  b after a.release() : pixel=[0, 255, 0, 255] glGetError=0    PASS
+== RESULT ========================================================
+  all checks passed
+Linux offscreen GL: VALIDATED
+```
+
+`--quick` skips the PyMOL build, so this run re-establishes checks 1–6 (the EGL context itself,
+the FBO, the resize invariant, D-EGL-1 and D-EGL-3) and **not** checks 7–9 (the PyMOL render, the
+pick, `cmd.ray`). Those were last run in §2.9; run the script without `--quick` to redo them,
+which takes about 30× longer because it builds PyMOL inside the image.
+
+Two notes for whoever runs it next: pass `--out <somewhere outside the repo>`, because the default
+`.tenmol-gl-out/` is still not in `.gitignore` (§9 item 15); and the run leaves a Docker image
+behind, so `docker image rm <tag>` afterwards.
+
 ---
 
 ## 3. Windows design (`wgl.py`)
@@ -448,6 +516,12 @@ straight off a `WinDLL` already get `__stdcall` from ctypes. See §8.3.
 
 ### 3.4 ANGLE
 
+> **If you arrived here from a `§3.4` citation in `glcontext/egl.py`, this is not the section you
+> want.** Two comments there cite `§3.4` for findings that live elsewhere, and the numbering was
+> never corrected: `egl.py:264` (the `EGL_BAD_DISPLAY` refcount, `_display_refs`) means
+> **§2.7 D-EGL-1**, and `egl.py:965` (thread affinity, `EGL_BAD_ACCESS`, no "steal") means
+> **§2.7 D-EGL-3**, measured in §2.8 check 5. Reported to that file's owner, not edited here.
+
 Implemented (`TENMOL_WGL_BACKEND=angle`, reusing `egl.py` with `egl_libs=("libEGL.dll",)`,
 `gl_libs=("libGLESv2.dll",)`) purely so a Windows box can *diagnose* with it. It must not ship:
 ANGLE gives OpenGL ES, and `glewInit()` (`packages/engine/layer0/ShaderMgr.cpp:566`) resolves through
@@ -457,6 +531,10 @@ ANGLE gives OpenGL ES, and `glewInit()` (`packages/engine/layer0/ShaderMgr.cpp:5
 ---
 
 ## 4. Honesty: what is and is not proven
+
+> **If you arrived here from `glcontext/wgl.py:86`'s "the manual Windows acceptance procedure is
+> §4", the procedure is §6.4.** This section is the list of what that procedure would *settle*
+> (§4.2), which is the next most useful thing. Reported to that file's owner, not edited here.
 
 ### 4.1 Linux — settled
 
@@ -1061,7 +1139,7 @@ whether `fboEntryPoints` was still `ARB`, and anything GLEW printed on stderr.
 
 ### 6.4 Windows: the manual procedure (NOT AUTOMATED, NOT RUN)
 
-There is no `scripts/test-gl-windows.ps1` on purpose: writing an unrun automation script for an
+There is no a Windows equivalent of `scripts/test-gl-linux.sh` (not written) on purpose: writing an unrun automation script for an
 unrun code path just adds a second unverified artefact. Do this by hand, once, on real Windows,
 and then automate what you learned.
 
@@ -1121,7 +1199,7 @@ set TENMOL_WGL_BACKEND=
 py -3.12-32 check_offscreen_gl.py
 
 # --- 5. record the answer ------------------------------------------------
-python -c "from tenmol_bridge import glcontext; import json; c=glcontext.create_context(640,480); print(json.dumps(c.info(), indent=2)); c.release()" > docs\webclient\spikes\07-windows-result.json
+python -c "from tenmol_bridge import glcontext; import json; c=glcontext.create_context(640,480); print(json.dumps(c.info(), indent=2)); c.release()" > docs\spikes\07-windows-result.json
 ```
 
 **Report back — the checklist, in this order.** Anything that is not `PASS` is a finding, not a
@@ -1256,6 +1334,19 @@ wants, and using it avoids the two-context dance that `wglCreateContextAttribsAR
 
 ## 9. Changes other owners must make (reported, not applied)
 
+> **Re-checked against the tree on 2026-08-02.** Nine of the fifteen are still open and the
+> commands that prove it are in the table; do not re-derive them.
+>
+> | # | state | evidence |
+> |---|---|---|
+> | 1, 2, 10, 11 | **still open** | `cgl.py` has no public `gl` accessor (`_gl` is private); it still calls `glBindFramebufferEXT`/`glDeleteFramebuffersEXT`; `release()` deletes its FBO **without** a preceding `CGLSetCurrentContext(self)`, i.e. **defect D-EGL-2 is present in `cgl.py`** exactly as item 10 predicted; `glcontext/__init__.py`'s `Context` protocol declares only `make_current`/`resize`/`release`/`info`. |
+> | 3, 13 | **still open** | `scripts/doctor.mjs:160` still runs the raw CGL recipe copied from `04-picking.md` §2 and prints *"no offscreen GL implementation for %s yet (WP-02)"* on any non-Darwin platform — which §2.8 makes false for Linux. |
+> | 4, 12 | **still open** | `scripts/bootstrap.sh:161` still warns *"offscreen GL on Linux (EGL surfaceless) is NOT implemented yet"*. |
+> | 15 | **still open** | `grep -n tenmol-gl-out .gitignore` → no match. |
+> | 8 | **done** (as recorded below) | `render/framestream.py:PixelReadback` prefers `ctx.gl`. |
+> | 14 | **still open, and now costed** | `docs/screenshots/` still has no Linux image. It holds 95 PNGs / 12.9 MB, of which **91 are referenced by no file in the repo**. Adding a 41 KB `linux-egl-pymol.png` to an already-unreferenced 12 MB pile is not obviously worth it; the CI artefact from `.github/workflows/webclient-gl-linux.yml` is the same evidence with no repo weight. |
+> | 5, 6, 7, 9 | doc / CI-marker items, unchanged. |
+
 1. **WP-02 / `glcontext/cgl.py`** — add a `gl` property (or an equivalent accessor for
    `glClear`/`glClearColor`/`glReadPixels`) to `CGLContext` so §6.1 runs its draw+readback check
    on macOS too. It currently reports `[SKIP]`. Optionally also add the additive `info()` keys
@@ -1272,11 +1363,11 @@ wants, and using it avoids the two-context dance that `wglCreateContextAttribsAR
 4. **WP-00 / `scripts/bootstrap.sh`** — on Linux, check for `libEGL.so.1` and `libGL.so.1` and
    print the `apt-get`/`dnf` line from §6.3 if missing. PyMOL's own build already needs
    `libglew-dev`.
-5. **`03-implementation-plan.md:149` and `:1256-1257`** — "Linux (EGL surfaceless / GLX pbuffer)
+5. **`code-ownership.md:149` and `:1256-1257`** — "Linux (EGL surfaceless / GLX pbuffer)
    and Windows (WGL + hidden window) are a **separate spike**" and open question 2 are resolved:
    funded and implemented, pending hardware validation. Also `:746` and `:835` still say
    `glcontext.py`; it is a package, `glcontext/`, with four modules.
-6. **`03-implementation-plan.md:841-842`** — "`glcontext.py` is platform-dispatched with only the
+6. **`code-ownership.md:841-842`** — "`glcontext.py` is platform-dispatched with only the
    CGL implementation present; other platforms raise a typed `NoOffscreenGL`" is superseded: all
    three implementations are present.
 7. **`04-picking.md:600-601`** — the "Linux/Windows parity is a separate spike" bullet can point

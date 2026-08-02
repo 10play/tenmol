@@ -1,11 +1,16 @@
-# Input: Mouse & Keyboard — PyMOL → React/WebGL port map
+# Input: mouse and keyboard
 
-Area owner: `input-mouse-keyboard`.
-Every claim below is anchored to a `path:line` in this repo that I actually read. Where an API does
-**not** exist (I grepped and found nothing) it is called out explicitly as **NOT PRESENT**.
+Map of PyMOL's input path, from the Qt widget down to `SceneDrag`. Every claim is anchored to a
+`path:line` in `packages/engine/`, which is unmodified upstream. Where an API does **not** exist
+it is called out explicitly as **NOT PRESENT**.
 
-Target architecture assumed: PyMOL backend = one local Python process; Python bridge exposes `cmd`
-over WS/HTTP; three.js draws PyMOL-computed geometry; all Qt/viewport GUI becomes React.
+**Where the port stands.** `packages/viewport/src/input/` holds the whole surface:
+`mouse.ts` (1:1 pointer forwarding + drag coalescing), `keys.ts` (the `keymapping.py` translation),
+`butmode.ts` + `modes.ts` (the 57-action / 80-slot table, mirrored in TypeScript — see §17),
+`camera.ts` (RPC-driven actions for a GL-free backend), `coords.ts` (the y-flip and dpr maths of
+§2), `coalescer.ts`, `shortcuts.ts`, `mouseConfig.ts`. Resize negotiation is
+`packages/viewport/src/resize.ts`; the mouse-mode UI is `apps/web/src/features/mouse/`; key
+bindings are `apps/web/src/features/keyboard/` and `apps/web/src/features/shortcuts/`.
 
 ---
 
@@ -31,11 +36,11 @@ over WS/HTTP; three.js draws PyMOL-computed geometry; all Qt/viewport GUI become
 | `packages/engine/layer1/SceneMouse.cpp` (2036 lines) | `SceneClick` / `SceneDrag` / `SceneRelease` — all viewport semantics |
 | `packages/engine/layer1/ScenePicking.cpp:17` | `SceneDoXYPick` — GPU color-pick + `glReadPixels` |
 | `packages/engine/layer1/Control.cpp` | Movie control block (mouse), SDOF/spaceball, `ControlRock` |
-| `packages/engine/layer3/Executive.cpp:7417` | `ExecutiveSelectRect` — box-select semantics |
+| `packages/engine/layer3/Executive.cpp:7432` | `ExecutiveSelectRect` — box-select semantics |
 
 ---
 
-## 1. The event pipeline as it exists today
+## 1. The event pipeline
 
 ```
 Qt event
@@ -99,12 +104,14 @@ So PyMOL expects, for every mouse event:
    for the legacy QGLWidget path the scaling is done in `paintGL` via `glViewport`
    (`pymol_gl_widget.py:202-206`). **The engine's window size is in device pixels.**
 
-**Web requirement.** The React canvas must send `{x: Math.round(cssX * dpr), y: Math.round((cssH - cssY) * dpr)}`
-with `cssH = canvas.clientHeight`. On `ResizeObserver` / `devicePixelRatio` change we must send
-`_reshape(w_device, h_device, force)` **and** `cmd.set('display_scale_factor', Math.round(dpr))`,
-in that order, mirroring `updateFbScale` + `resizeGL`. Because the backend has no real window, the
-bridge must own the authoritative viewport size and reject stale reshape events (last-write-wins with
-a monotonic sequence number).
+**In the port.** The canvas sends `{x: round(cssX * dpr), y: round((cssH - cssY) * dpr)}` with
+`cssH = canvas.clientHeight` (`packages/viewport/src/input/coords.ts`). On `ResizeObserver` /
+`devicePixelRatio` change it sends `reshape(wDevice, hDevice, force)` **and then**
+`cmd.set('display_scale_factor', round(dpr))`, in that order, mirroring `updateFbScale` +
+`resizeGL` (`packages/viewport/src/resize.ts`, which also debounces: a window drag emits one
+resize per frame and each costs an FBO re-storage on the engine thread). The engine has no window,
+so the browser is the authority on size and the bridge is the authority on what it managed to
+allocate; the handshake is last-write-wins.
 
 **Stereo x-wrap.** `OrthoButton` rewrites x through `get_wrap_x` when `WrapXFlag`
 (`packages/engine/layer1/Ortho.cpp:2513-2521`, helper at `:204-231`), and `SceneClick`/`SceneDrag` do the same with
@@ -134,10 +141,10 @@ a monotonic sequence number).
   (`:305-310`) replays the last drag at `LastX/LastY/LastModifiers` — used for timing-driven pop-ups;
   it is triggered from Python via `cmd._fake_drag` (`packages/engine/modules/pymol/cmd.py:171`, `packages/engine/layer4/Cmd.cpp:540`).
 
-**Web consequence.** Since every internal-GUI block becomes a React component, the browser must NOT
-forward clicks that land on React chrome to `_button`. Only the 3D canvas forwards. But
-`OrthoGrab` semantics still matter *inside* the canvas (box-select rubber band, scene-button drag),
-so the canvas must use `setPointerCapture` on pointerdown and release it on pointerup.
+**In the port.** Every internal-GUI block is a React component, so clicks that land on chrome are
+never forwarded to `_button`; only the 3D canvas forwards. `OrthoGrab` semantics still apply
+*inside* the canvas (box-select rubber band, scene-button drag), which is why the canvas takes
+`setPointerCapture` on pointerdown and releases it on pointerup.
 
 ---
 
@@ -258,10 +265,11 @@ else:                                    # single/double
 _cmd.button(_COb, but_code, act_code)                               # :864
 ```
 
-**Backend contract for the web UI's "Mouse config" panel:** `cmd.button(button, modifier, action)`
-is the only supported write path. There is **no** getter — I grepped; `ButModeGet` exists in C
-(`packages/engine/layer1/ButMode.h:225`) but is **NOT exposed to Python**. The web UI must therefore mirror the
-Python-side `mode_dict` to render the matrix, or a new bridge endpoint must expose `ButModeGet`.
+**Backend contract for the mouse-config panel:** `cmd.button(button, modifier, action)` is the
+only supported write path. There is **no** getter — `ButModeGet` exists in C
+(`packages/engine/layer1/ButMode.h:225`) and is **NOT exposed to Python** (grepped). The panel
+therefore mirrors the Python-side `mode_dict` to render the matrix
+(`packages/viewport/src/input/modes.ts`); no C++ accessor was added. See §17.
 
 ## 6. Mouse rings and mode cycling
 
@@ -508,7 +516,7 @@ This is the **only** camera path in the Qt front-end that goes through `set_view
   `OrthoSetLoopRect(G, true, rect)` (`packages/engine/layer1/Ortho.cpp:253-260`) and `OrthoGrab`.
 * Drag updates `right/bottom` only (`:59-66`) — so the rect is drawn from the anchor.
 * Release normalises the rect, calls `ExecutiveSelectRect(G, rect, mode)` (`:68-91`).
-* `ExecutiveSelectRect` (`packages/engine/layer3/Executive.cpp:7417-7500+`) runs `SceneMultipick`
+* `ExecutiveSelectRect` (`packages/engine/layer3/Executive.cpp:7432-7586`) runs `SceneMultipick`
   (`packages/engine/layer1/ScenePicking.cpp:332`) over the rect, creates `_tmp_rect_sele`, then set/add/subtract
   against the active selection using the current `sel_mode_kw`, honouring `log_box_selections`.
 * The rubber band itself is drawn by Ortho, so in the web port it becomes a React/CSS overlay —
@@ -585,20 +593,20 @@ Exposed as `pymol._cmd.get_click_string(_COb, reset)` (`packages/engine/layer4/C
 none. The bridge must call `_cmd.get_click_string` directly or a wrapper must be added.
 
 ### 13.5 Selection indicator (the pink dots)
-Rendered by `ExecutiveRenderSelectionsFromTargets` (`packages/engine/layer3/Executive.cpp:8433+`) as a point CGO.
+Rendered by `ExecutiveRenderSelectionsFromTargets` (`packages/engine/layer3/Executive.cpp:8462-8567`) as a point CGO.
 Default colour `(1.0, 0.2, 0.6)` unless `rec->sele_color` is set (`:8310-8313`). Width comes from
 `ExecutiveGetAdjustedSelectionWidth` (`:8362-8380`): `selection_width_scale * |stick_radius| /
 SceneGetScreenVertexScale`, clamped to `[selection_width, selection_width_max]`. Defaults:
 `selection_width` 3.0, `selection_width_max` 10.0, `selection_width_scale` 2.0
 (`SettingInfo.h:164, 489, 490`); `selection_round_points` 0 (`:559`),
-`selection_overlay` 1.0 (`:165`), `selection_visible_only` 0 (`:570`, used at `Executive.cpp:8445`).
-Multi-pass outline widths at `Executive.cpp:8304-8353`.
-`auto_indicate_flags` creates the `indicate` selection (`Executive.cpp:9420-9423`, name at `:128`).
+`selection_overlay` 1.0 (`:165`), `selection_visible_only` 0 (`:570`, used at `Executive.cpp:8466`).
+Multi-pass outline widths at `Executive.cpp:8419-8450`.
+`auto_indicate_flags` creates the `indicate` selection (`Executive.cpp:9442-9445`, name at `:128`).
 
-**Web port:** the indicator is geometry PyMOL already computes — it must arrive as a CGO/point
-buffer over the wire, not be re-derived in three.js from atom coordinates.
+The indicator is geometry PyMOL already computes, so it crosses the wire as a point buffer
+rather than being re-derived client-side from atom coordinates.
 
-## 14. Non-scene mouse targets inside the viewport (become React)
+## 14. Non-scene mouse targets inside the viewport
 
 * **Movie control bar** (`packages/engine/layer1/Control.cpp`): 9 buttons, `NButton = 9` (`:62`), hit-test
   `which_button` (`:243-255`). Release actions (`:288-385`):
@@ -842,9 +850,11 @@ Notes:
 * **Mouse tracking is always on** in Qt (`setMouseTracking(True)`, `pymol_gl_widget.py:108`) —
   passive moves are delivered even with no button down. `OrthoDrag` no-ops unless something is
   grabbed/clicked (`Ortho.cpp:2588-2594`), so sending every `pointermove` is *correct* but wasteful.
-  Recommend: send passive moves only when the backend has requested them (wizards that implement
-  passive drag), otherwise only between pointerdown and pointerup. Throttle to one message per
-  animation frame with the **latest** position (never coalesce by dropping the last event).
+  So passive moves are sent only between pointerdown and pointerup, coalesced to the **latest**
+  position per budget window and flushed before any button event
+  (`packages/viewport/src/input/coalescer.ts`). The coalescer runs off a clock rather than
+  `requestAnimationFrame`, because rAF stops dead in a hidden or occluded tab and an rAF-driven
+  flush turns a whole drag into one jump at `pointerup`.
 * `e.button` for pointerup is the released button; ensure a synthetic `_button(b,1,…)` is sent on
   `pointercancel`, `blur`, and `visibilitychange` so the backend never stays in a dragging state.
 * `e.getCoalescedEvents()` should be **ignored** — PyMOL's drag math is incremental
@@ -878,12 +888,12 @@ Gotchas:
   `Digit0` → 48) to stay standards-compliant, and document the equivalence.
 * Ctrl+letter and Alt+letter are browser/OS shortcuts (Ctrl-T new tab, Ctrl-W close, Alt-F menu…).
   `preventDefault()` recovers most but **not** Ctrl-W/Ctrl-T/Ctrl-N in most browsers. PyMOL binds
-  `CTRL-T` (`bond;unpick`) and `CTRL-F` (`wizard find`) — expect collisions. Mitigation options:
-  (a) an explicit "capture keyboard" toggle, (b) remap the conflicting defaults in the web build,
-  (c) require the app to run installed/PWA. This must be a product decision.
+  `CTRL-T` (`bond;unpick`) and `CTRL-F` (`wizard find`), so those collide. The bindings stay as
+  upstream defines them and are rebindable from the shortcut editor
+  (`apps/web/src/features/shortcuts/`); the browser wins where `preventDefault()` cannot.
 * macOS: Qt folds Meta (⌘) into the CTRL bit (`keymapping.py:51-52`), so `e.metaKey` → bit 2.
   The separate `_cmmd` path (`internal.py:500-507`, `Ortho.cpp:775-786`) is only reachable from the
-  native macOS GLUT build; it can be dropped.
+  native macOS GLUT build and is not ported.
 * Send on `keydown` only (Qt sends on `keyPressEvent`); ignore `keyup`. Ignore auto-repeat only if a
   binding is expensive — Qt does not ignore it.
 * `Tab` must be `preventDefault()`-ed so it reaches the PyMOL command line for completion
@@ -903,7 +913,7 @@ Wrap in try/catch: the Qt code notes `set` fails "with modal draw (mpng ..., mod
 
 Two sources: Safari `gesturestart/gesturechange/gestureend`, and Chrome/Firefox which report
 trackpad pinch as `wheel` with `ctrlKey === true`. **This collides with PyMOL's Ctrl+wheel = `mvsz`.**
-Recommended handling, mirroring `gestureEvent` (`pymol_gl_widget.py:138-168`):
+Handled by mirroring `gestureEvent` (`pymol_gl_widget.py:138-168`):
 * `wheel` with `e.ctrlKey` and no physical Ctrl pressed (track `keydown/keyup` state) → treat as
   pinch: on first event snapshot `view[11]` from `cmd.get_view()`, then
   `z = startZ / totalScale; view[11] = z; view[15] -= (z - old); view[16] -= (z - old);
@@ -913,115 +923,125 @@ Recommended handling, mirroring `gestureEvent` (`pymol_gl_widget.py:138-168`):
 
 ---
 
-## 17. Client-side camera vs. round-trip — analysis and recommendation
+## 17. Why the backend stays authoritative for the camera
 
-### The tension
-* three.js owns the camera it renders with. If the browser mutates it locally, the frame rate is
-  perfect (no RTT), but the backend's `CScene::m_view` diverges.
-* Everything authoritative depends on the backend view matrix:
-  * **Picking** is a GPU colour-pick pass in the backend's own GL context
-    (`packages/engine/layer1/ScenePicking.cpp:17-38`, `PyMOLReadPixels` at `:149`) — it renders *with the backend's
-    camera*. If the browser camera differs by one frame, clicks hit the wrong atom.
-  * **Box select** uses `SceneMultipick` over a screen rect (`Executive.cpp:7434-7438`) — same problem,
-    amplified.
-  * **Drag/edit math** uses `SceneGetExactScreenVertexScale` and
-    `MatrixInvTransformC44fAs33f3f(I->m_view.rotMatrix(), …)` on the backend
-    (`SceneMouse.cpp:1490-1491`, `:1596-1597`, `:1729`) — atom positions computed from mouse deltas
-    depend on the backend's rotation matrix and zoom.
-  * **Clip planes, slab, roving detail, `mouse_z_scale`, `virtual_trackball`** are all backend
-    settings applied in `SceneDrag`; reimplementing them in JS means forking numerically-sensitive
-    code (`SceneMouse.cpp:1762-2026`).
-  * **Scenes, `mview`, `zoom animate=-1`, rock, movie playback** all animate the backend camera
-    (`ControlRock`, `Control.cpp:415-439`; `SceneIdle` sweep, `Scene.cpp:2410-2427`). The browser
-    must follow those anyway.
+Everything authoritative depends on the backend view matrix, which is why the browser never owns
+it:
 
-### Option A — pure round-trip (`_button`/`_drag`)
-Send every pointer event; backend runs `SceneDrag`; backend pushes the new view; three.js applies it.
-* ✅ Bit-exact behaviour for all 57 actions, zero re-implementation, picking always consistent.
-* ✅ `cmd.get_view()` / `set_view` / `turn` / `move` / scenes / movies "just work".
-* ❌ Rotation latency = RTT + backend frame. On localhost over a WS this is ~1-3 ms, which is
-  acceptable; over anything else it is not.
+* **Picking** is a GPU colour-pick pass in the backend's own GL context
+  (`packages/engine/layer1/ScenePicking.cpp:17-38`, `PyMOLReadPixels` at `:149`) — it renders *with
+  the backend's camera*. If the browser camera differs by one frame, clicks hit the wrong atom.
+* **Box select** uses `SceneMultipick` over a screen rect (`Executive.cpp:7432-7438`) — same
+  problem, amplified.
+* **Drag/edit math** uses `SceneGetExactScreenVertexScale` and
+  `MatrixInvTransformC44fAs33f3f(I->m_view.rotMatrix(), ...)` on the backend
+  (`SceneMouse.cpp:1490-1491`, `:1596-1597`, `:1729`) — atom positions computed from mouse deltas
+  depend on the backend's rotation matrix and zoom.
+* **Clip planes, slab, roving detail, `mouse_z_scale`, `virtual_trackball`** are backend settings
+  applied inside `SceneDrag`; reimplementing them client-side means forking numerically sensitive
+  code (`SceneMouse.cpp:1762-2026`).
+* **Scenes, `mview`, `zoom animate=-1`, rock, movie playback** all animate the backend camera
+  (`ControlRock`, `Control.cpp:415-439`; `SceneIdle` sweep, `Scene.cpp:2410-2427`), so the browser
+  has to follow the backend regardless.
 
-### Option B — pure client-side camera
-* ✅ Zero-latency orbit.
-* ❌ Requires porting `SceneDrag`'s trackball, `mouse_scale`/`mouse_limit` clamping, `mouse_z_scale`,
-  `legacy_mouse_zoom`, clip coupling, `virtual_trackball` 0/1/2, roving origin — ~700 lines of
-  numerically fiddly C.
-* ❌ Picking becomes wrong unless the browser also pushes the view before every pick and waits.
-* ❌ Every non-camera drag mode (`roto`, `movf`, `torf`, `mova`, `rotl`, `pktb`, gadget drag, slice
-  drag) still has to round-trip, so you end up with two divergent input paths.
+### The two input paths that came out of this
 
-### Option C — recommended: **round-trip authoritative, with client-side predictive camera only for `rota`/`move`/`movz`**
-1. **Default to Option A.** Every pointer event goes to `_button`/`_drag`. This is the correctness
-   baseline and the only thing that keeps picking/editing right.
-2. **Before the drag starts**, the backend tells the client which action the current
-   (button, modifier) resolves to — a new bridge method wrapping `ButModeTranslate`
-   (`packages/engine/layer1/ButMode.cpp:603`) is needed; **`ButModeGet`/`ButModeTranslate` are NOT exposed to Python
-   today** (grepped `packages/engine/modules/` — only `cmd.button` writes exist).
-3. **Only for the three pure-camera actions** `cButModeRotXYZ`, `cButModeTransXY`, `cButModeTransZ`,
-   the client may apply a *predicted* camera delta immediately and reconcile with the authoritative
-   view when it arrives (compare a sequence number; snap if divergence exceeds epsilon). Everything
-   else (picking, editing, clipping, lights, box select, gadgets) renders only what the backend sends.
-4. **Never** originate camera state client-side for picking. On `pointerdown` that will pick, flush
-   any pending predicted camera to the backend first (or simply do not predict on the frame a
-   pick occurs — pick actions are click-not-drag, so this is cheap).
-5. Expose `cmd.set_view` / `cmd.get_view` / `cmd.turn` / `cmd.move` (`packages/engine/modules/pymol/viewing.py:734,
-   634, 1300, 352`) for programmatic camera use (React "Reset/Zoom/Orient" buttons, pinch — see
-   §16.4), matching what the Qt widget already does for pinch (`pymol_gl_widget.py:145-166`).
+**Mode P (backend has a GL context).** Every pointer event is forwarded verbatim as
+`_button`/`_drag` and `SceneClick`/`SceneDrag`/`SceneRelease` decide what it means. Bit-exact for
+all 57 actions, zero reimplementation, picking always consistent.
+`packages/viewport/src/input/mouse.ts` is that path; it only ever *coalesces* consecutive drags
+(safe: `SceneDrag` reads the current position against the press position) and never reorders them.
 
-**Bottom line:** picking and editing must stay authoritative on the backend, therefore the *camera*
-must also stay authoritative on the backend; client-side prediction is an optimisation layer that
-must be discardable, not a source of truth.
+**Mode G (backend started `--no-gl`).** Raw input is accepted and silently never applied:
+`CScene::click/drag/release` only call `OrthoDefer` (`Scene.cpp:4113`, `:4129`, `:4146`), and the
+queue is drained by `ExecutiveDrawNow`, which runs only while `PyMOL_GetIdleAndReady` is true —
+and that only advances while `DrawnFlag` is set, which only `PyMOL_Draw` sets. Measured: a 20-step
+drag moved `get_view()[2]` by exactly 0. So on a GL-free backend the client drives the session the
+way a script does — `turn`, `move`, `clip`, `rotate`, `translate`, `torsion`, `select` — which take
+effect immediately because they are ordinary API calls rather than queued scene events.
+`packages/viewport/src/input/camera.ts` is that path.
 
----
+Both paths resolve the gesture through the same ButMode arithmetic, redone on **every** drag
+sample with the modifier that sample carried, exactly as `SceneDrag` does
+(`packages/engine/layer1/SceneMouse.cpp:1308`, `mode = ButModeTranslate(G, I->Button, mod)`), so
+releasing Shift mid-drag changes the action mid-drag.
 
-## 18. Suggested bridge surface for this area
+### `ButModeGet`/`ButModeTranslate` are mirrored, not exposed
+
+They exist in C (`packages/engine/layer1/ButMode.h:225`, `packages/engine/layer1/ButMode.cpp:603`)
+and are **NOT PRESENT** in Python — only the write path `cmd.button`
+(`packages/engine/modules/pymol/controlling.py:799-868`) exists. No C++ accessor was added. The
+authoritative binding table is the Python one (`controlling.mode_dict`, `mouse_ring`,
+`mode_name_dict`), applied via `cmd.button()`, with the current mode read from
+`cmd.get('button_mode')` / `cmd.get('button_mode_name')`. `packages/viewport/src/input/butmode.ts`
+mirrors it, expands it into the same 80 slots the C core keeps, and resolves it with the same
+arithmetic; `butmode.test.ts` and `modes.test.ts` diff every table against the real
+`controlling.py` and `ButMode.cpp` in the tree, so the mirror cannot drift silently.
+
+`camera.ts` does not guess at the actions whose C implementation has no Python equivalent —
+`DrgM`/`DrgO`/`DgRt` (they consume `EditorDrag` state the client cannot see), the light actions,
+and the click-only actions (`PkAt`, `Menu`, `Cent`, `Orig`, ...) which belong to the press, not
+the drag. Those are counted as unsupported and issue nothing. Gains are approximate — degrees per
+pixel and Angstroms per pixel are constants there, where PyMOL derives them from a virtual
+trackball and `SceneGetExactScreenVertexScale`. The *action* a gesture maps to is exact; how far
+one pixel takes you is not.
+
+## 18. The bridge surface for this area
 
 | Direction | Message | Backing |
 |---|---|---|
-| C→S | `input.button(button, state, x, y, mod)` | `_cmd._button` (`Cmd.cpp:3626`) |
-| C→S | `input.drag(x, y, mod)` | `_cmd._drag` (`Cmd.cpp:3646`) |
-| C→S | `input.reshape(w, h, force)` | `_cmd._reshape` (`Cmd.cpp:3569`) |
+| C→S | `{t:'input',kind:'button'}` (button, state, x, y, mod) | `_cmd._button` (`Cmd.cpp:3626`) |
+| C→S | `{t:'input',kind:'drag'}` (x, y, mod) | `_cmd._drag` (`Cmd.cpp:3646`) |
+| C→S | `{t:'input',kind:'reshape'}` (w, h, force) | `_cmd._reshape` (`Cmd.cpp:3569`) |
 | C→S | `cmd.set('display_scale_factor', n)` | `Setting.cpp:2946` |
 | C→S | `cmd.button/mouse/config_mouse/edit_mode/set_key/mask/unmask` | `controlling.py` |
 | C→S | `cmd.set_view/get_view/turn/move` | `viewing.py:734/634/1300/352` |
 | S→C | view + redisplay tick | `pymol.getRedisplay()` (`pymol2/__init__.py:37`), `PyMOL_Idle` |
-| S→C | click-ready blob | `_cmd.get_click_string(_COb, 1)` (`Cmd.cpp:1420`) — **needs a `cmd.*` wrapper** |
-| S→C | current mouse config table | **NOT PRESENT** — needs a wrapper over `ButModeGet` (`ButMode.h:225`) or mirror `controlling.mode_dict` |
-| S→C | `button_mode_name`, `mouse_selection_mode` | plain settings; poll or subscribe |
-| S→C | loop-rect (box select) rectangle | `OrthoSetLoopRect` (`Ortho.cpp:253`) — currently drawn internally, needs to be surfaced |
+| S→C | `button_mode_name`, `mouse_selection_mode` | plain settings, delivered on the settings topic |
+
+Three things stay client-side because upstream has no Python surface for them:
+
+* the **mouse config table** — mirrored in `packages/viewport/src/input/butmode.ts` (§17),
+  not fetched;
+* the **loop rect** for box select — `OrthoSetLoopRect` (`Ortho.cpp:253`) is only drawn
+  internally, so the browser draws its own from the same press/current coordinates
+  (`apps/web/src/features/console/OrthoLoopRect.tsx`);
+* `get_click_string` — `_cmd.get_click_string` (`Cmd.cpp:1420`) has no `cmd.*` wrapper upstream,
+  so the `clik` / SimpleClick pathway is reached through the raw `_cmd` entry point.
 
 ---
 
-## 19. Risks
+## 19. Constraints this area lives under
 
 1. **Picking requires the backend's GL context.** `SceneDoXYPick` renders a pick pass and calls
-   `PyMOLReadPixels` (`ScenePicking.cpp:149`). A headless backend needs an offscreen/EGL context, and
-   every pick costs a full render — this is the single biggest architectural risk in this area.
-2. **Camera divergence breaks picking silently.** If any client-side camera prediction leaks into a
-   pick, users select the wrong atom with no error.
-3. **Browser keyboard hijacking.** `CTRL-T`, `CTRL-F`, `CTRL-W`-adjacent defaults collide with the
-   browser; some cannot be `preventDefault()`-ed.
+   `PyMOLReadPixels` (`ScenePicking.cpp:149`), so every pick costs a full render. A GL-less bridge
+   cannot pick at all — `packages/viewport/src/picking/route.ts` chooses between the backend pass
+   and a client-side ray on that basis.
+2. **Camera divergence breaks picking silently** — the wrong atom is selected with no error. This
+   is the reason §17 keeps the view authoritative on the backend.
+3. **Browser keyboard hijacking.** `CTRL-T`, `CTRL-F` and `CTRL-W`-adjacent defaults collide with
+   the browser and some cannot be `preventDefault()`-ed.
 4. **Middle-click and right-click** need `preventDefault` on `auxclick`/`contextmenu`; some Linux
    browsers still paste on middle-click.
-5. **Ctrl+wheel is trackpad pinch** in Chrome/Firefox, colliding with PyMOL's Ctrl+wheel = `mvsz`.
-6. **No API to read the current button table** — the mouse-config UI must mirror `mode_dict`, which
-   will drift from `ButMode`'s real state whenever a plugin calls `cmd.button` directly.
-7. **`get_click_string` has no Python wrapper** — the `clik`/SimpleClick pathway is unusable from the
-   bridge until one is added.
-8. **DPR/y-flip off-by-one.** Qt flips using the *logical* height before scaling
-   (`pymol_gl_widget.py:174`); a naive `(h_device - y_device)` differs on fractional DPR and will
-   mis-pick edge pixels.
-9. **Latent upstream bugs** that a faithful port will inherit: duplicate `double_left` row in
+5. **Ctrl+wheel is trackpad pinch** in Chrome/Firefox, colliding with PyMOL's Ctrl+wheel = `mvsz`
+   (§16.4).
+6. **The button table can drift.** The client mirrors `mode_dict` (§17); a plugin calling
+   `cmd.button` directly changes `ButMode`'s real state without changing the mirror. The mirror
+   tests pin it against the source, but they cannot see runtime writes.
+7. **DPR/y-flip off-by-one.** Qt flips using the *logical* height before scaling
+   (`pymol_gl_widget.py:174`); a naive `(h_device - y_device)` differs on fractional DPR and
+   mis-picks edge pixels.
+8. **Latent upstream bugs** a faithful port inherits: duplicate `double_left` row in
    `three_button_motions` (`controlling.py:398-399`), duplicate row in `two_button_selecting`
    (`:456-457`), missing `break` in `SceneClickPickNothing` (`SceneMouse.cpp:573`), double release
    dispatch in `OrthoButton` (`Ortho.cpp:2543-2556`), `ButModeSet(cButModeMiddleCtSh)` written twice
    in `PyMOL_SetDefaultMouse` (`PyMOL.cpp:3005` — the source itself comments "SET TWICE?!?").
-10. **SDOF / spaceball** (`Control.cpp:83-216`, `_sdof`) has no browser equivalent short of WebHID.
-11. **Deferred execution ordering.** All scene input is queued through `OrthoDefer`; a WS transport
-    that reorders or drops messages will corrupt drag state. The transport must be strictly ordered
-    and lossless (single WS, no parallel channels for input).
-12. **Timing-based semantics** (0.35 s double-click, 0.25 s single-click window, 0.15 s delay) are
-    measured on the backend against `UtilGetSeconds`. Network jitter inflates the measured press→
-    release gap and will cause single clicks to be dropped. Consider sending a client timestamp and
-    letting the bridge pass it as `when`.
+9. **SDOF / spaceball** (`Control.cpp:83-216`, `_sdof`) has no browser equivalent short of WebHID
+   and is not ported.
+10. **Deferred execution ordering.** All scene input is queued through `OrthoDefer`; a transport
+    that reorders or drops messages corrupts drag state, so input rides one strictly ordered
+    connection with no parallel channels.
+11. **Timing-based semantics** (0.35 s double-click, 0.25 s single-click window, 0.15 s delay) are
+    measured on the backend against `UtilGetSeconds`, so transport jitter inflates the measured
+    press-to-release gap. The client stamps `when` from the event itself, not from send time
+    (`packages/viewport/src/input/coords.ts`), and the bridge passes that through.

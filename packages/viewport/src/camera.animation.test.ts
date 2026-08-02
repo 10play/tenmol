@@ -1,5 +1,5 @@
 /**
- * The camera ANIMATION contract — `00-parity-inventory.md:337`.
+ * The camera ANIMATION contract — `feature-parity.md:337`.
  *
  * `packages/engine/test/camera.test.ts` is the golden test for the view MATRIX; this is the
  * golden test for the view's CLOCK. Every constant asserted here was measured

@@ -32,7 +32,7 @@
  * (`viewOf` degrades to `payload.slice`), which on 1AON is ~93 MB per pull.
  *
  * ---------------------------------------------------------------------------
- * WHAT THE MODE-G PAYLOAD CONTAINS, and why (all from `spikes/03-geometry.md`
+ * WHAT THE MODE-G PAYLOAD CONTAINS, and why (all from `spikes/geometry.md`
  * and plan §1.3 — three constraints, each from a MEASURED failure of the
  * existing exporters):
  *

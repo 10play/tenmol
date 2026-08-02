@@ -5,7 +5,7 @@ because ``PyMOL_DrawWithoutLock`` assigns ``G->HaveGUI = G->Option->pmgui``
 (``packages/engine/layer5/PyMOL.cpp:2248``) and then calls ``glGetString``
 (``packages/engine/layer5/PyMOL.cpp:2307``) — and because with ``HaveGUI == 0`` the entire body
 of ``SceneRender`` is skipped (``packages/engine/layer1/SceneRender.cpp:270``), which silently
-kills every pick.  See ``docs/spikes/04-picking.md``.
+kills every pick.  See ``docs/spikes/picking.md``.
 
 THE INTERFACE (agreed across WP-02 and the EGL/WGL work package)
 ----------------------------------------------------------------

@@ -1,10 +1,17 @@
-# Web Client Mapping — Movies, Scenes, States/Frames, Sequence Viewer
+# Movies, Scenes, States/Frames, Sequence Viewer
 
-Area owner doc for the React/pnpm rebuild of the PyMOL front-end.
-Backend stays as-is (C++ + Python `cmd`), exposed over a Python bridge (WebSocket/HTTP).
-Every claim below is anchored to a file:line in this repo that was actually read.
+Map of four coupled PyMOL subsystems. The engine (`packages/engine/`, C++ + Python `cmd`) is
+unmodified upstream and is reached over the Python bridge. Every claim below is anchored to a
+`file:line` that was read.
 
-Repo root: `/Users/amirangel/Documents/GitHub/tenmol`
+**Where the port stands.** Movie panel and transport:
+`apps/web/src/features/movie/` (`MovieTimeline`, `TransportBar`, `MovieEditors`, `ExportDialog`,
+`msetParser.ts`, `timeline.ts`, `mvprg.ts`) over `packages/bridge/tenmol_bridge/panels/movie.py`
+and `packages/protocol/src/topics/movie{,_panel}.ts`. Scenes: `apps/web/src/features/scenes/`
+over `packages/protocol/src/topics/scenes.ts`. Sequence viewer:
+`apps/web/src/features/seqview/` over `packages/bridge/tenmol_bridge/panels/seqview.py`.
+The clock stays on the backend (§0), and the frame stream arrives on
+`packages/protocol/src/topics/frame.ts`.
 
 ---
 
@@ -25,37 +32,38 @@ Four coupled subsystems live here:
    (`packages/engine/layer1/Seq.cpp:259` `CSeq::draw`). Selection interaction mutates the *active selection*
    via generated `cmd.select(...)` strings (`packages/engine/layer3/Seeker.cpp:169`, `:70`).
 
-Two of these (movie panel, sequence viewer) are today **Ortho blocks drawn inside the GL
-viewport** (`packages/engine/layer1/Movie.cpp:1741`, `packages/engine/layer1/Seq.cpp:259`, `packages/engine/layer1/Control.cpp:534`), plus
-**scene buttons** drawn as an overlay on the Scene block
-(`packages/engine/layer1/Scene.cpp:2885` `SceneDrawButtons`, gated by `scene_buttons`,
-`packages/engine/layer1/Scene.cpp:3456`). All three must become React components.
+Two of these (movie panel, sequence viewer) are **Ortho blocks drawn inside the GL viewport**
+upstream (`packages/engine/layer1/Movie.cpp:1741`, `packages/engine/layer1/Seq.cpp:259`,
+`packages/engine/layer1/Control.cpp:536`), plus **scene buttons** drawn as an overlay on the
+Scene block (`packages/engine/layer1/Scene.cpp:2885` `SceneDrawButtons`, gated by
+`scene_buttons`, `packages/engine/layer1/Scene.cpp:3456`). All three are React components in
+the port and are never drawn by the engine.
 
-### ⚠️ Contradiction with the target architecture (must be resolved)
+### Why parts of this area are server-rendered raster, not geometry
 
-The target says "3D viewport is rendered client-side in WebGL from geometry PyMOL already
-computed". That is fine for the molecular scene, but **three features in this area produce
-*server-rendered raster images*, not geometry**:
+The molecular scene reaches the browser as geometry, but four features here produce
+*server-rendered raster images*:
 
 - `cmd.ray` → `_cmd.render` (`packages/engine/modules/pymol/viewing.py:1581`) writes into `G->Scene->Image`.
 - `cmd.draw` → `_cmd.draw` needs a live GL context (`packages/engine/modules/pymol/viewing.py:1652`,
-  wrapped in `_self._call_with_opengl_context`).
+  wrapped in `_self._call_with_opengl_context` at `:1660`).
 - `cmd.mpng` / `movie.produce` render every frame to PNG on disk
   (`packages/engine/modules/pymol/moving.py:366`, `packages/engine/layer1/Movie.cpp:626` `MovieModalPNG`,
   `packages/engine/modules/pymol/movie.py:846`).
-- Scene **thumbnails** are produced by `SceneDeferImage` into a 220×124 PNG buffer
+- Scene **thumbnails** come from `SceneDeferImage` into a 220×124 PNG buffer
   (`packages/engine/layer3/MovieScene.cpp:225-233`, dims at `packages/engine/layer3/MovieScene.h:97-99`).
 
-So the bridge must keep a *headless/offscreen* GL or ray path server-side for
-ray/draw/mpng/thumbnails, and stream PNG bytes to the browser. There is no way to get a
-ray-traced image or a scene thumbnail out of three.js. Also `cmd.draw` explicitly
-"does not work when running in the command-line only mode"
-(`packages/engine/modules/pymol/viewing.py:1630-1632`) — headless deployments must force `ray`.
+None of those can be produced client-side, so the bridge owns an offscreen GL context
+(`packages/bridge/tenmol_bridge/glcontext/` — CGL, EGL, WGL) and streams encoded bytes
+(`packages/bridge/tenmol_bridge/render/encode.py`, `render/framestream.py`). `cmd.draw`
+documents that it "does not work when running in the command-line only mode"
+(`packages/engine/modules/pymol/viewing.py:1630-1632`), which is why a context-less bridge
+falls back to `ray`.
 
-Second contradiction: **movie playback is driven by the backend idle loop**
+**Movie playback is driven by the backend idle loop**
 (`packages/engine/layer1/Scene.cpp:2432` `SceneIdle`, frame pacing at `:2453-2480`, rock at `:2477-2484`).
-If the browser owns the clock, we get double-timing. Recommendation: keep the backend as
-the single clock and push `frame` change events; the client only renders.
+The backend stays the single clock and pushes frame-change events; the browser never runs its
+own playback timer, which is what keeps the two from double-timing.
 
 ---
 
@@ -69,7 +77,7 @@ the single clock and push `frame` change events; the client only renders.
 | `cmd.get_state()` | `packages/engine/modules/pymol/moving.py:958` | 1-based current state; **no lock taken** |
 | `cmd.count_frames()` | `packages/engine/modules/pymol/querying.py:759` | frames defined for the movie |
 | `cmd.get_movie_length(images=-1)` | `packages/engine/modules/pymol/querying.py:730` | frames *explicitly* defined by `mset`; negative internal value is folded per `images` arg (`:746-753`) |
-| `cmd.count_states(selection)` | `packages/engine/modules/pymol/querying.py:702` | states in selection |
+| `cmd.count_states(selection)` | `packages/engine/modules/pymol/querying.py:703` | states in selection |
 | `cmd.get_movie_playing()` | `packages/engine/modules/pymol/moving.py:64` | bool |
 | `cmd.get_movie_locked()` | `packages/engine/modules/pymol/querying.py:814` | bool (movie commands suppressed) |
 
@@ -232,18 +240,18 @@ When not frozen/localized it calls `ExecutiveMotionExtend` (`packages/engine/lay
 
 ---
 
-## 5. The Movie Panel (in-viewport, must become React)
+## 5. The Movie Panel (in-viewport upstream)
 
 `CMovie` is an Ortho `Block` (`packages/engine/layer1/Movie.h:52`). Height:
 `MovieGetPanelHeight` (`packages/engine/layer1/Movie.cpp:1701`) = `movie_panel_row_height` ×
 `ExecutiveCountMotions(G)`, or a single row when `presentation` is on (`:1716-1721`);
 zero when `movie_panel==0` or there is nothing to show (`:1703-1711`).
 
-Rows come from `ExecutiveMotionDraw` (`packages/engine/layer3/Executive.cpp:692`): one row for the global
+Rows come from `ExecutiveMotionDraw` (`packages/engine/layer3/Executive.cpp:697`): one row for the global
 camera (`cExecAll`, drawn by `MovieDrawViewElem` → `ViewElemDraw(..., "camera", …)`,
 `packages/engine/layer1/Movie.cpp:1728-1734`) and one row per object that has motions
-(`ObjectDrawViewElem`, `packages/engine/layer3/Executive.cpp:722`). Row count = `ExecutiveCountMotions`
-(`packages/engine/layer3/Executive.cpp:659`), which falls back to 1 when `SceneGetNFrame(G) > 1` (`:679-680`).
+(`ObjectDrawViewElem`, `packages/engine/layer3/Executive.cpp:727`). Row count = `ExecutiveCountMotions`
+(`packages/engine/layer3/Executive.cpp:664`), which falls back to 1 when `SceneGetNFrame(G) > 1` (`:684-685`).
 
 Per-frame cell painting (`packages/engine/layer1/View.cpp:158-260`): color by `specification_level` —
 level 1 (interpolated) draws a thin center bar (`bar_color {0.3,0.3,0.6}` with
@@ -285,9 +293,9 @@ ins/del = green fill when inserting, red fill when deleting.
 
 Drag is abandoned if the pointer leaves ±50px vertically (`:1580`).
 
-### 5.2 Panel context menus (must become React menus)
+### 5.2 Panel context menus
 
-Activated by `ExecutiveMotionMenuActivate` (`packages/engine/layer3/Executive.cpp:732`), which resolves
+Activated by `ExecutiveMotionMenuActivate` (`packages/engine/layer3/Executive.cpp:737`), which resolves
 which row was hit and passes the 1-based frame number as a string.
 
 **`camera_motion`** (`packages/engine/modules/pymol/menu.py:108-124`):
@@ -442,7 +450,7 @@ quiet=1, width=0, height=0)` — `packages/engine/modules/pymol/movie.py:846`:
 - Sets `keep_alive` during export and `unset`s it afterwards (`:971`, `:811`).
 - A `_watch` thread prints byte counts while encoding (`:658-685`).
 
-### 7.4 Export dialog (Qt) → React form
+### 7.4 Export dialog (Qt)
 
 `packages/engine/modules/pmg_qt/file_dialogs.py:691` `file_save_mpeg(parent, _preselect=None)`,
 form `packages/engine/modules/pmg_qt/forms/movieexport.ui`:
@@ -579,7 +587,7 @@ Scene
 └── Cache ▸ Enable / Optimize / Read Only / Disable → cmd.cache(...)
 ```
 
-### 8.5 Scene Panel dialog (Qt) → React panel
+### 8.5 Scene Panel dialog (Qt)
 
 `packages/engine/modules/pmg_qt/scene_bin_gui.py:29` `ScenePanel(QWidget)`:
 - Title "Scene Panel", 365×700 (`:45`, `:52`).
@@ -602,7 +610,7 @@ Scene
 - Repopulates on paint/focus events via an event filter (`:102-113`) — replace with the
   `scenes_changed` event.
 
-### 8.6 Scene buttons (in-viewport overlay) → React overlay
+### 8.6 Scene buttons (in-viewport overlay)
 
 `SceneDrawButtons` (`packages/engine/layer1/Scene.cpp:2885`), enabled by `scene_buttons`
 (`packages/engine/layer1/Scene.cpp:3456`). Names come from `SceneSetNames` (`:2870`) into
@@ -705,12 +713,12 @@ using `ViewElemInterpolate(..., 2.0F, 1.0F, true, 0.0F, hand, 0.0F)`
   deg-ish per render second (`:2390-2392`).
 - Phase from `sweep_phase`, speed from `sweep_speed`, tick rate from `rock_delay` ms.
 
-`ControlIdling` (`packages/engine/layer1/Control.cpp:395-401`) keeps the idle loop alive while any of
+`ControlIdling` (`packages/engine/layer1/Control.cpp:397-403`) keeps the idle loop alive while any of
 sdof / movie playing / `rock` / `sculpting` is active.
 
 ---
 
-## 10. Internal GUI control bar (9 buttons, in-viewport) → React toolbar
+## 10. Internal GUI control bar (9 buttons, in-viewport)
 
 `CControl` block, `NButton = 9` (`packages/engine/layer1/Control.h`/`packages/engine/layer1/Control.cpp:62`), hit test
 `which_button` = `(NButton * x) / control_width` (`packages/engine/layer1/Control.cpp:243-252`).
@@ -802,7 +810,7 @@ Refresh protocol: `SeqChanged` marks "rebuild" and `SeqDirty` marks "recompute s
 highlight" (`packages/engine/layer1/Seq.cpp:136-148`); `SeqUpdate` runs `SeekerUpdate` then
 `Handler->refresh` (`packages/engine/layer1/Seq.cpp:88-102`).
 
-### 12.2 Row/column data model — exactly what the React component needs
+### 12.2 Row/column data model
 
 `CSeqRow` (`packages/engine/layer1/Seq.h:42-57`): `txt` (one flat char buffer for the row), `col[]`,
 `fill[]`, `char2col[]` (character-offset → 1-based column index),
@@ -998,58 +1006,64 @@ Display menu entries that map to these: `packages/engine/modules/pymol/_gui.py:3
 
 ---
 
-## 14. Backend contract gaps (things the bridge must add)
+## 14. What upstream does not expose, and what the bridge added
 
-These are **real gaps** — I grepped and did not find an existing API:
+Four things this area needs have no upstream Python API. Each is now supplied by a bridge
+module that installs extra callables onto the `cmd` namespace, so the client reaches them the
+same way it reaches any other `cmd.*` symbol.
 
-1. **No structured movie-panel data.** `cmd.mdump` only prints
+1. **No structured movie-panel data upstream.** `cmd.mdump` only prints
    (`packages/engine/layer1/Movie.cpp:378-403`). `MovieGetSpecLevel(G, frame)` (`packages/engine/layer1/Movie.cpp:163`)
    is C-only; it is not in the `_cmd` method table (`packages/engine/layer4/Cmd.cpp:6549-6562`).
-   → Need `bridge.get_movie_panel()` returning
-   `{ nFrame, frame, playing, sequence: [state per frame],
-      rows: [{ kind: 'camera'|'object', name, levels: Uint8Array }],
-      commands: { frame: str }, sceneFlags: { frame: sceneName } }`.
-2. **No structured sequence-viewer data.** `SeekerUpdate` writes only into
+   Supplied as `cmd.get_movie_panel` / `get_movie_status` / `get_movie_key_frames`
+   (`packages/bridge/tenmol_bridge/panels/movie.py`, `EXPORTS`), typed in
+   `packages/protocol/src/topics/movie_panel.ts`, consumed by
+   `apps/web/src/features/movie/movieSource.ts`.
+2. **No structured sequence-viewer data upstream.** `SeekerUpdate` writes only into
    `G->Seq->Row` (`packages/engine/layer3/Seeker.cpp:1947`). `cmd.get_fastastr`
    (`packages/engine/modules/pymol/exporting.py:170`) gives sequences but **no colors, no per-cell atom
    indices, no selection state, no gaps, no alignment offsets**, and it only covers
    polymers (`:198`). `cmd.get_seq_align_str` exists (`packages/engine/layer4/Cmd.cpp:6490`) but is an
-   alignment export, not the viewer model.
-   → Need `bridge.get_seq_view()` returning the §12.2 payload, plus a `seq_changed` event
-   wired to `SeqChanged`/`SeqDirty` (`packages/engine/layer1/Seq.cpp:136-148`).
-3. **No scene metadata bundle.** Today the panel makes N round-trips
+   alignment export, not the viewer model. The §12.2 payload is rebuilt from `cmd` queries in
+   `packages/bridge/tenmol_bridge/panels/seqview.py` (entry point `tenmol_seqview`), consumed
+   by `apps/web/src/features/seqview/source.ts`.
+3. **No scene metadata bundle upstream.** Qt makes N round-trips
    (`get_scene_list` + `get_scene_thumbnail` per scene, `scene_bin_gui.py:169-192`).
-   → Need `bridge.get_scenes()` → `[{ name, message, storemask, thumbnailPngBase64 }]`,
-   backed by the existing `MovieSceneGetThumbnail` / `MovieSceneGetMessage`
-   (`packages/engine/layer3/MovieScene.h:170-173`).
-4. **No event stream.** Everything today is polled or push-from-C via `OrthoDirty`.
-   → Need at minimum: `frame`, `state`, `movie_playing`, `scenes_changed`
-   (`packages/engine/layer3/MovieScene.cpp:833`), `scene_current_name`, `seq_changed`, `viewport`,
-   `view` (for camera sync while rocking/animating).
-5. **Menus are Python data, not C.** `get_menudata` (`packages/engine/modules/pymol/_gui.py:55`) and
-   `packages/engine/modules/pymol/menu.py` return plain nested lists of
-   `('command'|'menu'|'check'|'radio'|'separator', label, payload)` — the React menu
-   renderer can consume these almost verbatim (see the Qt walker at
-   `packages/engine/modules/pmg_qt/pymol_qt_gui.py:298-342`).
+   Supplied as `cmd.get_scene_panel` + `cmd.get_scene_thumbnail_png`
+   (`panels/movie.py`), backed by the existing `MovieSceneGetThumbnail` /
+   `MovieSceneGetMessage` (`packages/engine/layer3/MovieScene.h:170-173`).
+4. **No event stream upstream.** Everything is polled or push-from-C via `OrthoDirty`.
+   The bridge publishes `frame`, `view`, `settings`, `objects`, `feedback` and the rest as
+   protocol topics (`packages/protocol/src/topics/`), with scene changes reaching the client
+   through `scenes.ts` and playback state through `movie.ts`.
+
+**Menus are Python data, not C.** `get_menudata` (`packages/engine/modules/pymol/_gui.py:55`) and
+`packages/engine/modules/pymol/menu.py` return plain nested lists of
+`('command'|'menu'|'check'|'radio'|'separator', label, payload)`, which the port consumes
+nearly verbatim (compare the Qt walker at
+`packages/engine/modules/pmg_qt/pymol_qt_gui.py:298-342` with
+`apps/web/src/features/menubar/menuSource.ts`).
 
 ---
 
-## 15. React component plan (summary)
+## 15. Where each surface lives now
 
-| Component | Replaces | Backend contract |
+| Surface | Replaces | Backend contract |
 |---|---|---|
-| `<MovieMenu/>` | `_gui.py:234-376` | `cmd.movie.*`, `cmd.mset/mclear/meter_reset`, settings |
-| `<MovieTimeline/>` | `CMovie` block (`packages/engine/layer1/Movie.cpp:1741`) | new `get_movie_panel()`; writes via `cmd.mmove/mcopy/minsert/mdelete/mview` |
-| `<TransportBar/>` | `CControl` (`packages/engine/layer1/Control.cpp:290`) + Qt row (`pymol_qt_gui.py:241-247`) | `rewind/backward/mstop/mplay/mtoggle/forward/ending/middle/mclear/rock/full_screen` |
-| `<StateSlider/>` | scrollbar in `CMovie::draw` (`packages/engine/layer1/Movie.cpp:1775`) | `cmd.frame`, `cmd.set_frame`, `count_frames`, `count_states` |
-| `<ScenePanel/>` | `scene_bin_gui.py:29` | new `get_scenes()`, `cmd.scene`, `cmd.scene_order`, `set_scene_message` |
-| `<SceneButtons/>` | `SceneDrawButtons` (`packages/engine/layer1/Scene.cpp:2885`) | `get_scene_list`, `scene_current_name`, `cmd.scene`, `cmd.scene_order` |
-| `<SceneContextMenu/>` | `menu.py:1842` | `cmd.scene(...,'update'/'delete'/'rename')` |
-| `<SequenceViewer/>` | `CSeq`+`CSeeker` (`packages/engine/layer1/Seq.cpp:259`, `packages/engine/layer3/Seeker.cpp:969`) | new `get_seq_view()`; writes via `cmd.select(name, expr, enable=1)`, `cmd.center/zoom`, `cmd.set('state',…)` |
-| `<SeqOptionMenu/>` `<PickSeleMenu/>` | `menu.py:1800`, `:1709` | the literal command strings in those menus |
-| `<MovieExportDialog/>` | `file_dialogs.py:691` + `movieexport.ui` | `cmd.mpng`, `cmd.movie.produce`, `get_viewport` |
-| `<CameraMotionMenu/>` `<ObjMotionMenu/>` | `menu.py:108`, `:126` | `cmd.mview(...)`, `cmd.mset()`, `cmd.reset(object=)` |
-| `<ViewportSizeControl/>` | `cmd.viewport` (`viewing.py:1459`) | must also resize the WebGL canvas *and* the backend offscreen buffer |
+| `features/movie/movieMenu.ts` | `_gui.py:234-376` | `cmd.movie.*`, `cmd.mset/mclear/meter_reset`, settings |
+| `features/movie/MovieTimeline.tsx` | `CMovie` block (`packages/engine/layer1/Movie.cpp:1741`) | `cmd.get_movie_panel`; writes via `cmd.mmove/mcopy/minsert/mdelete/mview` |
+| `features/movie/TransportBar.tsx` | `CControl` (`packages/engine/layer1/Control.cpp:288` release, `:536` draw) + Qt row (`pymol_qt_gui.py:241-247`) | `rewind/backward/mstop/mplay/mtoggle/forward/ending/middle/mclear/rock/full_screen` |
+| `features/movie/MovieTimeline.tsx` state slider | scrollbar in `CMovie::draw` (`packages/engine/layer1/Movie.cpp:1775`) | `cmd.frame`, `cmd.set_frame`, `count_frames`, `count_states` |
+| `features/scenes/ScenePanel.tsx` | `scene_bin_gui.py:29` | `cmd.get_scene_panel`, `cmd.scene`, `cmd.scene_order`, `set_scene_message` |
+| `features/scenes/sceneButtonGeometry.ts` | `SceneDrawButtons` (`packages/engine/layer1/Scene.cpp:2885`) | `get_scene_list`, `scene_current_name`, `cmd.scene`, `cmd.scene_order` |
+| `features/scenes/SceneMenu.tsx` | `menu.py:1842` | `cmd.scene(...,'update'/'delete'/'rename')` |
+| `features/seqview/SequenceViewer.tsx` | `CSeq`+`CSeeker` (`packages/engine/layer1/Seq.cpp:259`, `packages/engine/layer3/Seeker.cpp:969`) | `tenmol_seqview`; writes via `cmd.select(name, expr, enable=1)`, `cmd.center/zoom`, `cmd.set('state',…)` |
+| `features/seqview/grammar.ts` | `menu.py:1800`, `:1709` | the literal command strings in those menus |
+| `features/movie/ExportDialog.tsx` | `file_dialogs.py:691` + `movieexport.ui` | `cmd.mpng`, `cmd.movie.produce`, `get_viewport` |
+| `features/movie/motionMenu.ts` | `menu.py:108`, `:126` | `cmd.mview(...)`, `cmd.mset()`, `cmd.reset(object=)` |
+| `packages/viewport/src/resize.ts` | `cmd.viewport` (`viewing.py:1459`) | resizes the WebGL canvas *and* the backend offscreen buffer |
+
+Paths are relative to `apps/web/src/` unless stated otherwise.
 | Key handler | `shortcut_dict.py`, `internal.py:447` | forward to `cmd.do`, with F1–F12 scene/view fallback replicated client-side |
 
 Rendering notes for the timeline and sequence viewer: both are dense 1-D grids

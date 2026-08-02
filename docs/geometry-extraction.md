@@ -1,12 +1,17 @@
-# Geometry Extraction — Feasibility Study
+# Geometry extraction
 
-**Area:** `geometry-extraction`
-**Repo:** `/Users/amirangel/Documents/GitHub/tenmol` (PyMOL open-source fork "tenmol")
-**Question:** can PyMOL's *already-computed* render geometry be pulled out of the C++ backend and shipped
-to a browser so that three.js draws it, without three.js recomputing representations from atoms?
+Can PyMOL's *already-computed* render geometry be pulled out of the C++ backend and shipped to a
+browser, so the browser draws it instead of recomputing representations from atoms? This is the
+inventory that answered that, read out of `packages/engine/`. Every claim carries a `file:line`.
+Where something could not be confirmed by reading code, the text says so.
 
-Everything below is grounded in files that were actually read. Every claim carries a `file:line`.
-Where I could not confirm something by reading code, I say so explicitly.
+**Where the port stands.** Yes, and it is built. `_cmd.web_get_rep_geometry` is the accessor of §6
+(`packages/engine/layer4/Cmd.cpp:6471`, implementation `packages/engine/layer4/CmdWebGeometry.cpp`);
+it is served by `packages/bridge/tenmol_bridge/render/modeg.py`, typed in
+`packages/protocol/src/geometry.ts`, and drawn by `packages/viewport/src/modeG/`. The
+raster fallback for everything Mode G cannot draw is `packages/viewport/src/modeP/`, with the
+per-rep switch in `packages/viewport/src/renderPolicy.ts`. Measurements are in
+`docs/spikes/geometry.md` and `docs/spikes/geometry-accessor.md`.
 
 ---
 
@@ -26,7 +31,7 @@ Where I could not confirm something by reading code, I say so explicitly.
   (`packages/engine/layer2/RepSurface.cpp:3217-3229`, `packages/engine/layer2/RepSurface.cpp:4559-4574`, `packages/engine/modules/pymol/internal.py:101`).
   That is a real, existing, zero-new-C++ path to a surface mesh — but Python lists of boxed floats, and
   no colors.
-* The correct engineering answer is a **new pybind/CPython accessor** that walks
+* The answer that shipped is a **new CPython accessor** that walks
   `CoordSet::Rep[cRepCnt]` (`packages/engine/layer2/CoordSet.h:107`), runs the existing CPU tessellators
   `CGOSimplify()` (`packages/engine/layer1/CGO.cpp:4444`) + `CGOCombineBeginEnd()` (`packages/engine/layer1/CGO.cpp:1539`), and hands
   back the resulting `CGO_DRAW_ARRAYS` float blocks as **raw `PyBytes`** using the primitive that
@@ -357,14 +362,18 @@ front/back clip, ortho-flag/FOV) and (b) *invalidation events* when a rep is reb
 
 ---
 
-## 6. Proposed new C++/Python accessor (the actual recommendation)
+## 6. The new C++/Python accessor
+
+This section is the design that became `_cmd.web_get_rep_geometry`
+(`packages/engine/layer4/Cmd.cpp:6471`, implementation `packages/engine/layer4/CmdWebGeometry.cpp`,
+wrapped in `/* tenmol web client -- BEGIN/END */` sentinels).
 
 ### 6a. Design
 
-Add one new `_cmd` method, e.g. `_cmd.get_rep_geometry(G, object_name, state, rep_id, flags)`,
-registered in the method table alongside the existing `get_*` entries
-(`packages/engine/layer4/Cmd.cpp:6446-6514`). Follow the exact shape of `CmdGetCoordSetAsNumPy`
-(`packages/engine/layer4/Cmd.cpp:2033-2056`): `API_SETUP_ARGS` → `APIEnterBlocked` → `ExecutiveGetCoordSet`
+One new `_cmd` method, `web_get_rep_geometry(G, object_name, state, rep_id, flags)`, registered in
+the method table alongside the existing `get_*` entries (`packages/engine/layer4/Cmd.cpp:6466-6478`).
+It follows the shape of `CmdGetCoordSetAsNumPy` (`packages/engine/layer4/Cmd.cpp:2033-2056`):
+`API_SETUP_ARGS` → `APIEnterBlocked` → `ExecutiveGetCoordSet`
 (`packages/engine/layer3/Executive.h:869`) → build result → `APIExitBlocked`.
 
 Resolution path (all already public):
@@ -460,15 +469,16 @@ There is **no existing Python callback for rep invalidation** — I grepped and 
 be added (a `PYOBJECT_CALLMETHOD` into `G->P_inst->cmd`, following the pattern of
 `call_raw_image_callback` at `packages/engine/layer1/Scene.cpp:4020-4051`).
 
-### 6f. Effort estimate
+### 6f. What it cost
 
-* Surface accessor (memcpy of 8 existing vectors): **~150 lines, low risk.**
-* CGO accessor (CGOSimplify + iterate + PyBytes): **~300 lines**, mostly a variant of the already-existing
-  `CGOArrayAsPyList` (`packages/engine/layer1/CGO.cpp:241-287`).
-* Invalidation callback: **~80 lines**, plus threading care (`Rep::update()` runs on worker threads
-  when `async_builds` is on, `packages/engine/layer1/Scene.cpp:4740-4757` — the callback must not touch Python from a
-  non-GIL thread; use `PAutoBlock`/`PAutoUnblock` as `RepSurface` already does at
-  `packages/engine/layer2/RepSurface.cpp:4569-4581`).
+* Surface accessor: memcpy of 8 existing vectors.
+* CGO accessor: `CGOSimplify` + iterate + `PyBytes`, a variant of the existing `CGOArrayAsPyList`
+  (`packages/engine/layer1/CGO.cpp:241-287`).
+* Invalidation: no callback was added. `Rep::update()` runs on worker threads when `async_builds`
+  is on (`packages/engine/layer1/Scene.cpp:4740-4757`), so a callback would have had to avoid
+  touching Python from a non-GIL thread. Instead the four change counters of
+  `_cmd.web_get_versions` are polled — see `docs/cmd-api-rpc.md` §8.5 and
+  `packages/bridge/tenmol_bridge/state/repversions.py`.
 
 ---
 
@@ -487,22 +497,23 @@ Shared includes: `compute_color_for_light.fs` (101 lines), `compute_fog_color.fs
 
 `sphere.fs` (94 lines) is a genuine ray-sphere impostor writing `gl_FragDepth` — requires
 `GL_EXT_frag_depth` on WebGL1, native on WebGL2 (`packages/engine/data/shaders/sphere.fs:1-3, 55-60`).
-`cylinder.fs` is 187 lines of impostor math. **These are directly portable to three.js
-`RawShaderMaterial` / `ShaderMaterial` with matched uniform names.** ~1840 lines of GLSL total across
+`cylinder.fs` is 187 lines of impostor math. **These are directly portable with matched uniform names**, and are what
+`packages/viewport/src/modeG/materials/` and `packages/viewport/src/shaders/` are derived from. ~1840 lines of GLSL total across
 all shaders — this is the single biggest lever for visual parity and it is copy-adaptable, not
 reinventable.
 
 ---
 
-## 8. HONEST VERDICT
+## 8. Verdict
 
-**Can a three.js client reach visual parity with PyMOL by drawing PyMOL's own geometry?**
+**Can a browser client reach visual parity with PyMOL by drawing PyMOL's own geometry?**
 
-**For the interactive OpenGL viewport: yes, ~95%, and the remaining 5% is a long tail of small
-mismatches, not a wall.** The mesh data is exact (it *is* PyMOL's data), the shaders are portable, and
-the camera model is fully specified by `cmd.get_view()`. This is a real, buildable product.
+**For the interactive OpenGL viewport: yes.** The mesh data is exact (it *is* PyMOL's data), the
+shaders are portable, and the camera model is fully specified by `cmd.get_view()`. What remains is
+a long tail of small mismatches, enumerated below.
 
-**For ray-traced output: no, not ever, and you should not try.** See risks.
+**For ray-traced output: no.** `cmd.ray` output is fetched as pixels from the backend instead
+(Mode P), never reproduced client-side.
 
 ### Where it will definitively NOT match
 
@@ -581,21 +592,25 @@ the camera model is fully specified by `cmd.get_view()`. This is a real, buildab
 
 ---
 
-## 9. Open questions I could not resolve by reading
+## 9. Questions this map left open, and how they were closed
 
-* I found **no existing Python hook fired on Rep rebuild/invalidation**. Grepped `packages/engine/layer1/P.cpp`,
-  `packages/engine/layer4/Cmd.cpp`, `packages/engine/modules/pymol/*.py`. If one exists under a name I did not guess, it would remove
-  the need for §6e.
-* I did **not** verify whether `RepSurface::AT` is populated in all surface modes or only when
-  `pick_surface` is on. `AT` is declared at `packages/engine/layer2/RepSurface.cpp:83` but I did not trace every
-  write site.
-* I did **not** confirm the exact byte layout of the pick-color sub-block inside `CGO_DRAW_ARRAYS`
-  (`VERTEX_PICKCOLOR_RGBA_SIZE = 1` float holding 4 packed bytes + 2 index floats,
-  `packages/engine/layer1/CGO.cpp:60-64`). The offset arithmetic at `packages/engine/layer1/CGO.cpp:1664-1666`
-  (`pickColorVals = nxtVals + VERTEX_PICKCOLOR_RGBA_SIZE * nverts`) implies the RGBA sub-array
-  precedes the index sub-array within the same block; this needs a runtime check before relying on it.
-* `_PYMOL_NO_RAY` guards `SceneRay` entirely (`packages/engine/layer1/SceneRay.cpp:94-96`). I did **not** find a
-  `setup.py` flag setting it, so ray export is presumably always compiled in this fork — but I did not
-  confirm via a build.
-* Whether `pymol._cache` surface entries survive `cmd.delete` / rebuild cycles cleanly enough to be a
-  reliable feed — `_cache_purge` (`packages/engine/modules/pymol/internal.py:48-78`) evicts by size and access time.
+* **No Python hook fires on Rep rebuild/invalidation.** Confirmed by grep over
+  `packages/engine/layer1/P.cpp`, `packages/engine/layer4/Cmd.cpp` and
+  `packages/engine/modules/pymol/*.py`. None was added; §6f explains what replaced it.
+* **Is `RepSurface::AT` populated in all surface modes, or only with `pick_surface`?** `AT` is
+  declared at `packages/engine/layer2/RepSurface.cpp:83`; not every write site was traced here.
+  `docs/spikes/picking.md` answered the practical question instead — surface picking runs on
+  the backend against a real GL pick pass (15/15 clicks resolved), so client-side reliance on `AT`
+  never became load-bearing.
+* **The byte layout of the pick-color sub-block inside `CGO_DRAW_ARRAYS`**
+  (`VERTEX_PICKCOLOR_RGBA_SIZE = 1` float holding 4 packed bytes, plus 2 index floats,
+  `packages/engine/layer1/CGO.cpp:60-63`). The offset arithmetic at
+  `packages/engine/layer1/CGO.cpp:1665` (`pickColorVals = nxtVals + VERTEX_PICKCOLOR_RGBA_SIZE *
+  nverts`) implies the RGBA sub-array precedes the index sub-array in the same block. Verified at
+  runtime by `docs/spikes/geometry-accessor.md`, which is what
+  `packages/bridge/tenmol_bridge/render/modeg.py::_deinterleave_i32` depends on.
+* **`_PYMOL_NO_RAY` guards `SceneRay` entirely** (`packages/engine/layer1/SceneRay.cpp:94-96`).
+  No `setup.py` flag sets it, so ray export is compiled in for this fork's builds.
+* **Whether `pymol._cache` surface entries survive `cmd.delete`/rebuild cycles** cleanly enough to
+  be a reliable feed — `_cache_purge` (`packages/engine/modules/pymol/internal.py:49-78`) evicts by
+  size and access time. Moot: §6's accessor reads `Rep[]` directly rather than the cache.
