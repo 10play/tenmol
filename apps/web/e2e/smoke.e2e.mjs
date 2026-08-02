@@ -1192,4 +1192,120 @@ export const tests = [
       }
     },
   },
+  {
+    /**
+     * Row 341 item (2) — `seq_view_overlay = 0` RESERVES SCENE SPACE.
+     *
+     * `OrthoReshape` takes the sequence viewer's height out of the scene
+     * rectangle when overlay is off (`layer1/Ortho.cpp:2419` `sceneBottom +=
+     * seqHeight`, `:2433` `sceneTop = seqHeight`). This client drew the strip
+     * `position: absolute` over the canvas and changed only its background
+     * opacity, so the setting did nothing you could measure: MEASURED before
+     * the fix, the canvas was `top 24, bottom 668, height 644` in ALL FOUR
+     * combinations of overlay 0/1 by location 0/1, identical to the pixel.
+     *
+     * THIS CANNOT BE A JSDOM TEST. Every number below comes from a real layout;
+     * in jsdom they are all 0. `p12reserve.dom.test.ts` covers the arithmetic.
+     */
+    name: 'seq_view_overlay 0 shrinks the scene instead of covering it (row 341)',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+
+      /** The canvas box and the strip box, in one round trip. */
+      const survey = () =>
+        page.evaluate(() => {
+          const box = (sel) => {
+            const n = document.querySelector(sel);
+            if (!n) return null;
+            const r = n.getBoundingClientRect();
+            return {
+              top: Math.round(r.top),
+              bottom: Math.round(r.bottom),
+              height: Math.round(r.height),
+            };
+          };
+          // `.viewport` and not the `<canvas>`: the canvas carries no class,
+          // and `.viewport` is the `flex: 1` box that absorbs the padding —
+          // i.e. it IS the scene rectangle in the browser's units.
+          return { canvas: box('.viewport'), strip: box('.seqview') };
+        });
+
+      try {
+        await run(page, 'load test/dat/pept.pdb, p12seq', 2400);
+        // ESTABLISH the baseline, do not assume it. All 21 specs share one
+        // bridge and `seq_view` is a GLOBAL setting: the sequence-viewer spec
+        // above turns it on and leaves it on, so this one arrived to a strip
+        // already up and failed on its first assertion — passing alone and
+        // failing in the suite, which is the shared-process trap this file
+        // documents everywhere else.
+        await run(page, 'set seq_view, 0', 1200);
+        const bare = await survey();
+        assert(bare.strip === null, 'the strip is up after seq_view 0');
+        assert(bare.canvas.height > 100, `no canvas to measure (${JSON.stringify(bare.canvas)})`);
+
+        // OVERLAY ON: draws over the picture, takes nothing.
+        await run(page, 'set seq_view_overlay, 1', 600);
+        await run(page, 'set seq_view, 1', 1600);
+        const overlay = await survey();
+        assert(overlay.strip !== null, 'the sequence viewer never appeared');
+        assert(
+          overlay.canvas.height === bare.canvas.height,
+          `overlay=1 must not resize the scene (${bare.canvas.height} -> ${overlay.canvas.height})`,
+        );
+
+        // OVERLAY OFF, TOP: `sceneTop = seqHeight`.
+        await run(page, 'set seq_view_overlay, 0', 1400);
+        const top = await survey();
+        const reserved = bare.canvas.height - top.canvas.height;
+        assert(
+          reserved === top.strip.height,
+          `the scene gave up ${reserved}px for a ${top.strip.height}px strip`,
+        );
+        assert(
+          top.canvas.top === bare.canvas.top + top.strip.height,
+          `the canvas did not start below the strip (${top.canvas.top} vs ${bare.canvas.top}+${top.strip.height})`,
+        );
+        // ...and the strip still sits flush against the edge, in the band the
+        // canvas gave up rather than below it.
+        assert(
+          top.strip.top === bare.canvas.top,
+          `the strip left a gap above it (${top.strip.top} vs ${bare.canvas.top})`,
+        );
+
+        // OVERLAY OFF, BOTTOM: `sceneBottom += seqHeight`, the other branch.
+        await run(page, 'set seq_view_location, 1', 1400);
+        const bottom = await survey();
+        assert(
+          bare.canvas.height - bottom.canvas.height === bottom.strip.height,
+          `location=1 reserved ${bare.canvas.height - bottom.canvas.height}px for ${bottom.strip.height}px`,
+        );
+        assert(
+          bottom.canvas.top === bare.canvas.top,
+          'location=1 must take the band off the BOTTOM, not the top',
+        );
+        assert(
+          bottom.canvas.bottom === bare.canvas.bottom - bottom.strip.height,
+          `the canvas did not end above the strip (${bottom.canvas.bottom})`,
+        );
+
+        // AND IT GIVES THE SPACE BACK. A reservation that outlives its viewer
+        // is a black band with no visible cause.
+        await run(page, 'set seq_view, 0', 1600);
+        const gone = await survey();
+        assert(gone.strip === null, 'the strip is still up');
+        assert(
+          gone.canvas.height === bare.canvas.height,
+          `the scene kept ${bare.canvas.height - gone.canvas.height}px reserved for a viewer that is gone`,
+        );
+      } finally {
+        // The bridge is shared by all 21 specs: these are global settings.
+        await run(page, 'set seq_view, 0', 400);
+        await run(page, 'set seq_view_location, 0', 400);
+        await run(page, 'set seq_view_overlay, 0', 400);
+        await run(page, 'delete p12seq', 600);
+        await page.close();
+      }
+    },
+  },
 ];

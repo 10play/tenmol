@@ -26,6 +26,7 @@ import { createSeqviewSource, type SeqviewMenuPayload, type SeqviewSource } from
 import { Button, click, move, wheel, type Mods, type SeqAction, type SeqDrag } from './grammar';
 import { selectionRuns } from './minimap';
 import { clampFirst, widestRow } from './window';
+import { applyReservation } from './reserve';
 import { columnRgb, isAligned, rgbCss, windowBase } from './alignment';
 import './seqview.css';
 
@@ -352,9 +353,61 @@ export function SequenceViewer(): React.JSX.Element | null {
     [scrollBy],
   );
 
+  /*
+   * ROW 341 item (2) — `seq_view_overlay = 0` RESERVES SCENE SPACE.
+   *
+   * `OrthoReshape` gives the sequence viewer a band out of the scene rectangle
+   * (`layer1/Ortho.cpp:2419,2433`); this strip is `position: absolute`, so it
+   * took none, and the setting only changed the background's opacity. The
+   * height is MEASURED rather than derived: `SeqGetHeight` is a row-count
+   * formula in the C's own metrics, and re-deriving it here would mean keeping
+   * a second copy of this component's CSS in arithmetic.
+   *
+   * A ResizeObserver rather than a layout effect alone: the strip's height
+   * changes when rows appear, when the horizontal scrollbar comes and goes
+   * (which is exactly `SeqGetHeight`'s `+ ScrollBarWidth` term) and when the
+   * window is resized, none of which re-renders this component.
+   */
+  const stripRef = useRef<HTMLDivElement | null>(null);
+  const { location, overlay } = payload;
+  // `rendered` is in the DEPS, not just in the guard. The component survives
+  // `seq_view 0` — only the `<div>` below unmounts — so without it the effect
+  // would never re-run, its cleanup would never fire, and the scene would keep
+  // a band reserved for a viewer that is no longer there.
+  const rendered = payload.visible && payload.rows.length > 0;
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (strip === null) return;
+    // The offset parent IS `.shell__viewport`: the strip is absolutely
+    // positioned and that is the nearest positioned ancestor. Resolving it this
+    // way rather than by selector keeps the feature from naming a shell class.
+    const container = strip.offsetParent as HTMLElement | null;
+    let dispose = applyReservation(container, {
+      location,
+      overlay,
+      height: strip.getBoundingClientRect().height,
+    });
+    // jsdom has no ResizeObserver; the measurement above is the whole of the
+    // behaviour there and the observer is a live-resize refinement.
+    if (typeof ResizeObserver === 'undefined') return () => dispose();
+    const observer = new ResizeObserver(() => {
+      dispose();
+      dispose = applyReservation(container, {
+        location,
+        overlay,
+        height: strip.getBoundingClientRect().height,
+      });
+    });
+    observer.observe(strip);
+    return () => {
+      observer.disconnect();
+      dispose();
+    };
+  }, [location, overlay, rendered]);
+
   /* ------------------------------------------------------------------ */
 
-  if (!payload.visible || payload.rows.length === 0) return null;
+  if (!rendered) return null;
 
   const maxCols = Math.max(...payload.rows.map((row) => row.nCols), 1);
   const showLabelRow = (index: number) =>
@@ -383,6 +436,7 @@ export function SequenceViewer(): React.JSX.Element | null {
 
   return (
     <div
+      ref={stripRef}
       className={
         'seqview' +
         (payload.location === 1 ? ' seqview--bottom' : ' seqview--top') +

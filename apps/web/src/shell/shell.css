@@ -10,11 +10,28 @@
 
 /* Feature slots ------------------------------------------------------- */
 
+/*
+ * The scene rectangle. `OrthoReshape` (`layer1/Ortho.cpp:2419,2433`) takes the
+ * sequence viewer's height OUT of it when `seq_view_overlay` is 0
+ * (`sceneBottom += seqHeight` / `sceneTop = seqHeight`), and the padding below
+ * is how that arrives here.
+ *
+ * PADDING, not a shorter canvas: `.seqview` is absolutely positioned, and an
+ * absolutely positioned box resolves `top`/`bottom` against its containing
+ * block's PADDING box — so the strip still sits flush against the edge and the
+ * band it occupies is exactly the space the canvas gave up. `.viewport` is
+ * `flex: 1` inside, so it takes what is left with no arithmetic of its own.
+ *
+ * The two variables are written by `features/seqview/reserve.ts` and default to
+ * 0, which is the overlay case AND the case where no strip is mounted at all.
+ */
 .shell__viewport {
   position: relative;
   display: flex;
   flex: 1;
   min-width: 0;
+  padding-top: var(--pm-seq-reserve-top, 0px);
+  padding-bottom: var(--pm-seq-reserve-bottom, 0px);
   background: var(--pm-bg-viewport);
   overflow: hidden;
 }
