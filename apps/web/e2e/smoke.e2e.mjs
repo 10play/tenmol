@@ -859,6 +859,13 @@ export const tests = [
 
       await run(page, 'set animation, 0', 800);
       await run(page, 'delete m98a or m98b', 700);
+      // ISOLATE. All 21 specs share one PyMOL, and by the time this one runs
+      // the panel holds ala, 1tii, obj01, mv, sq, cl and ip as well. This
+      // spec drags the pointer BETWEEN two named rows, so it depends on where
+      // those rows are; seven extra rows move them. Measured on a runner:
+      // the ctrl-drag left both m98a and m98b enabled, and polling for 87 s
+      // did not help because the gesture never landed where it was aimed.
+      await run(page, 'disable all', 700);
       await run(page, 'fragment ala, m98a', 1200);
       await run(page, 'fragment his, m98b', 1200);
       // Apart in MODEL space (`translate` defaults to camera space), so
@@ -919,7 +926,7 @@ export const tests = [
           // clientY on every move, and one jump would skip the band.
           for (let i = 1; i <= 6; i++) {
             await page.mouse.move(from.x, from.y + ((dest.y - from.y) * i) / 6);
-            await page.waitForTimeout(60);
+            await page.waitForTimeout(Math.round(60 * SCALE));
           }
         }
         await page.mouse.up({ button });

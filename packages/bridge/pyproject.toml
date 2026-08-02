@@ -17,6 +17,16 @@ dependencies = [
     # stream still produces a LOSSLESS still without Pillow, but jpeg/webp -
     # i.e. everything under 25 ms/frame - need it.
     "pillow>=10",
+    # `pymol.seqalign.aln_magic_read` does `from Bio import AlignIO`
+    # (seqalign.py:103), so the alignment import dialog — File > Open on a
+    # .aln/.fasta — raises ModuleNotFoundError without it.
+    #
+    # UNDECLARED UNTIL CI CAUGHT IT. It was present in every developer venv as
+    # a transitive install, so the alignment tests passed locally and every
+    # one of them errored on a clean runner. That is exactly the class of bug
+    # a fresh-machine CI exists to find, and it means the feature was broken
+    # for anyone who had actually followed the bootstrap instructions.
+    "biopython>=1.80",
 ]
 
 # NOTE: "pymol" is deliberately NOT a dependency. It is built from this repo
