@@ -63,6 +63,41 @@
   --pm-toggle-w: 17px;
   --pm-line-h: 12px;
 
+  /*
+   * The floor under the object list. `shell/orthoPanel.ts` derives the same
+   * number from the same two source constants and `shell/p11layout.test.ts`
+   * asserts they agree: `controlHeight` (20, layer1/Ortho.cpp:2267) plus the
+   * larger `ButModeGetHeight` (124, with `mouse_grid`) — the most the blocks
+   * that outrank the Executive block can ever take from the column between
+   * them. 8 rows of `--pm-row-h`.
+   */
+  --pm-exec-min: 144px;
+
+  /*
+   * The least the movie panel's own timeline may be squeezed to.
+   * `MovieGetPanelHeight` is `movie_panel_row_height * ExecutiveCountMotions`
+   * (`layer1/Movie.cpp:1713-1721`) and `movie_panel_row_height` defaults to 15
+   * (`layer1/SettingInfo.h:722`), so one PyMOL movie row is 15 px. MEASURED
+   * through the bridge: a six-object 30-frame session charges exactly one row.
+   */
+  --pm-movie-row-h: 15px;
+
+  /*
+   * `controlHeight = DIP2PIXEL(20)` (`layer1/Ortho.cpp:2267`) — the Control
+   * block, PyMOL's nine movie buttons, the one band in the column that is a
+   * flat constant. `.mvctl` measures 20 px (16 px buttons + 2 px of padding
+   * either side), which is why it is written as this variable.
+   */
+  --pm-control-h: 20px;
+
+  /*
+   * The title strip each of the three web-only panels carries. PyMOL has no
+   * counterpart — its blocks are all list — so this is a client constant, and
+   * it is a variable only so the panels' FLOORS can be written as
+   * `calc(head + <a PyMOL constant>)` instead of repeating a literal.
+   */
+  --pm-panel-head-h: 17px;
+
   --pm-font-ui: -apple-system, 'Segoe UI', 'DejaVu Sans', sans-serif;
   --pm-font-mono: Monaco, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
   --pm-fs: 11px;
@@ -309,17 +344,43 @@ code {
 /* Internal GUI column (Executive + ButMode + Control)                 */
 /* ------------------------------------------------------------------ */
 
+/*
+ * THE COLUMN'S HEIGHT BUDGET, and the one rule that governs it.
+ *
+ * `OrthoLayoutPanel` (`layer1/Ortho.cpp:2261-2337`) stacks the column bottom-up
+ * — Control 20 px, ButMode `ButModeGetHeight`, Wizard `control_size * NLine + 4`
+ * — and gives the EXECUTIVE BLOCK everything that is left. The object list is
+ * the residual and every other block is sized from a constant or its own
+ * content. MEASURED against the real engine at this column's own 644 px
+ * (`bridge/tests/test_p11_layout.py`): Executive 584 px, 90.7% of the column.
+ *
+ * The web column also carries the movie panel and the scene bin, which PyMOL
+ * draws at the bottom of the WINDOW and over the SCENE respectively (measured:
+ * the scene bin reserves 0 column px, with three scenes stored as with none).
+ * They cannot be moved — `features/registry.ts` is frozen — so instead:
+ *
+ *   * the object list gets a FLOOR it cannot be starved below
+ *     (`--pm-exec-min`, see `shell/orthoPanel.ts: EXECUTIVE_MIN_HEIGHT`), and
+ *   * whatever yields instead SCROLLS rather than clipping.
+ *
+ * `overflow-y: auto` here is the last of those valves. It never engages at a
+ * normal window size (the panels' minimums sum to well under 644), but a column
+ * shorter than its own minimums must hand the user a scrollbar rather than
+ * silently clip a block into a full bounding box nobody can click — which is
+ * exactly the failure this whole section exists to fix.
+ */
 .internal-gui {
   display: flex;
   flex-direction: column;
   min-width: 5px;
   background: var(--pm-panel);
   border-left: 1px solid var(--pm-edge);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .objpanel {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;

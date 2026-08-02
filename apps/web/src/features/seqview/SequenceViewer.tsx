@@ -26,6 +26,7 @@ import { createSeqviewSource, type SeqviewMenuPayload, type SeqviewSource } from
 import { Button, click, move, wheel, type Mods, type SeqAction, type SeqDrag } from './grammar';
 import { selectionRuns } from './minimap';
 import { clampFirst, widestRow } from './window';
+import { columnRgb, isAligned, rgbCss, windowBase } from './alignment';
 import './seqview.css';
 
 /** `layer1/Seq.h:84-88`. */
@@ -49,6 +50,11 @@ const EMPTY: SeqviewPayload = {
   fillColor: 104,
   activeSele: '',
   seleMode: 'byresi',
+  alignment: '',
+  unalignedMode: 0,
+  unalignedColor: 104,
+  fillChar: '-',
+  bgColor: [0, 0, 0],
   rows: [],
   colors: {},
   window: { first: 0, count: WINDOW, max: WINDOW },
@@ -354,6 +360,27 @@ export function SequenceViewer(): React.JSX.Element | null {
   const showLabelRow = (index: number) =>
     payload.labelMode === 2 || (payload.labelMode === 1 && index === 0);
 
+  /*
+   * ALIGNMENT MODE IS AN ABSOLUTE LAYOUT, and it has to be.
+   *
+   * Outside it a row's columns are contiguous — `offset` advances by exactly
+   * the width already drawn — so a flex row reproduces the C's geometry for
+   * free. Under an alignment the whole point is that a row's columns are NOT
+   * contiguous: `panels/seqview.py::align_rows` leaves holes where the other
+   * rows have residues this one does not (`layer3/Seeker.cpp:1583-1793`), and
+   * a flex row would close every one of them and destroy the line-up. So the
+   * cells are placed at `offset * CHAR_WIDTH` and the holes are filled with
+   * `row.fill`, which is what `CSeq::draw` paints (`layer1/Seq.cpp:488-504`).
+   *
+   * The base is SHARED (`windowBase`): rebasing each row on its own first cell,
+   * which is what the non-aligned label path does, would slide the rows back on
+   * top of each other.
+   */
+  const aligned = isAligned(payload);
+  const base = aligned ? windowBase(payload) : 0;
+  const rowBase = (row: SeqviewRow) => (aligned ? base : offsetOf(row, first));
+  const fillTint = rgbCss(payload.colors[String(payload.fillColor)]);
+
   return (
     <div
       className={
@@ -370,6 +397,17 @@ export function SequenceViewer(): React.JSX.Element | null {
         <span title="the active selection (ExecutiveGetActiveSeleName)">
           {payload.activeSele ? `${payload.seleMode || 'none'} → ${payload.activeSele}` : 'no selection'}
         </span>
+        {aligned && (
+          <span
+            className="seqview__alignment"
+            title="ExecutiveGetActiveAlignment — rows are lined up by tag and gaps are suppressed"
+          >
+            aligned by {payload.alignment}
+            {UNALIGNED_NAMES[payload.unalignedMode]
+              ? ` (${UNALIGNED_NAMES[payload.unalignedMode]})`
+              : ''}
+          </span>
+        )}
         <span className="seqview__spacer" />
         {error && <span className="seqview__error">{error}</span>}
         <span title="horizontal scroll — the wheel moves one column, as in layer1/Seq.cpp:218">
@@ -386,7 +424,7 @@ export function SequenceViewer(): React.JSX.Element | null {
                   <span
                     className="seqrow__crumb"
                     key={`c${mark.col}`}
-                    style={{ left: (mark.offset - offsetOf(row, first)) * CHAR_WIDTH }}
+                    style={{ left: (mark.offset - rowBase(row)) * CHAR_WIDTH }}
                   >
                     {mark.text}
                   </span>
@@ -395,7 +433,7 @@ export function SequenceViewer(): React.JSX.Element | null {
                   <span
                     className="seqrow__num"
                     key={`n${label.col}`}
-                    style={{ left: (label.offset - offsetOf(row, first)) * CHAR_WIDTH }}
+                    style={{ left: (label.offset - rowBase(row)) * CHAR_WIDTH }}
                   >
                     {label.text}
                   </span>
@@ -403,12 +441,30 @@ export function SequenceViewer(): React.JSX.Element | null {
               </div>
             )}
 
-            <div className="seqrow__line" style={{ height: LINE_HEIGHT }}>
+            <div
+              className={'seqrow__line' + (aligned ? ' seqrow__line--aligned' : '')}
+              style={{ height: LINE_HEIGHT }}
+            >
               {payload.labelMode === 0 && (
                 <span className="seqrow__name" title={row.object}>
                   /{row.object}
                 </span>
               )}
+              {aligned &&
+                payload.fillChar !== '' &&
+                row.fill.map((run) => (
+                  <span
+                    className="seqfill"
+                    key={`f${run.offset}-${run.width}`}
+                    style={{
+                      left: (run.offset - base) * CHAR_WIDTH,
+                      width: run.width * CHAR_WIDTH,
+                      color: fillTint,
+                    }}
+                  >
+                    {payload.fillChar.repeat(run.width)}
+                  </span>
+                ))}
               {row.cells.map((cell, cellIndex) => {
                 const col = row.first + cellIndex;
                 // `col->inverse` is INVERTED VIDEO in the C (`layer1/Seq.cpp:465-482`):
@@ -418,7 +474,10 @@ export function SequenceViewer(): React.JSX.Element | null {
                 // `background: currentcolor` resolves against this element's
                 // own `color`, which the same rule has just forced to black,
                 // and every selected cell renders black-on-black.
-                const tint = rgb(payload.colors[String(cell.color)]);
+                const tint = rgbCss(columnRgb(cell, payload));
+                const place = aligned
+                  ? { position: 'absolute' as const, left: (cell.offset - base) * CHAR_WIDTH }
+                  : {};
                 return (
                   <span
                     key={col}
@@ -426,16 +485,18 @@ export function SequenceViewer(): React.JSX.Element | null {
                       'seqcell' +
                       (cell.selected ? ' is-selected' : '') +
                       (cell.spacer ? ' is-spacer' : '') +
+                      (cell.unaligned ? ' is-unaligned' : '') +
                       (row.selectable ? '' : ' is-locked')
                     }
                     style={
                       cell.selected
                         ? {
+                            ...place,
                             width: cell.text.length * CHAR_WIDTH,
                             background: tint,
                             color: '#000',
                           }
-                        : { width: cell.text.length * CHAR_WIDTH, color: tint }
+                        : { ...place, width: cell.text.length * CHAR_WIDTH, color: tint }
                     }
                     title={cellTitle(row, cell)}
                     onPointerDown={(event) => onPointerDown(index, col, cell, event)}
@@ -538,6 +599,16 @@ const FORMAT_NAMES: Record<number, string> = {
   5: 'Movie Frames',
 };
 
+/** `seq_view_unaligned_mode`, for the header (`layer3/Seeker.cpp:1590-1596`). */
+const UNALIGNED_NAMES: Record<number, string> = {
+  0: 'packed',
+  1: 'packed, dimmed',
+  2: 'packed, blended',
+  3: 'staggered',
+  4: 'staggered, dimmed',
+  5: 'staggered, blended',
+};
+
 /** The character offset the window starts at, so labels line up with cells. */
 function offsetOf(row: SeqviewRow, _first: number): number {
   return row.cells[0]?.offset ?? 0;
@@ -545,13 +616,6 @@ function offsetOf(row: SeqviewRow, _first: number): number {
 
 function rowIndex(action: SeqAction): number {
   return 'row' in action ? action.row : -1;
-}
-
-function rgb(triple: number[] | undefined): string | undefined {
-  if (!triple || triple.length < 3) return undefined;
-  const to255 = (value: number | undefined) =>
-    Math.round(Math.max(0, Math.min(1, value ?? 0)) * 255);
-  return `rgb(${to255(triple[0])},${to255(triple[1])},${to255(triple[2])})`;
 }
 
 function cellTitle(row: SeqviewRow, cell: SeqviewCell): string {
@@ -562,6 +626,8 @@ function cellTitle(row: SeqviewRow, cell: SeqviewCell): string {
   if (cell.resi) bits.push(cell.resi);
   if (cell.state) bits.push(`state ${cell.state}`);
   bits.push(`${cell.atoms.length} atom${cell.atoms.length === 1 ? '' : 's'}`);
+  if (cell.unaligned) bits.push('unaligned');
+  else if (cell.tag) bits.push(`alignment column ${cell.tag}`);
   if (!row.selectable) bits.push('not selectable (non-discrete states)');
   return bits.join(' · ');
 }

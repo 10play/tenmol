@@ -39,7 +39,12 @@ import { MENU_DATA } from '../menubar/generated/menudata';
 import { MenuBar } from '../menubar/MenuBar';
 import { FileDropTarget } from './FileDropTarget';
 import { FilesPanel } from './FilesPanel';
-import { FILE_MENU_HOOKS, UNBOUND_FILE_HOOKS, requestFilesOpen } from './menuHooks';
+import {
+  BOUND_FILE_HOOKS,
+  FILE_MENU_HOOKS,
+  UNBOUND_FILE_HOOKS,
+  requestFilesOpen,
+} from './menuHooks';
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -152,7 +157,14 @@ function makeSession(): Session {
     config: {} as Session['config'],
     // `menuSource` bootstraps with a `do`; refusing it keeps the checked-in
     // generated tree, which is what these assertions are written against.
-    conn: { sendInput: vi.fn(), isOpen: true, do: () => Promise.reject(new Error('offline')) },
+    conn: {
+      sendInput: vi.fn(),
+      isOpen: true,
+      do: () => Promise.reject(new Error('offline')),
+      // `PluginDialogHost` (row 295) subscribes to the `dialog` topic on mount.
+      on: () => () => {},
+      sub: () => Promise.resolve(),
+    },
     stores,
     objectsSource: { poll: vi.fn(), invalidate: vi.fn() },
     poller: { stats: () => ({ hz: 30 }) },
@@ -351,7 +363,10 @@ describe('row 242 — the File menu leaf inventory', () => {
     expect(names.length).toBeGreaterThan(20);
     const unexplained = names.filter(
       (hook) =>
-        !(hook in FILE_MENU_HOOKS) &&
+        // `BOUND_FILE_HOOKS`, not `FILE_MENU_HOOKS`: `edit_pymolrc` is bound
+        // too, and is not in the table because it is not a `FilesPanel`
+        // action — it opens `features/texteditor`'s window (row 61).
+        !BOUND_FILE_HOOKS.includes(hook) &&
         !UNBOUND_FILE_HOOKS.includes(hook) &&
         // The menu bar implements this one itself (`MenuBar.tsx`).
         hook !== 'confirm_quit',

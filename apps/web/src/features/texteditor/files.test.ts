@@ -11,8 +11,17 @@ import { describe, expect, it } from 'vitest';
 import { MISSING_ROUTE, probeServerFiles } from './files';
 import type { Session } from '../../app';
 
-const fakeSession = (behaviour: () => Promise<unknown>): Session =>
-  ({ call: () => behaviour() }) as unknown as Session;
+/**
+ * `conn.do` is the bootstrap hop: `probeServerFiles` installs
+ * `cmd.tenmol_files` and retries once before concluding the route is absent
+ * (nothing in the app runs `FILES_BOOTSTRAP` at startup). The default here
+ * resolves, so `behaviour` alone decides the answer.
+ */
+const fakeSession = (behaviour: () => Promise<unknown>, bootstrap?: () => Promise<unknown>): Session =>
+  ({
+    call: () => behaviour(),
+    conn: { do: bootstrap ?? (() => Promise.resolve()) },
+  }) as unknown as Session;
 
 describe('MISSING_ROUTE', () => {
   it('recognises the bridge answers that mean "the endpoint does not exist"', () => {

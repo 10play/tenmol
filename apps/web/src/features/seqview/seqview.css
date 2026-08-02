@@ -64,6 +64,10 @@
   margin-left: auto;
 }
 
+.seqview__alignment {
+  color: #7fb0e0;
+}
+
 .seqview__error {
   color: #ff6b6b;
   max-width: 45%;
@@ -108,6 +112,41 @@
   /* Cells no longer shrink, so the row overflows; the viewer scrolls with its
      own windowed scrollbar rather than a native one. Clip instead. */
   overflow: hidden;
+}
+
+/*
+ * ALIGNMENT MODE. The flex row above packs the cells edge to edge, which is
+ * right when `offset` is contiguous and WRONG the moment an alignment opens
+ * holes in a row (`layer3/Seeker.cpp:1583-1793` places every column at the
+ * offset its tag earns, and the holes are what `row.fill` paints). So the row
+ * becomes a positioning context and every cell gets an explicit `left`.
+ *
+ * `display: block` NOT `flex`: an absolutely positioned child of a flex
+ * container is taken out of flow anyway, but the fill runs and the "…" more
+ * marker are not, and a flex row would have laid them out in a line.
+ */
+.seqrow__line--aligned {
+  display: block;
+  position: relative;
+}
+
+.seqrow__line--aligned .seqcell {
+  top: 0;
+}
+
+/*
+ * `row->fill` — `layer1/Seq.cpp:488-504` repeats `seq_view_fill_char` across
+ * the run in `seq_view_fill_color`. NOT clickable: the C never hit-tests it
+ * (`SeekerClick` resolves a COLUMN, and a fill entry is not one), so it must
+ * not swallow the pointer from the cell a user is aiming at.
+ */
+.seqfill {
+  position: absolute;
+  top: 0;
+  overflow: hidden;
+  white-space: pre;
+  pointer-events: none;
+  opacity: 0.7;
 }
 
 .seqrow__name {

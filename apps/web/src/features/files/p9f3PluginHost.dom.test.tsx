@@ -7,17 +7,23 @@
  * overlay slot, so a plugin dialog raised with that panel closed shows nothing
  * and blocks until the user opens it".
  *
- * That poller is now `PluginDialogHost`, rendered by `FileDropTarget` — the one
+ * That host is now `PluginDialogHost`, rendered by `FileDropTarget` — the one
  * piece of this feature `ViewportPanel` mounts unconditionally. These tests
  * mount ONLY `FileDropTarget` (i.e. the panel is closed, as it is by default,
  * `features/registry.ts` region 'overlay') and drive a parked request all the
- * way to `dialog_answer`.
+ * way to its answer.
+ *
+ * WAVE 11 UPDATE: the request now arrives on the pushed `dialog` topic instead
+ * of a 700 ms `dialog_pending` poll, and the answer goes to
+ * `_bridge.answer_dialog` instead of `cmd.tenmol_files.dialog_answer`. Every
+ * assertion below is the same assertion; only the delivery changed. The new
+ * behaviours (latency, `'closed'` events, the reconcile a reload needs) are in
+ * `p11DialogPush.dom.test.tsx`.
  *
  * MUTATION-TESTED: replacing `FileDropTarget`'s `return <PluginDialogHost />`
  * with `return null` makes the first three of these fail (no picker, no
- * answer); leaving the old poller in `FilesPanel` as well makes
- * `only one poller claims a request` fail with two `dialog_answer` calls for
- * one dialog.
+ * answer); adding a second `PluginDialogHost` to `FilesPanel` makes
+ * `only one host claims a request` fail with two pickers for one dialog.
  */
 
 import { act } from 'react';
@@ -26,17 +32,31 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FileDropTarget } from './FileDropTarget';
 import { FilesPanel } from './FilesPanel';
-import { PLUGIN_DIALOG_POLL_MS } from './pluginDialogs';
 
 const appendClient = vi.fn();
 const run = vi.fn().mockResolvedValue(undefined);
 const call = vi.fn();
 const conndo = vi.fn();
+
+/** The client's topic emitter, exactly as `PymolConnection.on` behaves. */
+type Listener = (payload: never) => void;
+const listeners = new Map<string, Set<Listener>>();
+const on = vi.fn((event: string, listener: Listener) => {
+  const set = listeners.get(event) ?? new Set<Listener>();
+  listeners.set(event, set);
+  set.add(listener);
+  return () => set.delete(listener);
+});
+const sub = vi.fn().mockResolvedValue(undefined);
+const emit = (event: string, payload: unknown) => {
+  for (const listener of [...(listeners.get(event) ?? [])]) listener(payload as never);
+};
+
 const SESSION = {
   call,
   run,
   act: vi.fn().mockResolvedValue(undefined),
-  conn: { do: conndo },
+  conn: { do: conndo, on, sub },
   stores: { feedback: { appendClient } },
 };
 vi.mock('../../app', () => ({ useSession: () => SESSION }));
@@ -44,9 +64,17 @@ vi.mock('../../app', () => ({ useSession: () => SESSION }));
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =
   true;
 
-const REQUEST = {
+/**
+ * One `dialog` topic payload, copied from what the running bridge emits
+ * (`session.py::plugin_dialog_payload`, verified over a real socket).
+ */
+const PUSH = {
   dialogId: 7,
-  kind: 'askopenfilename' as const,
+  kind: 'open-file',
+  entry: 'askopenfilename',
+  event: 'opened',
+  title: 'Pick a structure',
+  message: "a plugin's Python thread is blocked in askopenfilename",
   options: {
     title: 'Pick a structure',
     initialdir: '/data',
@@ -55,6 +83,11 @@ const REQUEST = {
     filters: ['PDB (*.pdb)', 'All (*)'],
     multiple: false,
   },
+  filters: [
+    ['PDB', '*.pdb'],
+    ['All', '*'],
+  ],
+  directory: '/data',
   waitingFor: 0.4,
 };
 
@@ -70,22 +103,17 @@ const LISTING = {
   truncated: false,
 };
 
-/** One pending request, then none — the shape `dialog_pending` really has. */
-function serve(options: { pending?: unknown[][] } = {}) {
-  const queue = options.pending ?? [[REQUEST], []];
-  let index = 0;
+/** Nothing parked when the tab connects; the topic delivers everything. */
+function serve() {
   call.mockImplementation((fn: string) => {
     switch (fn) {
-      case 'cmd.tenmol_files.dialog_pending': {
-        const next = queue[Math.min(index, queue.length - 1)] ?? [];
-        index += 1;
-        return Promise.resolve(next);
-      }
+      case '_bridge.pending_dialogs':
+        return Promise.resolve([]);
       case 'cmd.tenmol_files.browse':
         return Promise.resolve(LISTING);
       case 'cmd.tenmol_files.places':
         return Promise.resolve([]);
-      case 'cmd.tenmol_files.dialog_answer':
+      case '_bridge.answer_dialog':
         return Promise.resolve({ answered: true, error: null });
       case 'cmd.tenmol_files.recent':
         return Promise.resolve([]);
@@ -102,9 +130,10 @@ const settle = async () => {
   for (let i = 0; i < 8; i += 1) await act(async () => void (await Promise.resolve()));
 };
 
-const tick = async (ms = PLUGIN_DIALOG_POLL_MS + 10) => {
+/** Deliver one topic event the way the socket would. */
+const push = async (payload: unknown) => {
   await act(async () => {
-    await vi.advanceTimersByTimeAsync(ms);
+    emit('dialog', payload);
   });
   await settle();
 };
@@ -117,6 +146,9 @@ beforeEach(() => {
   appendClient.mockClear();
   run.mockClear();
   conndo.mockClear();
+  on.mockClear();
+  sub.mockClear();
+  listeners.clear();
   call.mockReset();
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -130,16 +162,16 @@ afterEach(() => {
 });
 
 describe('a plugin dialog with the File dialogs panel closed (row 295)', () => {
-  it('polls and opens the picker from the always-mounted component', async () => {
+  it('opens the picker from the always-mounted component', async () => {
     serve();
     act(() => root.render(<FileDropTarget />));
     await settle();
     // Nothing on screen until a plugin blocks.
     expect(text()).toBe('');
+    expect(sub).toHaveBeenCalledWith('dialog');
 
-    await tick();
+    await push(PUSH);
 
-    expect(calls('cmd.tenmol_files.dialog_pending').length).toBeGreaterThan(0);
     // `pickerForPluginDialog` prefixes the plugin's own title.
     expect(text()).toContain('Plugin: Pick a structure');
     // ...and it is the real path picker, listing the bridge's answer.
@@ -151,11 +183,11 @@ describe('a plugin dialog with the File dialogs panel closed (row 295)', () => {
     );
   });
 
-  it('answers `dialog_answer` with the chosen path, in tkinter\'s shape', async () => {
+  it('answers with the chosen path, in tkinter\'s shape', async () => {
     serve();
     act(() => root.render(<FileDropTarget />));
     await settle();
-    await tick();
+    await push(PUSH);
 
     const row = [...container.querySelectorAll('.fpick__row')].find((b) =>
       (b.textContent ?? '').startsWith('ala.pdb'),
@@ -171,8 +203,10 @@ describe('a plugin dialog with the File dialogs panel closed (row 295)', () => {
 
     // A single path, NOT a list: `multiple` is false, and `askopenfile` would
     // iterate a bare string character by character if this were wrong.
-    expect(calls('cmd.tenmol_files.dialog_answer')[0]?.[1]).toEqual([7, '/data/ala.pdb']);
-    // The picker is gone, and the poll is free to claim the next request.
+    expect(calls('_bridge.answer_dialog')[0]?.[1]).toEqual([
+      { dialogId: 7, value: '/data/ala.pdb' },
+    ]);
+    // The picker is gone, and the host is free to claim the next request.
     expect(text()).not.toContain('Plugin: Pick a structure');
   });
 
@@ -180,7 +214,7 @@ describe('a plugin dialog with the File dialogs panel closed (row 295)', () => {
     serve();
     act(() => root.render(<FileDropTarget />));
     await settle();
-    await tick();
+    await push(PUSH);
 
     const cancel = [...container.querySelectorAll('button')].find(
       (b) => b.textContent === 'Cancel',
@@ -189,11 +223,11 @@ describe('a plugin dialog with the File dialogs panel closed (row 295)', () => {
     act(() => cancel?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     await settle();
 
-    expect(calls('cmd.tenmol_files.dialog_answer')[0]?.[1]).toEqual([7, null]);
+    expect(calls('_bridge.answer_dialog')[0]?.[1]).toEqual([{ dialogId: 7, value: null }]);
   });
 
-  it('only one poller claims a request, even with the panel open too', async () => {
-    serve({ pending: [[REQUEST], [REQUEST], []] });
+  it('only one host claims a request, even with the panel open too', async () => {
+    serve();
     act(() =>
       root.render(
         <>
@@ -203,30 +237,30 @@ describe('a plugin dialog with the File dialogs panel closed (row 295)', () => {
       ),
     );
     await settle();
-    await tick();
-    await tick();
+    await push(PUSH);
+    // A second copy of the same event (a re-announce, or a reconcile racing the
+    // topic) must not open a second picker either.
+    await push(PUSH);
 
-    // `FilesPanel` no longer polls: every `dialog_pending` came from the host,
-    // and the request is claimed once.
+    // `FilesPanel` does not listen: the request is claimed exactly once.
     const dialogs = [...container.querySelectorAll('.fdlg__title')].filter((n) =>
       (n.textContent ?? '').startsWith('Plugin:'),
     );
     expect(dialogs.length).toBe(1);
   });
 
-  it('keeps polling after an answer, so a second dialog is not stranded', async () => {
-    serve({ pending: [[REQUEST], [], [{ ...REQUEST, dialogId: 8 }], []] });
+  it('keeps listening after an answer, so a second dialog is not stranded', async () => {
+    serve();
     act(() => root.render(<FileDropTarget />));
     await settle();
-    await tick();
+    await push(PUSH);
 
     const cancel = [...container.querySelectorAll('button')].find(
       (b) => b.textContent === 'Cancel',
     );
     act(() => cancel?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     await settle();
-    await tick();
-    await tick();
+    await push({ ...PUSH, dialogId: 8 });
 
     // The second request is on screen with no help from the panel; cancel it
     // too, so both answers are visible.
@@ -237,7 +271,9 @@ describe('a plugin dialog with the File dialogs panel closed (row 295)', () => {
     act(() => second?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     await settle();
 
-    const ids = calls('cmd.tenmol_files.dialog_answer').map((c) => (c[1] as unknown[])[0]);
+    const ids = calls('_bridge.answer_dialog').map(
+      (c) => ((c[1] as unknown[])[0] as { dialogId: number }).dialogId,
+    );
     expect(ids).toEqual([7, 8]);
   });
 });

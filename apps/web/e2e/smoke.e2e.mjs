@@ -948,4 +948,248 @@ export const tests = [
       await page.close();
     },
   },
+  {
+    /**
+     * THE INTERNAL-GUI COLUMN MUST NOT STARVE THE OBJECT LIST.
+     *
+     * A measured product defect, not a parity row. At the suite's own 1280x900,
+     * `.internal-gui` is 644 px and `.objpanel` used to be the only child with
+     * `flex-basis: 0` — the residual — with `min-height: 0`. MEASURED before
+     * the fix:
+     *
+     *     empty session          objpanel 132  mvpanel 125  scpanel 217
+     *     + 6 objects, mset x30  objpanel  34  mvpanel 223  scpanel 217
+     *                            .objpanel__rows 17 px against scrollHeight 128
+     *                            7 rows rendered, 1 REACHABLE
+     *     + 3 scenes stored      objpanel   0
+     *                            7 rows rendered, 0 REACHABLE
+     *
+     * Every clipped row still reported a full bounding box, so `toBeVisible`
+     * was true for all seven and a user could click none. That is why this spec
+     * HIT-TESTS: `document.elementFromPoint` at each row's centre must find
+     * that row, and then a real click on the last row must reach PyMOL.
+     *
+     * The fix and its justification: `shell/orthoPanel.ts: EXECUTIVE_MIN_HEIGHT`
+     * (144 px = `controlHeight` 20 + the larger `ButModeGetHeight` 124), with
+     * the PyMOL heights it is measured against in
+     * `bridge/tests/test_p11_layout.py` (the Executive block is 584 px of a
+     * 644 px column upstream; the scene bin reserves 0).
+     *
+     * NOTHING HERE IS COSMETIC. Every assertion is "a user can reach this",
+     * which is the one thing jsdom cannot answer — it lays nothing out, so all
+     * five numbers above read as 0 there.
+     */
+    name: 'the internal-gui column keeps the object list reachable (measured defect)',
+    async fn({ stack, assert }) {
+      const page = await openApp(stack);
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+
+      /** Everything the column reports about itself, in one round trip. */
+      const survey = () =>
+        page.evaluate(() => {
+          const col = document.querySelector('.internal-gui');
+          if (!col) return null;
+          const boxOf = (sel) => {
+            const el = document.querySelector(sel);
+            if (!el) return null;
+            const cs = window.getComputedStyle(el);
+            return {
+              h: Math.round(el.getBoundingClientRect().height),
+              client: el.clientHeight,
+              scroll: el.scrollHeight,
+              overflowY: cs.overflowY,
+              minHeight: cs.minHeight,
+            };
+          };
+          // A row is REACHABLE when a click at its centre lands on it. Not
+          // "visible": the clipped rows this spec exists for had full bounding
+          // boxes and belonged to nobody.
+          //
+          // TWO PASSES, and the order matters. The first is taken with the list
+          // scrolled to the top and answers "how many rows can be clicked with
+          // no scrolling at all" — the floor's whole purpose, and 0 before the
+          // fix. The second scrolls each row into view first and answers "can
+          // this row be reached at all", which must hold for every row however
+          // long the session's object list has grown.
+          const rowEls = [...document.querySelectorAll('.objrow')];
+          const list = document.querySelector('.objpanel__rows');
+          if (list) list.scrollTop = 0;
+          const rows = rowEls.map((row) => {
+            const b = row.getBoundingClientRect();
+            const hit = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2);
+            return {
+              text: (row.textContent ?? '').slice(0, 12),
+              reached: hit instanceof HTMLElement && hit.closest('.objrow') === row,
+            };
+          });
+          const scrolled = rowEls.map((row) => {
+            row.scrollIntoView({ block: 'center', inline: 'nearest' });
+            const b = row.getBoundingClientRect();
+            const hit = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2);
+            return {
+              text: (row.textContent ?? '').slice(0, 12),
+              reached: hit instanceof HTMLElement && hit.closest('.objrow') === row,
+            };
+          });
+          // Controls in the two panels that YIELD. Scrolled into view first,
+          // because a panel that shrinks is allowed to scroll — it is not
+          // allowed to clip, which no amount of scrolling can undo.
+          const controls = [...document.querySelectorAll('.mvpanel button, .scpanel button')]
+            .filter((el) => {
+              const b = el.getBoundingClientRect();
+              return b.width > 0 && b.height > 0;
+            })
+            .map((el) => {
+              el.scrollIntoView({ block: 'center', inline: 'nearest' });
+              const b = el.getBoundingClientRect();
+              const hit = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2);
+              return {
+                label: (el.textContent ?? '?').slice(0, 16),
+                reached: hit === el || (hit instanceof HTMLElement && el.contains(hit)),
+              };
+            });
+          // A block whose content overflows a `hidden` box is unreachable by
+          // any gesture. This is the shape of the original defect.
+          const clipped = [...col.children]
+            .map((el) => ({ el, cs: window.getComputedStyle(el) }))
+            .filter(
+              ({ el, cs }) => cs.overflowY === 'hidden' && el.scrollHeight > el.clientHeight,
+            )
+            .map(({ el }) => el.className.split(' ')[0]);
+          return {
+            column: Math.round(col.getBoundingClientRect().height),
+            objpanel: boxOf('.objpanel'),
+            objrows: boxOf('.objpanel__rows'),
+            mvpanel: boxOf('.mvpanel'),
+            scpanel: boxOf('.scpanel'),
+            rows,
+            scrolled,
+            controls,
+            clipped,
+          };
+        });
+
+      try {
+        await run(page, 'delete p11l*', 800);
+        for (const n of ['a', 'b', 'c', 'd', 'e', 'f']) {
+          await run(page, `load ${PDB}, p11l_${n}`, 900);
+        }
+        await run(page, 'mset 1 x30', 900);
+        await run(page, 'scene p11l_s1, store', 700);
+        await run(page, 'scene p11l_s2, store', 700);
+        await run(page, 'scene p11l_s3, store', 900);
+
+        const s = await survey();
+        assert(s !== null, 'no .internal-gui column');
+        const shape = JSON.stringify({
+          column: s.column,
+          objpanel: s.objpanel,
+          objrows: s.objrows,
+          mvpanel: s.mvpanel,
+          scpanel: s.scpanel,
+        });
+
+        // 1. THE FLOOR. `EXECUTIVE_MIN_HEIGHT`, and the panel that carries it
+        //    must be tall enough to hold it plus its own 17 px head.
+        assert(s.objrows !== null, 'no .objpanel__rows');
+        assert(
+          s.objrows.client >= 144,
+          `the object list is ${s.objrows.client} px, below the 144 px floor — ${shape}`,
+        );
+        assert(
+          s.objpanel.client >= 161,
+          `.objpanel is ${s.objpanel.client} px, below head + floor = 161 — ${shape}`,
+        );
+
+        // 2. NOTHING IS CLIPPED OUT OF REACH.
+        assert(
+          s.clipped.length === 0,
+          `clipped with overflow:hidden: ${s.clipped.join(', ')} — ${shape}`,
+        );
+
+        // 3. ROWS. Seven at least: `all` plus the six objects loaded above.
+        //    Earlier specs in this file leave their own objects behind and the
+        //    suite may be reordered, so the count is a floor, not an equality.
+        assert(s.rows.length >= 7, `only ${s.rows.length} object rows rendered`);
+
+        //    3a. THE FLOOR, EXPRESSED AS ROWS: 144 px of `ExecLineHeight` (18)
+        //        is eight rows, and all eight must be clickable with no
+        //        scrolling whatsoever. MEASURED before the fix: ZERO were.
+        const want = Math.min(8, s.rows.length);
+        const reachedNoScroll = s.rows.filter((r) => r.reached).length;
+        assert(
+          reachedNoScroll >= want,
+          `only ${reachedNoScroll} of ${s.rows.length} rows can be clicked without ` +
+            `scrolling; the 144 px floor is ${want} rows — ${shape}`,
+        );
+        //        …and they must be the FIRST ones, not eight scattered hits.
+        const firstBad = s.rows.slice(0, want).findIndex((r) => !r.reached);
+        assert(
+          firstBad === -1,
+          `row ${firstBad} (${s.rows[firstBad]?.text}) is inside the floor and ` +
+            `unreachable — ${shape}`,
+        );
+
+        //    3b. AND EVERY ROW IS REACHABLE, scrolling included. A list longer
+        //        than its panel is allowed to scroll — PyMOL's own Executive
+        //        block does, `layer3/Executive.cpp:16219-16224`. It is not
+        //        allowed to render a row that belongs to nobody.
+        const unreachable = s.scrolled.filter((r) => !r.reached).map((r) => r.text);
+        assert(
+          unreachable.length === 0,
+          `${unreachable.length} of ${s.scrolled.length} rows are rendered but cannot be ` +
+            `reached even after scrolling (${unreachable.join(', ')}) — ${shape}`,
+        );
+
+        // 4. WHAT YIELDED IS STILL REACHABLE, by scrolling rather than by luck.
+        const badControls = s.controls.filter((c) => !c.reached).map((c) => c.label);
+        assert(
+          badControls.length === 0,
+          `${badControls.length} of ${s.controls.length} movie/scene controls cannot be ` +
+            `reached even after scrolling (${badControls.join(', ')}) — ${shape}`,
+        );
+
+        // 5. AND A REAL CLICK ON THE LAST ROW REACHES PyMOL. The strongest
+        //    form of "reachable": PyMOL's own enabled-object list changes.
+        await run(page, 'disable p11l_f', 800);
+        assert(
+          !(await ask(page, 'cmd.get_names("objects",1)')).includes('p11l_f'),
+          'p11l_f did not start disabled',
+        );
+        const row = page
+          .locator('.objrow__name-text')
+          .filter({ hasText: /^p11l_f$/ })
+          .first();
+        await row.waitFor({ state: 'visible', timeout: 15_000 });
+        // The list is allowed to scroll — earlier specs leave their objects in
+        // the shared session, and this one is last.
+        await row.scrollIntoViewIfNeeded();
+        const box = await row.boundingBox();
+        assert(box !== null, 'the p11l_f row has no box');
+        const hit = await page.evaluate(
+          ([x, y]) => {
+            const el = document.elementFromPoint(x, y);
+            const own = el instanceof HTMLElement ? el.closest('.objrow') : null;
+            return own ? (own.textContent ?? '') : `NOT A ROW: ${el?.className ?? 'null'}`;
+          },
+          [box.x + box.width / 2, box.y + box.height / 2],
+        );
+        assert(hit.includes('p11l_f'), `a click on the p11l_f row would land on ${hit}`);
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+        await page.waitForTimeout(1400);
+        assert(
+          (await ask(page, 'cmd.get_names("objects",1)')).includes('p11l_f'),
+          'clicking the last object row did not enable it in PyMOL',
+        );
+      } finally {
+        // The bridge is shared by all 20 specs: scenes and a movie are global.
+        for (const n of ['p11l_s1', 'p11l_s2', 'p11l_s3']) {
+          await run(page, `scene ${n}, delete`, 500);
+        }
+        await run(page, 'mset', 500);
+        await run(page, 'delete p11l*', 700);
+        await page.close();
+      }
+    },
+  },
 ];

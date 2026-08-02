@@ -48,7 +48,16 @@ import { MENU_DATA } from './generated/menudata';
 import { createMenuSource } from './menuSource';
 import { DynamicList, MenuList } from './MenuList';
 import { AboutDialog } from './AboutDialog';
-import { HOOK_OWNERS, UNAVAILABLE_HOOKS, settingsIn } from './model';
+import { HOOK_OWNERS, UNAVAILABLE_COMMANDS, UNAVAILABLE_HOOKS, settingsIn } from './model';
+import {
+  RENDER_STATS_FN,
+  clientRepsFrom,
+  hasStereoLeaves,
+  stereoLeaf,
+  stereoNote,
+  stereoTooltip,
+  type ClientReps,
+} from './stereo';
 import {
   removeLastMovieProgram,
   runAction,
@@ -112,6 +121,16 @@ export function MenuBar() {
    */
   const recentFetch = useRef<Promise<void> | null>(null);
   const [tree, setTree] = useState<MenusPayload>(MENU_DATA);
+  /**
+   * Which reps this browser is drawing itself — `null` until the bridge says.
+   *
+   * Read when a menu carrying `Stereo Mode` opens, and only then. See
+   * `stereo.ts`: a server-side stereo setting is invisible for every rep the
+   * client has taken over, and the menu is the only place that can say so
+   * before the user clicks. `_bridge.render_stats` is documented read-only
+   * (`packages/viewport/src/stream/pause.ts:186`) and costs one call per open.
+   */
+  const [clientReps, setClientReps] = useState<ClientReps>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const source = useMemo(
@@ -210,6 +229,29 @@ export function MenuBar() {
       recentFetch.current = null;
     }
   }, [open, refresh]);
+
+  /* ---------------- who is drawing what (row 65) ---------------- */
+
+  // Read on OPEN, like every other piece of live state here, and only for the
+  // menu that has stereo leaves in it. A stale answer would be worse than none:
+  // the user can flip a rep between P and G in the viewport HUD at any moment.
+  useEffect(() => {
+    if (open === null) return;
+    const menu = menus[open];
+    if (!menu || menu.kind !== 'submenu' || !hasStereoLeaves(menu.items)) return;
+    let cancelled = false;
+    void session
+      .call<unknown>(RENDER_STATS_FN, [])
+      .then((stats) => {
+        if (!cancelled) setClientReps(clientRepsFrom(stats));
+      })
+      // An older bridge with no such route, or an offline session: `null` means
+      // "not asked", which `stereoScope` reports as such rather than as "none".
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [open, menus, session]);
 
   /* ---------------- the push channel (`setting_callbacks`) ---------------- */
 
@@ -360,6 +402,8 @@ export function MenuBar() {
       if (node.kind !== 'command') return null;
       const action = node.action;
       if (action.type === 'dropped') return action.reason;
+      // A command line this client can never honour — `UNAVAILABLE_COMMANDS`.
+      if (action.type === 'do') return UNAVAILABLE_COMMANDS[action.command] ?? null;
       if (action.type !== 'hook') return null;
       const impossible = UNAVAILABLE_HOOKS[action.hook];
       if (impossible) return impossible;
@@ -373,11 +417,48 @@ export function MenuBar() {
     [runtime],
   );
 
+  /** Live truth for a leaf that IS usable — see `MenuListProps.annotate`. */
+  const annotate = useCallback(
+    (node: MenuNode): string | null => {
+      if (node.kind !== 'command' || node.action.type !== 'do') return null;
+      return stereoTooltip(node.action.command, clientReps);
+    },
+    [clientReps],
+  );
+
+  /**
+   * `Display ▸ Stereo Mode ▸ …` ran — say what actually happened.
+   *
+   * `{t:'do'}` answers `ok` even when PyMOL rejected the line (MEASURED: both
+   * `stereo quadbuffer` and `stereo openvr` reply ok and only print an error),
+   * and three of the leaves do something their label does not say. So the state
+   * is read BACK and turned into one console line. `stereoNote` returns null
+   * when the label was already the whole truth, so this is not chatter.
+   */
+  const noteStereo = useCallback(
+    async (command: string) => {
+      try {
+        const [stereo, stereoMode] = await Promise.all([
+          session.call<string>('cmd.get', ['stereo']),
+          session.call<string>('cmd.get', ['stereo_mode']),
+        ]);
+        const line = stereoNote(command, { stereo: String(stereo), stereoMode: String(stereoMode) }, clientReps);
+        if (line) note(line);
+      } catch {
+        /* offline: PyMOL's own echo is still in the console */
+      }
+    },
+    [session, clientReps, note],
+  );
+
   const pick = useCallback(
     (node: MenuNode) => {
       setOpen(null);
       if (node.kind === 'command') {
-        void runAction(runtime, node.action);
+        const action = node.action;
+        void runAction(runtime, action).then(() => {
+          if (action.type === 'do' && stereoLeaf(action.command)) void noteStereo(action.command);
+        });
       } else if (node.kind === 'check') {
         const current = values[node.setting];
         const on = current ? String(current.value) !== String(node.falseValue) : false;
@@ -391,7 +472,7 @@ export function MenuBar() {
       // for a bridge that has no tap.
       if (!tap.live) window.setTimeout(() => void refresh(open), 120);
     },
-    [runtime, values, refresh, open, tap],
+    [runtime, values, refresh, open, tap, noteStereo],
   );
 
   /* ---------------- Open Recent ---------------- */
@@ -482,6 +563,7 @@ export function MenuBar() {
                   onPick={pick}
                   renderDynamic={renderDynamic}
                   unavailable={unavailable}
+                  annotate={annotate}
                 />
               )}
             </div>

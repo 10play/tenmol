@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import argparse
 import sys
-from typing import List, Optional
+import threading
+from typing import Any, List, Optional
 
 from .config import (
     DEFAULT_HEIGHT,
@@ -91,11 +92,86 @@ def build_parser() -> argparse.ArgumentParser:
             "This is the cross-platform thesis, made runnable."
         ),
     )
+    parser.add_argument(
+        "--idle-shutdown",
+        type=float,
+        default=None,
+        metavar="SECONDS",
+        help=(
+            "quit SECONDS after the last browser disconnects. 0 means never, "
+            "and that is the default ON PURPOSE: `pnpm dev` reloads the page "
+            "constantly and the test suite shares one engine across long "
+            "client-free stretches, so an armed watchdog would kill both. "
+            "Overrides TENMOL_BRIDGE_IDLE_SHUTDOWN. This is `execapp`'s "
+            "closeEvent -> cmd.quit() (pymol_qt_gui.py:1193) for a tab that "
+            "can never call it."
+        ),
+    )
     parser.add_argument("--log-level", default="info")
     parser.add_argument(
         "--version", action="version", version="tenmol-bridge " + __version__
     )
     return parser
+
+
+class ShutdownWatcher:
+    """Turn ``BridgeServer.shutdown_requested`` into uvicorn's ``should_exit``.
+
+    THE MISSING WIRE.  ``cmd.quit`` is routed to
+    :meth:`BridgeServer.request_shutdown` (``policy/base.py:166`` — never the C
+    ``exit()``), and the idle watchdog on the 10 Hz status thread calls the same
+    method when the browser has been gone for
+    ``idle_shutdown_seconds``.  Both of them set one boolean, and until this
+    class existed NOTHING READ IT: ``uvicorn.run()`` blocked forever, so File ▸
+    Quit and a closed tab were equally decorative.
+
+    A thread rather than an asyncio task because the flag is set from three
+    different threads (the socket thread through the dispatcher, the status
+    thread, and any plugin) and none of them holds the event loop.  uvicorn's
+    own ``Server.main_loop`` re-reads ``should_exit`` every 0.1 s and then runs
+    the ordinary graceful shutdown — lifespan shutdown, ``server.stop()``, pump
+    stopped, shims uninstalled — which is exactly what a bare ``os._exit``
+    would have skipped.
+    """
+
+    def __init__(
+        self,
+        bridge: Any,
+        uvicorn_server: Any,
+        interval: float = 0.1,
+    ) -> None:
+        self.bridge = bridge
+        self.uvicorn_server = uvicorn_server
+        self.interval = max(0.01, float(interval))
+        self._stop = threading.Event()
+        self._thread = threading.Thread(
+            target=self._run, name="tenmol-shutdown", daemon=True
+        )
+        #: Set once the flag was seen, so a caller can tell "uvicorn stopped
+        #: because we asked" from "uvicorn stopped for its own reasons".
+        self.fired = False
+
+    def start(self) -> "ShutdownWatcher":
+        self._thread.start()
+        return self
+
+    def stop(self) -> None:
+        self._stop.set()
+
+    def join(self, timeout: Optional[float] = None) -> None:
+        self._thread.join(timeout)
+
+    def _run(self) -> None:
+        while not self._stop.wait(self.interval):
+            if getattr(self.uvicorn_server, "should_exit", False):
+                return  # uvicorn is already going down; nothing to ask for
+            if not getattr(self.bridge, "shutdown_requested", False):
+                continue
+            self.fired = True
+            reason = getattr(self.bridge, "shutdown_reason", None) or "cmd.quit"
+            log("stopping the server: %s" % reason)
+            self.uvicorn_server.should_exit = True
+            return
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -153,15 +229,47 @@ def main(argv: Optional[List[str]] = None) -> int:
         )
     )
     app = create_app(config)
-    uvicorn.run(
-        app,
-        host=config.host,
-        port=config.port,
-        log_level=config.log_level,
-        # one process, one engine: never fork, never reload
-        workers=1,
-        reload=False,
+    bridge = getattr(app.state, "server", None)
+
+    # The launcher line row 00:77 was missing. `BridgeServer` reads
+    # TENMOL_BRIDGE_IDLE_SHUTDOWN itself and defaults to 0 (off); this makes it
+    # settable without an environment variable, and STILL DEFAULTS TO OFF —
+    # `pnpm dev` (scripts/dev-bridge.sh) and the e2e harness pass no flag, so
+    # neither a page reload nor a client-free test run can trip it.
+    if bridge is not None and args.idle_shutdown is not None:
+        bridge.idle_shutdown_seconds = max(0.0, float(args.idle_shutdown))
+    if bridge is not None:
+        seconds = getattr(bridge, "idle_shutdown_seconds", 0.0)
+        log(
+            "idle shutdown: %s"
+            % (
+                "%.1fs after the last client disconnects" % seconds
+                if seconds > 0
+                else "off (the bridge outlives every browser)"
+            )
+        )
+
+    # `uvicorn.run()` blocks and reads nothing back, which is why `cmd.quit`
+    # and the idle watchdog both stopped one step short of stopping the
+    # process. Drive the Server object directly so a thread can ask it to exit.
+    uvicorn_server = uvicorn.Server(
+        uvicorn.Config(
+            app,
+            host=config.host,
+            port=config.port,
+            log_level=config.log_level,
+            # one process, one engine: never fork, never reload
+            workers=1,
+            reload=False,
+        )
     )
+    watcher = ShutdownWatcher(bridge, uvicorn_server).start()
+    try:
+        uvicorn_server.run()
+    finally:
+        watcher.stop()
+    if bridge is not None and getattr(bridge, "shutdown_requested", False):
+        log("stopped (%s)" % (bridge.shutdown_reason or "cmd.quit"))
     return 0
 
 

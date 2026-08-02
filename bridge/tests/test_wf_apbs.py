@@ -88,13 +88,34 @@ def scratch(ws: WSClient):
         ws.call("cmd.set_view", before_view)
 
 
+def _confirm_execute(ws: WSClient) -> None:
+    """Clear the one-time ``subproc.execute`` confirmation for this session.
+
+    Sent unconditionally rather than "only if refused": the reply to a redundant
+    confirm is an ordinary ``ok`` and the alternative — call, inspect the error,
+    retry — would make every helper in this file a two-round-trip branch to
+    handle a state that is cleared once per process.
+    """
+    reply = ws.request(t="confirm", fn="subproc.execute")
+    assert reply["t"] == "ok", reply
+
+
 def child(ws: WSClient, code: str, wire_timeout: float = 60.0, **kwargs: Any) -> Dict[str, Any]:
     """Run a snippet of Python as a real child process through the bridge.
 
     Not ``ws.call``: its own ``timeout=`` is the *socket* deadline, so passing
     ``subproc.execute``'s ``timeout`` through it would silently be swallowed by
     the test client and never reach the runner.  Cost me one confused failure.
+
+    CONFIRMS FIRST, since wave 11.  Row 00:467's product decision put
+    ``subproc.execute`` behind the one-time confirmation ``cmd.system`` has
+    always had, so the FIRST call in a session is refused.  Every test in this
+    file is about what a child process does, not about the gate — that is
+    ``test_p11_confirm.py``'s job — so the helper clears it once and the tests
+    read as they did.  Idempotent: ``Policy.confirm`` is a set insert, and the
+    suite shares one process, so whichever test runs first pays for it.
     """
+    _confirm_execute(ws)
     reply = ws.request(
         t="call",
         fn="subproc.execute",
@@ -573,7 +594,12 @@ def test_the_grant_does_not_hijack_cmd_run(ws: WSClient) -> None:
     execute = policy.check("subproc.execute")
     assert execute.allowed and execute.dangerous
     assert execute.invalidates == ()
-    assert execute.needs_confirmation is False
+    # Confirmed-once since wave 11 (row 00:467).  Asserted HERE as well as in
+    # `test_p11_confirm.py` because this test is about leaf-vs-dotted keying:
+    # the gate must land on `subproc.execute` without putting a prompt in front
+    # of `cmd.run`, which shares nothing with it but a grant file.
+    assert execute.needs_confirmation is True
+    assert run.needs_confirmation is False
 
     assert policy.check("subproc.which").allowed
     assert not policy.check("subproc.which").dangerous

@@ -49,14 +49,29 @@ created, while ``cmd.system("true")`` in the same session is refused with
 (``policy/base.py:153``) is ``{"system"}``; ``execute`` is not in it.  So the
 comparison runs the other way — same capability, fewer gates.
 
-Deliberately NOT "fixed" by adding ``execute`` to ``CONFIRM_ONCE``, for two
-reasons.  (1) ``Grant`` has no field that feeds ``CONFIRM_ONCE``, so it would
-mean editing ``policy/base.py``, a shared file this work package does not own.
-(2) It would be theatre while ``cmd.do`` — dangerous, ungated, and able to run
-``import subprocess`` — is reachable on the same socket.  The real decision is
-one level up: whether an authenticated localhost client may start processes at
-all.  REPORTED for that decision rather than silently narrowed here; pinned as
-it actually behaves in ``bridge/tests/test_wf_apbsverify.py``.
+FIXED, AND BOTH OF THE OLD REASONS NOT TO ARE GONE.  This file used to say the
+gap was "deliberately NOT fixed" because (1) ``Grant`` had no field feeding
+``CONFIRM_ONCE``, so it would mean editing ``policy/base.py``, a shared file
+this work package does not own, and (2) it would be theatre while ``cmd.do`` —
+dangerous, ungated, and able to run ``import subprocess`` — was reachable on the
+same socket.  ``Grant.confirm_once`` now exists, so (1) is answered.  And
+``Dispatcher.do`` now re-applies the confirm-once gate to a command line's
+LEADING KEYWORD, so ``do("system true")`` is refused exactly as
+``cmd.system("true")`` is, which answers (2) for the specific bypass that made
+the comparison embarrassing.
+
+The decision above the code was the product owner's, taken 2026-08-02: an
+authenticated localhost client MAY start local processes, and the routes that do
+so must be consistent — one confirmation per session, then free.  So ``execute``
+is in ``confirm_once`` below.
+
+WHAT IS STILL TRUE AND SHOULD NOT BE OVERSOLD.  ``cmd.do`` remains able to reach
+a subprocess by routes the keyword gate cannot see — ``alias x, system rm`` then
+``x``, ``run script.py``, ``@script.pml``, and the ``/``-prefixed Python escape.
+All are in ``DANGEROUS`` and permitted by design; a client that can call
+``cmd.save`` can already write any path on this machine.  The gate removes an
+inconsistency, not a capability.  Pinned in
+``bridge/tests/test_wf_apbsverify.py`` and ``bridge/tests/test_p11_confirm.py``.
 """
 
 from __future__ import annotations
@@ -94,4 +109,10 @@ GRANT = Grant(
             "interposed, but argv[0] may itself be one"
         ),
     },
+    # DOTTED, not the leaf.  `execute` is a common enough word that a future
+    # panel could reasonably use it for something that starts no process, and a
+    # leaf key would silently put a confirmation prompt in front of that too.
+    # `Policy.check` prefers the dotted rule and `Policy.needs_confirmation`
+    # accepts either, so this is the narrow spelling and it fires.
+    confirm_once={"subproc.execute"},
 )

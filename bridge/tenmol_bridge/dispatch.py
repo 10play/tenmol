@@ -148,6 +148,25 @@ class Dispatcher:
             decision.raise_if_denied()
         except NotAllowed as exc:
             return _failed(exc)
+        # `cmd.do` is NOT itself confirm-once — it is how the console runs every
+        # typed command and how each panel bootstraps, so gating it would fire a
+        # prompt before the user had done anything.  But it must not be a way
+        # AROUND the gate: `cmd.system("true")` was refused pending confirmation
+        # while `do("system true")` in the same session ran, which made the gate
+        # theatre.  See `_confirm_once_keyword`.
+        # ONLY the confirm-once gate is re-applied here, never the whole policy:
+        # `check()` on every leading keyword would start refusing command lines
+        # for unrelated reasons (an unknown or private first word would become a
+        # policy denial instead of PyMOL's own "unknown command" message), and
+        # this is about one specific inconsistency, not about parsing the
+        # command language.
+        for keyword in _command_keywords(cmdline):
+            if not self.policy.needs_confirmation("cmd.%s" % keyword):
+                continue
+            try:
+                self.policy.check("cmd.%s" % keyword).raise_if_denied()
+            except NotAllowed as exc:
+                return _failed(exc)
         if self.on_dangerous is not None:
             self.on_dangerous("cmd.do", cmdline)
 
@@ -379,3 +398,44 @@ def _failed(exc: BaseException) -> "concurrent.futures.Future[Any]":
     future: "concurrent.futures.Future[Any]" = concurrent.futures.Future()
     future.set_exception(exc)
     return future
+
+
+def _command_keywords(cmdline: str) -> tuple:
+    """The leading keyword of each command on a `cmd.do` line.
+
+    `viewing.py`'s parser splits a line on newlines and on `;`
+    (`parsing.py:split`), so `zoom; system rm -rf /` is two commands and the
+    second one is the one that matters.  Returns them lowercased and
+    deduplicated, in order.
+
+    WHAT THIS IS AND IS NOT.  It is a CONSISTENCY gate, matching what
+    `cmd.system` has always done, so that the same capability is not reachable
+    ungated under a second spelling.  It is NOT a sandbox, and pretending
+    otherwise would be worse than not having it:
+
+     * `alias x, system rm` then `x` defeats it, as does `run script.py`,
+       `@script.pml`, and the `/`-prefixed Python escape.  All three are in
+       `DANGEROUS` and permitted by design — this is a local desktop
+       replacement, and a client that can call `cmd.save` can already write any
+       path on the machine.
+     * It reads only the first token, so it cannot see a keyword produced by
+       Python evaluation.
+
+    The threat it actually removes is the one that was measured and written
+    down in `policy/grants/wp-25-apbs.py`: an identical capability answering
+    with a confirmation prompt under one name and running silently under
+    another, which teaches a user that the prompt means nothing.
+    """
+    seen: Dict[str, None] = {}
+    for line in cmdline.splitlines():
+        for part in line.split(";"):
+            token = part.strip().split(None, 1)[0:1]
+            if not token:
+                continue
+            word = token[0].lower()
+            # `/python_expr` and `@script` are not keywords; they are escapes,
+            # and `_command_keywords` deliberately does not chase them.
+            if word[:1] in ("/", "@"):
+                continue
+            seen.setdefault(word, None)
+    return tuple(seen)

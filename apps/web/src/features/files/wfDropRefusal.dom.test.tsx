@@ -23,7 +23,9 @@ const call = vi.fn();
 const SESSION = {
   call,
   run,
-  conn: { do: vi.fn() },
+  // `on`/`sub`: `FileDropTarget` mounts `PluginDialogHost`, which subscribes to
+  // the `dialog` topic instead of polling (row 295).
+  conn: { do: vi.fn(), on: () => () => {}, sub: () => Promise.resolve() },
   stores: { feedback: { appendClient } },
 };
 vi.mock('../../app', () => ({ useSession: () => SESSION }));

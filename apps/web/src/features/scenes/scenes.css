@@ -3,22 +3,53 @@
  * pressed 0.7, current scene 0.5, others 0.25 grey.
  */
 
+/*
+ * THE ONE BLOCK IN THIS COLUMN PyMOL RESERVES NOTHING FOR.
+ *
+ * `SceneDrawButtons` (`layer1/Scene.cpp:2885-2905`) draws the scene bin into
+ * `I->rect` — the SCENE's rectangle — over the picture, and its first guard is
+ * `!I->SceneVec.empty()`, so with no scenes stored it draws nothing at all.
+ * MEASURED through the bridge (`bridge/tests/test_p11_layout.py`): turning
+ * `scene_buttons` on, and then storing three scenes, moves neither the scene
+ * rectangle nor the Executive block's edge by one pixel. PyMOL's reservation is
+ * 0 px, with three scenes as with none.
+ *
+ * MEASURED IN CHROMIUM, before the fix: this panel took **217 px of a 644 px
+ * column with zero scenes in the session** — more than the object list, the
+ * wizard band and the movie panel's control bar combined — because it was
+ * `flex: 0 1 auto` with `min-height: 0` while every one of its own children
+ * except `.scpanel__rows` was unshrinkable chrome. Squeezing it therefore did
+ * not shrink anything; `overflow: hidden` simply cut the bottom off, and the
+ * menu and the view list kept full bounding boxes nobody could click.
+ *
+ * So this panel is the first thing to yield, and it yields by SCROLLING. Its
+ * floor is the head plus one `internal_gui_control_size` row (18) — the single
+ * row `SceneDrawButtons` clamps `n_disp` to when there is no room for more.
+ */
 .scpanel {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
+  flex: 0 1 auto;
+  min-height: calc(var(--pm-panel-head-h) + var(--pm-row-h));
+  overflow-y: auto;
+  overflow-x: hidden;
   border-top: 1px solid var(--pm-edge);
   font-family: var(--pm-font-mono);
   font-size: 10px;
   color: var(--pm-text);
 }
 
+/* Sticky because `.scpanel` now scrolls: the four buttons in the head are the
+   panel's only controls and must not scroll away from a squeezed panel. */
 .scpanel__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 4px;
-  height: 17px;
+  height: var(--pm-panel-head-h);
   padding: 0 5px;
   background: var(--pm-panel-alt);
   border-bottom: 1px solid var(--pm-edge);
@@ -51,8 +82,11 @@
 
 /* --- the in-viewport buttons overlay ---------------------------------- */
 
+/* Chrome, like every child of `.scpanel` except the table: it never shrinks,
+   and `.scpanel` scrolls instead. */
 .scbar {
   display: flex;
+  flex: 0 0 auto;
   flex-wrap: wrap;
   gap: 1px;
   padding: 2px 5px;
@@ -87,8 +121,17 @@
 
 /* --- the Scene Panel table -------------------------------------------- */
 
+/*
+ * `flex: 1` expanded to `1 1 0%`, and this table was starved by exactly the
+ * mechanism that starved the object list one level up: MEASURED in Chromium
+ * with three scenes stored, `.scpanel__rows` was 70 px against a scrollHeight
+ * of 234 while the menu below it kept its full 98 px — and with no scenes it
+ * was 0 px of a 217 px panel. `flex-shrink: 0` with a content basis makes the
+ * table size itself and lets `.scpanel` do the scrolling for the whole panel,
+ * so there is one scrollbar rather than a nested pair.
+ */
 .scpanel__rows {
-  flex: 1;
+  flex: 1 0 auto;
   min-height: 0;
   overflow: auto;
 }
@@ -211,6 +254,7 @@
 /* --- menu ------------------------------------------------------------- */
 
 .scmenu {
+  flex: 0 0 auto;
   border-top: 1px solid var(--pm-edge);
   padding: 3px 5px;
   display: flex;
@@ -287,6 +331,7 @@
 }
 
 .scpanel__hint {
+  flex: 0 0 auto;
   margin: 2px 4px;
   font-size: 10px;
   color: var(--fg-dim, #9aa);
@@ -311,6 +356,7 @@
    colours, reps or a thumbnail. */
 
 .vwlist {
+  flex: 0 0 auto;
   border-top: 1px solid var(--pm-line);
   padding: 2px 0;
 }

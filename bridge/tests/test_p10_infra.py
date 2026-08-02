@@ -745,14 +745,23 @@ def test_a_work_package_can_now_gate_its_own_symbol() -> None:
 
     ``CONFIRM_ONCE`` was a module-level frozenset with no grant path into it, so
     "this work package wants its symbol confirmed" was inexpressible and the
-    WP-25 grant had to argue about it in prose instead.  The default is
-    unchanged: nothing in the tree uses the field today.
+    WP-25 grant had to argue about it in prose instead.
+
+    WAVE 11 USED IT.  This test used to assert that nothing in the tree did —
+    "the default is unchanged: nothing uses the field today" — which was true
+    for exactly one wave.  Row 00:467's product decision put
+    ``subproc.execute`` behind the same one-time confirmation as
+    ``cmd.system``, so the WP-25 grant now carries ``confirm_once``.  The
+    MECHANISM is what this test is for and it is unchanged; only the live
+    example moved from hypothetical to real.
     """
     from tenmol_bridge.policy import build_policy
     from tenmol_bridge.policy.base import CONFIRM_ONCE, Grant, Policy
 
+    # Still the built-in default; `subproc.execute` is added by a GRANT, which
+    # is the whole point of the field.
     assert CONFIRM_ONCE == frozenset({"system"})
-    assert build_policy().check("subproc.execute").needs_confirmation is False
+    assert build_policy().check("subproc.execute").needs_confirmation is True
 
     policy = Policy(roots={"cmd", "subproc"}).add_grant(
         Grant("probe", roots={"subproc"}, confirm_once={"subproc.execute"})

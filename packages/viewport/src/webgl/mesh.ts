@@ -21,14 +21,20 @@
  *         GL_LINE_STRIP run lengths (`layer2/RepMesh.cpp:422-431`), so the
  *         strips expand to LINE indices: run of n vertices -> n-1 segments.
  *         That is a re-INDEXING of PyMOL's own vertices, not a tessellation.
+ *
+ * A THIRD, LATER (parity row 131): those segments went to `LineSegments`, and
+ * WebGL2 core clamps `gl.lineWidth` to 1.0, so `mesh_width` did nothing at all.
+ * They now go through `./quadlines.ts` — PyMOL's own `trilines` expansion —
+ * which is the only primitive in WebGL2 that can be more than one pixel wide.
  */
 
-import { BufferAttribute, BufferGeometry, LineSegments, Mesh, Points } from 'three';
+import { BufferAttribute, BufferGeometry, Mesh, Points } from 'three';
 import type { Material, Object3D } from 'three';
 
 import { viewOf, type GeometryFrame, type IndexedMeshHeader } from '@tenmol/protocol';
 
 import { createVertexMaterial } from '../modeG/materials/vertex';
+import { buildQuadLines, quadLineRecords } from './quadlines';
 
 export interface BuiltMesh {
   object: Object3D;
@@ -132,10 +138,8 @@ export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): Built
   const geometry = new BufferGeometry();
   const nverts = header.counts.verts;
 
-  geometry.setAttribute(
-    'position',
-    new BufferAttribute(viewOf(frame, header.buffers.position) as Float32Array, 3),
-  );
+  const positions = viewOf(frame, header.buffers.position) as Float32Array;
+  geometry.setAttribute('position', new BufferAttribute(positions, 3));
 
   if (header.buffers.normal) {
     geometry.setAttribute(
@@ -166,6 +170,9 @@ export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): Built
     );
   }
 
+  // Kept for the quad-line path below, which needs a colour per ENDPOINT and
+  // cannot read it out of a vertex attribute.
+  let rgbaColor: Float32Array | null = null;
   if (header.buffers.color) {
     // RepSurface::VC / RepMesh::VC are RGB (3 floats); the material wants RGBA.
     const rgb = viewOf(frame, header.buffers.color) as Float32Array;
@@ -177,6 +184,7 @@ export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): Built
       rgba[i * 4 + 3] = defaultAlpha;
     }
     geometry.setAttribute('color', new BufferAttribute(rgba, 4));
+    rgbaColor = rgba;
   }
   if (header.buffers.alpha) {
     geometry.setAttribute(
@@ -205,6 +213,8 @@ export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): Built
   });
 
   let object: Object3D;
+  /** The material the RENDERER must push camera/fog uniforms into. */
+  let drawMaterial: Material = material;
   let triangles = 0;
 
   if (header.buffers.index) {
@@ -214,6 +224,14 @@ export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): Built
     geometry.setIndex(new BufferAttribute(filtered.index, 1));
     triangles = filtered.kept;
     object = new Mesh(geometry, material);
+  } else if (header.buffers.strip && isDotMesh(header)) {
+    // An `isodot` OBJECT carries the SAME strip layout as an `isomesh` one and
+    // means something completely different by it: `ObjectMesh::render` opens
+    // GL_POINTS, not GL_LINE_STRIP, when `MeshMode` is `isodot`
+    // (`layer2/ObjectMesh.cpp:768,803`). Measured on a real `isodot` of a
+    // gaussian map: 6,162 vertices in ONE run — so expanding the run as a line
+    // strip would draw a single 6,161-segment polyline right through the cloud.
+    object = new Points(geometry, material);
   } else if (header.buffers.strip) {
     const strips = viewOf(frame, header.buffers.strip) as Int32Array;
     const index = stripLineIndices(strips, nverts);
@@ -223,8 +241,25 @@ export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): Built
       );
       object = new Points(geometry, material);
     } else {
-      geometry.setIndex(new BufferAttribute(index, 1));
-      object = new LineSegments(geometry, material);
+      // `RepMesh::Width` (`meshWidth` on the header) is `mesh_width`, and
+      // WebGL2 cannot draw a line wider than one pixel — so the segments go to
+      // screen-space quads, PyMOL's own answer to the same limit. The vertex
+      // material and its geometry are dropped here: neither was ever drawn,
+      // and keeping them would leave a second, silently unused program.
+      const draw = buildQuadLines(
+        quadLineRecords(positions, index, rgbaColor, [
+          oneColor?.[0] ?? 1,
+          oneColor?.[1] ?? 1,
+          oneColor?.[2] ?? 1,
+          defaultAlpha,
+        ]),
+        index.length / 2,
+        meshWidthOf(header),
+      );
+      geometry.dispose();
+      material.dispose();
+      object = draw.object;
+      drawMaterial = draw.material;
     }
   } else {
     // A dot-surface (`SurfaceType::DotDefault`) really is a point cloud.
@@ -233,5 +268,33 @@ export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): Built
 
   object.frustumCulled = false;
   object.matrixAutoUpdate = false;
-  return { object, material, triangles, vertices: nverts, problems, warnings };
+  return { object, material: drawMaterial, triangles, vertices: nverts, problems, warnings };
+}
+
+/**
+ * `mesh_width` off the header, or PyMOL's default when the bridge is older
+ * than the packer that sends it (`cSetting_mesh_width` is 1.0,
+ * `layer1/SettingInfo.h`). A non-positive width would make the mesh vanish, so
+ * it falls back too.
+ */
+export function meshWidthOf(header: IndexedMeshHeader): number {
+  const raw = (header as unknown as { meshWidth?: unknown }).meshWidth;
+  return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? raw : 1;
+}
+
+/** `cIsomeshMode::isodot` (`layer0/PyMOLEnums.h:9-13`). */
+export const MESH_TYPE_ISODOT = 1;
+
+/**
+ * Does this frame's strip list mean POINTS rather than a line strip?
+ *
+ * `meshType` is `cIsomeshMode` — `RepMesh::mesh_type` for a molecular `mesh`
+ * rep, `ObjectMeshState::MeshMode` for an `isomesh`/`isodot` object. Only
+ * `isodot` (1) changes the primitive; `isomesh` (0) and `gradient` (3) are line
+ * strips. A frame from a bridge that does not send the field at all keeps the
+ * old behaviour.
+ */
+export function isDotMesh(header: IndexedMeshHeader): boolean {
+  const raw = (header as unknown as { meshType?: unknown }).meshType;
+  return raw === MESH_TYPE_ISODOT;
 }

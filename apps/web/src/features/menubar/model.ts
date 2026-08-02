@@ -16,6 +16,7 @@ import {
   type MenuSettingValue,
   type MenuValue,
 } from '@tenmol/protocol/topics/menus';
+import { STEREO_UNAVAILABLE } from './stereo';
 
 /* ------------------------------------------------------------------ *
  * Toolkit hooks
@@ -77,6 +78,18 @@ export const LOCAL_HOOKS = ['show_about', 'confirm_quit', 'mvprg', 'mvprg_remove
  */
 export const UNAVAILABLE_HOOKS: Readonly<Record<string, string>> = {
   new_window: 'one PyMOL process per bridge — a second window would need a second engine',
+};
+
+/**
+ * The same idea for a `do` leaf: a command line this client can never honour.
+ *
+ * A hook has an owner who might one day implement it; a command has none, so
+ * this table is only for things that are impossible by construction rather than
+ * unfinished. Today that is the two stereo modes whose second eye has no way to
+ * cross a WebSocket — see `stereo.ts` for the measurement and the argument.
+ */
+export const UNAVAILABLE_COMMANDS: Readonly<Record<string, string>> = {
+  ...STEREO_UNAVAILABLE,
 };
 
 /* ------------------------------------------------------------------ *

@@ -23,7 +23,7 @@
  */
 
 import type { MenuAction, MenuCall } from '@tenmol/protocol/topics/menus';
-import { HOOK_OWNERS, UNAVAILABLE_HOOKS } from './model';
+import { HOOK_OWNERS, UNAVAILABLE_COMMANDS, UNAVAILABLE_HOOKS } from './model';
 
 /** Everything a menu action needs from the outside world. */
 export interface MenuRuntime {
@@ -105,9 +105,18 @@ export async function runCall(rt: MenuRuntime, call: MenuCall): Promise<void> {
 export async function runAction(rt: MenuRuntime, action: MenuAction): Promise<void> {
   try {
     switch (action.type) {
-      case 'do':
+      case 'do': {
+        // Defence in depth for the `UNAVAILABLE_COMMANDS` leaves: `MenuList`
+        // renders them disabled, and if anything ever reaches them anyway they
+        // must not go out as a command line the engine will only reject.
+        const impossible = UNAVAILABLE_COMMANDS[action.command];
+        if (impossible) {
+          rt.note(` "${action.command}" is not available in the web client: ${impossible}`, 'warning');
+          return;
+        }
         await rt.run(action.command);
         return;
+      }
 
       case 'call':
         // Sequentially: the Transparency composites set three settings and the

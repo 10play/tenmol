@@ -1294,14 +1294,16 @@ def test_density_binds_pgup_pgdn_through_set_key_and_a_forwarded_key_walks_the_c
     assert after["pgdn"]["kind"] == "callable"
 
 
-def test_density_isomesh_objects_exist_but_do_not_reach_the_geometry_feed(a8):
-    """MEASURED, and it keeps the third clause of this row open.
+def test_density_isomesh_objects_reach_the_geometry_feed(a8):
+    """THE THIRD CLAUSE OF THIS ROW, now closed (wave 11).
 
-    `update_maps` really does build `w1_<map>` as an `object:mesh` coloured
-    blue -- but the Mode-G accessor answers `unsupported` for it, so the mesh
-    the wizard's whole purpose is to show cannot reach three.js yet.  That is
-    an area-3 gap (`_bridge.get_geometry` supports molecular, measurement and
-    CGO objects only), reported rather than papered over.
+    `update_maps` builds `w1_<map>` as an `object:mesh` coloured blue.  Until
+    wave 11 the Mode-G accessor answered `unsupported` for it -- it dispatched
+    straight from the ObjectCGO branch to `dynamic_cast<ObjectMolecule*>` --
+    so the mesh the wizard's whole purpose is to show could not reach three.js.
+    `layer4/CmdWebGeometry.cpp` now has an ObjectMesh branch that emits
+    `ObjectMeshState::N`/`::V` through the same `kind: 'mesh'` envelope
+    `RepMesh` uses; `bridge/tests/test_p11_geom.py` is the detailed form.
     """
     ws = a8
     ws.call("cmd.delete", "all")
@@ -1315,8 +1317,12 @@ def test_density_isomesh_objects_exist_but_do_not_reach_the_geometry_feed(a8):
     assert colour_indices(ws, "?w1_p8map") == []  # not a molecular object
 
     result = ws.call("_bridge.get_geometry", object="w1_p8map", rep="mesh")
-    assert result["status"] == "unsupported"
-    assert "no CPU-side geometry accessor" in result["message"]
+    assert result["status"] == "ok", result
+    assert result["fallbackReason"] is None
+    assert result["diagnostics"]["source"] == "ObjectMeshState::V"
+    assert result["diagnostics"]["nVert"] > 100
+    assert result["diagnostics"]["mapName"] == "p8map"
+    assert result["bytes"] > result["diagnostics"]["nVert"] * 12
 
 
 #: Count the live density wizard's `do_position` calls without changing what

@@ -81,6 +81,7 @@ Two routes, because the viewport package cannot reach topic events today (its
 from __future__ import annotations
 
 import hashlib
+import json
 import struct
 import threading
 import time
@@ -811,7 +812,22 @@ class GeometryService:
                 fallback=FALLBACK_EXTRACTION,
             )
 
-        digest = hashlib.blake2b(payload, digest_size=16).hexdigest()
+        # THE HEADER IS PART OF THE CONTENT (parity row 131).  Hashing only the
+        # payload made every header-only change invisible: ``set mesh_width,
+        # 3`` moves no vertex, so the payload is byte-identical, the fetch is
+        # answered ``unchanged`` and a client holding the old frame keeps the
+        # old width forever.  Measured in a browser before the fix -- Mode G
+        # drew 144,047 ink pixels at BOTH mesh_width 1 and 3.  The same trap
+        # is set for ``pointSize`` (``dot_width``), ``nonbondedSize``,
+        # ``defaultAlpha`` and ``oneColor``.
+        #
+        # ``seq``, ``hash`` and ``payloadBytes`` are assigned BELOW, after this
+        # point, so what is hashed here is the stable part of the header and an
+        # unchanged scene still hashes to the same digest.
+        digest = hashlib.blake2b(
+            json.dumps(header, sort_keys=True, default=str).encode("utf-8") + payload,
+            digest_size=16,
+        ).hexdigest()
         if have and have == digest:
             self.cache_hits += 1
             with self._lock:
@@ -970,7 +986,14 @@ class GeometryService:
     def _strip_mesh(
         self, raw: Dict[str, Any], object_name: str, index: int, state: int
     ) -> Tuple[Dict[str, Any], bytes, Dict[str, Any]]:
-        """``RepMesh``: line strips, NOT the 31,710 cylinders the exporters emit."""
+        """Line strips, NOT the 31,710 cylinders the exporters emit.
+
+        Two producers, one envelope: ``RepMesh`` (``show mesh`` on a molecule)
+        and ``ObjectMeshState`` (an ``isomesh``/``isodot`` OBJECT, which owns no
+        CoordSet and no Rep).  The accessor emits the same ``kind: 'mesh'`` dict
+        for both and names the origin in ``source``, so the only difference here
+        is what the diagnostics say.
+        """
         packer = _Packer()
         buffers: Dict[str, Any] = {"position": packer.add(raw["vertex"], "f32", 3)}
         if raw.get("strips"):
@@ -992,13 +1015,25 @@ class GeometryService:
                 "oneColor": one_color,
                 "meshType": raw.get("mesh_type"),
                 "nStrip": int(raw.get("n_strip", 0)),
+                # ``RepMesh::Width`` -- the RAW ``mesh_width`` setting (parity
+                # row 131).  PyMOL scales it by ``SceneGetDynamicLineWidth()``
+                # at DRAW time and that factor depends on the camera, so the
+                # client applies it; sending the scaled value would freeze it
+                # at whatever the camera was when the rep was packed.
+                "meshWidth": float(raw.get("width", 1.0) or 1.0),
             }
         )
         diagnostics = {
-            "source": "RepMesh",
+            "source": raw.get("source") or "RepMesh",
             "nVert": int(raw.get("n_vert", 0)),
             "nStrip": int(raw.get("n_strip", 0)),
         }
+        # `isomesh`/`isodot` only: which map, at which level.  A density panel
+        # cannot label the mesh it is showing without them and there is no other
+        # route to them (`ObjectMeshStateAsPyList` serialises neither V nor N).
+        if raw.get("map_name"):
+            diagnostics["mapName"] = str(raw["map_name"])
+            diagnostics["level"] = float(raw.get("level", 0.0))
         return header, packer.payload(), diagnostics
 
     def _dots(

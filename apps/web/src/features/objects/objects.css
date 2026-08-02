@@ -4,19 +4,45 @@
  * triples in layer3/Executive.cpp:16121-16127 and :16261-16334.
  */
 
+/*
+ * THE EXECUTIVE BLOCK IS THE RESIDUAL, AND IT HAS A FLOOR.
+ *
+ * `flex: 1` expands to `1 1 0%`, which made this the ONLY child of
+ * `.internal-gui` with a zero flex-basis: every other block sized itself from
+ * its content and this one took whatever was left. With `min-height: 0` and
+ * `overflow: hidden`, "whatever was left" was measured in Chromium at 1280x900
+ * as 34 px with six objects loaded and 0 px with three scenes stored — seven
+ * rows rendered, one reachable, then none. The clipped rows kept full bounding
+ * boxes, so nothing that asserts `toBeVisible` could see it.
+ *
+ * `flex-basis: auto` puts the list on the same footing as its siblings (its
+ * base is its content, like theirs), `flex-grow: 1` keeps PyMOL's rule that the
+ * Executive block absorbs the spare room, and the floor is the head plus
+ * `--pm-exec-min` so that neither the head nor the floor can ever be cut off by
+ * the `overflow: hidden` below. Measured after the change: 161 px.
+ *
+ * NOT `min-height: min-content`, which was tried and is a trap: MEASURED, a
+ * flex item's min-content contribution is its own content height, so
+ * `min-content` here resolves to "all the rows" and grows without limit with
+ * the object count — a floor that would starve every sibling instead.
+ *
+ * `overflow: hidden` stays, and is now safe: the only child that can be
+ * squeezed is `.objpanel__rows`, which scrolls.
+ */
 .objpanel {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: calc(var(--pm-panel-head-h) + var(--pm-exec-min));
   overflow: hidden;
 }
 
 .objpanel__head {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 6px;
-  height: 17px;
+  height: var(--pm-panel-head-h);
   padding: 0 5px;
   background: var(--pm-panel-alt);
   border-bottom: 1px solid var(--pm-edge);
@@ -36,16 +62,33 @@
   color: #5b6167;
 }
 
+/*
+ * THE FLOOR ITSELF. `--pm-exec-min` is 144 px = `controlHeight` (20) plus the
+ * larger `ButModeGetHeight` (124) — the most the two blocks that outrank the
+ * Executive block can ever take from the column between them, and 8 rows of
+ * `--pm-row-h`. Derivation and the measured PyMOL heights it is compared
+ * against: `shell/orthoPanel.ts: EXECUTIVE_MIN_HEIGHT`, measured in
+ * `bridge/tests/test_p11_layout.py`, guarded in `apps/web/e2e/smoke.e2e.mjs`.
+ *
+ * It is on the LIST rather than on `.objpanel` because `.objpanel__head` is a
+ * web addition with no PyMOL counterpart; PyMOL's Executive block is the rows.
+ *
+ * Beyond the floor the list still scrolls, which is what PyMOL does too:
+ * `ExecutiveDrawPanel` shows `n_disp = height / ExecLineHeight` rows and puts a
+ * scrollbar up as soon as `n_ent > n_disp` (`layer3/Executive.cpp:16219-16224`).
+ */
 .objpanel__rows {
-  flex: 1;
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: var(--pm-exec-min);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 1px 0;
 }
 
+/* Siblings of `.objpanel__rows`, and neither may eat into its floor. */
 .objpanel__empty,
 .objpanel__error {
+  flex: 0 0 auto;
   padding: 8px 6px;
   color: #5b6167;
   font-family: var(--pm-font-mono);

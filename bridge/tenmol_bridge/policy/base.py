@@ -158,6 +158,17 @@ DANGEROUS: Dict[str, str] = {
 #: whether it should.  "The work package cannot express the decision" and "the
 #: work package decided not to" are different states and the policy should be
 #: able to tell them apart.
+#:
+#: THE POLICY IS NOW SETTLED (inventory row 467).  The product owner's decision,
+#: 2026-08-02: an authenticated localhost client MAY start local processes, and
+#: the three routes that do so must be CONSISTENT — confirm once per session,
+#: then flow.  ``system`` is here; ``subproc.execute`` is added by
+#: ``policy/grants/wp-25-apbs.py`` through ``Grant.confirm_once``.  ``cmd.do``
+#: is deliberately NOT gated as a whole (it is how the console runs every typed
+#: command and how each panel bootstraps, so a prompt would fire before the user
+#: had done anything); instead ``Dispatcher.do`` re-applies this gate to a
+#: command line's leading keyword, which is what stops ``do("system true")``
+#: being a way around ``cmd.system``.
 CONFIRM_ONCE: FrozenSet[str] = frozenset({"system"})
 
 #: Executed by the bridge, not by PyMOL.  ``cmd.quit`` would take the C
@@ -307,6 +318,24 @@ class Policy:
     def is_confirmed(self, symbol: str) -> bool:
         return symbol in self._confirmed
 
+    def needs_confirmation(self, symbol: str) -> bool:
+        """Is ``symbol`` gated and not yet confirmed in this session?
+
+        Separate from :meth:`check` so a caller can ask the narrow question
+        without running the whole policy: ``Dispatcher.do`` re-applies the
+        confirm-once gate to a command line's leading keyword, and must not turn
+        an unknown first word into a policy denial while doing it.
+        """
+        if not isinstance(symbol, str) or not symbol:
+            return False
+        leaf = symbol.rsplit(".", 1)[-1]
+        return (
+            self.require_confirmation
+            and (leaf in self.confirm_once or symbol in self.confirm_once)
+            and leaf not in self._confirmed
+            and symbol not in self._confirmed
+        )
+
     # -- the check ---------------------------------------------------------
 
     def check(self, symbol: Any) -> Decision:  # noqa: ANN401 - client input
@@ -404,12 +433,10 @@ class Policy:
                 dangerous=True,
                 danger_reason=danger_reason,
             )
-        needs_confirmation = (
-            self.require_confirmation
-            and (leaf in self.confirm_once or symbol in self.confirm_once)
-            and leaf not in self._confirmed
-            and symbol not in self._confirmed
-        )
+        # One implementation, called from both places: `Dispatcher.do` asks the
+        # same question about a command line's leading keyword, and two copies
+        # of this predicate would drift.
+        needs_confirmation = self.needs_confirmation(symbol)
         return Decision(
             symbol=symbol,
             allowed=True,

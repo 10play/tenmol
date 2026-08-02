@@ -98,7 +98,14 @@ function makeSession(): Session {
   const appendClient = feedback.appendClient.bind(feedback);
   return {
     config: {} as Session['config'],
-    conn: { sendInput: vi.fn(), isOpen: true, do: () => Promise.reject(new Error('offline')) },
+    conn: {
+      sendInput: vi.fn(),
+      isOpen: true,
+      do: () => Promise.reject(new Error('offline')),
+      // `PluginDialogHost` (row 295) subscribes to the `dialog` topic on mount.
+      on: () => () => {},
+      sub: () => Promise.resolve(),
+    },
     stores: {
       connection: createConnectionStore('ws://test/ws', true),
       feedback: {

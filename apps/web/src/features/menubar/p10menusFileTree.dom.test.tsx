@@ -11,19 +11,19 @@
  * installed and asserts the EXACT leaf list of the real harvested tree
  * (`generated/menudata.ts`, harvested from `PyMOLDesktopGUI.get_menudata`) and
  * the EXACT set of leaves that are still refused, each with the sentence it
- * refuses with. MEASURED: 32 leaves, 4 refusals, and the refusals are
- * `New PyMOL Window ▸ Default`, `New PyMOL Window ▸ Ignore .pymolrc and plugins
- * (-k)` (both row 294, impossible by construction), the empty `Open Recent…`
- * placeholder (this session refuses `tenmol_menus`, so the DB is unreachable —
- * it is a placeholder, not a leaf), and `Edit pymolrc`, which is the ONE File
- * leaf still saying "not built yet".
+ * refuses with. MEASURED: 32 leaves, and (wave 11) 3 refusals — `New PyMOL
+ * Window ▸ Default` and `▸ Ignore .pymolrc and plugins (-k)` (both row 294,
+ * impossible by construction) and the empty `Open Recent…` placeholder (this
+ * session refuses `tenmol_menus`, so the DB is unreachable — it is a
+ * placeholder, not a leaf).
  *
- * That last one is the whole of row 61's remainder and it is quantified here so
- * nobody has to re-derive it: `features/texteditor/TextEditorPanel.tsx:44`
- * takes a `DialogWindowSpec` and never reads `spec.arg`, so binding the hook
- * would open an EMPTY editor titled `~/.pymolrc`. The bridge half it needs is
- * already built and already called from that feature
- * (`panels/files.py::pymolrc` at :2132, `read_text` at :2242, `write_text`).
+ * IT WAS FOUR. `Edit pymolrc` was the fourth and was the whole of row 61's
+ * remainder: `TextEditorPanel` took a `DialogWindowSpec` and never read
+ * `spec.arg`, so binding the hook would have opened an EMPTY editor titled
+ * `~/.pymolrc`. The panel now reads it, `features/files/menuHooks.ts` binds
+ * `edit_pymolrc`, and the leaf is live. Enabled is not the same as live, so the
+ * proof that clicking it opens an editor holding the pymolrc the bridge served
+ * is a separate census: `p11menusFileLeaf.dom.test.tsx`.
  */
 
 import { act, useEffect, useSyncExternalStore } from 'react';
@@ -45,7 +45,7 @@ import {
 } from '../../shell/panelHooks';
 import { FileDropTarget } from '../files/FileDropTarget';
 import { FilesPanel } from '../files/FilesPanel';
-import { FILE_MENU_HOOKS } from '../files/menuHooks';
+import { BOUND_FILE_HOOKS, FILE_MENU_HOOKS } from '../files/menuHooks';
 import { MENU_DATA } from './generated/menudata';
 import { MenuBar } from './MenuBar';
 
@@ -92,7 +92,14 @@ const FILE_LEAVES = [
   'Quit',
 ];
 
-/** The four leaves that are still refused, with the reason each gives. */
+/**
+ * The leaves that are still refused, with the reason each gives.
+ *
+ * WAS FOUR. `Edit pymolrc` left this map in wave 11: `TextEditorPanel` now
+ * reads `spec.arg`, so `features/files/menuHooks.ts` binds `edit_pymolrc` and
+ * the leaf is live. The census that proves it is LIVE rather than merely
+ * enabled is `p11menusFileLeaf.dom.test.tsx`.
+ */
 const REFUSALS: Record<string, string> = {
   'New PyMOL Window > Default':
     'hook new_window — one PyMOL process per bridge — a second window would need a second engine',
@@ -101,13 +108,19 @@ const REFUSALS: Record<string, string> = {
   // Not a leaf: `DynamicList`'s empty row. The DB is server-side and this
   // session refuses `tenmol_menus`.
   'Open Recent... > no recent files': '',
-  'Edit pymolrc': 'hook edit_pymolrc — not built yet — WP-22 owns it (text editor dialog)',
 };
 
 function makeSession(): Session {
   return {
     config: {} as Session['config'],
-    conn: { sendInput: vi.fn(), isOpen: true, do: () => Promise.reject(new Error('offline')) },
+    conn: {
+      sendInput: vi.fn(),
+      isOpen: true,
+      do: () => Promise.reject(new Error('offline')),
+      // `PluginDialogHost` (row 295) subscribes to the `dialog` topic on mount.
+      on: () => () => {},
+      sub: () => Promise.resolve(),
+    },
     stores: {
       connection: createConnectionStore('ws://test/ws', true),
       feedback: createFeedbackStore(),
@@ -221,20 +234,22 @@ describe('row 61 — every leaf of the File tree', () => {
     expect([...seen.keys()]).toEqual(FILE_LEAVES);
   });
 
-  it('refuses exactly four of them, each with its own sentence', async () => {
+  it('refuses exactly three of them, each with its own sentence', async () => {
     const seen = await census();
     const refused = Object.fromEntries([...seen].filter(([, why]) => why !== null));
     expect(refused).toEqual(REFUSALS);
   });
 
-  it('Edit pymolrc is the ONLY leaf still saying "not built yet"', async () => {
+  it('no leaf says "not built yet" any more', async () => {
     const seen = await census();
     const notBuilt = [...seen]
       .filter(([, why]) => (why ?? '').includes('not built yet'))
       .map(([label]) => label);
-    expect(notBuilt).toEqual(['Edit pymolrc']);
-    // …and it is unbound on purpose: `FILE_MENU_HOOKS` never claims it.
+    expect(notBuilt).toEqual([]);
+    // `Edit pymolrc` is still not in the ACTION TABLE — it is not a `FilesPanel`
+    // action — but `installFileMenuHooks` registers it all the same.
     expect(Object.keys(FILE_MENU_HOOKS)).not.toContain('edit_pymolrc');
+    expect(BOUND_FILE_HOOKS).toContain('edit_pymolrc');
   });
 
   it('the 21 bound hooks are all real leaves of that tree', async () => {
@@ -261,10 +276,17 @@ describe('row 61 — every leaf of the File tree', () => {
     // geometry exporters plus PNG are six, not five).
     expect(Object.keys(FILE_MENU_HOOKS)).toHaveLength(21);
     for (const hook of Object.keys(FILE_MENU_HOOKS)) expect(hooks).toContain(hook);
-    // The three that are NOT bound, and nothing else.
+    // The three that are NOT in the table, and nothing else. `edit_pymolrc`
+    // is bound outside it (see `BOUND_FILE_HOOKS`); `confirm_quit` is the menu
+    // bar's own; `new_window` is impossible by construction.
     expect(hooks.filter((h) => !(h in FILE_MENU_HOOKS)).sort()).toEqual([
       'confirm_quit',
       'edit_pymolrc',
+      'new_window',
+      'new_window',
+    ]);
+    expect(hooks.filter((h) => !BOUND_FILE_HOOKS.includes(h)).sort()).toEqual([
+      'confirm_quit',
       'new_window',
       'new_window',
     ]);

@@ -135,7 +135,14 @@ function makeSession(): Session {
     config: {} as Session['config'],
     // The menu TREE stays the checked-in generated copy: refusing the
     // bootstrap `do` is what `p9f1MenuHooks` does for the same reason.
-    conn: { sendInput: vi.fn(), isOpen: true, do: () => Promise.reject(new Error('offline')) },
+    conn: {
+      sendInput: vi.fn(),
+      isOpen: true,
+      do: () => Promise.reject(new Error('offline')),
+      // `PluginDialogHost` (row 295) subscribes to the `dialog` topic on mount.
+      on: () => () => {},
+      sub: () => Promise.resolve(),
+    },
     stores: {
       connection: createConnectionStore('ws://test/ws', true),
       feedback: createFeedbackStore(),

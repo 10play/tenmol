@@ -70,6 +70,43 @@ export const SeqGapMode = { None: 0, All: 1, Single: 2 } as const;
 export type SeqGapModeValue = (typeof SeqGapMode)[keyof typeof SeqGapMode];
 
 /**
+ * `seq_view_unaligned_mode` (setting 514, global, default 0).
+ *
+ * TWO independent things, which is why there are six values:
+ *
+ *  - LAYOUT (`layer3/Seeker.cpp:1590-1596`): 0/1/2 pack every row's untagged
+ *    columns into ONE shared column; 3/4/5 give each row its own — `stagger`.
+ *  - COLOUR (`layer1/Seq.cpp:420-449`): 0/3 paint an unaligned column in
+ *    `seq_view_unaligned_color` flat, 1/4 average it with the background, 2/5
+ *    average it with `seq_view_unaligned_color`.
+ *
+ * `seq_view_unaligned_color` left at its default of -1 resolves to
+ * `seq_view_fill_color` — except in mode 3, where it stays -1 and the column
+ * keeps its own colour (`layer1/Seq.cpp:323-332`).
+ */
+export const SeqUnalignedMode = {
+  /** Packed; flat unaligned colour. */
+  PackedFlat: 0,
+  /** Packed; blended with the background. */
+  PackedDim: 1,
+  /** Packed; blended with the unaligned colour. */
+  PackedBlend: 2,
+  /** Staggered; the column keeps its own colour. */
+  StaggeredOwn: 3,
+  /** Staggered; blended with the background. */
+  StaggeredDim: 4,
+  /** Staggered; blended with the unaligned colour. */
+  StaggeredBlend: 5,
+} as const;
+export type SeqUnalignedModeValue =
+  (typeof SeqUnalignedMode)[keyof typeof SeqUnalignedMode];
+
+/** `layer3/Seeker.cpp:1590-1596` — only 3/4/5 stagger. */
+export function seqUnalignedStagger(mode: number): boolean {
+  return mode !== 0 && mode !== 1 && mode !== 2;
+}
+
+/**
  * `SelModeKW`, `layer1/Scene.cpp:459-467`, indexed by `mouse_selection_mode`.
  * The keyword the selection algebra wraps every term in.
  */
@@ -114,9 +151,26 @@ export interface SeqviewCell {
   state?: number;
   /** Alignment tag (`SeekerFindTag`, `:928-967`); 0 when no alignment. */
   tag?: number;
+  /**
+   * `col->unaligned` — set by the alignment pass on every column with no tag
+   * (`layer3/Seeker.cpp:1658`).  Drives the colour, not the position.
+   */
+  unaligned?: boolean;
   resi?: string;
   chain?: string;
   resn?: string;
+}
+
+/**
+ * One `row->fill` run — `layer1/Seq.cpp:488-504` paints `width` copies of
+ * `seq_view_fill_char` at `offset`, in `seq_view_fill_color`.  These are the
+ * dashes under a residue another row has and this one does not.
+ */
+export interface SeqviewFill {
+  /** Character offset, in the same space as `SeqviewCell.offset`. */
+  offset: number;
+  /** `col->stop - col->start` — how many fill characters. */
+  width: number;
 }
 
 /** A residue-number label or a `/segi/chain/` breadcrumb above a column. */
@@ -147,6 +201,12 @@ export interface SeqviewRow {
   /** True when the window is not the whole row. */
   truncated: boolean;
   cells: SeqviewCell[];
+  /**
+   * `row->fill` — empty unless an alignment is active.  Windowed by character
+   * offset against the span the windowed cells cover, not by column, because a
+   * fill run has no column index.
+   */
+  fill: SeqviewFill[];
   /** Residue-number labels — the THIRD pass (`:1820-1914`). */
   labels: SeqviewLabel[];
   /** `/segi/chain/` markers, re-emitted at every change (`:1147-1215`). */
@@ -170,6 +230,21 @@ export interface SeqviewPayload {
   activeSele: string;
   /** `SceneGetSeleModeKeyword` — one of `SEL_MODE_KEYWORDS`. */
   seleMode: string;
+  /**
+   * `ExecutiveGetActiveAlignment` (`layer3/Executive.cpp:3403`) — the
+   * `seq_view_alignment` object, or the first enabled one, or ''.  Non-empty is
+   * exactly the C's `align_sele >= 0`: rows are laid out by tag, and gaps are
+   * suppressed (`layer3/Seeker.cpp:1235`).
+   */
+  alignment: string;
+  /** `seq_view_unaligned_mode` — see `SeqUnalignedMode`. */
+  unalignedMode: number;
+  /** Resolved `seq_view_unaligned_color`; -1 = keep the column's own colour. */
+  unalignedColor: number;
+  /** `seq_view_fill_char`, first character only; '' means draw no fill. */
+  fillChar: string;
+  /** `bg_rgb` (or the gradient end this strip sits on) as 0..1 RGB. */
+  bgColor: number[];
   rows: SeqviewRow[];
   /** Colour index (as a string key) -> 0..1 RGB, for every index in `rows`. */
   colors: Record<string, number[]>;

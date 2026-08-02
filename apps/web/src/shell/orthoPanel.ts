@@ -137,6 +137,57 @@ export function wizardHeight(lines: number, controlSize: number = ORTHO.controlS
   return lines > 0 ? controlSize * lines + ORTHO.wizardPad : 0;
 }
 
+/**
+ * THE FLOOR THE OBJECT LIST CANNOT BE STARVED BELOW, and why it is this number.
+ *
+ * MEASURED IN CHROMIUM at 1280x900, before the fix: `.internal-gui` is 644 px,
+ * and with six objects loaded and `mset 1 x30` the object panel was **34 px**
+ * — its row list 17 px against a scrollHeight of 128, seven rows rendered and
+ * ONE reachable. Store three scenes on top and the panel was **0 px**: seven
+ * rendered, NONE reachable. Every row still reported a full bounding box, so
+ * Playwright called them visible and a user could not click any of them.
+ *
+ * The cause was arithmetic, not a bug in any panel: `.objpanel` was the only
+ * child of the column with `flex-basis: 0`, so it was the residual, and it had
+ * `min-height: 0`, so the residual could be nothing. 18 + 221 + 217 + 152 = 608
+ * of 644 went to the four other blocks.
+ *
+ * WHAT UPSTREAM DOES, and it decides the shape of the fix rather than taste.
+ * `OrthoLayoutPanel` (above) makes the EXECUTIVE BLOCK the residual and sizes
+ * everything else from a constant or from its own content. MEASURED against
+ * the real engine in `bridge/tests/test_p11_layout.py`, in a PyMOL window of
+ * exactly the browser column's 644 px:
+ *
+ *     Executive block, no movie          584 px   (90.7% of the column)
+ *     Executive block, 30-frame movie    569 px   (MovieGetPanelHeight = 15)
+ *     scene bin (`scene_buttons`)          0 px   with 0 scenes AND with 3
+ *
+ * The last line answers the question the web column poses: `SceneDrawButtons`
+ * (`layer1/Scene.cpp:2885`) draws into the SCENE's rectangle and returns
+ * immediately when `SceneVec` is empty, so the 217 px `.scpanel` was taking
+ * with zero scenes stored is 217 px more than PyMOL reserves.
+ *
+ * A STRICT REPRODUCTION IS NOT AVAILABLE. The web column carries two surfaces
+ * `OrthoReshape` puts elsewhere — the movie panel (a full-width strip at the
+ * bottom of the WINDOW) and the scene bin (painted over the scene) — and
+ * `features/registry.ts` is frozen, so neither can be moved out of the column.
+ * Handing the object list all 584 px would leave 60 for both.
+ *
+ * So the floor is stated from the two constants that DO outrank the Executive
+ * block inside the column, and it is their maximum: `controlHeight` (20,
+ * `layer1/Ortho.cpp:2267`) plus the larger `ButModeGetHeight` (124, with
+ * `mouse_grid`; measured by click in `test_f7_layout.py` as the band y=20..143).
+ * **The object list is never handed less height than the blocks that outrank it
+ * can ever take between them.** 144 px is 8 rows of `ExecLineHeight`
+ * (`internal_gui_control_size`, 18 — `layer3/Executive.cpp:16192`), and it is
+ * 24.6% of the 584 px PyMOL gives the same list at the same column height, so
+ * it is a floor rather than a claim of parity.
+ *
+ * Applied to `.objpanel__rows` — the list itself — because `.objpanel__head`
+ * is a web addition PyMOL has no counterpart for.
+ */
+export const EXECUTIVE_MIN_HEIGHT = ORTHO.controlHeight + ORTHO.butModeGridHeight;
+
 export function layoutInternalGui(input: OrthoPanelInput): OrthoPanelLayout {
   const control = ORTHO.controlHeight;
   const butMode = butModeHeight(input.mouseGrid);

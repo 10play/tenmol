@@ -87,22 +87,53 @@ export const FILE_MENU_HOOKS: Readonly<Record<string, string>> = {
 };
 
 /**
- * The two seams deliberately NOT bound here, recorded so the absence is a
- * decision rather than an oversight:
+ * `File ▸ Edit pymolrc` — the last dead leaf of this menu, now bound.
  *
- *   `edit_pymolrc`  — `features/texteditor` owns it (WP-22) and its panel
- *                     ignores the file argument, so binding it would open an
- *                     EMPTY editor and imply ~/.pymolrc had been loaded.
+ * It is NOT in {@link FILE_MENU_HOOKS} because it is not a `FilesPanel` action:
+ * it opens `features/texteditor`'s window, and the module that does so is
+ * `../texteditor/openEditor`. It is registered here anyway, and deliberately,
+ * because THIS is the file whose installer runs from something always mounted
+ * (`FileDropTarget`). Registering it from `TextEditorSlot` would bind the hook
+ * only while an editor was already open, which is the dead-handler bug four
+ * features have now shipped.
+ *
+ * The import is DYNAMIC so the menu bar's File menu does not pull the editor,
+ * its syntax highlighter and the dialogs store into the initial bundle — the
+ * same reason `MenuBar` imports `requestFilesOpen` on click.
+ */
+export const EDIT_PYMOLRC_HOOK = 'edit_pymolrc';
+
+export async function openPymolrc(): Promise<void> {
+  const { openPymolrcEditor } = await import('../texteditor/openEditor');
+  openPymolrcEditor();
+}
+
+/**
+ * The seams deliberately NOT bound here, recorded so each absence is a decision
+ * rather than an oversight:
+ *
  *   `new_window`    — impossible by construction: one engine per bridge.
  *                     `UNAVAILABLE_HOOKS` already says so in the tooltip.
  *
  * `file_autoload_mtz` is in `_gui.py`'s seam list but no Qt menu references
  * it, so there is no leaf to light up.
+ *
+ * `edit_pymolrc` used to be on this list. It is now bound by
+ * {@link installFileMenuHooks} through {@link openPymolrc}; the reason it was
+ * unbound — `TextEditorPanel` ignoring `spec.arg` — is gone.
  */
-export const UNBOUND_FILE_HOOKS: readonly string[] = [
-  'edit_pymolrc',
-  'new_window',
-  'file_autoload_mtz',
+export const UNBOUND_FILE_HOOKS: readonly string[] = ['new_window', 'file_autoload_mtz'];
+
+/**
+ * Every `_gui.py` File seam {@link installFileMenuHooks} actually registers.
+ *
+ * `FILE_MENU_HOOKS` is not that list any more: `edit_pymolrc` is bound too, and
+ * it is not in the table because it is not a `FilesPanel` action. An inventory
+ * test that walks the harvested tree must check against THIS.
+ */
+export const BOUND_FILE_HOOKS: readonly string[] = [
+  ...Object.keys(FILE_MENU_HOOKS),
+  EDIT_PYMOLRC_HOOK,
 ];
 
 /**
@@ -151,6 +182,7 @@ export function installFileMenuHooks(): () => void {
   const offs = Object.entries(FILE_MENU_HOOKS).map(([hook, action]) =>
     registerMenuHook(hook, () => requestFilesAction(action)),
   );
+  offs.push(registerMenuHook(EDIT_PYMOLRC_HOOK, () => openPymolrc()));
   return () => {
     for (const off of offs) off();
   };

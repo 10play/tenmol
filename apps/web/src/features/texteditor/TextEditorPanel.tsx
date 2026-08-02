@@ -25,13 +25,16 @@ import type { DialogWindowSpec } from '../dialogs/store';
 import { useHostedWindows } from '../dialogs/useDialogs';
 import {
   downloadFile,
+  openServerFile,
   pickBrowserFile,
   probeServerFiles,
   readServerFile,
+  resolvePymolrc,
   runScript,
   writeServerFile,
   type FileAccess,
 } from './files';
+import { PYMOLRC_ARG } from './openEditor';
 import { editorTitle, highlight, isPymolrc, syntaxForFilename } from './syntax';
 import './texteditor.css';
 
@@ -52,22 +55,12 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState<null | (() => void)>(null);
+  /** The other active rc files, when PyMOL loaded more than one. */
+  const [choices, setChoices] = useState<readonly string[]>([]);
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
 
   const dirty = text !== saved;
-
-  useEffect(() => {
-    void probeServerFiles(session).then((ok) => {
-      setAccess(ok ? 'server' : 'browser');
-      if (!ok) {
-        setStatus(
-          'no bridge file endpoints (_bridge.read_text_file / _bridge.write_text_file) — ' +
-            'using the browser picker and download',
-        );
-      }
-    });
-  }, [session]);
 
   /* --------------------------------------------------------------- actions */
 
@@ -121,6 +114,70 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
     setStatus(nextPath ? editorTitle(nextPath) : '');
     setError('');
   }, []);
+
+  /**
+   * Open the file this window was asked for — `spec.arg`.
+   *
+   * THE WHOLE OF ROW 61's REMAINDER LIVED HERE. `dialogs/store.ts` has carried
+   * an `arg` per window since it was written (it keys them `texteditor:<arg>`),
+   * and this panel ignored it: every editor opened EMPTY. That is why
+   * `features/files/menuHooks.ts` deliberately left `edit_pymolrc` unbound —
+   * binding it would have shown a window titled `~/.pymolrc` that had not
+   * loaded ~/.pymolrc.
+   *
+   * The probe runs first and in the SAME effect, not beside it: which access
+   * path is live decides whether `arg` can be honoured at all, and two effects
+   * racing meant a server read issued while `access` still said `browser`.
+   */
+  useEffect(() => {
+    const wanted = spec.arg;
+    let alive = true;
+    void (async () => {
+      const ok = await probeServerFiles(session);
+      if (!alive) return;
+      setAccess(ok ? 'server' : 'browser');
+      if (!ok) {
+        setStatus(
+          'no bridge file endpoints (_bridge.read_text_file / _bridge.write_text_file) — ' +
+            'using the browser picker and download',
+        );
+        // A window opened ON a path by another feature cannot fall back to the
+        // browser picker: the picker cannot reach the PyMOL host's filesystem,
+        // so pretending would show an empty buffer titled with a path it never
+        // read. Say so instead.
+        if (wanted) {
+          setError(
+            `cannot open ${wanted === PYMOLRC_ARG ? 'pymolrc' : wanted}: this bridge serves no ` +
+              'files (cmd.tenmol_files is not installed)',
+          );
+        }
+        return;
+      }
+      if (!wanted) return;
+      try {
+        // `@pymolrc` is a REQUEST, not a path — `openEditor.ts` explains why the
+        // menu hook cannot resolve it itself.
+        const target = wanted === PYMOLRC_ARG ? await resolvePymolrc(session) : null;
+        if (!alive) return;
+        const result = await openServerFile(session, target ? target.path : wanted);
+        if (!alive) return;
+        load(result.path, result.text);
+        setChoices(target && target.candidates.length > 1 ? target.candidates : []);
+        if (!result.exists) {
+          // `_edit_pymolrc`'s "Create new pymolrc?" prompt (`TextEditor.py:176`)
+          // without the modal: the buffer is aimed at the path and Save creates it.
+          setStatus(`${result.path} does not exist yet — Save will create it`);
+        } else if (target && target.candidates.length > 1) {
+          setStatus(`${result.path} — ${target.candidates.length} active pymolrc files`);
+        }
+      } catch (error: unknown) {
+        if (alive) setError(messageOf(error));
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [session, spec.arg, load]);
 
   const doOpen = useCallback(async () => {
     setError('');
@@ -258,6 +315,37 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
           <div className="txted__note" role="note">
             pymolrc is read at startup — restart PyMOL to apply, or paste the
             lines into the command line to try them now.
+          </div>
+        )}
+        {/*
+          * `edit_pymolrc`'s `QInputDialog.getItem` (`TextEditor.py:161-165`):
+          * with two or more active rc files Qt ASKS which one. A modal before
+          * the window exists is the wrong shape here — the window is already
+          * open on the first file — so the same choice is a control inside it.
+          */}
+        {choices.length > 1 && (
+          <div className="txted__note" role="note">
+            <label>
+              Active pymolrc files:{' '}
+              <select
+                data-txted-pymolrc=""
+                value={path}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  guard(() => {
+                    void openServerFile(session, next)
+                      .then((result) => load(result.path, result.text))
+                      .catch((error: unknown) => setError(messageOf(error)));
+                  });
+                }}
+              >
+                {choices.map((file) => (
+                  <option key={file} value={file}>
+                    {file}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         )}
 

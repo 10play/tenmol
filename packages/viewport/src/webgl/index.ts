@@ -27,4 +27,21 @@ export {
   type InstancedDraw,
   type InstanceDrawOptions,
 } from './instances';
-export { buildIndexedMesh, stripLineIndices, visibleTriangleIndices, type BuiltMesh } from './mesh';
+export {
+  buildIndexedMesh,
+  meshWidthOf,
+  stripLineIndices,
+  visibleTriangleIndices,
+  type BuiltMesh,
+} from './mesh';
+export {
+  buildQuadLines,
+  dynamicLineWidth,
+  quadLineRecords,
+  vertexScaleOf,
+  DYNAMIC_WIDTH_FACTOR,
+  DYNAMIC_WIDTH_MAX,
+  DYNAMIC_WIDTH_MIN,
+  QUADLINE_ITEM_SIZE,
+  type QuadLineDraw,
+} from './quadlines';

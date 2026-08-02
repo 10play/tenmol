@@ -39,7 +39,9 @@ const conndo = vi.fn();
 const SESSION = {
   call,
   run,
-  conn: { do: conndo },
+  // `on`/`sub`: `FileDropTarget` mounts `PluginDialogHost`, which subscribes to
+  // the `dialog` topic instead of polling (row 295).
+  conn: { do: conndo, on: () => () => {}, sub: () => Promise.resolve() },
   stores: { feedback: { appendClient } },
 };
 vi.mock('../../app', () => ({ useSession: () => SESSION }));
@@ -93,10 +95,18 @@ describe('the plugin file-dialog shim is actually installed (row 295)', () => {
 
   it('installs the service first when the bridge has never seen it', async () => {
     // `hello` fails with NotAllowed until `panels.files.install()` has run;
-    // `bootstrap()` then `{t:'do'}`s the import and retries.
-    call
-      .mockRejectedValueOnce(new Error('NotAllowed: no such symbol'))
-      .mockResolvedValue({ installed: true });
+    // `bootstrap()` then `{t:'do'}`s the import and retries.  Keyed on the
+    // SYMBOL rather than on call order: `PluginDialogHost` also calls
+    // `_bridge.pending_dialogs` once on mount (row 295's reconcile), and which
+    // of the two lands first is not this test's subject.
+    let firstHello = true;
+    call.mockImplementation((fn: string) => {
+      if (fn === 'cmd.tenmol_files.hello' && firstHello) {
+        firstHello = false;
+        return Promise.reject(new Error('NotAllowed: no such symbol'));
+      }
+      return Promise.resolve({ installed: true });
+    });
 
     act(() => root.render(<FileDropTarget />));
     await settle();

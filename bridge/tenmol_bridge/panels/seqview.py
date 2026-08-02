@@ -27,13 +27,37 @@ Every rule below is transcribed from the C++, with the line number:
   ``codes`` 0..5              ``:1259-1484``                  display modes
   gap insertion               ``:1230-1258``, ``MAXCONSECUTIVEGAPS`` ``:983``
   ``SeekerFindColor``         ``:908-926``
+  ``SeekerFindTag``           ``:928-966``   alignment tags
   label pass                  ``:1820-1914``
-  offset pass                 ``:1548-1581``
+  offset pass, no alignment   ``:1548-1581``
+  offset pass, alignment      ``:1583-1793``  (tag line-up, stagger, fill)
   ``SeekerRefresh``           ``:475-525``  (``col->inverse``)
   ``SeekerSelectionToggle``   ``:169-246``  selection algebra
   ``SeekerSelectionCenter``   ``:248-315``
   ``ExecutiveGetActiveSeleName`` ``layer3/Executive.cpp:3433``
+  ``ExecutiveGetActiveAlignment`` ``layer3/Executive.cpp:3403``
   ``SceneGetSeleModeKeyword`` ``layer1/Scene.cpp:504``
+
+ALIGNMENT MODE, AND THE ONE DELIBERATE DIFFERENCE
+-------------------------------------------------
+``SeekerFindTag`` reads ``SelectorIsMember(ai->selEntry, align_sele)``, i.e. the
+per-atom *tag* the alignment object stored when it registered itself as a
+selection (``ObjectAlignment.cpp:1035`` ``SelectorCreateFromTagDict``).  Those
+tags are handed out one per alignment COLUMN, strictly increasing along the
+alignment (``ObjectAlignment.cpp:920-1000``), and the layout only ever compares
+them (``min_tag``).  ``cmd.get_raw_alignment(name)`` returns exactly those
+columns, in the same order, so the column ordinal is an order-equivalent tag and
+no new C accessor is needed.
+
+The C's residue columns start at index **2**: ``col[0]`` is the object-name
+title and ``col[1]`` the ``/segi/chain/`` breadcrumb, both spacers, always
+exactly two (``:1055-1140``, every ``label_mode`` branch).  This model does not
+carry them — the client draws the object name in its own gutter and the
+breadcrumb in the label row — so ``_align_rows`` starts its cursor at 0 where
+the C starts it after those two columns.  That is a constant shift shared by
+every row, which is what alignment means; nothing about the relative line-up
+changes.
+
 
 HOW THE CLIENT REACHES IT
 -------------------------
@@ -75,7 +99,10 @@ __all__ = [
     "TEMP_SELE",
     "TEMP_CENTER_SELE",
     "abbr",
+    "active_alignment",
     "active_sele_name",
+    "alignment_context",
+    "alignment_tags",
     "build",
     "center",
     "collect_atoms",
@@ -90,6 +117,11 @@ __all__ = [
     "row_model",
     "DEFAULT_WINDOW",
     "MAX_CELLS_PER_FRAME",
+    "C_LEAD_COLS",
+    "find_tag",
+    "align_rows",
+    "fill_char",
+    "unaligned_color",
 ]
 
 # --------------------------------------------------------------------------
@@ -234,6 +266,74 @@ def active_sele_name(cmd: Any, create_new: bool = False) -> str:
     return name
 
 
+def active_alignment(cmd: Any) -> str:
+    """``ExecutiveGetActiveAlignment`` (``layer3/Executive.cpp:3403``).
+
+    1) ``seq_view_alignment`` if it is set, 2) else the name of the FIRST
+    enabled alignment object, 3) else ``''``.  The C walks the Spec list keeping
+    ``rec->visible`` entries whose object type is ``cObjectAlignment``;
+    ``cmd.get_names('objects', enabled_only=1)`` walks the same list in the same
+    order, and ``cmd.get_type`` names that type ``object:alignment``.
+    """
+    named = _text(cmd, "seq_view_alignment", "", "")
+    if named:
+        return named
+    try:
+        names = list(cmd.get_names("objects", enabled_only=1))
+    except Exception:  # noqa: BLE001
+        return ""
+    for name in names:
+        try:
+            if cmd.get_type(name) == "object:alignment":
+                return str(name)
+        except Exception:  # noqa: BLE001
+            continue
+    return ""
+
+
+def alignment_tags(cmd: Any, name: str) -> Dict[str, Dict[int, int]]:
+    """Per-object ``{atom index: tag}`` for one alignment object.
+
+    ``ObjectAlignment.cpp:920-1000`` hands out one tag per alignment column,
+    strictly increasing along the alignment, and stores them in ``id2tag`` which
+    ``SelectorCreateFromTagDict`` (``:1035``) turns into the tags
+    ``SelectorIsMember`` returns.  ``cmd.get_raw_alignment`` returns the same
+    columns in the same order, so the 1-based column ordinal is an
+    order-equivalent tag — and the layout only ever compares tags (``min_tag``,
+    ``Seeker.cpp:1725``), never uses their magnitude.
+    """
+    if not name:
+        return {}
+    try:
+        raw = cmd.get_raw_alignment(name)
+    except Exception:  # noqa: BLE001 - a stale seq_view_alignment must not throw
+        return {}
+    out: Dict[str, Dict[int, int]] = {}
+    for ordinal, column in enumerate(raw or (), start=1):
+        for entry in column:
+            try:
+                obj, index = str(entry[0]), int(entry[1])
+            except Exception:  # noqa: BLE001
+                continue
+            out.setdefault(obj, {})[index] = ordinal
+    return out
+
+
+def alignment_context(cmd: Any) -> Tuple[str, Dict[str, Dict[int, int]]]:
+    """``('', {})`` when ``align_sele < 0``, i.e. alignment mode is OFF.
+
+    The C's gate is ``ExecutiveGetActiveAlignmentSele() >= 0``, which is false
+    both when there is no alignment and when ``seq_view_alignment`` names
+    something that is not a registered selector.  An empty tag map is the same
+    condition on this side.
+    """
+    name = active_alignment(cmd)
+    tags = alignment_tags(cmd, name)
+    if not tags:
+        return "", {}
+    return name, tags
+
+
 # --------------------------------------------------------------------------
 # Atom readout
 # --------------------------------------------------------------------------
@@ -355,6 +455,7 @@ def _cell(
         "selected": False,
         "state": state,
         "tag": tag,
+        "unaligned": False,
         "resi": resi,
         "chain": chain,
         "resn": resn,
@@ -375,6 +476,29 @@ def _find_color(group: Sequence[Atom]) -> int:
         if (atom.elem or "").upper() == "C":  # ``ai->protons == cAN_C``
             result = atom.color
     return int(result)
+
+
+def find_tag(group: Sequence[Atom], tags: Dict[int, int], codes: int) -> int:
+    """``SeekerFindTag`` (``layer3/Seeker.cpp:928-966``).
+
+    Walks the atoms the column stands for — the residue for ``codes`` 0/1, the
+    single atom for 2, the chain for 3 — and returns:  the tag of a GUIDE atom
+    if one carries a tag and the column is residue-based (``codes < 2``), else
+    the first non-zero tag seen.  (``result < tag`` can only fire again once
+    ``result`` is non-zero, and only for a guide atom, which the early return
+    has already taken; so after the first hit the value is frozen.)
+    """
+    result = 0
+    for atom in group:
+        tag = int(tags.get(atom.index, 0))
+        if tag and codes < 2 and atom.is_guide:
+            return tag
+        if result < tag:
+            if not result:
+                result = tag
+            elif codes < 2 and atom.is_guide:
+                result = tag
+    return result
 
 
 def _gaps_needed(previous: Optional[Atom], atom: Atom, gap_mode: int) -> int:
@@ -422,8 +546,14 @@ def _build_cells(
     default_color: int,
     fill_color: int,
     present: Optional[set],
+    tags: Optional[Dict[int, int]] = None,
 ) -> List[Dict[str, Any]]:
     cells: List[Dict[str, Any]] = []
+    #: ``:1319,1363,1389,1415`` — the tag is only read when ``align_sele >= 0``.
+    tag_map: Dict[int, int] = tags or {}
+
+    def tag_for(group: Sequence[Atom]) -> int:
+        return find_tag(group, tag_map, codes) if tag_map else 0
 
     def colour_for(group: Sequence[Atom]) -> int:
         in_state = present is None or any(a.index in present for a in group)
@@ -455,6 +585,7 @@ def _build_cells(
                             [a.index for a in group],
                             is_abbr=True,
                             hint_no_space=bool(last_abbr) or needed > 0,
+                            tag=tag_for(group),
                             resi=head.resi,
                             chain=head.chain,
                             resn=head.resn,
@@ -468,6 +599,7 @@ def _build_cells(
                             colour_for(group),
                             [a.index for a in group],
                             hint_no_space=bool(last_abbr) or needed > 0,
+                            tag=tag_for(group),
                             resi=head.resi,
                             chain=head.chain,
                             resn=head.resn,
@@ -480,6 +612,7 @@ def _build_cells(
                         head.resn or "''",
                         colour_for(group),
                         [a.index for a in group],
+                        tag=tag_for(group),
                         resi=head.resi,
                         chain=head.chain,
                         resn=head.resn,
@@ -501,6 +634,7 @@ def _build_cells(
                     atom.name or "''",
                     color,
                     [atom.index],
+                    tag=tag_for((atom,)),
                     resi=atom.resi,
                     chain=atom.chain,
                     resn=atom.resn,
@@ -514,13 +648,13 @@ def _build_cells(
         for atom in atoms:
             if atom.chain_key != key:
                 if group:
-                    cells.append(_chain_cell(group, default_color))
+                    cells.append(_chain_cell(group, default_color, tag_for(group)))
                 group = [atom]
                 key = atom.chain_key
             else:
                 group.append(atom)
         if group:
-            cells.append(_chain_cell(group, default_color))
+            cells.append(_chain_cell(group, default_color, tag_for(group)))
         return cells
 
     if codes == 4:  # state names (``:1423-1482``)
@@ -545,13 +679,14 @@ def _build_cells(
     return cells
 
 
-def _chain_cell(group: Sequence[Atom], default_color: int) -> Dict[str, Any]:
+def _chain_cell(group: Sequence[Atom], default_color: int, tag: int = 0) -> Dict[str, Any]:
     head = group[0]
     color = _find_color(group) if default_color < 0 else default_color
     return _cell(
         head.chain or "''",
         color,
         [a.index for a in group],
+        tag=tag,
         chain=head.chain,
     )
 
@@ -576,6 +711,191 @@ def _lay_out(cells: List[Dict[str, Any]], codes: int) -> int:
         else:
             position += 1
     return position
+
+
+# --------------------------------------------------------------------------
+# The SECOND pass, alignment mode
+# --------------------------------------------------------------------------
+
+#: The two spacer columns every C row starts with — the object-name title and
+#: the ``/segi/chain/`` breadcrumb (``layer3/Seeker.cpp:1055-1140``; all five
+#: ``label_mode`` branches leave ``nCol == 2``).  This model does not carry
+#: them, so every column index the C compares against is shifted by this much.
+C_LEAD_COLS = 2
+
+
+def align_rows(rows: Sequence[Dict[str, Any]], unaligned_mode: int) -> None:
+    """``SeekerUpdate``'s SECOND PASS in alignment mode (``:1583-1793``).
+
+    Rewrites ``cell['offset']`` on every row so that columns carrying the same
+    tag land in the same character column, marks every untagged column
+    ``unaligned``, and appends to ``row['fill']`` the ``{offset, width}`` runs
+    the C stores in ``row->fill`` and ``CSeq::draw`` paints with
+    ``seq_view_fill_char`` (``layer1/Seq.cpp:488-504``).
+
+    ``seq_view_unaligned_mode`` 0/1/2 pack the untagged columns of every row
+    into ONE shared column (``stagger == false``); 3/4/5 give each row its own
+    (``stagger == true``).  The mode also drives the COLOUR, but that is
+    ``CSeq::draw``'s half and is applied by the client from the flags here.
+
+    ``codes`` is the C's file-scope variable, still holding the value it was
+    last assigned in the first pass — the format of the LAST visible row.  It is
+    reproduced rather than fixed, because it decides where spaces go.
+    """
+    if not rows:
+        return
+    stagger = int(unaligned_mode) not in (0, 1, 2)
+    codes = int(rows[-1].get("codes", 0))
+    cells = [row["cells"] for row in rows]
+    n_col = [len(column) for column in cells]
+    n_row = len(rows)
+    for row in rows:
+        row["fill"] = []
+    fill = [row["fill"] for row in rows]
+
+    def width(cell: Dict[str, Any]) -> int:
+        return len(cell["text"])
+
+    c_col = [0] * n_row
+    current = 0
+    first = True
+    done_flag = False
+
+    while not done_flag:
+        hint_tagged_no_space = True
+        done_flag = True
+
+        # ---- insert untagged entries into their own columns (``:1618-1712``)
+        untagged_flag = True
+        hint_untagged_space = False
+        while untagged_flag:
+            space_added = False
+            max_width = 0
+            untagged_flag = False
+            saw_untagged_no_abbr = False
+
+            # first get the spaces in...
+            for a in range(n_row):
+                if c_col[a] >= n_col[a]:
+                    continue
+                r1 = cells[a][c_col[a]]
+                if r1["tag"]:
+                    continue
+                text_len = width(r1)
+                if (
+                    (not first)
+                    and (not space_added)
+                    and (c_col[a] + C_LEAD_COLS > 2)
+                    and (
+                        codes
+                        or ((not r1["isAbbr"]) and (not r1["spacer"]))
+                        or hint_untagged_space
+                        or (r1["isAbbr"] and (not r1["hintNoSpace"]))
+                    )
+                ):
+                    current += 1
+                    space_added = True
+                if max_width < text_len:
+                    max_width = text_len
+
+            # then do the rest
+            for a in range(n_row):
+                if c_col[a] >= n_col[a]:
+                    continue
+                r1 = cells[a][c_col[a]]
+                if r1["tag"]:
+                    continue
+                text_len = width(r1)
+                untagged_flag = True
+                done_flag = False
+                saw_untagged_no_abbr |= (not r1["isAbbr"]) and (not r1["spacer"])
+                first = False
+                r1["offset"] = current
+                r1["unaligned"] = True
+
+                if not r1["spacer"]:
+                    # infill populate other rows with dashes
+                    for aa in range(n_row):
+                        if aa == a:
+                            continue
+                        if c_col[aa] < n_col[aa]:
+                            r2 = cells[aa][c_col[aa]]
+                            if stagger or r2["tag"] or r2["spacer"]:
+                                fill[aa].append({"offset": current, "width": text_len})
+                        else:
+                            fill[aa].append({"offset": current, "width": text_len})
+
+                if stagger:
+                    current += text_len
+                elif max_width < text_len:
+                    max_width = text_len
+
+            if not stagger:
+                current += max_width
+            if saw_untagged_no_abbr:
+                hint_untagged_space = True
+                hint_tagged_no_space = False
+            else:
+                hint_untagged_space = False
+                hint_tagged_no_space = True
+
+            for a in range(n_row):
+                if c_col[a] < n_col[a] and not cells[a][c_col[a]]["tag"]:
+                    c_col[a] += 1
+
+        # ---- then the lowest tag still pending, in ONE column (``:1714-1792``)
+        min_tag = 0
+        for a in range(n_row):
+            if c_col[a] >= n_col[a]:
+                continue
+            tag = cells[a][c_col[a]]["tag"]
+            if tag and ((min_tag > tag) or (not min_tag)):
+                min_tag = tag
+        if not min_tag:
+            continue
+
+        max_width = 0
+        space_added = False
+        # TWICE, because the space is inserted part way through the first sweep
+        # and every row placed before it would otherwise keep the old offset.
+        for _rep in range(2):
+            for a in range(n_row):
+                if c_col[a] >= n_col[a]:
+                    continue
+                r1 = cells[a][c_col[a]]
+                if r1["tag"] != min_tag:
+                    continue
+                if (
+                    (not first)
+                    and (not space_added)
+                    and (
+                        codes
+                        or ((not r1["isAbbr"]) and (not r1["spacer"]))
+                        or (
+                            r1["isAbbr"]
+                            and (not (r1["hintNoSpace"] or hint_tagged_no_space))
+                        )
+                    )
+                ):
+                    current += 1
+                    space_added = True
+                done_flag = False
+                first = False
+                r1["offset"] = current
+                if max_width < width(r1):
+                    max_width = width(r1)
+
+        for aa in range(n_row):
+            if c_col[aa] < n_col[aa]:
+                if cells[aa][c_col[aa]]["tag"] != min_tag:
+                    fill[aa].append({"offset": current, "width": max_width})
+            else:
+                fill[aa].append({"offset": current, "width": max_width})
+
+        for a in range(n_row):
+            if c_col[a] < n_col[a] and cells[a][c_col[a]]["tag"] == min_tag:
+                c_col[a] += 1
+        current += max_width
 
 
 def _labels(
@@ -693,13 +1013,22 @@ def _object_rows(cmd: Any, hide_underscore: int) -> List[str]:
     return out
 
 
-def row_model(cmd: Any, name: str, state: int = -1) -> Optional[Dict[str, Any]]:
+def row_model(
+    cmd: Any,
+    name: str,
+    state: int = -1,
+    align_active: bool = False,
+    tags: Optional[Dict[int, int]] = None,
+) -> Optional[Dict[str, Any]]:
     """The FULL, un-windowed column model for one object.
 
     Split out of :func:`build` because :func:`select_range` needs the same model
     the way ``SeekerSelectionToggleRange`` (``:70-167``) reads the row it is
     already holding — the client must never have to ship 6,000 atom indices back
-    to name a range.
+    to name a range.  ``align_active`` and ``tags`` MUST be passed the same way
+    both callers see them: alignment mode suppresses gaps entirely
+    (``:1235`` ``&& align_sele < 0``), which changes the column indices a drag
+    is addressed by.
     """
     codes = _int(cmd, "seq_view_format", name, _int(cmd, "seq_view_format", "", 0))
     try:
@@ -714,13 +1043,19 @@ def row_model(cmd: Any, name: str, state: int = -1) -> Optional[Dict[str, Any]]:
     if not atoms:
         return None
 
-    gap_mode = _int(cmd, "seq_view_gap_mode", "", GAP_MODE_ALL)
+    # ``:1235`` — "Only include non-consecutive gaps when not doing alignment":
+    # the whole gap arithmetic is gated on ``align_sele < 0``.
+    gap_mode = (
+        GAP_MODE_NONE
+        if align_active
+        else _int(cmd, "seq_view_gap_mode", "", GAP_MODE_ALL)
+    )
     fill_color = _int(cmd, "seq_view_fill_color", "", 104)
     default_color = _int(cmd, "seq_view_color", name, -1)
     present = _atoms_in_state(cmd, name, state)
 
     cells = _build_cells(
-        cmd, name, atoms, codes, gap_mode, default_color, fill_color, present
+        cmd, name, atoms, codes, gap_mode, default_color, fill_color, present, tags
     )
     ext_len = _lay_out(cells, codes)
     atoms_by_index = {atom.index: atom for atom in atoms}
@@ -741,8 +1076,13 @@ def row_model(cmd: Any, name: str, state: int = -1) -> Optional[Dict[str, Any]]:
         "discrete": discrete,
         "extLen": ext_len,
         "cells": cells,
+        "fill": [],
         "labels": _labels(cells, atoms_by_index, codes, div, sub),
         "breadcrumbs": _breadcrumbs(cells, atoms_by_index),
+        # Kept only so :func:`build` can redo the label pass after the alignment
+        # pass has moved every offset.  :func:`_window` drops it.
+        "_atoms": atoms_by_index,
+        "_labelPass": (div, sub),
     }
 
 
@@ -752,6 +1092,8 @@ def _window(row: Dict[str, Any], first: int, count: int) -> Dict[str, Any]:
     first = max(0, min(int(first), len(cells)))
     last = max(first, min(first + max(int(count), 0), len(cells)))
     windowed = dict(row)
+    windowed.pop("_atoms", None)
+    windowed.pop("_labelPass", None)
     windowed["cells"] = [_wire_cell(cell) for cell in cells[first:last]]
     windowed["nCols"] = len(cells)
     windowed["first"] = first
@@ -777,7 +1119,7 @@ def _wire_cell(cell: Dict[str, Any]) -> Dict[str, Any]:
         "offset": cell["offset"],
         "atoms": cell["atoms"],
     }
-    for key in ("spacer", "isAbbr", "hintNoSpace", "selected"):
+    for key in ("spacer", "isAbbr", "hintNoSpace", "selected", "unaligned"):
         if cell[key]:
             out[key] = True
     for key in ("state", "tag"):
@@ -812,6 +1154,9 @@ def build(
     sele_kw = sele_mode_keyword(cmd)
     sele_name = active_sele_name(cmd, create_new=False)
 
+    align_name, align_tags = alignment_context(cmd)
+    unaligned_mode = _int(cmd, "seq_view_unaligned_mode", "", 0)
+
     names = _object_rows(cmd, hide_underscore)
 
     selected_indices: Dict[str, set] = {}
@@ -822,12 +1167,11 @@ def build(
         except Exception:  # noqa: BLE001
             selected_indices = {}
 
-    rows: List[Dict[str, Any]] = []
-    used_colors: set = set()
-    budget = MAX_CELLS_PER_FRAME
-
+    full_rows: List[Dict[str, Any]] = []
     for name in names:
-        full = row_model(cmd, name, state)
+        full = row_model(
+            cmd, name, state, bool(align_name), align_tags.get(name, {})
+        )
         if full is None:
             continue
 
@@ -837,7 +1181,25 @@ def build(
                 cell["selected"] = False
             else:
                 cell["selected"] = any(index in member for index in cell["atoms"])
+        full_rows.append(full)
 
+    # The alignment pass is CROSS-ROW, so it can only run once every row exists
+    # — and it moves every offset, so the label and breadcrumb passes (the C's
+    # THIRD pass, which runs after the second) have to be redone from the new
+    # ones.
+    if align_name and full_rows:
+        align_rows(full_rows, unaligned_mode)
+        for full in full_rows:
+            div, sub = full["_labelPass"]
+            full["labels"] = _labels(
+                full["cells"], full["_atoms"], full["codes"], div, sub
+            )
+            full["breadcrumbs"] = _breadcrumbs(full["cells"], full["_atoms"])
+
+    rows: List[Dict[str, Any]] = []
+    used_colors: set = set()
+    budget = MAX_CELLS_PER_FRAME
+    for full in full_rows:
         row = _window(full, first, min(count, budget))
         budget -= len(row["cells"])
         for cell in row["cells"]:
@@ -846,6 +1208,22 @@ def build(
         rows.append(row)
         if budget <= 0:
             break
+
+    # A fill run is addressed by CHARACTER OFFSET, not by column, so it is
+    # windowed against the offset span the windowed cells actually cover.
+    if align_name and rows:
+        lo, hi = _offset_span(rows)
+        for row in rows:
+            row["fill"] = [
+                run
+                for run in row["fill"]
+                if run["offset"] + run["width"] > lo and run["offset"] < hi
+            ]
+
+    unaligned = unaligned_color(cmd, unaligned_mode, fill_color)
+    used_colors.add(fill_color)
+    if unaligned >= 0:
+        used_colors.add(unaligned)
 
     colors: Dict[str, List[float]] = {}
     for index in used_colors:
@@ -868,10 +1246,68 @@ def build(
         "fillColor": fill_color,
         "activeSele": sele_name,
         "seleMode": sele_kw,
+        "alignment": align_name,
+        "unalignedMode": unaligned_mode,
+        "unalignedColor": unaligned,
+        "fillChar": fill_char(cmd),
+        "bgColor": _bg_color(cmd, location),
         "rows": rows,
         "colors": colors,
         "window": {"first": first, "count": count, "max": MAX_CELLS_PER_FRAME},
     }
+
+
+def _offset_span(rows: Sequence[Dict[str, Any]]) -> Tuple[int, int]:
+    """The character range the windowed cells of ALL rows span."""
+    lo: Optional[int] = None
+    hi: Optional[int] = None
+    for row in rows:
+        cells = row["cells"]
+        if not cells:
+            continue
+        start = int(cells[0]["offset"])
+        end = int(cells[-1]["offset"]) + len(cells[-1]["text"])
+        lo = start if lo is None else min(lo, start)
+        hi = end if hi is None else max(hi, end)
+    return (0, 0) if lo is None or hi is None else (lo, hi)
+
+
+def fill_char(cmd: Any) -> str:
+    """``seq_view_fill_char`` as ``CSeq::draw`` reads it (``layer1/Seq.cpp:316``).
+
+    Only the FIRST character is used, and a space means "draw no fill at all"
+    (``fill_char = 0`` at ``:342``), which this reports as the empty string.
+    """
+    text = _text(cmd, "seq_view_fill_char", "", "-")
+    if not text:
+        return ""
+    return "" if text[0] == " " else text[0]
+
+
+def unaligned_color(cmd: Any, unaligned_mode: int, fill_color: int) -> int:
+    """``layer1/Seq.cpp:322-338`` — resolve ``seq_view_unaligned_color``.
+
+    Left at its default of -1 it becomes ``seq_view_fill_color``, EXCEPT in
+    ``seq_view_unaligned_mode`` 3, where it stays -1 and the column keeps its
+    own colour.
+    """
+    index = _int(cmd, "seq_view_unaligned_color", "", -1)
+    if index == -1:
+        return -1 if int(unaligned_mode) == 3 else int(fill_color)
+    return index
+
+
+def _bg_color(cmd: Any, location: int) -> List[float]:
+    """The background the unaligned blend averages against (``Seq.cpp:273-280``)."""
+    if _int(cmd, "bg_gradient", "", 0):
+        name = "bg_rgb_bottom" if location else "bg_rgb_top"
+    else:
+        name = "bg_rgb"
+    try:
+        rgb = cmd.get_color_tuple(_int(cmd, name, "", 0))
+    except Exception:  # noqa: BLE001
+        rgb = None
+    return [float(component) for component in rgb] if rgb else [0.0, 0.0, 0.0]
 
 
 # --------------------------------------------------------------------------
@@ -952,9 +1388,13 @@ def select_range(
     and concatenates every column's atom list into ONE selector call — "so that
     we only call selector once" (``:92``).  The row is rebuilt here rather than
     shipped back from the browser, so a drag across 6,000 columns costs two
-    integers on the wire.
+    integers on the wire.  It is rebuilt WITH the alignment context, because
+    alignment mode drops the gap columns and every column index shifts.
     """
-    full = row_model(cmd, obj, state)
+    align_name, align_tags = alignment_context(cmd)
+    full = row_model(
+        cmd, obj, state, bool(align_name), align_tags.get(obj, {})
+    )
     if full is None:
         return {"name": "", "expression": "", "log": "", "count": 0}
     cells = full["cells"]

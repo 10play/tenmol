@@ -97,17 +97,34 @@ def test_execute_reaches_a_full_shell_with_no_confirmation(
     is not stubbed to ``None`` --- so ``["/bin/sh", "-c", ...]`` resolves and
     the child gets the whole shell grammar: redirection, ``;``, pipelines.
 
-    MEASURED on this machine: reply ``{"t": "ok", "dangerous": true}`` with no
-    ``needsConfirmation``, in 0.005 s, and the redirected file existed
-    afterwards.  Asserting the *effect* (a file the shell created) and not just
-    the exit status, because a zero exit proves nothing about what ran.
+    MEASURED on this machine: the redirected file existed afterwards.  Asserting
+    the *effect* (a file the shell created) and not just the exit status,
+    because a zero exit proves nothing about what ran.
 
-    This is a claim correction, NOT a newly opened hole --- see the companion
-    test below.
+    RENAMED IN WAVE 11 --- it used to be called "..._with_no_confirmation" and
+    asserted ``"needsConfirmation" not in reply``.  That half is gone: row 467's
+    product decision put ``subproc.execute`` behind the same one-time
+    confirmation as ``cmd.system``, so the FIRST call in a session is now
+    refused.  The capability claim this test exists for is unchanged --- a
+    confirmed ``execute`` still reaches a full shell --- so the test confirms
+    first and then measures.
     """
     needle = HALF + "_SHELL"
     victim = tmp_path / "shell-really-ran"
     ws.subscribe("feedback")
+
+    # Clear the one-time gate.  NOT asserted as "the first call is refused"
+    # here: the suite shares one PyMOL process and `Policy.confirm` is a set
+    # insert on it, so whether THIS test sees the refusal depends on whether
+    # `test_wf_apbs.py` ran first — it did, and asserting the refusal made this
+    # test pass alone and fail in the suite. The refusal is pinned against a
+    # fresh `Policy` in `test_p11_confirm.py`, where order cannot decide it.
+    #
+    # `WSClient.request` takes the frame as KWARGS, not as a dict: passing a
+    # dict positionally binds it to `timeout` and dies in the deadline
+    # arithmetic ("unsupported operand type(s) for +: 'float' and 'dict'").
+    confirmed = ws.request(t="confirm", fn="subproc.execute")
+    assert confirmed["t"] == "ok", confirmed
 
     reply = ws.call_reply(
         "subproc.execute",
@@ -116,7 +133,6 @@ def test_execute_reaches_a_full_shell_with_no_confirmation(
 
     assert reply["t"] == "ok", reply
     assert reply.get("dangerous") is True, reply
-    assert "needsConfirmation" not in reply, reply
     assert reply["result"]["returncode"] == 0, reply
 
     # The shell's `>` redirection happened: this is the capability, not the
@@ -129,39 +145,50 @@ def test_execute_reaches_a_full_shell_with_no_confirmation(
     assert feedback_hits(bridge, needle), bridge.feedback_lines()[-10:]
 
 
-def test_confirm_once_gates_system_but_not_execute() -> None:
+def test_confirm_once_gates_system_AND_execute() -> None:
     """The asymmetry, on a fresh Policy so suite order cannot decide it.
 
-    UPDATED IN WAVE 10, and the update is the point.  This test used to record
-    that ``Grant`` had **no field** that could add to ``CONFIRM_ONCE``, so the
-    WP-25 grant *could not* gate ``execute`` even if it wanted to.  That is no
-    longer true: ``Grant.confirm_once`` exists (``policy/base.py``), and the
-    same pass fixed the dotted-path lookup that any such gate would have had to
-    work around.
+    THE THIRD AND LAST VERSION OF THIS TEST, and the history is the point.
 
-    The BEHAVIOUR is unchanged, and now for a reason the code can express: WP-25
-    argues in its own grant file that gating ``execute`` while ``cmd.do`` is
-    dangerous, ungated and able to run ``import subprocess`` on the same socket
-    is theatre.  "Cannot say it" and "chose not to say it" are different states;
-    this is now the second one.
+    * Wave 8 recorded the asymmetry as a fact: ``cmd.system`` confirmed,
+      ``subproc.execute`` not.
+    * Wave 10 recorded that ``Grant`` had gained a ``confirm_once`` field, so
+      WP-25 *could* now express the gate — but did not, arguing that gating
+      ``execute`` while ``cmd.do`` could run ``import subprocess`` on the same
+      socket was theatre.  "Cannot say it" and "chose not to say it" are
+      different states, and that pass moved it to the second.
+    * Wave 11 took the decision to the product owner, who chose "confirm once,
+      consistently" (inventory row 467).  So the gate is on, AND the bypass the
+      previous version was right to point at is closed: ``Dispatcher.do``
+      re-applies the gate to a command line's leading keyword.
+
+    What is NOT claimed, then or now: this is not a sandbox.  ``run``,
+    ``alias`` and the ``/`` escape still reach a subprocess and are still
+    permitted by design.  See ``bridge/tests/test_p11_confirm.py``.
     """
     from tenmol_bridge.policy import build_policy
     from tenmol_bridge.policy.base import CONFIRM_ONCE, Grant
 
+    # `system` is the built-in; `subproc.execute` arrives via the WP-25 grant,
+    # so the two live in different places and both must be checked.
     assert CONFIRM_ONCE == frozenset({"system"})
-    assert Grant("probe").confirm_once == set(), "the field exists and is empty"
+    assert Grant("probe").confirm_once == set(), "the field defaults empty"
 
     policy = build_policy()
     system = policy.check("cmd.system")
     execute = policy.check("subproc.execute")
 
     assert system.dangerous and system.needs_confirmation is True
-    assert execute.dangerous and execute.needs_confirmation is False
+    assert execute.dangerous and execute.needs_confirmation is True
 
-    # ...and the gate WOULD work if WP-25 ever asked for it, keyed either way.
-    gated = build_policy().add_grant(Grant("probe", confirm_once={"subproc.execute"}))
-    assert gated.check("subproc.execute").needs_confirmation is True
-    assert gated.check("subproc.which").needs_confirmation is False
+    # The gate is NARROW: `which` starts nothing and must not have acquired a
+    # prompt along the way.
+    assert policy.check("subproc.which").needs_confirmation is False
+
+    # And it is per capability, not a blanket unlock.
+    policy.confirm("subproc.execute")
+    assert policy.check("subproc.execute").needs_confirmation is False
+    assert policy.check("cmd.system").needs_confirmation is True
 
 
 def test_execute_is_a_new_channel_and_not_a_new_capability(ws: WSClient, bridge) -> None:

@@ -502,6 +502,18 @@ def load_help(path: Optional[str] = None) -> Dict[str, str]:
 # parse is, so a stale asset produces NO defaults rather than wrong ones, and
 # ``test_p10_rest.py`` regenerates it in memory and fails if the checked-in copy
 # differs by one byte -- staleness is a red test, not a silent lie.
+#
+# "SHIPPED WITH THE PACKAGE" IS A PACKAGING DECLARATION, NOT A WISH.  Being
+# checked in next to the module is NOT enough: setuptools puts ``*.py`` and
+# nothing else in a distribution, and for one wave this comment was simply
+# false -- a built wheel held 43 ``.py`` files and ZERO ``.json``, so every
+# ``pip install`` layout had the fallback (a header that is not installed
+# either) and therefore no defaults at all.  What makes the sentence true is
+# ``[tool.setuptools.package-data]`` in ``bridge/pyproject.toml``, and what
+# keeps it true is ``bridge/tests/test_p11_infra2.py``, which BUILDS the wheel
+# and the sdist and reads the asset back out of them -- an in-tree test cannot
+# see this failure mode, because in the tree the file is always next to
+# ``__file__``.
 
 #: Next to this module, so it travels with the package.
 ASSET_NAME = "setting_catalog.json"

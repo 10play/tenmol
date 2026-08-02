@@ -26,15 +26,29 @@
 }
 
 /* Menus like Setting > Label > Font are 14 rows; Movie > X-Rock is 20. Cap the
-   height rather than letting a list run off the bottom of the window. */
+   height rather than letting a list run off the bottom of the window.
+
+   `overflow-x: visible` DOES NOT SURVIVE THIS. CSS computes it to `auto` the
+   moment `overflow-y` is not `visible`, so this rule made every menu a scroll
+   container and CLIPPED the submenu each one opens at `left: 100%`. Measured in
+   a 1280x900 browser: Display's list had scrollWidth 418 against clientWidth
+   208, `elementFromPoint` over `Display > Stereo Mode >` returned the viewport
+   CANVAS, and a screenshot showed no submenu at all. `MenuList` now positions
+   nested lists `fixed`, which is not clipped by an ancestor's overflow — see
+   the note there. */
 .menu {
   max-height: calc(100vh - 40px);
   overflow-y: auto;
-  overflow-x: visible;
 }
 
-/* A nested list four levels deep runs off a 1280px window; MenuList measures
-   and adds this. */
+/* Out of the parent's scroll clip. `MenuList` supplies `left`/`top` inline,
+   including the flip when a fourth-level list would run off the right edge. */
+.menu--sub {
+  position: fixed;
+}
+
+/* Top-level lists only: a nested one is placed by `MenuList` in viewport
+   coordinates and never needs the anchor-relative flip. */
 .menu--flip {
   left: auto;
   right: 100%;

@@ -58,6 +58,7 @@
 
 #include "os_python.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -75,6 +76,7 @@
 #include "ObjectMolecule.h"
 #include "ObjectDist.h"
 #include "ObjectCGO.h"
+#include "ObjectMesh.h"
 #include "DistSet.h"
 #include "CoordSet.h"
 #include "Rep.h"
@@ -1321,6 +1323,133 @@ PyObject* extractMesh(::Rep* rep, PyMOLGlobals* G)
     dictSet(d, "color", f32Bytes(I->VC, size_t(total) * 3));
   }
   dictSetInt(d, "mesh_type", static_cast<int>(I->mesh_type));
+  // `RepMesh::Width` -- cSetting_mesh_width for an isomesh, cSetting_dot_width
+  // for an isodot (layer2/RepMesh.cpp:612-616).  It is the RAW setting; the
+  // renderer scales it by SceneGetDynamicLineWidth() at draw time, which is
+  // camera-dependent and therefore the client's job, not the packer's.
+  dictSetFloat(d, "width", I->Width);
+  return d;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Isomesh / isodot OBJECTS (ObjectMesh) - what `isomesh` and `isodot` create,
+ * and what the density wizard exists to show.
+ *
+ * These are not molecular reps and own no CoordSet, so nothing above can reach
+ * them.  Their geometry lives on the state and is filled by IsosurfVolume
+ * inside ObjectMesh::update() (layer2/ObjectMesh.cpp:534-618); ObjectMesh::
+ * render() then walks exactly these two arrays (:755-830):
+ *
+ *   ObjectMeshState::N   zero-terminated GL_LINE_STRIP run lengths (ObjectMesh.h:31)
+ *   ObjectMeshState::V   3 floats per vertex, already back-transformed through
+ *                        the state Matrix (ObjectMesh.h:35, .cpp:618-627)
+ *   ObjectMeshState::VC  3 floats per vertex when the colour is NOT uniform,
+ *                        and EMPTY when it is (ObjectMeshStateUpdateColors,
+ *                        .cpp:470-476) - so `VC.empty()` is the one-colour flag
+ *
+ * That is the same layout RepMesh keeps, so this reuses extractMesh()'s
+ * `kind: "mesh"` envelope instead of inventing a second one: the bridge's
+ * `_strip_mesh` and the client's `stripLineIndices` already draw it.
+ *
+ * V may be LONGER than the strips describe: the carve path (.cpp:629-684)
+ * rebuilds N/V with VLACheck, which grows a VLA and never shrinks it.  The
+ * vertex count that may be READ is therefore the strip total, never
+ * VLAGetSize(V)/3.
+ * ------------------------------------------------------------------------- */
+
+/// Walk ObjectMeshState::N.  @return nullptr on success, else a reason tag.
+const char* objectMeshStrips(
+    const ObjectMeshState& ms, std::vector<int>& strips, long& total)
+{
+  total = 0;
+  const size_t n_n = ms.N.size();
+  const size_t n_v = ms.V.size();
+  if (!n_n || !n_v) {
+    return "empty";
+  }
+  const long avail = static_cast<long>(n_v / 3);
+  for (size_t i = 0; i < n_n; ++i) {
+    const int c = ms.N[i];
+    if (!c) {
+      return nullptr; // hit the terminator
+    }
+    if (c < 0 || total + c > avail) {
+      return "overrun";
+    }
+    strips.push_back(c);
+    total += c;
+  }
+  return "unterminated";
+}
+
+PyObject* extractObjectMesh(
+    ObjectMesh* om, const ObjectMeshState& ms, PyMOLGlobals* G)
+{
+  if (!ms.Active) {
+    return makeResult("not-built", "mesh state is not active");
+  }
+  if (!(om->visRep & cRepMeshBit)) {
+    /* ObjectMesh::update() skips the isosurfacing entirely when the mesh rep is
+     * hidden (.cpp:534), and render() returns early too - so this is the same
+     * "Mode P is not drawing it either" case the molecular path reports. */
+    return makeResult("not-built",
+        "mesh rep is hidden for this object (show mesh, then cmd.refresh() or "
+        "pass update=1)");
+  }
+
+  std::vector<int> strips;
+  long total = 0;
+  if (const char* why = objectMeshStrips(ms, strips, total)) {
+    if (std::strcmp(why, "empty") == 0) {
+      return makeResult("not-built",
+          "mesh state carries no geometry yet (the isomesh has never been "
+          "updated; pass update=1)");
+    }
+    return makeResult("layout-mismatch",
+        std::strcmp(why, "overrun") == 0
+            ? "ObjectMeshState::N strip lengths overrun ::V"
+            : "ObjectMeshState::N is not zero-terminated");
+  }
+  if (!total) {
+    return makeResult("empty", "mesh state is built but has 0 vertices");
+  }
+
+  const bool one_color_flag = ms.VC.empty();
+  if (!one_color_flag && ms.VC.size() < static_cast<size_t>(total) * 3) {
+    return makeResult(
+        "layout-mismatch", "ObjectMeshState::VC is shorter than ::V");
+  }
+
+  PyObject* d = makeResult("ok", "");
+  dictSetStr(d, "kind", "mesh");
+  dictSetStr(d, "source", "ObjectMeshState::V");
+  dictSetInt(d, "n_vert", total);
+  dictSetInt(d, "n_strip", static_cast<long>(strips.size()));
+  dictSet(d, "strips", i32Bytes(strips));
+  dictSet(d, "vertex", f32Bytes(ms.V.data(), static_cast<size_t>(total) * 3));
+  dictSet(d, "one_color_flag", PyBool_FromLong(one_color_flag));
+  if (one_color_flag) {
+    dictSet(d, "rgb", rgbList(ColorGet(G, ms.OneColor < 0 ? 0 : ms.OneColor)));
+    Py_INCREF(Py_None);
+    dictSet(d, "color", Py_None);
+  } else {
+    dictSet(d, "color", f32Bytes(ms.VC.data(), static_cast<size_t>(total) * 3));
+  }
+  /* cIsomeshMode (layer0/PyMOLEnums.h:9): 0 isomesh -> LINE_STRIP,
+   * 1 isodot -> POINTS.  The client MUST branch on this or an isodot object is
+   * drawn as a cage of lines between unrelated dots. */
+  dictSetInt(d, "mesh_type", static_cast<int>(ms.MeshMode));
+  /* Line width, RAW: ObjectMesh::render() emits LINEWIDTH_DYNAMIC_MESH
+   * (.cpp:772), i.e. `mesh_width` scaled by SceneGetDynamicLineWidth() at DRAW
+   * time, so the camera-dependent factor is the client's to apply. */
+  dictSetFloat(d, "width",
+      SettingGet_f(G, nullptr, om->Setting.get(),
+          ms.MeshMode == cIsomeshMode::isodot ? cSetting_dot_width
+                                              : cSetting_mesh_width));
+  /* Identity of the isosurface itself - nothing a Rep-based accessor can say,
+   * and what a density panel needs to label the mesh it is showing. */
+  dictSetFloat(d, "level", ms.Level);
+  dictSetStr(d, "map_name", ms.MapName);
   return d;
 }
 
@@ -1642,6 +1771,15 @@ uint64_t repSignature(::Rep* rep, PyMOLGlobals* G)
     }
     hashU64(h, static_cast<uint64_t>(total));
     hashFloats(h, I->V, size_t(total) * 3);
+    // `Width` IS part of the rep's appearance and MUST be in the signature.
+    // It was not, and the consequence was measured rather than argued: with
+    // `mesh_width` 1 -> 3 the geometry survives byte-identical, so nothing else
+    // hashed here changes, `web_get_versions` never bumped `mesh|<state>`, and
+    // the client's version poll — which gates every geometry pull — saw no
+    // reason to refetch. Mode P went 22,780 -> 36,444 ink pixels while Mode G
+    // stayed at 22,771 with `geometryFrames` stuck at 1. `cRepDot` six lines
+    // below has always hashed its `Width`; this arm simply did not.
+    hashBytes(h, &I->Width, sizeof(I->Width));
     hashU64(h, I->oneColorFlag ? 1u : 0u);
     // RepMesh::recolor() also mutates in place (layer2/RepMesh.cpp:571).
     hashFloats(h, ColorGet(G, I->oneColor), 3);
@@ -1820,6 +1958,8 @@ void walkObject(PyMOLGlobals* G, pymol::CObject* base, WebObjectVersion& O,
     n_state = static_cast<int>(od->DSet.size());
   } else if (auto oc = dynamic_cast<ObjectCGO*>(base)) {
     n_state = static_cast<int>(oc->State.size());
+  } else if (auto ome = dynamic_cast<ObjectMesh*>(base)) {
+    n_state = static_cast<int>(ome->State.size());
   }
 
   if (O.type != type || O.enabled != base->Enabled || O.obj_sig != osig ||
@@ -1898,8 +2038,52 @@ void walkObject(PyMOLGlobals* G, pymol::CObject* base, WebObjectVersion& O,
     return;
   }
 
-  /* Any other object type (map, mesh, surface, volume, group, ...): the
-   * object-level signature above is all we track.  Documented in
+  /* isomesh / isodot objects: the geometry hangs off ObjectMeshState, not off a
+   * Rep slot, so it needs its own signature.  Without this the version table
+   * never lists a `mesh|<state>` row for an ObjectMesh and client-side
+   * discovery has no reason to pull it - and a re-levelled isomesh (same
+   * object, same vertex COUNT, different vertices) would never be refetched. */
+  if (auto ome = dynamic_cast<ObjectMesh*>(base)) {
+    for (size_t s = 0; s < ome->State.size(); ++s) {
+      const ObjectMeshState& ms = ome->State[s];
+      std::vector<int> strips;
+      long total = 0;
+      const char* why = objectMeshStrips(ms, strips, total);
+      const bool active =
+          ms.Active && (base->visRep & cRepMeshBit) && !why && total > 0;
+      uint64_t sig = kFnvOffset;
+      if (active) {
+        hashU64(sig, static_cast<uint64_t>(total));
+        hashInts(sig, strips.data(), strips.size());
+        hashFloats(sig, ms.V.data(), static_cast<size_t>(total) * 3);
+        hashU64(sig, ms.VC.empty() ? 1u : 0u);
+        /* ObjectMeshStateUpdateColors() recolours in place, so the colour has
+         * to be in the signature or `color red, m1` would be invisible. */
+        hashFloats(sig, ColorGet(G, ms.OneColor < 0 ? 0 : ms.OneColor), 3);
+        if (!ms.VC.empty()) {
+          hashFloats(sig, ms.VC.data(),
+              std::min(ms.VC.size(), static_cast<size_t>(total) * 3));
+        }
+        hashFloats(sig, &ms.Level, 1);
+        hashU64(sig, static_cast<uint64_t>(static_cast<int>(ms.MeshMode)));
+        /* The width `extractObjectMesh` emits, hashed by the same lookup that
+         * produces it - an OBJECT-level setting, not state, so it is read here
+         * rather than taken off `ms`. Same hole, same consequence as the
+         * `cRepMesh` arm of `repSignature`: `set mesh_width, 3` changes no
+         * vertex, so without this the version never bumps and the client's
+         * poll - which gates every pull - never refetches. */
+        const float width = SettingGet_f(G, nullptr, ome->Setting.get(),
+            ms.MeshMode == cIsomeshMode::isodot ? cSetting_dot_width
+                                                : cSetting_mesh_width);
+        hashFloats(sig, &width, 1);
+      }
+      changed |= noteRep(O, static_cast<int>(s), cRepMesh, active, sig);
+    }
+    return;
+  }
+
+  /* Any other object type (map, surface, volume, group, ...): the object-level
+   * signature above is all we track.  Documented in
    * docs/webclient/spikes/08-native-changes.md. */
 }
 
@@ -2057,11 +2241,34 @@ PyObject* CmdWebGetRepGeometry(PyObject* self, PyObject* args)
       break;
     }
 
+    /* --- isomesh / isodot objects (the density wizard's product) -------- */
+    if (auto ome = dynamic_cast<ObjectMesh*>(base)) {
+      if (rep_index == cRepExtent) {
+        result = extractExtent(base, G);
+        break;
+      }
+      if (rep_index != cRepMesh) {
+        result = makeResult("unsupported",
+            "mesh objects only carry the mesh and extent reps");
+        break;
+      }
+      if (resolved_state < 0) {
+        resolved_state = ome->getCurrentState();
+      }
+      if (resolved_state < 0 ||
+          static_cast<size_t>(resolved_state) >= ome->State.size()) {
+        result = makeResult("not-built", "no mesh state for this state index");
+        break;
+      }
+      result = extractObjectMesh(ome, ome->State[resolved_state], G);
+      break;
+    }
+
     obj = dynamic_cast<ObjectMolecule*>(base);
     if (!obj) {
       result = makeResult("unsupported",
           "no CPU-side geometry accessor for this object type (molecular, "
-          "measurement and CGO objects are supported)");
+          "measurement, CGO and mesh objects are supported)");
       break;
     }
 
