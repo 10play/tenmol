@@ -209,8 +209,14 @@ jobs:
       # Neither has anything to do with GL. Scope the job to what it is named
       # after; a green job that answers the wrong question is worse than none.
       - name: bridge pytest suite (the GL-dependent tests)
+        # `-k 'not benchmark'`: two of these assert a WALL-CLOCK BUDGET
+        # (median frame time <= 6 ms, measured on an M4 Max with a hardware GL
+        # context). This runner has no GPU at all — llvmpipe software
+        # rasterisation is the entire point of the job — and it measured
+        # 11.392 ms. A performance budget on a software rasteriser tests the
+        # runner, not the code, and would be red for ever.
         run: |
-          packages/bridge/.venv/bin/python -m pytest -q \
+          packages/bridge/.venv/bin/python -m pytest -q -k 'not benchmark' \
             packages/bridge/tests/test_modeg.py \
             packages/bridge/tests/test_modeg_lines.py \
             packages/bridge/tests/test_modeg_objects.py \
