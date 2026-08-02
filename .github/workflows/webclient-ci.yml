@@ -237,6 +237,7 @@ jobs:
         id: engine
         uses: ./.github/actions/engine-venv
         with:
+          python-version: ${{ env.PYTHON_VERSION }}
           cache-epoch: ${{ env.CACHE_EPOCH }}
 
       # Checked here, immediately after bootstrap and before anything else

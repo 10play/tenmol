@@ -18,6 +18,15 @@ name: engine-venv
 description: Build or restore the PyMOL venv at packages/bridge/.venv
 
 inputs:
+  python-version:
+    description: >-
+      The interpreter to build against. NOT optional in practice: a GitHub
+      macOS runner's default `python` is 3.14, PyMOL does not build on it
+      (upstream's own py314 branch is red on all three platforms), and
+      bootstrap only WARNS before failing later. The first real CI run died
+      exactly here.
+    required: false
+    default: '3.13'
   cache-epoch:
     description: Bump to invalidate every engine cache at once.
     required: false
@@ -34,6 +43,12 @@ outputs:
 runs:
   using: composite
   steps:
+    # Pin the interpreter BEFORE anything reads `python`. Without this the
+    # runner's default wins, which is 3.14 today.
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
     # The venv symlinks this interpreter and the extension modules are
     # ABI-tagged to it, so its exact version belongs in the cache key.
     - name: identify the interpreter

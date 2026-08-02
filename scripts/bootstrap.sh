@@ -103,6 +103,13 @@ die() {
   exit 1
 }
 
+# Every use site expands this with the `[@]+` guard, never bare. Under
+# `set -u` on bash 3.2 — which is what macOS
+# ships as /bin/bash, and what a GitHub macOS runner executes this with —
+# expanding an EMPTY array is an "unbound variable" error and kills the
+# script. bash >= 4.4 treats it as empty, so this is invisible on Linux and
+# on any Mac with a Homebrew bash. It killed the first real CI run:
+#   scripts/bootstrap.sh: line 227: PIP_QUIET[@]: unbound variable
 PIP_QUIET=()
 [ "$QUIET" = 1 ] && PIP_QUIET=(-q)
 
@@ -224,7 +231,7 @@ PY="$VENV/bin/python"
 # Build-time deps must be present *before* the PyMOL build, because we pass
 # --no-build-isolation (spikes/build.md section 3.1).
 info "installing build requirements (pip, numpy, setuptools, cmake)"
-"$PY" -m pip install "${PIP_QUIET[@]}" --upgrade \
+"$PY" -m pip install ${PIP_QUIET[@]+"${PIP_QUIET[@]}"} --upgrade \
   pip "numpy>=2.0" "setuptools>=69.2.0" "cmake>=3.13.3" >/dev/null ||
   die "could not install build requirements into the venv"
 ok "build requirements installed"
@@ -290,7 +297,7 @@ else
   # No --glut (default False keeps _PYMOL_NO_MAIN defined), no --testing
   # (needs Catch2 v2).
   BUILD_LOG="$REPO_ROOT/.tenmol-bootstrap.log"
-  if "$PY" -m pip install "${PIP_QUIET[@]}" --no-build-isolation \
+  if "$PY" -m pip install ${PIP_QUIET[@]+"${PIP_QUIET[@]}"} --no-build-isolation \
     --config-settings use-msgpackc=c++11 "$REPO_ROOT/packages/engine" >"$BUILD_LOG" 2>&1; then
     ok "$("$PY" -c 'import pymol;print(pymol.get_version_message())') built and installed"
     rm -f "$BUILD_LOG"
@@ -311,7 +318,7 @@ fi
 step "tenmol-bridge (editable install)"
 
 if [ -f "$REPO_ROOT/packages/bridge/pyproject.toml" ]; then
-  "$PY" -m pip install "${PIP_QUIET[@]}" -e "$REPO_ROOT/packages/bridge[dev]" >/dev/null ||
+  "$PY" -m pip install ${PIP_QUIET[@]+"${PIP_QUIET[@]}"} -e "$REPO_ROOT/packages/bridge[dev]" >/dev/null ||
     die "pip install -e packages/bridge/ failed"
   ok "tenmol_bridge importable: $("$PY" -c 'import tenmol_bridge;print(tenmol_bridge.__version__)')"
 else

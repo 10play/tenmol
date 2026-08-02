@@ -82,6 +82,8 @@ concurrency:
 env:
   PNPM_VERSION: 9.15.4
   NODE_VERSION: "22"
+  # PyMOL does not build on 3.14, which is the runner default.
+  PYTHON_VERSION: "3.13"
   # Must match webclient-ci.yml: the two share one engine cache via
   # .github/actions/engine-venv, and a different epoch would split it.
   CACHE_EPOCH: v1
@@ -112,6 +114,7 @@ jobs:
         id: engine
         uses: ./.github/actions/engine-venv
         with:
+          python-version: ${{ env.PYTHON_VERSION }}
           cache-epoch: ${{ env.CACHE_EPOCH }}
 
       - name: cache playwright's chrome-headless-shell
