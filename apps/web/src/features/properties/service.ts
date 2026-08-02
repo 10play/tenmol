@@ -50,8 +50,7 @@ import { KEYS, coerceToPythonLiteral, formatValue, inferOldKind, oneLetter } fro
 
 /** `bridge/tenmol_bridge/panels/properties.py`, bootstrapped like the others. */
 export const PROPS_NS = 'cmd.tenmol_props';
-export const PROPS_BOOTSTRAP =
-  'import tenmol_bridge.panels.properties as _tp; _tp.install()';
+export const PROPS_BOOTSTRAP = 'import tenmol_bridge.panels.properties as _tp; _tp.install()';
 
 export interface AtomExtras {
   ok: boolean;
@@ -74,8 +73,7 @@ export async function atomExtras(
   state: number,
 ): Promise<AtomExtras | null> {
   const empty: AtomExtras = { ok: false, found: false, builtins: {}, properties: {} };
-  const fetch = () =>
-    session.call<AtomExtras>(`${PROPS_NS}.atom_extras`, [model, index, state]);
+  const fetch = () => session.call<AtomExtras>(`${PROPS_NS}.atom_extras`, [model, index, state]);
   try {
     return await fetch();
   } catch {
@@ -163,6 +161,29 @@ export async function readPk1(session: Session): Promise<{ model: string; index:
   const owners = await session.call<string[]>('get_object_list', ['pk1']);
   const owner = Array.isArray(owners) && owners.length > 0 ? owners[0]! : '';
   return { model: owner, index: atom.index };
+}
+
+/**
+ * The same answer as {@link readPk1} in ONE call, for the follow poll.
+ *
+ * `cmd.index('?pk1')` returns `[[model, index]]`, or `[]` when nothing is
+ * picked. Measured over the socket in `bridge/tests/test_p8_a10.py`, including
+ * the two things that make it usable on a timer where `readPk1` is not:
+ *
+ *   * it is ONE round trip, not three (`get_names` + `get_model` +
+ *     `get_object_list`), and it carries no coordinates;
+ *   * the `?` prefix is load-bearing. Bare `pk1` raises
+ *     ` Error: invalid selection` when there is no pick, so an unpicked session
+ *     would produce an error frame every poll interval.
+ *
+ * `readPk1` is kept for the open/Refresh path: it is the port of upstream's
+ * `update_from_pk1` and this is not.
+ */
+export async function probePk1(session: Session): Promise<{ model: string; index: number } | null> {
+  const rows = await session.call<[string, number][]>('index', ['?pk1']);
+  const first = Array.isArray(rows) ? rows[0] : undefined;
+  if (!first || typeof first[0] !== 'string' || typeof first[1] !== 'number') return null;
+  return { model: first[0], index: first[1] };
 }
 
 /** `update_pk1` (`properties_dialog.py:330-341`) — move the pk1 pick. */
@@ -350,7 +371,14 @@ export function atomSettingsPlaceholder(): PropertyRow[] {
 export function atomPropertyRows(extras: AtomExtras | null): PropertyRow[] {
   const entries = Object.entries(extras?.properties ?? {});
   if (entries.length === 0) {
-    return [{ branch: 'atom-property', key: 'p.*', text: '', unavailable: 'no custom properties on this atom' }];
+    return [
+      {
+        branch: 'atom-property',
+        key: 'p.*',
+        text: '',
+        unavailable: 'no custom properties on this atom',
+      },
+    ];
   }
   return entries.map(([key, value]) => ({
     branch: 'atom-property',

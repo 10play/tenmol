@@ -82,6 +82,8 @@ __all__ = [
     "uninstall",
     "movie_status",
     "movie_panel",
+    "movie_key_frames",
+    "key_frame_payload",
     "scene_panel",
     "scene_thumbnail_png",
     "movie_export_png",
@@ -98,12 +100,23 @@ __all__ = [
     "SPEC_INTERPOLATED",
     "SPEC_KEY",
     "STORE_BITS",
+    "VE_LENGTH",
     "THUMBNAIL_WIDTH",
     "THUMBNAIL_HEIGHT",
 ]
 
 # -- CViewElem list indices (layer1/View.cpp:341-425) -----------------------
 VE_MATRIX_FLAG = 0
+VE_MATRIX = 1
+VE_PRE_FLAG = 2
+VE_PRE = 3
+VE_POST_FLAG = 4
+VE_POST = 5
+VE_CLIP_FLAG = 6
+VE_FRONT = 7
+VE_BACK = 8
+VE_ORTHO_FLAG = 9
+VE_ORTHO = 10
 VE_VIEW_MODE = 11
 VE_SPEC_LEVEL = 12
 VE_SCENE_FLAG = 13
@@ -114,6 +127,10 @@ VE_BIAS_FLAG = 17
 VE_BIAS = 18
 VE_STATE_FLAG = 19
 VE_STATE = 20
+#: ``PyList_New(21)`` (``layer1/View.cpp:348``).  ``timing_flag``/``timing``
+#: (``layer1/View.h:50``) are NOT among those 21 slots and have no other
+#: Python route, which is the one part of the struct no getter can expose.
+VE_LENGTH = 21
 
 #: ``CViewElem::specification_level`` (``layer1/View.h:24``).
 SPEC_NONE = 0
@@ -318,6 +335,139 @@ def _state_at(element: Optional[Sequence[Any]]) -> Optional[int]:
         return None
     value = element[VE_STATE]
     return int(value) if value is not None else None
+
+
+def _float_list(value: Any) -> Optional[List[float]]:
+    if not isinstance(value, (list, tuple)):
+        return None
+    return [float(item) for item in value]
+
+
+def _number(value: Any) -> Optional[float]:
+    if value is None or isinstance(value, str):
+        return None
+    return float(value)
+
+
+def key_frame_payload(element: Optional[Sequence[Any]]) -> Dict[str, Any]:
+    """Decode ONE ``ViewElemAsPyList`` (``layer1/View.cpp:341-424``) in full.
+
+    Everything ``CViewElem`` (``layer1/View.h:24-56``) holds, in the order the
+    struct declares it — the 4x4 matrix, the pre/post translations, the clip
+    planes, ortho, view_mode, specification_level, the scene key, power, bias
+    and state.  :func:`movie_panel` deliberately reports only the three fields
+    the timeline draws with; this is the key-frame INSPECTOR, one frame at a
+    time, so the full 21-slot list is worth decoding.
+
+    TWO THINGS THE C GETS WRONG, reproduced faithfully rather than repaired,
+    because a getter that "fixes" them would disagree with the session file the
+    same engine writes:
+
+    * slots 7/8 (``front``/``back``) are guarded by ``view->post_flag``, not
+      ``clip_flag`` (``View.cpp:372``).  A key frame with clip planes and no
+      post translation therefore serialises ``clipFlag=1`` with
+      ``front=None``, and ``ViewElemFromPyList`` reads the flag back with no
+      values behind it.
+    * slot 16 (``power``) is guarded by ``view->ortho_flag``, not
+      ``power_flag`` (``View.cpp:404``), so ``mview store, power=-1`` round
+      trips as ``powerFlag=1, power=None`` unless an ortho was stored too.
+
+    AND ONE THING THAT IS SIMPLY NOT THERE: ``timing_flag``/``timing``
+    (``View.h:50-51``) have **no slot** — ``ViewElemAsPyList`` builds
+    ``PyList_New(21)`` and fills 0..20, none of which is timing.  It is
+    therefore unreachable from Python by any route: ``get_session`` is the only
+    structured readout of a ``CViewElem`` and this is the only serialiser it
+    uses.  ``VE_LENGTH`` is asserted by the tests so a future upstream merge
+    that adds the slot shows up as a failure rather than as silence.
+    """
+    if not element:
+        return {"specLevel": SPEC_NONE, "present": False}
+    return {
+        "present": True,
+        "specLevel": int(element[VE_SPEC_LEVEL]),
+        "matrixFlag": bool(int(element[VE_MATRIX_FLAG])),
+        "matrix": _float_list(element[VE_MATRIX]),
+        "preFlag": bool(int(element[VE_PRE_FLAG])),
+        "pre": _float_list(element[VE_PRE]),
+        "postFlag": bool(int(element[VE_POST_FLAG])),
+        "post": _float_list(element[VE_POST]),
+        "clipFlag": bool(int(element[VE_CLIP_FLAG])),
+        "front": _number(element[VE_FRONT]),
+        "back": _number(element[VE_BACK]),
+        "orthoFlag": bool(int(element[VE_ORTHO_FLAG])),
+        "ortho": _number(element[VE_ORTHO]),
+        "viewMode": int(element[VE_VIEW_MODE]),
+        "sceneFlag": bool(int(element[VE_SCENE_FLAG])),
+        "scene": _scene_at(element),
+        "powerFlag": bool(int(element[VE_POWER_FLAG])),
+        "power": _number(element[VE_POWER]),
+        "biasFlag": bool(int(element[VE_BIAS_FLAG])),
+        "bias": _number(element[VE_BIAS]),
+        "stateFlag": bool(int(element[VE_STATE_FLAG])),
+        "state": _state_at(element),
+    }
+
+
+def _view_elem_for(session: Dict[str, Any], obj: str) -> Optional[Sequence[Any]]:
+    """The ``ViewElem`` VLA of the camera (``obj == ''``) or of one object."""
+    if not obj:
+        movie = session.get("movie") or []
+        return movie[MV_VIEWELEM] if len(movie) > MV_VIEWELEM else None
+    for entry in session.get("names") or []:
+        if not entry or len(entry) <= EXEC_PAYLOAD:
+            continue
+        if entry[EXEC_TYPE] != EXEC_TYPE_OBJECT or str(entry[0]) != obj:
+            continue
+        payload = entry[EXEC_PAYLOAD]
+        if not isinstance(payload, (list, tuple)) or not payload:
+            return None
+        header = payload[0]
+        if not isinstance(header, (list, tuple)) or len(header) <= OBJ_VIEWELEM:
+            return None
+        return header[OBJ_VIEWELEM] or None
+    return None
+
+
+def movie_key_frames(
+    cmd: Optional[Any] = None,
+    object: str = "",  # noqa: A002 - the wire name matches cmd.mview's argument
+    first: int = 1,
+    last: int = 0,
+    session: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Full ``CViewElem`` payloads for a 1-based frame range.
+
+    ``object=''`` is the camera track (``CMovie::ViewElem``); any other name is
+    that object's own track, the same split ``ExecutiveMotionView``
+    (``layer3/Executive.cpp:437``) makes.  ``last=0`` means "to the end".
+
+    This is the read side of the key-frame inspector: the timeline gets its
+    per-frame ``specification_level`` from the much cheaper
+    :func:`movie_panel`, and only the selected cell is decoded here.
+    """
+    cmd = _resolve(cmd)
+    nframes = int(cmd.count_frames())
+    session = _session(cmd) if session is None else session
+    view_elem = _view_elem_for(session, str(object))
+
+    first = max(1, int(first))
+    last = nframes if int(last) <= 0 else min(int(last), nframes)
+    frames: List[Dict[str, Any]] = []
+    for frame in range(first, last + 1):
+        payload = key_frame_payload(_elem(view_elem, frame - 1))
+        payload["frame"] = frame
+        frames.append(payload)
+    return {
+        "object": str(object),
+        "nframes": nframes,
+        "track": bool(view_elem),
+        "first": first,
+        "last": last,
+        "frames": frames,
+        # ``ViewElemAsPyList`` is ``PyList_New(21)``; timing has no slot.
+        "slots": VE_LENGTH,
+        "timingExposed": False,
+    }
 
 
 def _object_rows(session: Dict[str, Any], nframes: int) -> List[Dict[str, Any]]:
@@ -957,6 +1107,7 @@ def movie_produce(
 EXPORTS: Dict[str, Any] = {
     "get_movie_status": movie_status,
     "get_movie_panel": movie_panel,
+    "get_movie_key_frames": movie_key_frames,
     "get_scene_panel": scene_panel,
     "get_scene_thumbnail_png": scene_thumbnail_png,
     "movie_export_png": movie_export_png,

@@ -142,3 +142,105 @@
 .plugmgr__note code {
   font-family: var(--pm-font-mono);
 }
+
+/* ---------------------------------------------------------------- writes */
+
+/*
+ * Wave 8: the Settings and Startup Paths tabs became editable, and every edit
+ * lands in ~/.pymolpluginsrc.py. The confirmation is a band rather than a
+ * modal because it has to be readable AT THE SAME TIME as the control that
+ * staged it -- the whole point is "this is what that click will do".
+ */
+.plugmgr__prefrow {
+  display: contents;
+}
+
+.plugmgr__prefs dt label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.plugmgr__confirm {
+  margin: 6px 0;
+  padding: 6px 8px;
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--pm-edge);
+}
+
+.plugmgr__confirmtext {
+  margin: 0 0 6px;
+  line-height: 1.45;
+}
+
+.plugmgr__confirmrow {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.plugmgr__confirmrow button,
+.plugmgr__addrow button {
+  padding: 2px 8px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.plugmgr__confirmrow button:disabled,
+.plugmgr__addrow button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.plugmgr__paths li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.plugmgr__pathtext {
+  flex: 1;
+  direction: rtl;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plugmgr__paths li button {
+  flex: none;
+  padding: 0 5px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font: inherit;
+  cursor: pointer;
+}
+
+.plugmgr__paths li button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.plugmgr__paths--fixed li {
+  opacity: 0.75;
+}
+
+.plugmgr__addrow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.plugmgr__addrow input {
+  flex: 1;
+  font: inherit;
+  font-family: var(--pm-font-mono);
+  padding: 2px 4px;
+  background: var(--pm-input, var(--pm-panel));
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+}

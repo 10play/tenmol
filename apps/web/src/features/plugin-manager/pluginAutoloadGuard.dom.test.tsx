@@ -154,9 +154,14 @@ describe('autoload checkbox', () => {
     expect(captured!.error).toMatch(/NotAllowed/);
     expect(captured!.plugins).toEqual([]);
 
-    await expect(captured!.setAutoload('apbs_gui', false)).rejects.toThrow(
-      /refusing to write ~\/\.pymolpluginsrc\.py/,
-    );
+    // wave 8: the guard now also SETS the visible write error before it
+    // rejects (rejecting alone was invisible, because every caller swallows
+    // it), so the call is a state update and has to be inside act().
+    await act(async () => {
+      await expect(captured!.setAutoload('apbs_gui', false)).rejects.toThrow(
+        /refusing to write ~\/\.pymolpluginsrc\.py/,
+      );
+    });
     expect(calls()).not.toContain('plugins.autoload.update');
     expect(calls()).not.toContain('plugins.set_pref_changed');
   });

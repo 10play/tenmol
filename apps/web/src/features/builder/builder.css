@@ -163,6 +163,22 @@
   line-height: 0;
 }
 
+/* The shipped ring bitmaps are black line art on a transparent background,
+   drawn for Qt's light palette. `builder.py:1114,1125` builds an
+   `invertPixels()` copy for the dark case and never uses it; this dock IS dark,
+   so the inversion happens here instead. `pixelated` keeps a 20 px 4-colour
+   GIF crisp on a HiDPI screen rather than smearing it. */
+.bbtn__icon {
+  image-rendering: pixelated;
+  filter: invert(1);
+}
+
+@media (prefers-color-scheme: light) {
+  .bbtn__icon {
+    filter: none;
+  }
+}
+
 .bbtn--disabled,
 .bbtn:disabled {
   opacity: 0.4;

@@ -434,6 +434,63 @@ export const GENERATED_BANDS: readonly { prefix: string; first: number; count: n
   { prefix: 'o', first: 4256, count: 1000 },
 ];
 
+/**
+ * The whole built-in table, cut into the regions `ColorReset` lays down in
+ * order (`layer1/Color.cpp:825-1322`). This is what the "advanced" browser
+ * pages through — 5388 tiles is not a palette, but 5388 tiles you can only
+ * SAMPLE is not browsable either, and `spectrum`/`ramp_new`/`set_color` all
+ * take these names.
+ *
+ * Every boundary below is asserted against the live table, name by name, in
+ * `bridge/tests/test_p8_a5.py::test_the_twelve_colour_regions_are_where_ColorReset_puts_them`.
+ * `first`/`count` — the last index is `first + count - 1`.
+ */
+export interface ColorRegion {
+  id: string;
+  label: string;
+  first: number;
+  count: number;
+  /** How PyMOL generated it; shown so the user knows what they are looking at. */
+  note: string;
+}
+
+export const COLOR_REGIONS: readonly ColorRegion[] = [
+  { id: 'core', label: 'core names', first: 0, count: 54, note: 'white … tv_yellow, hand-written' },
+  { id: 'grey', label: 'grey00-99', first: 54, count: 100, note: 'i/99 in all three channels' },
+  { id: 'lightmagenta', label: 'lightmagenta', first: 154, count: 1, note: 'one stray slot' },
+  { id: 's', label: 's000-999', first: 155, count: 1000, note: 'saturated spectrum' },
+  { id: 'r', label: 'r000-999', first: 1155, count: 1000, note: 'red-shifted spectrum' },
+  { id: 'c', label: 'c000-999', first: 2155, count: 1000, note: 'cycled spectrum' },
+  { id: 'w', label: 'w000-999', first: 3155, count: 1000, note: 'white-centred spectrum' },
+  { id: 'density', label: 'density', first: 4155, count: 1, note: 'one stray slot' },
+  { id: 'gray', label: 'gray00-99', first: 4156, count: 100, note: 'the American spelling' },
+  { id: 'o', label: 'o000-999', first: 4256, count: 1000, note: 'the rainbow palettes live here' },
+  { id: 'tints', label: 'tints & deeps', first: 5256, count: 25, note: 'paleyellow … darksalmon' },
+  { id: 'elements', label: 'element colours', first: 5281, count: 107, note: 'H … + deuterium, lonepair, pseudoatom' },
+];
+
+/** The slots a region covers, as entries; missing slots come back as null. */
+export function regionEntries(
+  state: PaletteState,
+  region: ColorRegion,
+  page: number,
+  perPage: number,
+): (ColorEntry | null)[] {
+  const start = region.first + page * perPage;
+  const end = Math.min(region.first + region.count, start + perPage);
+  const out: (ColorEntry | null)[] = [];
+  for (let i = start; i < end; i++) {
+    const entry = state.entries[i];
+    out.push(entry && entry.index === i ? entry : (state.entries.find((e) => e.index === i) ?? null));
+  }
+  return out;
+}
+
+/** How many pages `region` needs at `perPage` tiles. At least 1, so the UI has a page 0. */
+export function regionPages(region: ColorRegion, perPage: number): number {
+  return Math.max(1, Math.ceil(region.count / perPage));
+}
+
 /** Sample `n` evenly spaced colours out of a band, for a palette preview. */
 export function sampleBand(
   state: PaletteState,

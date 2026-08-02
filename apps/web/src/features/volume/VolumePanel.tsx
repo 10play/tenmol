@@ -46,7 +46,7 @@ import {
   valueBoxPrompt,
   type RampView,
 } from './ramp';
-import { applyPreset, fetchHistogram, getRamp, setRamp } from './service';
+import { applyPreset, fetchHistogram, getRamp, listPresets, setRamp } from './service';
 import './volume.css';
 
 type Modal =
@@ -77,6 +77,16 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
   } | null>(null);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
+  /**
+   * The named ramps, read live off `menu.vol_color` — which is where the
+   * internal `A > volume` submenu gets them. `BUILTIN_VOLUME_RAMPS` is the
+   * fallback for a backend that refuses the call, and the difference is shown
+   * rather than hidden.
+   */
+  const [presets, setPresets] = useState<{ names: readonly string[]; live: boolean }>({
+    names: BUILTIN_VOLUME_RAMPS,
+    live: false,
+  });
 
   /** The newest points/view, readable from a callback that closed over an old render. */
   const pointsRef = useRef(points);
@@ -125,6 +135,15 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
       if (parsed) {
         pointsRef.current = parsed;
         setPoints(parsed);
+      }
+
+      // Live, and every reload: `volume_ramp_new` can add one at any time.
+      // A refusal is not an error for the panel — it just means the constant.
+      try {
+        const names = await listPresets(session, name);
+        if (names.length > 0) setPresets({ names, live: true });
+      } catch {
+        setPresets({ names: BUILTIN_VOLUME_RAMPS, live: false });
       }
 
       const fetched = await fetchHistogram(session, name, flat);
@@ -269,13 +288,19 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
               }}
             >
               <option value="">named ramp…</option>
-              {BUILTIN_VOLUME_RAMPS.map((ramp) => (
+              {presets.names.map((ramp) => (
                 <option key={ramp} value={ramp}>
                   {ramp}
                 </option>
               ))}
             </select>
           </label>
+          <span
+            className="volpanel__presetsrc"
+            data-volume-preset-source={presets.live ? 'menu.vol_color' : 'constant'}
+          >
+            {presets.live ? 'live' : 'built-in list'}
+          </span>
           <button type="button" data-volume-reload="" onClick={() => void reload()}>
             Reload
           </button>

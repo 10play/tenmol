@@ -33,8 +33,12 @@ import {
   BY_ELEM_PAGES,
   BY_SS_PRESETS,
   COLOR_CYCLE,
+  FIXED_CARBON_SHORTCUTS,
+  NEGATIVE_REPS,
   REP_SETTING_LISTS,
   REP_SETTING_MODE_NAMES,
+  negativeSettings,
+  type NegativeRep,
 } from './menuData';
 import { findByName, type PaletteState } from './palette';
 import { useColorAction } from './usePalette';
@@ -45,13 +49,15 @@ export interface SwatchGridProps {
   sele: string;
 }
 
-type Submenu = 'elem' | 'chain' | 'ss' | 'rep' | 'spectrum' | 'auto' | null;
+type Submenu = 'elem' | 'chain' | 'ss' | 'rep' | 'spectrum' | 'auto' | 'negative' | null;
 
 export function SwatchGrid({ palette, sele }: SwatchGridProps) {
   const act = useColorAction();
   const [open, setOpen] = useState<Submenu>(null);
   const [repMode, setRepMode] = useState(0);
   const [repSetting, setRepSetting] = useState<string | null>(null);
+  const [negativeRep, setNegativeRep] = useState<NegativeRep>('mesh');
+  const [negativeArmed, setNegativeArmed] = useState(false);
 
   const q = JSON.stringify(sele);
 
@@ -70,8 +76,26 @@ export function SwatchGrid({ palette, sele }: SwatchGridProps) {
       call('unset', [setting, sele], { quiet: 0 }),
     );
 
+  /**
+   * `mesh_color`'s colour entries — menu.py:697-698. ONE menu item, TWO writes,
+   * in this order: make the negative lobe visible, then colour it. Dropping the
+   * `_negative_visible` write is the classic way to make this look broken: the
+   * colour lands in the setting and nothing appears, because the default is 0.
+   */
+  const setNegativeColor = (name: string) => {
+    const s = negativeSettings(negativeRep);
+    return act(
+      `cmd.set("${s.visible}",1,${q},quiet=0); cmd.set("${s.color}","${name}",${q},quiet=0)`,
+      async (call) => {
+        await call('set', [s.visible, 1, sele], { quiet: 0 });
+        await call('set', [s.color, name, sele], { quiet: 0 });
+      },
+    );
+  };
+
   const onSwatch = (name: string) => {
-    if (repSetting) void setRepColor(repSetting, name);
+    if (negativeArmed) void setNegativeColor(name);
+    else if (repSetting) void setRepColor(repSetting, name);
     else void colorDeep(name);
   };
 
@@ -86,6 +110,7 @@ export function SwatchGrid({ palette, sele }: SwatchGridProps) {
             ['rep', 'by rep'],
             ['spectrum', 'spectrum'],
             ['auto', 'auto'],
+            ['negative', 'negative'],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -115,8 +140,26 @@ export function SwatchGrid({ palette, sele }: SwatchGridProps) {
       )}
       {open === 'spectrum' && <SpectrumShortcuts sele={sele} />}
       {open === 'auto' && <AutoColor sele={sele} />}
+      {open === 'negative' && (
+        <Negative
+          sele={sele}
+          rep={negativeRep}
+          setRep={setNegativeRep}
+          armed={negativeArmed}
+          setArmed={setNegativeArmed}
+        />
+      )}
 
-      {repSetting && (
+      {negativeArmed && (
+        <div className="cmenu__armed">
+          next swatch writes <code>{negativeSettings(negativeRep).color}</code>
+          <button type="button" onClick={() => setNegativeArmed(false)}>
+            cancel
+          </button>
+        </div>
+      )}
+
+      {repSetting && !negativeArmed && (
         <div className="cmenu__armed">
           next swatch writes <code>{repSetting}</code>
           <button type="button" onClick={() => setRepSetting(null)}>
@@ -252,6 +295,99 @@ function ByElement({ sele, palette }: { sele: string; palette: PaletteState }) {
           );
         })}
       </div>
+
+      <div className="cmenu__sub-head">Fixed-carbon shortcuts</div>
+      <p className="cmenu__note">
+        <code>util.cbaX</code> — util.py:442-510. Same as the tiles above except they do{' '}
+        <em>not</em> set the object colour (no <code>flags=1</code> pass), so they are their own
+        entries rather than aliases.
+      </p>
+      <div className="cmenu__tiles">
+        {FIXED_CARBON_SHORTCUTS.map((shortcut) => {
+          const entry = findByName(palette, shortcut.color);
+          return (
+            <button
+              key={shortcut.fn}
+              type="button"
+              className="cmenu__tile cmenu__tile--shortcut"
+              style={{ background: entry ? rgbToCss(entry.rgb) : '#444' }}
+              title={`util.${shortcut.fn}(…) — carbons ${shortcut.color}, everything else atomic, object colour untouched`}
+              onClick={() =>
+                void act(`util.${shortcut.fn}(${JSON.stringify(sele)})`, (call) =>
+                  call(`util.${shortcut.fn}`, [sele]),
+                )
+              }
+            >
+              <span className="cmenu__tile-label">{shortcut.fn}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * negative colour — menu.py:696-712, `mesh_color`
+ * ------------------------------------------------------------------ */
+
+function Negative({
+  sele,
+  rep,
+  setRep,
+  armed,
+  setArmed,
+}: {
+  sele: string;
+  rep: NegativeRep;
+  setRep: (r: NegativeRep) => void;
+  armed: boolean;
+  setArmed: (b: boolean) => void;
+}) {
+  const act = useColorAction();
+  const s = negativeSettings(rep);
+  const q = JSON.stringify(sele);
+  return (
+    <div className="cmenu__sub">
+      <div className="cmenu__sub-head">
+        Negative Color:
+        <span className="cmenu__pages">
+          {NEGATIVE_REPS.map((name) => (
+            <button
+              key={name}
+              type="button"
+              className={'cmenu__page' + (name === rep ? ' is-on' : '')}
+              onClick={() => setRep(name)}
+            >
+              {name}
+            </button>
+          ))}
+        </span>
+      </div>
+      <p className="cmenu__note">
+        Only <code>object:mesh</code> and <code>object:surface</code> have this menu —{' '}
+        <code>ExecutiveMenu</code> sends them to <code>mesh_color</code> instead of{' '}
+        <code>mol_color</code> (Executive.cpp:15249-15256). Both entries are settings writes on{' '}
+        <code>{sele}</code>.
+      </p>
+      <button
+        type="button"
+        className="cmenu__row"
+        onClick={() =>
+          void act(`cmd.set("${s.visible}",0,${q},quiet=0)`, (call) =>
+            call('set', [s.visible, 0, sele], { quiet: 0 }),
+          )
+        }
+      >
+        off<code>{s.visible} = 0</code>
+      </button>
+      <button
+        type="button"
+        className={'cmenu__row' + (armed ? ' is-on' : '')}
+        onClick={() => setArmed(!armed)}
+      >
+        pick a colour below<code>{s.color}</code>
+      </button>
     </div>
   );
 }

@@ -860,3 +860,128 @@
   color: #5b6167;
   font-size: 10px;
 }
+
+/* ------------------------------------------------------------------ *
+ * `<BandGrid>` — the advanced band browser
+ * ------------------------------------------------------------------ */
+
+.cmenu__tile--shortcut .cmenu__tile-label {
+  font-weight: 600;
+}
+
+.cbands {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cbands__regions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.cbands__region {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 6px;
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--pm-line);
+  border-radius: 2px;
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.cbands__region.is-on {
+  color: var(--pm-text-bright);
+  border-color: var(--pm-accent, #7aa2c8);
+}
+
+.cbands__region em {
+  color: #5b6167;
+  font-style: normal;
+  font-size: 9px;
+}
+
+.cbands__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.cbands__pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cbands__pages button {
+  padding: 0 6px;
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--pm-line);
+  border-radius: 2px;
+  color: var(--pm-text);
+  cursor: pointer;
+}
+
+.cbands__pages button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.cbands__jump {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cbands__tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.cbands__tile {
+  position: relative;
+  width: 42px;
+  height: 14px;
+  padding: 0;
+  border: 1px solid #0006;
+  border-radius: 1px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.cbands__tile.is-missing {
+  background: repeating-linear-gradient(45deg, #333 0 3px, #222 3px 6px);
+  cursor: default;
+}
+
+.cbands__tile:hover {
+  border-color: #fff;
+}
+
+.cbands__tile-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--pm-font-mono);
+  font-size: 7.5px;
+  color: #000;
+  text-shadow: 0 0 3px #fff9;
+  pointer-events: none;
+}
+
+.cbands__note {
+  color: #b08a4a;
+}

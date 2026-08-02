@@ -162,12 +162,50 @@ export interface GestureInput {
   from: number;
   /** 0-based frame under the release. */
   to: number;
-  /** Pixels travelled; a right-click that moves less opens the menu instead. */
+  /** Pixels travelled horizontally; a right-click that moves less opens the menu. */
   travel: number;
+  /**
+   * Pixels travelled VERTICALLY. `CMovie::drag:1588` clears `DragMenu` on
+   * `|dy| > 5` as well as `|dx| > 3`, so a right-press that slides down out of
+   * its row is not a menu either. Optional: omitted means 0.
+   */
+  travelY?: number;
+  /**
+   * `CMovie::DragDraw` (`:1580`) — false once the pointer is more than 50 px
+   * above or below the panel block, and `CMovie::release` emits NOTHING while
+   * it is false (`:1633`, `:1650`, `:1664`, `:1681`). Defaults to true so the
+   * hundreds of existing call sites keep their meaning.
+   */
+  inRange?: boolean;
   /** The row's object name; `''` is the camera row (`cExecAll`). */
   object?: string;
   /** `MovieGetLength()`. Drags that end outside `[0, frames)` are dropped. */
   frames?: number;
+}
+
+/**
+ * `CMovie::drag`'s `DragDraw` test (`layer1/Movie.cpp:1580`).
+ *
+ * ```c
+ * I->DragDraw = ((y < (rect.top + 50)) && (y > (rect.bottom - 50)));
+ * ```
+ *
+ * The C's y axis points UP, so `rect.top > rect.bottom` and that reads as "no
+ * further than 50 px outside the block, either way". Here y points down, so
+ * the comparison flips; the 50 does not.
+ *
+ * It is not decoration: while it is false the ghost boxes are not drawn AND
+ * the release emits no command at all. That is how a user abandons a drag
+ * they did not mean to start — pull away from the panel and let go.
+ */
+export const DRAG_ABANDON_PX = 50;
+
+export function dragInRange(
+  y: number,
+  block: { top: number; bottom: number },
+  slack = DRAG_ABANDON_PX,
+): boolean {
+  return y > block.top - slack && y < block.bottom + slack;
 }
 
 /** `CMovie::release`'s `extra`, minus the `,object=` prefix (`:1607-1615`). */
@@ -185,6 +223,14 @@ export function objectArgument(object: string, column: boolean, oblate = false):
  * `DragMenu` is still set (`:1621`). A right-drag of 4 px that stays inside one
  * cell therefore does nothing at all — it is neither a menu nor an `mmove` onto
  * itself.
+ *
+ * `inRange` is the second half of that state machine and the one wave 4 left
+ * out: `CMovie::release` wraps the mmove/mcopy, the oblate clear and the
+ * ins/del in `if(I->DragDraw && ...)`, so a drag that wandered more than 50 px
+ * out of the panel emits nothing when it is released. THE MENU IS NOT WRAPPED
+ * — `:1621` tests only `DragCurFrame == DragStartFrame && DragMenu` — so a
+ * right-press that goes 200 px away and comes back to its own cell still opens
+ * the motion menu. That asymmetry is deliberate in the C and reproduced here.
  */
 export function classifyGesture(input: GestureInput): PanelGesture | null {
   const { button, shift, ctrl, from, to, travel } = input;
@@ -192,14 +238,17 @@ export function classifyGesture(input: GestureInput): PanelGesture | null {
   const frames = input.frames ?? Number.POSITIVE_INFINITY;
   const count = 1;
   const column = ctrl && shift;
+  const inRange = input.inRange ?? true;
+  // `CMovie::drag:1588` — the menu dies on |dx|>3 OR |dy|>5.
+  const menuAlive = travel <= 3 && (input.travelY ?? 0) <= 5;
 
   if (button === 2) {
     // Pressing past the last cell opens the menu immediately (`:1508-1514`).
     if (from >= frames) return { kind: 'menu', frame: from, object, column };
     if (to === from) {
-      return travel > 3 ? null : { kind: 'menu', frame: from, object, column };
+      return menuAlive ? { kind: 'menu', frame: from, object, column } : null;
     }
-    if (to < 0 || to >= frames) return null;
+    if (to < 0 || to >= frames || !inRange) return null;
     const arg = objectArgument(object, column);
     // `mod == cOrthoSHIFT` is an EQUALITY test (`:1503`), so Ctrl+Shift+Right
     // is a column *move*, never a copy.
@@ -212,6 +261,7 @@ export function classifyGesture(input: GestureInput): PanelGesture | null {
     // `case cOrthoSHIFT: break;` — "TEMPORAL SELECTIONS -- TO COME" (`:1521`).
     if (shift && !ctrl) return null;
     if (ctrl) {
+      if (!inRange) return null;
       const arg = objectArgument(object, column);
       const cur = Math.max(0, to); // `if(I->DragCurFrame<0) DragCurFrame = 0`
       const delta = cur - from;
@@ -228,6 +278,7 @@ export function classifyGesture(input: GestureInput): PanelGesture | null {
   }
 
   if (button === 1 && ctrl) {
+    if (!inRange) return null;
     // `cMovieDragModeOblate`, clamped into the strip (`:1657-1663`).
     const last = frames === Number.POSITIVE_INFINITY ? Number.POSITIVE_INFINITY : frames - 1;
     const lo = Math.min(Math.max(0, Math.min(from, to)), last);

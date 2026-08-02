@@ -25,8 +25,13 @@ import {
   initializePluginSystem,
   isAutoloadEnabled,
   readAutoload,
+  readStartupPaths,
   setAutoload,
+  setPreference,
+  setStartupPaths,
   type CallFn,
+  type PreferenceKey,
+  type StartupPaths,
 } from './pluginSystem';
 
 /** One discovered plugin. `findPlugins` returns `{name: filename}` and nothing more. */
@@ -44,20 +49,35 @@ export interface DiscoveredPlugin {
 
 export interface PluginRegistry {
   plugins: DiscoveredPlugin[];
+  /** Scan order, user entries first. Kept for the read-only overview. */
   startupPaths: string[];
+  /** The same list, split at the boundary `set_startup_path` may not cross. */
+  paths: StartupPaths;
   preferences: { verbose: boolean; instantsave: boolean };
   loading: boolean;
   error: string | null;
   refresh: () => void;
   /** Flip one plugin's enabled-at-startup flag. Rejects if the scan failed. */
   setAutoload: (name: string, enabled: boolean) => Promise<void>;
+  /** Write one plugin preference. Rejects if the scan failed. */
+  setPreference: (key: PreferenceKey, value: boolean) => Promise<void>;
+  /** Replace the USER slice of the startup path. Rejects if the scan failed. */
+  setStartupPaths: (paths: readonly string[], autosave: boolean) => Promise<void>;
   /** Name of the plugin whose checkbox is mid-flight, or null. */
   saving: string | null;
+  /** Last write failure, shown next to the control that caused it. */
+  writeError: string | null;
 }
 
-const EMPTY: Omit<PluginRegistry, 'refresh' | 'setAutoload' | 'saving'> = {
+type Derived = Omit<
+  PluginRegistry,
+  'refresh' | 'setAutoload' | 'setPreference' | 'setStartupPaths' | 'saving' | 'writeError'
+>;
+
+const EMPTY: Derived = {
   plugins: [],
   startupPaths: [],
+  paths: { user: [], installation: [] },
   preferences: { verbose: false, instantsave: true },
   loading: true,
   error: null,
@@ -87,10 +107,11 @@ export type { CallFn } from './pluginSystem';
  */
 export async function loadPluginRegistry(
   call: CallFn,
-): Promise<Omit<PluginRegistry, 'refresh' | 'loading' | 'error' | 'setAutoload' | 'saving'>> {
+): Promise<Omit<Derived, 'loading' | 'error'>> {
   await initializePluginSystem(call);
 
-  const startupPaths = (await call<string[]>('plugins.get_startup_path')) ?? [];
+  const paths = await readStartupPaths(call);
+  const startupPaths = [...paths.user, ...paths.installation];
   const found = (await call<Record<string, string>>('plugins.findPlugins', [startupPaths])) ?? {};
   // pref_get is one call per key; there are only two and they are cheap.
   const [verbose, instantsave, autoload] = await Promise.all([
@@ -111,6 +132,7 @@ export async function loadPluginRegistry(
   return {
     plugins,
     startupPaths,
+    paths,
     preferences: { verbose: Boolean(verbose), instantsave: Boolean(instantsave) },
   };
 }
@@ -154,26 +176,76 @@ export function usePluginRegistry(): PluginRegistry {
     };
   }, [session, nonce]);
 
+  const [writeError, setWriteError] = useState<string | null>(null);
+
+  /**
+   * Every write in this panel lands in `~/.pymolpluginsrc.py`, so they all go
+   * through the same guard: the registry must have initialized, or the
+   * in-memory dicts do not reflect the file and saving them DESTROYS it.
+   */
+  const guarded = useCallback(async (label: string, body: () => Promise<void>) => {
+    if (!ready.current) {
+      // Surface it AND reject. Rejecting alone made the refusal invisible:
+      // every caller in `PluginManager` swallows the rejection (it has
+      // already been reported), so the user clicked Apply and nothing at all
+      // happened. Found by the test that asserts the banner, not by reading.
+      const message = 'plugin registry not initialized; refusing to write ~/.pymolpluginsrc.py';
+      setWriteError(message);
+      throw new Error(message);
+    }
+    setSaving(label);
+    setWriteError(null);
+    try {
+      await body();
+    } catch (e) {
+      setWriteError(e instanceof Error ? e.message : String(e));
+      throw e;
+    } finally {
+      setSaving(null);
+    }
+  }, []);
+
   const toggle = useCallback(
-    async (name: string, enabled: boolean) => {
-      if (!ready.current) {
-        throw new Error(
-          'plugin registry not initialized; refusing to write ~/.pymolpluginsrc.py',
-        );
-      }
-      setSaving(name);
-      try {
+    (name: string, enabled: boolean) =>
+      guarded(name, async () => {
         await setAutoload((fn, args) => session.call(fn, args), name, enabled);
         setState((s) => ({
           ...s,
           plugins: s.plugins.map((p) => (p.name === name ? { ...p, autoload: enabled } : p)),
         }));
-      } finally {
-        setSaving(null);
-      }
-    },
-    [session],
+      }),
+    [session, guarded],
   );
 
-  return { ...state, refresh, setAutoload: toggle, saving };
+  const writePreference = useCallback(
+    (key: PreferenceKey, value: boolean) =>
+      guarded(`pref:${key}`, async () => {
+        await setPreference((fn, args) => session.call(fn, args), key, value);
+        setState((s) => ({ ...s, preferences: { ...s.preferences, [key]: value } }));
+      }),
+    [session, guarded],
+  );
+
+  const writeStartupPaths = useCallback(
+    (next: readonly string[], autosave: boolean) =>
+      guarded('paths', async () => {
+        const applied = await setStartupPaths((fn, args) => session.call(fn, args), next, autosave);
+        setState((s) => ({
+          ...s,
+          paths: { ...s.paths, user: applied },
+          startupPaths: [...applied, ...s.paths.installation],
+        }));
+      }),
+    [session, guarded],
+  );
+
+  return {
+    ...state,
+    refresh,
+    setAutoload: toggle,
+    setPreference: writePreference,
+    setStartupPaths: writeStartupPaths,
+    saving,
+    writeError,
+  };
 }

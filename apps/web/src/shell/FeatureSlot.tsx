@@ -9,6 +9,7 @@ import { Suspense, lazy, type ComponentType, useEffect } from 'react';
 import { getSlot, isInstalled, loadFeature } from '../features/registry';
 import { useSession } from '../app';
 import { ErrorBoundary } from './ErrorBoundary';
+import { panelMounted, panelUnmounted } from './panelHooks';
 
 const CACHE = new Map<string, ComponentType>();
 
@@ -87,10 +88,16 @@ function MountMarker({ id }: { id: string }) {
   useEffect(() => {
     const read = () => (document.body.dataset.features ?? '').split(' ').filter(Boolean);
     document.body.dataset.features = [...new Set([...read(), id])].join(' ');
+    // The same fact, delivered to code rather than to a selector: `openPanel`
+    // queues an intent against a slot that is not mounted yet (the panel is a
+    // `React.lazy` and the module has not even been fetched when the menu item
+    // is clicked), and this is the edge that drains the queue.
+    panelMounted(id);
     return () => {
       document.body.dataset.features = read()
         .filter((x) => x !== id)
         .join(' ');
+      panelUnmounted(id);
     };
   }, [id]);
   return null;

@@ -88,6 +88,7 @@ __all__ = [
     "OPS",
     "menu_name_for",
     "rows",
+    "spec_levels",
     "snapshot",
     "menu",
     "expand",
@@ -121,6 +122,19 @@ OBJECT_TYPES: Dict[int, str] = {
 #: Hit columns, left to right, as ``CExecutive::click`` numbers them
 #: (``Executive.cpp:15060-15300``): ``t = (op_cnt - t) - 1`` yields 0..5.
 OPS: Tuple[str, ...] = ("A", "S", "H", "L", "C", "M")
+
+#: Slot of the ``ViewElem`` VLA inside a ``CObject``'s session header list
+#: (``ObjectAsPyList``); the same index ``panels/movie.py:OBJ_VIEWELEM`` reads.
+OBJ_VIEWELEM = 13
+
+#: ``ViewElem`` slot carrying ``specification_level`` (``layer1/View.cpp``);
+#: ``panels/movie.py:VE_SPEC_LEVEL`` reads the same one.
+VE_SPEC_LEVEL = 12
+
+#: ``SpecRec::type`` for an object row (``layer3/ExecutiveDef.h``).
+_EXEC_TYPE = 1
+_EXEC_TYPE_OBJECT = 0
+_EXEC_PAYLOAD = 5
 
 _OP_INDEX = {op: index for index, op in enumerate(OPS)}
 
@@ -480,6 +494,60 @@ def _name_color(cmd: Any, name: str, kind: str, mode: int) -> Optional[List[floa
     return [float(component) for component in tuple_] if tuple_ else None
 
 
+def spec_levels(cmd: Any, frame: Optional[int] = None) -> Dict[str, int]:
+    """``ObjectGetSpecLevel(obj, SceneGetFrame(G))`` for every object.
+
+    The M button is tinted by this (``Executive.cpp:16362-16381``): level 1 ->
+    ``toggleColor3`` {0.6,0.6,0.8}, level 2 -> ``activeColor`` {0.9,0.9,1.0},
+    anything else -> ``toggleColor2`` {0.4,0.4,0.6}.
+
+    ``ObjectGetSpecLevel`` itself is C-only (``layer1/PyMOLObject.cpp:109``),
+    which is why the inventory called this unreachable — but its whole input,
+    ``CObject::ViewElem``, is serialised into the object's session header and
+    **survives ``partial=1``** (measured on this build: the header list is 14
+    long and slot 13 is the per-frame ``ViewElem`` list).  So the level is a
+    read off the same 0.036 ms partial session the row list already costs, with
+    no new C accessor:
+
+        frame < 0            -> max level over all frames
+        0 <= frame < size    -> ViewElem[frame].specification_level
+        frame >= size        -> 0
+        no ViewElem at all   -> -1  (the object carries no motion)
+
+    ``frame`` is the 0-based ``SceneGetFrame`` index; ``cmd.get_frame()`` is
+    1-based, so the default is ``get_frame() - 1``.
+    """
+    if frame is None:
+        frame = int(cmd.get_frame()) - 1
+    out: Dict[str, int] = {}
+    for rec in _partial_names(cmd):
+        try:
+            if int(rec[_EXEC_TYPE]) != _EXEC_TYPE_OBJECT:
+                continue
+            payload = rec[_EXEC_PAYLOAD]
+            header = payload[0]
+            view_elem = header[OBJ_VIEWELEM]
+        except (IndexError, TypeError, ValueError):
+            continue
+        name = str(rec[0])
+        if not view_elem:
+            out[name] = -1
+            continue
+        size = len(view_elem)
+        if frame < 0:
+            level = 0
+            for element in view_elem:
+                if element and int(element[VE_SPEC_LEVEL]) > level:
+                    level = int(element[VE_SPEC_LEVEL])
+            out[name] = level
+        elif frame < size:
+            element = view_elem[frame]
+            out[name] = int(element[VE_SPEC_LEVEL]) if element else 0
+        else:
+            out[name] = 0
+    return out
+
+
 def rows(cmd: Any, name_color_mode: Optional[int] = None) -> List[Dict[str, Any]]:
     """The panel's rows, in ``PanelListGroup`` order and nothing else.
 
@@ -600,6 +668,14 @@ def snapshot(cmd: Any, name_color_mode: Optional[int] = None) -> Dict[str, Any]:
     button_mode = str(cmd.get_setting_text("button_mode_name") or "")
     return {
         "rows": rows(cmd, name_color_mode),
+        # The M button's tint (`Executive.cpp:16362-16381`). Absent from
+        # `rows` on purpose: it is per-FRAME state, and the row list is not.
+        "specLevels": spec_levels(cmd),
+        "frame": int(cmd.get_frame()),
+        # `PopUp.cpp:144-164` inverts the whole pop-up when this is not
+        # Default; it is a pop-up property, not a row property, which is why it
+        # sits beside `settings` rather than in it.
+        "internalGuiMode": int(cmd.get_setting_int("internal_gui_mode")),
         "opCount": 6 if button_mode == "3-Button Motions" else 5,
         "buttonMode": button_mode,
         "ops": list(OPS[: 6 if button_mode == "3-Button Motions" else 5]),
@@ -631,6 +707,7 @@ ATTRIBUTE = "tenmol_objects"
 _VERBS: Dict[str, Callable[..., Any]] = {
     "snapshot": snapshot,
     "rows": rows,
+    "spec": spec_levels,
     "menu": menu,
     "expand": expand,
     "caption": caption_for,

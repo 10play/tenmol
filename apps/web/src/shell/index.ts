@@ -33,6 +33,24 @@ export {
   type DockArea,
   type ExtGuiDockState,
 } from './extGuiDock';
+export {
+  closePanel,
+  hasMenuHook,
+  isPanelMounted,
+  isPanelOpen,
+  menuHooks,
+  openPanel,
+  panelMounted,
+  panelUnmounted,
+  panelsStore,
+  registerMenuHook,
+  resetPanelHooks,
+  subscribeMenuHooks,
+  togglePanel,
+  type MenuHook,
+  type PanelsState,
+  type PanelsStore,
+} from './panelHooks';
 export { FeatureSlot } from './FeatureSlot';
 export { ErrorBoundary } from './ErrorBoundary';
 export { StatusBar } from './StatusBar';

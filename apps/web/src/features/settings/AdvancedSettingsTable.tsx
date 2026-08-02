@@ -37,6 +37,13 @@ import {
   type SettingsStore,
 } from '@tenmol/stores/settings';
 import { useStore } from '../../app';
+import {
+  atomSettingDelete,
+  atomSettingWrite,
+  describeAtomWriteResult,
+  type AtomSettingWrite,
+} from './atomSettings';
+import { REINITIALIZE_MENU, isSessionBlacklisted } from './sessionLifecycle';
 
 const ROW_HEIGHT = 22;
 const OVERSCAN = 8;
@@ -50,32 +57,48 @@ export interface ScopeSelection {
 }
 
 /**
- * The scopes this table offers. `atom-state` and `bond-state` are deliberately
- * absent: `cmd.set` cannot address them at all (only `alter_state`'s `s[...]`
- * can, `layer1/P.cpp:455-606`), so offering them would be offering a no-op.
+ * The scopes this table offers.
+ *
+ * `atom-state` is here even though `cmd.set` cannot address it: the write goes
+ * through `cmd.alter_state`'s `s[...]` instead (`features/settings/atomSettings.ts`,
+ * `layer1/P.cpp:455-606`), which is the escape hatch `setting.py:519-526`
+ * documents and the only path to the 17 atom-state settings.
+ *
+ * `bond-state` is still absent, and stays absent: no PyMOL API reaches it —
+ * there is no `alter_bond`, and `set_bond` writes the bond level.
  */
 const OFFERED_SCOPES: readonly SettingScope[] = [
   'global',
   'object',
   'object-state',
   'atom',
+  'atom-state',
   'bond',
 ];
 
-/** `atom` and `bond` are addressed by a selection, not by an object name. */
+/** `atom`, `atom-state` and `bond` are addressed by a selection, not an object. */
 function isSelectionScope(scope: SettingScope): boolean {
-  return scope === 'atom' || scope === 'bond';
+  return scope === 'atom' || scope === 'atom-state' || scope === 'bond';
 }
+
+/** The one raw call the atom-state path needs; `cmd.alter_state` is not on `SettingsSource`. */
+export type RawCall = (fn: string, args: readonly unknown[]) => Promise<unknown>;
 
 export function AdvancedSettingsTable({
   store,
   source,
   objects,
+  call,
 }: {
   store: SettingsStore;
   source: SettingsSource;
   /** Object names for the scope selector (from the object panel's poll). */
   objects: readonly string[];
+  /**
+   * `session.call`. Only the `atom-state` scope uses it, because `alter_state`
+   * is not a settings API and has no business on `SettingsSource`.
+   */
+  call?: RawCall;
 }) {
   const catalogue = useStore(store, (s) => s.catalogue);
   const entries = useStore(store, (s) => s.entries);
@@ -88,6 +111,7 @@ export function AdvancedSettingsTable({
     selection: '',
   });
   const [overridesTick, bumpOverrides] = useState(0);
+  const [note, setNote] = useState('');
   const [top, setTop] = useState(0);
   const [height, setHeight] = useState(420);
   const viewport = useRef<HTMLDivElement>(null);
@@ -173,17 +197,23 @@ export function AdvancedSettingsTable({
                 scope={scope}
                 source={source}
                 store={store}
+                call={call}
                 error={rejected[meta.index]}
                 onWrote={() => bumpOverrides((n) => n + 1)}
+                onNote={setNote}
               />
             ))}
           </div>
         </div>
       </div>
 
-      {isSelectionScope(scope.scope) && (
+      {scope.scope === 'atom-state' ? (
+        <AtomStateStrip note={note} scope={scope} />
+      ) : isSelectionScope(scope.scope) ? (
         <OverridesView source={source} scope={scope} tick={overridesTick} store={store} />
-      )}
+      ) : null}
+
+      <ReinitializeStrip call={call} source={source} onDone={() => bumpOverrides((n) => n + 1)} />
 
       <div className="setadv__foot">
         {catalogue?.meta.defaultsSource ? (
@@ -250,7 +280,7 @@ function ScopeSelector({
           />
         </label>
       )}
-      {value.scope === 'object-state' && (
+      {(value.scope === 'object-state' || value.scope === 'atom-state') && (
         <label>
           State
           <input
@@ -271,16 +301,20 @@ function Row({
   scope,
   source,
   store,
+  call,
   error,
   onWrote,
+  onNote,
 }: {
   meta: SettingMeta;
   entry: SettingEntry | undefined;
   scope: ScopeSelection;
   source: SettingsSource;
   store: SettingsStore;
+  call: RawCall | undefined;
   error: string | undefined;
   onWrote: () => void;
+  onNote: (text: string) => void;
 }) {
   const selectionScope = isSelectionScope(scope.scope);
   const writable = canWriteAt(meta, scope.scope);
@@ -292,7 +326,34 @@ function Row({
   const fail = (e: unknown) =>
     store.noteRejected(meta.index, e instanceof Error ? e.message : String(e));
 
+  /**
+   * `cmd.alter_state` — the only path to an atom-state setting. The literal is
+   * built from the typed value (`atomSettings.ts`); the user never supplies a
+   * Python fragment, because this verb evaluates whatever it is given per atom.
+   */
+  const runAtomState = (write: AtomSettingWrite) => {
+    if (!call) {
+      fail(new Error('atom-state writes need a session; none was passed to this table'));
+      return;
+    }
+    onNote(`${write.echo} …`);
+    void call(write.fn, write.args)
+      .then((result) => {
+        onNote(`${write.echo} → ${describeAtomWriteResult(write, result)}`);
+        onWrote();
+      })
+      .catch(fail);
+  };
+
   const commit = (raw: unknown) => {
+    if (scope.scope === 'atom-state') {
+      try {
+        runAtomState(atomSettingWrite(meta, raw, 'atom-state', scope));
+      } catch (e) {
+        fail(e);
+      }
+      return;
+    }
     // A BOND-level write must go through `cmd.set_bond`. `cmd.set` with a
     // selection "will appear to take, but no change will be observed"
     // (`modules/pymol/setting.py:245-248`) — the exact silent failure this
@@ -309,6 +370,10 @@ function Row({
   };
 
   const reset = () => {
+    if (scope.scope === 'atom-state') {
+      runAtomState(atomSettingDelete(meta, 'atom-state', scope));
+      return;
+    }
     const done =
       scope.scope === 'bond'
         ? source.unsetBond(meta, scope.selection)
@@ -327,7 +392,21 @@ function Row({
       data-name={meta.name}
       title={meta.help ?? `${meta.name} (index ${meta.index}, ${meta.level})`}
     >
-      <span className="setadv__c-name">{meta.name}</span>
+      <span className="setadv__c-name">
+        {meta.name}
+        {isSessionBlacklisted(meta) && (
+          <em
+            className="setadv__nopse"
+            title={
+              meta.level === 'unused'
+                ? 'unused level — never written to a .pse (Setting.cpp:628-631)'
+                : 'system-dependent — never written to a .pse (Setting.cpp:634-683)'
+            }
+          >
+            ¬pse
+          </em>
+        )}
+      </span>
       <span className="setadv__c-value">
         <ValueEditor
           meta={meta}
@@ -352,7 +431,9 @@ function Row({
           title={
             scope.scope === 'bond'
               ? 'cmd.unset_bond — removes the per-bond override'
-              : 'cmd.unset — restores the DEFAULT (PyMOL 2.5+)'
+              : scope.scope === 'atom-state'
+                ? "cmd.alter_state … del s['name'] — cmd.unset cannot reach this level"
+                : 'cmd.unset — restores the DEFAULT (PyMOL 2.5+)'
           }
           disabled={!writable || noTarget || (!selectionScope && isDefaultValue(meta, entry?.value))}
           onClick={reset}
@@ -361,6 +442,92 @@ function Row({
         </button>
       </span>
       {error ? <span className="setadv__error">{error}</span> : null}
+    </div>
+  );
+}
+
+/**
+ * `File ▸ Reinitialize` — `_gui.py:126-132`.
+ *
+ * It lives HERE and not in a File menu because there is no menu bar yet
+ * (WP-14), and because three of its four entries do nothing but rewrite this
+ * table: after any of them every cached value is stale, so the refetch is not
+ * optional. `Everything` also deletes every object, so it asks first — the Qt
+ * File menu does not, and a mis-click there is unrecoverable.
+ *
+ * The word, not the code, is what goes over the wire:
+ * `reinit_code[reinit_sc.auto_err(what)]` (`commanding.py:373`) resolves it, and
+ * an abbreviation resolves too — so sending `settings` is sending the API's own
+ * vocabulary rather than a magic `1`.
+ */
+function ReinitializeStrip({
+  call,
+  source,
+  onDone,
+}: {
+  call: RawCall | undefined;
+  source: SettingsSource;
+  onDone: () => void;
+}) {
+  const [armed, setArmed] = useState<string | null>(null);
+
+  const run = (what: string) => {
+    setArmed(null);
+    if (!call) return;
+    void call('reinitialize', [what])
+      .then(() => source.bootstrap())
+      .then(onDone)
+      .catch(() => undefined);
+  };
+
+  return (
+    <div className="setadv__reinit">
+      <span className="setadv__reinit-label" title="PyMOL puts these in File ▸ Reinitialize">
+        Reinitialize
+      </span>
+      {REINITIALIZE_MENU.map((entry) => (
+        <button
+          key={entry.what}
+          type="button"
+          title={`cmd.reinitialize("${entry.what}") — ${entry.help}`}
+          data-what={entry.what}
+          className={armed === entry.what ? 'is-armed' : undefined}
+          onClick={() => {
+            if (entry.destructive && armed !== entry.what) setArmed(entry.what);
+            else run(entry.what);
+          }}
+        >
+          {armed === entry.what ? `${entry.label}?` : entry.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The atom-state scope's own strip. It reports the atom count `alter_state`
+ * returned instead of enumerating overrides, because ENUMERATION IS NOT
+ * AVAILABLE at this level over the wire: the bridge's `scope` RPC reads
+ * `list(s)` inside `cmd.iterate`, whose `s` is bound to the ATOM
+ * (`layer1/P.cpp:455-606`), so an atom-state override is invisible to it —
+ * measured: after `alter_state 1, …, s['label_screen_point']=(1,2,3)`,
+ * `iterate` reports no override on that atom and `iterate_state 1` reports
+ * index 728. Reading them back needs an `iterate_state` variant of that RPC
+ * (`bridge/tenmol_bridge/panels/settings.py:718`), which this feature does not
+ * own. Saying so is better than showing "no overrides".
+ */
+function AtomStateStrip({ note, scope }: { note: string; scope: ScopeSelection }) {
+  return (
+    <div className="setadv__overrides" data-scope="atom-state">
+      {note ||
+        (scope.selection.trim() === ''
+          ? 'type a selection, then write a value — atom-state goes through cmd.alter_state'
+          : `state ${scope.state || 1} of ${scope.selection}: write a value to see what alter_state answered`)}
+      <em className="setadv__hint">
+        {' '}
+        · atom-state overrides cannot be listed back: the scope RPC uses cmd.iterate, not
+        cmd.iterate_state
+      </em>
     </div>
   );
 }

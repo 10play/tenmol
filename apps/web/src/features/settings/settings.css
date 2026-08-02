@@ -384,3 +384,48 @@
   line-height: 1.4;
   margin: 8px 0 0;
 }
+
+/* ------------------------------------------------------------------ *
+ * Session lifecycle — File ▸ Reinitialize, and the PSE blacklist mark
+ * ------------------------------------------------------------------ */
+
+.setadv__reinit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border-top: 1px solid var(--pm-line);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.setadv__reinit-label {
+  color: var(--pm-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.setadv__reinit button {
+  padding: 1px 7px;
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--pm-line);
+  border-radius: 2px;
+  color: var(--pm-text);
+  cursor: pointer;
+}
+
+.setadv__reinit button.is-armed {
+  border-color: #b04a4a;
+  color: #ffb0b0;
+}
+
+.setadv__nopse {
+  margin-left: 5px;
+  padding: 0 3px;
+  border: 1px solid var(--pm-line);
+  border-radius: 2px;
+  color: #6b7178;
+  font-size: 8px;
+  font-style: normal;
+  vertical-align: middle;
+}

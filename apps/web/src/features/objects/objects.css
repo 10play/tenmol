@@ -240,3 +240,58 @@
   border: 1px solid #101214;
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.6);
 }
+
+/* ---------------------------------------------------------------------
+ * WP-P8: submenu side-flip, rep check marks, internal_gui_mode inversion.
+ * ------------------------------------------------------------------- */
+
+/* `PopPlaceChild` puts the child at `parentRight - 2` on the right side and
+ * `parentLeft - width + 2` on the left (layer1/Pop.cpp:111-150); in flow terms
+ * that is `left: 100%` and `right: 100%` with the 2 px overlap. */
+.rowmenu__panel--right {
+  left: calc(100% - 2px);
+  right: auto;
+}
+
+.rowmenu__panel--left {
+  right: calc(100% - 2px);
+  left: auto;
+}
+
+/* The check mark PyMOL's own popup has no concept of; the column is reserved
+ * on every leaf of a menu that has any, so the labels stay aligned. */
+.rowmenu__tick {
+  flex: 0 0 8px;
+  width: 8px;
+  margin-left: -4px;
+  color: var(--pm-accent);
+  text-align: center;
+}
+
+.rowmenu__row.is-rep-on {
+  color: #ffffff;
+}
+
+.rowmenu__row.is-rep-partial .rowmenu__tick {
+  color: #8d949a;
+}
+
+/* internal_gui_mode != Default inverts the pop-up: text {0,0,0} on {1,1,1},
+ * and the title bar goes {0.3,0.3,0.6} -> {1,1,1} (layer4/PopUp.cpp:144-164,
+ * :813-826). */
+.rowmenu.is-light {
+  background: rgb(255, 255, 255);
+  border-color: #b6bcc2;
+  color: rgb(0, 0, 0);
+}
+
+.rowmenu.is-light .rowmenu__head,
+.rowmenu.is-light .rowmenu__panel {
+  background: rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
+}
+
+.rowmenu.is-light .rowmenu__row,
+.rowmenu.is-light .rowmenu__title {
+  color: rgb(0, 0, 0);
+}

@@ -64,6 +64,7 @@ __all__ = [
     "MOVIE_ENCODER_SUPPORT",
     "LOAD_FILTERS",
     "SAVE_MOLECULE_FILTERS",
+    "SAVE_UNAVAILABLE_FORMATS",
     "SESSION_FILTERS",
     "GEOMETRY_EXPORTS",
     "LOG_FILTERS",
@@ -111,6 +112,29 @@ SAVE_MOLECULE_FILTERS: Sequence[str] = (
     "MMTF (*.mmtf)",
     "By Extension (*.*)",
 )
+
+#: Formats whose **export** half fails or silently no-ops in this build.
+#:
+#: Deliberately NOT ``incentive_only.UNAVAILABLE_FORMATS``, which is about the
+#: **import** half.  The two disagree, measured (``test_p8_a6.py``):
+#:
+#: * ``.mae`` cannot be LOADED (``loadfunctions['mae']`` is the Incentive
+#:   sentinel) but ``cmd.save('x.mae')`` writes a real Maestro file, so the
+#:   save picker must not annotate it;
+#: * ``.mtl`` is in neither manifest yet always raises ``.MTL export not
+#:   implemented`` (``exporting.py:983-984``);
+#: * ``.obj`` reports success either way: ``cmd.get_mtl_obj`` is "an incomplete
+#:   and unsupported feature" (``querying.py:585-600``) that only exports
+#:   TRIANGLES, so a lines-only scene writes 0 bytes and says nothing.
+SAVE_UNAVAILABLE_FORMATS: Dict[str, str] = {
+    ".stl": "STL export not supported by this PyMOL build (lazyio.get_stlstr raises)",
+    ".gltf": "needs the external collada2gltf binary, which is not present",
+    ".glb": "needs the external collada2gltf binary, which is not present",
+    ".mtl": ".MTL export not implemented (exporting.py:983 raises)",
+    ".obj": (
+        "get_mtl_obj exports triangles only: a lines-only scene writes 0 bytes"
+    ),
+}
 
 #: ``pymol_qt_gui.py:657-661`` — Save Session As.
 SESSION_FILTERS: Sequence[str] = (
@@ -1797,10 +1821,14 @@ class FilesAPI:
         ``cmd.save`` raises "Unrecognized file format" on an unknown extension
         (``exporting.py:836-843``) despite what its docstring claims, so the
         picker checks first.
+
+        ``unavailable`` answers from :data:`SAVE_UNAVAILABLE_FORMATS`, the
+        EXPORT-side manifest.  It used to answer from the import-side one,
+        which got ``.mae`` wrong in both directions: saving a ``.mae`` works
+        (measured) and was annotated as impossible, while ``.mtl`` and ``.obj``
+        -- which really do raise / write nothing -- were not annotated at all.
         """
         from pymol import exporting, importing
-
-        from ..incentive_only import UNAVAILABLE_FORMATS
 
         final = with_extension(fname, filter_text)
         _prefix, ext, fmt, zipped = importing.filename_to_format(final)
@@ -1818,7 +1846,7 @@ class FilesAPI:
             "recognised": recognised,
             "exists": exists,
             "parentWritable": os.access(parent, os.W_OK),
-            "unavailable": UNAVAILABLE_FORMATS.get("." + (fmt or ext or "")),
+            "unavailable": SAVE_UNAVAILABLE_FORMATS.get("." + (fmt or ext or "")),
             "error": (
                 None
                 if recognised

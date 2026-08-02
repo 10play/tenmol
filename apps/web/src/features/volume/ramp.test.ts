@@ -225,7 +225,7 @@ describe('add / remove / drag', () => {
     expect(moved.points[1]!.alpha).toBe(0.2); // y frozen
   });
 
-  it("honours a latched axis constraint", () => {
+  it('honours a latched axis constraint', () => {
     const points = [{ value: 2, alpha: 0.2, r: 1, g: 0, b: 0 }];
     const xOnly = movePoints(view, points, 0, 400, 10, false, 'x');
     expect(xOnly.points[0]!.alpha).toBe(0.2);

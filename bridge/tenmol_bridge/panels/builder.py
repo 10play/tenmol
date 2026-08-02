@@ -37,6 +37,7 @@ from then on the client makes ordinary typed ``{t:'call'}`` requests:
 ``cmd.builder_action(kind, **params)``  one button press
 ``cmd.builder_pick(obj, index, mode)``  a viewport pick -> ``pkN`` + ``do_pick``
 ``cmd.builder_wizard_click(index)``     a wizard panel row
+``cmd.builder_select(selection)``       a named selection was edited elsewhere
 ======================================  ===================================
 
 Deliberate divergences from the Qt source, each of them a defect listed in
@@ -1953,6 +1954,38 @@ def builder_wizard_click(cmd: Any, index: int) -> Dict[str, Any]:
     return out
 
 
+def builder_select(cmd: Any, selection: str) -> Dict[str, Any]:
+    """``WizardDoSelect`` (``layer1/Wizard.cpp:172-190``) for the web client.
+
+    The engine fires ``wizard.do_select(name)`` ONLY from its own mouse paths —
+    ``layer1/SceneMouse.cpp:135,357`` (a click that lands in a selection),
+    ``layer3/Seeker.cpp:150,231`` (the sequence viewer) and
+    ``layer3/Executive.cpp:7563`` (a box/rect select).  It is never fired by
+    ``cmd.select``.  The Builder needs it anyway, because
+    :class:`AtomFlagWizard` treats an edit of the ``_build_display`` named
+    selection as an edit of the FLAG SET (``builder.py:906-913``), and in this
+    client that selection is edited by the object panel, not by a PyMOL mouse
+    handler.  So the panel calls this after it rewrites the selection.
+
+    A wizard with no ``do_select`` — or no wizard at all — is a no-op, exactly
+    like ``WizardDoSelect``'s two early returns.
+    """
+    error: Optional[str] = None
+    wizard = cmd.get_wizard()
+    handler = getattr(wizard, "do_select", None) if wizard is not None else None
+    if callable(handler):
+        try:
+            handler(str(selection))
+            cmd.refresh_wizard()
+        except Exception as exc:  # noqa: BLE001 - surfaced, never swallowed
+            error = "%s: %s" % (type(exc).__name__, str(exc).strip())
+            print(" Builder-Error: %s" % error)
+    state = builder_state(cmd)
+    state["error"] = error
+    state["selection"] = str(selection)
+    return state
+
+
 def builder_dismiss(cmd: Any) -> Dict[str, Any]:
     """The universal Done: drop the wizard and the builder's scratch selections."""
     wizard = cmd.get_wizard()
@@ -1976,6 +2009,7 @@ _ENTRY_POINTS = {
     "builder_action": builder_action,
     "builder_pick": builder_pick,
     "builder_wizard_click": builder_wizard_click,
+    "builder_select": builder_select,
     "builder_dismiss": builder_dismiss,
 }
 

@@ -154,7 +154,11 @@ export function MoviePanel() {
         </div>
       )}
 
-      <TransportBar status={status} run={run} />
+      <TransportBar
+        status={status}
+        run={run}
+        onLog={(line) => session.stores.feedback.appendClient(line)}
+      />
 
       <div className="mvpanel__seek">
         <input

@@ -15,9 +15,72 @@
 import { useState } from 'react';
 
 import { usePluginRegistry } from './usePluginRegistry';
+import {
+  addPath,
+  movePath,
+  removePath,
+  writeReachesDisk,
+  type PreferenceKey,
+} from './pluginSystem';
 import './plugin-manager.css';
 
 type Tab = 'installed' | 'settings' | 'paths';
+
+const PLUGINSRC = '~/.pymolpluginsrc.py';
+
+/**
+ * The confirmation every write in this panel goes through.
+ *
+ * Inventory row 461 said editing was unwired because "a write rewrites the
+ * user's interpreter startup file, which needs a confirmation flow this panel
+ * does not have yet". This is that flow, and its job is to be SPECIFIC: it says
+ * whether THIS write touches the file, before it happens. That is not
+ * decoration — `set_pref_changed` reads `instantsave` after the assignment, so
+ * exactly one of the controls here (turning instantsave off) changes nothing on
+ * disk, and a panel that promised otherwise would be wrong.
+ */
+function Confirm({
+  what,
+  toDisk,
+  busy,
+  onApply,
+  onCancel,
+  extra,
+}: {
+  what: string;
+  toDisk: boolean;
+  busy: boolean;
+  onApply: () => void;
+  onCancel: () => void;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <div className="plugmgr__confirm" role="group" aria-label="confirm plugin write">
+      <p className="plugmgr__confirmtext" data-plugin-confirm="">
+        {what}{' '}
+        {toDisk ? (
+          <>
+            This <strong>rewrites {PLUGINSRC}</strong>, the file PyMOL runs at interpreter startup.
+          </>
+        ) : (
+          <>
+            <code>instantsave</code> is off, so this stays in memory for this session only and{' '}
+            <code>{PLUGINSRC}</code> is not touched.
+          </>
+        )}
+      </p>
+      <div className="plugmgr__confirmrow">
+        {extra}
+        <button type="button" data-plugin-apply="" disabled={busy} onClick={onApply}>
+          {busy ? 'writing…' : toDisk ? 'Apply and save' : 'Apply (session only)'}
+        </button>
+        <button type="button" data-plugin-cancel="" disabled={busy} onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
   { id: 'installed', label: 'Installed Plugins' },
@@ -28,6 +91,18 @@ const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
 export function PluginManager() {
   const reg = usePluginRegistry();
   const [tab, setTab] = useState<Tab>('installed');
+  /** A staged preference edit, waiting for the confirmation. */
+  const [pendingPref, setPendingPref] = useState<{ key: PreferenceKey; value: boolean } | null>(
+    null,
+  );
+  /** A staged startup-path list. `null` means "no local edits". */
+  const [draft, setDraft] = useState<string[] | null>(null);
+  const [candidate, setCandidate] = useState('');
+
+  const userPaths = draft ?? reg.paths.user;
+  const dirty =
+    draft !== null &&
+    (draft.length !== reg.paths.user.length || draft.some((p, i) => p !== reg.paths.user[i]));
 
   return (
     <div className="plugmgr">
@@ -121,32 +196,181 @@ export function PluginManager() {
       {tab === 'settings' && (
         <div className="plugmgr__body">
           <dl className="plugmgr__prefs">
-            <dt>verbose</dt>
-            <dd>{String(reg.preferences.verbose)}</dd>
-            <dt>instantsave</dt>
-            <dd>{String(reg.preferences.instantsave)}</dd>
+            {(['verbose', 'instantsave'] as PreferenceKey[]).map((key) => (
+              <div key={key} className="plugmgr__prefrow">
+                <dt>
+                  <label>
+                    <input
+                      type="checkbox"
+                      data-plugin-pref={key}
+                      checked={reg.preferences[key]}
+                      disabled={reg.loading || reg.saving !== null}
+                      onChange={(e) => setPendingPref({ key, value: e.target.checked })}
+                    />
+                    {key}
+                  </label>
+                </dt>
+                <dd>{String(reg.preferences[key])}</dd>
+              </div>
+            ))}
           </dl>
+
+          {pendingPref && (
+            <Confirm
+              what={`Set ${pendingPref.key} to ${String(pendingPref.value)}.`}
+              toDisk={writeReachesDisk(
+                pendingPref.key,
+                pendingPref.value,
+                reg.preferences.instantsave,
+              )}
+              busy={reg.saving !== null}
+              onApply={() => {
+                void reg
+                  .setPreference(pendingPref.key, pendingPref.value)
+                  .catch(() => {})
+                  .finally(() => setPendingPref(null));
+              }}
+              onCancel={() => setPendingPref(null)}
+            />
+          )}
+          {reg.writeError !== null && (
+            <div className="plugmgr__error" data-plugin-writeerror="">
+              {reg.writeError}
+            </div>
+          )}
+
           <p className="plugmgr__note">
-            Stored in <code>~/.pymolpluginsrc.py</code>. Editing is not wired in v1 — writing
-            preferences also rewrites that file, which is a change to the user&rsquo;s interpreter
-            startup.
+            Stored in <code>{PLUGINSRC}</code>, alongside the per-plugin <code>autoload</code> flags
+            and the startup paths — one file carries all three, which is why every write here asks
+            first.
+          </p>
+          <p className="plugmgr__note">
+            <code>pref_set</code> ends in <code>set_pref_changed()</code>, which saves only if{' '}
+            <code>instantsave</code> is on <em>after</em> the change. Turning{' '}
+            <code>instantsave</code> off is therefore the one write that never reaches the file: it
+            applies to this session and the file goes on saying <code>True</code>.
           </p>
         </div>
       )}
 
       {tab === 'paths' && (
         <div className="plugmgr__body">
-          <ol className="plugmgr__paths">
-            {reg.startupPaths.map((p) => (
+          <ol className="plugmgr__paths" data-plugin-userpaths="">
+            {userPaths.map((p, index) => (
+              <li key={p} className="plugmgr__path" title={p}>
+                <span className="plugmgr__pathtext">{p}</span>
+                <button
+                  type="button"
+                  data-plugin-path-up={index}
+                  aria-label={`move ${p} up`}
+                  disabled={index === 0}
+                  onClick={() => setDraft(movePath(userPaths, index, -1))}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  data-plugin-path-down={index}
+                  aria-label={`move ${p} down`}
+                  disabled={index === userPaths.length - 1}
+                  onClick={() => setDraft(movePath(userPaths, index, 1))}
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  data-plugin-path-remove={index}
+                  aria-label={`remove ${p}`}
+                  onClick={() => setDraft(removePath(userPaths, index))}
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+            {userPaths.length === 0 && (
+              <li className="plugmgr__empty" data-plugin-nouserpaths="">
+                no user startup paths — every directory below is part of the installation
+              </li>
+            )}
+          </ol>
+
+          <div className="plugmgr__addrow">
+            <input
+              type="text"
+              data-plugin-path-input=""
+              aria-label="startup directory to add"
+              placeholder="/path/to/plugins"
+              value={candidate}
+              onChange={(e) => setCandidate(e.target.value)}
+            />
+            <button
+              type="button"
+              data-plugin-path-add=""
+              disabled={candidate.trim() === '' || userPaths.includes(candidate.trim())}
+              onClick={() => {
+                setDraft(addPath(userPaths, candidate));
+                setCandidate('');
+              }}
+            >
+              Add
+            </button>
+          </div>
+
+          {dirty && (
+            <Confirm
+              what={`Replace the ${reg.paths.user.length} user startup path(s) with ${draft!.length}.`}
+              toDisk={reg.preferences.instantsave}
+              busy={reg.saving !== null}
+              onApply={() => {
+                void reg
+                  .setStartupPaths(draft!, true)
+                  .then(() => setDraft(null))
+                  .catch(() => {});
+              }}
+              onCancel={() => setDraft(null)}
+              extra={
+                reg.preferences.instantsave ? (
+                  <button
+                    type="button"
+                    data-plugin-apply-session=""
+                    disabled={reg.saving !== null}
+                    onClick={() => {
+                      void reg
+                        .setStartupPaths(draft!, false)
+                        .then(() => setDraft(null))
+                        .catch(() => {});
+                    }}
+                  >
+                    Apply (session only)
+                  </button>
+                ) : null
+              }
+            />
+          )}
+          {reg.writeError !== null && (
+            <div className="plugmgr__error" data-plugin-writeerror="">
+              {reg.writeError}
+            </div>
+          )}
+
+          <p className="plugmgr__note">
+            Scanned in order; the first match for a name wins, so position matters.
+          </p>
+
+          <p className="plugmgr__note">
+            <strong>Installation paths</strong> ({reg.paths.installation.length}) cannot be edited:{' '}
+            <code>set_startup_path</code> assigns to{' '}
+            <code>startup.__path__[:-N_NON_USER_PATHS]</code>, so these survive every edit. They are
+            listed here rather than mixed in above, because a delete button that silently did
+            nothing would be worse than no button.
+          </p>
+          <ol className="plugmgr__paths plugmgr__paths--fixed" data-plugin-fixedpaths="">
+            {reg.paths.installation.map((p) => (
               <li key={p} className="plugmgr__path" title={p}>
                 {p}
               </li>
             ))}
           </ol>
-          <p className="plugmgr__note">
-            Scanned in order; the first match for a name wins. Adding and reordering paths is not
-            wired in v1.
-          </p>
         </div>
       )}
     </div>

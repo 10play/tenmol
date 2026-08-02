@@ -12,8 +12,11 @@
  * so there is no read path for them today. Writes DO go to Python, through
  * `cmd.set_key`, so validation and the mapping itself stay server-side.
  *
- * `shortcuts.test.ts` diffs this table against `modules/pymol/shortcut_dict.py`
- * in the tree, so it cannot drift.
+ * `p8a34keys.test.ts` diffs all 125 rows of this table — key, command and
+ * description — against `pymol.shortcut_dict.shortcut_dict_ref` read out of a
+ * LIVE engine (`__fixtures__/p8a34-keys.json`, regenerated and re-checked by
+ * `bridge/tests/test_p8_a34.py`), so it cannot drift. An earlier version of
+ * this comment named a `shortcuts.test.ts` that was never written.
  *
  * Bare `F1`..`F12` and `SHFT-F1`..`SHFT-F12` are deliberately absent: upstream
  * does not bind them, and `_special` falls through to scene- and view-name

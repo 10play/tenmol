@@ -135,7 +135,12 @@ export function SettingsPanel() {
             ) : open === 'menu' ? (
               <MenuDataRenderer ctx={ctx} />
             ) : open === 'table' ? (
-              <AdvancedSettingsTable store={store} source={source} objects={objects} />
+              <AdvancedSettingsTable
+                store={store}
+                source={source}
+                objects={objects}
+                call={(fn, args) => session.call(fn, args)}
+              />
             ) : (
               <LightingPanel store={store} source={source} />
             )}

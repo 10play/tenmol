@@ -31,6 +31,17 @@
   opacity: 0.6;
 }
 
+/* The pk1 follow poll's switch. Small, but it must be visible: it is the only
+   thing on screen that says the panel is talking to the engine on a timer. */
+.props__follow {
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.props__follow input {
+  margin: 0;
+}
+
 .props__error {
   color: #a11;
   font-size: 11px;

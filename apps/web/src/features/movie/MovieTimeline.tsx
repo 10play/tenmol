@@ -25,6 +25,7 @@ import {
   classifyGesture,
   classifyWheel,
   dragBoxes,
+  dragInRange,
   drawDragBoxes,
   drawRow,
   frameToX,
@@ -73,7 +74,12 @@ interface DragState {
   from: number;
   row: number;
   startX: number;
+  startY: number;
   travel: number;
+  /** `|dy|`, which kills the context menu at 5 px (`CMovie::drag:1588`). */
+  travelY: number;
+  /** `CMovie::DragDraw` — inside the block +/- 50 px (`CMovie::drag:1580`). */
+  inRange: boolean;
 }
 
 export function MovieTimeline({ panel, frame, run, onSelectFrame, onContextMenu }: Props) {
@@ -132,7 +138,10 @@ export function MovieTimeline({ panel, frame, run, onSelectFrame, onContextMenu 
 
     // The drag ghosts, last, so they sit over the cells like the C's overlay.
     const drag = dragRef.current;
-    if (drag && ghost) {
+    // `CMovie::draw:1793` paints the overlay only `if(I->DragDraw)`, so pulling
+    // away from the panel makes the ghost vanish — which is the only feedback
+    // the user gets that letting go now will do nothing.
+    if (drag && ghost && drag.inRange) {
       // `MoviePrepareDrag:1477` stretches DragRect over the whole block in
       // column mode, which is what makes a Ctrl+Shift drag show one tall box.
       const column = drag.ctrl && drag.shift;
@@ -195,7 +204,10 @@ export function MovieTimeline({ panel, frame, run, onSelectFrame, onContextMenu 
       from: frameAt(event, row),
       row,
       startX: event.clientX,
+      startY: event.clientY,
       travel: 0,
+      travelY: 0,
+      inRange: true,
     };
     setGhost({ row, to: dragRef.current.from });
     if (event.button === 0 && !event.ctrlKey && !event.metaKey) {
@@ -208,6 +220,11 @@ export function MovieTimeline({ panel, frame, run, onSelectFrame, onContextMenu 
     const drag = dragRef.current;
     if (!drag) return;
     drag.travel = Math.max(drag.travel, Math.abs(event.clientX - drag.startX));
+    drag.travelY = Math.max(drag.travelY, Math.abs(event.clientY - drag.startY));
+    // `CMovie::drag:1580` recomputes `DragDraw` on EVERY move, so a drag that
+    // leaves the block and comes back is live again.
+    const box = canvasRef.current?.getBoundingClientRect();
+    drag.inRange = box ? dragInRange(event.clientY, { top: box.top, bottom: box.bottom }) : true;
     setGhost({ row: drag.row, to: frameAt(event, drag.row) });
     if (drag.button === 0 && !drag.ctrl) {
       // Live scrollbar: SceneSetFrame(G,7,v) on every move, like MovieDrag.
@@ -229,6 +246,8 @@ export function MovieTimeline({ panel, frame, run, onSelectFrame, onContextMenu 
       from: drag.from,
       to,
       travel: drag.travel,
+      travelY: drag.travelY,
+      inRange: drag.inRange,
       object: rows[drag.row]?.object ?? '',
       frames,
     });

@@ -10,18 +10,27 @@
  *   cmd.get_volume_field(name)               raw field     (querying.py:40)
  *   cmd.volume_ramp_new(name, flat)          register      (colorramping.py:56)
  *
- * MEASURED BRIDGE DEFECT, worked around here rather than hidden:
- * `get_volume_histogram` is listed in `bridge/tenmol_bridge/codec.py`'s
- * `BLOB_RETURNS`, and `EngineBlobWriter._array_blob` then insists the value is
- * a numpy array — but `CmdGetVolumeHistogram` (`layer4/Cmd.cpp:738-752`) returns
- * a plain Python list of `bins + 4` floats. The call therefore answers
+ * THE HISTOGRAM CROSSES THE WIRE. This file used to say the opposite, and the
+ * inventory rows that depend on it were left PARTIAL for that reason, so the
+ * correction is recorded rather than quietly applied.
+ *
+ * The defect was real: `get_volume_histogram` was listed in
+ * `bridge/tenmol_bridge/codec.py`'s `BLOB_RETURNS`, and
+ * `EngineBlobWriter._array_blob` insists on a numpy array, while
+ * `CmdGetVolumeHistogram` (`layer4/Cmd.cpp:738-752`) returns a plain Python
+ * list of `bins + 4` floats — so every call answered
  *
  *     NotSerializable: get_volume_histogram returned list, expected a numpy array
  *
- * verbatim, on this tree, today. So `fetchHistogram` tries it, and on failure
- * derives the identical `[min, max, mean, stdev, h0..h63]` vector from
- * `cmd.get_volume_field`, which IS a numpy array and does arrive (as a blob).
- * When the bridge is fixed the fast path simply starts working.
+ * `codec.py` no longer lists it (it carries a comment saying why), and the call
+ * now answers 68 inline floats. Measured over a real socket in
+ * `bridge/tests/test_p8_a10.py`, which also RE-CREATES the old defect with a
+ * monkeypatch and gets that exact message back, so "fixed" is a measurement of
+ * this build and not a memory of a commit.
+ *
+ * The lower tiers stay: they are the answer to a bridge that is older than this
+ * file or is running with a different codec, and tier 3 is what keeps the panel
+ * usable for a volume whose map has been deleted.
  */
 
 import type { Session } from '../../app';
@@ -69,6 +78,42 @@ export async function applyPreset(session: Session, name: string, preset: string
   await session.call('volume_color', [name, preset], { _guiupdate: 0 });
 }
 
+/**
+ * The named ramps, READ LIVE — the `A > volume` submenu's own source.
+ *
+ * The inventory row said "the list is a client constant, not a live read of
+ * `pymol.colorramping.namedramps` (no cmd getter exists)". The second half is
+ * wrong, and the refutation is `modules/pymol/menu.py:643-653`:
+ *
+ *     def vol_color(self_cmd, sele):
+ *         from pymol.colorramping import namedramps
+ *         ...  + [[1, p, 'cmd.volume_color(%s, "%s")' % (rsele, p)]
+ *                 for p in sorted(namedramps)]
+ *
+ * `menu` IS in `policy/base.py`'s `DEFAULT_ROOTS`, so this resolves through the
+ * ordinary dispatcher, while `colorramping` is not and answers `NotAllowed:
+ * 'colorramping' is not an addressable namespace` (both measured in
+ * `bridge/tests/test_p8_a10.py`). `self_cmd` is unused by this particular
+ * provider, which is why `null` is a legal first argument.
+ *
+ * It is a LIVE read and not a prettier constant: registering a ramp with
+ * `cmd.volume_ramp_new` makes it appear here on the next call, measured.
+ *
+ * Row kinds are PyMOL's popup kinds (`layer4/PopUp.cpp`): 2 title, 0
+ * separator, 1 leaf. The `panel` leaf is filtered out here because its command
+ * is `cmd.volume_panel`, which raises `ImportError: pymol.Qt` on a build with
+ * no Qt binding — offering it would be offering a crash.
+ */
+export async function listPresets(session: Session, name: string): Promise<string[]> {
+  const rows = await session.call<[number, string, string][]>('menu.vol_color', [null, name]);
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .filter(
+      (row) => Array.isArray(row) && row[0] === 1 && String(row[2]).startsWith('cmd.volume_color('),
+    )
+    .map((row) => String(row[1]));
+}
+
 /** `cmd.volume_ramp_new(rname, flat)` — registers the current ramp by name. */
 export async function registerRamp(
   session: Session,
@@ -86,19 +131,21 @@ export interface HistogramFetch {
 }
 
 /**
- * THREE TIERS, tried in order, because the first two are both blocked by bridge
- * gaps that are not this work package's to fix:
+ * THREE TIERS, tried in order.
  *
- *   1. `cmd.get_volume_histogram(name)` — the real thing. Currently answers
- *      `NotSerializable: ... expected a numpy array` (see the module header).
+ *   1. `cmd.get_volume_histogram(name)` — the real thing, and on this build it
+ *      is the one that runs: 68 inline floats, `[min, max, mean, stdev, h0..h63]`,
+ *      of which `min` and `max` arrive bit-identical to the captured fixture
+ *      (`bridge/tests/test_p8_a10.py`). 2956 of the field's 2992 voxels are
+ *      binned — the rest fall outside PyMOL's own +/- `volume_data_range` trim.
  *   2. `cmd.get_volume_field(name)` + `histogramFromField` — a verbatim port of
  *      the C histogram, proved bar-for-bar in `ramp.test.ts`. The array arrives
  *      as a blob handle, and `GET /blob/{id}` from the page is CROSS-ORIGIN
  *      (`http://localhost:5210` -> `http://127.0.0.1:8810`) while
- *      `bridge/tenmol_bridge/server.py` installs no CORS middleware, so the
- *      browser refuses to read the response: measured, `TypeError: Failed to
- *      fetch`. One `Access-Control-Allow-Origin` header on `/blob` turns this
- *      tier on.
+ *      `bridge/tenmol_bridge/server.py` installs no CORS middleware (grep:
+ *      no `add_middleware` at all), so the browser refuses to read the
+ *      response: measured in wave 4, `TypeError: Failed to fetch`. One
+ *      `Access-Control-Allow-Origin` header on `/blob` turns this tier on.
  *   3. The ramp's own stops. No bars, but a data range that spans the colour
  *      map with a 10 % margin, so every interaction in the panel keeps working
  *      and the axes mean something.

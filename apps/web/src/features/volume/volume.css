@@ -21,6 +21,14 @@
   gap: 4px;
 }
 
+/* Where the named-ramp list came from: `menu.vol_color` (live) or the
+   compiled-in constant. Shown because "the engine has five ramps" and "we
+   believe the engine has five ramps" are different claims. */
+.volpanel__presetsrc {
+  font-size: 10px;
+  opacity: 0.55;
+}
+
 .volpanel__spacer {
   flex: 1;
 }

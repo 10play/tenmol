@@ -20,7 +20,11 @@
  *                     through a base-10 log curve scaled by `amax`
  */
 
-import type { FlatVolumeRamp, VolumeHistogram, VolumeRampPoint } from '@tenmol/protocol/topics/dialogs';
+import type {
+  FlatVolumeRamp,
+  VolumeHistogram,
+  VolumeRampPoint,
+} from '@tenmol/protocol/topics/dialogs';
 
 /** `volume.py:14` */
 export const DOT_RADIUS = 5;
@@ -254,12 +258,15 @@ export function normalizeHistogram(
  * vector `cmd.get_volume_histogram` returns — a line-for-line port of
  * `ObjectMapStateGetHistogram` (`layer2/ObjectMap.cpp:291-361`).
  *
- * This exists because the bridge cannot currently deliver that call at all:
- * `codec.BLOB_RETURNS` routes `get_volume_histogram` to a blob writer that
- * demands a numpy array, while the C function returns a plain Python list —
- * measured answer, `NotSerializable: get_volume_histogram returned list,
- * expected a numpy array`. `cmd.get_volume_field` IS a numpy array and does
- * arrive, so the client can compute the identical vector itself.
+ * This was written because the bridge could not deliver that call at all:
+ * `codec.BLOB_RETURNS` routed `get_volume_histogram` to a blob writer that
+ * demands a numpy array, while the C function returns a plain Python list.
+ * THAT IS FIXED — `cmd.get_volume_histogram` now answers 68 inline floats, and
+ * `bridge/tests/test_p8_a10.py` both measures it and re-creates the old defect
+ * with a monkeypatch to get the old `NotSerializable: get_volume_histogram
+ * returned list, expected a numpy array` back. So this is now the FALLBACK, for
+ * an older bridge; it stays because `cmd.get_volume_field` IS a numpy array and
+ * gives the client a way to compute the identical vector itself.
  *
  * Three details that are easy to get wrong and are not negotiable, because
  * getting any of them wrong moves the plotted curve:
@@ -274,11 +281,7 @@ export function normalizeHistogram(
  *     — `n_points - 1`, and anything landing outside `[0, n_points)` is DROPPED,
  *     not clamped. That is why the counts do not sum to the voxel count.
  */
-export function histogramFromField(
-  field: Float32Array,
-  bins: number,
-  limit = 5.0,
-): number[] {
+export function histogramFromField(field: Float32Array, bins: number, limit = 5.0): number[] {
   const n = field.length;
   if (n === 0) return [0, 1, 1, 1, ...new Array<number>(bins).fill(0)];
 
@@ -496,10 +499,7 @@ export function dragTooltip(value: number, alpha: number): string {
  * `wheelEvent`'s point branch (`volume.py:547-554`): every alpha is scaled by
  * `(1 - delta)` and clamped to 0..1. `delta` is `angleDelta.y / -1000`.
  */
-export function scaleAlphas(
-  points: readonly VolumeRampPoint[],
-  delta: number,
-): VolumeRampPoint[] {
+export function scaleAlphas(points: readonly VolumeRampPoint[], delta: number): VolumeRampPoint[] {
   return points.map((p) => {
     let y = p.alpha;
     y -= y * delta;
@@ -657,9 +657,5 @@ export function toHexColor(r: number, g: number, b: number): string {
 export function fromHexColor(hex: string): [number, number, number] {
   const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex.trim());
   if (!m) return [0, 0, 0];
-  return [
-    parseInt(m[1]!, 16) / 255,
-    parseInt(m[2]!, 16) / 255,
-    parseInt(m[3]!, 16) / 255,
-  ];
+  return [parseInt(m[1]!, 16) / 255, parseInt(m[2]!, 16) / 255, parseInt(m[3]!, 16) / 255];
 }

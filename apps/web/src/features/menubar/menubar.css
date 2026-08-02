@@ -114,3 +114,62 @@
 .about__ok:hover {
   background: linear-gradient(#474c51, #34383c);
 }
+
+/* Toolkit dialogs (Colors…, Keyboard Shortcuts…, Scenes…) ---------------- *
+ *
+ * Qt shows each of these as its own top-level `QDialog`. A browser has one
+ * window, so they are modals over the same scrim the About box uses; the body
+ * scrolls because `ShortcutEditor` lists every bound key and `ScenePanel` every
+ * scene, and neither has a bounded height.
+ */
+
+.toolkit-dialog {
+  display: flex;
+  flex-direction: column;
+  min-width: 420px;
+  max-width: min(900px, 92vw);
+  max-height: 86vh;
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-line);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.toolkit-dialog__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--pm-line);
+  color: var(--pm-text-bright);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.toolkit-dialog__x {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--pm-text);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toolkit-dialog__x:hover {
+  border-color: var(--pm-line);
+}
+
+.toolkit-dialog__body {
+  overflow: auto;
+  padding: 8px;
+}
+
+.toolkit-dialog__loading {
+  padding: 12px;
+  color: var(--pm-text-dim, #8a8f94);
+  font-size: 11px;
+}

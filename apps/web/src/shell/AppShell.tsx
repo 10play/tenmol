@@ -60,6 +60,7 @@ import {
   type GutterState,
   type ShellSettings,
 } from './orthoPanel';
+import { panelsStore, togglePanel } from './panelHooks';
 import {
   dockModifier,
   isDockShortcut,
@@ -576,12 +577,15 @@ function useDrag(onMove: (e: PointerEvent) => void, onUp?: () => void) {
  * the registry applies to absent slots.
  */
 function OverlayLayer() {
-  const [open, setOpen] = useState<readonly string[]>([]);
+  // The open set is a MODULE store, not local state: `Setting > Colors…` and
+  // the Properties quick button open these panels from other features, and a
+  // `useState` here could only ever be reached by this component's own
+  // children (`shell/panelHooks.ts`).
+  const open = useStore(panelsStore(), (state) => state.open);
   const slots = slotsForRegion('overlay').filter((slot) => isInstalled(slot.id));
   if (slots.length === 0) return null;
 
-  const toggle = (id: string) =>
-    setOpen((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+  const toggle = (id: string) => togglePanel(id);
 
   return (
     <>

@@ -21,6 +21,7 @@ import { rgbToCss } from '@tenmol/protocol';
 import { useSession, useStore } from '../../app';
 import { COLOR_SPACES, UTIL_COLOR_SCHEMES } from './menuData';
 import { paletteIntegrity } from './palette';
+import { BandGrid } from './BandGrid';
 import { ColorEditor } from './ColorEditor';
 import { RampPanel } from './RampPanel';
 import { SpectrumPanel } from './SpectrumPanel';
@@ -28,7 +29,7 @@ import { SwatchGrid } from './SwatchGrid';
 import { callOf, refreshPalette, useColorAction, usePalette } from './usePalette';
 import './colors.css';
 
-const TABS = ['palette', 'editor', 'spectrum', 'ramps', 'space'] as const;
+const TABS = ['palette', 'bands', 'editor', 'spectrum', 'ramps', 'space'] as const;
 type Tab = (typeof TABS)[number];
 
 export function ColorsPanel() {
@@ -123,6 +124,7 @@ export function ColorsPanel() {
 
       <div className="colors__body">
         {tab === 'palette' && <SwatchGrid palette={palette} sele={sele} />}
+        {tab === 'bands' && <BandGrid palette={palette} sele={sele} />}
         {tab === 'editor' && <ColorEditor palette={palette} />}
         {tab === 'spectrum' && <SpectrumPanel palette={palette} sele={sele} />}
         {tab === 'ramps' && <RampPanel palette={palette} />}

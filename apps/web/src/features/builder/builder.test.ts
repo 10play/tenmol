@@ -24,7 +24,6 @@ import {
   RNA_BASES,
   SECONDARY_STRUCTURE,
   diffTables,
-  ringPoints,
 } from './tables';
 import type { BuilderState, BuilderTables } from '@tenmol/protocol/topics/builder';
 
@@ -179,19 +178,6 @@ describe('diffTables', () => {
     expect(problems).toHaveLength(2);
     expect(problems[0]).toContain('rings');
     expect(problems[1]).toContain('napthylene');
-  });
-});
-
-describe('ringPoints', () => {
-  it('emits n vertices on the circle of radius r', () => {
-    for (const n of [3, 4, 5, 6, 7]) {
-      const points = ringPoints(n, 10, 10, 8).split(' ');
-      expect(points).toHaveLength(n);
-      for (const point of points) {
-        const [x, y] = point.split(',').map(Number) as [number, number];
-        expect(Math.hypot(x - 10, y - 10)).toBeCloseTo(8, 2);
-      }
-    }
   });
 });
 

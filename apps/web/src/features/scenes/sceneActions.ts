@@ -99,6 +99,20 @@ export const sceneActions = {
     args: [mode],
     echo: `cmd.cache("${mode}")`,
   }),
+  /**
+   * The Scene menu's `Buttons` check item (`_gui.py:801`).
+   *
+   * `('check', 'Buttons', 'scene_buttons')` is a plain global setting, and it
+   * is the one that decides whether `SceneDrawButtons` (`Scene.cpp:2885`)
+   * paints the overlay at all — so the checkbox has to write the SETTING, not
+   * a piece of client state, or the overlay and the menu disagree the moment
+   * anything else touches it.
+   */
+  buttons: (on: boolean): SceneAction => ({
+    fn: 'cmd.set',
+    args: ['scene_buttons', on ? 1 : 0],
+    echo: `cmd.set('scene_buttons', ${on ? 1 : 0})`,
+  }),
 } as const;
 
 /**

@@ -40,10 +40,27 @@ import {
   objectList,
   objectRows,
   ostateRows,
+  probePk1,
   readPk1,
   settingRows,
 } from './service';
 import './properties.css';
+
+/**
+ * How often the panel asks where pk1 is, in ms.
+ *
+ * There is nothing to subscribe to (see the effect below), so this number is a
+ * trade: one `cmd.index('?pk1')` per tick against how stale the panel is after
+ * a click in the viewport. 600 ms is under the ~1 s at which a UI stops feeling
+ * connected to the click that caused it, and 1.7 calls/s is a rounding error
+ * next to the 30 Hz pump.
+ */
+const PK1_POLL_MS = 600;
+
+const FOLLOW_TITLE =
+  'Re-read pk1 every 600 ms and follow picks made in the viewport. ' +
+  'There is no pk1-changed event to subscribe to: the selection topic accepts ' +
+  'a subscription and nothing publishes to it.';
 
 export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
   const session = useSession();
@@ -58,6 +75,11 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
   const [selected, setSelected] = useState<string>('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [follow, setFollow] = useState(true);
+
+  /** `objects`, readable from the poll without making it an effect dependency. */
+  const objectsRef = useRef<string[]>([]);
+  objectsRef.current = objects;
 
   /** setting index -> name. `get_name_list()` is NOT index-ordered (779 names,
    *  higher indices), so the two public list getters are zipped instead:
@@ -176,6 +198,65 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
     return () => clearTimeout(timer);
   }, [reload]);
 
+  /* ------------------------------------------------------- follow the pick */
+
+  /**
+   * The panel follows viewport picks.
+   *
+   * The inventory row asks for "a pk1-changed event"; there is no such event
+   * and there is no way to make one from here. The `selection` topic exists and
+   * ACCEPTS a subscription — which is the trap, because a client can wire
+   * itself up, see `subscribed: true` and wait forever — but nothing in
+   * `bridge/tenmol_bridge` ever publishes to it. Asserted, not assumed, in
+   * `bridge/tests/test_p8_a10.py`.
+   *
+   * So this is a poll, exactly as `features/scenes/useScenes.ts` stands in for
+   * the scenes drain, and it costs ONE `cmd.index('?pk1')` per tick — the whole
+   * pk1 answer in one round trip, against `readPk1`'s three. It runs only while
+   * the panel is open and only while `follow` is on, and the checkbox exists
+   * so that a poll the user does not want is a poll the user can stop.
+   *
+   * NO "did the panel write this itself?" GUARD, and that is deliberate.
+   * `reload()` ends in `cmd.edit` (upstream's `update_pk1`), so every tick sees
+   * a pk1 the panel set — but `setModel`/`setIndex` with the value already in
+   * state is a React BAIL-OUT: no re-render, no reload, no traffic. A guard was
+   * written here first and deleting it changed nothing measurable (the test
+   * below passed either way), while it actively broke the one case where the
+   * two disagree: `reload()` writes the index CLAMPED to `count_atoms`, and
+   * without a guard the next tick pulls the header box back to the atom the
+   * tree is actually showing. So the absence is load-bearing and the tests
+   * below pin the traffic instead.
+   *
+   * Replace the body with a subscription the day something publishes.
+   */
+  useEffect(() => {
+    if (!follow) return;
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const pk = await probePk1(session);
+        if (cancelled || !pk) return;
+        // Only when the pick names an object this panel has never listed: an
+        // unconditional re-read would double the cost of every single tick.
+        if (!objectsRef.current.includes(pk.model)) {
+          // a pick in an object created since the panel opened
+          const list = await objectList(session);
+          if (cancelled) return;
+          setObjects(list);
+        }
+        setModel(pk.model);
+        setIndex(pk.index);
+      } catch {
+        // a closed socket must not turn into an error banner every 600 ms
+      }
+    };
+    const timer = setInterval(() => void tick(), PK1_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [session, follow]);
+
   /* ------------------------------------------------------------- editing */
 
   const commit = useCallback(
@@ -265,6 +346,15 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
           >
             ⟳
           </button>
+          <label className="props__follow" title={FOLLOW_TITLE}>
+            <input
+              type="checkbox"
+              data-props-follow=""
+              checked={follow}
+              onChange={(e) => setFollow(e.target.checked)}
+            />
+            follow pick
+          </label>
           {busy && <span className="props__busy">…</span>}
         </div>
 

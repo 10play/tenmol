@@ -46,7 +46,9 @@ import { useSession, useStore } from '../../app';
 import { rowActions, planDrop, type DragRow } from './actions';
 import { createPanelSource } from './panelSource';
 import { RowMenu } from './RowMenu';
-import { menuNameFor, OPS, rowKind, type OpButton } from './menus';
+import { menuNameFor, MOTION_OP, OPS, rowKind, type OpButton } from './menus';
+import { nameTextColor, rowFillName } from './rowStyle';
+import { specClass } from './specLevel';
 import './objects.css';
 
 /** `internal_gui_control_size` default is 18 DIP; rows are that tall. */
@@ -87,6 +89,11 @@ export function ObjectPanel() {
   const phase = useStore(session.stores.connection, (s) => s.phase);
 
   const [menu, setMenu] = useState<OpenMenu | null>(null);
+  // `ObjectGetSpecLevel(obj, SceneGetFrame(G))` per object, from the same
+  // snapshot call. Not on `PanelRow`: it is per-FRAME state and the row list
+  // is not, so it lives beside the rows rather than inside them.
+  const [specLevels, setSpecLevels] = useState<Record<string, number>>({});
+  const [guiMode, setGuiMode] = useState(0);
   // The drag lives in a REF, mirrored into state only so the band can be
   // highlighted. React batches state updates, so a press and the release that
   // follows it in the same task would both read `drag === null` — which is
@@ -123,7 +130,11 @@ export function ObjectPanel() {
       if (phase === 'open') {
         try {
           const snapshot = await source.snapshot();
-          if (!stopped) store.applySnapshot(snapshot);
+          if (!stopped) {
+            store.applySnapshot(snapshot);
+            setSpecLevels(snapshot.specLevels ?? {});
+            setGuiMode(snapshot.internalGuiMode ?? 0);
+          }
         } catch (fault) {
           if (!stopped) {
             // Hand the panel back to the two-call poll rather than showing a
@@ -397,7 +408,18 @@ export function ObjectPanel() {
         onPointerCancel={onRowsPointerUp}
         onContextMenu={(e) => e.preventDefault()}
       >
-        {shown.map((row, index) => (
+        {shown.map((row, index) => {
+          // `but_color` (Executive.cpp:16443-16463) and, from it, the name
+          // colour: `getNameColor` is handed the FILL as its background and
+          // falls back to the default text colour when the object colour is
+          // within 0.1 of it (`:16469`).
+          const fill = rowFillName({
+            enabled: row.enabled,
+            cloaked: row.cloaked,
+            pressed: Boolean(drag && inBand(drag, index)),
+          });
+          const nameColor = nameTextColor(row.nameColor, fill);
+          return (
           <div
             className={
               'objrow' +
@@ -409,6 +431,7 @@ export function ObjectPanel() {
             }
             key={row.name}
             data-row-index={index}
+            data-fill={fill}
           >
             {row.isGroup ? (
               <button
@@ -434,7 +457,7 @@ export function ObjectPanel() {
               className="objrow__name"
               style={{
                 ...(row.nest > 0 ? { marginLeft: row.nest * 8 } : null),
-                ...(row.nameColor ? { color: cssColor(row.nameColor) } : null),
+                ...(nameColor ? { color: cssColor(nameColor) } : null),
               }}
               title={rowTooltip(row)}
               onPointerDown={(e) => onNamePointerDown(row, index, e)}
@@ -455,15 +478,29 @@ export function ObjectPanel() {
             <div className="objrow__ops">
               {ops.map((op) => {
                 const target = menuNameFor(rowKind(row), op);
+                // The M button alone is tinted by the row's motion spec level
+                // at the CURRENT frame (Executive.cpp:16362-16381).
+                const spec =
+                  op === MOTION_OP ? specClass(specLevels[nameOf(row)]) : 'none';
                 return (
                   <button
                     type="button"
                     key={op}
                     className={
                       `objrow__op objrow__op--${op.toLowerCase()}` +
-                      (target === null ? ' is-inert' : '')
+                      (target === null ? ' is-inert' : '') +
+                      (op === MOTION_OP ? ` is-spec-${spec}` : '')
                     }
-                    title={target ? `${op} — pymol.menu.${target}` : `${op} — no menu`}
+                    {...(op === MOTION_OP ? { 'data-spec': spec } : {})}
+                    title={
+                      op === MOTION_OP && spec !== 'none'
+                        ? `M — pymol.menu.${target} · motion spec level ${
+                            spec === 'key' ? '2 (key frame)' : '1 (interpolated)'
+                          }`
+                        : target
+                          ? `${op} — pymol.menu.${target}`
+                          : `${op} — no menu`
+                    }
                     onClick={(e) => openMenu(row, op, e.currentTarget)}
                   >
                     {op}
@@ -472,7 +509,8 @@ export function ObjectPanel() {
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {menu && (
@@ -484,6 +522,8 @@ export function ObjectPanel() {
           loading={!openPayload}
           error={null}
           anchor={menu.anchor}
+          reps={menu.row.reps}
+          internalGuiMode={guiMode}
           onPick={(command) => {
             setMenu(null);
             if (command) void session.run(command);

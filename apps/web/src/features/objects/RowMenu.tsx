@@ -27,6 +27,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { PanelMenuNode } from '@tenmol/protocol';
 import { parseColorCodes, stripColorCodes } from '@tenmol/stores/objects';
 import { OP_TITLES, type OpButton } from './menus';
+import { POP_SCROLL_PX, placeChild, type Affinity } from './placement';
+import { repCheck, type RepCheck } from './reps';
 
 /** `PopUp.cpp` opens a submenu 0.25 s after the pointer settles on its row. */
 export const SUBMENU_DELAY_MS = 250;
@@ -40,6 +42,18 @@ export interface RowMenuProps {
   loading?: boolean;
   error?: string | null;
   anchor: { x: number; y: number };
+  /**
+   * The row's live rep bitmask (`cmd.get_vis()[name][2]`, re-packed by
+   * `panels/objects.py:_rep_bitmask`). Drives the check marks PyMOL does not
+   * draw; 0 or absent means "tick nothing".
+   */
+  reps?: number;
+  /**
+   * `internal_gui_mode`. `PopUp.cpp:144-164` builds the menu with white text
+   * on {0.1,0.1,0.1} for Default (0) and inverts to black on white for
+   * anything else, and the title bar goes {0.3,0.3,0.6} -> white (`:813-826`).
+   */
+  internalGuiMode?: number;
   onPick: (command: string) => void;
   onExpand: (path: readonly number[]) => void;
   onClose: () => void;
@@ -53,6 +67,8 @@ export function RowMenu({
   loading,
   error,
   anchor,
+  reps = 0,
+  internalGuiMode = 0,
   onPick,
   onExpand,
   onClose,
@@ -85,15 +101,43 @@ export function RowMenu({
     };
   }, [onClose]);
 
+  // `CPopUp::release` scrolls by a FIXED 10 px per wheel notch
+  // (`PopUp.cpp:438-445`), in the opposite sense to the browser's own scroll,
+  // and React's root wheel listener is passive so `preventDefault` from JSX is
+  // ignored — the listener has to be attached by hand, exactly as the panel's
+  // one-row wheel does (`ObjectPanel.tsx:154-164`).
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onWheel = (event: WheelEvent) => {
+      const body = (event.target as HTMLElement | null)?.closest(
+        '.rowmenu__panel, .rowmenu__body',
+      ) as HTMLElement | null;
+      const target = body ?? el.querySelector<HTMLElement>('.rowmenu__body');
+      if (!target) return;
+      event.preventDefault();
+      target.scrollTop += Math.sign(event.deltaY) * POP_SCROLL_PX;
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
   return (
-    <div className="rowmenu" ref={ref} style={position} role="menu" data-testid="rowmenu">
+    <div
+      className={'rowmenu' + (internalGuiMode !== 0 ? ' is-light' : '')}
+      ref={ref}
+      style={position}
+      role="menu"
+      data-testid="rowmenu"
+      data-gui-mode={internalGuiMode}
+    >
       <div className="rowmenu__head">
         {OP_TITLES[op]} · {title}
         {menuName && <span className="rowmenu__src">{menuName}</span>}
       </div>
       {error && <div className="rowmenu__error">{error}</div>}
       {loading && !items.length && <div className="rowmenu__title">resolving…</div>}
-      <MenuList items={items} onPick={onPick} onExpand={onExpand} depth={0} />
+      <MenuList items={items} onPick={onPick} onExpand={onExpand} depth={0} reps={reps} />
     </div>
   );
 }
@@ -104,11 +148,16 @@ function MenuList({
   onPick,
   onExpand,
   depth,
+  reps,
+  affinity,
 }: {
   items: readonly PanelMenuNode[];
   onPick: (command: string) => void;
   onExpand: (path: readonly number[]) => void;
   depth: number;
+  reps: number;
+  /** The side this level was placed on; children inherit it (`Pop.cpp:131`). */
+  affinity?: Affinity | undefined;
 }) {
   const [open, setOpen] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -147,12 +196,15 @@ function MenuList({
         }
         const isSub = node.lazy === true || node.items !== undefined;
         if (!isSub) {
+          const check = repCheck(node.command, reps);
           return (
             <button
               type="button"
-              className="rowmenu__row"
+              className={'rowmenu__row' + (check === 'none' ? '' : ` is-rep-${check}`)}
               key={key}
               role="menuitem"
+              {...(check === 'none' ? {} : { 'aria-checked': check === 'on' })}
+              data-rep={check === 'none' ? undefined : check}
               title={node.command ?? ''}
               style={indentOf(node.text)}
               onMouseEnter={() => {
@@ -161,55 +213,142 @@ function MenuList({
               }}
               onClick={() => onPick(node.command ?? '')}
             >
+              <RepTick check={check} />
               <Coded text={node.text} />
             </button>
           );
         }
         return (
-          <div
-            className="rowmenu__sub"
+          <SubMenu
             key={key}
-            onMouseEnter={() => arm(index, node)}
-            onMouseLeave={cancel}
-          >
-            <button
-              type="button"
-              className={'rowmenu__row is-sub' + (open === index ? ' is-open' : '')}
-              role="menuitem"
-              aria-haspopup="menu"
-              aria-expanded={open === index}
-              style={indentOf(node.text)}
-              onClick={() => {
-                cancel();
-                if (open === index) {
-                  setOpen(null);
-                  return;
-                }
-                setOpen(index);
-                if (node.lazy) onExpand(node.path);
-              }}
-            >
-              <Coded text={node.text} />
-              <span className="rowmenu__arrow">▸</span>
-            </button>
-            {open === index && (
-              <div className="rowmenu__panel" style={{ zIndex: 310 + depth }}>
-                {node.lazy && !node.items ? (
-                  <div className="rowmenu__title">resolving…</div>
-                ) : (
-                  <MenuList
-                    items={node.items ?? []}
-                    onPick={onPick}
-                    onExpand={onExpand}
-                    depth={depth + 1}
-                  />
-                )}
-              </div>
-            )}
-          </div>
+            node={node}
+            index={index}
+            open={open === index}
+            depth={depth}
+            reps={reps}
+            affinity={affinity}
+            onArm={() => arm(index, node)}
+            onCancel={cancel}
+            onToggle={() => {
+              cancel();
+              if (open === index) {
+                setOpen(null);
+                return;
+              }
+              setOpen(index);
+              if (node.lazy) onExpand(node.path);
+            }}
+            onPick={onPick}
+            onExpand={onExpand}
+          />
         );
       })}
     </div>
+  );
+}
+
+/**
+ * One submenu, placed by `PopPlaceChild` (`layer1/Pop.cpp:111-150`): the
+ * inherited side first, the other side when the first one had to be clamped.
+ */
+function SubMenu({
+  node,
+  open,
+  depth,
+  reps,
+  affinity,
+  onArm,
+  onCancel,
+  onToggle,
+  onPick,
+  onExpand,
+}: {
+  node: PanelMenuNode;
+  index: number;
+  open: boolean;
+  depth: number;
+  reps: number;
+  affinity?: Affinity | undefined;
+  onArm: () => void;
+  onCancel: () => void;
+  onToggle: () => void;
+  onPick: (command: string) => void;
+  onExpand: (path: readonly number[]) => void;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [side, setSide] = useState<Affinity>(affinity ?? 'right');
+
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!open || !panel) return;
+    const parent = panel.parentElement?.closest<HTMLElement>('.rowmenu__panel, .rowmenu');
+    if (!parent) return;
+    const box = parent.getBoundingClientRect();
+    const width = panel.getBoundingClientRect().width || panel.offsetWidth;
+    // A jsdom-shaped environment reports 0 for everything; a zero-width menu
+    // "fits" on both sides and the flip would be meaningless, so leave the
+    // inherited side alone rather than inventing one.
+    if (width === 0 && box.width === 0) return;
+    const placed = placeChild({
+      parentLeft: box.left,
+      parentRight: box.right,
+      width,
+      viewportWidth: window.innerWidth,
+      ...(affinity ? { affinity } : {}),
+    });
+    setSide(placed.affinity);
+  }, [open, affinity, node.items]);
+
+  return (
+    <div className="rowmenu__sub" onMouseEnter={onArm} onMouseLeave={onCancel}>
+      <button
+        type="button"
+        className={'rowmenu__row is-sub' + (open ? ' is-open' : '')}
+        role="menuitem"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        style={indentOf(node.text)}
+        onClick={onToggle}
+      >
+        <Coded text={node.text} />
+        <span className="rowmenu__arrow">▸</span>
+      </button>
+      {open && (
+        <div
+          className={`rowmenu__panel rowmenu__panel--${side}`}
+          ref={panelRef}
+          data-side={side}
+          style={{ zIndex: 310 + depth }}
+        >
+          {node.lazy && !node.items ? (
+            <div className="rowmenu__title">resolving…</div>
+          ) : (
+            <MenuList
+              items={node.items ?? []}
+              onPick={onPick}
+              onExpand={onExpand}
+              depth={depth + 1}
+              reps={reps}
+              affinity={side}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The check mark PyMOL does not draw. `on` = every bit of the leaf's rep mask
+ * is in `cmd.get_vis()[name][2]`; `partial` = some of them, which only a
+ * combination leaf (`wire`, `licorice`) can produce.
+ */
+function RepTick({ check }: { check: RepCheck }) {
+  if (check === 'none') return null;
+  return (
+    <span className="rowmenu__tick" aria-hidden="true">
+      {check === 'on' ? '✓' : check === 'partial' ? '·' : ''}
+    </span>
   );
 }
 

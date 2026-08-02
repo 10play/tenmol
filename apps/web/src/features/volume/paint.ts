@@ -43,7 +43,9 @@ export type ValueBoxes = Partial<Record<ValueBoxKey, BoxRect>>;
 export function boxContains(rect: BoxRect | undefined, x: number, y: number): boolean {
   if (!rect) return false;
   // Qt's QRect.contains() is inclusive of right()/bottom() == x+w-1 / y+h-1.
-  return x >= rect.x && x <= rect.x + rect.width - 1 && y >= rect.y && y <= rect.y + rect.height - 1;
+  return (
+    x >= rect.x && x <= rect.x + rect.width - 1 && y >= rect.y && y <= rect.y + rect.height - 1
+  );
 }
 
 export interface PaintOptions {

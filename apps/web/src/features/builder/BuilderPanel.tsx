@@ -49,10 +49,10 @@ import {
   SECONDARY_STRUCTURE,
   SETTING_CHECKBOXES,
   diffTables,
-  ringPoints,
   type FragmentButton,
   type RingButton,
 } from './tables';
+import { RING_ICONS } from './ringIcons';
 import './builder.css';
 
 type Tab = 'Chemical' | 'Protein' | 'Nucleic Acid';
@@ -844,28 +844,24 @@ function ConfirmModal({
   );
 }
 
-/** The ten ring icons, drawn instead of shipped (`builder.py:1323-1335`). */
-function RingGlyph({ ring }: { ring: RingButton }) {
-  const sizes = ring.glyph;
-  const width = sizes.length > 1 ? 34 : 22;
+/**
+ * The ten ring icons, the shipped `$PYMOL_DATA/pmg_tk/bitmaps/builder/*.gif`
+ * bitmaps themselves (`builder.py:1114-1125,1323-1335`), at their natural size
+ * — which is what `QIcon.actualSize(QSize(48,48))` resolves to for a 20 px
+ * bitmap, since QIcon never upscales. Dark mode is `.bbtn__icon`'s
+ * `filter: invert(1)`, standing in for upstream's unused inverted copy.
+ */
+export function RingGlyph({ ring }: { ring: RingButton }) {
+  const icon = RING_ICONS[ring.icon];
+  if (icon === undefined) return null;
   return (
-    <svg viewBox={`0 0 ${width} 22`} width={width} height={22} aria-hidden="true">
-      {sizes.map((n, index) => {
-        const cx = sizes.length > 1 ? 9 + index * 16 : 11;
-        return (
-          <g key={`${n}-${index}`}>
-            <polygon
-              points={ringPoints(n, cx, 11, 8)}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.2"
-            />
-            {ring.aromatic && index === 0 && (
-              <circle cx={cx} cy={11} r={4.4} fill="none" stroke="currentColor" strokeWidth="1" />
-            )}
-          </g>
-        );
-      })}
-    </svg>
+    <img
+      className="bbtn__icon"
+      src={icon.src}
+      width={icon.width}
+      height={icon.height}
+      alt=""
+      draggable={false}
+    />
   );
 }

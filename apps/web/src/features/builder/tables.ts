@@ -117,18 +117,14 @@ export const FUNCTIONAL_GROUPS: readonly FragmentButton[] = [
 
 /**
  * The ten ring buttons. Upstream loads `$PYMOL_DATA/pmg_tk/bitmaps/builder/
- * <label>.gif` twice — normal and `invertPixels()` — and never uses the
- * inverted copy (dead code, `builder.py:1114,1125`). Here the glyph is drawn as
- * an SVG from {@link RingGlyph}: no binary asset, and dark mode is `currentColor`
- * rather than a second bitmap.
+ * <icon>.gif` twice — normal and `invertPixels()` — and never uses the
+ * inverted copy (dead code, `builder.py:1114,1125`). The same bitmaps ship
+ * here, inlined by {@link RING_ICONS}, with the inversion done as a CSS filter
+ * because this dock is dark and Qt's palette was light.
  */
 export interface RingButton extends FragmentButton {
-  /** The `.gif` basename upstream uses; kept as the stable identity. */
+  /** The `.gif` basename upstream uses, and the key into `RING_ICONS`. */
   icon: string;
-  /** Ring sizes to draw, left to right. Two entries = a fused bicycle. */
-  glyph: readonly number[];
-  /** Draw an aromatic circle inside the FIRST ring. */
-  aromatic: boolean;
 }
 
 export const RINGS: readonly RingButton[] = [
@@ -140,8 +136,6 @@ export const RINGS: readonly RingButton[] = [
     hydrogen: 4,
     anchor: 0,
     text: 'cyclopropyl',
-    glyph: [3],
-    aromatic: false,
   },
   {
     icon: 'cyc4',
@@ -151,8 +145,6 @@ export const RINGS: readonly RingButton[] = [
     hydrogen: 4,
     anchor: 0,
     text: 'cyclobutyl',
-    glyph: [4],
-    aromatic: false,
   },
   {
     icon: 'cyc5',
@@ -162,8 +154,6 @@ export const RINGS: readonly RingButton[] = [
     hydrogen: 5,
     anchor: 0,
     text: 'cyclopentyl',
-    glyph: [5],
-    aromatic: false,
   },
   {
     icon: 'cyc6',
@@ -173,8 +163,6 @@ export const RINGS: readonly RingButton[] = [
     hydrogen: 7,
     anchor: 0,
     text: 'cyclohexyl',
-    glyph: [6],
-    aromatic: false,
   },
   {
     icon: 'cyc7',
@@ -184,8 +172,6 @@ export const RINGS: readonly RingButton[] = [
     hydrogen: 8,
     anchor: 0,
     text: 'cycloheptyl',
-    glyph: [7],
-    aromatic: false,
   },
   {
     icon: 'aro5',
@@ -195,8 +181,6 @@ export const RINGS: readonly RingButton[] = [
     hydrogen: 5,
     anchor: 0,
     text: 'cyclopentadienyl',
-    glyph: [5],
-    aromatic: true,
   },
   {
     icon: 'aro6',
@@ -206,8 +190,6 @@ export const RINGS: readonly RingButton[] = [
     hydrogen: 6,
     anchor: 0,
     text: 'phenyl',
-    glyph: [6],
-    aromatic: true,
   },
   {
     icon: 'aro65',
@@ -217,8 +199,6 @@ export const RINGS: readonly RingButton[] = [
     hydrogen: 12,
     anchor: 0,
     text: 'indanyl',
-    glyph: [6, 5],
-    aromatic: true,
   },
   {
     // builder.py:1109 — "Napthylene"/`napthylene.pkl` is misspelled upstream,
@@ -230,8 +210,6 @@ export const RINGS: readonly RingButton[] = [
     hydrogen: 13,
     anchor: 0,
     text: 'napthyl',
-    glyph: [6, 6],
-    aromatic: true,
   },
   {
     icon: 'aro67',
@@ -241,8 +219,6 @@ export const RINGS: readonly RingButton[] = [
     hydrogen: 13,
     anchor: 0,
     text: 'benzocycloheptyl',
-    glyph: [6, 7],
-    aromatic: true,
   },
 ];
 
@@ -391,15 +367,3 @@ export function diffTables(remote: BuilderTables | null): string[] {
   return problems;
 }
 
-/**
- * Points of a regular n-gon inscribed in a circle, flat-bottomed, as an SVG
- * `points` string. Used to draw the ten ring icons without shipping the GIFs.
- */
-export function ringPoints(n: number, cx: number, cy: number, r: number): string {
-  const points: string[] = [];
-  for (let i = 0; i < n; i += 1) {
-    const angle = (Math.PI * 2 * i) / n - Math.PI / 2 + (n % 2 === 0 ? Math.PI / n : 0);
-    points.push(`${(cx + r * Math.cos(angle)).toFixed(2)},${(cy + r * Math.sin(angle)).toFixed(2)}`);
-  }
-  return points.join(' ');
-}

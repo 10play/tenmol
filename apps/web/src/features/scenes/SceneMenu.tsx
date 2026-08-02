@@ -17,13 +17,15 @@ import { F_KEYS, sceneActions, type SceneAction } from './sceneActions';
 interface Props {
   current: string | null;
   scenes: readonly string[];
+  /** `scene_buttons`, read from the engine — null until the first read lands. */
+  buttons: boolean | null;
   onRun: (action: SceneAction) => void;
   onCommand: (line: string) => void;
 }
 
 type Open = 'append' | 'recall' | 'store' | 'clear' | 'cache' | null;
 
-export function SceneMenu({ current, scenes, onRun, onCommand }: Props) {
+export function SceneMenu({ current, scenes, buttons, onRun, onCommand }: Props) {
   const [open, setOpen] = useState<Open>(null);
   const toggle = (name: Open) => setOpen(open === name ? null : name);
 
@@ -95,6 +97,19 @@ export function SceneMenu({ current, scenes, onRun, onCommand }: Props) {
         <button type="button" onClick={() => onRun(sceneActions.blank())}>
           Blank
         </button>
+        {/*
+          * `('check', 'Buttons', 'scene_buttons')` (`_gui.py:801`). A real
+          * checkbox bound to the real setting: the buttons overlay above reads
+          * the same one, so unticking it here hides the overlay there.
+          */}
+        <label className="scmenu__check">
+          <input
+            type="checkbox"
+            checked={buttons === true}
+            onChange={() => onRun(sceneActions.buttons(!buttons))}
+          />
+          Buttons
+        </label>
         <span className="scmenu__current">current: {current ?? '(none)'}</span>
       </div>
 

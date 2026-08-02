@@ -113,11 +113,122 @@ export function isAutoloadEnabled(name: string, map: Readonly<Record<string, boo
  *     process — same as the desktop manager. The caller already reads that
  *     preference and is expected to say which of the two happened.
  */
-export async function setAutoload(
-  call: CallFn,
-  name: string,
-  enabled: boolean,
-): Promise<void> {
+export async function setAutoload(call: CallFn, name: string, enabled: boolean): Promise<void> {
   await call<null>('plugins.autoload.update', [{ [name]: enabled }]);
   await call<null>('plugins.set_pref_changed', []);
+}
+
+/* ------------------------------------------------------------------ *
+ * Preferences (inventory row 461)
+ * ------------------------------------------------------------------ */
+
+export type PreferenceKey = 'verbose' | 'instantsave';
+
+/**
+ * Does writing `key = value` REWRITE `~/.pymolpluginsrc.py`?
+ *
+ * `pref_set` is `preferences[k] = v; set_pref_changed()`, and
+ * `set_pref_changed` is `if pref_get('instantsave', True): pref_save()` — it
+ * reads the preference AFTER the assignment. So turning `instantsave` OFF is
+ * the one write in this panel that never reaches disk: the file goes on saying
+ * `True` and the change dies with the process. Turning it back ON saves
+ * immediately, including everything else that drifted in the meantime.
+ *
+ * Measured, not deduced, in `bridge/tests/test_p8_a10.py`.
+ *
+ * The panel has to say which of the two happened before it happens, which is
+ * why this is a pure function and not a comment.
+ */
+export function writeReachesDisk(
+  key: PreferenceKey,
+  value: boolean,
+  instantsave: boolean,
+): boolean {
+  return key === 'instantsave' ? value : instantsave;
+}
+
+/** `plugins.pref_set(k, v)`. Returns None whether or not the save worked. */
+export async function setPreference(
+  call: CallFn,
+  key: PreferenceKey,
+  value: boolean,
+): Promise<void> {
+  await call<null>('plugins.pref_set', [key, value]);
+}
+
+/* ------------------------------------------------------------------ *
+ * Startup paths (inventory row 462)
+ * ------------------------------------------------------------------ */
+
+export interface StartupPaths {
+  /** `get_startup_path(True)` — the slice `set_startup_path` may replace. */
+  user: string[];
+  /**
+   * The tail `set_startup_path` can NEVER touch: the `pmg_tk.startup` package
+   * directory and `$PYMOL_DATA/startup`. `set_startup_path` assigns to
+   * `startup.__path__[:-N_NON_USER_PATHS]`, so these two survive every edit —
+   * which is why they are listed apart instead of being offered a delete
+   * button that would do nothing. Measured: 2 entries on this build, and
+   * `get_startup_path(True)` is empty, so BOTH visible rows are of this kind.
+   */
+  installation: string[];
+}
+
+export async function readStartupPaths(call: CallFn): Promise<StartupPaths> {
+  const all = (await call<string[]>('plugins.get_startup_path')) ?? [];
+  const user = (await call<string[]>('plugins.get_startup_path', [true])) ?? [];
+  return { user, installation: all.slice(user.length) };
+}
+
+/** Move `index` by `delta`, or return the list unchanged at the ends. */
+export function movePath(paths: readonly string[], index: number, delta: number): string[] {
+  const target = index + delta;
+  if (index < 0 || index >= paths.length || target < 0 || target >= paths.length) {
+    return [...paths];
+  }
+  const next = [...paths];
+  const [moved] = next.splice(index, 1);
+  next.splice(target, 0, moved!);
+  return next;
+}
+
+export function removePath(paths: readonly string[], index: number): string[] {
+  return paths.filter((_, i) => i !== index);
+}
+
+/**
+ * Append, refusing a blank and refusing a duplicate.
+ *
+ * `findPlugins` walks the list in order and the FIRST match for a name wins
+ * (`plugins/__init__.py:366-405`), so a duplicated entry is not merely untidy —
+ * it is a second copy of a rule that already fired.
+ */
+export function addPath(paths: readonly string[], candidate: string): string[] {
+  const trimmed = candidate.trim();
+  if (trimmed === '' || paths.includes(trimmed)) return [...paths];
+  return [...paths, trimmed];
+}
+
+/**
+ * `plugins.set_startup_path(paths, autosave)`, then RE-READ.
+ *
+ * The re-read is not belt-and-braces. `set_startup_path` ends in
+ * `else: print(' Error: set_startup_path failed')` for anything that is not a
+ * list, so a bad argument answers `t: ok` with `result: null` — exactly what a
+ * successful call answers. Measured in `bridge/tests/test_p8_a10.py`. The only
+ * way to know is to ask again.
+ */
+export async function setStartupPaths(
+  call: CallFn,
+  paths: readonly string[],
+  autosave: boolean,
+): Promise<string[]> {
+  await call<null>('plugins.set_startup_path', [[...paths], autosave]);
+  const after = (await call<string[]>('plugins.get_startup_path', [true])) ?? [];
+  if (after.length !== paths.length || after.some((p, i) => p !== paths[i])) {
+    throw new Error(
+      `set_startup_path did not apply: asked for [${paths.join(', ')}], engine has [${after.join(', ')}]`,
+    );
+  }
+  return after;
 }

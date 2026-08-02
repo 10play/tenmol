@@ -48,6 +48,26 @@ export function ScenePanel() {
   const [renameError, setRenameError] = useState<string | null>(null);
   /** Row index the pointer is currently over during a handle drag. */
   const [dropAt, setDropAt] = useState<number | null>(null);
+  /**
+   * `scene_buttons` (`_gui.py:801`, `layer1/Scene.cpp:2885`). Read from the
+   * engine rather than kept locally: it is a global setting the Scene menu,
+   * the settings table and any script can all write, and the overlay below is
+   * exactly what it turns off.
+   */
+  const [buttons, setButtons] = useState<boolean | null>(null);
+
+  const readButtons = async () => {
+    try {
+      setButtons(await session.call<boolean>('cmd.get_setting_boolean', ['scene_buttons']));
+    } catch {
+      /* the panel works without it; leave the last known value */
+    }
+  };
+
+  // Once, on mount: every write below re-reads it explicitly.
+  useEffect(() => {
+    void readButtons();
+  }, []);
 
   useEffect(() => {
     for (const scene of payload.scenes) {
@@ -172,6 +192,7 @@ export function ScenePanel() {
       </div>
 
       {/* --- the buttons overlay row ------------------------------------ */}
+      {buttons !== false && (
       <div className="scbar" role="toolbar" aria-label="scene buttons">
         {payload.scenes.length === 0 && <span className="scbar__empty">no scenes</span>}
         {payload.scenes.map((scene) => (
@@ -193,6 +214,7 @@ export function ScenePanel() {
           </button>
         ))}
       </div>
+      )}
 
       {/* --- the Scene Panel table -------------------------------------- */}
       {/*
@@ -362,7 +384,12 @@ export function ScenePanel() {
       <SceneMenu
         current={payload.current}
         scenes={payload.order}
-        onRun={(action) => void run(action)}
+        buttons={buttons}
+        onRun={(action) => {
+          // Re-read after every menu write: `Buttons` writes the setting and
+          // `Cache` can change nothing visible, so one cheap read covers both.
+          void run(action).then(readButtons);
+        }}
         onCommand={(line) => void session.run(line)}
       />
 

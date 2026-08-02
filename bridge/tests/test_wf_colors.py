@@ -54,9 +54,34 @@ PALETTE_TS = REPO / "apps" / "web" / "src" / "features" / "colors" / "palette.ts
 COLOR_TABLE_SIZE = 5388
 MINE = "tenmol_wfcolors"
 
+#: The six built-ins `util.colors('jmol')` redefines, which a later `.pse`
+#: restore re-registers at high slots. Named rather than counted, so a SEVENTH
+#: name going missing fails instead of being absorbed.
+PRISTINE_NAMED = {"carbon", "fluorine", "hydrogen", "nitrogen", "oxygen", "sulfur"}
+PRISTINE_BUILTIN = PRISTINE_NAMED
+
 
 def builtin_names(pairs: List[Any]) -> List[str]:
     return [name for name, index in pairs if index < COLOR_TABLE_SIZE]
+
+
+def rehomed(pairs: List[Any]) -> List[str]:
+    """Built-in names that a session restore moved ABOVE the built-in region.
+
+    THE COUNTS BELOW ARE NOT CONSTANTS OF THE PROCESS, and that is not a bug in
+    this file. `cmd.set_color` cannot be undone, and loading a .pse re-registers
+    every colour the session carries — so a built-in name that some earlier test
+    marked as a session colour (`util.colors('jmol')` does this to carbon,
+    fluorine, hydrogen, nitrogen, oxygen and sulfur) comes back at a NEW high
+    slot and vanishes from the built-in region for the rest of the run.
+
+    Measured: with `test_colors.py` and a `.pse` round trip both ahead of this
+    file, 178/5388 became 172/5382 — exactly those six names. So the assertions
+    allow the region to SHRINK by names that reappear higher up, and still fail
+    on anything else.
+    """
+    high = {name for name, index in pairs if index >= COLOR_TABLE_SIZE}
+    return sorted(high)
 
 
 # --------------------------------------------------------------------------- #
@@ -74,8 +99,11 @@ def test_list_colors_is_the_digit_free_names_not_the_whole_table(ws: Any) -> Non
     named = ws.call("get_color_indices")
     every = ws.call("get_color_indices", all=1)
 
-    assert len(builtin_names(named)) == 178
-    assert len(builtin_names(every)) == COLOR_TABLE_SIZE
+    # 178 and 5388 in a pristine session; see `rehomed` for why each may be
+    # short by names that a session restore moved above the built-in region.
+    moved = set(rehomed(every))
+    assert len(builtin_names(named)) + len(moved & PRISTINE_NAMED) == 178
+    assert len(builtin_names(every)) + len(moved & PRISTINE_BUILTIN) == COLOR_TABLE_SIZE
     assert all(not any(ch.isdigit() for ch in name) for name, _ in named)
 
     # The Qt list is sorted by QListWidget itself (`setSortingEnabled(True)`),
@@ -400,6 +428,7 @@ def test_this_module_leaks_nothing_into_the_built_in_table(ws: Any) -> None:
     # remaps every value through the LUT, and that global belongs to
     # `test_colors.py::test_space_remaps_every_color_through_the_lut`.)
     every = ws.call("get_color_indices", all=1)
-    assert len(builtin_names(every)) == COLOR_TABLE_SIZE
+    moved = set(rehomed(every))
+    assert len(builtin_names(every)) + len(moved & PRISTINE_BUILTIN) == COLOR_TABLE_SIZE
     by_index = {index: name for name, index in every}
     assert by_index[0] == "white" and by_index[4] == "red" and by_index[104] == "grey50"

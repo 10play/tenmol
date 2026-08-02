@@ -25,10 +25,12 @@
  * consumer would split the stream.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { MenuNode, MenuSettingValue, MenusPayload } from '@tenmol/protocol/topics/menus';
 import { truncateRecentLabel } from '@tenmol/protocol/topics/menus';
 import { useSession } from '../../app';
+import { menuHooks, subscribeMenuHooks } from '../../shell/panelHooks';
+import { ToolkitDialogHost, useToolkitHooks } from './toolkitHooks';
 import { MENU_DATA } from './generated/menudata';
 import { createMenuSource } from './menuSource';
 import { DynamicList, MenuList } from './MenuList';
@@ -190,6 +192,23 @@ export function MenuBar() {
   // literal. One indirection, no cycle, no stale capture.
   const runtimeRef = useRef<MenuRuntime | null>(null);
 
+  // The dialogs this feature can open itself (Colors…, Keyboard Shortcuts…,
+  // Scenes…, Edit All…) — `toolkitHooks.tsx`.
+  const toolkit = useToolkitHooks(note);
+
+  /**
+   * Hooks registered by OTHER features, from their own directories
+   * (`shell/panelHooks.ts`). This is what stops `runtime.hooks` being a
+   * hard-coded literal that only WP-14 can extend: a work package that owns a
+   * dialog calls `registerMenuHook('file_open', …)` and the leaf goes live —
+   * no edit to this file, no shared file two agents both touch.
+   *
+   * `useSyncExternalStore` rather than an effect: a registration that happens
+   * while the menu is OPEN must re-render it, or the item stays disabled until
+   * the next click.
+   */
+  const external = useSyncExternalStore(subscribeMenuHooks, menuHooks, menuHooks);
+
   const runtime: MenuRuntime = useMemo(
     () => ({
       run: (line) => session.run(line),
@@ -233,9 +252,14 @@ export function MenuBar() {
         mvprg: (args) =>
           runMovieProgram(runtimeRef.current as MenuRuntime, args[0] as string | null),
         mvprg_remove_last: () => removeLastMovieProgram(runtimeRef.current as MenuRuntime),
+        ...toolkit.hooks,
+        // Last, so a feature that owns a surface can override the menu bar's
+        // stand-in for it — the way Qt's `execapp` overwrites
+        // `pymol.gui.createlegacypmgapp` after the window is built.
+        ...external,
       },
     }),
-    [session, note],
+    [session, note, toolkit.hooks, external],
   );
   runtimeRef.current = runtime;
 
@@ -377,6 +401,7 @@ export function MenuBar() {
         {MENU_DATA.menus.length} menus · {MENU_DATA.settings.length} settings
       </span>
       {about && <AboutDialog lines={about} onClose={() => setAbout(null)} />}
+      <ToolkitDialogHost dialog={toolkit.dialog} onClose={toolkit.close} />
     </>
   );
 }

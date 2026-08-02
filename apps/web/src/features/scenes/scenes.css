@@ -380,3 +380,13 @@
 .vwrow__del:hover {
   background: var(--pm-hover, #2a2a2a);
 }
+
+/* The Scene menu's `Buttons` check item (`_gui.py:801`). */
+.scmenu__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--fg-dim, #9aa3ad);
+  white-space: nowrap;
+}

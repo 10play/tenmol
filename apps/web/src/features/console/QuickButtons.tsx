@@ -22,6 +22,7 @@
  */
 
 import { errorText, useSession, useStore } from '../../app';
+import { menuHooks, openPanel } from '../../shell/panelHooks';
 
 interface QuickButton {
   label: string;
@@ -31,7 +32,7 @@ interface QuickButton {
   /** Which work package will make a null button real. */
   todo?: string;
   /** Handled in TypeScript rather than by a bare command line. */
-  action?: 'getView';
+  action?: 'getView' | 'builder' | 'properties' | 'render';
 }
 
 const ROWS: QuickButton[][] = [
@@ -39,7 +40,13 @@ const ROWS: QuickButton[][] = [
     { label: 'Reset', cmd: 'reset', title: 'cmd.reset' },
     { label: 'Zoom', cmd: 'zoom animate=1.0', title: 'cmd.zoom(animate=1.0)' },
     { label: 'Orient', cmd: 'orient animate=1.0', title: 'cmd.orient(animate=1.0)' },
-    { label: 'Draw/Ray', cmd: null, title: 'the render dialog', todo: 'WP-19' },
+    {
+      label: 'Draw/Ray',
+      cmd: null,
+      action: 'render',
+      title: 'the render dialog (WidgetMenu wrapping render_dialog, :222)',
+      todo: 'WP-19',
+    },
   ],
   [
     { label: 'Unpick', cmd: 'unpick', title: 'cmd.unpick' },
@@ -62,16 +69,31 @@ const ROWS: QuickButton[][] = [
     { label: 'MClear', cmd: 'mclear', title: 'cmd.mclear' },
   ],
   [
-    { label: 'Builder', cmd: null, title: 'the builder dock', todo: 'WP-17' },
-    { label: 'Properties', cmd: null, title: 'the properties dialog', todo: 'WP-22' },
+    { label: 'Builder', cmd: null, action: 'builder', title: 'the builder dock' },
+    { label: 'Properties', cmd: null, action: 'properties', title: 'the properties dialog' },
     { label: 'Rebuild', cmd: 'rebuild', title: 'cmd.rebuild' },
   ],
 ];
 
+/**
+ * `int(cmd.get_progress() * 100)` — Qt's number, including its truncation
+ * (`pymol_qt_gui.py:931`). It is what decides visibility AND what the bar
+ * displays, so the two can never disagree.
+ */
+export function progressPercent(progress: number): number {
+  if (!Number.isFinite(progress)) return -1;
+  return Math.trunc(progress * 100);
+}
+
+/** A button that will really do its job when pressed. */
+export function live(button: QuickButton): boolean {
+  if (button.action === 'render') return menuHooks()['render_dialog'] !== undefined;
+  return button.cmd !== null || button.action !== undefined;
+}
+
 export function QuickButtons() {
   const session = useSession();
   const progress = useStore(session.stores.connection, (s) => s.progress);
-  const busy = progress >= 0;
 
   /**
    * `PyMOLQtGUI.get_view` (`pymol_qt_gui.py:83-86`): print the matrix at
@@ -94,6 +116,47 @@ export function QuickButtons() {
     }
   };
 
+  /**
+   * The three buttons that open a PANEL rather than run a command.
+   *
+   * Qt's are `self.builderWindow()`, `self.propertiesWindow()` and a
+   * `WidgetMenu` wrapping `render_dialog` (`pymol_qt_gui.py:222-271`) — bound
+   * methods of the one window that owns every widget. Here each surface is a
+   * separate registry slot that is NOT MOUNTED until the shell opens it, so
+   * `openPanel` mounts it and runs the intent on the mount edge
+   * (`shell/panelHooks.ts`).
+   */
+  const openBuilder = async () => {
+    const { OPEN_EVENT } = await import('../builder/BuilderPanel');
+    openPanel('builder', () => window.dispatchEvent(new Event(OPEN_EVENT)));
+  };
+
+  const openProperties = async () => {
+    const { dialogsStore } = await import('../dialogs/store');
+    openPanel('properties', () => dialogsStore.open('properties'));
+  };
+
+  /**
+   * `features/render` (WP-19) has built the two-page Draw/Ray form but exposes
+   * no way to open it from outside itself: `RenderDialog` keeps `expanded` in
+   * local state and takes no props, and unlike `features/builder` it publishes
+   * no open event. So this looks for a registered hook and, when there is none,
+   * says exactly what is missing instead of pretending to open something.
+   */
+  const openRender = () => {
+    const hook = menuHooks()['render_dialog'];
+    if (hook) {
+      void hook([]);
+      return;
+    }
+    session.stores.feedback.appendClient(
+      ' Draw/Ray: the render form is built (features/render) but has no open seam — ' +
+        "it needs one line, registerMenuHook('render_dialog', …) or an open event like " +
+        "features/builder's `tenmol:open-builder`. Use the Ray / Draw tab on the viewport.",
+      'warning',
+    );
+  };
+
   return (
     <div className="quickbuttons">
       {ROWS.map((row, i) => (
@@ -101,15 +164,16 @@ export function QuickButtons() {
           {row.map((button) => (
             <button
               type="button"
-              className={`quickbutton${button.cmd || button.action ? '' : ' quickbutton--todo'}`}
+              // Still VISIBLY unbuilt when it is unbuilt: Draw/Ray keeps its
+              // `todo` marker until someone registers `render_dialog`.
+              className={`quickbutton${live(button) ? '' : ' quickbutton--todo'}`}
               key={button.label}
-              title={
-                button.cmd || button.action
-                  ? button.title
-                  : `TODO (${button.todo}): ${button.title}`
-              }
+              title={live(button) ? button.title : `TODO (${button.todo}): ${button.title}`}
               onClick={() => {
                 if (button.action === 'getView') void getView();
+                else if (button.action === 'builder') void openBuilder();
+                else if (button.action === 'properties') void openProperties();
+                else if (button.action === 'render') openRender();
                 else if (button.cmd) void session.run(button.cmd);
                 else
                   session.stores.feedback.appendClient(
@@ -124,28 +188,46 @@ export function QuickButtons() {
         </div>
       ))}
 
-      <div className="quickbuttons__progress" title="cmd.get_progress(), 10 Hz status thread">
-        <div className="progressbar" aria-hidden="true">
+      {/*
+       * SHOWN ONLY WHILE A JOB IS RUNNING, as Qt does
+       * (`update_progress`, `pymol_qt_gui.py:931-939`: `progress =
+       * int(cmd.get_progress() * 100)`, then `setVisible(progress >= 0)` on
+       * the bar and the Abort button). It used to render always, with a
+       * disabled Abort — a permanently visible empty bar that says a job is
+       * running when none is. MEASURED against a real ray
+       * (`bridge/tests/test_p8_a1.py`): idle is exactly -1.0, and an async
+       * `ray 900,700` of a protein surface reports 0.35 after 0.16 s and
+       * returns to -1.0 when it ends, so the row appears and disappears.
+       */}
+      {progressPercent(progress) >= 0 && (
+        <div className="quickbuttons__progress" title="cmd.get_progress(), 10 Hz status thread">
           <div
-            className="progressbar__fill"
-            style={{ width: busy ? `${Math.round(Math.min(1, progress) * 100)}%` : '0%' }}
-          />
+            className="progressbar"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progressPercent(progress)}
+          >
+            <div
+              className="progressbar__fill"
+              style={{ width: `${Math.min(100, progressPercent(progress))}%` }}
+            />
+          </div>
+          <button
+            type="button"
+            className="quickbutton quickbutton--abort"
+            title="cmd.interrupt (modules/pymol/locking.py:88 — asynchronous, takes no lock)"
+            onClick={() => {
+              session.stores.feedback.appendClient('interrupt');
+              void session.call('interrupt').catch((error: unknown) => {
+                session.stores.feedback.appendClient(` ${errorText(error)}`, 'error');
+              });
+            }}
+          >
+            Abort
+          </button>
         </div>
-        <button
-          type="button"
-          className="quickbutton quickbutton--abort"
-          title="cmd.interrupt (modules/pymol/locking.py:88 — asynchronous, takes no lock)"
-          disabled={!busy}
-          onClick={() => {
-            session.stores.feedback.appendClient('interrupt');
-            void session.call('interrupt').catch((error: unknown) => {
-              session.stores.feedback.appendClient(` ${errorText(error)}`, 'error');
-            });
-          }}
-        >
-          Abort
-        </button>
-      </div>
+      )}
     </div>
   );
 }

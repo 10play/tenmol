@@ -327,6 +327,70 @@ export const BY_ELEM_PAGES: readonly ElemPage[] = [
 ];
 
 /* ------------------------------------------------------------------ *
+ * The ten fixed-carbon shortcuts — util.py:442-510
+ *
+ * `cbag`/`cbac`/`cbam`/`cbay`/`cbas`/`cbaw`/`cbab`/`cbao`/`cbap`/`cbak` are
+ * NOT `pymol.menu` entries — no PyMOL GUI surface exposes them, they are
+ * command-line verbs. They are here because they are the only carbon-colour
+ * verbs a user can type, and because they are NOT `util.cba` in disguise:
+ *
+ *     cba(color, sel)   color atomic, not-C     color <color>, C
+ *                       color <color>, sel, flags=1   <- ALSO the OBJECT colour
+ *     cbaX(sel)         color atomic, not-C     color <fixed>, C
+ *
+ * `cba` has that third line (`util.py:518-524`) and the ten shortcuts do not
+ * (`util.py:442-510`), so picking `cbag` and picking the `tv_green` tile on the
+ * by-element page leave the object rec in different states. MEASURED on a `trp`
+ * fragment coloured `grey50` first: after `util.cbag` the object colour was
+ * still 104, after `util.cba(33, …)` it was 33 —
+ * `bridge/tests/test_p8_a5.py::test_the_ten_fixed_carbon_shortcuts_leave_the_object_colour_alone`.
+ * ------------------------------------------------------------------ */
+
+export interface CarbonShortcut {
+  /** The `util.` function name, which is also what the user would type. */
+  fn: string;
+  /** The colour it hard-codes for carbons. */
+  color: string;
+}
+
+export const FIXED_CARBON_SHORTCUTS: readonly CarbonShortcut[] = [
+  { fn: 'cbag', color: 'carbon' },
+  { fn: 'cbac', color: 'cyan' },
+  { fn: 'cbam', color: 'lightmagenta' },
+  { fn: 'cbay', color: 'yellow' },
+  { fn: 'cbas', color: 'salmon' },
+  { fn: 'cbaw', color: 'hydrogen' },
+  { fn: 'cbab', color: 'slate' },
+  { fn: 'cbao', color: 'brightorange' },
+  { fn: 'cbap', color: 'purple' },
+  { fn: 'cbak', color: 'pink' },
+];
+
+/* ------------------------------------------------------------------ *
+ * Negative colours — `pymol.menu.mesh_color`, menu.py:696-712
+ *
+ * The C menu of a mesh or surface object is NOT `mol_color`: `ExecutiveMenu`
+ * routes `cObjectMesh` to `mesh_color(name)` and `cObjectSurface` to
+ * `mesh_color(name, 'surface')` (`layer3/Executive.cpp:15249-15256`). The only
+ * difference from the molecule menu is a `negative` submenu on top, whose
+ * entries are two SETTINGS writes on the object, not atom colours:
+ *
+ *     off      cmd.set("<rep>_negative_visible", 0, name, quiet=0)
+ *     <colour> cmd.set("<rep>_negative_visible", 1, name, quiet=0);
+ *              cmd.set("<rep>_negative_color", "<colour>", name, quiet=0)
+ *
+ * so it goes through the settings store, exactly like "by rep".
+ * ------------------------------------------------------------------ */
+
+export const NEGATIVE_REPS = ['mesh', 'surface'] as const;
+export type NegativeRep = (typeof NEGATIVE_REPS)[number];
+
+/** The two setting names `mesh_color` writes, for a given rep. */
+export function negativeSettings(rep: string): { visible: string; color: string } {
+  return { visible: `${rep}_negative_visible`, color: `${rep}_negative_color` };
+}
+
+/* ------------------------------------------------------------------ *
  * By secondary structure — menu.py:420-426
  * ------------------------------------------------------------------ */
 

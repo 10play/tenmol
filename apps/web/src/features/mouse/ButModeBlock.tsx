@@ -91,10 +91,11 @@ export function ButModeBlock() {
     (event: React.MouseEvent) => {
       // The block ignores clicks on this line while single-left is `pkat`.
       if (!line.cycles) return;
-      if (event.button === 2) {
-        pymolMenu.openAt(event.clientX, event.clientY, MOUSE_CONFIG_ROWS, 'Mouse Config');
-        return;
-      }
+      // `CButMode::click` does NOT open `mouse_config` here: the `dy < 2`
+      // branch (`ButMode.cpp:163-173`) has no right-button case at all, so the
+      // right button only flips `forward` and the line cycles BACKWARD. Only
+      // the `else` branch — everything above the bottom two lines — opens the
+      // menu (`:174-176`). This used to open the menu and never cycled back.
       mouse(isForward(event) ? 'select_forward' : 'select_backward');
     },
     [mouse, line.cycles],
@@ -121,10 +122,9 @@ export function ButModeBlock() {
         data-testid="butmode-mode"
         title="click to cycle the mouse mode; Shift or right-click reverses; right-click opens the mouse configuration menu"
         onMouseDown={cycleMode}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          cycleMode(e);
-        }}
+        // `mousedown` has ALREADY run for button 2 by the time `contextmenu`
+        // fires; acting again here made every right-click count twice.
+        onContextMenu={(e) => e.preventDefault()}
       >
         <span className="butmode__label">Mouse Mode</span>
         <span className="butmode__value" data-testid="butmode-name">
@@ -165,14 +165,11 @@ export function ButModeBlock() {
         disabled={!line.cycles}
         title={
           line.cycles
-            ? `mouse_selection_mode — click to cycle: ${SELECTION_LEVELS.map((l) => l.label).join(', ')}`
+            ? `mouse_selection_mode — click to cycle: ${SELECTION_LEVELS.map((l) => l.label).join(', ')}; Shift or right-click reverses`
             : 'single-left is bound to PkAt, so this line shows the picking state and does not cycle'
         }
         onMouseDown={cycleSelection}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          cycleSelection(e);
-        }}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <span className="butmode__label">{line.prefix.trim()}</span>
         <span className="butmode__value butmode__value--sele" data-testid="butmode-level">

@@ -26,9 +26,11 @@ import { transport, type MovieAction } from './movieSource';
 interface Props {
   status: MovieStatus;
   run: (action: MovieAction) => Promise<void>;
+  /** Where the equivalent command line goes for a button the engine cannot run. */
+  onLog?: (line: string) => void;
 }
 
-export function TransportBar({ status, run }: Props) {
+export function TransportBar({ status, run, onLog }: Props) {
   const playing = status.playing;
   const rocking = status.rocking || status.settings.rock === true;
   const seqView = status.settings.seq_view === true;
@@ -51,6 +53,32 @@ export function TransportBar({ status, run }: Props) {
 
   const onEnding = async (event: React.MouseEvent) => {
     await run(event.ctrlKey || event.metaKey ? transport.middle() : transport.ending());
+  };
+
+  /**
+   * Button 8 — the one button whose backend contract cannot be honoured.
+   *
+   * `CControl::release` case 8 (`Control.cpp:369-376`) logs `cmd.full_screen()`
+   * and `PParse`s `full_screen`. MEASURED over this bridge, all three forms —
+   * `cmd.full_screen()`, `(0)` and `(1)` — raise ` Error: ` from
+   * `_cmd.full_screen` (`viewing.py:1356`): `ExecutiveFullScreen` needs a real
+   * window and there is none. Dispatching it therefore does exactly one thing,
+   * which is to put a red error line in the user's console.
+   *
+   * The browser IS the window here, so the gesture is the Fullscreen API and
+   * only the command LINE is echoed, dimmed, the way every other panel action
+   * echoes. `requestFullscreen` rejects when it is not inside a user gesture
+   * (and is simply absent in jsdom) — both are swallowed, because there is
+   * nothing to repair and nothing worth telling the user.
+   */
+  const onFullScreen = async () => {
+    onLog?.('cmd.full_screen()');
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen?.();
+      else await document.documentElement.requestFullscreen?.();
+    } catch {
+      /* refused: not a user gesture, or the API is not available */
+    }
   };
 
   return (
@@ -130,9 +158,9 @@ export function TransportBar({ status, run }: Props) {
       <button
         type="button"
         className="mvctl__btn"
-        title="full screen — cmd.full_screen()"
+        title="full screen — the browser Fullscreen API (cmd.full_screen needs a window)"
         data-testid="mv-full"
-        onClick={() => void run(transport.fullScreen())}
+        onClick={() => void onFullScreen()}
       >
         full
       </button>

@@ -38,6 +38,17 @@ export interface BuilderController {
     mode: BuilderPickMode,
   ): Promise<BuilderState>;
   wizardClick(index: number): Promise<BuilderState>;
+  /**
+   * "A named selection was edited somewhere else" — the engine's
+   * `WizardDoSelect` (`layer1/Wizard.cpp:172-190`), which PyMOL fires only from
+   * its own mouse paths and never from `cmd.select`.
+   *
+   * The Builder needs it because `AtomFlagWizard` treats an edit of the
+   * `_build_display` selection as an edit of the FIXED/RESTRAINED atom set
+   * (`modules/pmg_qt/builder.py:906-913`), and in this client that selection is
+   * edited by the OBJECT PANEL. Whoever rewrites a named selection calls this.
+   */
+  selectionEdited(selection: string): Promise<BuilderState>;
   dismiss(): Promise<BuilderState>;
 }
 
@@ -95,6 +106,15 @@ export function createBuilderController(transport: BuilderTransport): BuilderCon
     wizardClick(index) {
       return withBootstrap(() =>
         transport.call<BuilderState>(BUILDER_RPC.wizardClick, [index]),
+      );
+    },
+    selectionEdited(selection) {
+      // Not in `BUILDER_RPC`: `packages/protocol` belongs to another work
+      // package and this leaf was added after that map was frozen for the
+      // wave. The name is asserted against the backend's `_ENTRY_POINTS` in
+      // p8a9builderselect.test.ts, which is the same guarantee the map gives.
+      return withBootstrap(() =>
+        transport.call<BuilderState>('cmd.builder_select', [selection]),
       );
     },
     dismiss() {

@@ -25,6 +25,24 @@
 
 import type { PanelMenuPayload, PanelSnapshot } from '@tenmol/protocol';
 
+/**
+ * What `panels/objects.py:snapshot` answers on top of `PanelSnapshot`.
+ *
+ * `specLevels` is `ObjectGetSpecLevel(obj, SceneGetFrame(G))` per object; it is
+ * NOT in `@tenmol/protocol`'s `PanelSnapshot` because it is per-FRAME state and
+ * that type describes the row list, which is not. Keeping it here means the M
+ * button's tint costs no extra round trip and no shared-type change.
+ */
+export interface PanelExtras {
+  specLevels?: Record<string, number>;
+  /** `cmd.get_frame()` — 1-based, the frame `specLevels` was read at. */
+  frame?: number;
+  /** `internal_gui_mode`; 0 = Default, anything else inverts the pop-ups. */
+  internalGuiMode?: number;
+}
+
+export type PanelSnapshotFull = PanelSnapshot & PanelExtras;
+
 /** `{t:'call'}` — `fn` is a dotted path resolved against `cmd` by the bridge. */
 export type CallFn = <T = unknown>(
   fn: string,
@@ -42,7 +60,7 @@ export interface PanelSourceOptions {
 
 export interface PanelSource {
   /** One panel snapshot. Bootstraps the endpoint on first use. */
-  snapshot(): Promise<PanelSnapshot>;
+  snapshot(): Promise<PanelSnapshotFull>;
   /** One row's popup menu, straight out of `pymol.menu.<name>`. */
   menu(name: string, op: string, kind?: string): Promise<PanelMenuPayload>;
   /** Resolve one lazy (`lambda:`) submenu — PyMOL's `SubGetItem`. */
@@ -110,7 +128,7 @@ export function createPanelSource(options: PanelSourceOptions): PanelSource {
     get ready() {
       return installed;
     },
-    snapshot: () => invoke<PanelSnapshot>('snapshot'),
+    snapshot: () => invoke<PanelSnapshotFull>('snapshot'),
     menu: (name, op, kind) => invoke<PanelMenuPayload>('menu', [name, op, kind ?? null]),
     expand: (name, op, path, kind) =>
       invoke<{ items: PanelMenuPayload['items'] }>('expand', [name, op, [...path], kind ?? null]),
