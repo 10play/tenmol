@@ -541,34 +541,36 @@ def test_a_wedged_child_is_killed_at_the_timeout(ws: WSClient) -> None:
     stop after 1.5 s came back at ~1.5 s with ``returncode`` -9 (SIGKILL) and
     ``timedOut`` true.
     """
-    # CALIBRATE FIRST, because `seconds` is dominated by what this machine
-    # charges to start a Python interpreter at all, not by the watchdog. A
-    # macOS CI runner measured 33-43 s for children whose whole body is
-    # `raise SystemExit(7)`; against that, ANY fixed bound is really a
-    # measurement of the runner, which is why 15.0 failed there at 36.86 s
-    # while `timedOut` and `returncode` -9 were both correct.
-    # No `timeout=`: this one must run to completion, so it gets no watchdog
-    # at all. The wire deadline is raised because the spawn itself is the slow
-    # part on exactly the runners this calibration exists for.
-    floor = child(ws, "raise SystemExit(0)", wire_timeout=180.0)
-    assert floor["timedOut"] is False, floor
-    assert floor["returncode"] == 0, floor
-
+    # THE CHILD SHOUTS IF IT EVER REACHES THE END OF ITS SLEEP. That marker,
+    # not the clock, is what proves the watchdog cut it short -- and it is the
+    # only form of the claim this suite can honestly make, because `seconds` on
+    # a CI runner is dominated by what the machine charges to start a Python
+    # interpreter at all. Measured on the macOS runner, from its own log:
+    #
+    #   raise SystemExit(7)   24.1 s      raise SystemExit(7)   31.1 s
+    #   raise SystemExit(0)   36.1 s      sleep(30), timeout 1.5  67.7 s
+    #
+    # A no-op child costs 24-36 s there and varies by 12 s between consecutive
+    # spawns, so every wall-clock form of this assertion -- a fixed 15 s, and
+    # then a bound calibrated against a freshly measured 36.0 s floor -- was
+    # really measuring interpreter startup and scheduling, not the watchdog.
+    # The marker is immune to all of it: it is present or it is not.
     started = time.monotonic()
-    result = child(ws, "import time; time.sleep(30)", timeout=1.5)
+    result = child(
+        ws,
+        "import time; time.sleep(30); print('ZWFA_SLEPT_THROUGH')",
+        timeout=1.5,
+        wire_timeout=180.0,
+    )
     elapsed = time.monotonic() - started
-    assert result["timedOut"] is True
-    assert result["returncode"] < 0, result
 
-    # THE PROPERTY: the 30 s sleep did not run. Measure it against the floor
-    # this machine just charged for an identical spawn that exits immediately,
-    # so the bound scales with the runner instead of pinning it. A child the
-    # watchdog cut off at 1.5 s costs the floor plus its own deadline plus the
-    # SIGKILL and reap; one that slept to completion would cost the floor plus
-    # THIRTY seconds. The 15 s of slack sits well inside that 28.5 s gap, so a
-    # broken watchdog still fails here.
-    budget = floor["seconds"] + 1.5 + 15.0
-    assert result["seconds"] < budget, (result, floor)
+    assert result["timedOut"] is True, result
+    # -9 is SIGKILL, and a sleep that ran to completion exits 0 -- the child
+    # has no path of its own to a negative returncode.
+    assert result["returncode"] < 0, result
+    # The independent half: even if the kill had raced the child's own exit,
+    # a child that got to the end of its sleep would have said so.
+    assert not any("ZWFA_SLEPT_THROUGH" in line for line in result["lines"]), result
 
     # `elapsed` is the ROUND TRIP, which includes the confirm handshake and
     # whatever else is queued on a shared socket. A runner measured 43.1 s here

@@ -466,8 +466,16 @@ def test_echo_puts_one_tagged_line_on_the_feedback_topic(volume_api, ws, bridge,
     try:
         assert ws.call(NS + ".status")["echo"] is True
         ws.call(NS + ".open", volume)
-        lines = bridge.wait_for_feedback("TENMOL_VOLUME panel %s" % volume)
+        # slow(): the default 5 s is a scheduling assumption, and the macOS
+        # runner broke it -- the echo line had not landed and the bare
+        # `marker[-1]` below failed as an IndexError, which says nothing about
+        # what went wrong. Scale the wait, and assert on the list before
+        # indexing it so a real miss reports the feedback tail.
+        lines = bridge.wait_for_feedback(
+            "TENMOL_VOLUME panel %s" % volume, timeout=slow(15.0)
+        )
         marker = [line for line in lines if "TENMOL_VOLUME panel" in line]
+        assert marker, lines[-5:]
         assert marker[-1].strip() == "TENMOL_VOLUME panel %s 0" % volume
     finally:
         ws.do("/import tenmol_bridge.panels.volume as _tv;_tv.install(echo=0)")
