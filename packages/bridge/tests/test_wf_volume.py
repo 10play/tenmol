@@ -225,14 +225,21 @@ def test_a_setting_write_reaches_both_the_settings_drain_and_the_geometry_topic(
 ) -> None:
     """"...alongside ``settings.changed``" — both channels, one ``cmd.set``."""
     ws.subscribe("geometry")
-    drain_geometry(ws, 1.5)  # the 'created' rows for `scene`
+    drain_geometry(ws, slow(1.5))  # the 'created' rows for `scene`
     cursor = ws.call("setting.tenmol_settings_drain", 0)["cursor"]
 
     ws.call("cmd.set", "stick_radius", 0.4)
 
     rows = wait_geometry(ws, scene)
     assert rows, "no geometry invalidation for a rep-invalidating setting"
-    sticks = [row for row in rows if row["rep"] == REP_STICKS]
+    # Select the STICKS row that says `changed`. The pre-drain above is meant to
+    # have eaten the scene's own `created` rows, but on a slow host they can
+    # still be in flight — a runner read one and failed with
+    # `assert 'created' == 'changed'`. Which reason arrived is the thing under
+    # test, so a run that saw ONLY `created` must still fail, and does.
+    sticks = [
+        row for row in rows if row["rep"] == REP_STICKS and row.get("reason") == "changed"
+    ] or [row for row in rows if row["rep"] == REP_STICKS]
     assert sticks, "sticks were not named: %r" % (rows,)
     entry = sticks[0]
     assert entry["state"] == 0

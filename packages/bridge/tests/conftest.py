@@ -176,6 +176,8 @@ class WSClient:
         self._next_id = 1
         self.events: List[Dict[str, Any]] = []
         self.feedback: List[str] = []
+        #: Replies seen but not yet asked for, keyed by frame id. See `_recv`.
+        self._replies: Dict[int, Dict[str, Any]] = {}
         self.hello: Optional[Dict[str, Any]] = None
         self.hello = self._await_hello()
 
@@ -193,6 +195,16 @@ class WSClient:
             self.feedback.extend(frame.get("lines", []))
         elif frame.get("t") == "event":
             self.events.append(frame)
+        elif frame.get("t") in ("ok", "err") and frame.get("id") is not None:
+            # BUFFER IT. `wait_reply` used to drop any reply whose id it was not
+            # currently waiting for, which is only safe if replies come back in
+            # send order — and they do not have to: `server.py` answers each
+            # call in its own asyncio task (`session.spawn(_reply(...))`), so
+            # completion order is scheduling-dependent. Under load on a CI
+            # runner a pipelined test lost a reply and then timed out on it
+            # ("no reply to frame 5" from the 256-call palette test) while the
+            # bridge had answered every one.
+            self._replies[frame["id"]] = frame
         return frame
 
     def _await_hello(self, timeout: float = 20.0) -> Dict[str, Any]:
@@ -213,17 +225,29 @@ class WSClient:
         return msg_id
 
     def wait_reply(self, msg_id: int, timeout: float = 60.0) -> Dict[str, Any]:
-        # Scaled by TENMOL_TEST_SLOW. 60 s is generous here and still too tight
-        # on a shared runner: building the 178-colour palette over the wire
-        # exceeded it ("no reply to frame 6"). This is a ceiling on how long a
-        # HANG takes to report, so stretching it costs nothing but patience.
+        # Scaled by TENMOL_TEST_SLOW: this is a ceiling on how long a HANG takes
+        # to report, so stretching it costs nothing but patience.
+        buffered = self._replies.pop(msg_id, None)
+        if buffered is not None:
+            return buffered
         deadline = time.monotonic() + timeout * slow_factor()
         while time.monotonic() < deadline:
-            reply = self._recv(min(1.0, max(0.05, deadline - time.monotonic())))
-            if reply is None:
-                continue
-            if reply.get("id") == msg_id and reply.get("t") in ("ok", "err"):
-                return reply
+            frame = self._recv(min(1.0, max(0.05, deadline - time.monotonic())))
+            # Check the frame we were just handed as well as the buffer. A
+            # SUBCLASS may override `_recv` without knowing about `_replies`
+            # (`test_session.BinaryWSClient` does, to keep binary frames), and
+            # reading only the buffer starved it. Buffering stays a pure
+            # optimisation for out-of-order replies rather than the only path.
+            if (
+                frame is not None
+                and frame.get("id") == msg_id
+                and frame.get("t") in ("ok", "err")
+            ):
+                self._replies.pop(msg_id, None)
+                return frame
+            buffered = self._replies.pop(msg_id, None)
+            if buffered is not None:
+                return buffered
         raise AssertionError("no reply to frame %d" % msg_id)
 
     def request(self, timeout: float = 60.0, **frame: Any) -> Dict[str, Any]:

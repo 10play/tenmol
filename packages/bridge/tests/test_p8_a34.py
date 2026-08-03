@@ -1235,7 +1235,11 @@ def test_protein_vacuum_esp_runs_and_says_what_it_destroyed(bridge) -> None:
         while time.monotonic() < deadline:
             lines += _stream(ws, 0.5)
             names = ws.call("cmd.get_names", "all")
-            if all(n in names for n in want):
+            # BOTH conditions. Breaking on the objects alone was my own earlier
+            # fix and it made this worse: the three objects can exist before the
+            # diagnostics have been streamed, so the run failed later at
+            # `assert "Util:" in text` with an EMPTY line list.
+            if all(n in names for n in want) and any("Util:" in ln for ln in lines):
                 break
         names = ws.call("cmd.get_names", "all")
         made = [n for n in want if n in names]
