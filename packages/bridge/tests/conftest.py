@@ -21,7 +21,7 @@ import sys
 import threading
 import time
 import urllib.request
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import pytest
 
@@ -101,11 +101,28 @@ class RunningBridge:
     def feedback_lines(self) -> List[str]:
         return self.pump.status_poller.lines()
 
-    def wait_for_feedback(self, needle: str, timeout: float = 5.0) -> List[str]:
+    def wait_for_feedback(
+        self,
+        needle: str,
+        timeout: float = 5.0,
+        where: Optional[Callable[[str], bool]] = None,
+    ) -> List[str]:
+        """Every feedback line, once one of them matches.
+
+        ``where`` narrows what counts as a match, and a caller that filters
+        the returned lines afterwards MUST pass the same predicate here.
+        Without it the bare needle also matches the ECHO of the command that
+        is going to produce the line -- ``cmd.do("exec(...)")`` is echoed
+        verbatim, marker and all -- so this returns on the echo alone and the
+        caller's filter is then handed a list with nothing left in it. That is
+        a race, not a constant: on a quiet machine the print lands in the same
+        batch as the echo and the bug is invisible.
+        """
+        match = where if where is not None else (lambda line: needle in line)
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             lines = self.feedback_lines()
-            if any(needle in line for line in lines):
+            if any(match(line) for line in lines):
                 return lines
             time.sleep(0.05)
         return self.feedback_lines()

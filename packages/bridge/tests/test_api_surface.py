@@ -20,7 +20,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from conftest import WSClient  # noqa: E402
+from conftest import WSClient, slow  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 API_PY = os.path.join(REPO, "packages", "engine", "modules", "pymol", "api.py")
@@ -93,8 +93,17 @@ def test_new_command_COERCES_string_arguments_via_annotations(ws, bridge) -> Non
     ws.do("cmd.new_command('zz_api_demo', zz_api_demo)")
 
     ws.do("zz_api_demo 5, hello")
-    lines = bridge.wait_for_feedback("ZAPI", timeout=5.0)
-    typed = [x for x in lines if "ZAPI" in x and "print(" not in x and "exec(" not in x]
+
+    # NOT the bare marker. `cmd.do` echoes the source that DEFINED the
+    # command, and that source contains 'ZAPI', so waiting on the marker alone
+    # can return on the echo before the command's own output has landed --
+    # leaving the filter below with an empty list. Wait for what the filter
+    # keeps. Same shape at every wait_for_feedback call that post-filters.
+    def printed(line: str) -> bool:
+        return "ZAPI" in line and "print(" not in line and "exec(" not in line
+
+    lines = bridge.wait_for_feedback("ZAPI", timeout=slow(5.0), where=printed)
+    typed = [x for x in lines if printed(x)]
     assert typed, lines[-5:]
     assert typed[-1].strip() == "ZAPI 10 'hello' int", typed[-1]
 
@@ -106,8 +115,12 @@ def test_new_command_falls_back_to_the_declared_defaults(ws, bridge) -> None:
     )
     ws.do("cmd.new_command('zz_api_def', zz_api_def)")
     ws.do("zz_api_def")
-    lines = bridge.wait_for_feedback("ZAPD", timeout=5.0)
-    got = [x for x in lines if "ZAPD" in x and "print(" not in x and "exec(" not in x]
+
+    def printed(line: str) -> bool:
+        return "ZAPD" in line and "print(" not in line and "exec(" not in line
+
+    lines = bridge.wait_for_feedback("ZAPD", timeout=slow(5.0), where=printed)
+    got = [x for x in lines if printed(x)]
     assert got and got[-1].strip() == "ZAPD 6 'x'", got[-1:]
 
 
@@ -125,8 +138,11 @@ def test_auto_arg_is_four_tables_one_per_argument_POSITION(ws, bridge) -> None:
         "print('ZAAG', len(cmd.auto_arg), [len(d) for d in cmd.auto_arg], "
         "cmd.auto_arg[0]['align'][1:])"
     )
-    lines = bridge.wait_for_feedback("ZAAG", timeout=5.0)
-    got = [x for x in lines if "ZAAG" in x and "print(" not in x]
+    def printed(line: str) -> bool:
+        return "ZAAG" in line and "print(" not in line
+
+    lines = bridge.wait_for_feedback("ZAAG", timeout=slow(5.0), where=printed)
+    got = [x for x in lines if printed(x)]
     assert got, lines[-5:]
     assert "4 [115, 70, 25, 7]" in got[-1], got[-1]
     assert "'selection'" in got[-1], got[-1]

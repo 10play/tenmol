@@ -569,8 +569,19 @@ def extended(bridge, parse_ws) -> Dict[str, Any]:
         yield data
     finally:
         parse_ws.do("exec(%r)" % _EXTEND_TEARDOWN.replace("__ZZ_OBJ__", OBJ))
-        lines = bridge.wait_for_feedback("ZZP8_TORNDOWN", timeout=10.0)
-        leftovers = [x for x in lines if "ZZP8_TORNDOWN" in x and "exec(" not in x]
+
+        # The marker alone is not enough to wait on: `cmd.do` echoes the
+        # exec() source, which CONTAINS the marker, so the bare needle matches
+        # the echo and returns before the print itself has landed -- and the
+        # filter below then drops that echo and finds nothing. Wait for the
+        # same line the filter keeps.
+        def printed(line: str) -> bool:
+            return "ZZP8_TORNDOWN" in line and "exec(" not in line
+
+        lines = bridge.wait_for_feedback(
+            "ZZP8_TORNDOWN", timeout=slow(20.0), where=printed
+        )
+        leftovers = [x for x in lines if printed(x)]
         assert leftovers, lines[-4:]
         report = leftovers[-1]
         assert "[] []" in report, (
