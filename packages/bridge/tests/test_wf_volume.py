@@ -57,6 +57,8 @@ from typing import Any, Dict, Iterator, List, Tuple
 
 import pytest
 
+from conftest import slow
+
 BOOTSTRAP = "/import tenmol_bridge.panels.settings as _s;_s.install()"
 
 #: ``cRep_t`` (``packages/engine/layer1/Rep.h``) — the two reps this module builds.
@@ -272,9 +274,18 @@ def test_geometry_invalidation_tracks_the_serialized_bytes_not_the_switch(
     outcomes: List[Tuple[str, bool, bool]] = []
     for name, value in matrix:
         before = rep_hashes(ws, scene)
-        drain_geometry(ws, 0.6)  # the refresh above can move things itself
+        # SCALED, and this is the whole of why this test was red on CI.
+        #
+        # The claim — bytes changed <=> invalidation emitted — is measured one
+        # setting at a time, so an event belonging to row N must not still be
+        # in flight when row N+1 opens its window. On a loaded runner it was:
+        # the failure alternated between `ray_trace_mode` and `stick_radius`
+        # across runs, which is an event attributed to the wrong row, not an
+        # invalidation that stopped happening. A fixed 0.6 s drain is a
+        # scheduling assumption; the claim is not.
+        drain_geometry(ws, slow(0.6))  # the refresh above can move things itself
         ws.call("cmd.set", name, value)
-        rows = wait_geometry(ws, scene, timeout=2.5)
+        rows = wait_geometry(ws, scene, timeout=slow(2.5))
         after = rep_hashes(ws, scene)
         outcomes.append((name, before != after, bool(rows)))
 

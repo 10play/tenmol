@@ -40,10 +40,13 @@ CALLABLES, so the fixture is not optional:
 
 from __future__ import annotations
 
+import itertools
 import time
 from typing import Any, Dict, Iterator, List
 
 import pytest
+
+from conftest import slow
 
 BOOTSTRAP = "/import tenmol_bridge.panels.volume as _tv;_tv.install()"
 NS = "cmd.tenmol_volume"
@@ -68,28 +71,95 @@ MAP_SETTINGS = {
 # ---------------------------------------------------------------------------
 
 
+#: Serial number for :func:`probe`, so no two probes ever share a marker.
+_PROBE_SERIAL = itertools.count(1)
+
+
 def probe(ws, bridge, tag: str, expr: str) -> str:
-    """Read a non-callable expression.
+    """Read a non-callable expression, and read back THIS call's own answer.
 
     The dispatcher invokes CALLABLES only, so an attribute is unreachable by
     ``{t:'call'}``.  ``print`` through ``{t:'do'}`` is the way, and PyMOL echoes
     the command line before running it — so the echo carries the tag too and is
     dropped by the ``print(`` filter.
 
-    The match is on ``<tag> `` and not on ``tag in line``, which cost a
-    debugging round: the poller's ring buffer keeps every line the whole
-    session, so ``P10VOLA`` matched a line an earlier test had printed under
-    ``P10VOLA2`` and the value came back with a stray leading space.
+    The match is on ``<marker> `` and not on ``marker in line``, which cost a
+    debugging round: the poller's ring keeps 20 000 lines of the session, so
+    ``P10VOLA`` matched a line an earlier test had printed under ``P10VOLA2``
+    and the value came back with a stray leading space.  The trailing space is
+    also what keeps ``…-1`` from matching ``…-11``.
+
+    WHY THE MARKER IS SERIALISED, and it is not decoration.
+    ``bridge.feedback_lines()`` is that SESSION-WIDE ring, filled from the one
+    destructive ``cmd._get_feedback()`` drain the whole process shares.  A fixed
+    tag therefore matches every earlier print under the same tag — and
+    :func:`volume_api` prints ``P10VOLRESTORE_PANEL`` once per test, fifteen
+    times a run.  MEASURED with the old fixed tag: every restore probe after the
+    first returned from ``wait_for_feedback`` in 0.000 s, satisfied by an
+    EARLIER test's line, and one of them read that stale line back as its
+    answer.  Quantified by mutation — break the fixture's ``uninstall()`` for
+    every test but the first, so that all fourteen later probes SHOULD read
+    ``tenmol_bridge.panels.volume`` — the old probe reported 13 of those 14 and
+    passed the fourteenth on the previous test's line; the marker below reports
+    all 14, at ``TENMOL_TEST_SLOW`` 1 and 3 alike.
+    A test that reads a shared, session-wide console must therefore identify
+    its OWN line: there is no tail of that buffer whose contents can be assumed.
+
+    WHY THERE IS A SENTINEL, AND WHY THE WAIT IS NOT A CLOCK.  The reply to
+    ``{t:'do'}`` says nothing about whether the print's OUTPUT is READABLE yet,
+    and the gap is unbounded.  ``CmdDo`` echoes the line and then ends in
+    ``PParse`` -> ``OrthoCommandIn``, which only pushes it onto
+    ``cmdActiveQueue`` (``packages/engine/layer4/Cmd.cpp:4212-4228``,
+    ``layer1/P.cpp:2200``, ``layer1/Ortho.cpp:2851``); the queue is drained when
+    the API lock is released on the GUI thread (``pymol/locking.py:64-66``,
+    ``_cmd.flush_now``) or later by ``PFlush`` inside ``PyMOL_Idle``
+    (``layer5/PyMOL.cpp:2436``).  Whenever it runs, the line it prints reaches
+    THIS ring only through the 10 Hz status poller, and
+    ``cmd._get_feedback()`` returns None — a lock miss, not "no output" —
+    every time the API lock is busy (``tenmol_bridge/pump.py:432-440``).  A
+    long call on a shared runner therefore holds the console back for as long
+    as it runs.  MEASURED by making that drain return None for 7 s (the
+    engine's own lock-miss path): the old fixed five-second
+    ``wait_for_feedback`` failed with ``assert []`` and a tail of
+    ``PyMOL>print('P10VOLIDEM', cmd.volume_color.__module__)`` and a stale
+    ``P10VOLRESTORE_PANEL`` line — the CI failure, exactly — while the loop
+    below passed at ``TENMOL_TEST_SLOW`` 1 and 3.
+
+    A second print is therefore queued BEHIND the first.  ``cmdActiveQueue`` is
+    FIFO, Ortho's feedback list is an UNBOUNDED ``std::queue`` that drops
+    nothing (``layer1/Ortho.cpp:105,492-497``), and ``cmd._get_feedback()``
+    empties it each poll — so the moment the sentinel line is in the ring the
+    value line is too, if it was ever produced.  That makes a missing value line
+    a REAL failure reported at once (an expression that raises prints a
+    traceback and no tagged line) rather than a five-second guess, and it means
+    nothing here asserts how FAST anything is.  The ``slow()`` deadline is a
+    backstop for a comatose console, not the bound being measured.
     """
-    ws.do("print(%r, %s)" % (tag, expr))
-    bridge.wait_for_feedback(tag + " ")
-    printed = [
-        line
-        for line in bridge.feedback_lines()
-        if line.strip().startswith(tag + " ") and "print(" not in line
-    ]
-    assert printed, bridge.feedback_lines()[-6:]
-    return printed[-1].strip()[len(tag) + 1 :]
+    marker = "%s-%d" % (tag, next(_PROBE_SERIAL))
+    sentinel = marker + "-END"
+    ws.do("print(%r, %s)" % (marker, expr))
+    ws.do("print(%r)" % sentinel)
+    deadline = time.monotonic() + slow(15.0)
+    printed: List[str] = []
+    fenced = False
+    while True:
+        # ONE snapshot, so the two reads cannot straddle a drain: if this list
+        # carries the sentinel it carries everything printed before it.
+        lines = bridge.feedback_lines()
+        printed = [
+            line
+            for line in lines
+            if line.strip().startswith(marker + " ") and "print(" not in line
+        ]
+        fenced = any(line.strip() == sentinel for line in lines)
+        if printed or fenced or time.monotonic() >= deadline:
+            break
+        time.sleep(0.02)
+    assert printed, (
+        "%s printed nothing (sentinel seen=%r); console tail=%r"
+        % (marker, fenced, bridge.feedback_lines()[-6:])
+    )
+    return printed[-1].strip()[len(marker) + 1 :]
 
 
 def drain(ws, cursor: int = 0) -> Dict[str, Any]:

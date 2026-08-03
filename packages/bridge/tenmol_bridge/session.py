@@ -60,6 +60,7 @@ __all__ = [
     "plugin_dialog_payload",
     "encode_binary_frame",
     "decode_binary_frame",
+    "encode_text_frame",
     "HEADER_ALIGNMENT",
     "ClientSession",
 ]
@@ -328,6 +329,74 @@ def encode_binary_frame(meta: Mapping[str, Any], payload: bytes) -> bytes:
     return _HEADER_STRUCT.pack(len(header)) + header + bytes(payload)
 
 
+def encode_text_frame(frame: Any) -> str:
+    """One control/RPC/event frame -> the exact JSON text that goes on the wire.
+
+    THE BRIDGE OWNS THIS STEP, NOT THE TRANSPORT, and that is the whole point of
+    the function existing.
+
+    A WebSocket **text** frame is defined to carry UTF-8 (RFC 6455 §5.6) and a
+    peer that receives anything else must fail the connection with close code
+    **1007**.  That is the worst outcome available: the socket dies, the client
+    sees a bare disconnect with no ``err`` frame, and every later call on that
+    connection fails for a reason that has nothing to do with it.
+
+    THIS IS DEFENCE IN DEPTH, NOT A FIX FOR AN OBSERVED BUG, and the distinction
+    is recorded because it was originally written up the other way round.  CI
+    did once produce::
+
+        websockets.exceptions.ConnectionClosedError: sent 1007 (invalid frame
+        payload data) invalid start byte at position 43
+
+    but an audit showed this function cannot be the cause: starlette already
+    serialises with ``ensure_ascii=False`` and uvicorn already does a strict
+    ``.encode()``, so a lone surrogate ALREADY raised a ``ValueError`` that the
+    writer ALREADY converted into an ``err`` frame — and with this module
+    reverted to its previous state, the end-to-end test still passes.  That CI
+    failure remains unexplained.  What this function does buy is that the
+    guarantee stops depending on a third-party version pin.
+
+    Any payload can reach here carrying **lone surrogates** — ``os.listdir`` and
+    every other ``os.fsdecode`` path hand back ``surrogateescape`` code points
+    for a byte the filesystem encoding cannot decode (``\\udc80``-``\\udcff``),
+    and ``panels/movie.py`` puts exactly that on the wire in ``movie_png``'s
+    ``files``/``written`` and ``movie_produce``'s ``frames``.  ``json.dumps``
+    is perfectly happy with those; **UTF-8 is not**.
+
+    So the frame is built in two explicit steps and both of them happen inside
+    the bridge, where the failure can be turned into an ``err`` frame:
+
+    1. ``json.dumps`` — the payload has to be JSON at all;
+    2. ``.encode("utf-8")`` STRICT — the text has to be a legal text frame.
+
+    Step 2 is deliberately not delegated to whatever ASGI server is underneath.
+    uvicorn's ``websockets`` path happens to do the same strict encode today, so
+    the failure surfaces as a ``ValueError`` the writer already caught — but the
+    guarantee then belongs to a third-party version pin rather than to the
+    protocol implementation, and a lenient encoder anywhere in the chain puts an
+    invalid frame on the wire instead.  ``ensure_ascii`` stays ``False`` for the
+    same reason: escaping the surrogate to ``\\udca0`` would produce a frame
+    that *is* valid UTF-8 and silently hands the client a broken string, which
+    is a quieter version of the same bug rather than a fix for it.
+    """
+    text = json.dumps(frame, separators=(",", ":"), ensure_ascii=False)
+    # Strict, and the result is thrown away: this is an assertion about `text`,
+    # not the buffer we send. The ASGI layer wants a `str` for a text frame.
+    text.encode("utf-8")
+    return text
+
+
+def _ascii_safe(text: str) -> str:
+    """``text`` with anything unencodable rendered as its ``\\xNN`` escape.
+
+    Used only for the error REPORT.  ``str(UnicodeEncodeError)`` is already
+    ASCII on CPython, but the report also carries ``str(exc)`` for exception
+    types this module does not control, and a report that cannot itself be
+    encoded would fail in exactly the way it exists to describe.
+    """
+    return text.encode("utf-8", "backslashreplace").decode("ascii", "replace")
+
+
 def decode_binary_frame(frame: bytes) -> Tuple[Dict[str, Any], memoryview]:
     if len(frame) < _HEADER_STRUCT.size:
         raise BadMessage("binary frame shorter than its header length field")
@@ -462,32 +531,73 @@ class ClientSession:
             self.send_soon(event_frame(topic, self.subs.next_seq(topic), payload))
 
     async def writer(self) -> None:
+        """BUILD THE FRAME, THEN WRITE IT — in that order, always.
+
+        The two steps fail for completely different reasons and only one of them
+        means the connection is over:
+
+        * **build** (JSON + strict UTF-8, :func:`encode_text_frame`) fails
+          because of the PAYLOAD.  Nothing has touched the socket, the client is
+          owed an explanation, and the writer must keep running.
+        * **write** fails because the SOCKET is gone.  There is nothing left to
+          say and nobody to say it to.
+
+        They used to be one step: the frame was handed to ``ws.send_json``,
+        which serialises *and* encodes *and* writes, and the writer guessed
+        which of the three had failed from the exception type.  Two ways that
+        guess went wrong, both measured:
+
+        * a payload that is JSON but not UTF-8 (a ``surrogateescape`` path out
+          of ``os.listdir``, straight into ``movie_png``'s ``files``) is only
+          caught because uvicorn's ``websockets`` backend happens to encode
+          strictly.  Nothing in this repository required that, and a transport
+          that encodes leniently ships an invalid text frame — the peer then
+          kills the connection with close code **1007** and every later call on
+          it fails for an unrelated reason;
+        * anything that is neither ``TypeError`` nor ``ValueError`` —
+          ``RecursionError`` from a deeply nested payload is the reachable one —
+          fell into ``except Exception: return``, which exits the writer while
+          the socket stays OPEN.  That is the silent permanent hang this
+          ``except`` clause was written to remove, still reachable by a
+          different door.
+        """
         while True:
             frame = await self.outbox.get()
             if frame is None:
                 return
+
+            binary = isinstance(frame, (bytes, bytearray))
+            text = ""
+            if not binary:
+                try:
+                    text = encode_text_frame(frame)
+                except Exception as exc:  # noqa: BLE001 - the PAYLOAD is bad
+                    # Every failure class, not a hand-picked two: a frame that
+                    # could not be built has not touched the socket, so the
+                    # answer is always "tell the caller and carry on".
+                    if not await self._report_unsendable(frame, exc):
+                        return
+                    continue
+
             try:
-                if isinstance(frame, (bytes, bytearray)):
+                if binary:
                     await self.ws.send_bytes(bytes(frame))
                     self.binary_sent += 1
                     self.binary_bytes += len(frame)
                 else:
-                    await self.ws.send_json(frame)
+                    await self._send_text(text, frame)
             except (TypeError, ValueError) as exc:
-                # NOT a dead socket: the FRAME could not be serialised.
-                #
-                # These two cases used to be one `except Exception: return`,
-                # and the consequence was severe out of all proportion to the
-                # cause. `cmd.get_scene_thumbnail` returns `bytes`, which
-                # `codec.encode` passes through (legal inside a binary frame,
-                # where ndarray payloads live) but `send_json` cannot encode.
-                # The writer task then exited, the socket stayed OPEN, and the
-                # client never received another reply to anything — measured:
-                # the call itself timed out at 60 s and so did every subsequent
-                # call on that connection. A hang, with no error, forever.
-                #
-                # The frame is dropped, the caller is told why, and the writer
-                # keeps running.
+                # A BACKSTOP, not the main path any more. `cmd.get_scene_thumbnail`
+                # returns `bytes`, which `codec.encode` passes through (legal
+                # inside a binary frame, where ndarray payloads live) but JSON
+                # cannot encode; that is now caught above, before the socket is
+                # touched. This stays because a transport may still reject a
+                # frame the bridge considers well-formed, and the historic
+                # consequence of treating that as a dead socket was severe out
+                # of all proportion to the cause: the writer task exited, the
+                # socket stayed OPEN, and the client never received another
+                # reply to anything — measured, the call itself timed out at
+                # 60 s and so did every subsequent call on that connection.
                 if not await self._report_unsendable(frame, exc):
                     return
                 continue
@@ -495,30 +605,53 @@ class ClientSession:
                 return
             self.sent += 1
 
+    async def _send_text(self, text: str, frame: Any) -> None:
+        """Put an ALREADY-VALIDATED text frame on the socket.
+
+        ``send_text`` is preferred because the bridge has just done the JSON and
+        the encode itself and there is no reason to pay for both twice — a
+        feedback replay is 2000 lines and a ``get_coords`` reply is megabytes of
+        base64.  ``send_json`` is the fallback for a transport that has no
+        ``send_text`` (the test doubles), and it is only a performance
+        difference: whichever one runs, :func:`encode_text_frame` has already
+        proved this frame is JSON and is valid UTF-8, so neither can be the
+        thing that puts an illegal frame on the wire.
+        """
+        sender = getattr(self.ws, "send_text", None)
+        if sender is None:
+            await self.ws.send_json(frame)
+            return
+        await sender(text)
+
     async def _report_unsendable(self, frame: Any, exc: Exception) -> bool:
         """Tell the client its reply could not be encoded. False to give up.
 
-        Best effort by construction: the error frame is plain strings, so the
-        only way it can fail in turn is a genuinely dead socket — and in that
-        case there is nothing left to say.
+        The error frame is built through :func:`encode_text_frame` like every
+        other frame, so it cannot itself be the thing that kills the socket —
+        and :func:`_ascii_safe` guarantees the one variable part, the
+        exception's own text, is plain ASCII before it goes in.  A report that
+        inherited the bad bytes it is reporting would fail in exactly the way it
+        exists to prevent.
         """
         msg_id = frame.get("id") if isinstance(frame, Mapping) else None
+        report = err_frame(
+            msg_id,
+            {
+                "kind": "NotSerializable",
+                "type": type(exc).__name__,
+                "message": (
+                    "the result could not be encoded for the wire: %s. "
+                    "A text frame must be JSON and must be valid UTF-8 (a name "
+                    "or path that came back from the filesystem with an "
+                    "undecodable byte in it is not). Binary returns must go "
+                    "through a blob or a panel route (for example "
+                    "`cmd.get_scene_thumbnail_png` rather than "
+                    "`cmd.get_scene_thumbnail`)." % _ascii_safe(str(exc))
+                ),
+            },
+        )
         try:
-            await self.ws.send_json(
-                err_frame(
-                    msg_id,
-                    {
-                        "kind": "NotSerializable",
-                        "type": type(exc).__name__,
-                        "message": (
-                            "the result could not be encoded for the wire: %s. "
-                            "Binary returns must go through a blob or a panel "
-                            "route (for example `cmd.get_scene_thumbnail_png` "
-                            "rather than `cmd.get_scene_thumbnail`)." % exc
-                        ),
-                    },
-                )
-            )
+            await self._send_text(encode_text_frame(report), report)
         except Exception:  # noqa: BLE001 - now the socket really is gone
             return False
         self.sent += 1

@@ -37,6 +37,7 @@ assert the cwd came back.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import shutil
@@ -48,6 +49,7 @@ from typing import Any, Dict, List, Optional
 import pytest
 
 from tenmol_bridge.panels import movie as movie_panel
+from tenmol_bridge.session import ClientSession, encode_text_frame
 
 BOOTSTRAP = "/import tenmol_bridge.panels.movie"
 
@@ -808,3 +810,207 @@ def test_the_motion_context_menu_targets_come_from_the_same_row(mws: Any) -> Non
     ):
         reply = mws.do(line)
         assert reply["t"] == "ok", (line, reply)
+
+
+# ==========================================================================
+# The wire, not the movie: a movie payload that is not UTF-8
+# ==========================================================================
+#
+# This section is here rather than in test_session.py because the movie panel
+# is where the bridge actually puts a filesystem-derived string on the wire:
+# `movie_png` answers with `files`/`written` straight out of `os.listdir`
+# (`panels/movie.py:756,768`) and `movie_produce` with `frames`
+# (`panels/movie.py:1094`).  `os.listdir` decodes a name the filesystem
+# encoding cannot decode with `surrogateescape`, i.e. as lone `\udc80`-`\udcff`
+# code points, and those are JSON-serialisable but NOT UTF-8-encodable.
+#
+# WHAT THAT COSTS, measured on a GitHub macOS runner:
+#
+#     websockets.exceptions.ConnectionClosedError: sent 1007 (invalid frame
+#     payload data) invalid start byte at position 43; no close frame received
+#
+# 1007 is "the text frame was not valid UTF-8" (RFC 6455 section 5.6) and the
+# peer is REQUIRED to fail the connection on it.  So one bad byte in one reply
+# takes the whole socket down: the caller never gets an `err` frame, and every
+# later test on that connection fails for a reason that has nothing to do with
+# it.
+
+#: One lone surrogate, produced exactly the way `os.listdir` produces one.
+#: NOT written to disk here: APFS rejects a filename that is not valid UTF-8
+#: (`OSError: [Errno 92] Illegal byte sequence`), so on macOS the byte cannot
+#: come from a real directory entry -- ext4 on the Linux jobs has no such rule.
+UNDECODABLE_PATH_BYTE = b"mov-\xa0-0001.png".decode("utf-8", "surrogateescape")
+
+
+class _LenientTextSink:
+    """A transport that serialises a frame but does not check its encoding.
+
+    This is `starlette.websockets.WebSocket.send_json` with the last step
+    removed: `json.dumps(..., ensure_ascii=False)` and then straight onto the
+    wire.  It is not a straw man -- it is what the ASGI layer hands over, and
+    the strict `text.encode()` that currently saves us lives one layer further
+    down, in whichever websocket backend uvicorn happened to pick
+    (`uvicorn/protocols/websockets/websockets_sansio_impl.py:448`).  Pinning the
+    guarantee to that is pinning it to a transitive dependency's choice.
+    """
+
+    def __init__(self) -> None:
+        self.wire: List[str] = []
+        self.binary: List[bytes] = []
+
+    async def send_json(self, frame: Any) -> None:
+        self.wire.append(json.dumps(frame, separators=(",", ":"), ensure_ascii=False))
+
+    async def send_bytes(self, payload: bytes) -> None:
+        self.binary.append(bytes(payload))
+
+
+def _drain(frames: List[Any]) -> _LenientTextSink:
+    """Push ``frames`` through a real ``ClientSession.writer`` and return the sink."""
+
+    async def main() -> _LenientTextSink:
+        sink = _LenientTextSink()
+        session = ClientSession(sink)
+        writer = asyncio.get_running_loop().create_task(session.writer())
+        for frame in frames:
+            await session.send(frame)
+        await session.close()
+        await asyncio.wait_for(writer, timeout=10)
+        return sink
+
+    return asyncio.run(main())
+
+
+def test_a_movie_payload_that_is_not_utf8_never_reaches_the_transport() -> None:
+    """The bridge, not the transport, is what makes a text frame legal.
+
+    Drive the real ``ClientSession.writer`` with a real ``movie_png`` reply
+    shape whose ``files`` entry carries a surrogate-escaped byte, through a
+    transport that does exactly what starlette does and no more.
+
+    Two assertions, and the first one is the whole point: EVERY string that
+    reached the wire encodes to UTF-8.  Before the frame was built inside the
+    bridge, the bad frame went straight through this sink and the peer would
+    have answered 1007.
+    """
+    good = {"id": 41, "t": "ok", "result": {"files": ["mov0001.png"], "count": 1}}
+    bad = {
+        "id": 42,
+        "t": "ok",
+        "result": {
+            "prefix": "/tmp/x/mov",
+            "dir": "/tmp/x",
+            "files": ["mov0001.png", UNDECODABLE_PATH_BYTE],
+            "written": [UNDECODABLE_PATH_BYTE],
+            "count": 2,
+        },
+    }
+    after = {"id": 43, "t": "ok", "result": {"files": [], "count": 0}}
+
+    sink = _drain([good, bad, after])
+
+    for text in sink.wire:
+        # The invariant. A `str` that encodes strictly is a legal text frame on
+        # every transport; one that does not is a killed connection on any.
+        text.encode("utf-8")
+
+    ids = [json.loads(text)["id"] for text in sink.wire]
+    kinds = [json.loads(text)["t"] for text in sink.wire]
+    assert ids == [41, 42, 43], sink.wire
+    # The caller is TOLD, on the frame it asked about, instead of losing the
+    # socket -- and the message has to name the cause or it is just a nicer hang.
+    assert kinds == ["ok", "err", "ok"], sink.wire
+    failed = json.loads(sink.wire[1])
+    assert failed["error"]["kind"] == "NotSerializable", failed
+    assert failed["error"]["type"] == "UnicodeEncodeError", failed
+    assert "UTF-8" in failed["error"]["message"], failed
+    # ...and the report itself is plain ASCII: it must not carry the bytes it
+    # is reporting, or it fails in exactly the way it exists to prevent.
+    sink.wire[1].encode("ascii")
+
+
+def test_a_frame_the_bridge_cannot_build_never_kills_the_writer() -> None:
+    """Whatever the failure class is, the writer survives it.
+
+    ``RecursionError`` is the reachable non-``TypeError``/``ValueError`` case:
+    the C JSON encoder raises it, not a ``ValueError``, so a deeply nested
+    payload used to fall into ``except Exception: return``.  That exits the
+    writer task while the socket stays OPEN -- the silent, permanent, no-error
+    hang the writer's error handling was written to remove, still reachable by
+    a different door.  The frame after it is the proof.
+    """
+    nested: Any = []
+    cursor = nested
+    for _ in range(20000):
+        deeper: List[Any] = []
+        cursor.append(deeper)
+        cursor = deeper
+
+    sink = _drain([
+        {"id": 51, "t": "ok", "result": None},
+        {"id": 52, "t": "ok", "result": nested},
+        {"id": 53, "t": "ok", "result": "still here"},
+    ])
+
+    kinds = [(json.loads(t)["id"], json.loads(t)["t"]) for t in sink.wire]
+    assert kinds == [(51, "ok"), (52, "err"), (53, "ok")], kinds
+    for text in sink.wire:
+        text.encode("utf-8")
+
+
+def test_the_movie_panel_path_answers_over_the_real_socket_and_stays_up(
+    mws: Any,
+) -> None:
+    """End to end, over uvicorn and a real websocket, on the movie route.
+
+    The surrogate is injected the way ``os.listdir`` injects one rather than by
+    creating the file, because APFS refuses a filename that is not valid UTF-8;
+    everything downstream of the value -- dispatcher, codec, outbox, writer,
+    uvicorn, the client -- is the product path.
+
+    What is asserted is the OBSERVABLE contract: an explicit ``err`` frame with
+    the id of the call that caused it, and a connection that still answers
+    afterwards.  A 1007 gives neither.
+    """
+    # ESTABLISH the precondition rather than inherit it: this file shares one
+    # engine with the whole suite and `_clean` leaves no movie behind.
+    _movie(mws, 4)
+    assert mws.call("cmd.count_frames") == 4
+
+    shim = (
+        "/import pymol; pymol.cmd.zz_movie_files = (lambda: "
+        "{'dir': '/tmp/tenmol', 'count': 1, 'files': "
+        "[b'mov-\\xa0-0001.png'.decode('utf-8', 'surrogateescape')]})"
+    )
+    reply = mws.do(shim)
+    assert reply["t"] == "ok", reply
+    try:
+        bad = mws.call_reply("cmd.zz_movie_files")
+        assert bad["t"] == "err", bad
+        assert bad["error"]["kind"] == "NotSerializable", bad
+        assert bad["error"]["type"] == "UnicodeEncodeError", bad
+        # The connection is still there, which is the entire difference between
+        # this and a 1007.
+        assert mws.call("cmd.count_frames") == 4
+        assert [row["label"] for row in mws.call("cmd.get_movie_panel")["rows"]] == [
+            "camera"
+        ]
+    finally:
+        mws.do("/import pymol; del pymol.cmd.zz_movie_files")
+
+
+def test_encode_text_frame_is_the_single_gate_and_it_is_strict() -> None:
+    """The helper both halves of the writer depend on, on its own.
+
+    ``ensure_ascii`` stays False deliberately.  Escaping the surrogate to
+    ``\\udca0`` would make the frame valid UTF-8 and hand the client a broken
+    string instead of an error -- a quieter version of the same bug, not a fix
+    for it.  So the helper must REFUSE, not repair.
+    """
+    assert encode_text_frame({"t": "ok", "result": "café"}) == '{"t":"ok","result":"café"}'
+    with pytest.raises(UnicodeEncodeError):
+        encode_text_frame({"t": "ok", "result": UNDECODABLE_PATH_BYTE})
+    with pytest.raises(UnicodeEncodeError):
+        encode_text_frame({"t": "ok", "result": {UNDECODABLE_PATH_BYTE: 1}})
+    with pytest.raises(TypeError):
+        encode_text_frame({"t": "ok", "result": b"\x00"})

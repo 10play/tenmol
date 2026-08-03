@@ -169,6 +169,22 @@ auto WizardCallPython(PyMOLGlobals* G, PyObject* wiz, const char* funcName, Func
 /**
  * Run when user selects something with the mouse, in a wizard
  */
+/* EVERY WIZARD EVENT CALLBACK BELOW USES `pautoblock`, NOT `pblock`.
+ *
+ * `PBlock` asserts the GIL is NOT already held and calls
+ * `ErrFatal(...) -> exit(1)` when it is (layer1/P.cpp:2412). These functions
+ * call into Python from wizard events, and they ARE reachable from a thread
+ * that already holds the GIL — so `pblock` turns a re-entrant call into a hard
+ * process kill instead of an exception. `pautoblock` acquires only when
+ * needed and its destructor releases only what it acquired, which is identical
+ * behaviour when the GIL is free.
+ *
+ * This file already used `pautoblock` for six of its callbacks and `pblock`
+ * for the other ten; the inconsistency was the bug. MEASURED: the bridge test
+ * suite died with "PBlock-Error: Threading error detected.  Terminating..."
+ * — taking the process, pytest and ~700 later tests with it — and which of the
+ * ten sites was hit depended only on timing.
+ */
 int WizardDoSelect(PyMOLGlobals* G, const char* name, int state)
 {
   CWizard *I = G->Wizard;
@@ -185,7 +201,7 @@ int WizardDoSelect(PyMOLGlobals* G, const char* name, int state)
   auto buf = pymol::string_format("cmd.get_wizard().do_select('''%s''')", name);
   PLog(G, buf, cPLog_pym);
   /* block and call (in Python) the wizard's do_select */
-  pymol::pblock block(G);
+  pymol::pautoblock block(G);
   WizardCallPython(G, wiz, "do_pick_state", PTruthCallStr1i, state + 1);
   return WizardCallPython(G, wiz, "do_select", PTruthCallStr, name);
 }
@@ -320,7 +336,7 @@ int WizardDoPick(PyMOLGlobals * G, int bondFlag, int state)
   else
     PLog(G, "cmd.get_wizard().do_pick(0)", cPLog_pym);
 
-  pymol::pblock block(G);
+  pymol::pautoblock block(G);
   WizardCallPython(G, wiz, "do_pick_state", PTruthCallStr1i, state + 1);
   return WizardCallPython(G, wiz, "do_pick", PTruthCallStr1i, bondFlag);
 }
@@ -337,7 +353,7 @@ int WizardDoKey(PyMOLGlobals * G, unsigned char k, int x, int y, int mod)
   }
   auto buffer = pymol::string_format("cmd.get_wizard().do_key(%d,%d,%d,%d)", k, x, y, mod);
   PLog(G, buffer, cPLog_pym);
-  pymol::pblock block(G);
+  pymol::pautoblock block(G);
   return WizardCallPython(G, wiz, "do_key", PTruthCallStr4i, k, x, y, mod);
 }
 
@@ -362,7 +378,7 @@ int WizardDoPosition(PyMOLGlobals * G, int force)
   }
   if(changed) {
     SceneGetCenter(G, I->LastUpdatedPosition);
-    pymol::pblock block(G);
+    pymol::pautoblock block(G);
     result = WizardCallPython(G, wiz, "do_position", PTruthCallStr0);
   }
   return result;
@@ -387,7 +403,7 @@ int WizardDoView(PyMOLGlobals * G, int force)
   }
   if(changed) {
     SceneGetView(G, I->LastUpdatedView);
-    pymol::pblock block(G);
+    pymol::pautoblock block(G);
     result = WizardCallPython(G, wiz, "do_view", PTruthCallStr0);
   }
   return result;
@@ -405,7 +421,7 @@ int WizardDoScene(PyMOLGlobals * G)
   }
   std::string buffer = "cmd.get_wizard().do_scene()";
   PLog(G, buffer, cPLog_pym);
-  pymol::pblock block(G);
+  pymol::pautoblock block(G);
   return WizardCallPython(G, wiz, "do_scene", PTruthCallStr0);
 }
 
@@ -421,7 +437,7 @@ int WizardDoDirty(PyMOLGlobals * G)
   }
   std::string buffer = "cmd.get_wizard().do_dirty()";
   PLog(G, buffer, cPLog_pym);
-  pymol::pblock block(G);
+  pymol::pautoblock block(G);
   return WizardCallPython(G, wiz, "do_dirty", PTruthCallStr0);
 }
 
@@ -438,7 +454,7 @@ int WizardDoState(PyMOLGlobals * G)
   int state = SettingGet<int>(G, cSetting_state);
   auto buffer = pymol::string_format("cmd.get_wizard().do_state(%d)", state);
   PLog(G, buffer, cPLog_pym);
-  pymol::pblock block(G);
+  pymol::pautoblock block(G);
   return WizardCallPython(G, wiz, "do_state", PTruthCallStr1i, state);
 }
 
@@ -455,7 +471,7 @@ int WizardDoFrame(PyMOLGlobals * G)
   int frame = SettingGet<int>(G, cSetting_frame) + 1;
   auto buffer = pymol::string_format("cmd.get_wizard().do_frame(%d)", frame);
   PLog(G, buffer, cPLog_pym);
-  pymol::pblock block(G);
+  pymol::pautoblock block(G);
   return WizardCallPython(G, wiz, "do_frame", PTruthCallStr1i, frame);
 }
 
@@ -472,7 +488,7 @@ int WizardDoSpecial(PyMOLGlobals * G, int k, int x, int y, int mod)
   }
   auto buffer = pymol::string_format("cmd.get_wizard().do_special(%d,%d,%d,%d)", k, x, y, mod);
   PLog(G, buffer, cPLog_pym);
-  pymol::pblock block(G);
+  pymol::pautoblock block(G);
   return WizardCallPython(G, wiz, "do_special", PTruthCallStr4i, k, x, y, mod);
 }
 
@@ -494,7 +510,7 @@ int CWizard::click(int button, int x, int y, int mod)
       break;
     case cWizTypePopUp:
       {
-        pymol::pblock block(G);
+        pymol::pautoblock block(G);
         auto wiz = WizardGet(G);
         PyObject* menuList = nullptr;
         if (wiz) {

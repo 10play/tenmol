@@ -24,6 +24,7 @@ import { ConfirmPrompt } from '../dialogs/modals';
 import type { DialogWindowSpec } from '../dialogs/store';
 import { useHostedWindows } from '../dialogs/useDialogs';
 import {
+  RECHECK,
   downloadFile,
   openServerFile,
   pickBrowserFile,
@@ -32,6 +33,7 @@ import {
   resolvePymolrc,
   runScript,
   writeServerFile,
+  type AccessState,
   type FileAccess,
 } from './files';
 import { PYMOLRC_ARG } from './openEditor';
@@ -44,13 +46,30 @@ const MODE_LABEL: Record<SyntaxMode, string> = {
   plain: 'Plain Text',
 };
 
+/** What the status bar says about where bytes go. `probing` is not a guess. */
+const ACCESS_LABEL: Record<AccessState, string> = {
+  server: 'bridge fs',
+  browser: 'browser fs',
+  probing: 'probing…',
+};
+
+/**
+ * The line the panel shows once the probe has run out of rounds.
+ *
+ * Named because {@link TextEditorPanel}'s re-check has to be able to TAKE IT
+ * BACK: it is the only status this panel writes that a later fact can falsify.
+ */
+const NO_FILES_NOTICE =
+  'this bridge serves no files (cmd.tenmol_files did not install) — ' +
+  'the browser picker and download are the fallback; Open and Save ask again first';
+
 export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
   const session = useSession();
   const [path, setPath] = useState('');
   const [text, setText] = useState('');
   const [saved, setSaved] = useState('');
   const [syntax, setSyntax] = useState<SyntaxMode>('plain');
-  const [access, setAccess] = useState<FileAccess>('browser');
+  const [access, setAccess] = useState<AccessState>('probing');
   const [fontSize, setFontSize] = useState(12);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
@@ -59,14 +78,74 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
   const [choices, setChoices] = useState<readonly string[]>([]);
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
+  /**
+   * The in-flight probe, so an action can WAIT for it instead of guessing.
+   *
+   * Ctrl+S half a second after the window opened is a completely ordinary
+   * thing to do, and on a loaded host the probe is still in the air then. The
+   * old panel read its `access` state — initialised to `'browser'` — and
+   * downloaded the buffer to ~/Downloads, which is not what the user asked for
+   * and not what the status line implied. Waiting costs one await and makes
+   * the keystroke land where the settled answer says it should.
+   */
+  const probeRef = useRef<Promise<FileAccess> | null>(null);
+  /** Mount lifetime. The effect's own `alive` flag is per-RUN, not per-panel. */
+  const mountedRef = useRef(true);
+  useEffect(
+    () => () => {
+      mountedRef.current = false;
+    },
+    [],
+  );
 
   const dirty = text !== saved;
 
   /* --------------------------------------------------------------- actions */
 
+  /**
+   * Where the bytes go, decided AT THE MOMENT OF THE ACTION.
+   *
+   * `probing` waits for the probe; that much is obvious. `browser` is the
+   * interesting one, and it is PROVISIONAL rather than a verdict — this is the
+   * half of the defect that no amount of extra probing reaches.
+   * {@link probeServerFiles} is bounded on purpose, so on a slow enough host it
+   * WILL run out of rounds; what turned that from a slow start into data going
+   * to the wrong place was that the answer was permanent. `access` was written
+   * once and every later Open and Save read it, so a window that lost the race
+   * saved to ~/Downloads for the rest of its life — while `cmd.tenmol_files`
+   * sat installed on the bridge, put there a second later by the app itself
+   * (`FileDropTarget`'s `armPluginDialogs`, five attempts a second apart).
+   * MEASURED with the bridge made to behave like the CI runner's software
+   * rasteriser: the editor's probe started asking at ~2.4 s and that install
+   * did not land until 4.775 s.
+   *
+   * So a `browser` answer costs one extra bootstrap-and-ask before the download
+   * path is taken, and a success upgrades the whole panel — badge, status line,
+   * Run button. A bridge that genuinely serves no files pays two round trips
+   * per action and still gets the browser picker.
+   */
+  const whereTo = useCallback(async (): Promise<FileAccess> => {
+    const settled = access === 'probing' ? ((await probeRef.current) ?? 'browser') : access;
+    if (settled === 'server') return 'server';
+    const recheck = probeServerFiles(session, {
+      ...RECHECK,
+      alive: () => mountedRef.current,
+    }).then((ok): FileAccess => (ok ? 'server' : 'browser'));
+    // Parked too, so a second click made while this one is in the air waits for
+    // the same answer instead of starting a third bootstrap.
+    probeRef.current = recheck;
+    const now = await recheck;
+    if (now === 'server' && mountedRef.current) {
+      setAccess('server');
+      setStatus((current) => (current === NO_FILES_NOTICE ? '' : current));
+      setError((current) => (current.startsWith('cannot open ') ? '' : current));
+    }
+    return now;
+  }, [access, session]);
+
   const doSaveAs = useCallback(async () => {
     setError('');
-    if (access === 'server') {
+    if ((await whereTo()) === 'server') {
       const target = window.prompt('Save As…', path || 'untitled.pml');
       if (!target) return;
       try {
@@ -82,7 +161,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
     const name = downloadFile(path || 'untitled.pml', text);
     setSaved(text);
     setStatus(`downloaded ${name} (browser fallback — not written to the PyMOL host)`);
-  }, [session, access, path, text]);
+  }, [session, whereTo, path, text]);
 
   const doSave = useCallback(async () => {
     if (!path) {
@@ -90,7 +169,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
       return;
     }
     setError('');
-    if (access === 'server') {
+    if ((await whereTo()) === 'server') {
       try {
         await writeServerFile(session, path, text);
         setSaved(text);
@@ -103,7 +182,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
     const name = downloadFile(path, text);
     setSaved(text);
     setStatus(`downloaded ${name} (browser fallback — not written to the PyMOL host)`);
-  }, [session, access, path, text, doSaveAs]);
+  }, [session, whereTo, path, text, doSaveAs]);
 
   const load = useCallback((nextPath: string, nextText: string) => {
     setPath(nextPath);
@@ -128,19 +207,24 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
    * The probe runs first and in the SAME effect, not beside it: which access
    * path is live decides whether `arg` can be honoured at all, and two effects
    * racing meant a server read issued while `access` still said `browser`.
+   *
+   * Its promise is ALSO parked in `probeRef` before the first await, so a
+   * toolbar click that arrives while it is still in the air waits for the
+   * answer rather than taking the fallback (`whereTo`).
    */
   useEffect(() => {
     const wanted = spec.arg;
     let alive = true;
+    const probe = probeServerFiles(session, { alive: () => alive }).then(
+      (ok): FileAccess => (ok ? 'server' : 'browser'),
+    );
+    probeRef.current = probe;
     void (async () => {
-      const ok = await probeServerFiles(session);
+      const settled = await probe;
       if (!alive) return;
-      setAccess(ok ? 'server' : 'browser');
-      if (!ok) {
-        setStatus(
-          'no bridge file endpoints (_bridge.read_text_file / _bridge.write_text_file) — ' +
-            'using the browser picker and download',
-        );
+      setAccess(settled);
+      if (settled !== 'server') {
+        setStatus(NO_FILES_NOTICE);
         // A window opened ON a path by another feature cannot fall back to the
         // browser picker: the picker cannot reach the PyMOL host's filesystem,
         // so pretending would show an empty buffer titled with a path it never
@@ -181,7 +265,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
 
   const doOpen = useCallback(async () => {
     setError('');
-    if (access === 'server') {
+    if ((await whereTo()) === 'server') {
       const target = window.prompt('Open file', path || '');
       if (!target) return;
       try {
@@ -194,7 +278,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
     }
     const picked = await pickBrowserFile();
     if (picked) load(picked.path, picked.text);
-  }, [session, access, path, load]);
+  }, [session, whereTo, path, load]);
 
   /**
    * `check_ask_save` (`TextEditor.py:120-135`). Yes saves and continues, No
@@ -299,7 +383,15 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
             </span>
           )}
           <span className="txted__spacer" />
-          <span className="txted__access">{access === 'server' ? 'bridge fs' : 'browser fs'}</span>
+          {/*
+            * `data-txted-access` is the machine-readable half: 'probing' is a
+            * real, transient value and anything watching this badge has to be
+            * able to tell it apart from a settled answer without matching on
+            * an ellipsis. The e2e spec waits on exactly this.
+            */}
+          <span className="txted__access" data-txted-access={access}>
+            {ACCESS_LABEL[access]}
+          </span>
         </div>
 
         {error && <div className="txted__error">{error}</div>}

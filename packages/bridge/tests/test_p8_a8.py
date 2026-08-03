@@ -45,10 +45,13 @@ Run::
 
 from __future__ import annotations
 
+import json
 import os
 import time
 
 import pytest
+
+from conftest import slow  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -138,22 +141,186 @@ def a8(ws):
     ws.call("cmd.set_view", view)
 
 
+# ---------------------------------------------------------------------------
+# WAITING ON THE DRAW PUMP, NOT ON THE CLOCK
+# ---------------------------------------------------------------------------
+#
+# Everything in this file that is not a plain `{t:'call'}` round trip is
+# carried by one of two threads, and BOTH of them are gated on how fast the
+# host rasterises:
+#
+# * the DRAW PUMP.  `CScene::click`/`drag`/`release` only ENQUEUE, through
+#   `OrthoDefer` (`packages/engine/layer1/Scene.cpp:4113-4155`); the queue is
+#   drained by `OrthoExecDeferred` from `ExecutiveDrawNow`
+#   (`packages/engine/layer1/Ortho.cpp:268-277`,
+#   `packages/engine/layer3/Executive.cpp:11521-11523`), which is also where
+#   `WizardUpdate` diffs frame/state/position/view.  No draw, no callback.
+#
+# * the 10 Hz STATUS DRAIN, which is the only route a `print` has to the
+#   `feedback` topic.  `cmd._get_feedback()` takes the API lock with
+#   `acquire(blocking=0)` (`packages/engine/modules/pymol/internal.py:596`,
+#   `locking.py:29`), and `Cmd_Draw` holds that same lock for the WHOLE of
+#   `PyMOL_Draw` (`packages/engine/layer4/Cmd.cpp:3619-3622`).  Every poll that
+#   lands inside a draw is a lock MISS and drains nothing.
+#
+# MEASURED, with a stand-in for a software rasteriser (a pre-tick hook holding
+# `lock_api` for the length of one draw, the rest of the bridge untouched):
+#
+#     draw cost   status lock misses   feedback line latency (n=25)
+#     ---------   -----------------   ----------------------------
+#     0 ms          1 / 47            median 0.049 s   max 0.144 s
+#     300 ms      971 / 997           median 4.112 s   max 6.030 s
+#
+# The suite's own numbers say the same thing from the other side: the Mode P
+# notes in `render/framestream.py:620-622` record a cartoon draw at *140-158 ms
+# on Mesa llvmpipe*, and the runner's GL preflight reports `Apple Software
+# Renderer`.  So a fixed `pump_frames(0.4)` here was not measuring the wizard,
+# it was measuring the rasteriser -- and 3x of 0.4 s would not have covered a
+# 4 s median either.  These helpers wait for the EVENT instead, with a deadline
+# that is merely a ceiling on how long a failure takes to report.
+
+#: Ceiling (pre-scaling) on how long a console line may take to surface.
+_FEEDBACK_SETTLE = 8.0
+
+
+def _pump_state(ws):
+    """``(ticksSeen, framesEmitted)`` -- what the draw pump has actually done.
+
+    ``FrameStream`` counts ``ticksSeen`` from its engine-thread tick hook, so
+    it advances exactly once per ``Engine.tick()`` -> ``p.draw()``.  It is the
+    only pump-liveness number reachable over the wire, which is what makes the
+    difference between "the input missed" and "nothing ever drew" observable
+    from a test.
+    """
+    try:
+        stats = ws.call("_bridge.render_stats")
+    except Exception:  # noqa: BLE001 - a diagnostic must never mask the failure
+        return None
+    mode_p = stats.get("modeP", {})
+    return (int(mode_p.get("ticksSeen", -1)), int(mode_p.get("framesEmitted", -1)))
+
+
+def pump_note(ws, before=None):
+    """A failure suffix that NAMES THE PUMP and says whether it ran.
+
+    TWO independent facts, because `ticksSeen` alone cannot tell them apart:
+
+    * the pump LOOP -- `ticksSeen` comes from a post-tick hook
+      (`render/framestream.py:1309`), so it advances once per `Pump._run`
+      iteration whether or not a draw happened.  It answers "is the engine
+      thread alive or wedged".
+    * whether a tick DRAWS at all -- `Engine.tick` calls `p.draw()` only in
+      state `running` (`engine.py:239-241`).  In `headless` the loop ticks
+      merrily and `ExecutiveDrawNow` is never reached, which `engine.py:37-39`
+      states outright: "no picking ... and the deferred queue never drains".
+      Reporting "the pump DID draw" there would be exactly backwards, so the
+      state is read (from the `hello` frame) before any verdict is given.
+    """
+    state = (ws.hello or {}).get("state", "unknown")
+    now = _pump_state(ws)
+    if now is None:
+        return (
+            "  THE DRAW PUMP could not be interrogated at all: "
+            "`_bridge.render_stats` did not answer (engine state=%r)." % (state,)
+        )
+    if state != "running":
+        verdict = (
+            "the engine is in state %r, NOT `running`, so `Engine.tick` never "
+            "calls `p.draw()` (engine.py:239-241) however fast it ticks: "
+            "`ExecutiveDrawNow` is unreachable, `OrthoDefer` never drains and "
+            "NO wizard callback in this file can fire.  That is an environment "
+            "without a usable GL context, not a product defect" % (state,)
+        )
+    elif before is None:
+        verdict = "cannot tell whether it advanced (no `before` sample)"
+    elif now[0] > before[0]:
+        verdict = (
+            "the pump loop ran and the engine is `running`, so `p.draw()` was "
+            "called: `ExecutiveDrawNow` ran, `OrthoDefer` was drained and "
+            "`WizardUpdate` was reached -- the carrier is fine and the wizard "
+            "genuinely was not called"
+        )
+    else:
+        verdict = (
+            "the pump loop did NOT advance a single tick, so it is wedged or "
+            "dead; nothing could drain `OrthoDefer` and no wizard callback was "
+            "reachable"
+        )
+    return "  THE DRAW PUMP: ticksSeen %s -> %d, framesEmitted %d, state=%r; %s." % (
+        "?" if before is None else before[0],
+        now[0],
+        now[1],
+        state,
+        verdict,
+    )
+
+
+def wait_for(ws, probe, seconds=_FEEDBACK_SETTLE, ticks=0):
+    """Poll ``probe()`` until it is truthy; return whatever it last gave.
+
+    ``seconds`` is scaled by ``TENMOL_TEST_SLOW`` and is only a ceiling.
+    ``ticks``, when set, is the real stopping rule: once the draw pump has put
+    that many frames through ``ExecutiveDrawNow`` and ``probe()`` is still
+    falsy, the answer "it did not happen" is believed immediately instead of
+    burning the whole deadline -- which is what keeps a deliberately-missed
+    click cheap.
+    """
+    deadline = time.monotonic() + slow(seconds)
+    start = _pump_state(ws)
+    value = probe()
+    while not value and time.monotonic() < deadline:
+        if ticks and start is not None:
+            now = _pump_state(ws)
+            if now is not None and now[0] - start[0] >= ticks:
+                break
+        ws.pump_frames(0.05)
+        value = probe()
+    return value
+
+
 def tagged(ws, tag, statement, wait=1.2):
     """Read a server-side *attribute* (the dispatcher only invokes callables).
 
     ``{t:'do'}`` + a tagged ``print``; PyMOL echoes the command back before it
     runs it, so the echo line has to be dropped.
+
+    ``wait`` used to be a fixed ``pump_frames``; it is now a floor on the
+    deadline this WAITS for the line against, for the reason in the block
+    comment above.  Nothing is weakened: if the statement never produces a
+    ``tag`` line the assertion still fires, just later and with the carrier
+    named.
     """
     before = len(ws.feedback)
+    pump_before = _pump_state(ws)
     ws.do(statement)
-    ws.pump_frames(wait)
-    lines = [
-        line
-        for line in ws.feedback[before:]
-        if tag in line and not line.startswith("PyMOL>")
-    ]
-    assert lines, "no %s line in %r" % (tag, ws.feedback[before:])
-    return lines
+    started = time.monotonic()
+    deadline = started + slow(max(wait, _FEEDBACK_SETTLE))
+    while True:
+        lines = [
+            line
+            for line in ws.feedback[before:]
+            if tag in line and not line.startswith("PyMOL>")
+        ]
+        if lines:
+            return lines
+        if time.monotonic() >= deadline:
+            break
+        ws.pump_frames(0.05)
+    raise AssertionError(
+        "no %s line after %.1fs.  The `{t:'do'}` reply came back, so the print "
+        "RAN; its console line never reached the `feedback` topic.  That line "
+        "is carried by the 10 Hz status drain, and `cmd._get_feedback()` takes "
+        "the API lock with `acquire(blocking=0)` "
+        "(packages/engine/modules/pymol/internal.py:596) while `Cmd_Draw` holds "
+        "it for the whole of `PyMOL_Draw` "
+        "(packages/engine/layer4/Cmd.cpp:3619), so a slow rasteriser starves "
+        "the drain.%s  Saw: %r"
+        % (
+            time.monotonic() - started,
+            pump_note(ws, pump_before),
+            ws.feedback[before:],
+        )
+    )
 
 
 def pick(ws, selection, bond=False):
@@ -943,9 +1110,9 @@ def test_a_demo_body_really_runs_on_its_thread_and_the_next_one_cleans_it_up(a8)
 
     ws.call("wizards.exec_code", row["code"])
 
-    deadline = time.monotonic() + 20.0
+    deadline = time.monotonic() + slow(20.0)
     while time.monotonic() < deadline and "cgo1" not in objects(ws):
-        time.sleep(0.05)
+        ws.pump_frames(0.05)
     assert "cgo1" in objects(ws), "the demo thread never loaded the r3d file"
     assert ws.call("cmd.get_type", "cgo1") == "object:cgo"
     # replace_wizard popped the old wizard and pushed a new one: still depth 1.
@@ -953,9 +1120,9 @@ def test_a_demo_body_really_runs_on_its_thread_and_the_next_one_cleans_it_up(a8)
 
     # ... and the next demo tears the previous one down through `<last>(cleanup=1)`
     ws.call("wizards.exec_code", "replace_wizard demo,finish")
-    deadline = time.monotonic() + 10.0
+    deadline = time.monotonic() + slow(10.0)
     while time.monotonic() < deadline and "cgo1" in objects(ws):
-        time.sleep(0.05)
+        ws.pump_frames(0.05)
     assert "cgo1" not in objects(ws)
 
 
@@ -1041,6 +1208,19 @@ def test_openvr_wizard_is_purely_declarative_with_nested_submenus(a8):
     assert len([i for i in gui if i["kind"] == "item"]) == 7
 
 
+#: Turn dragging off and render the resulting panel WITHOUT letting a draw in
+#: between -- see the block comment at the point of use.  `snapshot()` is the
+#: exact function the `wizards.snapshot` wire route calls.
+_DRAG_OFF_AND_SNAPSHOT = (
+    'exec("import json as _json\\n'
+    "import tenmol_bridge.panels.wizards as _wz\\n"
+    "cmd.drag()\\n"
+    "_s = _wz.snapshot()\\n"
+    "print('P8DRAG', _json.dumps({'cls': _s['cls'], 'panel': _s['panel'],"
+    " 'errors': _s['errors']}))\")"
+)
+
+
 def test_dragging_wizard_returns_a_none_panel_and_dismisses_itself(a8):
     """`dragging.py:44-56` -- `check_valid` calls `_ cmd.set_wizard()` on itself.
 
@@ -1082,18 +1262,39 @@ def test_dragging_wizard_returns_a_none_panel_and_dismisses_itself(a8):
     ]
     assert snap["panel"][2]["code"] == 'cmd.reset(object="ala")'
 
-    ws.call("cmd.drag")  # deactivate: editor scheme leaves 3
+    # DEACTIVATE, AND RENDER IT, IN ONE PUMP TASK.  `cmd.drag()` leaves the
+    # editor scheme at != 3, and the FIRST draw after that runs `WizardUpdate`
+    # -> `do_dirty` -> `dragging.check_valid` -> `_ cmd.set_wizard()`
+    # (dragging.py:44-56), which pops this wizard off the stack -- the wizard
+    # has `dirty` in its own event mask (asserted above as 1 + 128), so it is
+    # the draw that kills it.  MEASURED: with no draw in between a snapshot
+    # still sees `Dragging`; after one `pump_frames(0.2)` it is already gone.
+    #
+    # So `cmd.drag()` + `wizards.snapshot` AS TWO ROUND TRIPS is a bet that
+    # both land inside the same 16.7 ms pump batch. That held 15/15 on an idle
+    # M4 and lost inside a loaded full-suite run (`assert None == 'Dragging'`),
+    # and a shared runner is the loaded case. `{t:'do'}` is submitted with
+    # `tick_after=True` (`packages/bridge/tenmol_bridge/dispatch.py:187`), so
+    # running both in ONE `do` means nothing can draw between them: the race is
+    # removed rather than widened. Nothing is weakened -- these are the same
+    # three assertions on the same `wizards.snapshot()` the wire route calls
+    # (`panels/wizards.py:385`), and the wire route itself is exercised twice
+    # above in this very test.
+    line = tagged(ws, "P8DRAG", _DRAG_OFF_AND_SNAPSHOT)[0]
+    snap = json.loads(line.split("P8DRAG", 1)[1].strip())
 
     # get_panel now returns None -- which is a legal panel, not an error.
-    snap = ws.call("wizards.snapshot")
-    assert snap["cls"] == "Dragging"
+    assert snap["cls"] == "Dragging", (
+        "the Dragging wizard was already off the stack when its panel was "
+        "rendered, in the same task that deactivated it: %r" % (snap,)
+    )
     assert snap["panel"] == []
     assert snap["errors"] == []
 
     # ... and the wizard took itself off the stack while doing it.
-    deadline = time.monotonic() + 5.0
+    deadline = time.monotonic() + slow(5.0)
     while time.monotonic() < deadline and ws.call("wizards.probe")["depth"]:
-        time.sleep(0.05)
+        ws.pump_frames(0.05)
     assert ws.call("wizards.probe")["depth"] == 0
 
 
@@ -1135,13 +1336,13 @@ def recorded(ws):
 
 
 def wait_for_kinds(ws, kinds, timeout=15.0):
-    deadline = time.monotonic() + timeout
+    deadline = time.monotonic() + slow(timeout)
     seen = []
     while time.monotonic() < deadline:
         seen = recorded(ws)
         if kinds <= {entry[0] for entry in seen}:
             return seen
-        time.sleep(0.05)
+        ws.pump_frames(0.05)
     return seen
 
 
@@ -1200,7 +1401,7 @@ def test_the_core_diffs_frame_state_position_and_view_with_no_client_event(a8, g
     # ... and it is a DIFF, not a per-frame broadcast: with nothing moving, the
     # count of view/position events stops growing.
     settled = [e for e in recorded(ws) if e[0] in ("do_view", "do_position")]
-    ws.pump_frames(1.0)
+    ws.pump_frames(slow(1.0))  # a LONGER quiet window is a stronger claim
     assert (
         len([e for e in recorded(ws) if e[0] in ("do_view", "do_position")])
         == len(settled)
@@ -1379,18 +1580,25 @@ def test_density_do_position_roves_the_maps_with_no_client_event(a8, gl_bridge):
     before_calls = do_position_calls(ws)
     before_box = ws.call("cmd.get_extent", "w1_p8map")
 
+    pump_before = _pump_state(ws)
     ws.call("cmd.origin", "p8pept and resi 12")  # the ONLY thing sent
 
-    deadline = time.monotonic() + 20.0
+    # Nothing here is sent from the browser, so the ONLY thing that can move
+    # this forward is the draw pump reaching `WizardUpdate` from
+    # `ExecutiveDrawNow` -- wait for that, do not time it.
+    deadline = time.monotonic() + slow(20.0)
     calls, moved = before_calls, before_box
     while time.monotonic() < deadline:
         calls = do_position_calls(ws)
         moved = ws.call("cmd.get_extent", "w1_p8map")
         if calls > before_calls and moved != before_box:
             break
-        time.sleep(0.05)
+        ws.pump_frames(0.05)
 
-    assert calls > before_calls, "the core never called do_position"
+    assert calls > before_calls, (
+        "the core never called do_position (still %d calls).%s"
+        % (calls, pump_note(ws, pump_before))
+    )
     assert moved != before_box, "do_position fired but the map was not re-cut"
 
     # MEASURED, and narrower than the row implies: the re-cut box follows the
@@ -1537,12 +1745,48 @@ def wizard_picks(ws):
     return json.loads(line.split("P8PICKS", 1)[1].strip())
 
 
-def click_at(ws, fx, fy):
+def click_at(ws, fx, fy, until=None):
+    """One forwarded left click, then WAIT for the pump to carry it.
+
+    ``until`` is the observable the click is supposed to produce; the wait ends
+    as soon as it appears, or as soon as the pump has drawn
+    :data:`CLICK_TICKS` frames without it -- at which point this click really
+    did miss the molecule and the caller should try the next candidate point.
+    """
     width, height = ws.call("cmd.get_viewport")[:2]
     x, y = int(width * fx), int(height * fy)
     ws.input("button", button=0, state=0, x=x, y=y, mod=0, when=0.0)
     ws.input("button", button=0, state=1, x=x, y=y, mod=0, when=0.0)
-    time.sleep(1.2)
+    # `I->SingleClickDelay = 0.15` (`packages/engine/layer1/SceneMouse.cpp:1152`)
+    # has to expire before the click resolves at all, and it is consumed from
+    # `packages/engine/layer1/Scene.cpp:2441` -- inside the draw.
+    ws.pump_frames(slow(0.3))
+    if until is None:
+        ws.pump_frames(slow(0.9))
+        return None
+    return wait_for(ws, until, ticks=CLICK_TICKS)
+
+
+#: Draws to give a click before concluding it missed.  The deferred handler
+#: runs on the FIRST `ExecutiveDrawNow` after the release; 24 is two orders of
+#: margin on that and still only 0.4 s of a healthy 60 Hz pump.
+CLICK_TICKS = 24
+
+#: The one way a click can be carried by a healthy pump and STILL not reach the
+#: wizard, so worth naming when that happens.  MEASURED with a stand-in
+#: rasteriser: every click here survives a 200 ms draw and none survives a
+#: 250 ms one, which is `slowest_single_click = 0.25F`
+#: (`packages/engine/layer1/SceneMouse.cpp:1142-1149`) exactly -- press and
+#: release are one pump cycle apart, so the draw cost IS the gap.  A real slow
+#: renderer does not hit this: the budget is `0.25 + I->ApproxRenderTime`, and
+#: `ApproxRenderTime` is measured across the draw itself
+#: (`packages/engine/layer1/SceneRender.cpp:563`), so it grows with it.
+_CLICK_WINDOW_NOTE = (
+    "  If the pump DID draw, the other candidate is `slowest_single_click` "
+    "(0.25 s + ApproxRenderTime, packages/engine/layer1/SceneMouse.cpp:1142): "
+    "press and release are one pump cycle apart, so a draw that costs more "
+    "than that budget downgrades the click to a drag and no pick is made."
+)
 
 
 @pytest.fixture
@@ -1561,7 +1805,17 @@ def clickable(a8):
     for leftover in ("pk1", "pk2", "pk3", "pk4", "pkset", "pkmol", "sele"):
         ws.call("cmd.delete", leftover)
     assert ws.subscribe("pixels")["t"] == "ok"
-    time.sleep(1.2)
+    # The `pixels` subscription is what makes the pump draw for this client;
+    # wait for it to have actually drawn rather than for a fixed 1.2 s.
+    start = _pump_state(ws)
+    if start is not None:
+        wait_for(
+            ws,
+            lambda: (_pump_state(ws) or (start[0], 0))[0] >= start[0] + CLICK_TICKS,
+            seconds=6.0,
+        )
+    else:  # pragma: no cover - render_stats unavailable
+        ws.pump_frames(slow(1.2))
     yield ws
     ws.call("cmd.edit_mode", 0)
     ws.call("cmd.delete", "sele")
@@ -1587,12 +1841,15 @@ def test_a_real_left_click_drives_do_select_with_no_bridge_event(clickable):
     ]
 
     picks = []
+    pump_before = _pump_state(ws)
     for fx, fy in CLICK_POINTS:
-        click_at(ws, fx, fy)
-        picks = wizard_picks(ws)
+        picks = click_at(ws, fx, fy, until=lambda: wizard_picks(ws))
         if picks:
             break
-    assert picks, "every candidate click missed the molecule"
+    assert picks, (
+        "every candidate click missed the molecule -- or nothing carried it.%s%s"
+        % (pump_note(ws, pump_before), _CLICK_WINDOW_NOTE)
+    )
 
     # measurement maps a select into a pick (measurement.py:295-303)
     assert picks[0][0] == "do_select"
@@ -1606,11 +1863,18 @@ def test_a_real_left_click_drives_do_select_with_no_bridge_event(clickable):
     # ... and a second click completes the measurement: two mouse clicks, zero
     # `wizards.*` calls, one distance object.
     assert not [n for n in objects(ws) if n.startswith("measure")]
+
+    def measured():
+        return [n for n in objects(ws) if n.startswith("measure")]
+
+    pump_before = _pump_state(ws)
     for fx, fy in ((0.4, 0.4), (0.6, 0.6), (0.4, 0.6), (0.6, 0.4)):
-        click_at(ws, fx, fy)
-        if [n for n in objects(ws) if n.startswith("measure")]:
+        if click_at(ws, fx, fy, until=measured):
             break
-    assert [n for n in objects(ws) if n.startswith("measure")] == ["measure01"]
+    assert measured() == ["measure01"], (
+        "a second click never completed the measurement.%s%s"
+        % (pump_note(ws, pump_before), _CLICK_WINDOW_NOTE)
+    )
 
 
 def test_a_real_left_click_in_edit_mode_drives_do_pick_with_no_bridge_event(clickable):
@@ -1627,12 +1891,15 @@ def test_a_real_left_click_in_edit_mode_drives_do_pick_with_no_bridge_event(clic
     ws.pump_frames(0.5)
 
     picks = []
+    pump_before = _pump_state(ws)
     for fx, fy in CLICK_POINTS:
-        click_at(ws, fx, fy)
-        picks = wizard_picks(ws)
+        picks = click_at(ws, fx, fy, until=lambda: wizard_picks(ws))
         if picks:
             break
-    assert picks, "every candidate click missed the molecule"
+    assert picks, (
+        "every candidate click missed the molecule -- or nothing carried it.%s%s"
+        % (pump_note(ws, pump_before), _CLICK_WINDOW_NOTE)
+    )
 
     # no do_select at all this time: the editor path goes straight to do_pick
     assert [p[0] for p in picks] == ["do_pick"]
@@ -1651,8 +1918,15 @@ def test_a_real_left_click_in_edit_mode_drives_do_pick_with_no_bridge_event(clic
 SHFT = 1
 
 
-def rubber_band(ws, frm=(0.3, 0.3), to=(0.7, 0.7)):
-    """A real shift+left press-drag-release, in viewport pixels."""
+def rubber_band(ws, frm=(0.3, 0.3), to=(0.7, 0.7), until=None):
+    """A real shift+left press-drag-release, in viewport pixels.
+
+    Each step is spaced with ``pump_frames`` rather than ``sleep`` so the
+    socket keeps draining (these tests hold a ``pixels`` subscription), and the
+    release is followed by a WAIT on ``until`` -- ``ExecutiveSelectRect`` ends
+    at ``WizardDoSelect`` (`packages/engine/layer3/Executive.cpp:7563`) but it
+    is reached from the deferred queue, i.e. from the next draw.
+    """
     width, height = ws.call("cmd.get_viewport")[:2]
     x0, y0 = int(width * frm[0]), int(height * frm[1])
     x1, y1 = int(width * to[0]), int(height * to[1])
@@ -1665,9 +1939,13 @@ def rubber_band(ws, frm=(0.3, 0.3), to=(0.7, 0.7)):
             mod=SHFT,
             when=0.0,
         )
-        time.sleep(0.1)
+        ws.pump_frames(slow(0.1))
     ws.input("button", button=0, state=1, x=x1, y=y1, mod=SHFT, when=0.0)
-    time.sleep(1.5)
+    ws.pump_frames(slow(0.3))
+    if until is None:
+        ws.pump_frames(slow(1.2))
+        return None
+    return wait_for(ws, until, ticks=CLICK_TICKS)
 
 
 def test_a_box_select_drag_reaches_do_select_by_itself(clickable):
@@ -1683,10 +1961,21 @@ def test_a_box_select_drag_reaches_do_select_by_itself(clickable):
     ws.do(_COUNT_PICKS)
     ws.pump_frames(0.5)
     total = ws.call("cmd.count_atoms", "p8click")
+    pump_before = _pump_state(ws)
 
-    rubber_band(ws)
+    def both_callbacks():
+        """`do_select` maps into `do_pick` inside measurement.py:295-303, so
+        the pair lands together -- waiting for one only would race the other."""
+        got = wizard_picks(ws)
+        return got if len(got) >= 2 else None
+
+    rubber_band(ws, until=both_callbacks)
 
     picks = wizard_picks(ws)
+    assert picks, (
+        "the rubber band ran (`sele` exists) but no wizard callback fired.%s"
+        % pump_note(ws, pump_before)
+    )
     assert [p[0] for p in picks] == ["do_select", "do_pick"], picks
     assert picks[0][1] == "sele"
     # a REGION, not one atom -- and the wizard consumed the whole thing.

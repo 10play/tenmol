@@ -786,11 +786,39 @@ export const tests = [
      * Driving it through the UI is the whole value here: the panel only takes
      * the server path if `probeServerFiles` succeeds, so this asserts the
      * probe, the write and the read back through PyMOL in one go.
+     *
+     * WHAT THIS SPEC ALSO FOUND, on a CI runner and never here. It used to
+     * read `.txted__access` once, 1.5 s after the window opened, and it read
+     * `browser fs`. That was not a slow machine reporting late: the panel
+     * INITIALISED its access state to `browser` and every action read that
+     * value, so a save issued before the probe answered went to ~/Downloads
+     * with a status line claiming it had been written. The panel now starts at
+     * `probing` and actions await the probe (`TextEditorPanel.tsx`), and this
+     * spec waits for the settled value instead of sleeping — a fixed sleep is
+     * either too short somewhere or too long everywhere, and the answer here
+     * is a state that can simply be ASKED for until it exists.
      */
     name: 'the text editor saves to a real file on the PyMOL host',
     async fn({ stack, assert }) {
       const page = await openApp(stack);
       await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+
+      /**
+       * Poll a DOM attribute until it means something, and return what it last
+       * said. `until` above cannot serve here — it asks PyMOL a python question
+       * through the console, and both facts this spec waits for live in the
+       * panel, not in the engine.
+       */
+      const untilAttr = async (locator, attr, ok, timeoutMs = 20_000) => {
+        const deadline = Date.now() + timeoutMs * SCALE;
+        let last = null;
+        for (;;) {
+          last = await locator.getAttribute(attr);
+          if (ok(last)) return last;
+          if (Date.now() > deadline) return last;
+          await page.waitForTimeout(100);
+        }
+      };
 
       /*
        * The editor is a HOSTED WINDOW, not an overlay panel: the `texteditor`
@@ -800,17 +828,27 @@ export const tests = [
        * first version of this spec did, and why it timed out on the textarea.
        */
       await page.getByRole('button', { name: 'Dialogs', exact: true }).click();
-      await page.waitForTimeout(800);
-      await page.locator('[data-open="texteditor"]').click();
-      await page.waitForTimeout(1500);
+      const launcher = page.locator('[data-open="texteditor"]');
+      await launcher.waitFor({ state: 'visible', timeout: 20_000 });
+      await launcher.click();
 
       const area = page.locator('textarea.txted__area');
-      await area.waitFor({ state: 'visible', timeout: 10_000 });
+      await area.waitFor({ state: 'visible', timeout: 20_000 });
 
+      /*
+       * `data-txted-access` is `probing` until `probeServerFiles` concludes and
+       * `server`/`browser` afterwards, so "has it decided yet" and "what did it
+       * decide" are separable — which is the whole reason the attribute exists.
+       * A bridge that really serves no files settles on `browser` in about a
+       * second and fails the assertion below with the message it always had, so
+       * waiting costs no protection.
+       */
+      const badge = page.locator('.txted__access').first();
+      const settled = await untilAttr(badge, 'data-txted-access', (v) => v !== 'probing');
       // "bridge fs" means probeServerFiles found the route. Before the fix
       // this read "browser fs" and every assertion below was unreachable.
-      const access = (await page.locator('.txted__access').first().innerText()).trim();
-      assert(access === 'bridge fs', `editor is not using the server fs (${access})`);
+      const access = (await badge.innerText()).trim();
+      assert(settled === 'server', `editor is not using the server fs (${access})`);
 
       const body = '# tenmol e2e\nset sphere_scale, 0.42\n';
       await area.fill(body);
@@ -818,9 +856,14 @@ export const tests = [
       const target = `${stack.tmp ?? '/tmp'}/tenmol-e2e-editor.pml`;
       page.once('dialog', (dialog) => void dialog.accept(target));
       await page.locator('[data-txted-saveas]').click();
-      await page.waitForTimeout(1500);
 
-      const shown = (await page.locator('.txted__path').first().innerText()).trim();
+      // The write is a round trip; ask for the result rather than sleeping
+      // through it. `data-txted-path` carries the value the panel committed.
+      const shown = await untilAttr(
+        page.locator('.txted__path').first(),
+        'data-txted-path',
+        (v) => v === target,
+      );
       assert(shown === target, `path did not update after save (${shown})`);
 
       // Read it back THROUGH PYMOL, not through the panel that wrote it.

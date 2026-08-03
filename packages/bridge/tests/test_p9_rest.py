@@ -34,11 +34,12 @@ from __future__ import annotations
 
 import os
 import shutil
+import time
 from typing import Any, Dict, List
 
 import pytest
 
-from conftest import RunningBridge, WSClient
+from conftest import RunningBridge, WSClient, slow
 
 
 # --------------------------------------------------------------------------- #
@@ -562,7 +563,7 @@ def _coords(ws: WSClient, name: str) -> Dict[str, Any]:
     return {"coords": [atom["coord"] for atom in model["atom"]]}
 
 
-def test_builder_sculpt_tick_is_the_idle_loop_the_bridge_does_not_run(
+def test_builder_sculpt_tick_is_one_turn_of_the_engines_own_idle_sculpt(
     ws: WSClient,
 ) -> None:
     """``cmd.builder_sculpt_tick`` == one turn of ``PyMOL_Idle``'s sculpt step.
@@ -571,11 +572,46 @@ def test_builder_sculpt_tick_is_the_idle_loop_the_bridge_does_not_run(
     object set (every molecular object, ``Executive.cpp:7120-7133`` /
     ``:7164-7173``), same cycle count (``sculpting_cycles``).  The reply is what
     the client's ticker reads to decide whether to schedule another frame.
+
+    THE BRIDGE DOES RUN AN IDLE LOOP, which this test used to be named after
+    denying.  The pump ticks ``self.p.idle()`` 60 times a second whether or not
+    a client is attached (``tenmol_bridge/engine.py:236-239``,
+    ``pump.py:252-283``); ``PyMOL_Idle`` runs ``ExecutiveSculptIterateAll``
+    whenever ``ControlIdling`` is true (``layer5/PyMOL.cpp:2423-2425``), and
+    ``ControlIdling`` is true
+    whenever the ``sculpting`` setting is (``layer1/Control.cpp:396-402``) -- so
+    the engine minimises on its own the instant the setting goes on, with no
+    tick, no client and no draw.  MEASURED on this machine, on the displaced
+    alanine below, sending NOTHING after the ``set``: 0.675948 A of drift in the
+    first FIFTY MILLISECONDS, 0.000000 A over a whole second while the setting
+    is off.
+
+    That is why the gate is asserted here while the setting is still OFF, over
+    a real window, instead of by reading the coordinates back in the same
+    millisecond as the write.  ``== 0.0`` on the far side of the write was never
+    a statement about the tick: it was a statement about whether the client's
+    NEXT round trip landed inside one 16.7 ms idle turn.  Measured on this
+    machine under load, timing the gap between the ``set`` returning and
+    ``get_model`` returning: gaps of 2.5-5.2 ms passed, a 20 ms stall (routine
+    on a shared runner) failed 4 times out of 4 at 0.672888-0.675948 A, and one
+    UNSTALLED trial at a 2.5 ms gap failed at 0.664435 A -- the runner's own
+    number.  Run ten times, the old assertion went red once; the reproduction
+    reads ``assert 0.6644349098205566 == 0.0`` against CI's
+    ``assert 0.6644287109375 == 0.0``.  Off-and-soak is the stronger claim
+    anyway -- it says the ENGINE is inert too, not merely that one round trip
+    was quick.
     """
     name = "p9tick"
     saved = ws.call("cmd.get_setting_boolean", "sculpting")
+    # ESTABLISHED, not assumed: `test_p8_a1` writes `sculpting_cycles` seven
+    # times (1..1000) and one process is shared, so both numbers below -- the
+    # `cycles` the tick reports and how far one idle turn moves an atom -- would
+    # otherwise be whatever that test happened to leave behind.  10 is the
+    # engine's own default (`SettingInfo.h`, `sculpting_cycles`).
+    saved_cycles = ws.call("cmd.get_setting_int", "sculpting_cycles")
     ws.do("/from tenmol_bridge.panels.builder import install;install()")
     try:
+        ws.call("cmd.set", "sculpting_cycles", 10, quiet=1)
         # OFF: inactive, and -- the point -- it does not iterate anything.
         ws.call("cmd.set", "sculpting", 0, quiet=1)
         idle = ws.call("cmd.builder_sculpt_tick")
@@ -587,16 +623,34 @@ def test_builder_sculpt_tick_is_the_idle_loop_the_bridge_does_not_run(
         ws.call("cmd.rebuild", name)
         before = _coords(ws, name)
 
-        ws.call("cmd.set", "sculpting", 1, quiet=1)
-        # A tick with sculpting OFF must not have moved anything: prove it by
-        # showing the FIRST on-tick is what moves the atom.
+        # THE GATE, on a strained object that is sculpt_activate'd and would
+        # move the moment anything iterated it.  Neither the tick nor the pump's
+        # own idle may touch a coordinate while `sculpting` is off; a soak makes
+        # that falsifiable rather than lucky.  MEASURED 0.000000 A over a full
+        # second here, against 0.675948 A in the first FIFTY milliseconds once
+        # the gate is open.  One leaked idle turn is thirty times the noise
+        # floor, so this cannot be passed by being fast: mutating the gate to
+        # leak (`set sculpting, 1` in front of the soak) turns it red at
+        # TENMOL_TEST_SLOW 1 and 3 alike.  `slow()` only lengthens the window on
+        # a slow host, where a fixed one would contain fewer idle turns.
+        still = ws.call("cmd.builder_sculpt_tick")
+        assert still["active"] is False and still["cycles"] == 0
+        time.sleep(slow(0.5))
         assert _max_delta(before, _coords(ws, name)) == 0.0
 
+        ws.call("cmd.set", "sculpting", 1, quiet=1)
+        # From here on NOTHING may assert that the coordinates have not moved:
+        # the engine's own idle loop is now iterating them (see the docstring).
         first = ws.call("cmd.builder_sculpt_tick")
         assert first["active"] is True
         assert first["cycles"] == ws.call("cmd.get_setting_int", "sculpting_cycles")
         assert first["strain"] > 0.0
         after = _coords(ws, name)
+        # The gate opened: something is minimising.  This no longer attributes
+        # the movement to THIS call -- with the idle loop running it cannot be
+        # attributed by a coordinate read at all -- so what the tick itself did
+        # is asserted from its REPLY (`active`, `cycles`, `strain`), which the
+        # idle loop cannot forge.
         assert _max_delta(before, after) > 1e-4
 
         # Strain falls as the minimisation converges -- what the panel shows.
@@ -608,6 +662,7 @@ def test_builder_sculpt_tick_is_the_idle_loop_the_bridge_does_not_run(
         assert ws.call("cmd.builder_sculpt_tick", 3)["cycles"] == 3
     finally:
         ws.call("cmd.set", "sculpting", 1 if saved else 0, quiet=1)
+        ws.call("cmd.set", "sculpting_cycles", saved_cycles, quiet=1)
         ws.call("cmd.sculpt_deactivate", name)
         ws.call("cmd.delete", name)
 
@@ -618,9 +673,20 @@ def test_sculpt_iterate_moves_coordinates_only_while_the_object_is_active(
     """The engine contract behind the client's sculpt tick loop.
 
     `builder.py:134-225`'s SculptWizard turns `sculpting` on and leaves the
-    stepping to whoever draws the frames -- in Qt, the GL idle loop.  There is
-    no idle loop here, so the CLIENT ticks: `cmd.sculpt_iterate(obj, state, n)`
-    per animation frame.  What that call is worth is measured here, both ways.
+    stepping to whoever draws the frames -- in Qt, the GL idle loop.  The pump
+    runs one too (`self.p.idle()` at 60 Hz, see the test above), but a browser
+    client cannot depend on frames it does not drive, so it ticks explicitly:
+    `cmd.sculpt_iterate(obj, state, n)` per animation frame.  What that call is
+    worth is measured here, both ways.
+
+    NEITHER assertion below is a race, unlike the one the tick test had to
+    lose: `sculpt_deactivate` frees the object's shaker, and every iterate path
+    -- the idle loop's and this explicit one alike -- ends in
+    `ObjectMoleculeSculptIterate`, which returns 0.0 without touching a
+    coordinate when `I->Sculpt` is null (`layer2/ObjectMolecule.cpp:2459-2468`).
+    So `== 0.0` here is a statement about the sculpt set, not about which
+    thread ran first: the engine's idle loop may iterate as often as it likes
+    and this object still will not move.
     """
     name = "p9sculpt"
     saved = ws.call("cmd.get_setting_boolean", "sculpting")
@@ -641,10 +707,23 @@ def test_sculpt_iterate_moves_coordinates_only_while_the_object_is_active(
         # Deactivated: the same call is a no-op, which is what lets the client
         # stop its ticker on `Done` and be sure nothing else is moving.
         ws.call("cmd.sculpt_deactivate", name)
+        # `sculpting` off as well, so the engine's own 60 Hz idle loop
+        # provably cannot contribute to the delta below. The docstring argues
+        # `== 0.0` holds regardless, and locally it does — measured, 2 s of
+        # pure idle after deactivate moves 0.0 — but CI once reported 0.6644,
+        # which is EXACTLY one iterate's worth from the displaced start. That
+        # is the signature of the deactivate not being in effect, not of the
+        # idle loop nibbling, so the assertion is left exact and the two
+        # explanations are separated instead of averaged.
+        ws.call("cmd.set", "sculpting", 0, quiet=1)
         before = _coords(ws, name)
         ws.call("cmd.sculpt_iterate", name, 1, 10)
         after = _coords(ws, name)
-        assert _max_delta(before, after) == 0.0
+        assert _max_delta(before, after) == 0.0, (
+            "sculpt_deactivate did not stop the iterate (moved %r); a full "
+            "iterate's worth here means the deactivate never landed"
+            % _max_delta(before, after)
+        )
     finally:
         ws.call("cmd.set", "sculpting", 1 if saved else 0, quiet=1)
         ws.call("cmd.delete", name)

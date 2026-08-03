@@ -49,6 +49,8 @@ interface Stub {
   session: Session;
   calls: Array<{ fn: string; args: readonly unknown[] }>;
   lines: () => string[];
+  /** Attach `cmd.tenmol_files` LATER, the way the app's own bootstrap does. */
+  installNow: () => void;
 }
 
 const HOME = '/Users/amirangel';
@@ -61,6 +63,8 @@ function makeSession(options: {
   noFiles?: boolean;
   /** Bootstrapping installs it: the FIRST call fails, later ones work. */
   bootstrapInstalls?: boolean;
+  /** Delay every reply, the way a loaded pump does. */
+  slowProbeMs?: number;
 }): Stub {
   const calls: Array<{ fn: string; args: readonly unknown[] }> = [];
   const dos: string[] = [];
@@ -92,26 +96,38 @@ function makeSession(options: {
     act: () => Promise.resolve(undefined),
     call: (fn: string, args: readonly unknown[] = []) => {
       calls.push({ fn, args });
-      if (!installed) {
-        // `policy/base.py`, verbatim shape.
-        return Promise.reject(new Error(`'cmd.tenmol_files' is not an addressable namespace`));
-      }
-      if (fn === 'cmd.tenmol_files.pymolrc') {
-        return Promise.resolve(options.pymolrc ?? { paths: [], home: HOME });
-      }
-      if (fn === 'cmd.tenmol_files.read_text') {
-        const path = String(args[0] ?? '');
-        if (path === '') return Promise.resolve({ path: '', ok: false, text: '', error: 'no path' });
-        const hit = options.files?.[path];
-        if (hit) return Promise.resolve(hit);
-        return Promise.resolve({
-          path,
-          ok: false,
-          text: '',
-          error: `[Errno 2] No such file or directory: '${path}'`,
-        });
-      }
-      return Promise.reject(new Error(`offline: ${fn}`));
+      const answer = (): Promise<unknown> => {
+        if (!installed) {
+          // `policy/base.py`, verbatim shape.
+          return Promise.reject(new Error(`'cmd.tenmol_files' is not an addressable namespace`));
+        }
+        if (fn === 'cmd.tenmol_files.pymolrc') {
+          return Promise.resolve(options.pymolrc ?? { paths: [], home: HOME });
+        }
+        if (fn === 'cmd.tenmol_files.write_text') {
+          return Promise.resolve({ ok: true, error: null });
+        }
+        if (fn === 'cmd.tenmol_files.read_text') {
+          const path = String(args[0] ?? '');
+          if (path === '') {
+            return Promise.resolve({ path: '', ok: false, text: '', error: 'no path' });
+          }
+          const hit = options.files?.[path];
+          if (hit) return Promise.resolve(hit);
+          return Promise.resolve({
+            path,
+            ok: false,
+            text: '',
+            error: `[Errno 2] No such file or directory: '${path}'`,
+          });
+        }
+        return Promise.reject(new Error(`offline: ${fn}`));
+      };
+      if (!options.slowProbeMs) return answer();
+      // A loaded pump: the reply is real, it is just not immediate.
+      return new Promise((resolve, reject) => {
+        setTimeout(() => void answer().then(resolve, reject), options.slowProbeMs);
+      });
     },
     reconnect: vi.fn(),
     disconnect: vi.fn(),
@@ -119,7 +135,14 @@ function makeSession(options: {
     probeHealth: vi.fn(),
   } as unknown as Session;
 
-  return { session, calls, lines: () => dos };
+  return {
+    session,
+    calls,
+    lines: () => dos,
+    installNow: () => {
+      installed = true;
+    },
+  };
 }
 
 let container: HTMLDivElement;
@@ -144,6 +167,33 @@ afterEach(() => {
   resetPanelHooks();
 });
 
+/** Let queued microtasks and timers run inside `act`. */
+async function flush(times = 6, ms = 0): Promise<void> {
+  for (let i = 0; i < times; i += 1) {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, ms));
+    });
+  }
+}
+
+/**
+ * Wait for the probe to CONCLUDE.
+ *
+ * `access` starts at `'probing'` now, which is the whole point of the fix, so a
+ * fixed number of microtask turns is no longer a settled state: a bridge that
+ * refuses the namespace takes `PROBE_ATTEMPTS` bootstrap-and-ask rounds with a
+ * growing pause between them before the panel is entitled to say "browser fs".
+ */
+async function settle(timeoutMs = 4000): Promise<string> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    await flush(1, 20);
+    const state = q('.txted__access')?.getAttribute('data-txted-access') ?? '';
+    if (state !== 'probing') return state;
+    if (Date.now() > deadline) return state;
+  }
+}
+
 async function mount(stub: Stub): Promise<void> {
   act(() =>
     root.render(
@@ -152,11 +202,7 @@ async function mount(stub: Stub): Promise<void> {
       </SessionContext.Provider>,
     ),
   );
-  for (let i = 0; i < 6; i += 1) {
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-  }
+  await flush();
 }
 
 /**
@@ -258,6 +304,7 @@ describe('row 61 — TextEditorPanel reads spec.arg', () => {
     const stub = makeSession({ noFiles: true });
     openTextEditor('/work/setup.py');
     await mount(stub);
+    expect(await settle()).toBe('browser');
 
     // The browser picker cannot reach the PyMOL host, so an empty buffer
     // titled `/work/setup.py` would be a lie about what was read.
@@ -265,6 +312,155 @@ describe('row 61 — TextEditorPanel reads spec.arg', () => {
       'cannot open /work/setup.py: this bridge serves no files (cmd.tenmol_files is not installed)',
     );
     expect(pathLabel()).toBe('(unsaved)');
+  });
+
+  /**
+   * THE SILENT DOWNGRADE, as a user meets it.
+   *
+   * `access` used to be initialised to `'browser'` and every action read that
+   * value directly, so a Save issued before the probe answered took the
+   * download path — the bytes went to ~/Downloads and the status line said so
+   * in the past tense, with no error. On this machine that window is ~30 ms
+   * (three round trips, measured); on a CI runner drawing through a software
+   * rasteriser it is long enough that the e2e spec, reading 1.5 s after the
+   * window opened, still saw "browser fs".
+   *
+   * The bridge here answers the probe only after a delay, which is exactly the
+   * loaded host. The click must reach `write_text`, not `downloadFile`.
+   */
+  it('a Save clicked WHILE the probe is in flight still writes to the PyMOL host', async () => {
+    // No `arg`: an editor opened from the Dialogs panel, which is how the e2e
+    // spec opens it. Nothing else is in flight, so the only thing that can
+    // decide where the bytes go is the probe.
+    const stub = makeSession({
+      // Long enough that no number of microtask turns can hide the race.
+      slowProbeMs: 250,
+    });
+    openTextEditor('');
+    act(() =>
+      root.render(
+        <SessionContext.Provider value={stub.session}>
+          <TextEditorSlot />
+        </SessionContext.Provider>,
+      ),
+    );
+    await flush(2);
+
+    // Still undecided — this is the window the defect lived in.
+    expect(q('.txted__access')?.getAttribute('data-txted-access')).toBe('probing');
+
+    const downloads: string[] = [];
+    const anchorClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function patched(this: HTMLAnchorElement) {
+      if (this.download) downloads.push(this.download);
+    };
+    const prompt = window.prompt;
+    window.prompt = () => '/work/typed.pml';
+    try {
+      await act(async () => {
+        q<HTMLButtonElement>('[data-txted-saveas]')?.click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      await settle();
+      // The write itself is on the same slow wire.
+      for (let i = 0; i < 40 && status() === ''; i += 1) await flush(1, 20);
+    } finally {
+      HTMLAnchorElement.prototype.click = anchorClick;
+      window.prompt = prompt;
+    }
+
+    expect(downloads).toEqual([]);
+    const writes = stub.calls.filter((c) => c.fn === 'cmd.tenmol_files.write_text');
+    expect(writes.map((c) => c.args[0])).toEqual(['/work/typed.pml']);
+    expect(status()).toBe('wrote /work/typed.pml');
+  });
+
+  /**
+   * THE LATCH — the half of the defect a longer probe does not reach.
+   *
+   * `probeServerFiles` is bounded on purpose, so on a host slow enough it WILL
+   * run out of rounds. What made that a data-loss bug rather than a slow start
+   * is that the answer was permanent: `access` was written once and every
+   * later Open and Save read it, so a window that lost the race saved to
+   * ~/Downloads for the rest of its life — while `cmd.tenmol_files` sat
+   * installed on the bridge, put there a second later by the app itself
+   * (`FileDropTarget`'s `armPluginDialogs`, five attempts a second apart).
+   *
+   * MEASURED, with the bridge made to behave like the CI runner's software
+   * rasteriser: the editor's probe started asking at ~2.4 s and the app's own
+   * `_tf.install()` did not land until 4.775 s. That gap is this test.
+   */
+  it('a Save re-asks and reaches the host when the namespace installed LATE', async () => {
+    const stub = makeSession({ noFiles: true });
+    openTextEditor('');
+    await mount(stub);
+    // The probe genuinely ran out of rounds — this is the state the user is in.
+    expect(await settle()).toBe('browser');
+
+    // …and now the bridge has it, exactly as the app's own bootstrap delivers it.
+    stub.installNow();
+
+    const downloads: string[] = [];
+    const anchorClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function patched(this: HTMLAnchorElement) {
+      if (this.download) downloads.push(this.download);
+    };
+    const prompt = window.prompt;
+    window.prompt = () => '/work/late.pml';
+    try {
+      await act(async () => {
+        q<HTMLButtonElement>('[data-txted-saveas]')?.click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      for (let i = 0; i < 40 && status() !== 'wrote /work/late.pml'; i += 1) await flush(1, 20);
+    } finally {
+      HTMLAnchorElement.prototype.click = anchorClick;
+      window.prompt = prompt;
+    }
+
+    // The bytes went to the PyMOL host, not to ~/Downloads…
+    expect(downloads).toEqual([]);
+    expect(
+      stub.calls.filter((c) => c.fn === 'cmd.tenmol_files.write_text').map((c) => c.args[0]),
+    ).toEqual(['/work/late.pml']);
+    expect(status()).toBe('wrote /work/late.pml');
+    // …and the panel stopped claiming otherwise.
+    expect(q('.txted__access')?.getAttribute('data-txted-access')).toBe('server');
+  });
+
+  it('still downloads when the bridge really has no file service', async () => {
+    const stub = makeSession({ noFiles: true });
+    openTextEditor('');
+    await mount(stub);
+    expect(await settle()).toBe('browser');
+
+    const downloads: string[] = [];
+    const anchorClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function patched(this: HTMLAnchorElement) {
+      if (this.download) downloads.push(this.download);
+    };
+    // jsdom has no object URLs; `downloadFile` is exercised for real here, so
+    // the two halves of that API have to exist.
+    const objectUrl = URL as unknown as Record<string, unknown>;
+    const hadCreate = objectUrl['createObjectURL'];
+    const hadRevoke = objectUrl['revokeObjectURL'];
+    objectUrl['createObjectURL'] = () => 'blob:test';
+    objectUrl['revokeObjectURL'] = () => undefined;
+    try {
+      await act(async () => {
+        q<HTMLButtonElement>('[data-txted-save]')?.click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      for (let i = 0; i < 40 && downloads.length === 0; i += 1) await flush(1, 20);
+    } finally {
+      HTMLAnchorElement.prototype.click = anchorClick;
+      objectUrl['createObjectURL'] = hadCreate;
+      objectUrl['revokeObjectURL'] = hadRevoke;
+    }
+
+    expect(downloads).toEqual(['untitled.pml']);
+    expect(stub.calls.some((c) => c.fn === 'cmd.tenmol_files.write_text')).toBe(false);
+    expect(q('.txted__access')?.getAttribute('data-txted-access')).toBe('browser');
   });
 
   it('bootstraps cmd.tenmol_files itself — nothing else does it at startup', async () => {
@@ -280,6 +476,10 @@ describe('row 61 — TextEditorPanel reads spec.arg', () => {
     });
     openPymolrcEditor();
     await mount(stub);
+    // A bootstrap round is `do` -> PAUSE -> ask, so this is not a microtask
+    // away: the pause is deliberate and `settle` is what waits for it.
+    expect(await settle()).toBe('server');
+    for (let i = 0; i < 40 && area().value === ''; i += 1) await flush(1, 20);
 
     expect(stub.lines()).toContain('import tenmol_bridge.panels.files as _tf; _tf.install()');
     expect(q('.txted__access')?.textContent).toBe('bridge fs');

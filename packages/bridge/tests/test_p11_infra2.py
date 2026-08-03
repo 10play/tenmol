@@ -37,6 +37,8 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
+from conftest import slow
+
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 BRIDGE_DIR = os.path.join(REPO, "packages", "bridge")
 ASSET = os.path.join(BRIDGE_DIR, "tenmol_bridge", "panels", "setting_catalog.json")
@@ -92,10 +94,16 @@ def test_the_watcher_turns_the_flag_into_uvicorn_should_exit() -> None:
 
     assert uvicorn_server.should_exit is True
     assert watcher.fired is True
-    # Measured on this machine at interval=0.02, eight runs: 13.4-20.9 ms.
-    # The bound is three intervals, still two orders of magnitude under the
-    # 20 s WebSocket ping timeout that notices a suspended machine.
-    assert latency < 0.06, latency
+    # Measured on this machine at interval=0.02, eight runs: 13.4-20.9 ms; the
+    # bound is three intervals. SCALED, because three intervals of a 20 ms
+    # timer is a scheduling assumption, not a property of the code: a GitHub
+    # runner measured 0.0916 s. What the test actually protects is that the
+    # flag is READ AT ALL — before this wire existed, `should_exit` stayed
+    # False for ever — and the loop above already fails on that by timing out
+    # at 2 s. The bound below only keeps "one interval" from silently becoming
+    # "one minute", so it stays two orders of magnitude under the 20 s
+    # WebSocket ping timeout that notices a suspended machine.
+    assert latency < slow(0.06), latency
     watcher.join(timeout=2.0)
 
 

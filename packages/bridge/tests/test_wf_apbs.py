@@ -410,31 +410,107 @@ def test_output_arrives_while_the_child_is_still_running(ws: WSClient, bridge) -
 
     MEASURED writing this: with a child emitting one line per second for three
     seconds, the first line was on the feedback topic 0.45 s in while the reply
-    frame only came back at 3.09 s.  The assertion below is deliberately loose
-    (first line strictly before the reply, and before half the run) so it
-    cannot flake on a loaded machine, but a change to batch-at-the-end would
-    still fail it.
+    frame only came back at 3.09 s.
+
+    WHAT IS TIMED, AND WHAT MUST NOT BE.  Both stamps below are taken from the
+    moment the frame is SENT, so both carry the same start-up cost L: socket
+    transit, the engine queue, and ``fork`` + ``exec`` of the child.
+    ``first_line_at`` IS L — the child prints before it sleeps — and
+    ``replied_at`` is L + 3.0, the child's own three sleeps.  The original
+    ``first_line_at < replied_at / 2`` therefore reduced to ``L < 3.0``: an
+    assertion about how fast the HOST starts a process, with nothing left in it
+    about streaming.  It failed on a GitHub macOS runner with the streaming
+    behaviour perfectly intact::
+
+        AssertionError: (16.336, 19.170)   # run 30769055002
+        assert 16.33603737500016 < (19.169784040999957 / 2.0)
+
+    2.83 s between the two events against 3.00 s here, i.e. the child ran
+    exactly as it does locally and merely STARTED 16 s late.
+
+    ===================================================================
+    L IS A REAL DEFECT AND THIS TEST DELIBERATELY DOES NOT MEASURE IT
+    ===================================================================
+    Not an excuse for the rewrite — a separate, louder finding, and the
+    evidence is in the same junit files.  Two tests in THIS file, same
+    fixtures, same process, differing only in whether a child is actually
+    forked (``packages/bridge/tests/test_wf_apbs.py``)::
+
+      test_a_missing_executable_is_a_typed_error_raised_before_the_fork
+          shutil.which over the whole PATH, then raise            0.02-0.04 s
+      test_execute_is_marked_dangerous_and_says_why
+          the same path plus one /bin/echo                       12.5 -25.5 s
+      test_capture_children_leaves_an_explicit_redirection_alone
+          one Popen on the TEST thread, no bridge, no queue      11.5 -22.2 s
+
+    Five consecutive runs (30761287893, 30761291693, 30761575393, 30769052833,
+    30769055002) say the same thing: **one fork+exec out of this process costs
+    12-35 s on the runner**, against 0.004 s for the same call locally, and it
+    is the fork and not the engine queue — the third row never touches the
+    bridge.  It is not the fd-closing loop and not the address space either:
+    measured here, ``close_fds=True`` under ``RLIMIT_NOFILE`` 1,048,576 costs
+    4.4 ms, and spawn cost is flat (4.3-5.1 ms) from 0 GB to 4 GB resident.
+    Root cause unknown, owner ``tenmol_bridge/subproc.py``.  It is user-visible:
+    it is the ``apbs`` "hang" the panel would be blamed for, and every
+    ``cmd.system``/``cmd.run`` pays it too.  ``test_a_wedged_child_is_killed_at
+    _the_timeout`` below is the same term wearing a different hat (22.0 s
+    against a 1.5 s watchdog) and its ``slow(10.0)`` bound is a latent flake
+    for exactly this reason, not a statement about the watchdog.
+
+    So the assertion is on the INTERVAL BETWEEN the two events, which L cancels
+    out of.  That interval is manufactured by the child's own ``time.sleep``s,
+    so it does NOT shrink on a slow box and is deliberately NOT scaled; the
+    only thing a loaded host can do to it is shave the drain latency off the
+    front (0.17 s on the runner, from the numbers above), and 2.0 s of the
+    3.0 s is left as headroom for exactly that.  Batch at the end and it
+    collapses: every line would enter the ring after ``proc.wait()``, within
+    milliseconds of the reply.  MEASURED against that regression —
+    ``console_write`` buffered and flushed below the read loop — 0.0001 s, and
+    it stays 0.0001 s at TENMOL_TEST_SLOW=1, 3 and 10, because nothing here is
+    scaled.
     """
     needle = HALF + "_TICK"
     ws.subscribe("feedback")
+    # ESTABLISH the precondition rather than inherit it.  `subproc.execute` is
+    # confirm-once-per-process (row 00:467) and every other test here clears it
+    # through `child()`; this one hand-rolls the send to keep the message id, so
+    # run alone — `-k output_arrives`, or any CI split — it was answered with
+    # `err/NeedsConfirmation` and failed as "nothing streamed" 30 s later.
+    _confirm_execute(ws)
+    #: Seconds the child stays alive after each line.  Named, because the
+    #: assertion's floor is one of these and the two must not drift apart.
+    tick = 1.0
+    ticks = 3
     code = (
         "import sys, time\n"
-        "for i in range(3):\n"
-        "    print('%s' + '_TICK', i); sys.stdout.flush(); time.sleep(1.0)\n" % HALF
+        "for i in range(%d):\n"
+        "    print('%s' + '_TICK', i); sys.stdout.flush(); time.sleep(%r)\n"
+        % (ticks, HALF, tick)
     )
     started = time.monotonic()
     msg_id = ws.send(t="call", fn="subproc.execute", args=[[sys.executable, "-u", "-c", code]],
                      kwargs={})
-    assert wait_for(ws, bridge, needle, timeout=slow(10.0)), "nothing streamed"
+    # NOT the assertion — a deadline that has to clear L, whose worst observed
+    # value on the runner is 35.5 s (test_execute_never_goes_through_a_shell,
+    # run 30761575393).  slow(30) = 90 s there and 30 s here; the first line
+    # lands at 0.2 s locally, so the only run that pays this is one where
+    # streaming is genuinely broken.
+    assert wait_for(ws, bridge, needle, timeout=slow(30.0)), "nothing streamed"
     first_line_at = time.monotonic() - started
 
-    reply = ws.wait_reply(msg_id, timeout=30.0)
+    reply = ws.wait_reply(msg_id, timeout=slow(30.0))
     replied_at = time.monotonic() - started
 
     assert reply["t"] == "ok", reply
-    assert reply["result"]["lines"] == [needle + " %d" % i for i in range(3)]
-    assert first_line_at < replied_at, (first_line_at, replied_at)
-    assert first_line_at < replied_at / 2.0, (first_line_at, replied_at)
+    assert reply["result"]["lines"] == [needle + " %d" % i for i in range(ticks)]
+    streamed_for = replied_at - first_line_at
+    assert streamed_for > tick, (
+        "the console saw the child's output %.3f s before the call returned, "
+        "out of the %.1f s the child had left to live after its first line; "
+        "one tick (%.1f s) is the floor for 'while it was still running', and "
+        "~0 means the lines were dumped at the end. first=%.3f replied=%.3f"
+        % (streamed_for, ticks * tick, tick, first_line_at, replied_at)
+    )
 
 
 def test_exit_status_is_reported_not_swallowed(ws: WSClient, bridge) -> None:

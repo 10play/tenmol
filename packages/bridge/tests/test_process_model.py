@@ -29,7 +29,7 @@ import time
 
 import pytest
 
-from conftest import slow_rate
+from conftest import slow, slow_rate
 
 from tenmol_bridge.config import log
 from tenmol_bridge.engine import EngineState
@@ -271,9 +271,61 @@ def test_status_thread_only_uses_lock_attempting_calls(bridge, ws):
     get_progress/_get_feedback/get_setting_updates use ``lock_attempt``
     (``acquire(blocking=0)``), so they return in microseconds even while the
     engine thread holds the API lock.
+
+    EVERYTHING ASSERTED HERE IS A DELTA OVER THE HOLD WINDOW, and that is not
+    a style choice.  ``polls``, ``lock_misses`` and ``max_poll_ms`` are
+    cumulative for the LIFE OF THE PROCESS and the whole suite shares one
+    (``conftest.py``), so an absolute reading of any of them is a statement
+    about the 69 test files that happen to sort before this one.
+
+    ``max_poll_ms`` is the trap, because it is a HIGH-WATER MARK: nothing ever
+    brings it back down, so ``assert poller.max_poll_ms < 250.0`` asked "did
+    ANY poll since process start take a quarter of a second", and the answer on
+    a shared runner is yes, for reasons that have nothing to do with the lock.
+    The CI failure, from ``pytest-bridge.xml`` of run 30769055002::
+
+        E  AssertionError: {'running': True, 'hz': 10.0, 'polls': 2782,
+                            'lockMisses': 1370, ...}
+        E  assert 497.73274999995465 < 250.0
+
+    The mechanism, measured here rather than guessed: with one subscriber
+    attached, a session whose high-water was **0.027 ms** after boot read
+    **15.756 ms** the moment a single unrelated ``for i in range(120000):
+    print(...)`` ran, because one poll drained 120k lines and fanned them all
+    out.  A 580x jump bought entirely by a test that is not this one, on a box
+    2.4x faster than the runner and with one client instead of the suite's
+    churn — the runner's 497.7 ms is the same effect with the same cause, and
+    it is not a defect: a poll that drains 120k lines is SUPPOSED to be slow.
+
+    So the bound is NOT scaled and NOT deleted — it is RESET, below, in the gap
+    between two polls, which turns exactly the same 250 ms into a statement
+    about this test's own window.  Measured inside the window: 0.027–0.235 ms,
+    i.e. the bound keeps a factor of a thousand.
+
+    WHAT THAT COSTS: the old form also happened to watch the other 69 files.
+    It was a bad watchman — a poll that drains and fans out 120k lines is
+    *supposed* to be three orders of magnitude slower than an idle one, so the
+    reading it produced was noise, and no test owns "every poll in the session"
+    as a claim.  Scope lost, signal gained.
+
+    The runner's ``polls: 2782, lockMisses: 1370`` is not a symptom either: a
+    49% miss rate is the CORRECT reading of a box where the engine thread holds
+    ``lock_api`` for a much larger share of the wall clock, and a miss costs a
+    100 ms retry and loses nothing, because ``_get_feedback`` leaves the lines
+    in ``I->Line[]`` when it declines to take the lock.  A miss is the whole
+    point of ``lock_attempt``; zero misses during the hold would be the bug,
+    and that is what the ``lock_misses`` assertion below says.
     """
     poller = bridge.pump.status_poller
     hold = 1.5
+    interval = bridge.pump.config.status_interval
+
+    #: ``time.monotonic()`` either side of the lock, filled on the ENGINE
+    #: thread.  The window has to be delimited from in there: `elapsed` also
+    #: covers the queue wait, and the engine thread is DRAWING for that part —
+    #: on a software rasteriser a draw is long enough to be mistaken for the
+    #: stall this test hunts for.
+    window = {}
 
     def hold_the_api_lock(engine):
         # Exactly what every long C++ call does for its whole duration: hold
@@ -281,17 +333,43 @@ def test_status_thread_only_uses_lock_attempting_calls(bridge, ws):
         # would block here for the full 1.5 s -- spike 05 §6 measured
         # cmd.get_names() blocked for 3,808.8 ms during a 4.3 s ray.
         engine.cmd.lock(engine.cmd)
+        window["from"] = time.monotonic()
         try:
             time.sleep(hold)
         finally:
+            window["to"] = time.monotonic()
             engine.cmd.unlock(-1, engine.cmd)
         return True
 
-    polls_before = poller.polls
-    misses_before = poller.lock_misses
-    started = time.monotonic()
-    assert bridge.pump.call(hold_the_api_lock, timeout=30.0, label="hold-lock")
-    elapsed = time.monotonic() - started
+    # A sink runs at the END of every poll (``StatusPoller.poll_once``), so a
+    # stamp taken here says "a poll just finished" — which is both the clock
+    # this test reads and the fence it needs before touching ``max_poll_ms``.
+    stamps = []
+
+    def stamp(_lines, _progress, _updates):
+        stamps.append(time.monotonic())
+
+    poller.add_sink(stamp)
+    try:
+        # ESTABLISH THE PRECONDITION rather than assume it (the suite shares
+        # one poller).  The reset has to land in the gap BETWEEN two polls: a
+        # poll that was already draining another file's output when the reset
+        # happened would record its own 260 ms afterwards and the window would
+        # inherit exactly the number this test is trying to stop inheriting.
+        # Waiting for a sink call puts us ~100 ms clear of the next poll.
+        fence = len(stamps)
+        quiet = time.monotonic() + slow(5.0)
+        while len(stamps) == fence and time.monotonic() < quiet:
+            time.sleep(0.005)
+        polls_before = poller.polls
+        misses_before = poller.lock_misses
+        poller.max_poll_ms = 0.0
+        started = time.monotonic()
+        assert bridge.pump.call(hold_the_api_lock, timeout=30.0, label="hold-lock")
+        elapsed = time.monotonic() - started
+        windowed_max_poll_ms = poller.max_poll_ms
+    finally:
+        poller.remove_sink(stamp)
 
     polls_during = poller.polls - polls_before
     # Scaled: a loaded runner genuinely polls fewer times in the same
@@ -304,7 +382,61 @@ def test_status_thread_only_uses_lock_attempting_calls(bridge, ws):
     # ...and it saw the lock as busy rather than as "no output": _get_feedback
     # returns None, not [], on a lock miss (packages/engine/modules/pymol/internal.py:596-606).
     assert poller.lock_misses > misses_before, poller.status()
-    assert poller.max_poll_ms < 250.0, poller.status()
+
+    # The original 250 ms, now over this test's own window instead of the
+    # session's.  A poll DURING the hold is the cheapest poll there is — all
+    # three calls decline the lock and the sinks fan out nothing — so this is
+    # the same claim with none of the cross-file noise.  NOT scaled: 0.235 ms
+    # was the worst reading under a deliberately throttled QoS class with the
+    # machine at load average 100, which is 1,000x of headroom; a factor of 3
+    # on top of that would be decoration.
+    assert windowed_max_poll_ms < 250.0, (
+        "one poll took %.3f ms while the API lock was held for %.1f s — it "
+        "waited for the lock instead of attempting it, or a sink blocked the "
+        "poll thread. %r" % (windowed_max_poll_ms, hold, poller.status())
+    )
+
+    # ...and the same claim in the time domain, which catches a poll that never
+    # RETURNED (max_poll_ms is only written when one finishes).  The rate above
+    # is scaled 3x DOWN on CI, which leaves room for one long stall followed by
+    # a catch-up burst; this is the half of the claim that scaling gave away,
+    # and it is deliberately NOT scaled.  A poll that BLOCKED on lock_api is
+    # stuck for whatever is left of the hold — at least 1.4 of the 1.5 s, since
+    # the next poll starts within `interval` of the lock being taken — so half
+    # the hold is the widest bound that still catches it.
+    #
+    # MEASURED, worst gap inside the window:
+    #   idle                                              0.105 s
+    #   48 spinning processes, load average 100           0.105 s  (unmoved:
+    #     the engine thread is asleep for this window, so the poller contends
+    #     with the OS and nothing else)
+    #   the same, under `taskpolicy -c background`   0.20 - 0.30 s  (a ceiling,
+    #     not a slope — 28, 48 and 64 spinners all land in that band, because
+    #     it is the background QoS class's timer slack and not the load)
+    # against a bound of 0.75 s, and 1.5 s when a poll really does block.
+    # THE WINDOW EDGES COUNT AS STAMPS.  Without them the measurement has a
+    # hole big enough to drive the defect through: a poller that runs normally
+    # for 0.3 s and then blocks leaves stamps at 0.1/0.2/0.3 and nothing after,
+    # its own stamp landing outside the window — three 0.1 s gaps and a clean
+    # pass.  Bracketing by `from`/`to` turns that into a 1.2 s trailing silence,
+    # and makes "no polls at all in the window" fall out as a 1.5 s gap instead
+    # of needing a special case.
+    # Snapshot: a poll that had already copied the sink list can still append
+    # after `remove_sink` returns.
+    taken = [
+        moment for moment in list(stamps)
+        if window["from"] <= moment <= window["to"]
+    ]
+    edges = [window["from"]] + taken + [window["to"]]
+    gaps = [later - earlier for earlier, later in zip(edges, edges[1:])]
+    stalled_for = max(gaps)
+    assert stalled_for < hold / 2.0, (
+        "the status thread went quiet for %.3f s while the API lock was held "
+        "for %.1f s; the poll interval is %.3f s, so a gap this size means a "
+        "poll blocked on lock_api instead of attempting it. gaps=%r, %r"
+        % (stalled_for, hold, interval, [round(g, 3) for g in gaps],
+           poller.status())
+    )
 
 
 def test_healthz_exposes_what_the_ui_needs(bridge):
