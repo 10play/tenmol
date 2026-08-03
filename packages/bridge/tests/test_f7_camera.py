@@ -420,9 +420,21 @@ def test_an_instant_command_aborts_a_sweep_but_turn_does_not(
     assert gap(mid, target) > 1.0, "sweep already finished; test is meaningless"
     cam.call("cmd.zoom", "resi 20", animate=0)
     landed = cam.call("cmd.get_view")
-    assert gap(landed, target) == 0.0
+    # NOT bit-identity, and the difference is not the sweep still running.
+    # ``target`` is computed from a RESET camera; this zoom is computed from
+    # wherever the sweep had got to, so it inherits an interpolated rotation
+    # that is one float32 quantum off the identity ``target`` was built on.
+    # MEASURED over 40 aborts spread across the sweep: the landing error is
+    # either 0.0 or exactly 2**-19 (1.9073486328125e-06) and never anything
+    # else — 38 of the 40 showed the quantum. So this bound is ~50x the noise
+    # and still ~10^4 below the >1.0 gap a sweep in flight shows on the line
+    # above, which is the thing being distinguished.
+    assert gap(landed, target) < 1e-4, landed
     time.sleep(0.4)
-    assert gap(cam.call("cmd.get_view"), target) == 0.0, "aborted sweep resumed"
+    # This one IS exact: the claim is that nothing moved after the abort, and
+    # ``landed`` — not ``target`` — is the position it would have to depart
+    # from. Bit-identical in all 40 of the measured aborts.
+    assert gap(cam.call("cmd.get_view"), landed) == 0.0, "aborted sweep resumed"
 
     # control: the same turn, with nothing animating, really does rotate.
     cam.call("cmd.reset")

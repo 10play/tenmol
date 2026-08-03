@@ -541,21 +541,34 @@ def test_a_wedged_child_is_killed_at_the_timeout(ws: WSClient) -> None:
     stop after 1.5 s came back at ~1.5 s with ``returncode`` -9 (SIGKILL) and
     ``timedOut`` true.
     """
+    # CALIBRATE FIRST, because `seconds` is dominated by what this machine
+    # charges to start a Python interpreter at all, not by the watchdog. A
+    # macOS CI runner measured 33-43 s for children whose whole body is
+    # `raise SystemExit(7)`; against that, ANY fixed bound is really a
+    # measurement of the runner, which is why 15.0 failed there at 36.86 s
+    # while `timedOut` and `returncode` -9 were both correct.
+    # No `timeout=`: this one must run to completion, so it gets no watchdog
+    # at all. The wire deadline is raised because the spawn itself is the slow
+    # part on exactly the runners this calibration exists for.
+    floor = child(ws, "raise SystemExit(0)", wire_timeout=180.0)
+    assert floor["timedOut"] is False, floor
+    assert floor["returncode"] == 0, floor
+
     started = time.monotonic()
     result = child(ws, "import time; time.sleep(30)", timeout=1.5)
     elapsed = time.monotonic() - started
     assert result["timedOut"] is True
     assert result["returncode"] < 0, result
 
-    # The WATCHDOG is what this test is about, and `seconds` is the server's own
-    # measurement around the child — so that is what gets the tight bound. The
-    # child asks for 30 s and is cut off at 1.5 s; anything under 30 s proves it
-    # did not run to completion, and 3x its own timeout proves the watchdog is
-    # what stopped it.
-    # Bounded well under the child's own 30 s sleep, which is what proves the
-    # watchdog cut it short — not at 1.5 s + slack, because `seconds` also
-    # covers spawn, SIGKILL and reap, and all three stretch under load.
-    assert result["seconds"] < 15.0, result
+    # THE PROPERTY: the 30 s sleep did not run. Measure it against the floor
+    # this machine just charged for an identical spawn that exits immediately,
+    # so the bound scales with the runner instead of pinning it. A child the
+    # watchdog cut off at 1.5 s costs the floor plus its own deadline plus the
+    # SIGKILL and reap; one that slept to completion would cost the floor plus
+    # THIRTY seconds. The 15 s of slack sits well inside that 28.5 s gap, so a
+    # broken watchdog still fails here.
+    budget = floor["seconds"] + 1.5 + 15.0
+    assert result["seconds"] < budget, (result, floor)
 
     # `elapsed` is the ROUND TRIP, which includes the confirm handshake and
     # whatever else is queued on a shared socket. A runner measured 43.1 s here
