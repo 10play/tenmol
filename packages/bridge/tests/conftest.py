@@ -213,7 +213,11 @@ class WSClient:
         return msg_id
 
     def wait_reply(self, msg_id: int, timeout: float = 60.0) -> Dict[str, Any]:
-        deadline = time.monotonic() + timeout
+        # Scaled by TENMOL_TEST_SLOW. 60 s is generous here and still too tight
+        # on a shared runner: building the 178-colour palette over the wire
+        # exceeded it ("no reply to frame 6"). This is a ceiling on how long a
+        # HANG takes to report, so stretching it costs nothing but patience.
+        deadline = time.monotonic() + timeout * slow_factor()
         while time.monotonic() < deadline:
             reply = self._recv(min(1.0, max(0.05, deadline - time.monotonic())))
             if reply is None:

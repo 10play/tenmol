@@ -458,7 +458,23 @@ def test_a_second_animated_command_abandons_the_first_where_it_stands(
     assert gap(mid, target) > 1.0
 
     cam.call("cmd.center", "resi 20", animate=0.5)
-    assert gap(cam.call("cmd.get_view"), mid) == 0.0, "interruption jumped"
+    after = cam.call("cmd.get_view")
+    # NOT `== 0.0`. The interrupted zoom is a 2 s sweep in 30 fps key frames, so
+    # between reading `mid` and reading `after` the OLD animation legitimately
+    # advances a frame or two — on an idle machine none elapse and the gap is
+    # exactly 0, on a loaded runner some do, and the test was asserting the
+    # machine was idle rather than that the engine did not jump.
+    #
+    # The claim is that interruption does not JUMP: `ScenePrimeAnimation`
+    # snapshots the CURRENT view as the new key frame 0 instead of completing
+    # the old sweep. A jump would land at or near the abandoned target, which is
+    # the whole remaining distance away. A few frames of sweep is a small
+    # fraction of it, so the two are separated by an order of magnitude.
+    remaining = gap(mid, target)
+    assert gap(after, mid) < remaining * 0.1, (
+        "interruption jumped: moved %.3f toward a target %.3f away"
+        % (gap(after, mid), remaining)
+    )
     settled = quiet_view(cam)
     assert gap(settled, target) > 1.0, "the abandoned zoom reached its target"
 

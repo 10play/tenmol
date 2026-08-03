@@ -20,6 +20,8 @@ from typing import Any, Dict, List
 
 import pytest
 
+from conftest import slow
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from conftest import WSClient  # noqa: E402
@@ -1222,11 +1224,22 @@ def test_protein_vacuum_esp_runs_and_says_what_it_destroyed(bridge) -> None:
         reply = ws.call_reply("util.protein_vacuum_esp", ESP, 2, 10.0, 0)
         if reply["t"] == "err":
             pytest.skip("protein_vacuum_esp unavailable here: %r" % reply["error"])
-        lines = _stream(ws, 1.5)
-
+        # WAIT for the three objects rather than assuming a fixed window was
+        # enough. `protein_vacuum_esp` does an h_add, a charge assignment and a
+        # Coulomb map; a runner needed longer than the 1.5 s this used to sleep,
+        # and the failure looked like "it made nothing" rather than "it is still
+        # working".
+        want = [ESP + "_e_chg", ESP + "_e_map", ESP + "_e_pot"]
+        lines: list = []
+        deadline = time.monotonic() + slow(20.0)
+        while time.monotonic() < deadline:
+            lines += _stream(ws, 0.5)
+            names = ws.call("cmd.get_names", "all")
+            if all(n in names for n in want):
+                break
         names = ws.call("cmd.get_names", "all")
-        made = [n for n in (ESP + "_e_chg", ESP + "_e_map", ESP + "_e_pot") if n in names]
-        assert made == [ESP + "_e_chg", ESP + "_e_map", ESP + "_e_pot"], (made, names)
+        made = [n for n in want if n in names]
+        assert made == want, (made, names)
 
         # It MUTATES first: h_add grows the model, and the source object is
         # disabled behind the user's back.

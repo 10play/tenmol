@@ -546,10 +546,21 @@ def test_a_wedged_child_is_killed_at_the_timeout(ws: WSClient) -> None:
     elapsed = time.monotonic() - started
     assert result["timedOut"] is True
     assert result["returncode"] < 0, result
-    # Scaled: the child is killed at ITS OWN timeout, but a loaded runner adds
-    # scheduling latency on top — measured 22.0 s against this 10.0 s bound.
-    # A watchdog that never fires still runs to the harness timeout and fails.
-    assert elapsed < slow(10.0), elapsed
+
+    # The WATCHDOG is what this test is about, and `seconds` is the server's own
+    # measurement around the child — so that is what gets the tight bound. The
+    # child asks for 30 s and is cut off at 1.5 s; anything under 30 s proves it
+    # did not run to completion, and 3x its own timeout proves the watchdog is
+    # what stopped it.
+    assert result["seconds"] < slow(1.5) + 1.0, result
+
+    # `elapsed` is the ROUND TRIP, which includes the confirm handshake and
+    # whatever else is queued on a shared socket. A runner measured 43.1 s here
+    # while `timedOut` and `returncode` -9 were both correct — i.e. the watchdog
+    # worked perfectly and only the wire was slow. Bounding it tightly measured
+    # the runner; bounding it loosely says nothing `seconds` does not already
+    # say. It stays only as a hang guard.
+    assert elapsed < slow(120.0), elapsed
 
 
 def test_a_missing_executable_is_a_typed_error_raised_before_the_fork(
