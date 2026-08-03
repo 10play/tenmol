@@ -266,10 +266,39 @@ def tagged(ws: WSClient, tag: str, line: str, timeout: float = 6.0) -> str:
 
 
 def drain_geometry(ws: WSClient, seconds: float) -> List[Dict[str, Any]]:
+    """Clear, then read for ``seconds``.  Only safe BEFORE the trigger.
+
+    After a trigger, use ``geometry_mark`` + ``geometry_since`` instead: the
+    ``clear()`` here also drops rows that arrived while ``ws.call`` was
+    pumping the socket for its own reply, which for a ``cmd.set`` is most of
+    them.
+    """
     ws.events.clear()
     ws.pump_frames(seconds)
     rows: List[Dict[str, Any]] = []
     for event in ws.events:
+        if event.get("topic") == "geometry":
+            rows.extend(event.get("payload", {}).get("invalidated", []))
+    return rows
+
+
+def geometry_mark(ws: WSClient) -> int:
+    """How many frames the client has seen.  Pair with ``geometry_since``."""
+    return len(ws.events)
+
+
+def geometry_since(
+    ws: WSClient, since: int, seconds: float
+) -> List[Dict[str, Any]]:
+    """Every invalidation from ``since`` on, after reading for ``seconds``.
+
+    Nothing is cleared, so a row that landed during the ``cmd.set`` that
+    caused it still counts — which is the whole difference from
+    ``drain_geometry``.
+    """
+    ws.pump_frames(seconds)
+    rows: List[Dict[str, Any]] = []
+    for event in ws.events[since:]:
         if event.get("topic") == "geometry":
             rows.extend(event.get("payload", {}).get("invalidated", []))
     return rows
@@ -721,12 +750,21 @@ def test_a_layout_setting_emits_nothing_on_the_geometry_topic_and_a_rep_one_does
     drain_geometry(ws, 1.5)
 
     mine = lambda rows: [r for r in rows if r.get("object") == "f7_ala"]  # noqa: E731
+    # Mark BEFORE each `set`, and never clear after one: `ws.call` pumps the
+    # socket while waiting for its own reply, so the invalidation a `set`
+    # raises is usually already buffered when the read starts. Clearing there
+    # dropped it — which made the negative checks pass for the wrong reason and
+    # the positive one below fail outright.
     for name, value in (("mouse_grid", 0), ("internal_gui_width", 260), ("movie_panel", 1)):
+        mark = geometry_mark(ws)
         ws.call("cmd.set", name, value)
-        assert mine(drain_geometry(ws, 1.2)) == [], "%s reached the geometry topic" % name
+        assert mine(geometry_since(ws, mark, 1.2)) == [], (
+            "%s reached the geometry topic" % name
+        )
 
+    mark = geometry_mark(ws)
     ws.call("cmd.set", "stick_radius", 0.4)
-    rows = mine(drain_geometry(ws, 2.5))
+    rows = mine(geometry_since(ws, mark, 2.5))
     assert rows, "stick_radius produced no invalidation — the pipe was dead"
     assert rows[0]["rep"] == 0 and rows[0]["level"] == 100
     assert rows[0]["reason"] == "changed" and rows[0]["active"] is True

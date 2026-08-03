@@ -143,17 +143,46 @@ def drain_geometry(ws: Any, seconds: float) -> List[Dict[str, Any]]:
     return rows
 
 
-def wait_geometry(ws: Any, obj: str, timeout: float = 4.0) -> List[Dict[str, Any]]:
-    """Invalidations naming ``obj``.  Returns as soon as one arrives."""
+def geometry_mark(ws: Any) -> int:
+    """How many frames the client has seen.  Pair with ``wait_geometry``."""
+    return len(ws.events)
+
+
+def wait_geometry(
+    ws: Any, obj: str, timeout: float = 4.0, since: int = 0
+) -> List[Dict[str, Any]]:
+    """Invalidations naming ``obj``, from ``since`` on.  Returns on the first.
+
+    This does NOT clear ``ws.events``, and that is the entire point. ``ws.call``
+    pumps the socket while it waits for its own reply, so the invalidation
+    raised by the very ``cmd.set`` under test is routinely ALREADY BUFFERED by
+    the time this is called. The previous version polled by calling
+    ``drain_geometry``, which begins with ``ws.events.clear()`` — so it threw
+    that row away on its first iteration and then sat out the whole timeout
+    waiting for a second one that was never coming. It failed on the macOS
+    runner as a bare ``assert []``, and it could only ever pass by winning a
+    race it did not control.
+
+    ``since`` is where to start reading, which keeps the caller's pre-drain
+    ``created`` rows out of the result without discarding anything.
+    """
     deadline = time.monotonic() + timeout
     rows: List[Dict[str, Any]] = []
-    while time.monotonic() < deadline:
-        rows.extend(
-            row for row in drain_geometry(ws, 0.4) if row.get("object") == obj
-        )
-        if rows:
-            break
-    return rows
+    seen = since
+    while True:
+        while seen < len(ws.events):
+            event = ws.events[seen]
+            seen += 1
+            if event.get("topic") != "geometry":
+                continue
+            rows.extend(
+                row
+                for row in event.get("payload", {}).get("invalidated", [])
+                if row.get("object") == obj
+            )
+        if rows or time.monotonic() >= deadline:
+            return rows
+        ws.pump_frames(0.2)
 
 
 def rep_hashes(ws: Any, obj: str) -> Tuple[str, str]:
@@ -227,10 +256,11 @@ def test_a_setting_write_reaches_both_the_settings_drain_and_the_geometry_topic(
     ws.subscribe("geometry")
     drain_geometry(ws, slow(1.5))  # the 'created' rows for `scene`
     cursor = ws.call("setting.tenmol_settings_drain", 0)["cursor"]
+    mark = geometry_mark(ws)  # everything after this belongs to the `set` below
 
     ws.call("cmd.set", "stick_radius", 0.4)
 
-    rows = wait_geometry(ws, scene)
+    rows = wait_geometry(ws, scene, timeout=slow(4.0), since=mark)
     assert rows, "no geometry invalidation for a rep-invalidating setting"
     # Select the STICKS row that says `changed`. The pre-drain above is meant to
     # have eaten the scene's own `created` rows, but on a slow host they can
@@ -291,8 +321,9 @@ def test_geometry_invalidation_tracks_the_serialized_bytes_not_the_switch(
         # invalidation that stopped happening. A fixed 0.6 s drain is a
         # scheduling assumption; the claim is not.
         drain_geometry(ws, slow(0.6))  # the refresh above can move things itself
+        mark = geometry_mark(ws)
         ws.call("cmd.set", name, value)
-        rows = wait_geometry(ws, scene, timeout=slow(2.5))
+        rows = wait_geometry(ws, scene, timeout=slow(2.5), since=mark)
         after = rep_hashes(ws, scene)
         outcomes.append((name, before != after, bool(rows)))
 
