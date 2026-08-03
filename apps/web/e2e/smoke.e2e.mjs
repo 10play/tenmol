@@ -288,7 +288,23 @@ export const tests = [
       const launchers = page.locator('.overlay-launcher__btn');
       const n = await launchers.count();
       for (let i = 0; i < n; i++) await launchers.nth(i).click();
-      await page.waitForTimeout(800);
+
+      // POLL until every shipped slot has reported in, rather than sleeping a
+      // fixed 800 ms. Feature slots are lazily imported, so on a slow host the
+      // last few are still resolving when the check runs — a runner failed
+      // here with "shipped but not mounted: plugin-manager" while the same
+      // commit passed on the other trigger. The assertion below is unchanged:
+      // a slot that never mounts still fails, just after a deadline instead of
+      // after a guess.
+      const readAll = async () =>
+        page.evaluate(() => (document.body.dataset.features ?? '').split(' ').filter(Boolean));
+      const deadline = Date.now() + 30_000 * SCALE;
+      for (;;) {
+        const seen = await readAll();
+        if (shipped.every((id) => seen.includes(id))) break;
+        if (Date.now() > deadline) break;
+        await page.waitForTimeout(250);
+      }
 
       // `document.body.dataset.features` — a side channel, so the check cannot
       // perturb layout. An earlier wrapper element with `display: contents` had
