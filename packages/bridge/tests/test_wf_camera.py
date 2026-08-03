@@ -803,6 +803,48 @@ def test_stereo_modes_and_the_stereo_mode_that_stays_behind(cam: WSClient) -> No
     assert int(cam.call("cmd.get", "stereo_mode")) == 5, "stereo_mode stays latched"
 
 
+def test_every_stereo_mode_survives_the_draws_it_enables(cam: WSClient, gl_bridge):
+    """REGRESSION, and it used to take the whole process down with SIGSEGV.
+
+    The test above only sets the modes; whether the pump ever *drew* one is a
+    race it does not control.  ``geowall`` is the mode that crashes, and on a
+    fast machine all four round-trips can land inside a single 1/60 s tick, so
+    the crash showed up as an intermittent exit-139 on the macOS CI runner and
+    never locally.  This test closes the race by waiting for real draws with
+    each mode active.
+
+    THE DEFECT.  ``stereo_mode=geowall`` makes ``ExecutiveDrawNow``
+    (``packages/engine/layer3/Executive.cpp:11559-11567``) call ``OrthoDoDraw``
+    twice, the second time with ``OrthoRenderMode::GeoWallRight``.  For that
+    mode ``OrthoGetBackbuffers`` returned an EMPTY vector, and ``OrthoDoDraw``
+    then read ``backbuffers.front()`` (``Ortho.cpp:1868``) plus
+    ``backbuffers[0]`` in both draw loops (``:1948``, ``:2077``) — three
+    dereferences of an empty ``std::vector``'s null data pointer.  The empty
+    return came from the ``PYMOL-5001`` DrawBuffer refactor (``d188d36b``),
+    which collapsed "which buffers to clear up front" and "which buffer this
+    pass draws into" into one vector; for the geowall right eye those differ —
+    clear nothing, but still draw into ``GL_BACK``, which is what the
+    pre-refactor ``OrthoDrawBuffer(G, GL_BACK)`` did.
+
+    A dead process fails this test by killing the run, so the assertions here
+    are only the second line of defence.
+    """
+    engine = gl_bridge.pump.engine
+    try:
+        for name in ("crosseye", "walleye", "geowall", "sidebyside"):
+            before = engine.draws
+            assert cam.call_reply("cmd.stereo", name)["t"] == "ok", name
+            # Two draws, not one: the tick that was already in flight when the
+            # setting landed does not count.
+            deadline = time.monotonic() + 20.0
+            while engine.draws < before + 2 and time.monotonic() < deadline:
+                time.sleep(0.01)
+            assert engine.draws >= before + 2, "%s: pump stopped drawing" % name
+            assert cam.call("cmd.get", "stereo") == "on", name
+    finally:
+        cam.call("cmd.stereo", "off")
+
+
 def test_full_screen_is_not_available_on_this_build(cam: WSClient) -> None:
     """``cmd.full_screen`` raises, both directions.
 

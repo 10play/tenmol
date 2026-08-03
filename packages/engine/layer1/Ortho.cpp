@@ -1828,7 +1828,16 @@ static std::vector<GLFramebufferConfig> OrthoGetBackbuffers(
 #endif
   }
   if (drawInfo.renderMode == OrthoRenderMode::GeoWallRight) {
-    return {};
+    // The right eye shares the left eye's buffer and is separated by the
+    // viewport (ExecutiveDrawNow), so this is the same target as the mono
+    // path -- what the pre-refactor code bound with OrthoDrawBuffer(GL_BACK).
+    // It must NOT be empty: the caller reads backbuffers.front(), and both
+    // draw loops index backbuffers[0], so returning {} dereferenced an empty
+    // vector's null data pointer and segfaulted on `stereo geowall`.
+    // Skipping the *clear* for this pass is handled by the caller instead.
+    return {
+        {CShaderMgr::OpenGLDefaultFramebufferID, GL_BACK},
+    };
   }
   if (SceneMustDrawBoth(G)) {
     return {
@@ -1902,7 +1911,10 @@ void OrthoDoDraw(PyMOLGlobals* G, const OrthoDrawInfo& drawInfo)
 
     for (const auto& backbuffer : backbuffers) {
       G->ShaderMgr->setDrawBuffer(backbuffer);
-      if (drawInfo.clearTarget) {
+      // The geowall right eye draws into the buffer the left eye just filled,
+      // so clearing here would wipe the left half of the wall.
+      if (drawInfo.clearTarget &&
+          drawInfo.renderMode != OrthoRenderMode::GeoWallRight) {
         SceneGLClear(G, GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
       }
     }
