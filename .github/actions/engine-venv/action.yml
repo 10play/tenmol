@@ -1,0 +1,124 @@
+# Build (or restore) packages/bridge/.venv with PyMOL compiled from this tree.
+#
+# WHY THIS IS AN ACTION AND NOT COPY-PASTED INTO EACH WORKFLOW.
+# `webclient-ci.yml` and `webclient-e2e.yml` both need a built engine on macOS,
+# both cache `packages/bridge/.venv`, and both fire on the same push/PR events.
+# They were written independently and used DIFFERENT cache keys —
+# `engine-venv-*` against a curated file list, and `pymol-venv-*` against
+# `hashFiles('packages/engine/**')`. The consequences were both bad:
+#
+#   * neither cache could ever serve the other, so every PR compiled PyMOL
+#     TWICE on macOS — the most expensive thing in this repo's CI;
+#   * `packages/engine/**` hashes all 1,574 engine files including the 900+ in
+#     `testing/`, which are neither compiled nor installed, so any edit to an
+#     upstream test invalidated a cache it cannot affect.
+#
+# One definition, one key, no drift. Anything that needs the engine calls this.
+name: engine-venv
+description: Build or restore the PyMOL venv at packages/bridge/.venv
+
+inputs:
+  python-version:
+    description: >-
+      The interpreter to build against. NOT optional in practice: a GitHub
+      macOS runner's default `python` is 3.14, PyMOL does not build on it
+      (upstream's own py314 branch is red on all three platforms), and
+      bootstrap only WARNS before failing later. The first real CI run died
+      exactly here.
+    required: false
+    default: '3.13'
+  cache-epoch:
+    description: Bump to invalidate every engine cache at once.
+    required: false
+    default: 'v1'
+
+outputs:
+  python:
+    description: The full x.y.z of the interpreter the venv was built from.
+    value: ${{ steps.ident.outputs.python }}
+  cache-hit:
+    description: 'true when the venv was restored rather than built.'
+    value: ${{ steps.engine-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    # Pin the interpreter BEFORE anything reads `python`. Without this the
+    # runner's default wins, which is 3.14 today.
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    # The venv symlinks this interpreter and the extension modules are
+    # ABI-tagged to it, so its exact version belongs in the cache key.
+    - name: identify the interpreter
+      id: ident
+      shell: bash
+      run: |
+        set -euo pipefail
+        full="$(python -c 'import sys;print("%d.%d.%d" % sys.version_info[:3])')"
+        echo "python=$full" >> "$GITHUB_OUTPUT"
+        echo "python-bin=$(command -v python)" >> "$GITHUB_OUTPUT"
+        echo "python $full at $(command -v python)"
+
+    # The set scripts/bootstrap.sh requires; it dies listing anything missing.
+    # catch2 is deliberately absent: only --testing=true needs it, and brew
+    # ships v3 while layerCTest wants v2.
+    - name: native deps (Homebrew)
+      shell: bash
+      run: |
+        brew install cmake libpng freetype glew glm netcdf msgpack-cxx libxml2
+        brew list --versions cmake libpng freetype glew glm netcdf msgpack-cxx libxml2
+
+    # bootstrap vendors rcsb/mmtf-cpp into packages/engine/.deps
+    # (TENMOL_DEPS_DIR) — NOT a top-level .deps, and NOT
+    # packages/engine/include/, which is upstream and must stay clean.
+    # Header-only and pinned to whatever master was on first fetch, hence the
+    # static key.
+    - name: cache vendored mmtf-cpp headers
+      uses: actions/cache@v4
+      with:
+        path: packages/engine/.deps
+        key: mmtf-cpp-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-epoch }}
+
+    # scripts/bootstrap.sh skips the PyMOL build when `import pymol` already
+    # works in the venv, so caching the venv IS caching the build.
+    #
+    # The key names everything that determines the binary, because a cache that
+    # serves an engine built from different sources is worse than no cache: it
+    # turns a compile error or a behaviour change into a green build. Hence
+    # every compiled and installed path plus the build backend, and NOT
+    # packages/engine/{test,testing,examples}/, which are neither.
+    #
+    # NO restore-keys, on purpose. A prefix fallback would restore an engine
+    # built from some other revision and bootstrap would then skip the build —
+    # precisely the failure this key exists to prevent. A miss must mean a
+    # rebuild.
+    - name: cache the built engine (packages/bridge/.venv)
+      id: engine-cache
+      uses: actions/cache@v4
+      with:
+        path: packages/bridge/.venv
+        key: >-
+          engine-venv-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-epoch }}-py${{ steps.ident.outputs.python }}-${{
+          hashFiles('packages/engine/setup.py',
+          'packages/engine/pyproject.toml',
+          'packages/engine/CMakeLists.txt',
+          'packages/engine/create_shadertext.py',
+          'packages/engine/_custom_build/**',
+          'packages/engine/layer*/**',
+          'packages/engine/ov/**',
+          'packages/engine/include/**',
+          'packages/engine/contrib/**',
+          'packages/engine/modules/**',
+          'packages/engine/data/**',
+          'packages/bridge/pyproject.toml',
+          'scripts/bootstrap.sh') }}
+
+    - name: bootstrap
+      shell: bash
+      env:
+        TENMOL_PYTHON: ${{ steps.ident.outputs.python-bin }}
+      run: |
+        echo "engine cache hit: ${{ steps.engine-cache.outputs.cache-hit || 'false' }}"
+        bash scripts/bootstrap.sh

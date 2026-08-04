@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Vite consumes src/ directly; this package is never built by tsc.
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    // The DOM lib comes from tsconfig.base.json. `types: []` keeps @types/node
+    // out: nothing here may touch a Node API, and `document` is always probed
+    // defensively so the package is usable under vitest's node environment.
+    "types": [],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "include": ["src/**/*.ts", "packages/engine/test/**/*.ts"]
+}

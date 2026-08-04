@@ -1,0 +1,228 @@
+# Linux offscreen GL validation for the web client bridge.
+#
+# The one thing docs/spikes/cross-platform-gl.md could not do for a
+# long time: actually RUN packages/bridge/tenmol_bridge/glcontext/egl.py. It is now run
+# for real, both in a local container (`bash scripts/test-gl-linux.sh`) and here
+# on the ubuntu runners below, which have no GPU and no X server -- the point.
+#
+# Mesa's EGL_MESA_platform_surfaceless + llvmpipe needs neither. It gives a
+# desktop OpenGL 4.x COMPATIBILITY context, which is what PyMOL requires:
+# packages/engine/layer1/ScenePicking.cpp:283,306 call glPushMatrix/glPopMatrix and :234,272
+# call glShadeModel, none of which exist in GLES.
+#
+# This workflow is KEPT rather than deleted because the claim was checked, not
+# assumed. `bash scripts/test-gl-linux.sh` was run to completion in a
+# debian:bookworm-slim container with no GPU, no X and no /dev/dri, and every
+# assertion held:
+#
+#   surfaceless / api=gl / desktopGL=True / ARB fbo entry points
+#   renderer   llvmpipe (LLVM 15.0.6, 128 bits)
+#   version    4.5 (Compatibility Profile) Mesa 22.3.6
+#   PyMOL      1tii.pdb, 5684 atoms, cartoon drawn in 163 ms, glGetError=0
+#   readback   13578 / 76800 pixels non-black through PixelReadback
+#   picking    3/3 clicks selected a CA atom through ScenePicking
+#
+# So the "no offscreen GL implementation for Linux" line a developer sees comes
+# from scripts/doctor.mjs, whose GL probe is a hard-coded CGL recipe with no
+# other branch. That is the DOCTOR's limitation. egl.py works.
+#
+# Separate from webclient-ci.yml on purpose: that one's real job is macOS/CGL,
+# this one is the Linux half of the cross-platform story and it is allowed to
+# be slow (it builds PyMOL from this tree).
+#
+# The validator itself lives in scripts/test-gl-linux.sh so that a developer
+# runs byte-for-byte what CI runs.
+name: webclient-gl-linux
+
+on:
+  push:
+    branches: [master, web-client, "wp-*"]
+    paths:
+      - "packages/bridge/tenmol_bridge/glcontext/**"
+      - "packages/bridge/tenmol_bridge/render/**"
+      # engine.py owns GL context setup and the GL-less fallback, so a
+      # regression there is exactly what this job exists to catch. It was
+      # missing from this filter, which meant the job would not run for it.
+      - "packages/bridge/tenmol_bridge/engine.py"
+      - "scripts/test-gl-linux.sh"
+      - "scripts/bootstrap.sh"
+      - ".github/workflows/webclient-gl-linux.yml"
+      - "packages/engine/layer0/**"
+      - "packages/engine/layer1/**"
+      - "packages/engine/layer5/**"
+      - "packages/engine/setup.py"
+  # Same list as the push trigger, deliberately. When it was the shorter one, a
+  # PR touching scripts/bootstrap.sh or layer1 skipped this check and the push
+  # that merged it ran it -- so the breakage was found on master rather than on
+  # the branch that caused it.
+  pull_request:
+    paths:
+      - "packages/bridge/tenmol_bridge/glcontext/**"
+      - "packages/bridge/tenmol_bridge/render/**"
+      # engine.py owns GL context setup and the GL-less fallback, so a
+      # regression there is exactly what this job exists to catch. It was
+      # missing from this filter, which meant the job would not run for it.
+      - "packages/bridge/tenmol_bridge/engine.py"
+      - "scripts/test-gl-linux.sh"
+      - "scripts/bootstrap.sh"
+      - ".github/workflows/webclient-gl-linux.yml"
+      - "packages/engine/layer0/**"
+      - "packages/engine/layer1/**"
+      - "packages/engine/layer5/**"
+      - "packages/engine/setup.py"
+  workflow_dispatch:
+
+# `github.event_name` is in the key on purpose: without it the push run
+# and the pull_request run for the same branch share a group and cancel
+# each other, which is why runs showed up as `cancelled` with no cause.
+concurrency:
+  group: gl-linux-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+env:
+  # Force the software rasteriser even if the runner image ever grows a GPU:
+  # we are validating the no-hardware path, so a GPU appearing would silently
+  # stop testing the thing this workflow exists to test.
+  LIBGL_ALWAYS_SOFTWARE: "1"
+  GALLIUM_DRIVER: llvmpipe
+
+jobs:
+  # -------------------------------------------------------------------------
+  # ~2 minutes: EGL, the FBO, glReadPixels and the thread/display rules.
+  # No PyMOL build, so this is the gate that must never go red.
+  # -------------------------------------------------------------------------
+  egl-surfaceless:
+    name: EGL surfaceless (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # Two Mesa generations. 22.04 ships Mesa 23.x, 24.04 ships Mesa 24.x;
+        # the surfaceless platform and EGL_OPENGL_API support differ between
+        # them often enough to be worth both.
+        os: [ubuntu-22.04, ubuntu-24.04]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Mesa (EGL + llvmpipe, no GPU, no X)
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            libegl1 libegl-mesa0 libgl1 libglx-mesa0 libgl1-mesa-dri \
+            libopengl0 libglvnd0 mesa-utils-bin
+
+      - name: what EGL/Mesa did we actually get
+        continue-on-error: true
+        run: |
+          echo "DISPLAY=${DISPLAY:-<unset>}  WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-<unset>}"
+          ls -la /dev/dri 2>&1 || echo "no /dev/dri (expected)"
+          dpkg -l | grep -E 'mesa|libegl|libglvnd' || true
+          eglinfo -B 2>&1 | head -40 || true
+
+      - name: egl.probe() -- diagnostics before any assertion
+        run: |
+          PYTHONPATH=packages/bridge python3 -c "
+          import json
+          from tenmol_bridge.glcontext import egl
+          print(json.dumps(egl.probe(), indent=2))"
+
+      - name: acceptance -- scripts/test-gl-linux.sh --native --quick
+        run: |
+          bash scripts/test-gl-linux.sh \
+            --native --quick \
+            --python "$(command -v python3)" \
+            --out "$RUNNER_TEMP/gl-out"
+
+  # -------------------------------------------------------------------------
+  # The real thing: build PyMOL from this tree, render a structure through the
+  # EGL FBO, read it back, and prove the pick pass works.
+  # -------------------------------------------------------------------------
+  egl-pymol:
+    name: EGL + a real PyMOL render
+    runs-on: ubuntu-24.04
+    # A PyMOL build plus the 1851-test bridge suite, which alone takes ~9
+    # minutes on a fast laptop. 60 was cutting it close.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Mesa + PyMOL build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            libegl1 libegl-mesa0 libgl1 libglx-mesa0 libgl1-mesa-dri \
+            libopengl0 libglvnd0 mesa-utils-bin \
+            cmake libfreetype6-dev libglew-dev libglm-dev libmsgpack-dev \
+            libnetcdf-dev libpng-dev libxml2-dev
+
+      # scripts/bootstrap.sh vendors these into packages/engine/.deps (its
+      # DEPS_DIR default). The pre-monorepo path `.deps` is where nothing has
+      # been written since the reorg, so that cache never hit and mmtf-cpp was
+      # re-cloned on every run. The key is distinct from any older one on
+      # purpose: same key + different contents would restore into the wrong
+      # place depending on which workflow populated it first.
+      - name: cache vendored mmtf-cpp headers
+        uses: actions/cache@v4
+        with:
+          path: packages/engine/.deps
+          key: mmtf-cpp-${{ runner.os }}-engine-v2
+
+      - name: bootstrap (builds PyMOL from this tree into packages/bridge/.venv)
+        run: bash scripts/bootstrap.sh --skip-node --python "$(command -v python)"
+
+      - name: the build did not dirty the tree
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain)" || {
+            echo "::error::the PyMOL build dirtied the working tree"
+            exit 1
+          }
+
+      - name: acceptance -- scripts/test-gl-linux.sh --native
+        run: |
+          bash scripts/test-gl-linux.sh --native --out "$RUNNER_TEMP/gl-out"
+
+      - name: what the EGL context rendered
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-egl-render
+          path: ${{ runner.temp }}/gl-out/*.png
+          if-no-files-found: warn
+
+      # The GL-RELEVANT tests, not the whole suite.
+      #
+      # This job's question is "does the EGL surfaceless path still work on a
+      # box with no GPU and no X server". The full suite is webclient-ci.yml's
+      # macOS job, and running it here a second time bought nothing and cost
+      # two platform-dependent failures:
+      #
+      #   test_menus.py::test_generated_typescript_matches_a_fresh_harvest
+      #     — asserts the committed menudata.ts equals a FRESH harvest of
+      #       _gui.py. Verified identical on macOS; _gui.py evidently branches
+      #       on what is importable, so the same file cannot match on both.
+      #   test_colors.py::test_web_client_can_build_the_palette_over_the_wire
+      #     — "no reply to frame 134", i.e. a socket timeout on a slower box.
+      #
+      # Neither has anything to do with GL. Scope the job to what it is named
+      # after; a green job that answers the wrong question is worse than none.
+      - name: bridge pytest suite (the GL-dependent tests)
+        # `-k 'not benchmark'`: two of these assert a WALL-CLOCK BUDGET
+        # (median frame time <= 6 ms, measured on an M4 Max with a hardware GL
+        # context). This runner has no GPU at all — llvmpipe software
+        # rasterisation is the entire point of the job — and it measured
+        # 11.392 ms. A performance budget on a software rasteriser tests the
+        # runner, not the code, and would be red for ever.
+        run: |
+          packages/bridge/.venv/bin/python -m pytest -q -k 'not benchmark' \
+            packages/bridge/tests/test_modeg.py \
+            packages/bridge/tests/test_modeg_lines.py \
+            packages/bridge/tests/test_modeg_objects.py \
+            packages/bridge/tests/test_render.py \
+            packages/bridge/tests/test_picking.py \
+            packages/bridge/tests/test_geometry_exports.py

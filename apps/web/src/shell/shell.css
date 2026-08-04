@@ -1,0 +1,386 @@
+/*
+ * Shell chrome. Everything shared (the PyMOL palette, .shell, .menubar,
+ * .internal-gui, .extgui, .statusbar, .objrow, .feedback, .cmdline) lives in
+ * src/styles/global.css, which is owned by another work package; this file adds
+ * only what the shell introduces and never redefines a token.
+ *
+ * Colours here that are not from global.css are all derived from the same
+ * PyMOL source triples documented at the top of it.
+ */
+
+/* Feature slots ------------------------------------------------------- */
+
+/*
+ * The scene rectangle. `OrthoReshape` (`packages/engine/layer1/Ortho.cpp:2419,2433`) takes the
+ * sequence viewer's height OUT of it when `seq_view_overlay` is 0
+ * (`sceneBottom += seqHeight` / `sceneTop = seqHeight`), and the padding below
+ * is how that arrives here.
+ *
+ * PADDING, not a shorter canvas: `.seqview` is absolutely positioned, and an
+ * absolutely positioned box resolves `top`/`bottom` against its containing
+ * block's PADDING box — so the strip still sits flush against the edge and the
+ * band it occupies is exactly the space the canvas gave up. `.viewport` is
+ * `flex: 1` inside, so it takes what is left with no arithmetic of its own.
+ *
+ * The two variables are written by `features/seqview/reserve.ts` and default to
+ * 0, which is the overlay case AND the case where no strip is mounted at all.
+ */
+.shell__viewport {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  padding-top: var(--pm-seq-reserve-top, 0px);
+  padding-bottom: var(--pm-seq-reserve-bottom, 0px);
+  background: var(--pm-bg-viewport);
+  overflow: hidden;
+}
+
+.feature-absent {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 22px;
+  padding: 6px 8px;
+  color: #4a4f55;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.feature-absent__owner {
+  padding: 0 4px;
+  border: 1px solid #2b2f33;
+  color: #5b6167;
+}
+
+.feature-loading {
+  padding: 6px 8px;
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.feature-failed {
+  padding: 8px;
+  border: 1px solid #5a2222;
+  background: #241416;
+  color: #ff9c9c;
+  font-family: var(--pm-font-mono);
+  font-size: 10.5px;
+}
+
+.feature-failed__title {
+  color: #ff6b6b;
+  margin-bottom: 3px;
+}
+
+.feature-failed__message {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.feature-failed__retry {
+  margin-top: 6px;
+  padding: 1px 8px;
+  border: 1px solid #5a2222;
+  color: #ffc9c9;
+}
+
+/* Shell chrome in the menu-bar strip ----------------------------------- */
+
+.shell-chrome__note {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: #5b6167;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.shell-chrome__warn {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: #ffb84d;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.menubar__item {
+  display: flex;
+  align-items: center;
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  white-space: pre;
+}
+
+/* Status bar additions -------------------------------------------------- */
+
+.statusbar__sep {
+  color: #3a3e42;
+}
+
+.statusbar__text--dim {
+  color: #6f757a;
+}
+
+.statusbar__dot--unauthorized,
+.statusbar__dot--forbidden {
+  background: #ff8c1a;
+}
+
+.statusbar__progress {
+  position: relative;
+  display: inline-block;
+  width: 90px;
+  height: 7px;
+  background: #0d0f10;
+  border: 1px solid var(--pm-line);
+}
+
+.statusbar__progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--pm-accent);
+}
+
+/* Connection overlay ---------------------------------------------------- */
+
+.connpanel {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 11, 12, 0.72);
+}
+
+.connpanel__box {
+  width: 560px;
+  max-width: calc(100vw - 40px);
+  padding: 16px 18px;
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-edge);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+}
+
+.connpanel__title {
+  margin-bottom: 10px;
+  color: var(--pm-mouse-mode);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.connpanel__facts {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 2px 10px;
+  margin: 0 0 10px;
+}
+
+.connpanel__facts dt {
+  color: #6f757a;
+}
+
+.connpanel__facts dd {
+  margin: 0;
+  color: var(--pm-text-bright);
+  word-break: break-all;
+}
+
+.connpanel__hint {
+  margin: 0 0 10px;
+  color: var(--pm-text-dim);
+  line-height: 1.5;
+}
+
+.connpanel__hint code {
+  padding: 0 3px;
+  background: #0d0f10;
+  border: 1px solid var(--pm-line);
+  color: var(--pm-text);
+}
+
+.connpanel__row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.connpanel__input {
+  flex: 1;
+  min-width: 0;
+  height: 19px;
+  padding: 0 5px;
+  background: #0d0f10;
+  border: 1px solid var(--pm-line);
+  color: var(--pm-text-bright);
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  outline: none;
+}
+
+.connpanel__input:focus {
+  border-color: var(--pm-accent);
+}
+
+.connpanel__health {
+  margin-top: 10px;
+  padding: 6px;
+  background: #0d0f10;
+  border: 1px solid var(--pm-line);
+  color: var(--pm-text);
+  word-break: break-word;
+}
+
+.quickbutton:disabled {
+  color: #55595d;
+  background: #24272a;
+}
+
+/* Internal GUI column: the OrthoLayoutPanel stack order ------------------
+ *
+ * NOT HERE, ON PURPOSE. `OrthoLayoutPanel` (packages/engine/layer1/Ortho.cpp:2261-2340) stacks
+ * bottom-up Control, ButMode, Wizard, Executive, so top-down the column is
+ * Executive, Wizard, ButMode, Control — but the ButMode block is PORTALLED in
+ * by `features/shortcuts` (the registry is frozen and declares no slot for it)
+ * and lands last. The shell fixes the order by stamping `style.order` from
+ * `INTERNAL_GUI_ORDER` (`shell/orthoPanel.ts`). A rule here would work in the
+ * browser and be untestable: vitest stubs CSS imports and jsdom implements no
+ * computed `order`.
+ */
+
+/* External GUI dock ------------------------------------------------------
+ *
+ * `QDockWidget` with `toggle_ext_window_dockable`. Four presentations:
+ * docked bottom (the default), docked left/right (Qt's `BottomToTop`
+ * re-orientation), floating, hidden (not rendered at all).
+ */
+
+.extgui {
+  flex-direction: column;
+}
+
+.extgui__body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.extgui__titlebar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-edge);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+  cursor: default;
+  user-select: none;
+}
+
+.extgui__title {
+  color: var(--pm-text-dim);
+  letter-spacing: 0.06em;
+}
+
+.extgui__spacer {
+  flex: 1;
+}
+
+.extgui__btn {
+  padding: 0 5px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font: inherit;
+  font-size: 10px;
+  line-height: 12px;
+  cursor: pointer;
+}
+
+.extgui__btn.is-on {
+  background: var(--pm-btn-pressed);
+  color: var(--pm-text-bright);
+}
+
+/* Docked left/right: Qt flips the box layout to BottomToTop and drops the
+ * quickbutton stretch (pymol_qt_gui.py:196-204). The console and the
+ * quickbutton column are DOM siblings in that order, so BottomToTop is
+ * column-reverse — quickbuttons above the console, exactly as Qt renders it. */
+.extgui.extgui--side {
+  width: 320px;
+  min-height: 0;
+  border-top: none;
+}
+
+.extgui.extgui--left {
+  border-right: 1px solid var(--pm-edge);
+}
+
+.extgui.extgui--right {
+  border-left: 1px solid var(--pm-edge);
+}
+
+.extgui--side .extgui__body {
+  flex-direction: column-reverse;
+}
+
+.extgui.extgui--float {
+  position: fixed;
+  right: 24px;
+  bottom: 48px;
+  z-index: 300;
+  width: 640px;
+  max-width: calc(100vw - 48px);
+  height: 260px;
+  min-height: 0;
+  border: 1px solid var(--pm-edge);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+}
+
+/* Overlay panels ---------------------------------------------------------
+ * Closed until opened. Rendering every installed overlay unconditionally put
+ * ten panels in the document flow and pushed the viewport off screen.
+ */
+
+.overlay-launcher {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  gap: 2px;
+  padding: 2px 4px;
+  background: var(--pm-panel-alt);
+  border-top: 1px solid var(--pm-edge);
+  border-left: 1px solid var(--pm-edge);
+}
+
+.overlay-launcher__btn {
+  padding: 1px 7px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.overlay-launcher__btn.is-on {
+  background: var(--pm-btn-pressed);
+  color: var(--pm-text-bright);
+}
+
+

@@ -1,0 +1,29 @@
+{
+  "name": "@tenmol/protocol",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Wire protocol (types + constants) shared by the tenmol web client and the PyMOL bridge",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./envelope": "./src/envelope.ts",
+    "./errors": "./src/errors.ts",
+    "./codec": "./src/codec.ts",
+    "./geometry": "./src/geometry.ts",
+    "./topics": "./src/topics/index.ts",
+    "./topics/*": "./src/topics/*.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "python"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",
+    "test": "cd ../.. && node node_modules/vitest/vitest.mjs run packages/protocol/test"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

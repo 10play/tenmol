@@ -1,0 +1,134 @@
+/* Draw/Ray dialog. Shares the panel tokens from src/styles/global.css. */
+
+.render {
+  min-width: 340px;
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font-size: 11px;
+}
+
+.render__title {
+  padding: 3px 6px;
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+}
+
+.render__body {
+  padding: 8px;
+}
+
+.render__grid {
+  display: grid;
+  grid-template-columns: max-content 78px max-content 92px;
+  gap: 4px 6px;
+  align-items: center;
+}
+
+.render__grid input,
+.render__grid select {
+  background: var(--pm-bg);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font: inherit;
+  font-family: var(--pm-font-mono);
+  padding: 1px 3px;
+  width: 100%;
+}
+
+.render__unit,
+.render__aspect {
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+}
+
+.render__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.render__path {
+  flex: 1;
+  min-width: 160px;
+  background: var(--pm-bg);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font-family: var(--pm-font-mono);
+  font-size: inherit;
+  padding: 1px 3px;
+}
+
+.render__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.render__btn {
+  padding: 2px 12px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.render__btn--primary {
+  background: var(--pm-btn-pressed);
+}
+
+.render__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.render__note {
+  margin: 0 0 8px;
+  color: var(--pm-text-dim);
+  line-height: 1.45;
+}
+
+.render__status {
+  padding: 3px 6px;
+  border-top: 1px solid var(--pm-edge);
+  background: var(--pm-panel-alt);
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+}
+
+/* Collapsed state: a tab, not a panel. The `viewport` region renders inline, so
+   an always-expanded dialog permanently costs viewport width. */
+.render__tab {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 5;
+  padding: 1px 8px;
+  background: var(--pm-btn-enabled);
+  border: 1px solid var(--pm-edge);
+  color: var(--pm-text-dim);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.render__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.render__collapse {
+  padding: 0 2px;
+  background: transparent;
+  border: 0;
+  color: var(--pm-text-dim);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}

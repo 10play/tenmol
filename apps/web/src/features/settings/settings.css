@@ -1,0 +1,482 @@
+/*
+ * Settings overlay. Colours come from the shell's variables (src/styles/global.css)
+ * so this looks like PyMOL's own panels, not like a web form.
+ */
+
+.setlaunch {
+  position: absolute;
+  top: 26px;
+  right: 8px;
+  z-index: 40;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  font-family: var(--pm-font-ui);
+  font-size: var(--pm-fs);
+}
+
+.setlaunch button {
+  background: var(--pm-panel-alt);
+  color: var(--pm-text);
+  border: 1px solid var(--pm-line);
+  border-radius: 2px;
+  padding: 1px 7px;
+  cursor: pointer;
+}
+
+.setlaunch button:hover {
+  color: var(--pm-text-bright);
+  border-color: var(--pm-accent);
+}
+
+.setlaunch__state {
+  color: var(--pm-text-dim);
+  font-size: 10px;
+}
+
+.setlaunch__state--error {
+  color: #ff8080;
+}
+
+.setwin {
+  position: absolute;
+  top: 52px;
+  right: 8px;
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  /* The Qt dialog's minimum is 400x500 (advanced_settings_gui.py:20). */
+  width: 620px;
+  min-width: 400px;
+  height: 560px;
+  min-height: 500px;
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-line);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 55%);
+  font-family: var(--pm-font-ui);
+  font-size: var(--pm-fs);
+  color: var(--pm-text);
+}
+
+.setwin[data-window='menu'] {
+  width: 380px;
+}
+
+.setwin__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 20px;
+  padding: 0 4px 0 8px;
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-edge);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pm-text-dim);
+}
+
+.setwin__title button {
+  background: none;
+  border: none;
+  color: var(--pm-text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.setwin__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.setwin__status {
+  padding: 12px;
+  color: var(--pm-text-dim);
+}
+
+/* --- the menu-data renderer --------------------------------------------- */
+
+.setmenu__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 10px;
+}
+
+.setmenu__list[data-depth='0'] {
+  padding: 4px 0;
+}
+
+.setmenu__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 1px 6px;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.setmenu__row:hover:not(:disabled) {
+  background: var(--pm-panel-alt);
+  color: var(--pm-text-bright);
+}
+
+.setmenu__row:disabled {
+  color: #5b6167;
+  cursor: not-allowed;
+}
+
+.setmenu__row.is-on {
+  color: var(--pm-text-bright);
+}
+
+.setmenu__mark {
+  display: inline-block;
+  width: 12px;
+  color: var(--pm-accent);
+  font-size: 10px;
+}
+
+.setmenu__sep {
+  height: 1px;
+  margin: 3px 8px;
+  background: var(--pm-line);
+}
+
+/* A radio group is markup, not layout: no box, no indent. */
+.setmenu__group,
+.setmenu__list--radios {
+  display: contents;
+}
+
+.setmenu__accel {
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--pm-text-dim);
+  font-size: 10px;
+}
+
+.setmenu__row--dynamic,
+.setmenu__row--error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 6px;
+  color: #5b6167;
+}
+
+.setmenu__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--pm-line);
+}
+
+.setmenu__tab {
+  padding: 2px 8px;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--pm-text-dim);
+  font: inherit;
+  cursor: pointer;
+}
+
+.setmenu__tab.is-on {
+  border-color: var(--pm-line);
+  background: var(--pm-panel-alt);
+  color: var(--pm-text-bright);
+}
+
+.setmenu__source {
+  margin-left: auto;
+  color: var(--pm-text-dim);
+  font-size: 10px;
+}
+
+/* --- the advanced table --------------------------------------------------
+ *
+ * Prefixed `setadv__`, not `advset__`: `features/dialogs/dialogs.css` already
+ * owns `.advset__row` (an absolutely-positioned flex row) and CSS is one global
+ * namespace, so the two stylesheets silently fought and whichever loaded last
+ * stacked every row of this table at the same y. MEASURED, not theorised —
+ * `getBoundingClientRect()` on six consecutive rows returned an identical
+ * `top`. Every class this file introduces is prefixed with `set`.
+ * ------------------------------------------------------------------------- */
+
+.setadv {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+}
+
+.setadv__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--pm-line);
+}
+
+.setadv__bar input,
+.setadv__bar select {
+  background: var(--pm-bg);
+  color: var(--pm-text);
+  border: 1px solid var(--pm-line);
+  font: inherit;
+  padding: 1px 4px;
+}
+
+.setadv__filter,
+.setadv__scope label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--pm-text-dim);
+}
+
+.setadv__scope {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.setadv__scope input[type='number'] {
+  width: 48px;
+}
+
+.setadv__sel {
+  width: 130px;
+}
+
+.setadv__overrides {
+  border-top: 1px solid var(--pm-line);
+  padding: 3px 6px;
+  color: var(--pm-text-dim);
+  font-size: 10px;
+  max-height: 44px;
+  overflow: auto;
+}
+
+.setadv__count {
+  margin-left: auto;
+  color: var(--pm-text-dim);
+}
+
+.setadv__head,
+.setadv__row {
+  display: grid;
+  grid-template-columns: 1fr 150px 92px 130px 24px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+}
+
+.setadv__head {
+  height: 18px;
+  color: var(--pm-text-dim);
+  border-bottom: 1px solid var(--pm-line);
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.setadv__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.setadv__row {
+  border-bottom: 1px solid rgb(52 56 60 / 35%);
+}
+
+.setadv__row.is-locked {
+  opacity: 0.55;
+}
+
+.setadv__row input[type='text'] {
+  width: 100%;
+  background: var(--pm-bg);
+  color: var(--pm-text);
+  border: 1px solid transparent;
+  font: inherit;
+  padding: 0 3px;
+}
+
+.setadv__row input[type='text']:focus {
+  border-color: var(--pm-accent);
+  outline: none;
+}
+
+.setadv__c-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setadv__c-level,
+.setadv__c-default {
+  color: var(--pm-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setadv__hint {
+  color: #6f767c;
+  font-style: normal;
+}
+
+.setadv__c-reset button {
+  background: none;
+  border: none;
+  color: var(--pm-text-dim);
+  cursor: pointer;
+}
+
+.setadv__c-reset button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.setadv__error {
+  grid-column: 1 / -1;
+  color: #ffb066;
+  font-size: 10px;
+}
+
+.setadv__foot {
+  border-top: 1px solid var(--pm-line);
+  padding: 3px 6px;
+  color: var(--pm-text-dim);
+  font-size: 10px;
+}
+
+.setadv__warn {
+  color: #ffb066;
+}
+
+/* --- lighting ------------------------------------------------------------ */
+
+.lighting {
+  padding: 6px 10px 12px;
+}
+
+.lighting__presets {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding-bottom: 6px;
+}
+
+.lighting__presets-label {
+  color: #ff8080;
+}
+
+.lighting__presets button {
+  background: var(--pm-panel-alt);
+  color: var(--pm-text);
+  border: 1px solid var(--pm-line);
+  padding: 1px 8px;
+  cursor: pointer;
+}
+
+.lighting__section {
+  border: none;
+  border-top: 1px solid var(--pm-line);
+  margin: 0;
+  padding: 4px 0;
+}
+
+.lighting__section legend {
+  color: #8080ff;
+  font-size: 10px;
+  padding: 0 4px 0 0;
+}
+
+.lighting__row {
+  display: grid;
+  grid-template-columns: 190px 1fr 70px;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 0;
+}
+
+.lighting__row label {
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  font-size: 10.5px;
+}
+
+.lighting__num {
+  background: var(--pm-bg);
+  color: var(--pm-text);
+  border: 1px solid var(--pm-line);
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  padding: 0 3px;
+  width: 100%;
+}
+
+.lighting__note {
+  color: var(--pm-text-dim);
+  font-size: 10px;
+  line-height: 1.4;
+  margin: 8px 0 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Session lifecycle — File ▸ Reinitialize, and the PSE blacklist mark
+ * ------------------------------------------------------------------ */
+
+.setadv__reinit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border-top: 1px solid var(--pm-line);
+  font-family: var(--pm-font-mono);
+  font-size: 10px;
+}
+
+.setadv__reinit-label {
+  color: var(--pm-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.setadv__reinit button {
+  padding: 1px 7px;
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--pm-line);
+  border-radius: 2px;
+  color: var(--pm-text);
+  cursor: pointer;
+}
+
+.setadv__reinit button.is-armed {
+  border-color: #b04a4a;
+  color: #ffb0b0;
+}
+
+.setadv__nopse {
+  margin-left: 5px;
+  padding: 0 3px;
+  border: 1px solid var(--pm-line);
+  border-radius: 2px;
+  color: #6b7178;
+  font-size: 8px;
+  font-style: normal;
+  vertical-align: middle;
+}

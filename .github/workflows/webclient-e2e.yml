@@ -1,0 +1,272 @@
+# End-to-end: the 21 Playwright specs in apps/web/e2e, against a real bridge,
+# a real PyMOL and a real headless Chromium.
+#
+# Nothing else in CI runs them. webclient-ci.yml proves the tree builds and the
+# bridge answers /healthz; it never opens the app. Every regression that only
+# shows up when the browser talks to PyMOL -- a wire-format change, a leaked
+# selection, a panel that stops mounting -- was invisible to CI until this file.
+#
+#
+# WHY macOS AND NOT ubuntu
+#
+# Not because of GL. Linux offscreen GL works: `bash scripts/test-gl-linux.sh`
+# was run to completion in a container with no GPU, no X and no /dev/dri, and
+# EGL surfaceless + llvmpipe gave a 4.5 compatibility context that PyMOL drew
+# 5684 atoms into and picked through. .github/workflows/webclient-gl-linux.yml
+# is the job that keeps that honest.
+#
+# The blocker is the harness. apps/web/e2e/harness.mjs findChrome() looks in
+#
+#     ~/Library/Caches/ms-playwright/<build>/chrome-headless-shell-mac-arm64/
+#
+# and has no other branch. playwright-core ships four layouts
+# (mac-arm64, mac-x64, linux64, win64), so on ubuntu that directory does not
+# exist and the harness exits 2 -- "this machine cannot run the suite" -- before
+# a single spec runs. macOS arm64 is therefore the only runner the suite can
+# execute on today, and macos-15 is pinned rather than macos-latest because
+# macos-13 is x86_64 and would break the same way.
+#
+# Making findChrome() platform-aware is a small change to harness.mjs and would
+# let this whole job move to ubuntu-latest at roughly a tenth of the cost. It is
+# the single highest-value follow-up here, and it is not made in this file
+# because harness.mjs is not this file.
+#
+#
+# WHY THE SUITE RUNS TWICE
+#
+# The specs need TWO different things from the runner and they fail differently:
+#
+#   * the GL-free spec needs no server GL at all -- Mode G renders in the
+#     browser -- so it passes on any runner where the app and the bridge are
+#     healthy. It is the gate that says "the product works".
+#   * the other twenty ride on a CGL context, which needs a window server the
+#     runner may not have. webclient-ci.yml already treats CGL as fallible.
+#
+# Measured, not guessed. `TENMOL_BRIDGE_NO_GL=1 node apps/web/e2e/run.mjs` on a
+# machine that DOES have GL -- i.e. a simulated runner with no window server --
+# scores 17/21, and the four failures are always these:
+#
+#   the bridge reports a running PyMOL with a GL context   (state=headless)
+#   object rows: the six modifier gestures reach PyMOL (row 98)
+#   the internal-gui column keeps the object list reachable
+#   seq_view_overlay 0 shrinks the scene instead of covering it (row 341)
+#
+# The GL-free spec passes. So a GL outage on the runner has a fixed, nameable
+# signature and looks nothing like a product regression -- provided the log says
+# which one it was, which is what the preflight step below is for.
+#
+# Both runs share one checkout and one venv, so the second costs seconds; the
+# PyMOL build dominates everything.
+#
+#
+# ONE BRIDGE, ORDER-DEPENDENT SPECS
+#
+# run.mjs boots ONE stack for all 21 specs and PyMOL session state carries
+# between them (apps/web/e2e/README.md, "Shared backend state"). Do not split
+# this into a matrix and do not shard it: the suite is only meaningful run whole
+# and in order.
+name: webclient-e2e
+
+on:
+  push:
+    branches: [master, web-client, "wp-*"]
+    paths-ignore: ["docs/**", "**/*.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "**/*.md"]
+  workflow_dispatch:
+
+# `github.event_name` is in the key on purpose: without it the push run
+# and the pull_request run for the same branch share a group and cancel
+# each other, which is why runs showed up as `cancelled` with no cause.
+concurrency:
+  group: webclient-e2e-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+env:
+  PNPM_VERSION: 9.15.4
+  NODE_VERSION: "22"
+  # PyMOL does not build on 3.14, which is the runner default.
+  PYTHON_VERSION: "3.13"
+  # Must match webclient-ci.yml: the two share one engine cache via
+  # .github/actions/engine-venv, and a different epoch would split it.
+  CACHE_EPOCH: v1
+
+jobs:
+  e2e:
+    name: 21 specs (real PyMOL + real Chromium)
+    # arm64 is mandatory -- see the header. Do not relax to macos-latest.
+    runs-on: macos-15
+    timeout-minutes: 75
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # Build or restore the engine. Shared with webclient-ci.yml so the two
+      # cannot drift onto different cache keys and compile PyMOL twice per PR
+      # — which is what they did. See .github/actions/engine-venv.
+      - name: engine venv
+        id: engine
+        uses: ./.github/actions/engine-venv
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache-epoch: ${{ env.CACHE_EPOCH }}
+
+      - name: cache playwright's chrome-headless-shell
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      # `playwright-core install` (not `npx playwright install`, which would
+      # download a whole second package) puts the shell exactly where
+      # findChrome() looks. The harness takes the newest build present, so an
+      # older cached one alongside is harmless.
+      - name: chrome-headless-shell
+        run: |
+          pnpm exec playwright-core install chromium-headless-shell
+          ls -d ~/Library/Caches/ms-playwright/chromium_headless_shell-*
+
+      # --skip-node because pnpm install already ran above, under the cache.
+      - name: what the venv ended up with
+        env:
+          VENV_CACHE_HIT: ${{ steps.engine.outputs.cache-hit }}
+        run: |
+          packages/bridge/.venv/bin/python -c \
+            "import pymol; print(pymol.get_version_message())"
+          echo "venv cache hit: ${VENV_CACHE_HIT:-false}"
+
+      # THE TRIAGE STEP. If the suite goes red, this is the first thing to read:
+      # it says whether the runner had a GL context at all. Deliberately not
+      # fatal -- a GL-less runner is a real, supported configuration (the bridge
+      # logs it and keeps serving, engine.py:478) and the GL-free gate below is
+      # expected to pass anyway.
+      - name: GL preflight -- did CGL come up on this runner?
+        continue-on-error: true
+        run: |
+          bash scripts/dev-bridge.sh --port 8765 > bridge-preflight.log 2>&1 &
+          for _ in $(seq 1 90); do
+            sleep 1
+            if curl -sf --max-time 2 http://127.0.0.1:8765/healthz -o healthz.json; then break; fi
+          done
+          # Stop it here, not at the end of the step: everything below reads the
+          # file, and a `set -e` abort in between would otherwise leave a PyMOL
+          # burning a core for the rest of the job.
+          pkill -f "tenmol_bridge --port 8765" || true
+          if [ ! -s healthz.json ]; then
+            echo "::warning::the preflight bridge never answered /healthz -- see bridge-preflight.log"
+            tail -n 40 bridge-preflight.log || true
+            exit 1
+          fi
+          python3 - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
+          import json
+          h = json.load(open("healthz.json"))
+          gl = h.get("gl") or {}
+          print("### GL preflight\n")
+          print("| field | value |\n| --- | --- |")
+          for k in ("state", "pymolVersion"):
+              print("| %s | `%s` |" % (k, h.get(k)))
+          for k in ("available", "backend", "renderer", "version", "reason"):
+              if k in gl:
+                  print("| gl.%s | `%s` |" % (k, gl[k]))
+          print()
+          print("GL available: **%s**" % bool(gl.get("available")))
+          PY
+
+      # The gate that is platform-independent: Mode G renders in the browser and
+      # the server never draws. Runs first so that "the app is broken" and "this
+      # runner has no GL" are separated before the big run muddles them.
+      - name: e2e -- the GL-free spec
+        env:
+          # The runner reports `Apple Software Renderer` and shares its CPU;
+          # the waits in smoke.e2e.mjs were tuned on an M4 Max. Five specs
+          # failed on the first real run, all with 'the action did not take
+          # effect' messages. The brittle assertions now poll, and this
+          # scales what is still a fixed wait.
+          TENMOL_E2E_SCALE: '3'
+        run: |
+          set -o pipefail
+          set +e
+          node apps/web/e2e/run.mjs --loud -t 'GL-free' 2>&1 | tee e2e-glfree.log
+          status=$?
+          set -e
+          if [ "$status" = 2 ]; then
+            echo "::error::the e2e stack could not start (exit 2) -- an environment failure, not a regression. See e2e-glfree.log in the artifact."
+          elif [ "$status" != 0 ]; then
+            echo "::error::the GL-free spec failed. This one needs NO server GL, so it is a real product regression rather than a runner problem."
+          fi
+          exit "$status"
+
+      # --loud makes the harness inherit the bridge's and vite's stdio
+      # (harness.mjs:146), so the tee'd file IS the bridge log -- there is no
+      # separate one to collect. It also makes run.mjs print stack traces for
+      # infrastructure errors.
+      #
+      # Exit codes are distinct on purpose (apps/web/e2e/run.mjs:12):
+      #   1 = a spec failed, the product is broken
+      #   2 = the stack never started, this runner cannot run the suite
+      # Collapsing them into "red" is how a missing chromium gets mistaken for a
+      # regression, so they are annotated separately.
+      - name: e2e -- all 21 specs
+        env:
+          # The runner reports `Apple Software Renderer` and shares its CPU;
+          # the waits in smoke.e2e.mjs were tuned on an M4 Max. Five specs
+          # failed on the first real run, all with 'the action did not take
+          # effect' messages. The brittle assertions now poll, and this
+          # scales what is still a fixed wait.
+          TENMOL_E2E_SCALE: '3'
+        run: |
+          set -o pipefail
+          set +e
+          node apps/web/e2e/run.mjs --loud 2>&1 | tee e2e.log
+          status=$?
+          set -e
+
+          if grep -q '(retried)' e2e.log; then
+            echo "::warning::a spec only passed on its second attempt -- see e2e.log for '(retried)'"
+          fi
+
+          # NOT `tail`: under --loud the last forty lines of this file are
+          # uvicorn's shutdown chatter, not the results. Pull the runner's own
+          # lines instead -- the per-spec verdicts, the indented detail line
+          # under a failure, and the final tally.
+          {
+            echo '### e2e'
+            echo '```'
+            grep -E '^ +(ok|FAIL|ERROR) |^ {8}[^ ]|^e2e: ' e2e.log || echo '(no result lines -- see the artifact)'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          case "$status" in
+            0) echo "e2e: all specs passed" ;;
+            2)
+              echo "::error::the e2e stack could not start on this runner (exit 2)."
+              echo "::error::That is an environment failure, not a regression: no venv, no PyMOL, or no cached chrome-headless-shell."
+              exit 2
+              ;;
+            *)
+              echo "::error::e2e specs failed (exit $status). Check the GL preflight step first: if it reported gl.available=false, the GL-dependent specs are expected to fail and the GL-free gate above is the real signal."
+              exit "$status"
+              ;;
+          esac
+
+      - name: keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: |
+            e2e.log
+            e2e-glfree.log
+            bridge-preflight.log
+            healthz.json
+          if-no-files-found: warn
+          retention-days: 14

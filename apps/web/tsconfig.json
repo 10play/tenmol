@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Vite consumes src/ directly and the workspace packages are consumed as
+    // TypeScript source, so this app is never emitted by tsc.
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+
+    // No "node": nothing in src/ or vite.config.ts touches a Node API.
+    "types": ["vite/client"],
+
+    // Stricter than the base, because the shell is all UI code.
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "include": ["src", "vite.config.ts"]
+}

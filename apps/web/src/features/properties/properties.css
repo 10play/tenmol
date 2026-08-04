@@ -1,0 +1,128 @@
+/* Properties Inspector (WP-22). */
+
+.props {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 100%;
+  outline: none;
+}
+
+.props__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+
+.props__head label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.props__head input[type='number'] {
+  width: 68px;
+  font: inherit;
+}
+
+.props__busy {
+  opacity: 0.6;
+}
+
+/* The pk1 follow poll's switch. Small, but it must be visible: it is the only
+   thing on screen that says the panel is talking to the engine on a timer. */
+.props__follow {
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.props__follow input {
+  margin: 0;
+}
+
+.props__error {
+  color: #a11;
+  font-size: 11px;
+  white-space: pre-wrap;
+}
+
+.props__tree {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid #c8c8c8;
+  background: #fff;
+  padding: 3px 4px;
+}
+
+.props__section-label {
+  font-weight: 600;
+  font-size: 11px;
+  margin: 4px 0 2px;
+}
+
+.props__group {
+  margin-left: 10px;
+}
+
+.props__group-label {
+  font-size: 11px;
+  opacity: 0.75;
+  margin: 3px 0 1px;
+}
+
+.props__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+  padding: 1px 2px;
+  border-radius: 2px;
+}
+
+.props__row.is-selected {
+  background: #d6e6ff;
+}
+
+.props__key {
+  width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font:
+    11px ui-monospace,
+    monospace;
+}
+
+.props__value {
+  flex: 1;
+  min-width: 0;
+  font:
+    11px ui-monospace,
+    monospace;
+  border: 1px solid #d5d5d5;
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+
+.props__ro {
+  flex: 1;
+  font:
+    11px ui-monospace,
+    monospace;
+  opacity: 0.75;
+}
+
+.props__unavailable {
+  flex: 1;
+  font-size: 10.5px;
+  color: #a06000;
+  cursor: help;
+}
+
+.props__empty {
+  margin-left: 10px;
+  font-size: 11px;
+  opacity: 0.5;
+}

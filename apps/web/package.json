@@ -1,0 +1,27 @@
+{
+  "name": "@tenmol/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PyMOL front-end as a React application shell (local desktop replacement).",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tenmol/client": "workspace:*",
+    "@tenmol/protocol": "workspace:*",
+    "@tenmol/stores": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

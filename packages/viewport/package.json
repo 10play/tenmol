@@ -1,0 +1,36 @@
+{
+  "name": "@tenmol/viewport",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The tenmol 3D viewport: Mode P (server-rendered pixels) and Mode G (three.js drawing PyMOL's own geometry), input forwarding, camera and resize negotiation",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./input": "./src/input/index.ts",
+    "./modeP": "./src/modeP/index.ts",
+    "./modeG": "./src/modeG/index.ts",
+    "./stream": "./src/stream/index.ts",
+    "./webgl": "./src/webgl/index.ts",
+    "./picking": "./src/picking/index.ts",
+    "./materials": "./src/materials/index.ts",
+    "./compositor": "./src/compositor/index.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "cd ../.. && node node_modules/vitest/vitest.mjs run packages/viewport/test"
+  },
+  "dependencies": {
+    "@tenmol/protocol": "workspace:*",
+    "three": "catalog:"
+  },
+  "devDependencies": {
+    "@types/three": "catalog:",
+    "typescript": "catalog:"
+  }
+}

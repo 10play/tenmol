@@ -1,0 +1,293 @@
+/* Floating window chrome + the three small modals of area 10 (WP-22). */
+
+/*
+ * STACKING, and why this number is not 0.
+ *
+ * `.dlgwin` had `position: fixed` and NO z-index, so it stacked purely by DOM
+ * order — and lost. The sequence viewer (`seqview.css`, z-index 20, which it
+ * needs because PyMOL draws the Seq block above the scene) rendered over the
+ * top of a floating window's title bar, making File/Save unclickable whenever
+ * a sequence was shown. Caught by the text-editor e2e spec, where Playwright
+ * reported `.seqrow__line ... intercepts pointer events`.
+ *
+ * A dragged floating window is the frontmost thing in the app short of a modal,
+ * so it sits above the viewport HUD (10) and the Seq block (20). The modal
+ * scrim below is 20 relative to its OWN window, not to the page.
+ */
+.dlgwin {
+  position: fixed;
+  z-index: 30;
+  background: #f3f3f3;
+  border: 1px solid #6b6b6b;
+  border-radius: 4px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 35%);
+  font:
+    12px/1.4 system-ui,
+    sans-serif;
+  color: #1c1c1c;
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+}
+
+.dlgwin__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 8px;
+  background: linear-gradient(#e2e2e2, #cfcfcf);
+  border-bottom: 1px solid #a8a8a8;
+  border-radius: 3px 3px 0 0;
+  cursor: move;
+  user-select: none;
+  font-weight: 600;
+}
+
+.dlgwin__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dlgwin__btn {
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 3px;
+  color: inherit;
+}
+
+.dlgwin__btn:hover {
+  background: #b9b9b9;
+}
+
+.dlgwin__body {
+  position: relative;
+  overflow: auto;
+  padding: 6px;
+}
+
+.dlgwin__footer {
+  border-top: 1px solid #c8c8c8;
+  padding: 5px 6px;
+}
+
+.dlgwin__grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, #9a9a9a 50%, #9a9a9a 60%, transparent 60%);
+}
+
+.dlgwin.is-minimised {
+  min-width: 260px;
+}
+
+/* --- the launcher strip -------------------------------------------------- */
+
+.dlglaunch {
+  position: fixed;
+  left: 8px;
+  bottom: 30px;
+  z-index: 9;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  background: rgb(28 28 28 / 82%);
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  padding: 3px 5px;
+  font:
+    11px/1.4 ui-monospace,
+    monospace;
+  color: #d8d8d8;
+}
+
+.dlglaunch button,
+.dlglaunch select {
+  font: inherit;
+  background: #333;
+  color: #eee;
+  border: 1px solid #5a5a5a;
+  border-radius: 3px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.dlglaunch button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.dlglaunch__title {
+  opacity: 0.7;
+  padding-right: 2px;
+}
+
+/* --- modals -------------------------------------------------------------- */
+
+.dlgmodal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 25%);
+  z-index: 20;
+}
+
+.dlgmodal__box {
+  background: #fafafa;
+  border: 1px solid #6b6b6b;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+  padding: 8px;
+  max-width: 96%;
+  max-height: 96%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dlgmodal__box--narrow {
+  width: 280px;
+}
+
+.dlgmodal__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.dlgmodal__pre {
+  margin: 0;
+  overflow: auto;
+  max-height: 320px;
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  padding: 6px;
+  font:
+    11px/1.35 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  white-space: pre;
+}
+
+.dlgmodal__message {
+  white-space: pre-wrap;
+}
+
+.dlgmodal__input {
+  font:
+    12px ui-monospace,
+    monospace;
+  padding: 3px 5px;
+  border: 1px solid #9a9a9a;
+  border-radius: 3px;
+}
+
+.dlgmodal__hint {
+  font-size: 10px;
+  opacity: 0.65;
+}
+
+.dlgmodal__row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.dlgmodal__spacer {
+  flex: 1;
+}
+
+.dlgmodal__note {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* --- the advanced settings table ---------------------------------------- */
+
+.advset {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 5px;
+}
+
+.advset__head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.advset__filter {
+  flex: 1;
+  font: inherit;
+  padding: 3px 5px;
+  border: 1px solid #9a9a9a;
+  border-radius: 3px;
+}
+
+.advset__scroll {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid #c8c8c8;
+  background: #fff;
+}
+
+.advset__rows {
+  position: relative;
+}
+
+.advset__row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  border-bottom: 1px solid #eee;
+  box-sizing: border-box;
+}
+
+.advset__name {
+  width: 46%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font:
+    11px ui-monospace,
+    monospace;
+}
+
+.advset__value {
+  flex: 1;
+  font:
+    11px ui-monospace,
+    monospace;
+  border: 1px solid #cfcfcf;
+  border-radius: 2px;
+  padding: 1px 4px;
+  min-width: 0;
+}
+
+.advset__note {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.advset__error {
+  color: #a11;
+  font-size: 11px;
+}

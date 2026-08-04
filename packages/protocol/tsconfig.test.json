@@ -1,0 +1,18 @@
+{
+  // Typecheck config for the round-trip test. Split from tsconfig.json so the
+  // library itself keeps `"types": []` and cannot accidentally depend on Node.
+  //
+  // `packages/engine/test/run.sh` reuses this project with `--noEmit false --module commonjs`
+  // to produce a runnable JS build in a temp dir; nothing is emitted into the
+  // repo.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "packages/engine/test/**/*.ts"]
+}
