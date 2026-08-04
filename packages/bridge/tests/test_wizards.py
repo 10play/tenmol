@@ -380,8 +380,7 @@ def test_pick_dispatch_labels_an_atom(clean_wizards):
 
     # ... and the label really landed on the atom (label.py:96-98).
     ws.call("iterate", "ala and name CA", "print('LABEL=' + label)")
-    ws.pump_frames(1.0)
-    assert any("LABEL=ALA-" in line for line in ws.feedback), ws.feedback[-5:]
+    assert ws.pump_until(lambda line: "LABEL=ALA-" in line), ws.feedback[-5:]
 
     ws.call("delete", "all")
 

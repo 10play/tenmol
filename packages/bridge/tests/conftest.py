@@ -295,6 +295,27 @@ class WSClient:
         while time.monotonic() < deadline:
             self._recv(min(0.2, max(0.01, deadline - time.monotonic())))
 
+    def pump_until(
+        self,
+        predicate: Callable[[str], bool],
+        timeout: float = 5.0,
+    ) -> bool:
+        """Pump frames until a feedback line matches ``predicate``.
+
+        Polls instead of sleeping a fixed duration: returns as soon as the
+        line lands on a quiet machine, but waits up to ``timeout`` scaled by
+        TENMOL_TEST_SLOW so a loaded CI runner still gets there. A fixed
+        ``pump_frames(1.0)`` measures the runner, not the code -- it flaked on
+        the GitHub macOS box where feedback arrives well after one second.
+        Mirrors ``RunningBridge.wait_for_feedback`` and ``wait_reply``'s scaling.
+        """
+        deadline = time.monotonic() + timeout * slow_factor()
+        while time.monotonic() < deadline:
+            if any(predicate(line) for line in self.feedback):
+                return True
+            self._recv(min(0.2, max(0.01, deadline - time.monotonic())))
+        return any(predicate(line) for line in self.feedback)
+
     def close(self) -> None:
         try:
             self._conn.close()
