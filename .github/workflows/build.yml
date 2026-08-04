@@ -44,7 +44,7 @@ jobs:
 
     - name: Install collada2gltf
       run: |
-        wget -nv https://anaconda.org/schrodinger/collada2gltf/2.1.4/download/linux-64/collada2gltf-2.1.4-h6bb024c_0.tar.bz2
+        wget -nv https://conda.anaconda.org/schrodinger/linux-64/collada2gltf-2.1.4-h6bb024c_0.tar.bz2
         sudo tar xf collada2gltf-*.tar.bz2 -C / bin/collada2gltf
 
     - name: Get additional sources
