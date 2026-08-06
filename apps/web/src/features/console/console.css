@@ -1,4 +1,5 @@
-/*
+@layer legacy {
+  /*
  * Console feature styles. The base `.extgui`, `.feedback`, `.cmdline`,
  * `.quickbuttons` rules live in src/styles/global.css; this file adds the
  * severity colours and the output toolbar.
@@ -9,111 +10,111 @@
  * client-origin lines dim so a button press is never mistaken for engine output.
  */
 
-.console__bar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 17px;
-  padding: 0 5px;
-  background: var(--pm-panel-alt);
-  border-bottom: 1px solid var(--pm-edge);
-  color: var(--pm-text-dim);
-  font-family: var(--pm-font-mono);
-  font-size: 10px;
-  user-select: none;
-}
+  .console__bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 17px;
+    padding: 0 5px;
+    background: var(--pm-panel-alt);
+    border-bottom: 1px solid var(--pm-edge);
+    color: var(--pm-text-dim);
+    font-family: var(--pm-font-mono);
+    font-size: 10px;
+    user-select: none;
+  }
 
-.console__bar-title {
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
+  .console__bar-title {
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
 
-.console__bar-count {
-  color: #5b6167;
-}
+  .console__bar-count {
+    color: #5b6167;
+  }
 
-.console__bar-spacer {
-  flex: 1;
-}
+  .console__bar-spacer {
+    flex: 1;
+  }
 
-.console__bar-btn {
-  padding: 0 5px;
-  height: 13px;
-  line-height: 13px;
-  border: 1px solid transparent;
-  color: var(--pm-text-dim);
-}
+  .console__bar-btn {
+    padding: 0 5px;
+    height: 13px;
+    line-height: 13px;
+    border: 1px solid transparent;
+    color: var(--pm-text-dim);
+  }
 
-.console__bar-btn:hover {
-  border-color: var(--pm-line);
-  color: var(--pm-text-bright);
-}
+  .console__bar-btn:hover {
+    border-color: var(--pm-line);
+    color: var(--pm-text-bright);
+  }
 
-.console__bar-btn.is-on {
-  color: var(--pm-text-bright);
-  border-color: var(--pm-line);
-  background: #2c3033;
-}
+  .console__bar-btn.is-on {
+    color: var(--pm-text-bright);
+    border-color: var(--pm-line);
+    background: #2c3033;
+  }
 
-.feedback__more {
-  padding: 2px 0 4px;
-  color: #5b6167;
-  font-size: 10px;
-}
+  .feedback__more {
+    padding: 2px 0 4px;
+    color: #5b6167;
+    font-size: 10px;
+  }
 
-.feedback__more-btn {
-  color: var(--pm-accent);
-  text-decoration: underline;
-  font: inherit;
-}
+  .feedback__more-btn {
+    color: var(--pm-accent);
+    text-decoration: underline;
+    font: inherit;
+  }
 
-.feedback__line--prompt {
-  color: var(--pm-mouse-mode);
-}
+  .feedback__line--prompt {
+    color: var(--pm-mouse-mode);
+  }
 
-.feedback__line--error {
-  color: #ff6b6b;
-}
+  .feedback__line--error {
+    color: #ff6b6b;
+  }
 
-.feedback__line--warning {
-  color: #ffb84d;
-}
+  .feedback__line--warning {
+    color: #ffb84d;
+  }
 
-.feedback__line--info {
-  color: var(--pm-text);
-}
+  .feedback__line--info {
+    color: var(--pm-text);
+  }
 
-/* Client-origin: what the UI did, not what PyMOL said. */
-.feedback__line--client {
-  color: #6f757a;
-  font-style: italic;
-}
+  /* Client-origin: what the UI did, not what PyMOL said. */
+  .feedback__line--client {
+    color: #6f757a;
+    font-style: italic;
+  }
 
-.cmdline__label--offline {
-  color: #6f757a;
-  text-decoration: line-through;
-}
+  .cmdline__label--offline {
+    color: #6f757a;
+    text-decoration: line-through;
+  }
 
-.quickbutton--todo {
-  color: #6f757a;
-  border-style: dashed;
-}
+  .quickbutton--todo {
+    color: #6f757a;
+    border-style: dashed;
+  }
 
-.quickbutton:disabled {
-  opacity: 0.45;
-}
+  .quickbutton:disabled {
+    opacity: 0.45;
+  }
 
-.console__bar-font {
-  height: 14px;
-  padding: 0 2px;
-  background: var(--pm-panel);
-  color: var(--pm-text-dim);
-  border: 1px solid var(--pm-line);
-  font-family: var(--pm-font-mono);
-  font-size: 10px;
-}
+  .console__bar-font {
+    height: 14px;
+    padding: 0 2px;
+    background: var(--pm-panel);
+    color: var(--pm-text-dim);
+    border: 1px solid var(--pm-line);
+    font-family: var(--pm-font-mono);
+    font-size: 10px;
+  }
 
-/* ------------------------------------------------------------------ *
+  /* ------------------------------------------------------------------ *
  * The in-viewport console (OrthoConsole)
  *
  * `OrthoDrawText` (packages/engine/layer1/Ortho.cpp:1623-1693) draws bottom-left over the
@@ -128,80 +129,80 @@
  * also what makes focusing the prompt possible at all.
  * ------------------------------------------------------------------ */
 
-.ortho {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding-left: 3px;
-  font-family: var(--pm-font-mono);
-  font-size: 11px;
-  line-height: 12px;
-  pointer-events: none;
-  outline: none;
-  z-index: 3;
-}
+  .ortho {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-left: 3px;
+    font-family: var(--pm-font-mono);
+    font-size: 11px;
+    line-height: 12px;
+    pointer-events: none;
+    outline: none;
+    z-index: 3;
+  }
 
-.ortho__band {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #000;
-  z-index: -1;
-}
+  .ortho__band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #000;
+    z-index: -1;
+  }
 
-.ortho__lines {
-  display: flex;
-  flex-direction: column;
-  white-space: pre;
-  pointer-events: auto;
-  width: fit-content;
-  max-width: 100%;
-  overflow: hidden;
-}
+  .ortho__lines {
+    display: flex;
+    flex-direction: column;
+    white-space: pre;
+    pointer-events: auto;
+    width: fit-content;
+    max-width: 100%;
+    overflow: hidden;
+  }
 
-.ortho__line {
-  height: 12px;
-  overflow: hidden;
-  text-overflow: clip;
-}
+  .ortho__line {
+    height: 12px;
+    overflow: hidden;
+    text-overflow: clip;
+  }
 
-.ortho__line.is-gap {
-  margin-bottom: 4px; /* `if (lcount == adjust_at) y += 4` */
-}
+  .ortho__line.is-gap {
+    margin-bottom: 4px; /* `if (lcount == adjust_at) y += 4` */
+  }
 
-/* `I->TextColor` = {0.83, 0.83, 1.0} (packages/engine/layer1/Ortho.cpp:2702-2704). */
-.ortho__line--text {
-  color: #d4d4ff;
-}
+  /* `I->TextColor` = {0.83, 0.83, 1.0} (packages/engine/layer1/Ortho.cpp:2702-2704). */
+  .ortho__line--text {
+    color: #d4d4ff;
+  }
 
-/* `I->OverlayColor` = 1 - bg_rgb; black background -> white (`:1876-1880`). */
-.ortho__line--overlay {
-  color: #fff;
-}
+  /* `I->OverlayColor` = 1 - bg_rgb; black background -> white (`:1876-1880`). */
+  .ortho__line--overlay {
+    color: #fff;
+  }
 
-.ortho:focus .ortho__caret {
-  background: #d4d4ff;
-  color: #000;
-}
+  .ortho:focus .ortho__caret {
+    background: #d4d4ff;
+    color: #000;
+  }
 
-.ortho__caret {
-  border-bottom: 1px solid #d4d4ff;
-}
+  .ortho__caret {
+    border-bottom: 1px solid #d4d4ff;
+  }
 
-.ortho__hidden {
-  align-self: flex-start;
-  padding: 1px 4px;
-  color: #6f757a;
-  font-size: 10px;
-  pointer-events: auto;
-}
+  .ortho__hidden {
+    align-self: flex-start;
+    padding: 1px 4px;
+    color: #6f757a;
+    font-size: 10px;
+    pointer-events: auto;
+  }
 
-/* ------------------------------------------------------------------ *
+  /* ------------------------------------------------------------------ *
  * The busy box (BusyOverlay)
  *
  * `OrthoBusyDraw` (packages/engine/layer1/Ortho.cpp:645-660): a black quad from (0, Height)
@@ -213,38 +214,38 @@
  * text, which is why it sits above `.ortho` in the stack.
  * ------------------------------------------------------------------ */
 
-.ortho-busy {
-  position: absolute;
-  top: 0;
-  left: 0;
-  box-sizing: border-box;
-  background: #000;
-  color: #fff;
-  font-family: var(--pm-font-mono);
-  font-size: 11px;
-  line-height: 15px; /* cBusySpacing */
-  pointer-events: none;
-  z-index: 4;
-}
+  .ortho-busy {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    background: #000;
+    color: #fff;
+    font-family: var(--pm-font-mono);
+    font-size: 11px;
+    line-height: 15px; /* cBusySpacing */
+    pointer-events: none;
+    z-index: 4;
+  }
 
-.ortho-busy__message {
-  white-space: pre;
-  overflow: hidden;
-}
+  .ortho-busy__message {
+    white-space: pre;
+    overflow: hidden;
+  }
 
-/* `glBegin(GL_LINE_LOOP)` around the bar, then a filled strip inside it
+  /* `glBegin(GL_LINE_LOOP)` around the bar, then a filled strip inside it
    (`packages/engine/layer1/Ortho.cpp:668-687`). */
-.ortho-busy__bar {
-  box-sizing: border-box;
-  border: 1px solid #fff;
-}
+  .ortho-busy__bar {
+    box-sizing: border-box;
+    border: 1px solid #fff;
+  }
 
-.ortho-busy__fill {
-  height: 100%;
-  background: #fff;
-}
+  .ortho-busy__fill {
+    height: 100%;
+    background: #fff;
+  }
 
-/* ------------------------------------------------------------------ *
+  /* ------------------------------------------------------------------ *
  * The rubber band (OrthoLoopRect)
  *
  * `OrthoDrawLoop` (packages/engine/layer1/Ortho.cpp:1695-1745) draws four 1 px strips in
@@ -253,24 +254,25 @@
  * `.ortho__line--overlay` already uses.
  * ------------------------------------------------------------------ */
 
-.ortho-loop {
-  position: absolute;
-  box-sizing: border-box;
-  border: 1px solid #fff;
-  pointer-events: none;
-  z-index: 3;
-}
+  .ortho-loop {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid #fff;
+    pointer-events: none;
+    z-index: 3;
+  }
 
-/* Not in PyMOL, which draws all three the same: a hint of WHICH box action is
+  /* Not in PyMOL, which draws all three the same: a hint of WHICH box action is
    running, since the web client has no ButMode block in the corner by default. */
-.ortho-loop--add {
-  border-style: solid;
-}
+  .ortho-loop--add {
+    border-style: solid;
+  }
 
-.ortho-loop--subtract {
-  border-style: dashed;
-}
+  .ortho-loop--subtract {
+    border-style: dashed;
+  }
 
-.ortho-loop--set {
-  border-style: dotted;
+  .ortho-loop--set {
+    border-style: dotted;
+  }
 }
