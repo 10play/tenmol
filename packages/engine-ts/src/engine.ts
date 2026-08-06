@@ -25,6 +25,7 @@ import {
 import { Executive } from './exec/executive';
 import { getColorIndex, getColorTuple } from './exec/color';
 import { parsePdb } from './model/pdb';
+import { buildFragment } from './model/fragments';
 import { buildLinesFrame, buildSpheresFrame } from './geometry/frames';
 import { parseCommand, splitCommands } from './cmd/parser';
 import { SelectionError } from './select/selector';
@@ -38,6 +39,7 @@ for (const [id, name] of Object.entries(REP_NAMES)) REP_BY_NAME.set(name, Number
 
 /** Console verbs the `do` parser recognizes; anything else is silent Python. */
 const KNOWN_KEYWORDS = new Set([
+  'fragment',
   'show',
   'hide',
   'as',
@@ -48,6 +50,8 @@ const KNOWN_KEYWORDS = new Set([
   'orient',
   'turn',
   'set',
+  'bg_color',
+  'reset',
 ]);
 
 type Handler = (args: unknown[], kwargs: Record<string, unknown>) => Json;
@@ -146,6 +150,15 @@ export class Engine {
   private runKeyword(keyword: string, args: string[]): void {
     // Map the console keyword to a ported handler with positional string args.
     switch (keyword) {
+      case 'fragment':
+        this.call('fragment', [args[0] ?? '', args[1] ?? '']);
+        return;
+      case 'bg_color':
+        this.call('bg_color', [args[0] ?? 'black']);
+        return;
+      case 'reset':
+        this.call('reset', []);
+        return;
       case 'show':
         this.call('show', [args[0] ?? 'lines', args[1] ?? 'all']);
         return;
@@ -342,6 +355,91 @@ export class Engine {
       const t = getColorTuple(Number(args[0]));
       return t ? [t[0], t[1], t[2]] : null;
     });
+
+    // `cmd.fragment(name, object)` — load a built-in fragment and frame it.
+    h('fragment', (args, kwargs) => {
+      const name = str(args[0]);
+      const requested = str(args[1] ?? kwargs['object']) || name;
+      const objName = ex.uniqueName(requested || name || 'obj');
+      const mol = buildFragment(name, objName);
+      if (!mol) {
+        throw new PymolError(
+          {
+            kind: 'CmdException',
+            type: 'CmdException',
+            message: `fragment '${name}' is not in the TypeScript engine's library yet`,
+            traceback: '',
+          },
+          'fragment',
+        );
+      }
+      ex.addMolecule(mol);
+      const sphere = ex.selectionSphere(objName);
+      if (sphere) ex.view.zoomToSphere(sphere.center, sphere.radius);
+      this.publish();
+      return objName;
+    });
+
+    h('bg_color', (args) => {
+      ex.set('bg_rgb', getColorIndex(str(args[0], 'black')) || 0);
+      this.emitView();
+      return null;
+    });
+
+    h('reset', () => {
+      ex.view.set([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -40, 0, 0, 0, 20, 60, -20]);
+      const sphere = ex.selectionSphere('all');
+      if (sphere) ex.view.zoomToSphere(sphere.center, sphere.radius);
+      this.emitView();
+      return null;
+    });
+
+    // ---- benign read defaults ----------------------------------------------
+    // A fresh, empty PyMOL session answers these with trivial values. Answering
+    // them the same way keeps the app's panels (movie, scenes, views, mouse,
+    // settings) rendering CLEANLY on the local engine instead of showing a red
+    // "not ported" error for every idle poll. These are reads only; nothing is
+    // pretending to implement a feature.
+    h('get_scene_list', () => []);
+    h('get_scene_dict', () => ({}) as unknown as Json);
+    h('get_frame', () => 1);
+    h('get_state', () => 1);
+    h('count_frames', () => 0);
+    h('count_states', (args) => ex.molecule(str(args[0]))?.nstate ?? ex.moleculesInOrder()[0]?.nstate ?? 1);
+    h('count_discrete', () => 0);
+    h('get_movie_locked', () => 0);
+    h('get_movie_length', () => 0);
+    h('get_movie_playing', () => 0);
+    h('get_object_list', () => ex.getNames('objects'));
+    h('get_names_of_type', () => []);
+    h('get_type', () => 'object:molecule');
+    h('get_vis', () => ({}) as unknown as Json);
+    h('get_setting_updates', () => []);
+    h('get_setting_text', (args) => {
+      const v = ex.getSetting(str(args[0]));
+      return v === undefined ? '' : String(v);
+    });
+    h('get_setting_tuple', (args) => [ex.getSetting(str(args[0])) ?? 0]);
+    h('get', (args) => (ex.getSetting(str(args[0])) ?? null) as Json);
+    h('get_title', () => '');
+    h('set_title', () => null);
+    h('matrix_reset', () => null);
+    h('get_object_color_index', () => 0);
+    h('get_object_matrix', () => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+    h('get_object_ttt', () => null);
+    h('get_progress', () => -1);
+    h('get_idle', () => 0);
+    h('get_version', () => ['tenmol-engine-ts', 0, 0, '', '', '']);
+    h('get_renderer', () => ['tenmol-engine-ts (WebGL2)', 'browser', '']);
+    h('view', () => null);
+    h('scene', () => null);
+    h('wizards.catalog', () => []);
+    // NOTE: only stub a symbol when the EMPTY shape is known. wizards.probe /
+    // wizards.snapshot return rich objects a feature dereferences; a wrong-shape
+    // stub crashes it, whereas an honest NotPorted is caught and shown cleanly.
+    // So they are deliberately left unported.
+    h('setting.get_name_list', () => []);
+    h('setting.get_index_list', () => []);
 
     // A per-atom colour/vis probe the differential suite reads. Schema-stable,
     // NEW (not upstream), namespaced under `_engine` so it never shadows a real

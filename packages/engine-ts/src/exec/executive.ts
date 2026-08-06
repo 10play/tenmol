@@ -31,6 +31,11 @@ const DEFAULT_SETTINGS: Readonly<Record<string, number | string>> = {
   line_width: 1.0,
   field_of_view: 20,
   orthoscopic: 0,
+  // Mouse-config panel reads these; PyMOL's fresh-session defaults.
+  button_mode: 0,
+  button_mode_name: '3-Button Viewing',
+  mouse_grid: 0,
+  mouse_selection_mode: 0,
 };
 
 export class Executive {

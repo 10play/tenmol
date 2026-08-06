@@ -196,6 +196,35 @@ describe('LocalBackend', () => {
     });
   });
 
+  it('loads a built-in fragment from the console and renders it', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.do('fragment ala');
+    expect(await backend.call('get_names', ['objects'])).toEqual(['ala']);
+    expect(await backend.call('count_atoms', ['all'])).toBe(5);
+    await backend.do('show spheres');
+    expect(await backend.call('count_atoms', ['rep spheres'])).toBe(5);
+  });
+
+  it('answers benign read symbols instead of NotPorted (clean panels)', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    expect(await backend.call('get_scene_list', [])).toEqual([]);
+    expect(await backend.call('get_frame', [])).toBe(1);
+    expect(await backend.call('count_frames', [])).toBe(0);
+    expect(await backend.call('get_setting_text', ['button_mode_name'])).toBe('3-Button Viewing');
+    expect(await backend.call('get_movie_playing', [])).toBe(0);
+  });
+
+  it('does not echo an error for an unrecognised (Python) command line', async () => {
+    const backend = new LocalBackend();
+    const lines: string[] = [];
+    backend.on('feedback', ({ lines: l }) => lines.push(...l));
+    await backend.connect();
+    await backend.do('from tenmol_bridge.panels.objects import install;install()');
+    expect(lines).toEqual([]); // silent — no prompt echo, no "unknown command"
+  });
+
   it('echoes a typed command line on the feedback stream', async () => {
     const backend = new LocalBackend();
     const lines: string[] = [];
