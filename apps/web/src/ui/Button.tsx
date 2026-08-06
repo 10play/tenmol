@@ -48,14 +48,17 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
 
 /* The one button system, in Tailwind. `flat` = bordered fill; `ghost` = text
  * that fills on hover. `on`/`off` state is added by ToggleButton via data-state. */
+// `bg-none` clears the legacy `background:` GRADIENT (background-image); the
+// Tailwind `bg-[color]` only sets background-color, and utilities beat the
+// `legacy` layer in every state, so the flat fill is clean in dark AND light.
 const FLAT =
   'inline-flex items-center justify-center gap-1.5 rounded-[6px] border font-medium leading-none ' +
-  'border-[var(--sh-btn-border)] bg-[var(--sh-btn-fill)] text-[var(--pm-text)] transition-colors ' +
+  'border-[var(--sh-btn-border)] bg-none bg-[var(--sh-btn-fill)] text-[var(--pm-text)] transition-colors ' +
   'hover:border-[var(--sh-btn-border-strong)] hover:bg-[var(--sh-btn-hover)] hover:text-[var(--pm-text-bright)] ' +
   'active:opacity-90 disabled:opacity-45 disabled:pointer-events-none';
 const GHOST =
   'inline-flex items-center justify-center gap-1.5 rounded-[6px] font-medium leading-none ' +
-  'text-[var(--pm-text-dim)] transition-colors hover:bg-[var(--sh-btn-hover)] hover:text-[var(--pm-text-bright)] ' +
+  'bg-none text-[var(--pm-text-dim)] transition-colors hover:bg-[var(--sh-btn-hover)] hover:text-[var(--pm-text-bright)] ' +
   'disabled:opacity-45 disabled:pointer-events-none';
 
 const MODERN_VARIANT: Record<ButtonVariant, string> = {
