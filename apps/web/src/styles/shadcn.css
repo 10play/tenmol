@@ -1,120 +1,157 @@
 /*
- * The modern theme — a macOS-flavoured reskin, active only under
- * [data-ui-theme='shadcn']. Inert in classic (the default), so the pixel-exact
- * PyMOL look is untouched: flip the attribute back and every rule here vanishes.
+ * The modern theme — a fresh, contemporary dark UI (Linear / Vercel / Raycast
+ * flavour), active only under [data-ui-theme='shadcn']. Inert in classic (the
+ * default), so the pixel-exact PyMOL look is untouched.
  *
- * WHY CSS AND NOT TAILWIND UTILITIES ON EACH BUTTON. The app ships a faithful
- * reproduction of PyMOL's own stylesheet — `.quickbutton { background: linear-
- * gradient(...) }` and friends — and those rules are UNLAYERED, so they always
- * outrank Tailwind's `@layer utilities`. The only thing that can override a
- * faithful base rule is a higher-specificity unlayered rule, which is exactly
- * what `:root[data-ui-theme='shadcn'] .quickbutton { ... }` is. So the theme is
- * expressed as CSS keyed off the Tailwind `@theme` tokens (see tailwind.css) and
- * the shadcn `data-slot` attributes. The genuinely NEW surfaces — the Radix
- * DropdownMenu / Dialog / Tooltip — ARE plain Tailwind-utility shadcn components
- * (they carry no competing base class), so both halves of the stack are real.
+ * WHAT MADE THE OLD REVISION STILL FEEL DATED, and what this fixes:
+ *   - monospace fonts on all the CHROME  ->  clean sans-serif everywhere except
+ *     the genuine terminal surfaces (console scrollback, command input) and the
+ *     aligned mouse-mode data grid, which stay mono on purpose;
+ *   - skeuomorphic gradient buttons        ->  flat, subtle, bordered buttons;
+ *   - flat grey section labels             ->  real uppercase tracked headers;
+ *   - cramped spacing                      ->  more padding / breathing room;
+ *   - dull grey accent                     ->  one vivid accent used throughout.
+ *
+ * WHY CSS AND NOT TAILWIND UTILITIES ON EACH ELEMENT. The app ships PyMOL's own
+ * faithful stylesheet, and those rules are UNLAYERED, so they outrank Tailwind's
+ * `@layer utilities`. Only a higher-specificity unlayered rule can override a
+ * faithful base rule — which is what these `:root[data-ui-theme='shadcn'] …`
+ * selectors are, keyed off the Tailwind `@theme` tokens (tailwind.css) and the
+ * shadcn `data-slot` attributes. The NEW surfaces (Radix DropdownMenu / Dialog /
+ * Tooltip) are real Tailwind-utility shadcn components with no competing class.
  *
  * The internal-gui column's load-bearing metrics (row model, Executive floor,
- * internal_gui_width) are preserved; "modern spacing" lives in the chrome,
- * console, controls, panels and dialogs.
+ * internal_gui_width) are preserved; "modern spacing" lives in the chrome.
  */
 
 /* ------------------------------------------------------------------ */
-/* 1. Palette + design tokens — macOS "graphite" dark.                 */
+/* 1. Palette + tokens — fresh neutral dark, one vivid accent.         */
 /* ------------------------------------------------------------------ */
 
 :root[data-ui-theme='shadcn'] {
-  --pm-bg: #1c1c1e; /* window */
-  --pm-bg-viewport: #08080a;
-  --pm-panel: #242427; /* sidebars / panels */
-  --pm-panel-alt: #2c2c30;
+  --pm-bg: #0e0e11;
+  --pm-bg-viewport: #050507;
+  --pm-panel: #161619;
+  --pm-panel-alt: #1c1c21;
   --pm-edge: #000000;
-  --pm-line: rgba(255, 255, 255, 0.1);
-  --pm-text: #e8e8ec;
-  --pm-text-dim: #9a9aa3;
+  --pm-line: rgba(255, 255, 255, 0.08);
+  --pm-text: #eaeaef;
+  --pm-text-dim: #8a8a95;
   --pm-text-bright: #ffffff;
-  --pm-accent: #0a84ff; /* macOS system blue (dark) */
+  --pm-accent: #635bff; /* vivid blurple */
 
-  --pm-btn-enabled: #4a4a4e;
-  --pm-btn-disabled: #2a2a2d;
-  --pm-btn-cloaked: #37373b;
-  --pm-btn-pressed: #5a5a5f;
-  --pm-caption: #30d158; /* macOS green */
+  --pm-btn-enabled: #3a3a42;
+  --pm-btn-disabled: #24242a;
+  --pm-btn-cloaked: #2e2e35;
+  --pm-btn-pressed: #45454f;
+  --pm-caption: #3ecf8e; /* fresh green */
 
-  --pm-mouse-mode: #ff8a80;
-  --pm-control-lit: #d4d4d9;
-  --pm-control-idle: #66666d;
+  --pm-mouse-mode: #ff7a85;
+  --pm-control-lit: #d6d6dd;
+  --pm-control-idle: #5f5f69;
 
-  /* macOS control chrome */
-  --sh-radius: 9px;
-  --sh-radius-sm: 6px;
-  --sh-blur: saturate(180%) blur(22px);
-  --sh-hairline: rgba(255, 255, 255, 0.12);
-  --sh-btn: linear-gradient(180deg, #3c3c41 0%, #303035 100%);
-  --sh-btn-hover: linear-gradient(180deg, #46464c 0%, #37373d 100%);
-  --sh-btn-active: linear-gradient(180deg, #292a2e 0%, #232327 100%);
-  --sh-btn-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.45), inset 0 0.5px 0 rgba(255, 255, 255, 0.09);
-  --sh-pop-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
-  --sh-ring: 0 0 0 3.5px color-mix(in srgb, var(--pm-accent) 38%, transparent);
+  --sh-r: 8px;
+  --sh-r-sm: 7px;
+  --sh-blur: saturate(180%) blur(24px);
+  --sh-line: rgba(255, 255, 255, 0.08);
+  --sh-line-2: rgba(255, 255, 255, 0.14);
+  --sh-fill: rgba(255, 255, 255, 0.055);
+  --sh-fill-hover: rgba(255, 255, 255, 0.1);
+  --sh-pop: 0 16px 48px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
+  --sh-ring: 0 0 0 3px color-mix(in srgb, var(--pm-accent) 40%, transparent);
 
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  --pm-font-ui:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --pm-font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  font-family: var(--pm-font-ui);
 }
 
 /* ------------------------------------------------------------------ */
-/* 2. macOS push buttons — gradient, hairline, depth, rounded.         */
+/* 2. TYPOGRAPHY — the big one. Sans-serif chrome; mono only where it   */
+/*    is a real terminal or aligned data.                              */
+/* ------------------------------------------------------------------ */
+
+/* Blanket sans on the chrome that PyMOL drew in monospace. */
+:root[data-ui-theme='shadcn'] .objrow__name,
+:root[data-ui-theme='shadcn'] .objrow__group,
+:root[data-ui-theme='shadcn'] .objrow__caption,
+:root[data-ui-theme='shadcn'] .objrow__op,
+:root[data-ui-theme='shadcn'] .butmode__title,
+:root[data-ui-theme='shadcn'] .butmode__selmode,
+:root[data-ui-theme='shadcn'] .butmode__mode,
+:root[data-ui-theme='shadcn'] .statusbar,
+:root[data-ui-theme='shadcn'] .menu,
+:root[data-ui-theme='shadcn'] .menu__mark,
+:root[data-ui-theme='shadcn'] .viewport__placeholder,
+:root[data-ui-theme='shadcn'] .quickbutton,
+:root[data-ui-theme='shadcn'] [class*='__head'],
+:root[data-ui-theme='shadcn'] [class*='__title'],
+:root[data-ui-theme='shadcn'] [class*='__label'],
+:root[data-ui-theme='shadcn'] [class*='__bar'] {
+  font-family: var(--pm-font-ui) !important;
+}
+
+/* Section headers -> real uppercase tracked labels (OBJECTS, WIZARD, OUTPUT…). */
+:root[data-ui-theme='shadcn'] [class*='__head'],
+:root[data-ui-theme='shadcn'] .console__bar-title,
+:root[data-ui-theme='shadcn'] .butmode__title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  font-size: 10px;
+  color: var(--pm-text-dim);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Buttons — flat, subtle, bordered (Linear/Vercel), not gradient.  */
 /* ------------------------------------------------------------------ */
 
 :root[data-ui-theme='shadcn'] .quickbutton,
 :root[data-ui-theme='shadcn'] [data-slot='button'],
 :root[data-ui-theme='shadcn'] [data-slot='icon-button'],
 :root[data-ui-theme='shadcn'] [data-slot='toggle-button'] {
-  background: var(--sh-btn);
-  border: 0.5px solid var(--sh-hairline);
-  border-radius: var(--sh-radius-sm);
+  background: var(--sh-fill);
+  border: 1px solid var(--sh-line);
+  border-radius: var(--sh-r-sm);
   color: var(--pm-text);
-  box-shadow: var(--sh-btn-shadow);
+  box-shadow: none;
   font-weight: 500;
-  letter-spacing: 0.01em;
   transition:
-    background 0.12s ease,
-    box-shadow 0.12s ease,
-    border-color 0.12s ease,
-    transform 0.04s ease;
+    background 0.13s ease,
+    border-color 0.13s ease,
+    color 0.13s ease;
 }
 
 :root[data-ui-theme='shadcn'] .quickbutton {
-  height: 22px;
-  padding: 0 10px;
+  height: 24px;
+  padding: 0 11px;
 }
 
 :root[data-ui-theme='shadcn'] .quickbutton:hover,
 :root[data-ui-theme='shadcn'] [data-slot='button']:hover,
 :root[data-ui-theme='shadcn'] [data-slot='icon-button']:hover,
 :root[data-ui-theme='shadcn'] [data-slot='toggle-button']:hover {
-  background: var(--sh-btn-hover);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--sh-fill-hover);
+  border-color: var(--sh-line-2);
   color: var(--pm-text-bright);
 }
 
 :root[data-ui-theme='shadcn'] .quickbutton:active,
 :root[data-ui-theme='shadcn'] [data-slot='button']:active,
 :root[data-ui-theme='shadcn'] [data-slot='icon-button']:active {
-  background: var(--sh-btn-active);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
-  transform: translateY(0.5px);
+  background: rgba(255, 255, 255, 0.03);
 }
 
-/* Pressed / on toggles glow the system accent — the macOS "selected" look. */
+/* Selected / on -> the accent fill. */
 :root[data-ui-theme='shadcn'] [data-slot='toggle-button'][data-state='on'],
 :root[data-ui-theme='shadcn'] .overlay-launcher__btn.is-on,
 :root[data-ui-theme='shadcn'] .extgui__btn.is-on,
 :root[data-ui-theme='shadcn'] .console__bar-btn.is-on {
-  background: linear-gradient(180deg, #2b8bff 0%, #0a72ea 100%);
-  border-color: #0a72ea;
+  background: var(--pm-accent);
+  border-color: transparent;
   color: #fff;
-  box-shadow:
-    0 1px 2px rgba(10, 132, 255, 0.4),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--pm-accent) 45%, transparent);
 }
 
 :root[data-ui-theme='shadcn'] button:focus-visible,
@@ -125,101 +162,99 @@
   border-color: var(--pm-accent);
 }
 
-/* Danger button. */
 :root[data-ui-theme='shadcn'] .quickbutton--abort {
-  background: linear-gradient(180deg, #ff5a52 0%, #e0342c 100%);
-  border-color: #d22c25;
+  background: #ff453a;
+  border-color: transparent;
   color: #fff;
-  box-shadow: 0 1px 2px rgba(255, 69, 58, 0.35);
 }
 :root[data-ui-theme='shadcn'] .quickbutton--abort:hover {
-  background: linear-gradient(180deg, #ff6a63 0%, #ef3b33 100%);
+  background: #ff5a50;
 }
 
 /* ------------------------------------------------------------------ */
-/* 3. Menu bar — translucent macOS menu strip.                         */
+/* 4. Top bar — a modern app title bar.                                */
 /* ------------------------------------------------------------------ */
 
 :root[data-ui-theme='shadcn'] .menubar {
-  background: rgba(28, 28, 30, 0.72);
+  background: rgba(14, 14, 17, 0.72);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border-bottom: 0.5px solid var(--sh-hairline);
-  height: 30px;
-  gap: 1px;
-  padding: 0 6px;
+  border-bottom: 1px solid var(--sh-line);
+  height: 34px;
+  gap: 2px;
+  padding: 0 8px;
   align-items: center;
 }
 :root[data-ui-theme='shadcn'] .menubar__item {
   background: transparent;
   border: 1px solid transparent;
   box-shadow: none;
-  border-radius: var(--sh-radius-sm);
-  padding: 4px 11px;
-  color: var(--pm-text);
+  border-radius: var(--sh-r-sm);
+  padding: 5px 11px;
+  color: var(--pm-text-dim);
   font-weight: 500;
+  font-size: 12.5px;
 }
 :root[data-ui-theme='shadcn'] .menubar__item:hover,
 :root[data-ui-theme='shadcn'] .menubar__item.is-open {
-  background: var(--pm-accent);
-  color: #fff;
+  background: var(--sh-fill-hover);
+  color: var(--pm-text-bright);
 }
 :root[data-ui-theme='shadcn'] .menubar__title {
   color: var(--pm-text-bright);
-  font-weight: 600;
-  letter-spacing: 0;
-  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: 13px;
   text-transform: none;
 }
 
-/* Console output toolbar buttons: compact segmented look. */
 :root[data-ui-theme='shadcn'] .console__bar-btn {
-  padding: 2px 9px;
-  height: 20px;
+  padding: 3px 10px;
+  height: 22px;
 }
 
 /* ------------------------------------------------------------------ */
-/* 4. Bespoke dropdown menus (features/menubar, features/pymol-menu).   */
+/* 5. Bespoke dropdown menus (features/menubar, features/pymol-menu).   */
 /* ------------------------------------------------------------------ */
 
 :root[data-ui-theme='shadcn'] .menu,
 :root[data-ui-theme='shadcn'] .popup-menu {
-  background: rgba(40, 40, 43, 0.86);
+  background: rgba(26, 26, 30, 0.9);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border: 0.5px solid var(--sh-hairline);
-  border-radius: var(--sh-radius);
-  box-shadow: var(--sh-pop-shadow);
-  padding: 5px;
+  border: 1px solid var(--sh-line-2);
+  border-radius: var(--sh-r);
+  box-shadow: var(--sh-pop);
+  padding: 6px;
 }
 :root[data-ui-theme='shadcn'] .menu__row {
-  border-radius: var(--sh-radius-sm);
-  height: 23px;
-  padding: 0 10px 0 8px;
+  border-radius: var(--sh-r-sm);
+  height: 26px;
+  padding: 0 10px 0 9px;
+  font-size: 12.5px;
 }
 :root[data-ui-theme='shadcn'] .menu__row:hover {
   background: var(--pm-accent);
   color: #fff;
 }
 :root[data-ui-theme='shadcn'] .menu__sep {
-  background: var(--sh-hairline);
+  background: var(--sh-line);
   margin: 5px 8px;
 }
 
 /* ------------------------------------------------------------------ */
-/* 5. Inputs / selects / form controls — macOS fields.                 */
+/* 6. Inputs / selects / fields.                                       */
 /* ------------------------------------------------------------------ */
 
 :root[data-ui-theme='shadcn'] .cmdline__input,
 :root[data-ui-theme='shadcn'] [data-slot='input'],
 :root[data-ui-theme='shadcn'] [data-slot='textarea'],
 :root[data-ui-theme='shadcn'] [data-slot='select'] {
-  background: rgba(0, 0, 0, 0.28);
-  border: 0.5px solid var(--sh-hairline);
-  border-radius: var(--sh-radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--sh-line);
+  border-radius: var(--sh-r-sm);
   color: var(--pm-text-bright);
-  padding: 4px 9px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+  padding: 5px 10px;
 }
 :root[data-ui-theme='shadcn'] [data-slot='select'] {
   cursor: pointer;
@@ -238,114 +273,135 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* 6. Panels, docks, console — vibrancy + rounded cards.               */
+/* 7. Panels, docks, console — cards with subtle borders + vibrancy.   */
 /* ------------------------------------------------------------------ */
 
+:root[data-ui-theme='shadcn'] .shell__main {
+  background: var(--pm-bg);
+}
 :root[data-ui-theme='shadcn'] [data-slot='panel'],
 :root[data-ui-theme='shadcn'] .extgui {
-  border-radius: var(--sh-radius);
+  border-radius: var(--sh-r);
 }
 :root[data-ui-theme='shadcn'] .extgui {
-  border: 0.5px solid var(--sh-hairline);
-  box-shadow: var(--sh-pop-shadow);
+  border: 1px solid var(--sh-line);
+  box-shadow: var(--sh-pop);
   overflow: hidden;
 }
 :root[data-ui-theme='shadcn'] .extgui__titlebar {
-  background: rgba(44, 44, 48, 0.8);
+  background: rgba(28, 28, 33, 0.8);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border-bottom: 0.5px solid var(--sh-hairline);
+  border-bottom: 1px solid var(--sh-line);
 }
 :root[data-ui-theme='shadcn'] .cmdline {
-  background: rgba(36, 36, 39, 0.82);
+  background: rgba(20, 20, 24, 0.82);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border-top: 0.5px solid var(--sh-hairline);
-  height: 32px;
-  padding: 0 10px;
+  border-top: 1px solid var(--sh-line);
+  height: 36px;
+  padding: 0 12px;
+  gap: 8px;
+}
+:root[data-ui-theme='shadcn'] .cmdline__label {
+  color: var(--pm-accent);
+  font-weight: 600;
 }
 :root[data-ui-theme='shadcn'] .cmdline__input {
-  height: 24px;
+  height: 26px;
+  font-family: var(--pm-font-mono);
 }
 :root[data-ui-theme='shadcn'] .console__bar {
-  background: rgba(36, 36, 39, 0.82);
+  background: rgba(20, 20, 24, 0.82);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border-bottom: 0.5px solid var(--sh-hairline);
-  height: 28px;
+  border-bottom: 1px solid var(--sh-line);
+  height: 30px;
+  padding: 0 10px;
 }
 :root[data-ui-theme='shadcn'] .feedback {
-  background: rgba(8, 8, 10, 0.55);
+  background: rgba(6, 6, 9, 0.6);
+  font-family: var(--pm-font-mono);
+  padding: 8px 12px;
+  line-height: 1.55;
 }
 
-/* Overlay launcher — a floating macOS vibrancy toolbar. */
+/* Overlay launcher — floating pill with vibrancy. */
 :root[data-ui-theme='shadcn'] .overlay-launcher {
-  background: rgba(40, 40, 43, 0.72);
+  background: rgba(22, 22, 26, 0.72);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border: 0.5px solid var(--sh-hairline);
-  border-radius: 14px;
-  padding: 5px 7px;
+  border: 1px solid var(--sh-line-2);
+  border-radius: 999px;
+  padding: 6px 8px;
   gap: 4px;
-  box-shadow: var(--sh-pop-shadow);
+  box-shadow: var(--sh-pop);
 }
 :root[data-ui-theme='shadcn'] .overlay-launcher__btn {
   background: transparent;
-  border: 0.5px solid transparent;
+  border: 1px solid transparent;
   box-shadow: none;
-  border-radius: 9px;
-  padding: 4px 11px;
+  border-radius: 999px;
+  padding: 5px 13px;
   color: var(--pm-text-dim);
+  font-weight: 500;
 }
 :root[data-ui-theme='shadcn'] .overlay-launcher__btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--sh-fill-hover);
   color: var(--pm-text-bright);
 }
 
 /* ------------------------------------------------------------------ */
-/* 7. The internal-gui column — recoloured, geometry preserved.        */
+/* 8. Internal-gui column — recoloured, geometry preserved.            */
 /* ------------------------------------------------------------------ */
 
 :root[data-ui-theme='shadcn'] .internal-gui {
-  background: rgba(36, 36, 39, 0.6);
-  border-left: 0.5px solid var(--sh-hairline);
+  background: var(--pm-panel);
+  border-left: 1px solid var(--sh-line);
+}
+:root[data-ui-theme='shadcn'] .objpanel__head,
+:root[data-ui-theme='shadcn'] .scpanel__head,
+:root[data-ui-theme='shadcn'] .mvpanel__head {
+  background: transparent;
+  border-bottom: 1px solid var(--sh-line);
+  padding: 8px 10px;
+}
+:root[data-ui-theme='shadcn'] .objrow {
+  padding: 0 4px;
 }
 :root[data-ui-theme='shadcn'] .objrow__name {
-  border: 0.5px solid var(--sh-hairline);
-  border-radius: var(--sh-radius-sm);
+  border: 1px solid var(--sh-line);
+  border-radius: 6px;
   color: var(--pm-text);
-  background: var(--pm-btn-disabled);
-  box-shadow: var(--sh-btn-shadow);
+  background: var(--sh-fill);
+  font-size: 11.5px;
 }
 :root[data-ui-theme='shadcn'] .objrow.is-enabled .objrow__name {
-  background: linear-gradient(180deg, #4e4e53, #414146);
+  background: rgba(99, 91, 255, 0.16);
+  border-color: rgba(99, 91, 255, 0.4);
   color: var(--pm-text-bright);
 }
 :root[data-ui-theme='shadcn'] .objrow__name:hover {
-  background: var(--pm-btn-pressed);
+  background: var(--sh-fill-hover);
 }
 :root[data-ui-theme='shadcn'] .objrow__op {
   border: none;
-  border-radius: 4px;
-  filter: saturate(0.92) brightness(1.02);
-}
-:root[data-ui-theme='shadcn'] .objpanel__head {
-  background: rgba(44, 44, 48, 0.7);
-  border-bottom: 0.5px solid var(--sh-hairline);
+  border-radius: 5px;
+  filter: saturate(0.95);
 }
 :root[data-ui-theme='shadcn'] .control {
-  background: rgba(36, 36, 39, 0.7);
-  border-top: 0.5px solid var(--sh-hairline);
+  background: transparent;
+  border-top: 1px solid var(--sh-line);
 }
 :root[data-ui-theme='shadcn'] .control__btn:hover {
   color: var(--pm-text-bright);
-  border-color: var(--sh-hairline);
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--sh-line);
+  border-radius: 6px;
+  background: var(--sh-fill);
 }
 
 /* ------------------------------------------------------------------ */
-/* 8. Splitters, status bar, scrollbars, viewport.                     */
+/* 9. Splitters, status bar, scrollbars, viewport HUD.                 */
 /* ------------------------------------------------------------------ */
 
 :root[data-ui-theme='shadcn'] .splitter {
@@ -355,46 +411,41 @@
   background: var(--pm-accent);
 }
 :root[data-ui-theme='shadcn'] .statusbar {
-  background: rgba(20, 20, 22, 0.82);
+  background: rgba(12, 12, 15, 0.85);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border-top: 0.5px solid var(--sh-hairline);
-  height: 24px;
-  font-family: inherit;
+  border-top: 1px solid var(--sh-line);
+  height: 26px;
+  font-size: 11px;
 }
 :root[data-ui-theme='shadcn'] .statusbar__progress-fill {
   background: var(--pm-accent);
 }
-:root[data-ui-theme='shadcn'] .viewport__placeholder-title {
-  color: var(--pm-text-dim);
-}
 
-/* macOS overlay scrollbars — thin, rounded, translucent. */
 :root[data-ui-theme='shadcn'] ::-webkit-scrollbar {
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
 }
 :root[data-ui-theme='shadcn'] ::-webkit-scrollbar-track {
   background: transparent;
 }
 :root[data-ui-theme='shadcn'] ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border: 3px solid transparent;
+  background: rgba(255, 255, 255, 0.16);
+  border: 3.5px solid transparent;
   background-clip: padding-box;
   border-radius: 999px;
 }
 :root[data-ui-theme='shadcn'] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.28);
   background-clip: padding-box;
 }
 
-/* Progress bars. */
 :root[data-ui-theme='shadcn'] .progressbar {
-  border: 0.5px solid var(--sh-hairline);
+  border: 1px solid var(--sh-line);
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.05);
 }
 :root[data-ui-theme='shadcn'] .progressbar__fill {
-  background: linear-gradient(90deg, #0a84ff, #2b8bff);
+  background: var(--pm-accent);
 }
