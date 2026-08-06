@@ -29,7 +29,7 @@
  */
 
 import type { Json, ViewMatrix } from '@tenmol/protocol';
-import type { PymolConnection } from './connection';
+import type { CmdBackend } from '@tenmol/backend';
 
 /* ------------------------------------------------------------------ *
  * kwargs detection
@@ -96,7 +96,7 @@ export interface CmdNamespace {
 /** Escape hatches available on the proxy under `$`-prefixed names. */
 export interface CmdInternals {
   /** The transport this facade writes to. */
-  readonly $conn: PymolConnection;
+  readonly $conn: CmdBackend;
   /**
    * The same proxy, untyped — the door to the ~389 symbols that do not have a
    * hand-written signature yet: `await cmd.$any.symexp('s', 'obj', 'sele', 5)`.
@@ -313,7 +313,7 @@ const RESERVED = new Set<string>([
   '$$typeof', // React
 ]);
 
-function makeNode(conn: PymolConnection, path: string): CmdCallable & CmdNamespace {
+function makeNode(conn: CmdBackend, path: string): CmdCallable & CmdNamespace {
   const children = new Map<string, CmdCallable & CmdNamespace>();
 
   const target = function callTarget(): void {
@@ -385,6 +385,6 @@ function makeNode(conn: PymolConnection, path: string): CmdCallable & CmdNamespa
  * Errors reject with `PymolError` carrying the Python exception type and
  * traceback.
  */
-export function createCmd(conn: PymolConnection): Cmd {
+export function createCmd(conn: CmdBackend): Cmd {
   return makeNode(conn, '') as unknown as Cmd;
 }

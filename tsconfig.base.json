@@ -30,6 +30,10 @@
     "paths": {
       "@tenmol/protocol": ["packages/protocol/src/index.ts"],
       "@tenmol/protocol/*": ["packages/protocol/src/*"],
+      "@tenmol/backend": ["packages/backend/src/index.ts"],
+      "@tenmol/backend/*": ["packages/backend/src/*"],
+      "@tenmol/engine-ts": ["packages/engine-ts/src/index.ts"],
+      "@tenmol/engine-ts/*": ["packages/engine-ts/src/*"],
       "@tenmol/client": ["packages/client/src/index.ts"],
       "@tenmol/client/*": ["packages/client/src/*"],
       "@tenmol/stores": ["packages/stores/src/index.ts"],

@@ -28,6 +28,8 @@
     "lint:fix": "eslint . --fix",
     "ownership": "node scripts/ownership.mjs",
     "parity": "node scripts/parity.mjs",
+    "//parity:engine": "The engine-parity gate: differential equivalence of the TypeScript engine vs. golden snapshots (and vs. real PyMOL with --remote). See scripts/parity-engine.mjs and tools/parity.",
+    "parity:engine": "node scripts/parity-engine.mjs",
     "format": "prettier --write --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml vitest.workspace.ts \"scripts/*.mjs\" \"apps/**/*\" \"packages/**/*\" docs/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
     "format:check": "prettier --check --ignore-unknown package.json tsconfig.base.json eslint.config.js .prettierrc pnpm-workspace.yaml vitest.workspace.ts \"scripts/*.mjs\" \"apps/**/*\" \"packages/**/*\" docs/README.md \"!**/dist/**\" \"!**/generated/**\" \"!**/node_modules/**\"",
     "clean": "rm -rf .turbo *.tsbuildinfo apps/*/dist apps/*/.turbo apps/*/*.tsbuildinfo apps/*/node_modules packages/*/dist packages/*/.turbo packages/*/*.tsbuildinfo packages/*/node_modules node_modules"

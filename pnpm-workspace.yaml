@@ -8,6 +8,9 @@
 packages:
   - "apps/*"
   - "packages/*"
+  # tools/* dirs that carry a package.json (e.g. the engine-parity harness in
+  # tools/parity). Dirs without one — tools/gen-api — are simply skipped.
+  - "tools/*"
 
 # Shared dependency versions. A workspace package may write "catalog:" as the version
 # specifier for any key below and pnpm will substitute the pinned range at install time.

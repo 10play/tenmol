@@ -11,7 +11,9 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@tenmol/backend": "workspace:*",
     "@tenmol/client": "workspace:*",
+    "@tenmol/engine-ts": "workspace:*",
     "@tenmol/protocol": "workspace:*",
     "@tenmol/stores": "workspace:*",
     "react": "catalog:",

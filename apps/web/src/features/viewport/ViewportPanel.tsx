@@ -74,17 +74,25 @@ export function ViewportPanel(): React.JSX.Element {
     const pull = pullDisabled() ? null : createDevPullSource(transport);
     const fixtures = fixtureGeometrySource();
 
+      // The in-browser TypeScript engine (`?backend=local`) cannot rasterise —
+    // it has no offscreen GL — so it PUSHES Mode-G geometry frames instead.
+    // Default the viewport to Mode G and drop Mode P entirely, so the local
+    // engine's geometry is what paints.
+    const geometryFirst = session.config.backend === 'local';
+
     const viewport = createViewport({
       container: host,
       transport,
       // 1.5 s of no pixel frames and we drop to the pull source rather than
       // showing a black canvas.
-      pixelSource: modePDisabled()
-        ? NULL_PIXEL_SOURCE
-        : pull === null
-          ? stream
-          : withFallback(stream, pull, 1500),
+      pixelSource:
+        geometryFirst || modePDisabled()
+          ? NULL_PIXEL_SOURCE
+          : pull === null
+            ? stream
+            : withFallback(stream, pull, 1500),
       ...(fixtures === null ? {} : { geometrySource: fixtures }),
+      ...(geometryFirst ? { policy: { default: 'geometry' as const, perRep: [] } } : {}),
       maxDpr: 2,
       onError: (error) => console.warn('[viewport]', error.message),
     });

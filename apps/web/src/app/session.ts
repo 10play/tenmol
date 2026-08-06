@@ -13,7 +13,8 @@
  * first import and never torn down by a component unmounting.
  */
 
-import { PymolConnection } from '@tenmol/client';
+import { createRemoteBackend, type Backend } from '@tenmol/client';
+import { createLocalBackend } from '@tenmol/engine-ts';
 import {
   createConnectionStore,
   createFeedbackStore,
@@ -47,7 +48,8 @@ export interface SessionStores {
 
 export interface Session {
   config: BridgeConfig;
-  conn: PymolConnection;
+  /** The active engine, behind the abstract `Backend` interface. */
+  conn: Backend;
   stores: SessionStores;
   objectsSource: ObjectsSource;
   poller: Poller;
@@ -88,14 +90,20 @@ function createSession(initialConfig: BridgeConfig): Session {
     ui: createUiStore(),
   };
 
-  const conn = new PymolConnection({
-    url: config.url,
-    autoReconnect: true,
-    // PyMOL calls can legitimately take minutes (`ray`, `mpng`), so there is no
-    // request timeout. A dead socket rejects everything pending anyway.
-    requestTimeoutMs: 0,
-    reconnect: { initialDelayMs: 300, maxDelayMs: 5000, factor: 1.8, jitter: 0.2 },
-  });
+  // THE ABSTRACT SWITCH. `config.backend` (subdomain / env / `?backend=`) picks
+  // the engine; from here down nothing in this file — or in the stores, viewport
+  // or features — knows or cares which one it got. That is the whole point.
+  const conn: Backend =
+    config.backend === 'local'
+      ? createLocalBackend({ url: config.displayUrl })
+      : createRemoteBackend({
+          url: config.url,
+          autoReconnect: true,
+          // PyMOL calls can legitimately take minutes (`ray`, `mpng`), so there
+          // is no request timeout. A dead socket rejects everything pending.
+          requestTimeoutMs: 0,
+          reconnect: { initialDelayMs: 300, maxDelayMs: 5000, factor: 1.8, jitter: 0.2 },
+        });
 
   const objectsSource = createObjectsSource({
     call: (fn, args, kwargs) => conn.call(fn, args ?? [], kwargs ?? {}),

@@ -142,6 +142,17 @@ jobs:
           node scripts/parity.mjs
           node scripts/parity.mjs --min 362
 
+      # ---- gate: engine parity (differential equivalence) -----------------
+      #
+      # Proves the TypeScript engine (@tenmol/engine-ts) is identical to real
+      # PyMOL over the ported command slice. This Linux job needs no PyMOL: it
+      # runs the fixture, generative and contract gates; the LIVE diff against a
+      # real bridge (tools/parity/test/live.test.ts) self-skips unless
+      # TENMOL_PARITY_REMOTE is set, and runs in the bridge-enabled job.
+      # See docs/engine-port.md.
+      - name: engine parity (differential)
+        run: node scripts/parity-engine.mjs
+
       # ---- gate: drain lint -----------------------------------------------
       #
       # tools/parity/drain_lint.py exits 1 on a violation, so it gates as-is.
