@@ -15,6 +15,7 @@ import type { Session } from '../../app';
 import type { ViewportTransport } from '@tenmol/viewport';
 import type { BinaryFrame, InputMessage } from '@tenmol/protocol';
 
+/** Adapt an app `Session` to the `ViewportTransport` the viewport package needs. */
 export function createSessionTransport(session: Session): ViewportTransport {
   const listeners = new Set<(frame: BinaryFrame) => void>();
 

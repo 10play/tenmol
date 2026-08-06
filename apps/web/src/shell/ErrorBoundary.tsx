@@ -20,6 +20,7 @@ interface State {
   error: Error | null;
 }
 
+/** A React error boundary that isolates one feature's crash, showing a labelled retry box. */
 export class ErrorBoundary extends Component<Props, State> {
   override state: State = { error: null };
 

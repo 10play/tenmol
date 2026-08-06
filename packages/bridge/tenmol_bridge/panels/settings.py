@@ -202,6 +202,11 @@ class SettingTap:
         self.recorded = 0
 
     def record(self, indices: Sequence[Any]) -> None:
+        """Append a batch of changed setting indices to the ring, under lock.
+
+        Non-numeric entries are dropped; an empty batch still counts as a call
+        but adds no sequence entry, so :meth:`since` only advances on real change.
+        """
         clean: Tuple[int, ...] = tuple(
             int(i) for i in indices if isinstance(i, (int, float))
         )
@@ -445,6 +450,11 @@ def _candidate_paths(env: str, *relative: str) -> List[str]:
 
 
 def setting_info_path() -> Optional[str]:
+    """Locate ``SettingInfo.h`` across env override and repo candidates, or ``None``.
+
+    The header is not shipped in an installed layout, so this can legitimately
+    fail to find it.
+    """
     for path in _candidate_paths("TENMOL_SETTINGINFO_H", "packages/engine/layer1/SettingInfo.h"):
         if os.path.isfile(path):
             return path
@@ -452,6 +462,12 @@ def setting_info_path() -> Optional[str]:
 
 
 def setting_help_path() -> Optional[str]:
+    """Locate ``setting_help.csv`` (the tooltip source), or ``None`` if absent.
+
+    Checks the env override and repo candidates first, then ``$PYMOL_DATA`` —
+    unlike the header, the CSV is copied into installed layouts, so an installed
+    bridge still finds its tooltips.
+    """
     for path in _candidate_paths("TENMOL_SETTING_HELP_CSV", "packages/engine/data/setting_help.csv"):
         if os.path.isfile(path):
             return path

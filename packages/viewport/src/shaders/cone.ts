@@ -86,6 +86,7 @@ void main() {
 }
 `;
 
+/** Cone/frustum impostor fragment shader; ray-traces the surface and splices in `lighting`. */
 export const CONE_FRAG = (lighting: string): string => /* glsl */ `precision highp float;
 precision highp int;
 

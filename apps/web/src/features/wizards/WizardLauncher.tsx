@@ -18,6 +18,7 @@
 import { useState } from 'react';
 import type { WizardCatalog, WizardMenubarNode } from '@tenmol/protocol';
 
+/** Props for {@link WizardLauncher}: the catalog, active state, and callbacks. */
 export interface WizardLauncherProps {
   catalog: WizardCatalog | null;
   error: string | null;
@@ -28,6 +29,7 @@ export interface WizardLauncherProps {
   active: boolean;
 }
 
+/** The wizard picker bar: lists available wizards and launches or dismisses one. */
 export function WizardLauncher({
   catalog,
   error,

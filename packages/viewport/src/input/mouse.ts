@@ -47,6 +47,7 @@ export interface PinchTarget {
   end(): void;
 }
 
+/** Everything the input controller needs: target element, transport, geometry, and optional pick/pinch/camera hooks. */
 export interface InputControllerOptions {
   /** The element that receives pointer events (the topmost canvas/overlay). */
   element: HTMLElement;
@@ -93,6 +94,7 @@ export interface InputControllerOptions {
   clearTimer?: (handle: unknown) => void;
 }
 
+/** Counters the input controller keeps: forwarded inputs, coalescing, drops, and drag timing. */
 export interface InputControllerStats {
   buttons: number;
   drags: number;
@@ -120,6 +122,7 @@ export interface InputControllerStats {
   brokenGestures: number;
 }
 
+/** Handle to a live input controller: teardown, cancel, and read-only stats. */
 export interface InputController {
   destroy(): void;
   /** Sends button-up for any held button. Used on blur / unmount. */
@@ -146,6 +149,7 @@ function domButton(button: number): number | null {
 
 const PINCH_IDLE_MS = 250;
 
+/** Wire pointer/wheel events on an element to PyMOL input messages (with drag coalescing). */
 export function createInputController(options: InputControllerOptions): InputController {
   const { element, transport, geometry } = options;
 

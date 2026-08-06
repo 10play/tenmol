@@ -23,6 +23,7 @@ export interface ConnectionLike {
   readonly connectionState?: string;
 }
 
+/** Options for {@link bindConnection}, chiefly the raw-socket tap needed to receive Mode-P frames. */
 export interface BindConnectionOptions {
   /**
    * Optional raw-binary tap. Supply this if you have access to the socket
@@ -32,6 +33,7 @@ export interface BindConnectionOptions {
   onRawBinary?: (listener: (bytes: ArrayBuffer | Uint8Array) => void) => () => void;
 }
 
+/** Adapts a `PymolConnection`-like object into a {@link ViewportTransport}, routing geometry and (via the tap) pixel frames. */
 export function bindConnection(
   connection: ConnectionLike,
   options: BindConnectionOptions = {},

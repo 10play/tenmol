@@ -121,10 +121,12 @@ class EncodedImage(NamedTuple):
 
     @property
     def lossless(self) -> bool:
+        """True if this frame's encoding preserves pixels exactly."""
         return is_lossless(self.encoding)
 
     @property
     def nbytes(self) -> int:
+        """The size of the encoded payload in bytes."""
         return len(self.data)
 
 
@@ -153,6 +155,7 @@ def _pil():
 
 
 def have_pillow() -> bool:
+    """True if Pillow is importable, gating the JPEG/WebP encodings."""
     return _pil() is not None
 
 
@@ -190,6 +193,7 @@ def capabilities() -> Dict[str, Any]:
 
 
 def is_lossless(encoding: str) -> bool:
+    """True if ``encoding`` is one of the pixel-exact (lossless) encodings."""
     return encoding in LOSSLESS_PIXEL_ENCODINGS
 
 
@@ -439,6 +443,7 @@ class AdaptiveQuality:
 
     @property
     def quality(self) -> int:
+        """The current adaptive quality level for the next frame."""
         return self._quality
 
     def set_base(self, base: int) -> None:
@@ -450,6 +455,10 @@ class AdaptiveQuality:
         self._clean = 0
 
     def penalise(self, reason: str = "backpressure") -> int:
+        """Step quality down by ``step_down`` (floored at the minimum) and return it.
+
+        Resets the clean-frame counter so recovery must be re-earned.
+        """
         self.penalties += 1
         self._clean = 0
         self._quality = max(self.minimum, self._quality - self.step_down)
@@ -467,11 +476,13 @@ class AdaptiveQuality:
         return self._quality
 
     def reset(self) -> int:
+        """Snap quality back to the base level and clear the recovery counter."""
         self._quality = self.base
         self._clean = 0
         return self._quality
 
     def stats(self) -> Dict[str, Any]:
+        """A snapshot of the controller: current/base/bounds and penalty/reward tallies."""
         return {
             "quality": self._quality,
             "base": self.base,

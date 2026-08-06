@@ -54,8 +54,10 @@ export interface DragSample {
   when: number;
 }
 
+/** Why a coalesced sample was flushed: a new event, the budget timer, or a forced barrier. */
 export type FlushReason = 'event' | 'timer' | 'forced';
 
+/** Construction options for a drag coalescer: flush sink, budget, clock, and timers. */
 export interface DragCoalescerOptions {
   /** Called with the surviving sample. Must send it immediately, in order. */
   flush: (sample: DragSample, reason: FlushReason) => void;
@@ -68,6 +70,7 @@ export interface DragCoalescerOptions {
   clearTimer?: (handle: unknown) => void;
 }
 
+/** Counters a coalescer tracks: samples, drops, flushes by trigger, and worst gap. */
 export interface DragCoalescerStats {
   /** Samples pushed. */
   samples: number;
@@ -82,6 +85,7 @@ export interface DragCoalescerStats {
   maxGapMs: number;
 }
 
+/** A live drag coalescer: buffers positions and flushes at most one per budget window. */
 export interface DragCoalescer {
   /** Start a gesture: opens a fresh budget window at `atMs` (default now). */
   begin(atMs?: number): void;
@@ -106,6 +110,7 @@ function defaultNow(): number {
     : Date.now();
 }
 
+/** Build a drag coalescer that rate-limits drag samples to one per budget window. */
 export function createDragCoalescer(options: DragCoalescerOptions): DragCoalescer {
   const budgetMs = options.budgetMs ?? DEFAULT_DRAG_BUDGET_MS;
   const now = options.now ?? defaultNow;

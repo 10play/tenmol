@@ -107,6 +107,10 @@ def make_key(object_name: str, state: int, rep: int) -> str:
 
 
 def parse_key(key: str) -> Optional[Tuple[str, int, int]]:
+    """Split a :func:`make_key` string back into ``(object, state, rep)``.
+
+    Returns ``None`` for anything malformed rather than raising.
+    """
     parts = key.split(KEY_SEP)
     if len(parts) != 3:
         return None
@@ -152,6 +156,7 @@ class RepVersion:
 
     @property
     def key(self) -> str:
+        """This row's ``(object, state, rep)`` identity as a joined key string."""
         return make_key(self.object, self.state, self.rep)
 
     def row(self) -> List[Any]:
@@ -159,6 +164,10 @@ class RepVersion:
         return [self.object, self.state, self.rep, self.version, 1 if self.active else 0]
 
     def same(self, other: "RepVersion") -> bool:
+        """True if ``other`` has the same version and effective visibility.
+
+        This is the diff test the client poll uses to decide a row is unchanged.
+        """
         return self.version == other.version and self.active == other.active
 
     def __repr__(self) -> str:  # pragma: no cover - diagnostics

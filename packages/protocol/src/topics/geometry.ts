@@ -32,6 +32,7 @@ export interface GeometryFallback extends GeometryKey {
   detail: string;
 }
 
+/** The `geometry` topic event: invalidations, Mode-P fallbacks, and effective per-rep modes. */
 export interface GeometryPayload {
   invalidated: GeometryInvalidation[];
   /** Reps that fell back to Mode P since the last event. */

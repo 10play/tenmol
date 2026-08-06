@@ -18,6 +18,7 @@
 
 import { COMPUTE_NS } from '@tenmol/protocol/topics/compute';
 
+/** How a metric's result is produced and rendered by the panel. */
 export type MetricKind =
   | 'scalar'
   | 'selection'
@@ -47,6 +48,7 @@ export type MetricParam =
   | { kind: 'number'; name: string; label: string; default: number }
   | { kind: 'bool'; name: string; label: string; default: boolean };
 
+/** One compute-panel helper: its call, kind, params and presentation. */
 export interface Metric {
   id: string;
   /** Dotted call, resolved by the dispatcher to `pymol.util.<name>`. */
@@ -80,6 +82,7 @@ export interface Metric {
   source: string;
 }
 
+/** The catalogue of compute helpers the panel offers, in display order. */
 export const METRICS: readonly Metric[] = [
   {
     id: 'area',

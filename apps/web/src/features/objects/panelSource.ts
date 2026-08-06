@@ -41,6 +41,7 @@ export interface PanelExtras {
   internalGuiMode?: number;
 }
 
+/** A panel snapshot plus the extra GUI-mode fields the source layers on. */
 export type PanelSnapshotFull = PanelSnapshot & PanelExtras;
 
 /** `{t:'call'}` — `fn` is a dotted path resolved against `cmd` by the bridge. */
@@ -53,11 +54,13 @@ export type CallFn = <T = unknown>(
 /** `{t:'do'}` — a raw PyMOL command line. */
 export type DoFn = (commandLine: string) => Promise<unknown>;
 
+/** The wire callbacks a panel source needs: a `call` and a `do`. */
 export interface PanelSourceOptions {
   call: CallFn;
   do: DoFn;
 }
 
+/** Reads the objects panel — snapshots and row menus — over the bridge. */
 export interface PanelSource {
   /** One panel snapshot. Bootstraps the endpoint on first use. */
   snapshot(): Promise<PanelSnapshotFull>;
@@ -87,6 +90,7 @@ export const PANEL_SYMBOL = 'tenmol_objects';
 export const BOOTSTRAP =
   '/from tenmol_bridge.panels.objects import install;install()';
 
+/** Build a panel source over the given `call`/`do`, bootstrapping on first use. */
 export function createPanelSource(options: PanelSourceOptions): PanelSource {
   const { call } = options;
   let installed = false;

@@ -43,6 +43,7 @@ function params(): URLSearchParams {
   return new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
 }
 
+/** `?viewportFixtures=` — a static Mode-G source from pre-encoded dev frames, or null. */
 export function fixtureGeometrySource(): GeometrySource | null {
   const raw = params().get('viewportFixtures');
   if (raw === null || raw.trim() === '' || !pullSourceAvailable()) return null;
@@ -54,14 +55,17 @@ export function fixtureGeometrySource(): GeometrySource | null {
   return createStaticGeometrySource({ urls });
 }
 
+/** `?viewportPull=off` — suppress the dev PNG pull fallback. */
 export function pullDisabled(): boolean {
   return params().get('viewportPull') === 'off';
 }
 
+/** `?viewportHandle=1` — publish the live `ViewportHandle` on `window`. */
 export function handleExposed(): boolean {
   return params().get('viewportHandle') === '1';
 }
 
+/** `?viewportModeP=off` — do not start a Mode-P source, leaving Mode G on a black canvas. */
 export function modePDisabled(): boolean {
   return params().get('viewportModeP') === 'off';
 }

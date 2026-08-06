@@ -24,6 +24,7 @@ import { WizardLauncher } from './WizardLauncher';
 import { WizardKeyCapture } from './WizardKeyCapture';
 import './wizards.css';
 
+/** The wizards feature root: wires the wizard service to launcher, panel, and prompt. */
 export function WizardsPanel() {
   const session = useSession();
   const phase = useStore(session.stores.connection, (s) => s.phase);

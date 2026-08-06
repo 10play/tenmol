@@ -222,7 +222,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 --version
-          node scripts/doc-coverage.mjs --max-undocumented 1192
+          node scripts/doc-coverage.mjs --max-undocumented 0
 
       # ---- gate: Mintlify site links --------------------------------------
       #

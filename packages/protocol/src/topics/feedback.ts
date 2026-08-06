@@ -12,8 +12,10 @@
  */
 
 export const FEEDBACK_SEVERITIES = ['error', 'warning', 'suggest', 'info'] as const;
+/** One console feedback severity level. */
 export type FeedbackSeverity = (typeof FEEDBACK_SEVERITIES)[number];
 
+/** One classified console line: its text and inferred severity. */
 export interface FeedbackLine {
   text: string;
   severity: FeedbackSeverity;
@@ -21,6 +23,7 @@ export interface FeedbackLine {
   inferred: boolean;
 }
 
+/** A `feedback` topic frame: raw console lines with optional classification. */
 export interface FeedbackPayload {
   /** Raw lines, in order. Same shape as the top-level `{t:'feedback'}` frame. */
   lines: string[];

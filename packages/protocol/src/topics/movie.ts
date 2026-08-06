@@ -89,10 +89,14 @@ export interface MovieStatus {
 
 /** `CViewElem::specification_level` (`packages/engine/layer1/View.h:24`). */
 export const SPEC_NONE = 0;
+/** Frame's view is tweened between neighbouring key frames. */
 export const SPEC_INTERPOLATED = 1;
+/** Frame carries an explicit key-framed view. */
 export const SPEC_KEY = 2;
+/** A frame's key-frame specification level: none, interpolated, or key. */
 export type SpecLevel = typeof SPEC_NONE | typeof SPEC_INTERPOLATED | typeof SPEC_KEY;
 
+/** One frame of the movie timeline: its state mapping, command, and key-frame flags. */
 export interface MovieCell {
   /** 1-based movie frame. */
   frame: number;
@@ -124,6 +128,7 @@ export interface MovieRow {
   scenes: (string | null)[];
 }
 
+/** The full movie panel: frame cells, motion rows, and the C panel's layout metrics. */
 export interface MoviePanel {
   nframes: number;
   cells: MovieCell[];
@@ -160,6 +165,7 @@ export interface MoviePanel {
 /** `MovieScene::storemask` bit names (`packages/engine/layer3/MovieScene.cpp:207-213`). */
 export type SceneStore = 'view' | 'color' | 'active' | 'rep' | 'frame' | 'thumbnail';
 
+/** One stored scene: its name, message, and which state groups it captured. */
 export interface SceneRecord {
   name: string;
   /** `cmd.get_scene_message(name)`. */
@@ -170,6 +176,7 @@ export interface SceneRecord {
   current: boolean;
 }
 
+/** The scene panel state: every scene, the current one, and their order. */
 export interface ScenePanelPayload {
   scenes: SceneRecord[];
   current: string | null;
@@ -199,6 +206,7 @@ export interface SceneThumbnail {
  * export
  * ------------------------------------------------------------------ */
 
+/** Outcome of a frame-sequence export: the files written and where. */
 export interface MovieExportResult {
   prefix: string;
   dir: string;
@@ -258,6 +266,7 @@ export interface MovieProducePlan {
   twoPassPalette: boolean;
 }
 
+/** The plan plus what `movie.produce` actually did: success, byte size, leftover frames. */
 export interface MovieProduceResult extends MovieProducePlan {
   ok: boolean;
   bytes: number;
@@ -286,6 +295,7 @@ export type MsetToken =
   | { kind: 'repeat'; total: number }
   | { kind: 'ramp'; to: number };
 
+/** Client-side preview of an `mset` string: the resolved frame->state table. */
 export interface MsetPreview {
   /** 1-based states, one entry per movie frame. */
   states: number[];

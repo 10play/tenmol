@@ -62,6 +62,7 @@ const view = (
  */
 export const VIEW_PROBE_KEY = '__tenmol_view_probe__';
 
+/** The `cmd.view` command surface — store and recall named camera views. */
 export const viewActions = {
   /** Overwrite-or-create. `store` is the only write; see (2) above. */
   store: (key: string) => view([key, 'store']),

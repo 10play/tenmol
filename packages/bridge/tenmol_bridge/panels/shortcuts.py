@@ -56,10 +56,17 @@ def _describe(value: Any) -> Dict[str, Any]:
 
 
 class ShortcutsAPI:
+    """The wire-facing panel API exposing PyMOL's live keyboard bindings.
+
+    Reads ``cmd.key_mappings`` and reports it as a stable, ordered list of
+    records for the client's shortcut panel.
+    """
+
     def __init__(self, cmd: Any) -> None:
         self._cmd = cmd
 
     def hello(self) -> Dict[str, Any]:
+        """A capability handshake announcing the attach attribute."""
         return {"ok": True, "attr": ATTR}
 
     def key_mappings(self) -> Dict[str, Any]:
@@ -79,6 +86,10 @@ class ShortcutsAPI:
 
 
 def install(cmd: Optional[Any] = None) -> Dict[str, Any]:
+    """Attach the shortcuts API to ``cmd`` (defaulting to ``pymol.cmd``), idempotently.
+
+    Returns the API's ``hello`` handshake; a second call reuses the existing instance.
+    """
     if cmd is None:
         import pymol
 
@@ -92,6 +103,7 @@ def install(cmd: Optional[Any] = None) -> Dict[str, Any]:
 
 
 def uninstall(cmd: Optional[Any] = None) -> bool:
+    """Detach the shortcuts API from ``cmd``; True if one was present to remove."""
     if cmd is None:
         import pymol
 
@@ -103,6 +115,7 @@ def uninstall(cmd: Optional[Any] = None) -> bool:
 
 
 def installed(cmd: Optional[Any] = None) -> bool:
+    """True if the shortcuts API is attached to ``cmd`` (defaulting to ``pymol.cmd``)."""
     if cmd is None:
         import pymol
 

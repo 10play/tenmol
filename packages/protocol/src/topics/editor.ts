@@ -18,6 +18,7 @@ export interface EditorPickedAtom {
   label: string;
 }
 
+/** The Builder's current pick state: which atoms are picked and what edits they enable. */
 export interface EditorPayload {
   /** `cmd.get_setting_int('auto_zoom')`-style editor mode flags. */
   active: boolean;

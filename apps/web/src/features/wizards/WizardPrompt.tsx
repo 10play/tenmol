@@ -50,6 +50,7 @@ export const WIZARD_TEXT_COLOR = 'rgb(51, 255, 51)';
 /** `WizardBackColor` (`packages/engine/layer1/Ortho.cpp:2692-2694`). */
 export const WIZARD_BACK_COLOR = 'rgb(51, 51, 51)';
 
+/** Props for `WizardPrompt`: the prompt lines, the `wizard_prompt_mode`, and the portal target. */
 export interface WizardPromptProps {
   lines: string[];
   /** Setting `wizard_prompt_mode`. */
@@ -58,6 +59,7 @@ export interface WizardPromptProps {
   target?: string;
 }
 
+/** Renders PyMOL's in-viewport wizard prompt overlay via a portal. */
 export function WizardPrompt({ lines, mode, target = '.shell__viewport' }: WizardPromptProps) {
   const host = usePortalHost(target);
   const seqHeight = useTopSeqViewerHeight(host);

@@ -19,6 +19,7 @@ const REFRESH_MS = 1500;
 
 const EMPTY: ScenePanelPayload = { scenes: [], current: null, order: [] };
 
+/** State and actions the scenes panel exposes: scene list, thumbnails and mutators. */
 export interface ScenesController {
   payload: ScenePanelPayload;
   thumbs: Record<string, SceneThumbnail>;
@@ -28,6 +29,7 @@ export interface ScenesController {
   loadThumb(name: string): Promise<void>;
 }
 
+/** React hook driving the scenes panel: polls the scene list and manages thumbnails. */
 export function useScenes(): ScenesController {
   const session = useSession();
   const sourceRef = useRef<MovieSource | null>(null);

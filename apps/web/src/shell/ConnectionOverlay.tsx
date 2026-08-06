@@ -17,6 +17,7 @@
 import { useCallback, useState } from 'react';
 import { useSession, useStoreState } from '../app';
 
+/** Full-screen overlay for connecting to the bridge, distinguishing an unreachable bridge from a bad token. */
 export function ConnectionOverlay() {
   const session = useSession();
   const connection = useStoreState(session.stores.connection);

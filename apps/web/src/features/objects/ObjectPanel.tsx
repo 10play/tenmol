@@ -77,6 +77,7 @@ interface DragState {
   lastChanged: string | null;
 }
 
+/** The object tree panel: rows for every object/selection with visibility, colour and menus. */
 export function ObjectPanel() {
   const session = useSession();
   const store = session.stores.objects;
@@ -554,10 +555,12 @@ function capture(event: React.PointerEvent): void {
   }
 }
 
+/** Whether a group row is expanded, preferring its own flag over the collapsed set. */
 export function isOpen(row: PanelRow, collapsed: readonly string[]): boolean {
   return row.isOpen !== undefined ? row.isOpen : !collapsed.includes(row.name);
 }
 
+/** Whether a row index falls inside the current visibility-drag band. */
 export function inBand(drag: { pressed: number; over: number; mode: string }, index: number) {
   if (drag.mode !== 'visibility') return false;
   return index >= Math.min(drag.pressed, drag.over) && index <= Math.max(drag.pressed, drag.over);
@@ -584,6 +587,7 @@ export function rowIndexAt(
   return index >= count ? count : index;
 }
 
+/** Walk a nested menu tree by index path to the node it points at, or undefined. */
 export function nodeAtPath(
   items: readonly PanelMenuNode[],
   path: readonly number[],

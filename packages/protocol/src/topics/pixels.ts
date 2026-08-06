@@ -12,6 +12,7 @@
 
 import type { PixelEncoding, RepId } from '../geometry';
 
+/** The `pixels` topic event: negotiated Mode-P stream parameters and flow-control state. */
 export interface PixelsPayload {
   /** Framebuffer size the bridge is currently rendering at (CSS px * dpr). */
   width: number;

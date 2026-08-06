@@ -440,9 +440,15 @@ class ActionWizard(Wizard):
         self.actionHash = str(self.__class__)
 
     def setActionHash(self, action_hash: Any) -> None:
+        """Set the identity token used to recognize a re-click of the same button."""
         self.actionHash = action_hash
 
     def activateOrDismiss(self) -> int:
+        """Install this wizard, or tear it down if the same action is already active.
+
+        Returns 1 when it activated and 0 when a repeated click dismissed it -- the
+        click-the-same-button-twice-to-cancel behaviour.
+        """
         activate_flag = 1
         cur_wiz = self.cmd.get_wizard()
         if cur_wiz is not None:
@@ -457,12 +463,18 @@ class ActionWizard(Wizard):
         return activate_flag
 
     def actionWizardDone(self) -> None:
+        """Delete the active selection, drop the pick, and remove the wizard."""
         self.cmd.delete(ACTIVE_SELE)
         self.cmd.unpick()
         self.cmd.set_wizard()
         self.cmd.refresh_wizard()
 
     def activeSeleValid(self) -> bool:
+        """Ensure ACTIVE_SELE names exactly one enabled object, deriving it from pk1
+        or the sole enabled object when needed.
+
+        Returns whether a valid active selection now exists.
+        """
         if ACTIVE_SELE in self.cmd.get_names("selections"):
             if self.cmd.select(ACTIVE_SELE, "byobj " + ACTIVE_SELE) < 1:
                 self.cmd.delete(ACTIVE_SELE)
@@ -492,13 +504,19 @@ class RepeatableActionWizard(ActionWizard):
         self.repeating = 0
 
     def repeat(self) -> None:
+        """Switch the wizard into repeating mode so it stays armed after each pick."""
         self.repeating = 1
         self.cmd.refresh_wizard()
 
     def getRepeating(self) -> int:
+        """Return whether the wizard is in repeating (multi-pick) mode."""
         return self.repeating
 
     def activateRepeatOrDismiss(self) -> int:
+        """Install the wizard in repeating mode, or dismiss it on a repeat click.
+
+        On first activation it is always set repeating (matching builder.py:255).
+        """
         activate_flag = 1
         cur_wiz = self.cmd.get_wizard()
         if cur_wiz is not None:
@@ -519,6 +537,7 @@ class RepeatableActionWizard(ActionWizard):
         return activate_flag
 
     def cleanup(self) -> None:
+        """Drop the current pick before the base-class cleanup runs."""
         self.cmd.unpick()
         ActionWizard.cleanup(self)
 
@@ -533,6 +552,11 @@ class CleanWizard(ActionWizard):
         ActionWizard.__init__(self, _self)
 
     def run_job(self) -> None:
+        """Clean the single object under ACTIVE_SELE, tearing down the wizard first.
+
+        ``cmd.clean`` is Incentive-only here, so any failure is captured in
+        ``last_error`` and printed rather than raised.
+        """
         if ACTIVE_SELE in self.cmd.get_names("selections"):
             obj_list = self.cmd.get_object_list(ACTIVE_SELE)
             if len(obj_list) == 1:
@@ -546,6 +570,9 @@ class CleanWizard(ActionWizard):
                     print(self.last_error)
 
     def do_pick(self, bondFlag: int) -> None:
+        """Resolve the picked object and, if it is a single object, run the clean job;
+        otherwise report that only one object can be cleaned at a time.
+        """
         if ACTIVE_SELE in self.cmd.get_names("selections"):
             obj_list = self.cmd.get_object_list(ACTIVE_SELE)
             if len(obj_list) != 1:
@@ -561,14 +588,19 @@ class CleanWizard(ActionWizard):
             print("Error: can only clean one object at a time")
 
     def toggle(self) -> None:
+        """Activate the wizard and, when a valid single-object selection exists, run
+        the clean immediately.
+        """
         if self.activateOrDismiss():
             if self.activeSeleValid():
                 self.run_job()
 
     def get_prompt(self) -> List[str]:
+        """Return the pick-an-object-to-clean prompt line."""
         return ["Pick object to clean..."]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the Clean/Done button rows."""
         return [[1, "Clean", ""], [2, "Done", "cmd.set_wizard()"]]
 
 
@@ -580,6 +612,9 @@ class SculptWizard(ActionWizard):
         self.sculpt_object: Optional[str] = None
 
     def sculpt_activate(self) -> None:
+        """Begin real-time sculpting on the single object in ACTIVE_SELE, pushing
+        undo, enabling the sculpting engine, and optionally showing the VDW CGO.
+        """
         if ACTIVE_SELE in self.cmd.get_names("selections"):
             obj_list = self.cmd.get_object_list(ACTIVE_SELE)
             if len(obj_list) == 1:
@@ -599,6 +634,9 @@ class SculptWizard(ActionWizard):
                 print("Error: cannot sculpt more than one object at a time")
 
     def sculpt_deactivate(self) -> None:
+        """Stop sculpting the current object, running a final iteration and clearing
+        the VDW visualization.
+        """
         if self.sculpt_object is not None and self.sculpt_object in self.cmd.get_names():
             self.cmd.set("sculpt_vdw_vis_mode", "0", self.sculpt_object)
             self.cmd.sculpt_iterate(self.sculpt_object, self.cmd.get_state(), 0)
@@ -608,6 +646,9 @@ class SculptWizard(ActionWizard):
             self.cmd.refresh_wizard()
 
     def do_pick(self, bondFlag: int) -> Any:
+        """Start sculpting the picked object; once sculpting, return 0 so the pick
+        falls through to a normal edit drag.
+        """
         if self.sculpt_object is None:
             self.cmd.select(ACTIVE_SELE, "byobj pk1")
             self.sculpt_activate()
@@ -616,16 +657,21 @@ class SculptWizard(ActionWizard):
         return None
 
     def toggle(self) -> None:
+        """Activate the wizard and start sculpting when a valid object is selected."""
         if self.activateOrDismiss():
             if self.activeSeleValid():
                 self.sculpt_activate()
 
     def get_prompt(self) -> List[str]:
+        """Return the pick-an-object prompt or the 'Sculpting <obj>' status line."""
         if self.sculpt_object is None:
             return ["Pick object to sculpt..."]
         return ["Sculpting %s..." % self.sculpt_object]
 
     def finish_sculpting(self) -> None:
+        """End sculpting, clear the sculpting setting and active selection, and
+        remove the wizard.
+        """
         if self.sculpt_object:
             self.sculpt_deactivate()
         self.cmd.set("sculpting", 0)
@@ -634,6 +680,10 @@ class SculptWizard(ActionWizard):
         self.cmd.refresh_wizard()
 
     def scramble(self, mode: int) -> None:
+        """Randomly displace the sculpt object's coordinates.
+
+        Mode 0 skips fixed and restrained atoms; mode 1 skips only fixed atoms.
+        """
         from chempy import cpv
 
         if self.sculpt_object and self.cmd.count_atoms(self.sculpt_object):
@@ -654,6 +704,7 @@ class SculptWizard(ActionWizard):
             self.cmd.delete(sc_tmp)
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the sculpt control rows (undo, switch object, scramble variants, done)."""
         return [
             [1, "Sculpt", ""],
             [2, "Undo", "cmd.undo()"],
@@ -664,6 +715,7 @@ class SculptWizard(ActionWizard):
         ]
 
     def cleanup(self) -> None:
+        """Deactivate sculpting before the base-class cleanup."""
         self.sculpt_deactivate()
         ActionWizard.cleanup(self)
 
@@ -672,12 +724,16 @@ class ReplaceWizard(RepeatableActionWizard):
     """``builder.py:266-299``."""
 
     def do_pick(self, bondFlag: int) -> None:
+        """Replace the picked atom with the configured symbol/geometry/valence,
+        ending the wizard unless it is repeating.
+        """
         self.cmd.select(ACTIVE_SELE, "bymol pk1")
         self.cmd.replace(self.symbol, self.geometry, self.valence)
         if not self.getRepeating():
             self.actionWizardDone()
 
     def toggle(self, symbol: str, geometry: int, valence: int, text: str) -> None:
+        """Arm the wizard for the given replacement atom and activate (or dismiss) it."""
         self.symbol = symbol
         self.geometry = geometry
         self.valence = valence
@@ -686,11 +742,13 @@ class ReplaceWizard(RepeatableActionWizard):
         self.activateRepeatOrDismiss()
 
     def get_prompt(self) -> List[str]:
+        """Return the singular or plural pick-an-atom-to-replace prompt."""
         if self.getRepeating():
             return ["Pick atoms to replace with %s..." % self.text]
         return ["Pick atom to replace with %s..." % self.text]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the replace button rows, differing between single and repeating mode."""
         if self.getRepeating():
             return [
                 [1, "Replacing Multiple Atoms", ""],
@@ -711,6 +769,9 @@ class AttachWizard(RepeatableActionWizard):
         self.mode = 0
 
     def do_pick(self, bondFlag: int) -> None:
+        """Attach the fragment at the picked location (mode 0) or combine it into the
+        picked object (mode 1), ending the wizard unless repeating.
+        """
         if self.mode == 0:
             self.cmd.select(ACTIVE_SELE, "bymol pk1")
             editor.attach_fragment(
@@ -728,6 +789,7 @@ class AttachWizard(RepeatableActionWizard):
             self.actionWizardDone()
 
     def toggle(self, fragment: str, position: int, geometry: int, text: str) -> None:
+        """Arm the wizard for the given fragment and activate (or dismiss) it."""
         self.fragment = fragment
         self.position = position
         self.geometry = geometry
@@ -736,6 +798,7 @@ class AttachWizard(RepeatableActionWizard):
         self.activateRepeatOrDismiss()
 
     def create_new(self) -> None:
+        """Instantiate the fragment as a brand-new object rather than attaching it."""
         self.cmd.unpick()
         name = self.cmd.get_unused_name("obj")
         self.cmd.fragment(self.fragment, name)
@@ -743,10 +806,14 @@ class AttachWizard(RepeatableActionWizard):
             self.actionWizardDone()
 
     def combine(self) -> None:
+        """Switch to combine mode so the next pick merges the fragment into an
+        existing object.
+        """
         self.mode = 1
         self.cmd.refresh_wizard()
 
     def get_prompt(self) -> List[str]:
+        """Return the attach or combine prompt for the current mode."""
         if self.mode == 0:
             if self.getRepeating():
                 return ["Pick locations to attach %s..." % self.text]
@@ -754,6 +821,7 @@ class AttachWizard(RepeatableActionWizard):
         return ["Pick object to combine %s into..." % self.text]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the attach button rows for single or repeating mode."""
         if self.getRepeating():
             return [
                 [1, "Attaching Multiple Fragments", ""],
@@ -796,18 +864,28 @@ class BioPolymerWizard(RepeatableActionWizard):
         self.highlight_attachment_points()
 
     def cleanup(self) -> None:
+        """Hide the attachment-point highlight before the base-class cleanup."""
         self.highlight_attachment_points(False)
         RepeatableActionWizard.cleanup(self)
 
     def highlight_attachment_points(self, show: bool = True) -> None:
+        """Show or hide the sphere highlight on free attachment points, when
+        highlighting is enabled.
+        """
         if self._highlighting_enabled:
             fn = self.cmd.show if show else self.cmd.hide
             fn("spheres", self.HIGHLIGHT_SELE)
 
     def attach_monomer(self, objectname: str = "") -> None:
+        """Attach one monomer at the picked site; implemented by subclasses."""
         raise NotImplementedError
 
     def do_pick(self, bondFlag: int) -> None:
+        """Attach a monomer at the picked residue (mode 0).
+
+        Mode 1 (combine) is unsupported in this tree and reports an error instead
+        of raising ``AttributeError`` at pick time.
+        """
         # `bymol` because attaching can move every atom of the molecule.
         if self.mode == 0:
             self.cmd.select(ACTIVE_SELE, "bymol ?pk1")
@@ -828,6 +906,9 @@ class BioPolymerWizard(RepeatableActionWizard):
             self.actionWizardDone()
 
     def toggle(self, monomer: str) -> None:
+        """Arm the wizard for the given monomer, activate it, and auto-highlight
+        attachment points unless spheres are already shown.
+        """
         self._monomer = monomer
         self.setActionHash((monomer,))
         if self.activateRepeatOrDismiss():
@@ -838,6 +919,7 @@ class BioPolymerWizard(RepeatableActionWizard):
             self.highlight_attachment_points()
 
     def create_new(self) -> None:
+        """Attach the monomer as a new object."""
         self.cmd.unpick()
         name = self.cmd.get_unused_name("obj")
         self.attach_monomer(name)
@@ -847,6 +929,7 @@ class BioPolymerWizard(RepeatableActionWizard):
             self.cmd.unpick()
 
     def get_prompt(self) -> List[str]:
+        """Return the attach or combine prompt for the current mode."""
         if self.mode == 0:
             if self.getRepeating():
                 return ["Pick locations to attach %s..." % self._monomer]
@@ -854,6 +937,7 @@ class BioPolymerWizard(RepeatableActionWizard):
         return ["Pick object to combine %s into..." % self._monomer]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the residue-attachment button rows for single or repeating mode."""
         if self.getRepeating():
             return [
                 [1, "Attaching Multiple Residues", ""],
@@ -881,9 +965,11 @@ class AminoAcidWizard(BioPolymerWizard):
         self.setSecondaryStructure(ss)
 
     def setSecondaryStructure(self, ss: int) -> None:
+        """Set the secondary-structure code applied to newly attached amino acids."""
         self._secondary_structure = ss
 
     def attach_monomer(self, objectname: str = "") -> None:
+        """Attach an amino acid at the picked site with the configured secondary structure."""
         with self:
             editor.attach_amino_acid(
                 "?pk1",
@@ -910,6 +996,9 @@ class NucleicAcidWizard(BioPolymerWizard):
         return self
 
     def attach_monomer(self, objectname: str = "") -> None:
+        """Attach a nucleotide at the picked site using the configured type, form,
+        and double-helix flag.
+        """
         with self:
             editor.attach_nuc_acid(
                 "?pk1",
@@ -932,10 +1021,14 @@ class ValenceWizard(RepeatableActionWizard):
     """
 
     def cleanup(self) -> None:
+        """Restore the default atom-picking button bindings the wizard overrode."""
         self.cmd.button("single_left", "none", "PkAt")
         self.cmd.button("double_left", "none", "MovA")
 
     def do_pick(self, bondFlag: int) -> None:
+        """Set or cycle the valence of the picked bond, or re-arm bond picking when
+        an atom (not a bond) was picked.
+        """
         with undocontext(self.cmd, "(?pk1 ?pk2) extend 1"):
             self.cmd.select(ACTIVE_SELE, "bymol pk1")
             if bondFlag:
@@ -952,6 +1045,9 @@ class ValenceWizard(RepeatableActionWizard):
             self.actionWizardDone()
 
     def toggle(self, order: Any, text: str) -> None:
+        """Arm the wizard for the given bond order and force left-click bond picking
+        while active.
+        """
         self.order = order
         self.text = text
         self.setActionHash((order, text))
@@ -961,11 +1057,13 @@ class ValenceWizard(RepeatableActionWizard):
             self.cmd.button("single_left", "none", "PkBd")
 
     def get_prompt(self) -> List[str]:
+        """Return the singular or plural pick-a-bond prompt."""
         if self.getRepeating():
             return ["Pick bonds to set as %s..." % self.text]
         return ["Pick bond to set as %s..." % self.text]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the valence button rows for single or repeating mode."""
         if self.getRepeating():
             return [
                 [1, "Setting Multiple Valences", ""],
@@ -982,6 +1080,9 @@ class ChargeWizard(RepeatableActionWizard):
     """``builder.py:566-604``."""
 
     def do_pick(self, bondFlag: int) -> None:
+        """Set the formal charge on the picked atom, refill hydrogens, and label it,
+        ending the wizard unless repeating.
+        """
         with undocontext(self.cmd, "bymol ?pk1"):
             self.cmd.select(ACTIVE_SELE, "bymol pk1")
             self.cmd.alter("pk1", "formal_charge=%s" % self.charge)
@@ -995,17 +1096,20 @@ class ChargeWizard(RepeatableActionWizard):
             self.actionWizardDone()
 
     def toggle(self, charge: Any, text: str) -> None:
+        """Arm the wizard for the given charge value and activate (or dismiss) it."""
         self.charge = charge
         self.text = text
         self.setActionHash((charge, text))
         self.activateRepeatOrDismiss()
 
     def get_prompt(self) -> List[str]:
+        """Return the singular or plural set-charge prompt."""
         if self.getRepeating():
             return ["Pick atoms to set charge = %s..." % self.text]
         return ["Pick atom to set charge = %s..." % self.text]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the charge button rows for single or repeating mode."""
         if self.getRepeating():
             return [
                 [1, "Setting Multiple Charges", ""],
@@ -1027,6 +1131,9 @@ class InvertWizard(RepeatableActionWizard):
     """
 
     def do_pick(self, bondFlag: int) -> None:
+        """On the third picked atom, invert the stereocenter; picking exceptions are
+        printed rather than raised.
+        """
         try:
             self.cmd.select(ACTIVE_SELE, "bymol pk1")
             picked = collect_picked(self.cmd)
@@ -1040,9 +1147,11 @@ class InvertWizard(RepeatableActionWizard):
         self.cmd.refresh_wizard()
 
     def toggle(self) -> None:
+        """Activate (or dismiss) the wizard."""
         self.activateRepeatOrDismiss()
 
     def get_prompt(self) -> List[str]:
+        """Return the origin/first/second stationary-atom prompt for the current pick step."""
         names = self.cmd.get_names("selections")
         if "pk1" in names:
             if "pk2" in names:
@@ -1051,6 +1160,7 @@ class InvertWizard(RepeatableActionWizard):
         return ["Pick origin atom for inversion..."]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the invert button rows for single or repeating mode."""
         if self.getRepeating():
             return [
                 [1, "Inverting Multiple", ""],
@@ -1068,6 +1178,11 @@ class BondWizard(RepeatableActionWizard):
 
     @staticmethod
     def staticaction(cmd: Any) -> bool:
+        """Bond the two picked atoms, refilling hydrogens.
+
+        If two hydrogens are picked, bond their heavy neighbours instead. Returns
+        whether a bond was made.
+        """
         picked = collect_picked(cmd)
         if picked != ["pk1", "pk2"]:
             return False
@@ -1088,20 +1203,24 @@ class BondWizard(RepeatableActionWizard):
         return True
 
     def do_pick(self, bondFlag: int) -> None:
+        """Run the static bond action and end the wizard unless repeating."""
         if self.staticaction(self.cmd):
             if not self.getRepeating():
                 self.actionWizardDone()
         self.cmd.refresh_wizard()
 
     def toggle(self) -> None:
+        """Activate (or dismiss) the wizard."""
         self.activateRepeatOrDismiss()
 
     def get_prompt(self) -> List[str]:
+        """Return the first- or second-atom pick prompt."""
         if "pk1" in self.cmd.get_names("selections"):
             return ["Pick second atom for bond..."]
         return ["Pick first atom for bond..."]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the create-bond button rows for single or repeating mode."""
         if self.getRepeating():
             return [
                 [1, "Creating Multiple Bonds", ""],
@@ -1118,9 +1237,13 @@ class UnbondWizard(RepeatableActionWizard):
     """``builder.py:700-740``.  Also a bond-picking wizard."""
 
     def cleanup(self) -> None:
+        """Restore atom picking on single-left-click after the wizard forced bond picking."""
         self.cmd.button("single_left", "none", "PkAt")
 
     def do_pick(self, bondFlag: int) -> None:
+        """Delete the picked bond, or re-arm bond picking when an atom was picked;
+        ends the wizard unless repeating.
+        """
         with undocontext(self.cmd, "(?pk1 ?pk2) extend 1"):
             self.cmd.select(ACTIVE_SELE, "bymol pk1")
             if bondFlag:
@@ -1134,16 +1257,19 @@ class UnbondWizard(RepeatableActionWizard):
             self.actionWizardDone()
 
     def toggle(self) -> None:
+        """Activate (or dismiss) the wizard and force left-click bond picking while active."""
         self.activateRepeatOrDismiss()
         if self.cmd.get_wizard() is self:
             self.cmd.button("single_left", "none", "PkBd")
 
     def get_prompt(self) -> List[str]:
+        """Return the singular or plural pick-a-bond-to-delete prompt."""
         if self.getRepeating():
             return ["Pick bonds to delete..."]
         return ["Pick bond to delete..."]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the delete-bond button rows for single or repeating mode."""
         if self.getRepeating():
             return [
                 [1, "Deleting Multiple Bonds", ""],
@@ -1168,11 +1294,17 @@ class HydrogenWizard(RepeatableActionWizard):
         self.mode = "fix"
 
     def run_add(self) -> None:
+        """Add hydrogens to the active selection when in 'add' mode, then clear the
+        selection.
+        """
         if self.mode == "add":
             self.cmd.h_add(ACTIVE_SELE)
             self.cmd.delete(ACTIVE_SELE)
 
     def do_pick(self, bondFlag: int) -> None:
+        """Fix ('fix' mode) or add ('add' mode) hydrogens on the picked molecule,
+        ending the wizard unless repeating.
+        """
         self.cmd.select(ACTIVE_SELE, "bymol pk1")
         if self.mode == "fix":
             self.cmd.h_fill()
@@ -1184,6 +1316,9 @@ class HydrogenWizard(RepeatableActionWizard):
             self.actionWizardDone()
 
     def toggle(self, mode: str) -> None:
+        """Arm the wizard in the given mode; 'add' runs immediately on a valid
+        selection while 'fix' arms repeating pick mode.
+        """
         self.mode = mode
         self.setActionHash((mode,))
         if self.mode == "add":
@@ -1194,6 +1329,7 @@ class HydrogenWizard(RepeatableActionWizard):
             self.activateRepeatOrDismiss()
 
     def get_prompt(self) -> List[str]:
+        """Return the fix- or add-hydrogens prompt for the current mode."""
         if self.mode == "fix":
             if self.getRepeating():
                 return ["Pick atom upon which to fix hydrogens..."]
@@ -1201,6 +1337,7 @@ class HydrogenWizard(RepeatableActionWizard):
         return ["Pick molecule upon which to add hydrogens..."]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the hydrogen button rows for the current mode and repeat state."""
         title = "Fixing Hydrogens" if self.mode == "fix" else "Adding Hydrogens"
         if self.getRepeating():
             return [[1, title, ""], [2, "Done", "cmd.set_wizard()"]]
@@ -1216,6 +1353,9 @@ class RemoveWizard(RepeatableActionWizard):
     """``builder.py:808-842``."""
 
     def do_pick(self, bondFlag: int) -> None:
+        """Remove the picked atom (and heavy neighbours), fixing chemistry and
+        re-adding hydrogens, then end the wizard unless repeating.
+        """
         with undocontext(self.cmd, "?pk1 extend 1"):
             cnt = self.cmd.select(
                 ACTIVE_SELE, "((pk1 and not hydro) extend 1) and not hydro"
@@ -1229,14 +1369,17 @@ class RemoveWizard(RepeatableActionWizard):
             self.actionWizardDone()
 
     def toggle(self) -> None:
+        """Activate (or dismiss) the wizard."""
         self.activateRepeatOrDismiss()
 
     def get_prompt(self) -> List[str]:
+        """Return the singular or plural pick-an-atom-to-delete prompt."""
         if self.getRepeating():
             return ["Pick atoms to delete..."]
         return ["Pick atom to delete..."]
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the delete-atom button rows for single or repeating mode."""
         if self.getRepeating():
             return [
                 [1, "Deleting Atoms", ""],
@@ -1258,6 +1401,9 @@ class AtomFlagWizard(ActionWizard):
         self.flag = 0
 
     def update_display(self) -> None:
+        """Rebuild DISPLAY_SELE to show which active-selection atoms carry the
+        current flag, then refresh the wizard.
+        """
         if ACTIVE_SELE in self.cmd.get_names("selections"):
             self.cmd.select(DISPLAY_SELE, ACTIVE_SELE + " and flag %d" % self.flag)
             self.cmd.enable(DISPLAY_SELE)
@@ -1266,6 +1412,7 @@ class AtomFlagWizard(ActionWizard):
         self.cmd.refresh_wizard()
 
     def do_pick(self, bondFlag: int) -> None:
+        """Toggle the current flag on the picked atom and refresh the flag display."""
         if ACTIVE_SELE in self.cmd.get_names("selections"):
             if self.cmd.count_atoms("pk1 and flag %d" % self.flag):
                 self.cmd.flag(self.flag, "pk1", "clear")
@@ -1284,6 +1431,9 @@ class AtomFlagWizard(ActionWizard):
         self.update_display()
 
     def get_prompt(self) -> List[str]:
+        """Return the pick-an-object prompt, or the toggle-restrained/fixed prompt
+        once an object is selected.
+        """
         if ACTIVE_SELE not in self.cmd.get_names("selections"):
             return ["Pick object to operate on..."]
         self.cmd.reference("validate", ACTIVE_SELE)  # overbroad (builder.py:876)
@@ -1294,6 +1444,9 @@ class AtomFlagWizard(ActionWizard):
         return ["Toggle unknown atom flag..."]
 
     def toggle(self, flag: int = 0) -> None:
+        """Arm the wizard for the given flag and activate (or dismiss) it, updating
+        the flag display.
+        """
         self.flag = flag
         if self.activateOrDismiss():
             if self.activeSeleValid():
@@ -1306,11 +1459,13 @@ class AtomFlagWizard(ActionWizard):
         return ACTIVE_SELE in self.cmd.get_names("selections")
 
     def do_all(self) -> None:
+        """Set the current flag on every atom of the active selection."""
         if self._active():
             self.cmd.flag(self.flag, ACTIVE_SELE, "set")
             self.update_display()
 
     def do_less(self, mode: int) -> None:
+        """Erode the flagged set inward by one bond (mode 0) or by residue (mode 1)."""
         if self._active():
             if mode == 0:
                 self.cmd.flag(
@@ -1327,6 +1482,9 @@ class AtomFlagWizard(ActionWizard):
             self.update_display()
 
     def do_cas(self, mode: int) -> None:
+        """Restrict the flag to C-alpha atoms -- replacing the set (mode 1) or
+        keeping only flagged CAs (mode 0).
+        """
         if self._active():
             if mode == 1:
                 self.cmd.flag(self.flag, ACTIVE_SELE, "clear")
@@ -1343,6 +1501,9 @@ class AtomFlagWizard(ActionWizard):
             self.update_display()
 
     def do_more(self, mode: int) -> None:
+        """Grow the flagged set outward by one bond (mode 0), by residue expansion
+        (mode 1), or to whole residues (mode 2).
+        """
         if self._active():
             if mode == 0:
                 self.cmd.flag(
@@ -1361,23 +1522,30 @@ class AtomFlagWizard(ActionWizard):
             self.update_display()
 
     def do_none(self) -> None:
+        """Clear the current flag from the whole active selection."""
         if self._active():
             self.cmd.flag(self.flag, ACTIVE_SELE, "clear")
             self.update_display()
 
     def do_store(self) -> None:
+        """Store reference coordinates for the active selection."""
         if self._active():
             self.cmd.reference("store", ACTIVE_SELE)
 
     def do_recall(self) -> None:
+        """Recall previously stored reference coordinates for the active selection."""
         if self._active():
             self.cmd.reference("recall", ACTIVE_SELE)
 
     def do_swap(self) -> None:
+        """Swap current and stored reference coordinates for the active selection."""
         if self._active():
             self.cmd.reference("swap", ACTIVE_SELE)
 
     def get_panel(self) -> List[List[Any]]:
+        """Return the flag-editing button rows, adding the reference-coordinate rows
+        for the restrain flag (2).
+        """
         title = {2: "Restrained Atoms", 3: "Fixed Atoms"}.get(self.flag)
         result: List[List[Any]] = [
             [1, title, ""],
@@ -1401,6 +1569,7 @@ class AtomFlagWizard(ActionWizard):
         return result
 
     def cleanup(self) -> None:
+        """Delete the display selection before the base Wizard cleanup."""
         self.cmd.delete(DISPLAY_SELE)
         Wizard.cleanup(self)
 
@@ -1431,6 +1600,9 @@ class _Panel:
     # -- growth / replacement ------------------------------------------
 
     def grow(self, name: str, pos: int, geom: int, text: str) -> None:
+        """Grow a fragment onto the picked atom in place, or arm an AttachWizard when
+        nothing is picked.
+        """
         if "pk1" in self.cmd.get_names("selections"):
             self.cmd.select(ACTIVE_SELE, "byobj pk1")
             editor.attach_fragment("pk1", name, pos, geom, _self=self.cmd)
@@ -1440,6 +1612,7 @@ class _Panel:
             AttachWizard(self.cmd).toggle(name, pos, geom, text)
 
     def replace(self, atom: str, geometry: int, valence: int, text: str) -> None:
+        """Replace the picked atom in place, or arm a ReplaceWizard when nothing is picked."""
         picked = collect_picked(self.cmd)
         if len(picked):
             self.cmd.select(ACTIVE_SELE, "byobj " + picked[0])
@@ -1449,6 +1622,9 @@ class _Panel:
             ReplaceWizard(_self=self.cmd).toggle(atom, geometry, valence, text)
 
     def attach(self, aa: str) -> None:
+        """Attach an amino acid to the single picked atom with the current secondary
+        structure, or arm an AminoAcidWizard when nothing suitable is picked.
+        """
         ss = self.ss_index + 1
         picked = collect_picked(self.cmd)
         if len(picked) == 1:
@@ -1461,6 +1637,9 @@ class _Panel:
             AminoAcidWizard(_self=self.cmd, ss=ss).toggle(aa)
 
     def ss_index_changed(self, index: int) -> None:
+        """Update the stored secondary-structure index and, if an AminoAcidWizard is
+        active, retune it.
+        """
         self.ss_index = index
         wizard = self.cmd.get_wizard()
         if isinstance(wizard, AminoAcidWizard):
@@ -1474,6 +1653,11 @@ class _Panel:
         form: Optional[str] = None,
         dbl_helix: Optional[bool] = None,
     ) -> None:
+        """Attach a nucleotide, updating the panel's form/helix/type state from the
+        client's values.
+
+        Attaches to a single picked atom, or arms a NucleicAcidWizard otherwise.
+        """
         # The Form/Helix radios are panel state on both sides; the client sends
         # its values with the press so the two can never disagree.
         if form is not None:
@@ -1505,6 +1689,9 @@ class _Panel:
             ).toggle(nuc_acid)
 
     def removeResn(self) -> None:
+        """Remove the whole residue of the single picked atom, or prompt to pick one
+        atom and retry.
+        """
         picked = collect_picked(self.cmd)
         if picked == ["pk1"]:
             self.cmd.select(NEWEST_SELE, "byres(pk1)")
@@ -1515,6 +1702,9 @@ class _Panel:
     # -- post-edit re-pick (builder.py:1412-1431) ----------------------
 
     def doAutoPick(self) -> None:
+        """Re-pick the newest atom after an edit (preferring a hydrogen) and forward
+        the pick to the active wizard, then zoom to it.
+        """
         self.cmd.unpick()
         if (
             self.cmd.select(
@@ -1540,12 +1730,16 @@ class _Panel:
         self.doZoom()
 
     def doZoom(self) -> None:
+        """Center the view on the current pk1 pick with a short animation."""
         if "pk1" in self.cmd.get_names("selections"):
             self.cmd.center("%pk1 extend 9", animate=-1)
 
     # -- row 1: atoms / charge / residue -------------------------------
 
     def setCharge(self, charge: int, text: str) -> None:
+        """Set the formal charge on the picked atoms and label them, or arm a
+        ChargeWizard when nothing is picked.
+        """
         picked = collect_picked(self.cmd)
         if len(picked) > 0:
             sele = "?pk1 ?pk2 ?pk3 ?pk4"
@@ -1558,6 +1752,7 @@ class _Panel:
             ChargeWizard(self.cmd).toggle(charge, text)
 
     def fixH(self) -> None:
+        """Refill hydrogens on the picked molecule, or arm a HydrogenWizard in fix mode."""
         if len(collect_picked(self.cmd)):
             self.cmd.h_fill()
             self.cmd.unpick()
@@ -1565,6 +1760,7 @@ class _Panel:
             HydrogenWizard(_self=self.cmd).toggle("fix")
 
     def addH(self) -> None:
+        """Add hydrogens to the picked molecule, or arm a HydrogenWizard in add mode."""
         if len(collect_picked(self.cmd)):
             self.cmd.h_add("pkmol")
             self.cmd.unpick()
@@ -1572,6 +1768,9 @@ class _Panel:
             HydrogenWizard(_self=self.cmd).toggle("add")
 
     def invert(self) -> None:
+        """Invert the stereocenter defined by three picked atoms, or arm an
+        InvertWizard otherwise.
+        """
         picked = collect_picked(self.cmd)
         if picked == ["pk1", "pk2", "pk3"]:
             self.cmd.invert()
@@ -1581,6 +1780,9 @@ class _Panel:
             InvertWizard(self.cmd).toggle()
 
     def removeAtom(self) -> None:
+        """Remove the picked atoms (fixing chemistry and re-adding hydrogens), or arm
+        a RemoveWizard when nothing is picked.
+        """
         picked = collect_picked(self.cmd)
         if len(picked):
             if self.cmd.count_atoms("?pkbond"):
@@ -1610,10 +1812,14 @@ class _Panel:
     # -- row 2: bonds / model ------------------------------------------
 
     def createBond(self) -> None:
+        """Bond the two picked atoms via the static action, or arm a BondWizard when
+        the pick is not a pair.
+        """
         if not BondWizard.staticaction(self.cmd):
             BondWizard(self.cmd).toggle()
 
     def deleteBond(self) -> None:
+        """Delete the picked bond, or arm an UnbondWizard when a bond pair is not picked."""
         picked = collect_picked(self.cmd)
         if picked == ["pk1", "pk2"]:
             with undocontext(self.cmd, "(?pk1 ?pk2) extend 1"):
@@ -1625,6 +1831,7 @@ class _Panel:
             UnbondWizard(self.cmd).toggle()
 
     def cycleBond(self) -> None:
+        """Cycle the valence of the picked bond, or arm a ValenceWizard in cycle mode."""
         picked = collect_picked(self.cmd)
         if picked == ["pk1", "pk2"]:
             with undocontext(self.cmd, "(?pk1 ?pk2) extend 1"):
@@ -1634,6 +1841,9 @@ class _Panel:
             ValenceWizard(_self=self.cmd).toggle(-1, "Cycle bond")
 
     def setOrder(self, order: str, text: str) -> None:
+        """Set the picked bond to the given order, or arm a ValenceWizard when a bond
+        pair is not picked.
+        """
         with undocontext(self.cmd, "(?pk1 ?pk2) extend 1"):
             picked = collect_picked(self.cmd)
             if picked == ["pk1", "pk2"]:
@@ -1646,6 +1856,7 @@ class _Panel:
                 ValenceWizard(_self=self.cmd).toggle(order, text)
 
     def sculpt(self) -> None:
+        """Seed the active selection from any picks and open the SculptWizard."""
         picked = collect_picked(self.cmd)
         if len(picked):
             self.cmd.select(ACTIVE_SELE, " or ".join(picked))
@@ -1668,6 +1879,7 @@ class _Panel:
         return wizard.last_error
 
     def fix(self) -> None:
+        """Seed the active selection and open the FixAtomWizard (flag 3)."""
         picked = collect_picked(self.cmd)
         if len(picked):
             self.cmd.select(ACTIVE_SELE, "pk1")
@@ -1677,6 +1889,7 @@ class _Panel:
         FixAtomWizard(_self=self.cmd).toggle(3)
 
     def rest(self) -> None:
+        """Seed the active selection and open the RestAtomWizard (flag 2, restrain)."""
         picked = collect_picked(self.cmd)
         if len(picked):
             self.cmd.select(ACTIVE_SELE, "byobj (" + " or ".join(picked) + ")")
@@ -1688,6 +1901,9 @@ class _Panel:
     # -- row 3: settings + undo ----------------------------------------
 
     def undo_suspended_objects(self) -> List[str]:
+        """Return the sorted names of objects that currently have per-object
+        ``suspend_undo`` set.
+        """
         return sorted(
             name
             for name in self.cmd.get_object_list()
@@ -1709,6 +1925,11 @@ class _Panel:
         return self.undo_suspended_objects()
 
     def enable_undo_for_objects(self, objects: Sequence[str]) -> List[str]:
+        """Re-enable undo on the named objects by unsetting their ``suspend_undo``,
+        skipping and reporting any unknown names.
+
+        Returns the objects actually changed.
+        """
         known = set(self.cmd.get_object_list())
         done: List[str] = []
         for name in objects:

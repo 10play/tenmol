@@ -31,8 +31,10 @@
 
 import type { SettingKind, SettingMeta } from '@tenmol/protocol';
 
+/** Whether an atom setting is written per-atom (`alter`) or per-state (`alter_state`). */
 export type AtomScope = 'atom' | 'atom-state';
 
+/** A prepared per-atom setting write: the wire call plus its echoed expression. */
 export interface AtomSettingWrite {
   /** The wire `fn`. */
   fn: 'alter' | 'alter_state';
@@ -104,6 +106,7 @@ function quote(text: string): string {
   return `'${text.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 }
 
+/** The atoms a setting write applies to: a selection and, for state scope, a state index. */
 export interface AtomSettingTarget {
   selection: string;
   /** 1-based, as `alter_state` takes it. Ignored for the `atom` scope. */

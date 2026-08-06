@@ -56,16 +56,19 @@ function maskOf(e: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }): n
   return (e.shiftKey ? MOD_SHIFT : 0) | (e.ctrlKey || e.metaKey ? MOD_CTRL : 0);
 }
 
+/** A deferred numeric-input request for a ramp point's value or alpha. */
 export interface PointPromptRequest {
   point: number;
   which: 'value' | 'alpha';
 }
 
+/** A deferred colour-picker request for one ramp point (or its whole triple). */
 export interface ColorPickRequest {
   point: number;
   triple: boolean;
 }
 
+/** Props for `VolumeCanvas`: the ramp view, its points, and the edit callbacks. */
 export interface VolumeCanvasProps {
   view: RampView;
   points: readonly VolumeRampPoint[];
@@ -87,6 +90,7 @@ export interface VolumeCanvasProps {
   onColorPick(request: ColorPickRequest): void;
 }
 
+/** The interactive 2D volume ramp canvas — drag, zoom, and edit transfer-function points. */
 export function VolumeCanvas(props: VolumeCanvasProps) {
   const { view, points } = props;
   const hostRef = useRef<HTMLDivElement>(null);

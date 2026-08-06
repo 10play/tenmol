@@ -36,6 +36,7 @@ import { viewOf, type GeometryFrame, type IndexedMeshHeader } from '@tenmol/prot
 import { createVertexMaterial } from '../modeG/materials/vertex';
 import { buildQuadLines, quadLineRecords } from './quadlines';
 
+/** A built three.js mesh plus the reasons it is undrawable (problems) or drawn-but-divergent (warnings). */
 export interface BuiltMesh {
   object: Object3D;
   material: Material;
@@ -131,6 +132,7 @@ export function visibleTriangleIndices(
   return { index: out, kept, total };
 }
 
+/** Build a three.js mesh from an indexed-mesh geometry frame, recording any parity problems and warnings. */
 export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): BuiltMesh {
   const header = frame.header;
   const problems: string[] = [];

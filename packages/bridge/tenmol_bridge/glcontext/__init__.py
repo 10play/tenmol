@@ -71,15 +71,19 @@ class Context(Protocol):
     backend: str
 
     def make_current(self) -> None:
+        """Bind this context and its FBO on the calling thread."""
         ...
 
     def resize(self, width: int, height: int) -> None:
+        """Reallocate the offscreen framebuffer to a new size."""
         ...
 
     def release(self) -> None:
+        """Tear down the context and free its GL and platform resources."""
         ...
 
     def info(self) -> Dict[str, Any]:
+        """A diagnostic snapshot of the context's backend and GL state."""
         ...
 
 

@@ -39,8 +39,10 @@
 
 /** The two custom properties `.shell__viewport` pads itself with. */
 export const RESERVE_TOP = '--pm-seq-reserve-top';
+/** CSS custom property `.shell__viewport` pads its bottom with for the seq strip. */
 export const RESERVE_BOTTOM = '--pm-seq-reserve-bottom';
 
+/** Where the sequence strip sits and how much scene space it claims. */
 export interface Reservation {
   /** `seq_view_location`: 0 draws at the top, 1 at the bottom. */
   location: number;

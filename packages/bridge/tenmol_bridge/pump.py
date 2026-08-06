@@ -57,6 +57,14 @@ TaskBody = Callable[[Engine], Any]
 
 @dataclass(order=False)
 class Task:
+    """One unit of work queued for the engine thread.
+
+    Pairs a callable ``body`` with the ``future`` that its return value (or
+    raised exception) resolves, plus scheduling hints: ``tick_after`` forces an
+    immediate draw, ``label`` names the task for diagnostics, and
+    ``submitted_at`` timestamps enqueue for latency accounting.
+    """
+
     body: TaskBody
     future: "concurrent.futures.Future[Any]"
     #: Draw immediately after this task instead of waiting for the next tick.
@@ -95,6 +103,12 @@ class Pump:
     # ---------------------------------------------------------- lifecycle
 
     def start(self, timeout: float = 60.0) -> "Pump":
+        """Spawn the engine thread and block until it has booted.
+
+        Idempotent: a second call is a no-op. Re-raises any boot error and,
+        once the engine is live, starts the status poller. Raises
+        :class:`EngineTimeout` if boot does not complete within ``timeout``.
+        """
         if self._thread is not None:
             return self
         self._thread = threading.Thread(
@@ -110,6 +124,12 @@ class Pump:
         return self
 
     def stop(self, timeout: float = 10.0) -> None:
+        """Signal the engine thread to exit and join it.
+
+        Stops the status poller, sets the stop flag, wakes the queue with a
+        sentinel, and waits up to ``timeout`` for the thread to die (logging if
+        it overruns). Idempotent when already stopped.
+        """
         if self._thread is None:
             return
         self.status_poller.stop()
@@ -186,6 +206,7 @@ class Pump:
             self._tick_hooks.append(hook)
 
     def remove_tick_hook(self, hook: Callable[[Engine], None]) -> None:
+        """Detach a post-draw hook previously registered via :meth:`add_tick_hook`."""
         with self._hook_lock:
             if hook in self._tick_hooks:
                 self._tick_hooks.remove(hook)
@@ -203,6 +224,7 @@ class Pump:
             self._pre_tick_hooks.append(hook)
 
     def remove_pre_tick_hook(self, hook: Callable[[Engine], None]) -> None:
+        """Detach a pre-tick hook previously registered via :meth:`add_pre_tick_hook`."""
         with self._hook_lock:
             if hook in self._pre_tick_hooks:
                 self._pre_tick_hooks.remove(hook)
@@ -211,13 +233,20 @@ class Pump:
 
     @property
     def state(self) -> str:
+        """The engine's current lifecycle state, forwarded from the engine."""
         return self.engine.state
 
     @property
     def pymol_version(self) -> str:
+        """The PyMOL version string reported by the booted engine."""
         return self.engine.pymol_version
 
     def status(self) -> Dict[str, Any]:
+        """A status snapshot: the engine's own status plus pump-level counters.
+
+        Augments :meth:`Engine.status` with queue depth, the configured tick
+        rate, the running tally of tick overruns, and the status poller's state.
+        """
         out = self.engine.status()
         out.update(
             {
@@ -360,6 +389,7 @@ class StatusPoller:
     # -- lifecycle ---------------------------------------------------------
 
     def start(self) -> "StatusPoller":
+        """Spawn the status polling thread. Idempotent if already running."""
         if self._thread is not None:
             return self
         self._stop.clear()
@@ -370,6 +400,7 @@ class StatusPoller:
         return self
 
     def stop(self, timeout: float = 3.0) -> None:
+        """Signal the polling thread to exit and join it, up to ``timeout``."""
         if self._thread is None:
             return
         self._stop.set()
@@ -379,12 +410,14 @@ class StatusPoller:
     def add_sink(
         self, sink: Callable[[Sequence[str], float, Sequence[Any]], None]
     ) -> None:
+        """Register a callback to receive ``(lines, progress, setting_updates)`` each poll."""
         with self._lock:
             self._sinks.append(sink)
 
     def remove_sink(
         self, sink: Callable[[Sequence[str], float, Sequence[Any]], None]
     ) -> None:
+        """Detach a sink previously registered via :meth:`add_sink`."""
         with self._lock:
             if sink in self._sinks:
                 self._sinks.remove(sink)
@@ -398,15 +431,18 @@ class StatusPoller:
         return data if limit is None else data[-limit:]
 
     def clear(self) -> None:
+        """Drop all captured scrollback and buffered setting updates."""
         with self._lock:
             self._ring.clear()
             self._settings.clear()
 
     def setting_updates(self) -> List[Any]:
+        """A copy of the setting-change events captured since the last clear."""
         with self._lock:
             return list(self._settings)
 
     def status(self) -> Dict[str, Any]:
+        """Poller diagnostics: running flag, poll rate, counters, and progress."""
         return {
             "running": self._thread is not None,
             "hz": self.config.status_hz,

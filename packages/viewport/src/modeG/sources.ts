@@ -54,6 +54,7 @@ import { DEFAULT_POLL_MS, createInvalidationPoller, type InvalidationPoller } fr
 /** `{t:'call'}` symbol the bridge exposes for a Mode-G pull. */
 export const GEOMETRY_PULL_FN = '_bridge.pull_geometry';
 
+/** Configuration for the streaming Mode-G source: transport, invalidation lifecycle, and discovery policy. */
 export interface StreamGeometrySourceOptions {
   transport: ViewportTransport;
   /** Set false to listen only (no pull requests). */
@@ -88,6 +89,7 @@ export interface StreamGeometrySourceOptions {
   wants?: (rep: RepId) => boolean;
 }
 
+/** A live Mode-G source with its cache, invalidation poller, and manual refresh exposed. */
 export interface StreamGeometrySource extends GeometrySource {
   /** Always present on this source (`GeometrySource` types it optional). */
   request(object: string, rep: RepId, state?: number): void;
@@ -98,6 +100,7 @@ export interface StreamGeometrySource extends GeometrySource {
   refresh(): Promise<void>;
 }
 
+/** Create the real Mode-G source: listen for geometry frames, pull the reps this viewport wants, and run the invalidation lifecycle. */
 export function createStreamGeometrySource(
   options: StreamGeometrySourceOptions,
 ): StreamGeometrySource {
@@ -266,12 +269,14 @@ export function createStreamGeometrySource(
   };
 }
 
+/** Configuration for the static source: the frame URLs to fetch once, and an optional fetch impl. */
 export interface StaticGeometrySourceOptions {
   /** Frame URLs, fetched once at start. */
   urls: readonly string[];
   fetchImpl?: typeof fetch;
 }
 
+/** Create a Mode-G source that fetches pre-encoded frames from URLs, for the dev harness and tests. */
 export function createStaticGeometrySource(options: StaticGeometrySourceOptions): GeometrySource {
   const doFetch = options.fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
   let stopped = false;

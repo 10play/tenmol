@@ -14,6 +14,7 @@ export interface SelectionRun {
   length: number;
 }
 
+/** Collapse selected cells into contiguous runs for drawing minimap ticks. */
 export function selectionRuns(
   cells: readonly { selected?: boolean; spacer?: boolean }[],
 ): SelectionRun[] {

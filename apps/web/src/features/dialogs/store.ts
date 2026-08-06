@@ -17,9 +17,12 @@
 
 import { createStore, type Store } from '@tenmol/stores';
 
+/** The four dialog window kinds hosted in area 10. */
 export const DIALOG_KINDS = ['volume', 'properties', 'texteditor', 'advanced-settings'] as const;
+/** One of the four dialog kinds the manager can open. */
 export type DialogKind = (typeof DIALOG_KINDS)[number];
 
+/** Geometry, identity, and stacking state of one open floating dialog window. */
 export interface DialogWindowSpec {
   key: string;
   kind: DialogKind;
@@ -34,6 +37,7 @@ export interface DialogWindowSpec {
   minimised: boolean;
 }
 
+/** The full set of open dialog windows plus the current top z-index. */
 export interface DialogsState {
   windows: readonly DialogWindowSpec[];
   /** Monotonic, so `raise` is a single `set`. */
@@ -61,6 +65,7 @@ const TITLES: Record<DialogKind, (arg: string) => string> = {
   'advanced-settings': () => 'Advanced Settings',
 };
 
+/** Store of open dialog windows with open/close/raise/move/resize commands. */
 export interface DialogsStore extends Store<DialogsState> {
   open(kind: DialogKind, arg?: string): string;
   close(key: string): void;
@@ -72,10 +77,12 @@ export interface DialogsStore extends Store<DialogsState> {
   windowsOfKind(kind: DialogKind): readonly DialogWindowSpec[];
 }
 
+/** The window key for a kind: `<kind>` for singletons, `<kind>:<arg>` per-arg. */
 export function dialogKey(kind: DialogKind, arg = ''): string {
   return arg ? `${kind}:${arg}` : kind;
 }
 
+/** Build a fresh dialogs store with its own window list and z-index counter. */
 export function createDialogsStore(): DialogsStore {
 /*
  * FLOOR FOR FLOATING WINDOWS.
@@ -206,6 +213,7 @@ function notifyHosts(): void {
   for (const listener of [...hostListeners]) listener();
 }
 
+/** Subscribe to host-claim changes; returns an unsubscribe function. */
 export function subscribeHosts(listener: () => void): () => void {
   hostListeners.add(listener);
   return () => {
@@ -223,12 +231,14 @@ export function claimHost(kind: DialogKind, token: HostToken): boolean {
   return true;
 }
 
+/** Release `token`'s claim on `kind` so the next asker can host it. */
 export function releaseHost(kind: DialogKind, token: HostToken): void {
   if (hostClaims.get(kind) !== token) return;
   hostClaims.delete(kind);
   notifyHosts();
 }
 
+/** True if `token` currently holds the host claim for `kind`. */
 export function isHost(kind: DialogKind, token: HostToken): boolean {
   return hostClaims.get(kind) === token;
 }

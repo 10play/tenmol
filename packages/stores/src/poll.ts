@@ -31,6 +31,7 @@ export interface PollerOptions {
   onError?: (error: unknown) => void;
 }
 
+/** A non-overlapping polling loop with start/stop/kick control. */
 export interface Poller {
   start(): void;
   stop(): void;
@@ -40,6 +41,7 @@ export interface Poller {
   stats(): PollerStats;
 }
 
+/** Live counters a `Poller` exposes for tests and diagnostics. */
 export interface PollerStats {
   passes: number;
   errors: number;
@@ -54,6 +56,7 @@ export interface PollerStats {
 const DEFAULT_FOCUSED_HZ = 30;
 const DEFAULT_HIDDEN_HZ = 4;
 
+/** Construct a `Poller` around a single async pass, per the rules above. */
 export function createPoller(options: PollerOptions): Poller {
   const focusedHz = options.focusedHz ?? DEFAULT_FOCUSED_HZ;
   const hiddenHz = options.hiddenHz ?? DEFAULT_HIDDEN_HZ;

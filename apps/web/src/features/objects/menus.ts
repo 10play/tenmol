@@ -25,9 +25,12 @@
 
 export type OpButton = 'A' | 'S' | 'H' | 'L' | 'C' | 'M';
 
+/** The op buttons in column order, matching `CExecutive::click`'s hit indices. */
 export const OPS: readonly OpButton[] = ['A', 'S', 'H', 'L', 'C', 'M'];
+/** The Motion button, present only in 3-Button Motions mode. */
 export const MOTION_OP: OpButton = 'M';
 
+/** Human-readable label for each op button. */
 export const OP_TITLES: Record<OpButton, string> = {
   A: 'Actions',
   S: 'Show',
@@ -133,6 +136,7 @@ const M: Table = {
   'object:mesh': 'obj_motion',
 };
 
+/** The full dispatch table: which `pymol.menu` function each button opens per row kind. */
 export const DISPATCH: Readonly<Record<OpButton, Table>> = { A, S, H, L, C, M };
 
 /** The row kind the dispatch table is keyed by. */

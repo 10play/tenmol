@@ -241,6 +241,7 @@ export const ACTION_NAME: readonly (string | null)[] = (() => {
  * Buttons and modifiers — `controlling.py:30-53`
  * ------------------------------------------------------------------ */
 
+/** Mouse button name -> `cmd.button`'s numeric code (`controlling.py:30-53`). */
 export const BUTTON_CODE: Readonly<Record<string, number>> = {
   left: 0,
   middle: 1,
@@ -254,6 +255,7 @@ export const BUTTON_CODE: Readonly<Record<string, number>> = {
   single_right: 9,
 };
 
+/** Modifier name -> `cmd.button`'s numeric code (`controlling.py:30-53`). */
 export const BUT_MOD_CODE: Readonly<Record<string, number>> = {
   none: 0,
   shft: 1,
@@ -469,6 +471,7 @@ export interface GridRow {
   wheel: number | null;
 }
 
+/** The six labelled rows of the on-screen ButMode grid, top to bottom. */
 export const GRID_ROWS: readonly GridRow[] = [
   { label: '& Keys', buttons: [0, 1, 2], wheel: 12 },
   { label: 'Shft', buttons: [3, 4, 5], wheel: 13 },
@@ -505,6 +508,7 @@ export interface SelectionLevel {
   keyword: string;
 }
 
+/** The seven `mouse_selection_mode` levels, from Atoms up to C-alphas. */
 export const SELECTION_LEVELS: readonly SelectionLevel[] = [
   { value: 0, label: 'Atoms', keyword: '' },
   { value: 1, label: 'Residues', keyword: 'byresi' },

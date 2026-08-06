@@ -104,6 +104,7 @@ const APPENDED_OWNERS: Readonly<Record<string, string>> = {
   initializePlugins: 'WP-25 (plugin surface)',
 };
 
+/** The application menu bar (File, Edit, … Help), built from PyMOL's `menudata`. */
 export function MenuBar() {
   const session = useSession();
   const [open, setOpen] = useState<number | null>(null);

@@ -39,6 +39,7 @@ const SETTINGS_INTERVAL_MS = 1000;
 /** Backed off to this while the tab is hidden (plan §1.5 uses the same idea). */
 const HIDDEN_INTERVAL_MS = 5000;
 
+/** Feeds the ortho console store from the feedback ring and polls console settings. */
 export interface ConsoleSource {
   store: ConsoleStore;
   /** Read the eight settings now. Safe to call while one is already in flight. */
@@ -58,6 +59,7 @@ export function getConsoleSource(): ConsoleSource {
   return singleton;
 }
 
+/** Build a console source bound to a session; prefer the `getConsoleSource` singleton. */
 export function createConsoleSource(session: Session): ConsoleSource {
   const store = createConsoleStore();
 

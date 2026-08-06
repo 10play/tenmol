@@ -79,6 +79,7 @@ import type { GeometryPayload } from './geometry';
 
 /* --- topic -> payload ----------------------------------------------------- */
 
+/** Maps each topic name to the shape of the payload it carries. */
 export interface TopicPayloads {
   feedback: FeedbackPayload;
   progress: ProgressPayload;

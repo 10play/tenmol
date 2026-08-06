@@ -19,6 +19,7 @@ export type CallFn = <T = unknown>(
   kwargs?: Readonly<Record<string, unknown>>,
 ) => Promise<T>;
 
+/** What `createObjectsSource` needs: the call transport, the store, and cache-fill budgets. */
 export interface ObjectsSourceOptions {
   call: CallFn;
   store: ObjectsStore;
@@ -27,6 +28,7 @@ export interface ObjectsSourceOptions {
   maxAtomLookupsPerPass?: number;
 }
 
+/** The object panel's bridge side: poll, cache invalidation, and topic adoption. */
 export interface ObjectsSource {
   /** One pass: two RPCs plus a bounded number of cache fills. */
   poll(): Promise<void>;
@@ -39,6 +41,7 @@ export interface ObjectsSource {
 /** Types for which `cmd.count_atoms` is meaningful. */
 const ATOM_COUNT_TYPES = new Set(['object:molecule', 'selection']);
 
+/** Wire the object store to `cmd.*`: name/vis polling with bounded per-name caches. */
 export function createObjectsSource(options: ObjectsSourceOptions): ObjectsSource {
   const { call, store } = options;
   const maxTypes = options.maxTypeLookupsPerPass ?? 8;
@@ -133,6 +136,7 @@ export function quoteName(name: string): string {
   return /^[A-Za-z0-9_.]+$/.test(name) && name !== '' ? name : JSON.stringify(name);
 }
 
+/** Every object-panel mutation as the single logged `cmd.*` call PyMOL's own panel issues. */
 export const panelActions = {
   enable: (name: string): PanelAction => ({
     fn: 'enable',

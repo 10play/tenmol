@@ -24,11 +24,13 @@ export const PANEL_SYMBOL = 'tenmol_menus';
 /** `/` makes PyMOL's parser treat the rest as Python (`packages/engine/modules/pymol/parser.py`). */
 export const BOOTSTRAP = '/from tenmol_bridge.panels.menus import install;install()';
 
+/** The two transports `createMenuSource` needs: a `{t:'call'}` and a `{t:'do'}`. */
 export interface MenuSourceOptions {
   call<T>(fn: string, args?: readonly unknown[]): Promise<T>;
   do(commandLine: string): Promise<void>;
 }
 
+/** The menu bar's bridge side: menus, setting values, and the recent-files list. */
 export interface MenuSource {
   /** True once a call has succeeded. */
   readonly ready: boolean;
@@ -39,6 +41,7 @@ export interface MenuSource {
   reset(): void;
 }
 
+/** Wire the menu panel to the bridge, bootstrapping the backend module on first miss. */
 export function createMenuSource(options: MenuSourceOptions): MenuSource {
   let installed = false;
   let bootstrapping: Promise<void> | null = null;

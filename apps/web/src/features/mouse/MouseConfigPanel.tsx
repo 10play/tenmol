@@ -57,6 +57,7 @@ const MODIFIERS: readonly { name: string; label: string }[] = [
 
 const ACTION_OPTIONS: readonly string[] = Object.keys(BUT_ACT_CODE).sort();
 
+/** The 8-modifier x 10-button matrix of mouse-action dropdowns. */
 export function MouseConfigPanel() {
   const session = useSession();
   const mode = useMouseMode();

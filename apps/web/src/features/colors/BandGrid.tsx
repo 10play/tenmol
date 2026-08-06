@@ -24,6 +24,7 @@ import { rgbToCss } from '@tenmol/protocol';
 import { COLOR_REGIONS, regionEntries, regionPages, type PaletteState } from './palette';
 import { useColorAction } from './usePalette';
 
+/** Props for the band grid: the palette to browse and the selection to color. */
 export interface BandGridProps {
   palette: PaletteState;
   sele: string;
@@ -32,6 +33,7 @@ export interface BandGridProps {
 /** Tiles per page. */
 export const PER_PAGE = 200;
 
+/** Paged grid over every built-in color slot, coloring the selection on click. */
 export function BandGrid({ palette, sele }: BandGridProps) {
   const act = useColorAction();
   const [regionId, setRegionId] = useState(COLOR_REGIONS[0]!.id);

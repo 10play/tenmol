@@ -30,6 +30,7 @@ import { dragOrder, encodeMenu, renameProblem, reorder, sceneActions } from './s
 import { layoutSceneButtons } from './sceneButtonGeometry';
 import './scenes.css';
 
+/** The Scenes panel: the stored-scene buttons with rename, reorder and thumbnails. */
 export function ScenePanel() {
   const session = useSession();
   const { payload, thumbs, run, loadThumb, refresh } = useScenes();

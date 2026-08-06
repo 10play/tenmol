@@ -88,6 +88,7 @@ export const HISTOGRAM_HEADER = 4;
  * the bridge for the live keys when you can.
  */
 export const BUILTIN_VOLUME_RAMPS = ['2fofc', 'fofc', 'esp', 'rainbow', 'rainbow2'] as const;
+/** One of the built-in named volume colour ramps. */
 export type BuiltinVolumeRamp = (typeof BUILTIN_VOLUME_RAMPS)[number];
 
 /* ------------------------------------------------------------------ *
@@ -120,8 +121,10 @@ export const PROPERTY_BRANCHES = [
   'astate-builtin',
   'astate-settings',
 ] as const;
+/** One branch of the properties tree; decides which `cmd.*` an edit becomes. */
 export type PropertyBranch = (typeof PROPERTY_BRANCHES)[number];
 
+/** One key/value row of the properties inspector, tagged with its branch. */
 export interface PropertyRow {
   branch: PropertyBranch;
   /** Column 0. Never editable (`UneditableDelegate`, `properties_dialog.py:18`). */
@@ -202,8 +205,10 @@ export const SETTING_TYPE = {
   Color: 5,
   String: 6,
 } as const;
+/** A `cSetting_*` type code returned by `cmd.get_setting_tuple`. */
 export type SettingTypeValue = (typeof SETTING_TYPE)[keyof typeof SETTING_TYPE];
 
+/** One row of the advanced settings table: name, index, type, string value. */
 export interface AdvancedSettingRow {
   /** `setting.get_name_list()` entry. */
   name: string;
@@ -224,6 +229,7 @@ export interface AdvancedSettingRow {
  * highlighting", not "a plain highlighter".
  */
 export const SYNTAX_MODES = ['python', 'pml', 'plain'] as const;
+/** One text-editor syntax highlighting mode. */
 export type SyntaxMode = (typeof SYNTAX_MODES)[number];
 
 /** A file the editor has open. `path` is a real server-side path (localhost). */

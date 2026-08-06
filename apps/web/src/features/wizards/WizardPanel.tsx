@@ -37,6 +37,7 @@ import { WizardPopupMenu } from './WizardPopupMenu';
 /** Setting `internal_gui_control_size`, default 18 (`packages/engine/layer1/SettingInfo.h:411`). */
 export const CONTROL_SIZE = 18;
 
+/** Props for {@link WizardPanel}: the wizard snapshot and the exec/menu callbacks. */
 export interface WizardPanelProps {
   snapshot: WizardSnapshot;
   /** Runs a `code` string server-side. NEVER evaluated here. */
@@ -52,6 +53,7 @@ interface OpenMenu {
   anchor: { x: number; y: number };
 }
 
+/** The generic wizard panel: renders any wizard's rows from its snapshot, or nothing when inactive. */
 export function WizardPanel({ snapshot, onExec, onMenu }: WizardPanelProps) {
   const [menu, setMenu] = useState<OpenMenu | null>(null);
   const [menuError, setMenuError] = useState<string | null>(null);

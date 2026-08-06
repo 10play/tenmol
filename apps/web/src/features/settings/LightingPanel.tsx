@@ -41,6 +41,7 @@ const spec = (label: string, min: number, max: number, res?: number): SliderSpec
   step: res ?? (max - min < 100 ? 0.01 : 0.1),
 });
 
+/** The grouped lighting settings and their slider ranges, laid out by section. */
 export const LIGHTING_SECTIONS: readonly Section[] = [
   {
     heading: 'Diffuse Reflection',
@@ -169,6 +170,7 @@ export const LIGHTING_PRESETS: readonly { name: string; sets: readonly [string, 
   },
 ];
 
+/** Settings panel of sliders controlling PyMOL's lighting and shading. */
 export function LightingPanel({
   store,
   source,

@@ -56,6 +56,7 @@ export function isTextEntry(target: EventTarget | null): boolean {
   return false;
 }
 
+/** Headless service that forwards document-level keydowns to the bridge as `_button` calls; renders nothing. */
 export function KeyboardService() {
   const session = useSession();
 

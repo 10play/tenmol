@@ -29,6 +29,7 @@
 
 import type { SettingValue } from '@tenmol/protocol';
 
+/** One `{t:'call'}` a menu command issues — the wire form of a Python lambda. */
 export interface MenuCall {
   /** Dotted symbol for `{t:'call'}`. */
   fn: string;
@@ -36,6 +37,7 @@ export interface MenuCall {
   kwargs?: Readonly<Record<string, unknown>>;
 }
 
+/** One node of the Setting menu tree: separator, submenu, command, check, or radio. */
 export type MenuItem =
   | { kind: 'separator' }
   | { kind: 'menu'; label: string; items: readonly MenuItem[] }

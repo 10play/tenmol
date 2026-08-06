@@ -20,6 +20,7 @@ import { ButModeBlock, MouseConfigPanel } from '../mouse';
 import { ShortcutEditor } from './ShortcutEditor';
 import './shortcuts.css';
 
+/** Service slot that portals in the ButMode block and hosts the mouse/key config overlay. */
 export function ShortcutsService() {
   const session = useSession();
   const internalGui = useStore(session.stores.ui, (state) => state.internalGui);

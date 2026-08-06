@@ -13,6 +13,7 @@
 
 import { createStore, type Store } from './createStore';
 
+/** Local-only UI preferences: panel geometry, console font, history — never PyMOL state. */
 export interface UiState {
   /** `internal_gui_width` (default 220, `packages/engine/layer1/Ortho.h:24`). */
   panelWidth: number;
@@ -32,6 +33,7 @@ export interface UiState {
 
 const STORAGE_KEY = 'tenmol.ui.v1';
 
+/** The default UI state used before any persisted values are loaded. */
 export const UI_DEFAULTS: UiState = {
   panelWidth: 220,
   consoleHeight: 210,
@@ -42,10 +44,12 @@ export const UI_DEFAULTS: UiState = {
   history: [],
 };
 
+/** A {@link UiState} store with a `reset` back to defaults. */
 export interface UiStore extends Store<UiState> {
   reset(): void;
 }
 
+/** Create a {@link UiStore} that loads from and persists to `storage` best-effort. */
 export function createUiStore(storage: StorageLike | null = defaultStorage()): UiStore {
   const store = createStore<UiState>({ ...UI_DEFAULTS, ...load(storage) });
 
@@ -59,6 +63,7 @@ export function createUiStore(storage: StorageLike | null = defaultStorage()): U
   };
 }
 
+/** The minimal `localStorage` surface this store needs. */
 export interface StorageLike {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;

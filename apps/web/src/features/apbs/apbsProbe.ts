@@ -31,9 +31,12 @@ export type CallFn = <T>(
   kwargs?: Readonly<Record<string, unknown>>,
 ) => Promise<T>;
 
+/** Executable names to try when locating APBS, in the plugin's own order. */
 export const APBS_CANDIDATES = ['apbs', '$SCHRODINGER/utilities/apbs'] as const;
+/** Executable names to try when locating pdb2pqr, in the plugin's own order. */
 export const PDB2PQR_CANDIDATES = ['pdb2pqr', 'pdb2pqr30', 'pdb2pqr_cli'] as const;
 
+/** Resolution result for one external program: its name, resolved path, and names tried. */
 export interface ProgramStatus {
   /** What the plugin would call it. */
   name: string;
@@ -43,6 +46,7 @@ export interface ProgramStatus {
   tried: readonly string[];
 }
 
+/** Whether the APBS pipeline can run here: both programs plus the plugin's own scan. */
 export interface ApbsProbe {
   apbs: ProgramStatus;
   pdb2pqr: ProgramStatus;
@@ -82,6 +86,7 @@ const MISSING = (candidates: readonly string[]): ProgramStatus => ({
   tried: candidates,
 });
 
+/** The neutral "nothing found yet" probe, used before any scan and on failure. */
 export const UNKNOWN_PROBE: ApbsProbe = {
   apbs: MISSING(APBS_CANDIDATES),
   pdb2pqr: MISSING(PDB2PQR_CANDIDATES),
@@ -89,6 +94,7 @@ export const UNKNOWN_PROBE: ApbsProbe = {
   error: null,
 };
 
+/** Scan the engine host for APBS, pdb2pqr, and the apbs_gui plugin. */
 export async function probeApbs(call: CallFn): Promise<ApbsProbe> {
   try {
     const paths = await call<string[]>('plugins.get_startup_path');

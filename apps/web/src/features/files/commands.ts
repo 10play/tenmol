@@ -24,6 +24,7 @@ export interface TrajOptions {
   deferBuilds: boolean;
 }
 
+/** Render the `load_traj` command string the trajectory dialog would execute. */
 export function trajCommand(o: TrajOptions): string {
   let command = '';
   if (o.deferBuilds) command += 'set defer_builds_mode, 3\n';
@@ -56,6 +57,7 @@ export interface MapOptions {
   isosurfaceName: string;
 }
 
+/** Render the map-load command string (load plus volume/isomesh/isosurface) the map dialog builds. */
 export function mapCommand(o: MapOptions): string {
   let command = `set ${o.normalizeSetting}, ${o.normalize ? 1 : 0}\n`;
   command += 'load ' + o.filename;
@@ -108,6 +110,7 @@ export interface MaeOptions {
   discrete: number;
 }
 
+/** Render the Maestro `load` command string the MAE import dialog would execute. */
 export function maeCommand(o: MaeOptions): string {
   let command = `load \\\n    ${o.filename}`;
   if (o.objectName) command += ', \\\n    ' + o.objectName;
@@ -131,6 +134,7 @@ export interface FetchOptions {
   namefofc: string;
 }
 
+/** Render the `fetch` command string (structure plus map types) the PDB fetch dialog builds. */
 export function fetchCommand(o: FetchOptions): string {
   // The Qt dialog returns '' until the code is exactly 4 characters, and the
   // OK button refuses with "Need 4 letter PDB code" (`:492-495`).
@@ -175,6 +179,7 @@ export function drawCommand(width: number, height: number): string {
   return `draw ${width | 0}, ${height | 0}`;
 }
 
+/** The command lines the Ray render button runs: set background opacity, then `ray`. */
 export function rayCommands(width: number, height: number, transparent: boolean): string[] {
   return [
     `set opaque_background, ${transparent ? 0 : 1}`,

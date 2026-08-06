@@ -34,6 +34,7 @@
 
 import type { BuilderSculptTick } from '@tenmol/protocol/topics/builder';
 
+/** Configuration for the sculpt ticker: the poll call, cycles/rate, and callbacks. */
 export interface SculptTickerOptions {
   /** One poll. Usually `controller.sculptTick`. */
   tick: (cycles?: number) => Promise<BuilderSculptTick>;
@@ -55,6 +56,7 @@ export interface SculptTickerOptions {
   cancel?: (handle: unknown) => void;
 }
 
+/** Handle to a sculpt ticker: whether it is running, and start/stop/sync controls. */
 export interface SculptTicker {
   readonly running: boolean;
   start(): void;
@@ -63,6 +65,7 @@ export interface SculptTicker {
   sync(sculpting: number | boolean | undefined): void;
 }
 
+/** Build a ticker that polls the engine's sculpt strain readout while sculpting is active. */
 export function createSculptTicker(options: SculptTickerOptions): SculptTicker {
   const hz = options.hz ?? 5;
   const cycles = options.cycles ?? 0;

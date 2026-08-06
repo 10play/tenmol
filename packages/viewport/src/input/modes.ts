@@ -29,6 +29,7 @@
 /** `[button, modifier, action]`, exactly the tuple `cmd.button` takes. */
 export type ButtonBinding = readonly [button: string, modifier: string, action: string];
 
+/** A mouse-mode name — a key of `mode_dict`, i.e. an argument to `cmd.mouse`. */
 export type ModeName =
   | 'three_button_lights'
   | 'three_button_viewing'
@@ -42,6 +43,7 @@ export type ModeName =
   | 'one_button_viewing'
   | 'default';
 
+/** A configuration-ring name — a key of `ring_dict`, the modes `cmd.mouse` cycles. */
 export type RingName =
   | 'maestro'
   | 'three_button'

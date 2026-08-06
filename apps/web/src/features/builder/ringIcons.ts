@@ -27,6 +27,7 @@ export interface RingIcon {
   readonly height: number;
 }
 
+/** The ten Chemical row-2 ring icons, keyed by ring name, inlined byte-for-byte. */
 export const RING_ICONS: Readonly<Record<string, RingIcon>> = {
   cyc3: {
     src: 'data:image/gif;base64,R0lGODlhFAAUAJEAAAAAAICAgP///////yH5BAEAAAIALAAAAAAUABQAAAIylI+py43gGAQhplmtgTtbLlAa2H2XJy1iQx6ryqJPDDuvG93hiAL+DwzKAsSi8ahJKgsAOw==',

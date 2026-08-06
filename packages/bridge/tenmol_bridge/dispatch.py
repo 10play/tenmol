@@ -64,6 +64,14 @@ class CallResult(dict):
 
 
 class Dispatcher:
+    """Turns a wire command into a policy-checked call on the engine thread.
+
+    Every public entry point (:meth:`call`, :meth:`do`, :meth:`input`,
+    :meth:`confirm`) runs the request through the :class:`Policy` and then
+    submits the actual PyMOL work to the pump, returning a Future.  The
+    ``_bridge.*`` namespace is intercepted before the policy and served in-process.
+    """
+
     def __init__(
         self,
         pump: Pump,
@@ -98,6 +106,12 @@ class Dispatcher:
         kwargs: Any = None,
         session: Any = None,
     ) -> "concurrent.futures.Future[CallResult]":
+        """Policy-check a ``cmd.*`` symbol and run it, returning a Future.
+
+        ``_bridge.*`` calls are routed in-process; a denied symbol yields an
+        already-failed Future; otherwise the resolved callable runs on the pump
+        with its result encoded (blobs extracted) into a :class:`CallResult`.
+        """
         if (
             self.bridge_routes is not None
             and isinstance(fn, str)
@@ -141,6 +155,12 @@ class Dispatcher:
     # -------------------------------------------------------------------- do
 
     def do(self, cmdline: Any, echo: bool = True) -> "concurrent.futures.Future[CallResult]":
+        """Run a raw PyMOL command line, as the console and panels do.
+
+        ``cmd.do`` is not itself confirm-gated (it bootstraps every panel), but
+        the confirm-once gate is re-applied per leading keyword so ``do`` cannot
+        be used to slip past a prompt an equivalent API call would raise.
+        """
         if not isinstance(cmdline, str) or not cmdline:
             return _failed(BadMessage("do requires a non-empty command string"))
         decision = self.policy.check("cmd.do")
@@ -254,6 +274,11 @@ class Dispatcher:
     # --------------------------------------------------------------- confirm
 
     def confirm(self, symbol: Any) -> "concurrent.futures.Future[CallResult]":
+        """Grant a one-shot confirmation for a gated symbol so its next call runs.
+
+        Answers immediately with an already-resolved Future; no PyMOL work is
+        submitted, only the policy's confirm-once state is updated.
+        """
         if not isinstance(symbol, str):
             return _failed(BadMessage("confirm requires a symbol name"))
         self.policy.confirm(symbol.rsplit(".", 1)[-1])

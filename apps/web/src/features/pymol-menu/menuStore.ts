@@ -21,6 +21,7 @@ import { createStore, type Store } from '@tenmol/stores';
 /** `[code, label, command]` exactly as `packages/engine/modules/pymol/menu.py` returns it. */
 export type PymolMenuRow = readonly [code: number, label: string, command: string];
 
+/** State of the popup PyMOL menu: whether it is open, its rows, and where it was anchored. */
 export interface PymolMenuState {
   open: boolean;
   /** Optional heading; PyMOL uses a code-2 row for this, we allow both. */
@@ -35,6 +36,7 @@ export interface PymolMenuState {
 
 const EMPTY: PymolMenuState = { open: false, title: '', rows: [], x: 0, y: 0, epoch: 0 };
 
+/** Store for the popup PyMOL menu, with imperative open/close controls. */
 export interface PymolMenuStore extends Store<PymolMenuState> {
   openAt(
     x: number,
@@ -45,6 +47,7 @@ export interface PymolMenuStore extends Store<PymolMenuState> {
   close(): void;
 }
 
+/** Build a fresh popup-menu store; prefer the `pymolMenu` singleton below. */
 export function createPymolMenuStore(): PymolMenuStore {
   const store = createStore<PymolMenuState>({ ...EMPTY });
   return {

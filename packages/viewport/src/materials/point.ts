@@ -3,6 +3,7 @@ import { GLSL3, RawShaderMaterial } from 'three';
 import { LIGHTING_GLSL, lightingUniforms } from '../modeG/materials/lighting';
 import { POINT_FRAG, POINT_VERT } from '../shaders/point';
 
+/** Options controlling the screen-space point (dots) material. */
 export interface PointMaterialOptions {
   /** `dot_width` / `line_width`, in CSS pixels. The frame header carries it. */
   pointSize?: number;

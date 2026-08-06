@@ -32,6 +32,7 @@
 import type { ConsoleSettings } from '@tenmol/protocol/topics/console';
 import { arrowsGrabbed, textVisible, type ConsoleState } from '@tenmol/stores/console';
 
+/** The decision {@link mapOrthoKey} returns: the console action a keystroke maps to, or `none` to leave it to the browser. */
 export type OrthoAction =
   /** Printable character insert (`add_normal_char`). */
   | { kind: 'insert'; ch: string }
@@ -78,6 +79,7 @@ export function controlChordKey(key: string): string {
   return key.toUpperCase();
 }
 
+/** Translate a browser key event into an {@link OrthoAction}, mirroring `OrthoKey`/`OrthoSpecial`. */
 export function mapOrthoKey(event: OrthoKeyEvent, state: ConsoleState): OrthoAction {
   const { key, ctrlKey, shiftKey, altKey, metaKey } = event;
   const settings = state.settings;

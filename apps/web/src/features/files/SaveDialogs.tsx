@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import type { SaveMoleculeInfo } from '@tenmol/protocol/topics/files';
 import { Check, Field, Modal } from './Modal';
 
+/** The parameters the Export Molecule dialog collects for one save. */
 export interface MoleculeSaveRequest {
   selection: string;
   state: number;

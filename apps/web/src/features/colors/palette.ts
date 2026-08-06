@@ -35,8 +35,10 @@ import {
   type ColorKind,
 } from '@tenmol/protocol';
 
+/** A normalized RGB triple, each channel in 0..1. */
 export type Rgb = readonly [number, number, number];
 
+/** One of PyMOL's keyword colours (auto, current, front, back, …) resolved live. */
 export interface SpecialColor {
   keyword: string;
   /** What `cmd.get_color_index(keyword)` answered, resolved live. */
@@ -47,12 +49,14 @@ export interface SpecialColor {
   rgb: Rgb | null;
 }
 
+/** A live `object:ramp` and the colour index it can be used as. */
 export interface RampInfo {
   name: string;
   /** `-10 - slot`; the colour index this ramp can be used AS. */
   index: number;
 }
 
+/** The full client-side snapshot of PyMOL's colour table, plus load status. */
 export interface PaletteState {
   status: 'idle' | 'loading' | 'ready' | 'error';
   error: string | null;
@@ -68,6 +72,7 @@ export interface PaletteState {
   revision: number;
 }
 
+/** The idle, unloaded palette used before the first fetch. */
 export const EMPTY_PALETTE: PaletteState = {
   status: 'idle',
   error: null,
@@ -117,6 +122,7 @@ export function parseColorIndices(value: unknown): { name: string; index: number
   return out;
 }
 
+/** The result of one full palette fetch, ready to fold into {@link PaletteState}. */
 export interface LoadedPalette {
   entries: ColorEntry[];
   named: ColorEntry[];
@@ -224,6 +230,7 @@ export async function loadRamps(call: CallFn): Promise<RampInfo[]> {
  * Lookup
  * ------------------------------------------------------------------ */
 
+/** A colour index resolved to a drawable RGB, label and CSS string. */
 export interface ResolvedColor {
   kind: ColorKind;
   /** Drawable RGB, or null when only PyMOL can say (front/back, unknown). */
@@ -454,6 +461,7 @@ export interface ColorRegion {
   note: string;
 }
 
+/** The twelve contiguous regions `ColorReset` lays the built-in table into. */
 export const COLOR_REGIONS: readonly ColorRegion[] = [
   { id: 'core', label: 'core names', first: 0, count: 54, note: 'white … tv_yellow, hand-written' },
   { id: 'grey', label: 'grey00-99', first: 54, count: 100, note: 'i/99 in all three channels' },

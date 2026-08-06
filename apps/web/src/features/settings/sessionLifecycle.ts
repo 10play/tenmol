@@ -35,6 +35,7 @@ export const REINIT_CODES: Readonly<Record<string, number>> = {
   purge_defaults: 4,
 };
 
+/** One `File ▸ Reinitialize` menu entry: its label, reinit word, help text, and whether it deletes objects. */
 export interface ReinitEntry {
   label: string;
   what: string;

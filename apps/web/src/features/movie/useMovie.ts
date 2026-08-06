@@ -42,6 +42,7 @@ const EMPTY_STATUS: MovieStatus = {
   settings: {} as MovieStatus['settings'],
 };
 
+/** The movie hook's return value: current status, panel, and actions to drive playback. */
 export interface MovieController {
   status: MovieStatus;
   panel: MoviePanel | null;
@@ -55,6 +56,7 @@ export interface MovieController {
   refreshNow(): Promise<void>;
 }
 
+/** React hook exposing movie status and panel plus action/command runners. */
 export function useMovie(): MovieController {
   const session = useSession();
   const source = useMemo(() => createMovieSource(session.call), [session]);

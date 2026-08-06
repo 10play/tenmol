@@ -50,8 +50,10 @@ import { KEYS, coerceToPythonLiteral, formatValue, inferOldKind, oneLetter } fro
 
 /** `packages/bridge/tenmol_bridge/panels/properties.py`, bootstrapped like the others. */
 export const PROPS_NS = 'cmd.tenmol_props';
+/** The `cmd.do` line that installs the properties helper into the bridge. */
 export const PROPS_BOOTSTRAP = 'import tenmol_bridge.panels.properties as _tp; _tp.install()';
 
+/** The bridge helper's reply for one atom: the seven chempy-less built-ins plus custom `p.*` properties. */
 export interface AtomExtras {
   ok: boolean;
   found: boolean;
@@ -93,6 +95,7 @@ const NO_ATOM_SETTINGS =
   'returns the effective value, there is no get_atom_settings, and s.all raises ' +
   'LookupError. Set one with alter s.<name> = ...';
 
+/** One atom as `cmd.get_model` returns it: the chempy `Atom` fields the panel reads. */
 export interface AtomRecord {
   index?: number;
   id?: number;
@@ -120,11 +123,13 @@ export interface AtomRecord {
   hetatm?: number;
 }
 
+/** A `cmd.get_model` result: the object name and its atom list. */
 export interface ChempyModel {
   __model__?: string;
   atom?: AtomRecord[];
 }
 
+/** The inspector header's selection: which object/state/atom index, and their spinner maxima. */
 export interface HeaderState {
   objects: string[];
   model: string;
@@ -140,6 +145,7 @@ export async function objectList(session: Session): Promise<string[]> {
   return Array.isArray(names) ? names : [];
 }
 
+/** `cmd.get_state()`, clamped to at least 1 — the state the header opens on. */
 export async function currentState(session: Session): Promise<number> {
   const state = await session.call<number>('get_state');
   return typeof state === 'number' && state > 0 ? state : 1;
@@ -199,6 +205,7 @@ export async function movePk1(session: Session, model: string, index: number): P
   }
 }
 
+/** Atom and state counts for a model, i.e. the two header spinner maxima. */
 export async function counts(
   session: Session,
   model: string,
@@ -212,6 +219,7 @@ export async function counts(
 
 /* ------------------------------------------------------------------ reads */
 
+/** Object-level rows: currently just the object's TTT matrix. */
 export async function objectRows(session: Session, model: string): Promise<PropertyRow[]> {
   const ttt = await session.call<number[] | null>('get_object_ttt', [model]);
   return [
@@ -223,6 +231,7 @@ export async function objectRows(session: Session, model: string): Promise<Prope
   ];
 }
 
+/** The settings set on a model, as rows — object level for state 0, object-state level otherwise. */
 export async function settingRows(
   session: Session,
   model: string,
@@ -246,6 +255,7 @@ export async function settingRows(
   }));
 }
 
+/** Object-state rows: the state's title and its state matrix. */
 export async function ostateRows(
   session: Session,
   model: string,
@@ -261,6 +271,7 @@ export async function ostateRows(
   ];
 }
 
+/** The four atom-level row groups the panel draws for one picked atom. */
 export interface AtomRows {
   identifiers: PropertyRow[];
   builtins: PropertyRow[];
@@ -270,6 +281,7 @@ export interface AtomRows {
   found: boolean;
 }
 
+/** Build every atom-level row for one atom, merging chempy fields with the bridge helper's extras. */
 export async function atomRows(
   session: Session,
   model: string,
@@ -387,12 +399,14 @@ export function atomPropertyRows(extras: AtomExtras | null): PropertyRow[] {
   }));
 }
 
+/** The atom-state settings branch, which PyMOL cannot fill — an `unavailable` placeholder row. */
 export function astateSettingsPlaceholder(): PropertyRow[] {
   return [{ branch: 'astate-settings', key: 's.*', text: '', unavailable: NO_ATOM_SETTINGS }];
 }
 
 /* ------------------------------------------------------------------ edits */
 
+/** The model and state an edit or unset applies against. */
 export interface EditContext {
   model: string;
   state: number;

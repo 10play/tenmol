@@ -22,6 +22,7 @@
 
 export type TopicUnsubscribe = () => void;
 
+/** Wiring for a topic binding: the topic, its payload handler, and an optional gap handler. */
 export interface TopicBindingOptions<P> {
   topic: string;
   /** Called for every payload, in arrival order. */
@@ -34,6 +35,7 @@ export interface TopicBindingOptions<P> {
   onGap?: (info: { topic: string; expected: number; received: number }) => void;
 }
 
+/** A per-topic binding that feeds events to a store and tracks sequence gaps. */
 export interface TopicBinding<P> {
   /** Feed one event. `seq` is optional until the client forwards it. */
   receive(payload: P, seq?: number): void;
@@ -44,6 +46,7 @@ export interface TopicBinding<P> {
   readonly seqAvailable: boolean;
 }
 
+/** Create a topic binding that applies payloads in order and reports any `seq` gap. */
 export function createTopicBinding<P>(options: TopicBindingOptions<P>): TopicBinding<P> {
   let lastSeq = 0;
   let gaps = 0;
@@ -95,6 +98,7 @@ export function createTopicBinding<P>(options: TopicBindingOptions<P>): TopicBin
  */
 export type InvalidationClass = 'color' | 'reps' | 'geometry' | 'coords' | 'names' | 'resync';
 
+/** Read the invalidation classes off an `{t:'ok'}` frame, accepting both `invalidates` and `inval`. */
 export function invalidationsOf(frame: unknown): readonly InvalidationClass[] {
   if (typeof frame !== 'object' || frame === null) return [];
   const record = frame as Record<string, unknown>;

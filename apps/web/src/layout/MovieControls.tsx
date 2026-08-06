@@ -58,6 +58,7 @@ const BUTTONS: Btn[] = [
   { key: 'full', glyph: 'F', title: 'full screen (cmd.full_screen)', cmd: 'full_screen' },
 ];
 
+/** The bottom movie-playback control bar: play, step, rock and full-screen buttons. */
 export function MovieControls({ frame }: { frame: FrameState }) {
   const bridge = useBridge();
   return (

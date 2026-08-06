@@ -9,6 +9,7 @@
 
 import type { InvalidationClass } from '../envelope';
 
+/** A `redisplay` topic event: scene-dirty flag, tick, and invalidation classes. */
 export interface RedisplayPayload {
   /** True when the scene changed since the last drain. */
   dirty: boolean;

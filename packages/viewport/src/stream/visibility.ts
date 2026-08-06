@@ -45,6 +45,7 @@ export interface VisibilityWindowLike {
   removeEventListener(type: string, listener: (event?: unknown) => void): void;
 }
 
+/** Wiring for {@link createVisibilityController}: callback, document/window, init. */
 export interface VisibilityControllerOptions {
   /**
    * Called whenever the answer changes, and ONCE at construction with the
@@ -59,6 +60,7 @@ export interface VisibilityControllerOptions {
   emitInitial?: boolean;
 }
 
+/** Watches page visibility and reports when it changes. */
 export interface VisibilityController {
   /** The last reported answer. */
   readonly hidden: boolean;
@@ -91,6 +93,7 @@ export function isDocumentHidden(doc: VisibilityDocumentLike | null = globalDocu
   return false;
 }
 
+/** Build a controller that fires `onChange` when page visibility changes. */
 export function createVisibilityController(
   options: VisibilityControllerOptions,
 ): VisibilityController {

@@ -22,6 +22,7 @@ import { dispatchLeaf } from './leafHooks';
 import { pymolMenu } from './menuStore';
 import './pymol-menu.css';
 
+/** Floating context menu rendered from PyMOL's menu store at the pick location. */
 export function PopupMenu() {
   const session = useSession();
   const state = useStoreState(pymolMenu);

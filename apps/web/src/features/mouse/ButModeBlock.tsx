@@ -46,6 +46,7 @@ const MOUSE_CONFIG_ROWS: readonly PymolMenuRow[] = MOUSE_CONFIG_MENU.map(
   (item) => [item.kind, item.label, item.command] as PymolMenuRow,
 );
 
+/** The ButMode block: PyMOL's mouse-mode and selection-level panel rendered as clickable DOM. */
 export function ButModeBlock() {
   const session = useSession();
   const mode = useMouseMode();
