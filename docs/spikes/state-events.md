@@ -1,3 +1,8 @@
+---
+title: "Spike 05 — State change detection for the web-client bridge"
+description: "> ## STATUS — re-read against the tree on 2026-08-02 > > §1–§7 are the design the bridge shipped and they still describe it. The two-channel split of > §5…"
+---
+
 # Spike 05 — State change detection for the web-client bridge
 
 > ## STATUS — re-read against the tree on 2026-08-02
@@ -8,7 +13,7 @@
 > all live constraints, not history.
 >
 > **§8 IS SUPERSEDED. Do not implement it.** It was a ranked wish-list of C++ that had not been
-> written; [`08-native-changes.md`](./08-native-changes.md) then wrote something deliberately
+> written; `08-native-changes.md` then wrote something deliberately
 > different, and §8's top recommendation is the one that was **rejected on evidence**:
 >
 > | §8 item | what actually happened |

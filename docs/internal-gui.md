@@ -1,3 +1,8 @@
+---
+title: "Internal GUI (the panels PyMOL draws inside the viewport)"
+description: "Scope: everything PyMOL draws itself inside the OpenGL viewport as 2D 'Blocks' — the right-hand object panel ('names list'), its A/S/H/L/C/M popup menus…"
+---
+
 # Internal GUI (the panels PyMOL draws inside the viewport)
 
 Scope: everything PyMOL draws **itself inside the OpenGL viewport** as 2D "Blocks" —
@@ -278,7 +283,7 @@ level ▸ — zoom / center / origin — drag / reset — rename / group ▸ —
 rename / group ▸ — delete.
 
 **`ramp_action`** (`menu.py:1460-1471`): `levels ▸` with `Range +/- L` for
-L ∈ {0.1,0.2,0.5,1,2,5,10,20,50,100} → `cmd.ramp_update(name, range=[-L,L])` — group ▸ —
+L ∈ &#123;0.1,0.2,0.5,1,2,5,10,20,50,100&#125; → `cmd.ramp_update(name, range=[-L,L])` — group ▸ —
 delete.
 
 Shared action sub-menus:
@@ -405,7 +410,7 @@ rank, ID, index).
   background, invoked at `packages/engine/layer1/SceneMouse.cpp:885-886` via `MenuActivate3fv`:
   `new ▸` (pseudoatom ▸ label / single) — zoom (vis) / orient (vis) / center (vis) /
   reset — movie ▸ (`movie_main`, `menu.py:1671-1680`: play, stop, rewind, panel ▸ on/off) /
-  scene ▸ (`scene_main`, `menu.py:1636-1650`: next, append, update, recall ▸ <all scenes>,
+  scene ▸ (`scene_main`, `menu.py:1636-1650`: next, append, update, recall ▸ &lt;all scenes>,
   buttons ▸ on/off) — enable ▸ / disable ▸ (`enable_disable`, `menu.py:1613-1629`) —
   `(all) ▸` / `(visible) ▸` (`all_option`, `menu.py:1592-1611`) — ray —
   `delete all` / `reinitialize` / `quit`.
@@ -462,8 +467,8 @@ across `rect.right - (rect.left + cControlLeftMargin)`; box size
 | 3 | ▶ (`:743-761`) | toggle play; with `Ctrl` rewinds first (`cmd.rewind();cmd.mplay()`) | `cmd.mplay()` / `cmd.mstop()` |
 | 4 | ▶ (`:762-785`) | `SceneSetFrame(G,5,1)` — step forward | `cmd.forward()` |
 | 5 | ▶ with bar (`:786-817`) | end; with `Ctrl` → middle | `cmd.ending()` / `cmd.middle()` |
-| 6 | letter `S` (`:818-822`) | toggle `seq_view` | `cmd.set('seq_view',0|1)` |
-| 7 | ▼ triangle (`:823-839`) | toggle `rock`, restarts sweep/frame timers | `cmd.rock(0|1)` |
+| 6 | letter `S` (`:818-822`) | toggle `seq_view` | `cmd.set('seq_view',0\|1)` |
+| 7 | ▼ triangle (`:823-839`) | toggle `rock`, restarts sweep/frame timers | `cmd.rock(0\|1)` |
 | 8 | letter `F` (`:840-844`) | `full_screen` | `cmd.full_screen()` |
 
 "Lit" (ActiveColor `{0.65,0.65,0.65}`) states: button 6 when `seq_view`, button 3 when
@@ -473,7 +478,7 @@ across `rect.right - (rect.left + cControlLeftMargin)`; box size
 **Left gutter "nub"** (`x < rect.left + cControlLeftMargin`, `packages/engine/layer1/Control.cpp:448-469`):
 * single click + drag horizontally → live-resizes `internal_gui_width`
   (min `cControlMinWidth = 5`) and calls `OrthoReshape` — `packages/engine/layer1/Control.cpp:263-276`
-* double click (<0.35 s) → collapse the panel to width 5 / restore the saved width.
+* double click (&lt;0.35 s) → collapse the panel to width 5 / restore the saved width.
 
 `ControlIdling()` (`packages/engine/layer1/Control.cpp:397-403`) — the client must keep animating while
 sdof active / movie playing / rock / sculpting.
@@ -703,7 +708,7 @@ All of the following were verified to exist in this tree.
 | Row names, in SpecRec order | `cmd.get_names(type, enabled_only, selection)` with `type` ∈ objects / selections / all / public / public_objects / public_selections / public_nongroup_objects / public_group_objects / nongroup_objects / group_objects | `packages/engine/modules/pymol/querying.py:1155-1199`; C: `ExecutiveGetNames` `packages/engine/layer3/Executive.cpp:8873-8960` |
 | Row kind | `cmd.get_type(name)` → `object:molecule`, `object:map`, `object:mesh`, `object:slice`, `object:surface`, `object:measurement`, `object:cgo`, `object:group`, `object:volume`, `selection` | `packages/engine/modules/pymol/querying.py:1206-1240` |
 | All names of one kind | `cmd.get_names_of_type('object:group')` | `packages/engine/modules/pymol/querying.py:1459-1485` |
-| **enabled + reps + colour, all rows at once** | `cmd.get_vis()` → `{name: [visible:int, [], [rep_indices] | None, color_index | None]}` | `packages/engine/modules/pymol/viewing.py:899-901`; C: `ExecutiveGetVisAsPyDict` `packages/engine/layer3/Executive.cpp:4496-4527` (rep list built by `getRepArrayFromBitmask` `:4529-4540`; `_`-prefixed recs are skipped) |
+| **enabled + reps + colour, all rows at once** | `cmd.get_vis()` → `{name: [visible:int, [], [rep_indices] \| None, color_index \| None]}` | `packages/engine/modules/pymol/viewing.py:899-901`; C: `ExecutiveGetVisAsPyDict` `packages/engine/layer3/Executive.cpp:4496-4527` (rep list built by `getRepArrayFromBitmask` `:4529-4540`; `_`-prefixed recs are skipped) |
 | Restore that state | `cmd.set_vis(dict)` | `packages/engine/modules/pymol/viewing.py:903-905`; C: `ExecutiveSetVisFromPyDict` `packages/engine/layer3/Executive.cpp:4574` |
 | Enabled-only listing | `cmd.get_names('objects', enabled_only=1)` | used by `menu.enable_disable` `packages/engine/modules/pymol/menu.py:1613-1629` |
 | Object colour index | `cmd.get_object_color_index(name)` | `packages/engine/modules/pymol/querying.py:819-823` |

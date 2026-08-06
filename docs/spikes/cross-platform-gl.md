@@ -1,3 +1,7 @@
+---
+title: "Spike 07 — Cross-platform offscreen GL (Linux EGL, Windows WGL)"
+---
+
 # Spike 07 — Cross-platform offscreen GL (Linux EGL, Windows WGL)
 
 ## THE ANSWER, if you came here for one
@@ -469,7 +473,7 @@ behind, so `docker image rm <tag>` afterwards.
 
 `WGL_ARB_pbuffer` is itself obtained through `wglGetProcAddress`, which needs a current context,
 which needs a window — so a window is unavoidable either way. We create one
-`WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN` window, **without `WS_VISIBLE` and without
+`WS_POPUP \| WS_CLIPSIBLINGS \| WS_CLIPCHILDREN` window, **without `WS_VISIBLE` and without
 `ShowWindow`**, take its DC, set a pixel format on it once, and render only into an FBO.
 `CS_OWNDC` is required: without it `GetDC` returns a DC from the common pool, the pixel format is
 not guaranteed to persist, and a later `wglMakeCurrent` can fail with
@@ -1289,7 +1293,7 @@ wants, and using it avoids the two-context dance that `wglCreateContextAttribsAR
    `_cmd*.so` links `libGLEW.so.2.2`, `libGLX.so.0` and `libX11.so.6`, and with `DISPLAY` unset a
    full start + load + draw wrote **nothing** to stderr and left `use_shaders` `on` (§2.8).
    `packages/engine/layer0/ShaderMgr.cpp:566-573` swallowing `GLEW_ERROR_NO_GLX_DISPLAY` is doing exactly its job.
-   GLEW < 2.2 is still untested.
+   GLEW &lt; 2.2 is still untested.
 3. ~~**32-bit Windows calling convention.**~~ **BUG FOUND AND FIXED — this risk was real, and
    "`WinDLL` is used everywhere it matters" was wrong.** `WinDLL` gives `__stdcall` only to
    functions fetched as *DLL exports*. Both `GLFunctions._bind` and `_EGL._proc` build their

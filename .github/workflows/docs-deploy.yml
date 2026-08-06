@@ -1,0 +1,57 @@
+# Deploy the Mintlify docs on merge to master.
+#
+# GRACEFUL UNTIL CONNECTED. The site is set up now; the Mintlify account is
+# linked later. Every real step here is gated on the MINTLIFY_API_KEY secret, so
+# until that secret exists this workflow is a green no-op -- it never blocks or
+# fails. It is deliberately NOT a required check.
+#
+# The RECOMMENDED hosting path is installing the Mintlify GitHub App, which
+# auto-deploys on every push with no token in the repo and no workflow at all.
+# This workflow is the token-based alternative (Mintlify's official action,
+# which calls the Trigger-update API) for teams that prefer an explicit,
+# in-repo trigger. Pick one; you do not need both.
+name: docs-deploy
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docs/**"
+      - "tools/gen-api/**"
+      - ".github/workflows/docs-deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: deploy to Mintlify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      # Resolve whether the account is connected. An undefined secret is the
+      # empty string in GitHub Actions, so this is safe before the secret exists.
+      - name: check Mintlify connection
+        id: guard
+        env:
+          MINTLIFY_API_KEY: ${{ secrets.MINTLIFY_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MINTLIFY_API_KEY:-}" ]; then
+            echo "connected=false" >> "$GITHUB_OUTPUT"
+            echo "Mintlify not connected (no MINTLIFY_API_KEY secret) -- skipping deploy."
+            echo "To go live: install the Mintlify GitHub App (auto-deploys on push),"
+            echo "or add a MINTLIFY_API_KEY secret to use the trigger step below."
+          else
+            echo "connected=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: trigger Mintlify deployment
+        if: steps.guard.outputs.connected == 'true'
+        uses: mintlify/github-action@v4
+        with:
+          api-key: ${{ secrets.MINTLIFY_API_KEY }}

@@ -1,0 +1,10 @@
+# Files that live in docs/ but are NOT part of the Mintlify site.
+#
+# feature-parity.md and code-ownership.md are machine-readable inputs parsed
+# byte-for-byte by scripts/parity.mjs and scripts/ownership.mjs. They must stay
+# at these exact paths and unmodified, so Mintlify neither renders nor validates
+# them. README.md is the GitHub-facing directory index (the Mintlify home is
+# index.mdx).
+feature-parity.md
+code-ownership.md
+README.md

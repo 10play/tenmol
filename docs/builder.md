@@ -1,3 +1,8 @@
+---
+title: "The molecular builder"
+description: "The Builder dock widget and the molecular editor state machine behind it, read out of packages/engine/, which is unmodified upstream."
+---
+
 # The molecular builder
 
 The Builder dock widget and the molecular editor state machine behind it, read out of
@@ -235,7 +240,7 @@ Backing dihedrals in `editor.attach_amino_acid` (`editor.py:151-162`):
 | 2 antiparallel beta | −139.0 | 135.0 |
 | 3 parallel beta | −119.0 | 113.0 |
 | 4 flat (**not exposed in the Qt combo**) | 180.0 | 180.0 |
-| ss<0 | falls back to the `secondary_structure` setting (`SettingInfo.h:242`, default 2, range 1..4) | |
+| ss&lt;0 | falls back to the `secondary_structure` setting (`SettingInfo.h:242`, default 2, range 1..4) | |
 
 ### 4c. `editor.attach_amino_acid` semantics (`editor.py:98-292`)
 
@@ -245,11 +250,11 @@ Signature: `attach_amino_acid(selection, amino_acid, center=0, animate=-1, objec
 - **New-object branch** (selection empty / 0 atoms): `cmd.fragment(amino_acid, object)`; `cmd.remove("(hydro and <obj>)")` if `not hydro`; then `cmd.edit("((obj) and name C)")` if a C exists else `cmd.edit("((obj) and name N)")`. Errors if an object with that name already exists.
 - **Validation errors** (each prints and raises `QuietException`, after `cmd.delete("_tmp_editor*")`):
   - `cmd.select(tmp_connect, "(sel) & elem N,C") != 1` → *"invalid connection point: must be one atom, name N or C."*
-  - `amino_acid in ["nhh","nme"]` and the picked atom is not `elem C` → *"invalid connection point: must be C for residue '<x>'"*
-  - `amino_acid == "ace"` and the picked atom is not `elem N` → *"invalid connection point: must be N for residue '<x>'"*
+  - `amino_acid in ["nhh","nme"]` and the picked atom is not `elem C` → *"invalid connection point: must be C for residue '&lt;x>'"*
+  - `amino_acid == "ace"` and the picked atom is not `elem N` → *"invalid connection point: must be N for residue '&lt;x>'"*
   - picked atom is `elem H` → *"please pick a nitrogen or carbonyl carbon to grow from."*
   - otherwise → *"unable to attach fragment."*
-- **Backward (grow off N)** `editor.py:167-222`: renumber new residue `resi = resv-1`; `cmd.set_geometry(tmp_connect, 3, 3)` (make N planar); `cmd.fuse("(tmp_editor and name C)", tmp_connect, 2)`; `cmd.select(tmp_domain,"byresi (pk1 | pk2)")`; `cmd.remove("(pkmol and hydro)")` if `not hydro`; `cmd.set_dihedral(CA/CH3', pk2, pk1, CA/CH3, 180.0)` (omega); `cmd.h_fix(tmp2)` if hydro; PHI/PSI `cmd.set_dihedral` (skipped for `pro*`); re-`cmd.edit` on the new terminal N; optional `cmd.center(..., animate=animate)`.
+- **Backward (grow off N)** `editor.py:167-222`: renumber new residue `resi = resv-1`; `cmd.set_geometry(tmp_connect, 3, 3)` (make N planar); `cmd.fuse("(tmp_editor and name C)", tmp_connect, 2)`; `cmd.select(tmp_domain,"byresi (pk1 \| pk2)")`; `cmd.remove("(pkmol and hydro)")` if `not hydro`; `cmd.set_dihedral(CA/CH3', pk2, pk1, CA/CH3, 180.0)` (omega); `cmd.h_fix(tmp2)` if hydro; PHI/PSI `cmd.set_dihedral` (skipped for `pro*`); re-`cmd.edit` on the new terminal N; optional `cmd.center(..., animate=animate)`.
 - **Forward (grow off C)** `editor.py:223-281`: mirror image, `resi = resv+1`, `cmd.set_geometry(tmp_editor+" & name N", 3, 3)`, `cmd.fuse("(tmp_editor and name N)", tmp_connect, 2)`, `cmd.h_fix("pk1")`, special amide-H fix for `nhh` (`set_dihedral(O, C, N, H1, 180)`), PHI/PSI, then `cmd.edit` new terminal C or `cmd.unpick()`.
 - Always finishes with `cmd.delete("_tmp_editor*")`.
 
@@ -494,14 +499,14 @@ Note the truncation bug: the truncated list including the literal `"[N more]"` p
 
 ### 6.6 `AminoAcidWizard` (`builder.py:473-492`)
 
-- `HIGHLIGHT_SELE = "(name N &! neighbor name C) | (name C &! neighbor name N)"` — free N/C termini.
+- `HIGHLIGHT_SELE = "(name N &! neighbor name C) \| (name C &! neighbor name N)"` — free N/C termini.
 - `attach_monomer(objectname="")` → `editor.attach_amino_acid("?pk1", monomer, object=objectname, ss=self._secondary_structure)`.
 - `setSecondaryStructure(ss)` is called live by the SS combo (`builder.py:1376-1379`).
 - `combine_monomer()` → `editor.combine_fragment("pk1", monomer, 0, 1)`.
 
 ### 6.7 `NucleicAcidWizard` (`builder.py:494-512`)
 
-- `HIGHLIGHT_SELE = "(name O3' &! neighbor name P) | (name P &! neighbor name O3') | (name O5' &! neighbor name P) "` — free 3'/5' ends.
+- `HIGHLIGHT_SELE = "(name O3' &! neighbor name P) \| (name P &! neighbor name O3') \| (name O5' &! neighbor name P) "` — free 3'/5' ends.
 - `_init(form, dbl_helix, nuc_type)` is a fluent initializer called right before `toggle()`.
 - `attach_monomer(objectname="")` → `editor.attach_nuc_acid("?pk1", monomer, object=objectname, nuc_type=..., form=..., dbl_helix=...)`.
 - `combine_monomer()` → `editor.combine_nucleotide("pk1", monomer + form, 0, 1)`.
@@ -613,12 +618,12 @@ Note: the local `verb` dict (`builder.py:953`, `{2:"Restrain", 3:"Fix"}`) is com
 
 ### 7b. Pick assignment order (`EditorGetNextMultiatom`, `packages/engine/layer3/Editor.cpp:498-536`)
 
-Next pick goes to the first free slot in order `pk1 → pk2 → pk3 → pk4`. **Once all four are taken, further picks overwrite `pk4`** (the round-robin variant is commented out). Clicking an already-picked atom in atom-pick mode *unpicks* it (`EditorDeselectIfSelected`, `Editor.cpp:356-392`; message *"You unpicked <atom>."*).
+Next pick goes to the first free slot in order `pk1 → pk2 → pk3 → pk4`. **Once all four are taken, further picks overwrite `pk4`** (the round-robin variant is commented out). Clicking an already-picked atom in atom-pick mode *unpicks* it (`EditorDeselectIfSelected`, `Editor.cpp:356-392`; message *"You unpicked &lt;atom>."*).
 
 ### 7c. Scene click → editor (`packages/engine/layer1/SceneMouse.cpp:404-470`)
 
-- `cButModePickAtom1` (`PkAt1` / "Pk1"): resets the editor and puts the atom in `pk1` only: `EditorInactivate` → `SelectorCreate(pk1, "<obj>`<index+1>")` → `EditorActivate(state, enable_bond=false)` → `EditorDefineExtraPks()` → `WizardDoPick(0, state)`. Logs `cmd.edit("<sele>",pkresi=1)`.
-- `cButModePickAtom` (`PkAt`): multi-pick; leaves bond mode if active, unpicks if already picked, otherwise `EditorGetNextMultiatom` → `SelectorCreate(name, ...)` → `EditorActivate(state, false)` → `EditorDefineExtraPks()` → `EditorLogState(false)` → `WizardDoPick(0, state)`. Feedback: *"You clicked <atom> -> (pkN)"*.
+- `cButModePickAtom1` (`PkAt1` / "Pk1"): resets the editor and puts the atom in `pk1` only: `EditorInactivate` → `SelectorCreate(pk1, "<obj>`&lt;index+1>")` → `EditorActivate(state, enable_bond=false)` → `EditorDefineExtraPks()` → `WizardDoPick(0, state)`. Logs `cmd.edit("&lt;sele>",pkresi=1)`.
+- `cButModePickAtom` (`PkAt`): multi-pick; leaves bond mode if active, unpicks if already picked, otherwise `EditorGetNextMultiatom` → `SelectorCreate(name, ...)` → `EditorActivate(state, false)` → `EditorDefineExtraPks()` → `EditorLogState(false)` → `WizardDoPick(0, state)`. Feedback: *"You clicked &lt;atom> -> (pkN)"*.
 - Bond picking (`PkBd`) goes through `SceneClickPickBond` (`SceneMouse.cpp:487+`) and sets `pk1`+`pk2` with `BondMode=true` → wizards receive `do_pick(bondFlag=1)`.
 - `ObjectMolecule.cpp:3428` calls `EditorSelect(sele1, sele2, "", "", false, true, true)` for bond picks.
 
