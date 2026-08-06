@@ -67,7 +67,10 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
 
   const viewportHeight = spec.height;
   const first = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
-  const last = Math.min(rows.length, Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + OVERSCAN);
+  const last = Math.min(
+    rows.length,
+    Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + OVERSCAN,
+  );
   const visible = rows.slice(first, last);
 
   const fetchRow = useCallback(

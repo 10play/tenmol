@@ -216,8 +216,7 @@ export function BuilderPanel() {
       // Not in editing mode: this click means "select", which is exactly what
       // the viewport does by itself. Leave it alone.
       if (current === null || !current.mouse.editing) return false;
-      const wantsBond =
-        current.wizard !== null && BOND_PICK_WIZARDS.has(current.wizard.name);
+      const wantsBond = current.wizard !== null && BOND_PICK_WIZARDS.has(current.wizard.name);
       if (wantsBond && hit.index2 === null) {
         // Armed for a bond and the click landed on something that identifies
         // ONE atom (a sphere, a surface triangle). Consume it anyway: falling
@@ -532,8 +531,20 @@ export function BuilderPanel() {
       <div className="builder__actions">
         <div className="builder__row">
           <span className="builder__label">Atoms:</span>
-          <ActionButton kind="fixH" label="Fix H" tip="Fix hydrogens on picked atoms" state={state} act={act} />
-          <ActionButton kind="addH" label="Add H" tip="Add hydrogens to entire molecule" state={state} act={act} />
+          <ActionButton
+            kind="fixH"
+            label="Fix H"
+            tip="Fix hydrogens on picked atoms"
+            state={state}
+            act={act}
+          />
+          <ActionButton
+            kind="addH"
+            label="Add H"
+            tip="Add hydrogens to entire molecule"
+            state={state}
+            act={act}
+          />
           <ActionButton
             kind="invert"
             label="Invert"
@@ -541,7 +552,13 @@ export function BuilderPanel() {
             state={state}
             act={act}
           />
-          <ActionButton kind="removeAtom" label="Delete" tip="Remove atoms" state={state} act={act} />
+          <ActionButton
+            kind="removeAtom"
+            label="Delete"
+            tip="Remove atoms"
+            state={state}
+            act={act}
+          />
           <Button
             type="button"
             className="bbtn"
@@ -576,7 +593,13 @@ export function BuilderPanel() {
             act={act}
           />
           <span className="builder__label">Residue:</span>
-          <ActionButton kind="removeResn" label="Remove" tip="Remove residue" state={state} act={act} />
+          <ActionButton
+            kind="removeResn"
+            label="Remove"
+            tip="Remove residue"
+            state={state}
+            act={act}
+          />
         </div>
 
         <div className="builder__row">
@@ -595,7 +618,13 @@ export function BuilderPanel() {
             state={state}
             act={act}
           />
-          <ActionButton kind="cycleBond" label="Cycle" tip="Cycle bond valence" state={state} act={act} />
+          <ActionButton
+            kind="cycleBond"
+            label="Cycle"
+            tip="Cycle bond valence"
+            state={state}
+            act={act}
+          />
           {BOND_ORDERS.map((entry) => (
             <ActionButton
               key={entry.order}
@@ -617,9 +646,21 @@ export function BuilderPanel() {
           >
             Clean
           </Button>
-          <ActionButton kind="sculpt" label="Sculpt" tip="Molecular sculpting" state={state} act={act} />
+          <ActionButton
+            kind="sculpt"
+            label="Sculpt"
+            tip="Molecular sculpting"
+            state={state}
+            act={act}
+          />
           <ActionButton kind="fix" label="Fix" tip="Fix atom positions" state={state} act={act} />
-          <ActionButton kind="rest" label="Rest" tip="Restrain atom positions" state={state} act={act} />
+          <ActionButton
+            kind="rest"
+            label="Rest"
+            tip="Restrain atom positions"
+            state={state}
+            act={act}
+          />
         </div>
 
         <div className="builder__row">

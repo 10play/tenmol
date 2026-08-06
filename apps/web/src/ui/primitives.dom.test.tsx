@@ -13,7 +13,15 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { cn } from './cn';
-import { Button, Checkbox, IconButton, ProgressBar, Select, TextInput, ToggleButton } from './index';
+import {
+  Button,
+  Checkbox,
+  IconButton,
+  ProgressBar,
+  Select,
+  TextInput,
+  ToggleButton,
+} from './index';
 import { ThemeProvider } from './theme';
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -41,8 +49,10 @@ describe('cn', () => {
     expect(cn('quickbutton', 'quickbutton--abort').split(' ')).toEqual(
       expect.arrayContaining(['quickbutton', 'quickbutton--abort']),
     );
-    // A falsy branch drops out, the real class stays — the `--todo` idiom.
-    expect(cn('quickbutton', false && 'quickbutton--todo')).toBe('quickbutton');
+    // A falsy branch drops out, the real class stays — the `--todo` idiom
+    // (`live ? undefined : 'quickbutton--todo'`).
+    const dropped: string | false = false;
+    expect(cn('quickbutton', dropped)).toBe('quickbutton');
   });
 });
 

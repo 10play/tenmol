@@ -53,9 +53,7 @@ export function TextDialog({
           </Button>
           {copied && <span className="dlgmodal__note">copied</span>}
           <span className="dlgmodal__spacer" />
-          <Button onClick={onClose}>
-            Close
-          </Button>
+          <Button onClick={onClose}>Close</Button>
         </div>
       </div>
     </div>
@@ -115,9 +113,7 @@ export function NumberPrompt({
         </div>
         <div className="dlgmodal__row">
           <span className="dlgmodal__spacer" />
-          <Button onClick={() => onDone(null)}>
-            Cancel
-          </Button>
+          <Button onClick={() => onDone(null)}>Cancel</Button>
           <Button data-accept="" onClick={accept}>
             OK
           </Button>

@@ -117,10 +117,7 @@ export function AdvancedSettingsTable({
   const [height, setHeight] = useState(420);
   const viewport = useRef<HTMLDivElement>(null);
 
-  const rows = useMemo(
-    () => filterSettings(catalogue?.settings ?? [], query),
-    [catalogue, query],
-  );
+  const rows = useMemo(() => filterSettings(catalogue?.settings ?? [], query), [catalogue, query]);
 
   useEffect(() => {
     const element = viewport.current;
@@ -258,7 +255,10 @@ function ScopeSelector({
       {value.scope !== 'global' && !isSelectionScope(value.scope) && (
         <label>
           Object
-          <Select value={value.object} onChange={(e) => onChange({ ...value, object: e.target.value })}>
+          <Select
+            value={value.object}
+            onChange={(e) => onChange({ ...value, object: e.target.value })}
+          >
             <option value="">(pick)</option>
             {objects.map((name) => (
               <option key={name} value={name}>
@@ -322,7 +322,9 @@ function Row({
   const object = selectionScope || scope.scope === 'global' ? '' : scope.object;
   const state = scope.scope === 'object-state' ? scope.state : 0;
   const hint = rangeHint(meta, scope.scope);
-  const noTarget = selectionScope ? scope.selection.trim() === '' : scope.scope !== 'global' && !object;
+  const noTarget = selectionScope
+    ? scope.selection.trim() === ''
+    : scope.scope !== 'global' && !object;
 
   const fail = (e: unknown) =>
     store.noteRejected(meta.index, e instanceof Error ? e.message : String(e));
@@ -419,7 +421,10 @@ function Row({
           onCommit={commit}
         />
       </span>
-      <span className="setadv__c-level" title={`writable at: ${scopesForLevel(meta.level).join(', ')}`}>
+      <span
+        className="setadv__c-level"
+        title={`writable at: ${scopesForLevel(meta.level).join(', ')}`}
+      >
         {meta.level}
       </span>
       <span className="setadv__c-default">
@@ -436,7 +441,9 @@ function Row({
                 ? "cmd.alter_state … del s['name'] — cmd.unset cannot reach this level"
                 : 'cmd.unset — restores the DEFAULT (PyMOL 2.5+)'
           }
-          disabled={!writable || noTarget || (!selectionScope && isDefaultValue(meta, entry?.value))}
+          disabled={
+            !writable || noTarget || (!selectionScope && isDefaultValue(meta, entry?.value))
+          }
           onClick={reset}
         >
           ⟲
@@ -608,9 +615,9 @@ function OverridesView({
             total === 0
               ? `no per-atom overrides on ${selection}`
               : `${reply.atoms.length} atoms carry ${total} overrides: ` +
-                [...new Set(reply.atoms.flatMap((a) => a.settings))]
-                  .map((i) => byIndex.get(i)?.name ?? i)
-                  .join(', '),
+                  [...new Set(reply.atoms.flatMap((a) => a.settings))]
+                    .map((i) => byIndex.get(i)?.name ?? i)
+                    .join(', '),
           );
         }
       } catch (e) {

@@ -190,7 +190,12 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
             />
           </label>
           {[720, 480, 360].map((h) => (
-            <Button variant="bare" key={h} type="button" onClick={() => setSize(presetSize(h, size))}>
+            <Button
+              variant="bare"
+              key={h}
+              type="button"
+              onClick={() => setSize(presetSize(h, size))}
+            >
               {h}p
             </Button>
           ))}
@@ -237,9 +242,12 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
         {plan && (
           <p className="mvedit__note">
             {plan.width || plan.height ? `${plan.width}x${plan.height}` : 'viewport'} ·{' '}
-            {plan.frameGlob} · {plan.encoder === 'mpeg_encode' ? `q${plan.mpegQuality}` : `crf ${plan.crf}`}
+            {plan.frameGlob} ·{' '}
+            {plan.encoder === 'mpeg_encode' ? `q${plan.mpegQuality}` : `crf ${plan.crf}`}
             {plan.twoPassPalette ? ' · two-pass palette' : ''}
-            {plan.fpsAdjusted ? ` · fps snapped ${plan.fps} -> ${plan.fpsLegal}` : ` · ${plan.fps} fps`}
+            {plan.fpsAdjusted
+              ? ` · fps snapped ${plan.fps} -> ${plan.fpsLegal}`
+              : ` · ${plan.fps} fps`}
           </p>
         )}
 
@@ -261,7 +269,12 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
         {result && <p className="mvexport__result">{result}</p>}
 
         <div className="mvedit__row">
-          <Button variant="bare" type="button" disabled={busy || !supported} onClick={() => void doExport()}>
+          <Button
+            variant="bare"
+            type="button"
+            disabled={busy || !supported}
+            onClick={() => void doExport()}
+          >
             {busy ? 'exporting…' : 'export'}
           </Button>
           <Button variant="bare" type="button" onClick={onClose}>

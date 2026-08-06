@@ -363,11 +363,11 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
             Reload
           </Button>
           {/*
-            * Whether the engine is reporting outside changes for this name, and
-            * how many it has reported. `_volume_windows_qt` is invisible in Qt
-            * and a panel that has silently stopped tracking looks identical to
-            * one that is up to date; this is that state, shown.
-            */}
+           * Whether the engine is reporting outside changes for this name, and
+           * how many it has reported. `_volume_windows_qt` is invisible in Qt
+           * and a panel that has silently stopped tracking looks identical to
+           * one that is up to date; this is that state, shown.
+           */}
           <span
             className="volpanel__watch"
             data-volume-watch={watched ? 'live' : 'off'}

@@ -182,8 +182,8 @@ export function ButModeBlock() {
 
       {mode.loaded && mode.mode === null && (
         <div className="butmode__warn">
-          unknown mode &quot;{mode.displayName}&quot; — the grid mirrors
-          controlling.mode_dict and has no row for it
+          unknown mode &quot;{mode.displayName}&quot; — the grid mirrors controlling.mode_dict and
+          has no row for it
         </div>
       )}
       {mode.error !== null && <div className="butmode__warn">{mode.error}</div>}

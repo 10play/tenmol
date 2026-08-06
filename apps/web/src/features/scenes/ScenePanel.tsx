@@ -276,9 +276,7 @@ export function ScenePanel() {
       // The press itself recalls, unless this scene is already current — the
       // `cur_name && elem.name != cur_name` guard at `SceneMouse.cpp:200-205`.
       if (scene.name !== payload.current) {
-        void run(
-          event.ctrlKey ? sceneActions.browse(scene.name) : sceneActions.recall(scene.name),
-        );
+        void run(event.ctrlKey ? sceneActions.browse(scene.name) : sceneActions.recall(scene.name));
       }
       return;
     }
@@ -295,9 +293,7 @@ export function ScenePanel() {
     if (state === null || index === state.index) return;
     if (state.mode === 2) {
       if (scene.name !== payload.current) {
-        void run(
-          event.ctrlKey ? sceneActions.browse(scene.name) : sceneActions.recall(scene.name),
-        );
+        void run(event.ctrlKey ? sceneActions.browse(scene.name) : sceneActions.recall(scene.name));
       }
       press.current = { index, mode: 2 };
       return;
@@ -370,112 +366,109 @@ export function ScenePanel() {
       </div>
 
       {/* --- the buttons overlay row ------------------------------------ *
-        * The LAYOUT is `SceneDrawButtons`' (`./sceneButtonGeometry.ts`): 8-dip
-        * character cells, `internal_gui_control_size` row height, names cut to
-        * `max_char`, and a scrollbar once the list is longer than `n_disp`
-        * rows. Until the engine has answered `cmd.get_viewport` there is no
-        * block to lay anything out in, so the strip degrades to an untruncated
-        * flex row rather than rendering nothing.
-        */}
+       * The LAYOUT is `SceneDrawButtons`' (`./sceneButtonGeometry.ts`): 8-dip
+       * character cells, `internal_gui_control_size` row height, names cut to
+       * `max_char`, and a scrollbar once the list is longer than `n_disp`
+       * rows. Until the engine has answered `cmd.get_viewport` there is no
+       * block to lay anything out in, so the strip degrades to an untruncated
+       * flex row rather than rendering nothing.
+       */}
       {buttons !== false && (
-      <div
-        className={'scbar' + (layout?.shown ? ' scbar--laid' : '')}
-        role="toolbar"
-        aria-label="scene buttons"
-        onWheel={(event) => {
-          if (!layout?.scrollBar) return;
-          event.preventDefault();
-          setSkip((value) =>
-            Math.max(
-              0,
-              Math.min(
-                payload.scenes.length - layout.nDisp,
-                value + (event.deltaY > 0 ? 1 : -1),
+        <div
+          className={'scbar' + (layout?.shown ? ' scbar--laid' : '')}
+          role="toolbar"
+          aria-label="scene buttons"
+          onWheel={(event) => {
+            if (!layout?.scrollBar) return;
+            event.preventDefault();
+            setSkip((value) =>
+              Math.max(
+                0,
+                Math.min(payload.scenes.length - layout.nDisp, value + (event.deltaY > 0 ? 1 : -1)),
               ),
-            ),
-          );
-        }}
-        style={
-          layout?.shown
-            ? // The drawn count, not `n_disp`: the loop can stop early on the
-              // `y < rect.bottom` break, and a strip taller than its stack is
-              // dead space that swallows clicks meant for the table below.
-              { height: layout.buttons.length * layout.lineHeight }
-            : undefined
-        }
-      >
-        {payload.scenes.length === 0 && <span className="scbar__empty">no scenes</span>}
-        {layout?.scrollBar && (
-          <div
-            className="scbar__scroll"
-            role="scrollbar"
-            aria-label="scene buttons"
-            aria-valuenow={skip}
-            aria-valuemin={0}
-            aria-valuemax={Math.max(0, layout.scrollBar.total - layout.scrollBar.visible)}
-            style={{ width: layout.scrollBar.width }}
-          >
+            );
+          }}
+          style={
+            layout?.shown
+              ? // The drawn count, not `n_disp`: the loop can stop early on the
+                // `y < rect.bottom` break, and a strip taller than its stack is
+                // dead space that swallows clicks meant for the table below.
+                { height: layout.buttons.length * layout.lineHeight }
+              : undefined
+          }
+        >
+          {payload.scenes.length === 0 && <span className="scbar__empty">no scenes</span>}
+          {layout?.scrollBar && (
             <div
-              className="scbar__thumb"
-              style={{
-                top: `${((skip / layout.scrollBar.total) * 100).toFixed(2)}%`,
-                height: `${((layout.scrollBar.visible / layout.scrollBar.total) * 100).toFixed(2)}%`,
-              }}
-            />
-          </div>
-        )}
-        {visibleScenes.map((scene, index) => {
-          const box = layout?.shown ? layout.buttons[index] : undefined;
-          // The index the C machine reasons about is the SCENE ORDER's, not
-          // this map's: `NSkip` rows may be scrolled past, and a drag that
-          // computed `scene_order` from the on-screen position would move the
-          // wrong scene the moment the strip was scrolled.
-          const orderIndex = payload.order.indexOf(scene.name);
-          return (
-            <button
-              key={scene.name}
-              type="button"
-              className={
-                'scbar__btn' +
-                (scene.current ? ' is-current' : '') +
-                (dragIndex === orderIndex ? ' is-dragging' : '') +
-                (box?.truncated ? ' is-truncated' : '')
-              }
-              title={scene.message || scene.name}
-              data-full-name={scene.name}
-              style={
-                box
-                  ? {
-                      position: 'absolute',
-                      left: box.left,
-                      // `stackOffset`, NOT `topOffset`: this strip is only as
-                      // tall as the stack, where PyMOL's block is the whole
-                      // viewport. See `sceneButtonGeometry.ts`.
-                      top: box.stackOffset,
-                      width: box.width,
-                      height: box.height,
-                      fontSize: layout ? layout.charWidth * 1.25 : undefined,
-                    }
-                  : undefined
-              }
-              onMouseDown={(event) => onButtonDown(scene, orderIndex, event)}
-              onMouseEnter={(event) => onButtonEnter(scene, orderIndex, event)}
-              onMouseUp={(event) => onButtonUp(scene, orderIndex, event)}
-              onContextMenu={(event) => event.preventDefault()}
+              className="scbar__scroll"
+              role="scrollbar"
+              aria-label="scene buttons"
+              aria-valuenow={skip}
+              aria-valuemin={0}
+              aria-valuemax={Math.max(0, layout.scrollBar.total - layout.scrollBar.visible)}
+              style={{ width: layout.scrollBar.width }}
             >
-              {box ? box.label : scene.name}
-            </button>
-          );
-        })}
-      </div>
+              <div
+                className="scbar__thumb"
+                style={{
+                  top: `${((skip / layout.scrollBar.total) * 100).toFixed(2)}%`,
+                  height: `${((layout.scrollBar.visible / layout.scrollBar.total) * 100).toFixed(2)}%`,
+                }}
+              />
+            </div>
+          )}
+          {visibleScenes.map((scene, index) => {
+            const box = layout?.shown ? layout.buttons[index] : undefined;
+            // The index the C machine reasons about is the SCENE ORDER's, not
+            // this map's: `NSkip` rows may be scrolled past, and a drag that
+            // computed `scene_order` from the on-screen position would move the
+            // wrong scene the moment the strip was scrolled.
+            const orderIndex = payload.order.indexOf(scene.name);
+            return (
+              <button
+                key={scene.name}
+                type="button"
+                className={
+                  'scbar__btn' +
+                  (scene.current ? ' is-current' : '') +
+                  (dragIndex === orderIndex ? ' is-dragging' : '') +
+                  (box?.truncated ? ' is-truncated' : '')
+                }
+                title={scene.message || scene.name}
+                data-full-name={scene.name}
+                style={
+                  box
+                    ? {
+                        position: 'absolute',
+                        left: box.left,
+                        // `stackOffset`, NOT `topOffset`: this strip is only as
+                        // tall as the stack, where PyMOL's block is the whole
+                        // viewport. See `sceneButtonGeometry.ts`.
+                        top: box.stackOffset,
+                        width: box.width,
+                        height: box.height,
+                        fontSize: layout ? layout.charWidth * 1.25 : undefined,
+                      }
+                    : undefined
+                }
+                onMouseDown={(event) => onButtonDown(scene, orderIndex, event)}
+                onMouseEnter={(event) => onButtonEnter(scene, orderIndex, event)}
+                onMouseUp={(event) => onButtonUp(scene, orderIndex, event)}
+                onContextMenu={(event) => event.preventDefault()}
+              >
+                {box ? box.label : scene.name}
+              </button>
+            );
+          })}
+        </div>
       )}
 
       {/* --- the Scene Panel table -------------------------------------- */}
       {/*
-        * `scene_bin_gui.py:150` puts this instruction under the table. Kept
-        * verbatim in meaning, reworded for what this panel actually does:
-        * upstream says "load into Workspace", which is Qt's word for recall.
-        */}
+       * `scene_bin_gui.py:150` puts this instruction under the table. Kept
+       * verbatim in meaning, reworded for what this panel actually does:
+       * upstream says "load into Workspace", which is Qt's word for recall.
+       */}
       <p className="scpanel__hint">Double-click a row to recall that scene.</p>
       <div className="scpanel__rows">
         {payload.scenes.map((scene, index) => (
@@ -493,17 +486,17 @@ export function ScenePanel() {
             role="presentation"
           >
             {/*
-              * A REAL drag, not a click.
-              *
-              * This handle used to move the row up exactly one position per
-              * click, which is not what a drag handle claims to do — moving a
-              * scene from the end to the front of a ten-scene list took nine
-              * clicks and nine `scene_order` round trips.
-              *
-              * Pointer events with capture, the same primitive `AppShell`'s
-              * splitters use; no drag-and-drop library. `dropAt` is the row the
-              * pointer is over, and the reorder is issued once, on release.
-              */}
+             * A REAL drag, not a click.
+             *
+             * This handle used to move the row up exactly one position per
+             * click, which is not what a drag handle claims to do — moving a
+             * scene from the end to the front of a ten-scene list took nine
+             * clicks and nine `scene_order` round trips.
+             *
+             * Pointer events with capture, the same primitive `AppShell`'s
+             * splitters use; no drag-and-drop library. `dropAt` is the row the
+             * pointer is over, and the reorder is issued once, on release.
+             */}
             <button
               type="button"
               className={`scrow__handle${dragging === scene.name ? ' is-dragging' : ''}`}
@@ -625,11 +618,11 @@ export function ScenePanel() {
       </div>
 
       {/*
-        * Named views (`cmd.view`) live here rather than in their own slot: the
-        * user's question is "where is my saved camera", and the answer for
-        * scenes and for views is the same place. They are NOT the same feature
-        * — see `viewActions.ts`.
-        */}
+       * Named views (`cmd.view`) live here rather than in their own slot: the
+       * user's question is "where is my saved camera", and the answer for
+       * scenes and for views is the same place. They are NOT the same feature
+       * — see `viewActions.ts`.
+       */}
       <ViewList />
 
       <SceneMenu
@@ -646,13 +639,13 @@ export function ScenePanel() {
 
       {menuFor && (
         /*
-          * `pymol.menu.scene_menu`, rendered by the SAME popup the object panel
-          * and the sequence viewer use — `MenuActivate*` is one entry point in
-          * the C, so there is one renderer here too. The three leaves are
-          * PyMOL's own command strings (`cmd.wizard("renaming",...)`,
-          * `cmd.scene(...,"update")`, `cmd.scene(...,"delete")`) and they go
-          * out as `{t:'do'}`, which is what `PopUp.cpp:471-475` does with them.
-          */
+         * `pymol.menu.scene_menu`, rendered by the SAME popup the object panel
+         * and the sequence viewer use — `MenuActivate*` is one entry point in
+         * the C, so there is one renderer here too. The three leaves are
+         * PyMOL's own command strings (`cmd.wizard("renaming",...)`,
+         * `cmd.scene(...,"update")`, `cmd.scene(...,"delete")`) and they go
+         * out as `{t:'do'}`, which is what `PopUp.cpp:471-475` does with them.
+         */
         <RowMenu
           title={`Scene ${menuFor.name}`}
           op="A"

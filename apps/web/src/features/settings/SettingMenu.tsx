@@ -34,13 +34,7 @@ import type {
   MenuSettingValue,
   MenuValue,
 } from '@tenmol/protocol/topics/menus';
-import {
-  baseLabel,
-  describe,
-  isCheckable,
-  isChecked,
-  isRadioActive,
-} from '../menubar/model';
+import { baseLabel, describe, isCheckable, isChecked, isRadioActive } from '../menubar/model';
 import { groupRadios, type MenuGroup } from './menuTree';
 import { Button } from '../../ui';
 
@@ -72,10 +66,10 @@ export function MenuDataRenderer({
         group.kind === 'radios' ? (
           <li className="setmenu__group" key={`g-${group.setting}-${group.index}`}>
             {/*
-              * `actiongroups.setdefault(setting, QActionGroup(self))`
-              * (`pymol_qt_gui.py:1084`) — the group is keyed by SETTING NAME,
-              * so that is the key here and the accessible name too.
-              */}
+             * `actiongroups.setdefault(setting, QActionGroup(self))`
+             * (`pymol_qt_gui.py:1084`) — the group is keyed by SETTING NAME,
+             * so that is the key here and the accessible name too.
+             */}
             <ul
               className="setmenu__list setmenu__list--radios"
               role="group"
@@ -88,27 +82,14 @@ export function MenuDataRenderer({
             </ul>
           </li>
         ) : (
-          <MenuNodeView
-            key={`n-${group.index}`}
-            node={group.node}
-            ctx={ctx}
-            depth={depth}
-          />
+          <MenuNodeView key={`n-${group.index}`} node={group.node} ctx={ctx} depth={depth} />
         ),
       )}
     </ul>
   );
 }
 
-function MenuNodeView({
-  node,
-  ctx,
-  depth,
-}: {
-  node: MenuNode;
-  ctx: MenuContext;
-  depth: number;
-}) {
+function MenuNodeView({ node, ctx, depth }: { node: MenuNode; ctx: MenuContext; depth: number }) {
   const [open, setOpen] = useState(depth > 0);
 
   if (node.kind === 'separator') return <li className="setmenu__sep" aria-hidden />;
@@ -159,12 +140,9 @@ function MenuNodeView({
   if (node.kind === 'command') {
     const action = node.action;
     const hooked = action.type === 'hook' ? ctx.hook(action.hook) : undefined;
-    const dead =
-      action.type === 'dropped' || (action.type === 'hook' && hooked === undefined);
+    const dead = action.type === 'dropped' || (action.type === 'hook' && hooked === undefined);
     const title =
-      action.type === 'hook' && hooked === undefined
-        ? ctx.hookNote(action.hook)
-        : describe(node);
+      action.type === 'hook' && hooked === undefined ? ctx.hookNote(action.hook) : describe(node);
 
     if (action.type === 'url') {
       return (
@@ -202,8 +180,7 @@ function MenuNodeView({
 
   const value = ctx.valueOf(node.setting);
   const missing = value === undefined;
-  const checked =
-    node.kind === 'check' ? isChecked(node, value) : isRadioActive(node, value);
+  const checked = node.kind === 'check' ? isChecked(node, value) : isRadioActive(node, value);
   // `SettingAction` refuses to make a float3 checkable and prints
   // `TODO 4 <name>` (`pymol_qt_gui.py:1069-1078`); radios go through a
   // different branch and are always checkable.

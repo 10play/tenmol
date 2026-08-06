@@ -113,7 +113,10 @@ export function ThemeProvider({
     if (root) root.setAttribute('data-ui-theme', theme);
   }, [theme]);
 
-  const value = useMemo<ThemeControls>(() => ({ theme, setTheme, toggle }), [theme, setTheme, toggle]);
+  const value = useMemo<ThemeControls>(
+    () => ({ theme, setTheme, toggle }),
+    [theme, setTheme, toggle],
+  );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

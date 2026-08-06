@@ -134,10 +134,10 @@ export function LegacyPlugins() {
 
       <p className="plugmgr__note">
         This is the registry <code>pymol.plugins.addmenuitem</code> writes into. The bridge stands
-        in as <code>pymol._ext_gui</code> and drives PyMOL&rsquo;s own{' '}
-        <code>PmwMenuBar</code> over a recording menu dict, so the semantics are upstream&rsquo;s:
-        a <code>|</code> in the label makes a submenu, a bare <code>-</code> makes a separator, and
-        re-registering an existing submenu is a no-op.
+        in as <code>pymol._ext_gui</code> and drives PyMOL&rsquo;s own <code>PmwMenuBar</code> over
+        a recording menu dict, so the semantics are upstream&rsquo;s: a <code>|</code> in the label
+        makes a submenu, a bare <code>-</code> makes a separator, and re-registering an existing
+        submenu is a no-op.
       </p>
       <p className="plugmgr__note">
         <code>plugins.addmenuitemqt</code> is refused (<code>HAVE_QT</code> stays false). A plugin

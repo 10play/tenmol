@@ -170,13 +170,7 @@ export const LIGHTING_PRESETS: readonly { name: string; sets: readonly [string, 
   },
 ];
 
-export function LightingPanel({
-  store,
-  source,
-}: {
-  store: SettingsStore;
-  source: SettingsSource;
-}) {
+export function LightingPanel({ store, source }: { store: SettingsStore; source: SettingsSource }) {
   const catalogue = useStore(store, (s) => s.catalogue);
   const entries = useStore(store, (s) => s.entries);
   const byName = useMemo(() => {
@@ -239,8 +233,8 @@ export function LightingPanel({
       ))}
       <p className="lighting__note">
         Ranges come from the plugin that authored this panel, not from
-        <code> SettingInfo</code>: PyMOL declares no min/max for most of these and enforces none
-        of them. Values are written unclamped and read back.
+        <code> SettingInfo</code>: PyMOL declares no min/max for most of these and enforces none of
+        them. Values are written unclamped and read back.
       </p>
     </div>
   );

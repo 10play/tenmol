@@ -27,7 +27,11 @@ import {
   type Metric,
   type MetricParam,
 } from './metrics';
-import { COMPUTE_BOOTSTRAP, COMPUTE_NS, type SasaRelativeResult } from '@tenmol/protocol/topics/compute';
+import {
+  COMPUTE_BOOTSTRAP,
+  COMPUTE_NS,
+  type SasaRelativeResult,
+} from '@tenmol/protocol/topics/compute';
 import { Button, Checkbox, TextInput } from '../../ui';
 import './compute.css';
 
@@ -77,10 +81,7 @@ interface FeedbackLine {
  *
  * Exported because the filter, not the rendering, is the part worth pinning.
  */
-export function diagnosticsSince(
-  lines: readonly FeedbackLine[],
-  mark: number,
-): readonly string[] {
+export function diagnosticsSince(lines: readonly FeedbackLine[], mark: number): readonly string[] {
   const out: string[] = [];
   for (const line of lines) {
     if (line.seq < mark) continue;
@@ -289,10 +290,19 @@ export function ComputePanel() {
       </table>
 
       {confirming !== null && (
-        <div className="compute__confirm" role="alertdialog" aria-label="confirm destructive action">
+        <div
+          className="compute__confirm"
+          role="alertdialog"
+          aria-label="confirm destructive action"
+        >
           <p className="compute__warn">{confirming.warning}</p>
           <div className="compute__confirm-actions">
-            <Button variant="bare" type="button" className="compute__btn" onClick={() => setConfirming(null)}>
+            <Button
+              variant="bare"
+              type="button"
+              className="compute__btn"
+              onClick={() => setConfirming(null)}
+            >
               Cancel
             </Button>
             <Button

@@ -24,12 +24,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { errorText, useSession, useStore } from '../../app';
-import {
-  menuHooks,
-  openPanel,
-  subscribeMenuHooks,
-  type MenuHook,
-} from '../../shell/panelHooks';
+import { menuHooks, openPanel, subscribeMenuHooks, type MenuHook } from '../../shell/panelHooks';
 import { Button, ProgressBar } from '../../ui';
 
 interface QuickButton {

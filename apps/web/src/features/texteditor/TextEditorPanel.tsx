@@ -216,8 +216,8 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
   useEffect(() => {
     const wanted = spec.arg;
     let alive = true;
-    const probe = probeServerFiles(session, { alive: () => alive }).then(
-      (ok): FileAccess => (ok ? 'server' : 'browser'),
+    const probe = probeServerFiles(session, { alive: () => alive }).then((ok): FileAccess =>
+      ok ? 'server' : 'browser',
     );
     probeRef.current = probe;
     void (async () => {
@@ -328,7 +328,12 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
       <div className="txted" onKeyDown={onKeyDown}>
         <div className="txted__menu">
           <span className="txted__menu-label">File</span>
-          <Button variant="bare" type="button" data-txted-open="" onClick={() => guard(() => void doOpen())}>
+          <Button
+            variant="bare"
+            type="button"
+            data-txted-open=""
+            onClick={() => guard(() => void doOpen())}
+          >
             Open <kbd>Ctrl+O</kbd>
           </Button>
           <Button variant="bare" type="button" data-txted-save="" onClick={() => void doSave()}>
@@ -386,11 +391,11 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
           )}
           <span className="txted__spacer" />
           {/*
-            * `data-txted-access` is the machine-readable half: 'probing' is a
-            * real, transient value and anything watching this badge has to be
-            * able to tell it apart from a settled answer without matching on
-            * an ellipsis. The e2e spec waits on exactly this.
-            */}
+           * `data-txted-access` is the machine-readable half: 'probing' is a
+           * real, transient value and anything watching this badge has to be
+           * able to tell it apart from a settled answer without matching on
+           * an ellipsis. The e2e spec waits on exactly this.
+           */}
           <span className="txted__access" data-txted-access={access}>
             {ACCESS_LABEL[access]}
           </span>
@@ -399,24 +404,24 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
         {error && <div className="txted__error">{error}</div>}
         {!error && status && <div className="txted__status">{status}</div>}
         {/*
-          * pymolrc is read ONCE, at startup (`invocation.get_user_config()` is
-          * consumed before the GUI exists), so editing it changes nothing in
-          * the running session. Qt does not say this and the inventory row
-          * asks for it: a file you edit and save, that visibly does nothing,
-          * reads as a broken editor.
-          */}
+         * pymolrc is read ONCE, at startup (`invocation.get_user_config()` is
+         * consumed before the GUI exists), so editing it changes nothing in
+         * the running session. Qt does not say this and the inventory row
+         * asks for it: a file you edit and save, that visibly does nothing,
+         * reads as a broken editor.
+         */}
         {isPymolrc(path) && (
           <div className="txted__note" role="note">
-            pymolrc is read at startup — restart PyMOL to apply, or paste the
-            lines into the command line to try them now.
+            pymolrc is read at startup — restart PyMOL to apply, or paste the lines into the command
+            line to try them now.
           </div>
         )}
         {/*
-          * `edit_pymolrc`'s `QInputDialog.getItem` (`TextEditor.py:161-165`):
-          * with two or more active rc files Qt ASKS which one. A modal before
-          * the window exists is the wrong shape here — the window is already
-          * open on the first file — so the same choice is a control inside it.
-          */}
+         * `edit_pymolrc`'s `QInputDialog.getItem` (`TextEditor.py:161-165`):
+         * with two or more active rc files Qt ASKS which one. A modal before
+         * the window exists is the wrong shape here — the window is already
+         * open on the first file — so the same choice is a control inside it.
+         */}
         {choices.length > 1 && (
           <div className="txted__note" role="note">
             <label>

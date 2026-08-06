@@ -193,8 +193,8 @@ export function PluginManager() {
             <code>pymol._ext_gui</code> and records the menu instead of building a Tk one.{' '}
             <code>addmenuitemqt</code> still raises <code>QtNotAvailableError</code>: that call
             asserts the plugin opens a PyQt window, which would open on the server, not in this
-            browser. PyMOL&rsquo;s own bundled plugins are replaced by native panels (APBS,
-            lighting settings) instead of being ported.
+            browser. PyMOL&rsquo;s own bundled plugins are replaced by native panels (APBS, lighting
+            settings) instead of being ported.
           </p>
         </div>
       )}

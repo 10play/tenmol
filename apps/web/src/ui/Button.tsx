@@ -18,14 +18,7 @@ import type { ComponentPropsWithRef } from 'react';
 import { cn } from './cn';
 
 export type ButtonVariant =
-  | 'bare'
-  | 'quick'
-  | 'menubar'
-  | 'control'
-  | 'extgui'
-  | 'launcher'
-  | 'consoleBar'
-  | 'op';
+  'bare' | 'quick' | 'menubar' | 'control' | 'extgui' | 'launcher' | 'consoleBar' | 'op';
 
 /** variant → the legacy BEM base class it stands in for. */
 const VARIANT_CLASS: Record<ButtonVariant, string> = {

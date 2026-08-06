@@ -103,10 +103,10 @@ export function MouseConfigPanel() {
           {mode.mode ?? 'unknown mode'})
         </span>
         <span className="mousecfg__note">
-          {Object.keys(BUTTON_CODE).length} buttons x {Object.keys(BUT_MOD_CODE).length}{' '}
-          modifiers = 80 slots. Every change is a <code>cmd.button</code> call. PyMOL exposes no
-          reader for the table, so these cells show what the current mouse mode wrote plus your
-          edits in this session.
+          {Object.keys(BUTTON_CODE).length} buttons x {Object.keys(BUT_MOD_CODE).length} modifiers =
+          80 slots. Every change is a <code>cmd.button</code> call. PyMOL exposes no reader for the
+          table, so these cells show what the current mouse mode wrote plus your edits in this
+          session.
         </span>
       </div>
       <table className="mousecfg__table">

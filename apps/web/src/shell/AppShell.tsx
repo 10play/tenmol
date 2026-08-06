@@ -177,7 +177,9 @@ export function AppShell() {
         const root = rootRef.current;
         if (!root) return;
         const box = root.getBoundingClientRect();
-        ui.set({ consoleHeight: Math.min(700, Math.max(60, Math.round(box.bottom - e.clientY - 18))) });
+        ui.set({
+          consoleHeight: Math.min(700, Math.max(60, Math.round(box.bottom - e.clientY - 18))),
+        });
       },
       [ui],
     ),
@@ -529,10 +531,7 @@ function useWindowTitle(session: Session): void {
  * a computed one is not (vitest stubs CSS imports; jsdom implements no computed
  * `order`). See `INTERNAL_GUI_ORDER`.
  */
-function useOrthoStackOrder(
-  ref: React.RefObject<HTMLDivElement | null>,
-  enabled: boolean,
-): void {
+function useOrthoStackOrder(ref: React.RefObject<HTMLDivElement | null>, enabled: boolean): void {
   useEffect(() => {
     const column = ref.current;
     if (!enabled || !column) return undefined;
@@ -618,14 +617,14 @@ function OverlayLayer() {
         ))}
       </div>
       {/*
-        * Rendered WITHOUT a wrapper. These panels bring their own positioning —
-        * `features/settings` is `position: absolute; right: 8px`, anchored to
-        * the app root. Wrapping each in a `position: relative` box made that box
-        * their containing block; it then collapsed to zero size (its only child
-        * was absolutely positioned) and threw the panel's own controls to
-        * x = -134, off screen left. The launcher decides WHETHER a panel
-        * renders; the panel decides WHERE.
-        */}
+       * Rendered WITHOUT a wrapper. These panels bring their own positioning —
+       * `features/settings` is `position: absolute; right: 8px`, anchored to
+       * the app root. Wrapping each in a `position: relative` box made that box
+       * their containing block; it then collapsed to zero size (its only child
+       * was absolutely positioned) and threw the panel's own controls to
+       * x = -134, off screen left. The launcher decides WHETHER a panel
+       * renders; the panel decides WHERE.
+       */}
       {slots
         .filter((slot) => open.includes(slot.id))
         .map((slot) => (
