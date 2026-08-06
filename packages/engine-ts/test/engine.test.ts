@@ -9,7 +9,7 @@ import {
 } from '@tenmol/protocol';
 import { PymolError } from '@tenmol/backend';
 import { Executive, LocalBackend, parsePdb, selectAtoms, getColorIndex } from '@tenmol/engine-ts';
-import { SMALL_PDB, EXPECTED, FIXTURE_ATOMS } from './fixture';
+import { SMALL_PDB, EXPECTED, FIXTURE_ATOMS, makePdb } from './fixture';
 
 function loaded(): Executive {
   const ex = new Executive();
@@ -187,6 +187,48 @@ describe('sticks (cylinder) geometry', () => {
     };
     expect(header.instances[0]!.kind).toBe('cylinder2');
     expect(header.instances[0]!.count).toBeGreaterThan(0); // one per bond
+  });
+});
+
+describe('nonbonded / nb_spheres geometry (unbonded atoms only)', () => {
+  // Two atoms 16 A apart: definitely no bond, so both are "nonbonded".
+  const isolated = makePdb([
+    { serial: 1, name: 'NA', resn: 'NA', chain: 'A', resi: 1, x: -8, y: 0, z: 0, elem: 'Na', hetatm: true },
+    { serial: 2, name: 'O', resn: 'HOH', chain: 'A', resi: 2, x: 8, y: 0, z: 0, elem: 'O', hetatm: true },
+  ]);
+
+  it('nb_spheres emits a sphere instance per unbonded atom', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.call('read_pdbstr', [isolated, 'ions']);
+    const frames: { header: { rep: number; instances: { kind: string; count: number }[] } }[] = [];
+    backend.on('geometry:frame', (f) => frames.push(f as never));
+    await backend.call('show_as', ['nb_spheres', 'all']);
+    const nb = frames.find((f) => f.header.rep === Rep.NonbondedSphere);
+    expect(nb?.header.instances[0]!.kind).toBe('sphere');
+    expect(nb?.header.instances[0]!.count).toBe(2);
+  });
+
+  it('nonbonded emits a cross instance per unbonded atom', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.call('read_pdbstr', [isolated, 'ions']);
+    const frames: { header: { rep: number; instances: { kind: string; count: number }[] } }[] = [];
+    backend.on('geometry:frame', (f) => frames.push(f as never));
+    await backend.call('show_as', ['nonbonded', 'all']);
+    const nb = frames.find((f) => f.header.rep === Rep.Nonbonded);
+    expect(nb?.header.instances[0]!.kind).toBe('cross');
+    expect(nb?.header.instances[0]!.count).toBe(2);
+  });
+
+  it('draws nothing for a fully-bonded molecule (PyMOL parity)', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.call('read_pdbstr', [SMALL_PDB, 'm']); // every atom is bonded
+    const frames: { header: { rep: number } }[] = [];
+    backend.on('geometry:frame', (f) => frames.push(f as never));
+    await backend.call('show_as', ['nonbonded', 'all']);
+    expect(frames.find((f) => f.header.rep === Rep.Nonbonded)).toBeUndefined();
   });
 });
 

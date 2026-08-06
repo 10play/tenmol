@@ -255,5 +255,117 @@ export function buildSticksFrame(
   return encode(header, payload);
 }
 
+/** Atoms that participate in no bond — what `nonbonded`/`nb_spheres` draw. */
+function unbondedAtoms(mol: ObjectMolecule): number[] {
+  const bonded = new Set<number>();
+  for (const [a, b] of mol.bonds) {
+    bonded.add(a);
+    bonded.add(b);
+  }
+  const out: number[] = [];
+  for (let i = 0; i < mol.natom; i++) if (!bonded.has(i)) out.push(i);
+  return out;
+}
+
+/**
+ * `nonbonded` — a `cross` instance (centre + rgba; the client expands it into
+ * three axis segments of `nonbonded_size`) for each unbonded atom carrying the
+ * rep, or `null` if none. Matches PyMOL, which crosses only atoms with no bond.
+ */
+export function buildNonbondedFrame(
+  mol: ObjectMolecule,
+  state: number,
+  seq: number,
+): ArrayBuffer | null {
+  const bit = repBit(Rep.Nonbonded);
+  const idx = unbondedAtoms(mol).filter((i) => mol.atoms[i]!.visRep & bit);
+  if (idx.length === 0) return null;
+
+  const n = INSTANCE_ITEM_SIZE.cross; // 7: center[3], rgba[4]
+  const data = new Float32Array(idx.length * n);
+  const atom = new Int32Array(idx.length);
+  for (let k = 0; k < idx.length; k++) {
+    const i = idx[k]!;
+    const [x, y, z] = mol.coord(i, state);
+    const [r, g, b] = rgbForIndex(mol.atoms[i]!.color);
+    const o = k * n;
+    data[o] = x; data[o + 1] = y; data[o + 2] = z;
+    data[o + 3] = r; data[o + 4] = g; data[o + 5] = b; data[o + 6] = 1;
+    atom[k] = mol.atoms[i]!.id;
+  }
+
+  const builder = new PayloadBuilder();
+  const inst: InstanceBuffer = { kind: 'cross', count: idx.length, itemSize: n, data: PLACEHOLDER };
+  builder.addF32(data, n, (ref) => (inst.data = ref));
+  builder.addI32(atom, 1, (ref) => (inst.atom = ref));
+  const payload = builder.build();
+
+  const header: CgoDrawArraysHeader = {
+    v: 1,
+    kind: 'cgo-draw-arrays',
+    seq,
+    payloadBytes: payload.byteLength,
+    object: mol.name,
+    state,
+    rep: Rep.Nonbonded,
+    blocks: [],
+    instances: [inst],
+  };
+  return encode(header, payload);
+}
+
+/**
+ * `nb_spheres` — a small `sphere` instance per unbonded atom carrying the rep
+ * (radius `nb_spheres_size`), or `null` if none.
+ */
+export function buildNbSpheresFrame(
+  mol: ObjectMolecule,
+  state: number,
+  seq: number,
+  size: number,
+): ArrayBuffer | null {
+  const bit = repBit(Rep.NonbondedSphere);
+  const idx = unbondedAtoms(mol).filter((i) => mol.atoms[i]!.visRep & bit);
+  if (idx.length === 0) return null;
+
+  const n = INSTANCE_ITEM_SIZE.sphere; // 8
+  const data = new Float32Array(idx.length * n);
+  const atom = new Int32Array(idx.length);
+  for (let k = 0; k < idx.length; k++) {
+    const i = idx[k]!;
+    const [x, y, z] = mol.coord(i, state);
+    const [r, g, b] = rgbForIndex(mol.atoms[i]!.color);
+    const o = k * n;
+    data[o] = x; data[o + 1] = y; data[o + 2] = z;
+    data[o + 3] = size;
+    data[o + 4] = r; data[o + 5] = g; data[o + 6] = b; data[o + 7] = 1;
+    atom[k] = mol.atoms[i]!.id;
+  }
+
+  const builder = new PayloadBuilder();
+  const inst: InstanceBuffer = {
+    kind: 'sphere',
+    count: idx.length,
+    itemSize: n,
+    data: PLACEHOLDER,
+  };
+  builder.addF32(data, n, (ref) => (inst.data = ref));
+  builder.addI32(atom, 1, (ref) => (inst.atom = ref));
+  const payload = builder.build();
+
+  const header: CgoDrawArraysHeader = {
+    v: 1,
+    kind: 'cgo-draw-arrays',
+    seq,
+    payloadBytes: payload.byteLength,
+    object: mol.name,
+    state,
+    rep: Rep.NonbondedSphere,
+    blocks: [],
+    instances: [inst],
+  };
+  return encode(header, payload);
+}
+
 /** Filled in by the builder; never read before assignment. */
 const PLACEHOLDER: BufferRef = { byteOffset: 0, byteLength: 0, dtype: 'f32', itemSize: 1 };

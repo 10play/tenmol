@@ -59,9 +59,13 @@ function formatAtom(a: FixtureAtom): string {
   return cols.join('').replace(/\s+$/, '');
 }
 
+/** Build column-exact PDB text from an atom list (for ad-hoc test inputs). */
+export function makePdb(atoms: FixtureAtom[]): string {
+  return atoms.map(formatAtom).join('\n') + '\nEND\n';
+}
+
 /** The fixture as PDB text. */
-export const SMALL_PDB: string =
-  FIXTURE_ATOMS.map(formatAtom).join('\n') + '\nEND\n';
+export const SMALL_PDB: string = makePdb(FIXTURE_ATOMS);
 
 /** Expected, hand-derived counts — the ground truth PyMOL also produces. */
 export const EXPECTED = {
