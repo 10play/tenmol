@@ -1,4 +1,4 @@
-name: Claude PR Review
+name: Claude Code Review
 
 on:
   pull_request:
@@ -6,104 +6,170 @@ on:
   issue_comment:
     types: [created]
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
-  review:
-    name: Claude Code Review
+  auto-review:
+    name: Auto Review PR
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'issue_comment' &&
-       github.event.issue.pull_request != null &&
-       contains(github.event.comment.body, '@claude review'))
-
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - name: Checkout PR
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get PR info
-        id: pr
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get PR diff
+        id: diff
         run: |
-          if [ "${{ github.event_name }}" = "issue_comment" ]; then
-            PR_NUMBER="${{ github.event.issue.number }}"
-          else
-            PR_NUMBER="${{ github.event.pull_request.number }}"
-          fi
-          echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          SHA=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json headRefOid -q .headRefOid)
-          echo "sha=$SHA" >> $GITHUB_OUTPUT
-          BASE=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json baseRefName -q .baseRefName)
-          echo "base=$BASE" >> $GITHUB_OUTPUT
-
-      - name: Generate diff
-        run: |
-          git fetch origin ${{ steps.pr.outputs.base }}
-          git diff origin/${{ steps.pr.outputs.base }}...${{ steps.pr.outputs.sha }} \
-            -- ':!*.lock' ':!*.min.js' ':!*.min.css' ':!dist/*' ':!build/*' \
-            | head -c 60000 > /tmp/pr.diff
-          echo "Diff size: $(wc -c < /tmp/pr.diff) bytes"
+          git fetch origin ${{ github.base_ref }}
+          DIFF=$(git diff origin/${{ github.base_ref }}...HEAD -- \
+            ':!package-lock.json' ':!yarn.lock' ':!bun.lockb' ':!*.min.js' ':!*.min.css' \
+            | head -c 60000)
+          echo "diff<<DIFF_EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF" >> $GITHUB_OUTPUT
+          echo "DIFF_EOF" >> $GITHUB_OUTPUT
 
       - name: Install Claude CLI
         run: npm install -g @anthropic-ai/claude-code
 
       - name: Run Claude review
+        id: review
         env:
           CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: |
-          DIFF=$(cat /tmp/pr.diff)
+          PROMPT="You are reviewing a pull request for the tenmol repo — a React Native app with a Python/WebSocket backend.
 
-          claude -p "You are an expert code reviewer for the tenmol project: a PyMOL web client \
-consisting of a React/TypeScript viewport (apps/web/) and a Python WebSocket bridge \
-(packages/bridge/) that drives PyMOL over a JSON protocol.
+          PR: #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }}
 
-Review the following pull request diff concisely. Structure your review as:
+          Diff:
+          ${{ steps.diff.outputs.diff }}
 
-## Summary
-One paragraph: what the PR does.
+          Write a structured code review with these sections:
+          ## Summary
+          One paragraph overview of the changes.
 
-## Issues
-List any bugs, correctness problems, security concerns, or API misuses.
-Use sub-headings (### Critical / ### Major / ### Minor) only when there are issues in that category. If none, say 'No issues found.'
+          ## Issues
+          List any Critical, Major, or Minor issues found. Be specific — include file + line references.
 
-## Suggestions
-Optional improvements: code quality, performance, maintainability.
-Keep this brief — don't nitpick style already handled by the formatter.
+          ## Suggestions
+          Optional improvements or nits.
 
-## Verdict
-One of: ✅ **LGTM** | ⚠️ **Needs minor changes** | 🔴 **Needs changes**
+          ## Verdict
+          End with one of:
+          - ✅ LGTM
+          - ⚠️ Minor issues (can merge after addressing)
+          - 🔴 Needs changes before merging"
 
-Here is the diff to review:
-
-\`\`\`diff
-${DIFF}
-\`\`\`" \
-            --output-format text > /tmp/claude-review.md
-
-          echo "Claude review complete."
+          REVIEW=$(claude -p "$PROMPT" 2>&1)
+          echo "review<<REVIEW_EOF" >> $GITHUB_OUTPUT
+          echo "$REVIEW" >> $GITHUB_OUTPUT
+          echo "REVIEW_EOF" >> $GITHUB_OUTPUT
 
       - name: Post review comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const review = `${{ steps.review.outputs.review }}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `<!-- claude-review -->\n🤖 **Claude Code Review**\n\n${review}\n\n---\n_Reply with \`@claude <question>\` to follow up._`
+            });
+
+  respond-to-comment:
+    name: Respond to @claude mention
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff for context
+        id: diff
+        run: |
+          PR_NUMBER=${{ github.event.issue.number }}
+          PR_DATA=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
+          BASE=$(echo "$PR_DATA" | jq -r '.base.ref')
+          HEAD=$(echo "$PR_DATA" | jq -r '.head.sha')
+          git fetch origin $BASE
+          git fetch origin $HEAD
+          DIFF=$(git diff origin/$BASE...$HEAD -- \
+            ':!package-lock.json' ':!yarn.lock' ':!bun.lockb' \
+            | head -c 30000)
+          echo "diff<<DIFF_EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF" >> $GITHUB_OUTPUT
+          echo "DIFF_EOF" >> $GITHUB_OUTPUT
+          echo "base=$BASE" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get recent comment thread for context
+        id: context
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 20
+            });
+            const thread = comments.data
+              .slice(-10)
+              .map(c => `**${c.user.login}:** ${c.body}`)
+              .join('\n\n---\n\n');
+            core.setOutput('thread', thread);
+
+      - name: Install Claude CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude response
+        id: response
+        env:
+          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENTER: ${{ github.event.comment.user.login }}
         run: |
-          REVIEW=$(cat /tmp/claude-review.md)
-          SHA="${{ steps.pr.outputs.sha }}"
-          SHORT_SHA="${SHA:0:7}"
+          # Strip @claude prefix from the question
+          QUESTION=$(echo "$COMMENT_BODY" | sed 's/@claude//g' | xargs)
 
-          BODY="<!-- claude-review -->
-## 🤖 Claude Code Review (${SHORT_SHA})
+          PROMPT="You are a code review assistant for tenmol — a React Native app with a Python/WebSocket backend.
 
-${REVIEW}
+          You are responding to a comment on PR #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
 
----
-<sub>Triggered by \${{ github.event_name }} · [workflow run](\${{ github.server_url }}/\${{ github.repository }}/actions/runs/\${{ github.run_id }})</sub>"
+          Recent comment thread:
+          ${{ steps.context.outputs.thread }}
 
-          gh pr comment "${{ steps.pr.outputs.number }}" \
-            --repo "${{ github.repository }}" \
-            --body "$BODY"
+          PR diff for context:
+          ${{ steps.diff.outputs.diff }}
+
+          $COMMENTER asks: $QUESTION
+
+          Answer directly and helpfully. Be concise. Reference specific code from the diff where relevant."
+
+          RESPONSE=$(claude -p "$PROMPT" 2>&1)
+          echo "response<<RESPONSE_EOF" >> $GITHUB_OUTPUT
+          echo "$RESPONSE" >> $GITHUB_OUTPUT
+          echo "RESPONSE_EOF" >> $GITHUB_OUTPUT
+
+      - name: Post response
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = `${{ steps.response.outputs.response }}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🤖 **Claude:** ${response}`
+            });
