@@ -28,6 +28,7 @@ REP_BY_NAME.set('dot', Rep.Dot);
 /** Default global settings the slice reads (`packages/engine/layer1/SettingInfo.h`). */
 const DEFAULT_SETTINGS: Readonly<Record<string, number | string>> = {
   sphere_scale: 1.0,
+  stick_radius: 0.25,
   line_width: 1.0,
   field_of_view: 20,
   orthoscopic: 0,

@@ -192,5 +192,68 @@ export function buildLinesFrame(
   return encode(header, payload);
 }
 
+/**
+ * Build the `sticks` frame — one split-colour `cylinder2` instance per bond
+ * whose endpoints both carry the sticks rep, or `null` if none. Each cylinder
+ * spans atom1..atom2 and is coloured half by each atom (PyMOL's
+ * `CGO_SHADER_CYLINDER_WITH_2ND_COLOR`), radius `stick_radius`.
+ */
+export function buildSticksFrame(
+  mol: ObjectMolecule,
+  state: number,
+  seq: number,
+  stickRadius: number,
+): ArrayBuffer | null {
+  const bit = repBit(Rep.Cyl);
+  const bonds = mol.bonds.filter(
+    ([a, b]) => (mol.atoms[a]!.visRep & bit) !== 0 && (mol.atoms[b]!.visRep & bit) !== 0,
+  );
+  if (bonds.length === 0) return null;
+
+  const n = INSTANCE_ITEM_SIZE.cylinder2; // 16
+  const data = new Float32Array(bonds.length * n);
+  const atom = new Int32Array(bonds.length);
+  for (let k = 0; k < bonds.length; k++) {
+    const [a, b] = bonds[k]!;
+    const [x1, y1, z1] = mol.coord(a, state);
+    const [x2, y2, z2] = mol.coord(b, state);
+    const [r1, g1, b1c] = rgbForIndex(mol.atoms[a]!.color);
+    const [r2, g2, b2c] = rgbForIndex(mol.atoms[b]!.color);
+    const o = k * n;
+    // origin, axis (atom2 - atom1)
+    data[o] = x1; data[o + 1] = y1; data[o + 2] = z1;
+    data[o + 3] = x2 - x1; data[o + 4] = y2 - y1; data[o + 5] = z2 - z1;
+    data[o + 6] = stickRadius;
+    data[o + 7] = 1; // capbits: capped
+    data[o + 8] = r1; data[o + 9] = g1; data[o + 10] = b1c; data[o + 11] = 1;
+    data[o + 12] = r2; data[o + 13] = g2; data[o + 14] = b2c; data[o + 15] = 1;
+    atom[k] = mol.atoms[a]!.id;
+  }
+
+  const builder = new PayloadBuilder();
+  const inst: InstanceBuffer = {
+    kind: 'cylinder2',
+    count: bonds.length,
+    itemSize: n,
+    data: PLACEHOLDER,
+  };
+  builder.addF32(data, n, (ref) => (inst.data = ref));
+  builder.addI32(atom, 1, (ref) => (inst.atom = ref));
+  const payload = builder.build();
+
+  const header: CgoDrawArraysHeader = {
+    v: 1,
+    kind: 'cgo-draw-arrays',
+    seq,
+    payloadBytes: payload.byteLength,
+    object: mol.name,
+    state,
+    rep: Rep.Cyl,
+    blocks: [],
+    instances: [inst],
+  };
+  return encode(header, payload);
+}
+
 /** Filled in by the builder; never read before assignment. */
 const PLACEHOLDER: BufferRef = { byteOffset: 0, byteLength: 0, dtype: 'f32', itemSize: 1 };

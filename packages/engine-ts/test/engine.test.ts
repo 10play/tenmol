@@ -172,6 +172,24 @@ describe('Mode-G geometry frames', () => {
   });
 });
 
+describe('sticks (cylinder) geometry', () => {
+  it('emits a cylinder2 instance per bond shown as sticks', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.call('read_pdbstr', [SMALL_PDB, 'm']);
+    const frames: unknown[] = [];
+    backend.on('geometry:frame', (f) => frames.push(f));
+    await backend.call('show_as', ['sticks', 'all']);
+    const stick = (frames as { header: { rep: number } }[]).find((f) => f.header.rep === Rep.Cyl);
+    expect(stick).toBeDefined();
+    const header = (stick as { header: unknown }).header as {
+      instances: { kind: string; count: number }[];
+    };
+    expect(header.instances[0]!.kind).toBe('cylinder2');
+    expect(header.instances[0]!.count).toBeGreaterThan(0); // one per bond
+  });
+});
+
 describe('LocalBackend', () => {
   it('connects, emits hello, and answers ported calls', async () => {
     const backend = new LocalBackend();

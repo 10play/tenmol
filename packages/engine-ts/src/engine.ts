@@ -26,12 +26,12 @@ import { Executive } from './exec/executive';
 import { getColorIndex, getColorTuple } from './exec/color';
 import { parsePdb } from './model/pdb';
 import { buildFragment } from './model/fragments';
-import { buildLinesFrame, buildSpheresFrame } from './geometry/frames';
+import { buildLinesFrame, buildSpheresFrame, buildSticksFrame } from './geometry/frames';
 import { parseCommand, splitCommands } from './cmd/parser';
 import { SelectionError } from './select/selector';
 
 /** PROTOCOL contract: the reps this engine can render in Mode G today. */
-const RENDERABLE_REPS = [Rep.Line, Rep.Sphere] as const;
+const RENDERABLE_REPS = [Rep.Line, Rep.Sphere, Rep.Cyl] as const;
 
 /** Representation name -> RepId, for `_bridge.pull_geometry(object, repName)`. */
 const REP_BY_NAME = new Map<string, number>();
@@ -673,7 +673,7 @@ export class Engine {
     if (!mol) return result('not-built');
     // Reps this engine cannot render yet are simply "nothing to draw" — never a
     // Mode-P fallback, because the local engine has no pixel stream.
-    if (rep !== Rep.Sphere && rep !== Rep.Line) return result('not-built');
+    if (rep !== Rep.Sphere && rep !== Rep.Line && rep !== Rep.Cyl) return result('not-built');
     const bytes = this.emitRepFrame(object, rep, state);
     return bytes > 0 ? result('updated', bytes) : result('empty');
   }
@@ -683,12 +683,15 @@ export class Engine {
     const mol = this.executive.molecule(object);
     if (!mol || !mol.enabled) return 0;
     const scale = this.executive.getSettingFloat('sphere_scale') || 1;
+    const stickRadius = this.executive.getSettingFloat('stick_radius') || 0.25;
     const buf =
       rep === Rep.Sphere
         ? buildSpheresFrame(mol, state, this.seq, scale)
         : rep === Rep.Line
           ? buildLinesFrame(mol, state, this.seq)
-          : null;
+          : rep === Rep.Cyl
+            ? buildSticksFrame(mol, state, this.seq, stickRadius)
+            : null;
     if (!buf) return 0;
     this.seq++;
     const frame = decodeBinaryFrame(buf);
