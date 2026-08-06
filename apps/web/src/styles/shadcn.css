@@ -168,42 +168,11 @@
 }
 
 /* ================================================================== */
-/* 4. THE ONE BUTTON SYSTEM — flat, no gradients/bevels/shadows.       */
+/* 4. BUTTON STATES — base appearance is Tailwind (see ui/Button.tsx). */
+/*    Only the shared on/off + destructive states live here, as token   */
+/*    rules that ride over the Tailwind base for elements that flag      */
+/*    state with a legacy class (movie `.mvctl__btn.is-on`, abort, …).   */
 /* ================================================================== */
-
-:root[data-ui-theme='shadcn'] .quickbutton,
-:root[data-ui-theme='shadcn'] [data-slot='button'],
-:root[data-ui-theme='shadcn'] [data-slot='icon-button'],
-:root[data-ui-theme='shadcn'] [data-slot='toggle-button'] {
-  background: var(--sh-btn-fill);
-  border: 1px solid var(--sh-btn-border);
-  border-radius: var(--sh-r-sm);
-  color: var(--pm-text);
-  box-shadow: none;
-  font-family: var(--pm-font-ui);
-  font-weight: 500;
-  transition:
-    background 0.13s ease,
-    border-color 0.13s ease,
-    color 0.13s ease;
-}
-:root[data-ui-theme='shadcn'] .quickbutton:hover,
-:root[data-ui-theme='shadcn'] [data-slot='button']:hover,
-:root[data-ui-theme='shadcn'] [data-slot='icon-button']:hover,
-:root[data-ui-theme='shadcn'] [data-slot='toggle-button']:hover {
-  background: var(--sh-btn-hover);
-  border-color: var(--sh-btn-border-strong);
-  color: var(--pm-text-bright);
-}
-:root[data-ui-theme='shadcn'] .quickbutton:active,
-:root[data-ui-theme='shadcn'] [data-slot='button']:active,
-:root[data-ui-theme='shadcn'] [data-slot='icon-button']:active {
-  background: color-mix(in srgb, var(--pm-text) 4%, transparent);
-}
-:root[data-ui-theme='shadcn'] .quickbutton:disabled,
-:root[data-ui-theme='shadcn'] [data-slot='button']:disabled {
-  opacity: 0.45;
-}
 
 /* on / selected / toggled -> flat accent, NO glow. */
 :root[data-ui-theme='shadcn'] [data-slot='toggle-button'][data-state='on'],
@@ -225,16 +194,6 @@
 }
 :root[data-ui-theme='shadcn'] .quickbutton--abort:hover {
   background: color-mix(in srgb, var(--sh-danger) 88%, white);
-}
-
-/* heights per context (the 3 sizes). */
-:root[data-ui-theme='shadcn'] .quickbutton {
-  height: 24px;
-  padding: 0 11px;
-}
-:root[data-ui-theme='shadcn'] .console__bar-btn {
-  height: 22px;
-  padding: 0 9px;
 }
 
 /* ================================================================== */

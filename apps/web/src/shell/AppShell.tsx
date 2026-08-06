@@ -104,7 +104,8 @@ import {
   toggleVisible,
   type ExtGuiDockState,
 } from './extGuiDock';
-import './shell.css';
+// shell.css is imported into the `legacy` cascade layer via styles/legacy.css
+// (see main.tsx), so the modern theme's Tailwind utilities can win over it.
 
 /** How often the shell re-reads the three PyMOL values it mirrors. */
 const SHELL_POLL_MS = 1000;

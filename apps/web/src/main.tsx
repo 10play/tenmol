@@ -6,9 +6,11 @@ import App from './app/App';
 // unreferenced.
 import '@fontsource-variable/space-grotesk';
 import '@fontsource-variable/jetbrains-mono';
-import './styles/global.css';
-// After global.css: Tailwind's utilities live in `@layer utilities`, which the
-// unlayered classic stylesheet always outranks. See styles/tailwind.css.
+// The classic PyMOL stylesheets, imported into a low `legacy` cascade layer so
+// the modern theme's Tailwind utilities win without a specificity war. Classic
+// is unaffected (its elements carry no utilities). See styles/legacy.css.
+import './styles/legacy.css';
+// Tailwind's theme tokens + on-demand utilities (utilities layer > legacy layer).
 import './styles/tailwind.css';
 // The modern theme. Every rule is scoped to `[data-ui-theme='shadcn']`, so it is
 // inert until the ThemeProvider stamps that attribute. See styles/shadcn.css.

@@ -4,15 +4,19 @@
  * THE CONTRACT. Each button renders its legacy BEM class (chosen by `variant`)
  * plus whatever `className` the caller passes, and forwards every other prop
  * verbatim (`title`, `data-testid`, `aria-*`, `disabled`, `onClick`, `style`,
- * `ref`, children). The ~140 class-name-pinned tests read exactly those, so this
- * is a drop-in for the inline `<button className="quickbutton" …>` it replaces.
+ * `ref`, children). The ~140 class-name-pinned tests read exactly those.
  *
- * THEME + ICONS. Classic is text-only and byte-identical to today. In the shadcn
- * theme a button may show a lucide `icon` (passed by the call site); the text
- * label is ALWAYS kept in the DOM — rendered inline next to the icon, or
- * visually hidden (`iconOnly`) for media-style controls — so `textContent` is
- * unchanged and every test still passes in both themes. `data-slot` lets
- * `styles/shadcn.css` do the rest of the restyle.
+ * MODERN THEME = TAILWIND. In the shadcn theme the button also gets a set of
+ * Tailwind utility classes (`MODERN_VARIANT`). Those WIN over the classic BEM
+ * rule because the classic stylesheets live in the low `legacy` cascade layer
+ * (see styles/legacy.css) while Tailwind utilities live in `@layer utilities`.
+ * So classic is styled by CSS, modern by Tailwind, from the SAME DOM — and since
+ * the utilities are only added under the modern theme, classic is untouched and
+ * every class-name test still passes.
+ *
+ * ICONS. A lucide `icon` renders in the modern theme only; the text label is
+ * always kept in the DOM (inline, or visually hidden for `iconOnly`), so
+ * `textContent` is unchanged.
  */
 
 import type { ComponentPropsWithRef, ReactNode } from 'react';
@@ -21,7 +25,14 @@ import { cn } from './cn';
 import { useTheme } from './theme';
 
 export type ButtonVariant =
-  'bare' | 'quick' | 'menubar' | 'control' | 'extgui' | 'launcher' | 'consoleBar' | 'op';
+  | 'bare'
+  | 'quick'
+  | 'menubar'
+  | 'control'
+  | 'extgui'
+  | 'launcher'
+  | 'consoleBar'
+  | 'op';
 
 /** variant → the legacy BEM base class it stands in for. */
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
@@ -33,6 +44,29 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
   launcher: 'overlay-launcher__btn',
   consoleBar: 'console__bar-btn',
   op: 'objrow__op',
+};
+
+/* The one button system, in Tailwind. `flat` = bordered fill; `ghost` = text
+ * that fills on hover. `on`/`off` state is added by ToggleButton via data-state. */
+const FLAT =
+  'inline-flex items-center justify-center gap-1.5 rounded-[6px] border font-medium leading-none ' +
+  'border-[var(--sh-btn-border)] bg-[var(--sh-btn-fill)] text-[var(--pm-text)] transition-colors ' +
+  'hover:border-[var(--sh-btn-border-strong)] hover:bg-[var(--sh-btn-hover)] hover:text-[var(--pm-text-bright)] ' +
+  'active:opacity-90 disabled:opacity-45 disabled:pointer-events-none';
+const GHOST =
+  'inline-flex items-center justify-center gap-1.5 rounded-[6px] font-medium leading-none ' +
+  'text-[var(--pm-text-dim)] transition-colors hover:bg-[var(--sh-btn-hover)] hover:text-[var(--pm-text-bright)] ' +
+  'disabled:opacity-45 disabled:pointer-events-none';
+
+const MODERN_VARIANT: Record<ButtonVariant, string> = {
+  bare: `${FLAT} h-7 px-3 text-[12px]`,
+  quick: `${FLAT} h-6 px-[11px] text-[11.5px]`,
+  menubar: `${GHOST} px-2.5 py-1 text-[12px] text-[var(--pm-text-dim)]`,
+  control: `${GHOST} rounded p-1`,
+  extgui: `${FLAT} h-6 px-2 text-[11px]`,
+  launcher: `${GHOST} rounded-full px-3 py-[5px] text-[11px]`,
+  consoleBar: `${FLAT} h-[22px] px-2.5 text-[11px]`,
+  op: '',
 };
 
 interface IconProps {
@@ -48,28 +82,21 @@ export interface ButtonProps extends ComponentPropsWithRef<'button'>, IconProps 
   variant?: ButtonVariant;
 }
 
-/**
- * Compose the button body. In classic (or with no icon) it is just `children`.
- * In shadcn with an icon it is the icon plus the label — inline, or visually
- * hidden when `iconOnly`. The label text stays in the DOM either way.
- */
-function useButtonBody(
+/** Icon + label body; label text always stays in the DOM. */
+function body(
+  modern: boolean,
   icon: LucideIcon | undefined,
   iconOnly: boolean | undefined,
   children: ReactNode,
-): { body: ReactNode; hasIcon: boolean } {
-  const modern = useTheme() === 'shadcn';
-  if (!modern || !icon) return { body: children, hasIcon: false };
+): ReactNode {
+  if (!modern || !icon) return children;
   const Icon = icon;
-  return {
-    hasIcon: true,
-    body: (
-      <>
-        <Icon className="ui-btn-icon" aria-hidden strokeWidth={1.75} />
-        {iconOnly ? <span className="ui-sr">{children}</span> : children}
-      </>
-    ),
-  };
+  return (
+    <>
+      <Icon className="ui-btn-icon" aria-hidden strokeWidth={1.75} />
+      {iconOnly ? <span className="ui-sr">{children}</span> : children}
+    </>
+  );
 }
 
 export function Button({
@@ -81,24 +108,23 @@ export function Button({
   children,
   ...rest
 }: ButtonProps) {
-  const { body, hasIcon } = useButtonBody(icon, iconOnly, children);
+  const modern = useTheme() === 'shadcn';
   return (
     <button
       type={type}
       data-slot="button"
       data-variant={variant}
-      className={cn(VARIANT_CLASS[variant], hasIcon && 'ui-has-icon', className)}
+      className={cn(VARIANT_CLASS[variant], modern && MODERN_VARIANT[variant], className)}
       {...rest}
     >
-      {body}
+      {body(modern, icon, iconOnly, children)}
     </button>
   );
 }
 
 /**
- * A button whose content is a single glyph or icon. Defaults to `iconOnly`, so
- * in shadcn it renders just the lucide icon while the glyph text (`×`, `|<`)
- * stays in the DOM for tests. Advertises `data-slot="icon-button"`.
+ * A button whose content is a single glyph or icon; defaults to `iconOnly`.
+ * Square in the modern theme.
  */
 export function IconButton({
   variant = 'bare',
@@ -109,16 +135,21 @@ export function IconButton({
   children,
   ...rest
 }: ButtonProps) {
-  const { body, hasIcon } = useButtonBody(icon, iconOnly, children);
+  const modern = useTheme() === 'shadcn';
   return (
     <button
       type={type}
       data-slot="icon-button"
       data-variant={variant}
-      className={cn(VARIANT_CLASS[variant], hasIcon && 'ui-has-icon', className)}
+      className={cn(
+        VARIANT_CLASS[variant],
+        modern && MODERN_VARIANT[variant],
+        modern && icon && iconOnly && 'aspect-square px-0',
+        className,
+      )}
       {...rest}
     >
-      {body}
+      {body(modern, icon, iconOnly, children)}
     </button>
   );
 }
@@ -129,10 +160,8 @@ export interface ToggleButtonProps extends ButtonProps {
 }
 
 /**
- * A two-state button. The app expresses "on" with the `is-on` class and
- * `aria-pressed` (the overlay launcher, the ext-gui dock buttons); this keeps
- * both so nothing that queries them changes, and adds `data-state` for the
- * shadcn theme.
+ * A two-state button. Keeps the legacy `is-on` class + `aria-pressed`; in the
+ * modern theme the accent "on" fill is Tailwind, keyed off `data-state`.
  */
 export function ToggleButton({
   variant = 'bare',
@@ -144,7 +173,7 @@ export function ToggleButton({
   children,
   ...rest
 }: ToggleButtonProps) {
-  const { body, hasIcon } = useButtonBody(icon, iconOnly, children);
+  const modern = useTheme() === 'shadcn';
   return (
     <button
       type={type}
@@ -155,12 +184,14 @@ export function ToggleButton({
       className={cn(
         VARIANT_CLASS[variant],
         pressed && 'is-on',
-        hasIcon && 'ui-has-icon',
+        modern && MODERN_VARIANT[variant],
+        modern &&
+          'data-[state=on]:border-transparent data-[state=on]:bg-[var(--pm-accent)] data-[state=on]:text-[var(--sh-accent-text)] data-[state=on]:hover:bg-[var(--pm-accent)]',
         className,
       )}
       {...rest}
     >
-      {body}
+      {body(modern, icon, iconOnly, children)}
     </button>
   );
 }
