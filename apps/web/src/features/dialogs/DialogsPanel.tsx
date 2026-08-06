@@ -28,6 +28,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSession } from '../../app';
+import { Button, Select } from '../../ui';
 import { createPortal } from 'react-dom';
 import { AdvancedSettings } from './AdvancedSettings';
 import { VolumePanel } from '../volume/VolumePanel';
@@ -86,20 +87,16 @@ function Launcher({ volumes }: { volumes: readonly string[] }) {
   const strip = (
     <div className="dlglaunch" data-dialogs-launcher="">
       <span className="dlglaunch__title">dialogs</span>
-      <button type="button" data-open="properties" onClick={() => dialogsStore.open('properties')}>
+      <Button data-open="properties" onClick={() => dialogsStore.open('properties')}>
         Properties
-      </button>
-      <button
-        type="button"
-        data-open="advanced-settings"
-        onClick={() => dialogsStore.open('advanced-settings')}
-      >
+      </Button>
+      <Button data-open="advanced-settings" onClick={() => dialogsStore.open('advanced-settings')}>
         Advanced settings
-      </button>
-      <button type="button" data-open="texteditor" onClick={() => dialogsStore.open('texteditor')}>
+      </Button>
+      <Button data-open="texteditor" onClick={() => dialogsStore.open('texteditor')}>
         Text editor
-      </button>
-      <select
+      </Button>
+      <Select
         data-open="volume"
         value=""
         title="cmd.get_names_of_type('object:volume')"
@@ -113,7 +110,7 @@ function Launcher({ volumes }: { volumes: readonly string[] }) {
             {name}
           </option>
         ))}
-      </select>
+      </Select>
     </div>
   );
   return typeof document === 'undefined' ? strip : createPortal(strip, document.body);

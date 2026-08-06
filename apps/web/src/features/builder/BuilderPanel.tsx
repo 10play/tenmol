@@ -37,6 +37,7 @@ import type {
 } from '@tenmol/protocol/topics/builder';
 import { registerPickRoute } from './viewportPicking';
 import { errorText, useSession } from '../../app';
+import { Button, IconButton, Checkbox, Select } from '../../ui';
 import { createBuilderController, pickHint } from './controller';
 import {
   AMINO_ACIDS_ROW0,
@@ -275,14 +276,14 @@ export function BuilderPanel() {
 
   if (!open) {
     return (
-      <button
+      <Button
         type="button"
         className="builder-launch"
         title="the Builder dock (packages/engine/modules/pmg_qt/builder.py)"
         onClick={() => setOpen(true)}
       >
         Builder
-      </button>
+      </Button>
     );
   }
 
@@ -320,9 +321,9 @@ export function BuilderPanel() {
         <span className="builder__mouse" title="cmd.edit_mode(1) rotates the mouse ring">
           {state?.mouse.mode_name || 'mouse mode ?'}
         </span>
-        <button type="button" className="builder__close" onClick={() => setOpen(false)}>
+        <IconButton type="button" className="builder__close" onClick={() => setOpen(false)}>
           ×
-        </button>
+        </IconButton>
       </div>
 
       {drift.length > 0 && (
@@ -348,7 +349,7 @@ export function BuilderPanel() {
 
       <div className="builder__tabs" role="tablist">
         {(['Chemical', 'Protein', 'Nucleic Acid'] as Tab[]).map((name) => (
-          <button
+          <Button
             type="button"
             role="tab"
             key={name}
@@ -357,7 +358,7 @@ export function BuilderPanel() {
             onClick={() => setTab(name)}
           >
             {name}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -366,7 +367,7 @@ export function BuilderPanel() {
           <div className="builder__grid" data-testid="tab-chemical">
             <div className="builder__row">
               {ELEMENTS.map((element) => (
-                <button
+                <Button
                   type="button"
                   key={element.label}
                   className="bbtn"
@@ -381,7 +382,7 @@ export function BuilderPanel() {
                   }
                 >
                   {element.label}
-                </button>
+                </Button>
               ))}
               {CHEM_ROW0_FRAGMENTS.map((fragment) => (
                 <GrowButton key={fragment.label} fragment={fragment} state={state} act={act} />
@@ -396,7 +397,7 @@ export function BuilderPanel() {
 
             <div className="builder__row">
               {RINGS.map((ring) => (
-                <button
+                <IconButton
                   type="button"
                   key={ring.icon}
                   className="bbtn bbtn--icon"
@@ -412,7 +413,7 @@ export function BuilderPanel() {
                   }
                 >
                   <RingGlyph ring={ring} />
-                </button>
+                </IconButton>
               ))}
             </div>
           </div>
@@ -422,7 +423,7 @@ export function BuilderPanel() {
           <div className="builder__grid" data-testid="tab-protein">
             <div className="builder__row">
               {AMINO_ACIDS_ROW0.map((residue) => (
-                <button
+                <Button
                   type="button"
                   key={residue}
                   className="bbtn"
@@ -430,12 +431,12 @@ export function BuilderPanel() {
                   onClick={() => act('attachAA', { residue: residue.toLowerCase() })}
                 >
                   {residue}
-                </button>
+                </Button>
               ))}
             </div>
             <div className="builder__row">
               {AMINO_ACIDS_ROW1.map((residue) => (
-                <button
+                <Button
                   type="button"
                   key={residue}
                   className="bbtn"
@@ -443,12 +444,12 @@ export function BuilderPanel() {
                   onClick={() => act('attachAA', { residue: residue.toLowerCase() })}
                 >
                   {residue}
-                </button>
+                </Button>
               ))}
             </div>
             <div className="builder__row builder__row--form">
               <label htmlFor="builder-ss">Secondary Structure:</label>
-              <select
+              <Select
                 id="builder-ss"
                 value={ssIndex}
                 onChange={(event) => {
@@ -463,7 +464,7 @@ export function BuilderPanel() {
                     {entry.label}
                   </option>
                 ))}
-              </select>
+              </Select>
               <span className="builder__note">
                 phi {SECONDARY_STRUCTURE[ssIndex]?.phi} / psi {SECONDARY_STRUCTURE[ssIndex]?.psi}
               </span>
@@ -475,7 +476,7 @@ export function BuilderPanel() {
           <div className="builder__grid" data-testid="tab-nucleic">
             <div className="builder__tabs builder__tabs--nested" role="tablist">
               {(['DNA', 'RNA'] as NucTab[]).map((name) => (
-                <button
+                <Button
                   type="button"
                   role="tab"
                   key={name}
@@ -484,7 +485,7 @@ export function BuilderPanel() {
                   onClick={() => setNucTab(name)}
                 >
                   {name}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -494,7 +495,7 @@ export function BuilderPanel() {
               <div className="builder__grid">
                 <div className="builder__row">
                   {RNA_BASES.map((base) => (
-                    <button
+                    <Button
                       type="button"
                       key={base.label}
                       className="bbtn"
@@ -502,7 +503,7 @@ export function BuilderPanel() {
                       onClick={() => act('attachNA', { base: base.fragment, nucType: 'RNA' })}
                     >
                       {base.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
                 <p className="builder__hint">
@@ -541,14 +542,14 @@ export function BuilderPanel() {
             act={act}
           />
           <ActionButton kind="removeAtom" label="Delete" tip="Remove atoms" state={state} act={act} />
-          <button
+          <Button
             type="button"
             className="bbtn"
             title="Delete everything"
             onClick={() => setConfirmClear(true)}
           >
             Clear
-          </button>
+          </Button>
           <span className="builder__label">Charge:</span>
           <ActionButton
             kind="setCharge"
@@ -607,7 +608,7 @@ export function BuilderPanel() {
             />
           ))}
           <span className="builder__label">Model:</span>
-          <button
+          <Button
             type="button"
             className="bbtn bbtn--disabled"
             disabled
@@ -615,7 +616,7 @@ export function BuilderPanel() {
             title={state?.clean_reason ?? 'cmd.clean is Incentive-only in this build'}
           >
             Clean
-          </button>
+          </Button>
           <ActionButton kind="sculpt" label="Sculpt" tip="Molecular sculpting" state={state} act={act} />
           <ActionButton kind="fix" label="Fix" tip="Fix atom positions" state={state} act={act} />
           <ActionButton kind="rest" label="Rest" tip="Restrain atom positions" state={state} act={act} />
@@ -627,8 +628,7 @@ export function BuilderPanel() {
             const checked = entry.inverted ? !raw : Boolean(raw);
             return (
               <label className="builder__check" key={entry.setting} title={entry.tooltip}>
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={checked}
                   onChange={(event) => {
                     const next = event.target.checked;
@@ -646,7 +646,7 @@ export function BuilderPanel() {
               </label>
             );
           })}
-          <button
+          <Button
             type="button"
             className="bbtn"
             title="Undo last change"
@@ -654,8 +654,8 @@ export function BuilderPanel() {
             onClick={undo}
           >
             Undo
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             className="bbtn"
             title="Redo last change"
@@ -663,7 +663,7 @@ export function BuilderPanel() {
             onClick={redo}
           >
             Redo
-          </button>
+          </Button>
           {state?.undo_is_noop && (
             <span className="builder__note" title="packages/engine/modules/pymol/editor.py:38-49">
               editor.undocontext is a no-op here — only cmd.undo/redo against the C ring works
@@ -752,7 +752,7 @@ function GrowButton({
   act: (kind: BuilderActionKind, params?: Record<string, unknown>) => void;
 }) {
   return (
-    <button
+    <Button
       type="button"
       className="bbtn"
       title={`${fragment.tooltip} — ${pickHint(state, 'grow')}`}
@@ -766,7 +766,7 @@ function GrowButton({
       }
     >
       {fragment.label}
-    </button>
+    </Button>
   );
 }
 
@@ -786,14 +786,14 @@ function ActionButton({
   act: (kind: BuilderActionKind, params?: Record<string, unknown>) => void;
 }) {
   return (
-    <button
+    <Button
       type="button"
       className="bbtn"
       title={`${tip} — ${pickHint(state, kind)}`}
       onClick={() => act(kind, params ?? {})}
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -815,7 +815,7 @@ function DnaTab({
     <div className="builder__grid">
       <div className="builder__row">
         {DNA_BASES.map((base) => (
-          <button
+          <Button
             type="button"
             key={base.label}
             className="bbtn"
@@ -832,7 +832,7 @@ function DnaTab({
             }
           >
             {base.label}
-          </button>
+          </Button>
         ))}
       </div>
       <div className="builder__row builder__row--form">
@@ -893,9 +893,9 @@ function PickStrip({ state, onUnpick }: { state: BuilderState | null; onUnpick: 
         </span>
       ) : null}
       <span className="builder__spacer" />
-      <button type="button" className="bbtn bbtn--small" onClick={onUnpick} title="cmd.unpick()">
+      <Button type="button" className="bbtn bbtn--small" onClick={onUnpick} title="cmd.unpick()">
         unpick
-      </button>
+      </Button>
     </div>
   );
 }
@@ -917,9 +917,9 @@ function WizardStrip({
         <span className="builder__wizard-name">{wizard.name}</span>
         {wizard.repeating && <span className="builder__note">repeating</span>}
         <span className="builder__spacer" />
-        <button type="button" className="bbtn bbtn--small" onClick={onDismiss}>
+        <Button type="button" className="bbtn bbtn--small" onClick={onDismiss}>
           dismiss
-        </button>
+        </Button>
       </div>
       {wizard.prompt.map((line) => (
         <div className="builder__wizard-prompt" key={line}>
@@ -933,7 +933,7 @@ function WizardStrip({
               {row[1]}
             </span>
           ) : (
-            <button
+            <Button
               type="button"
               className="bbtn"
               key={`${row[1]}-${index}`}
@@ -941,7 +941,7 @@ function WizardStrip({
               onClick={() => onClick(index)}
             >
               {row[1]}
-            </button>
+            </Button>
           ),
         )}
       </div>
@@ -970,12 +970,12 @@ function ConfirmModal({
         <div className="builder__modal-title">{title}</div>
         <pre className="builder__modal-message">{message}</pre>
         <div className="builder__row">
-          <button type="button" className="bbtn" onClick={onConfirm}>
+          <Button type="button" className="bbtn" onClick={onConfirm}>
             {confirmLabel}
-          </button>
-          <button type="button" className="bbtn" onClick={onCancel}>
+          </Button>
+          <Button type="button" className="bbtn" onClick={onCancel}>
             {cancelLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

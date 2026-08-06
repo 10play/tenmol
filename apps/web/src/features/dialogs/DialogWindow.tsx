@@ -10,6 +10,7 @@
 
 import { useCallback, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { IconButton } from '../../ui';
 import { dialogsStore, type DialogWindowSpec } from './store';
 import './dialogs.css';
 
@@ -93,23 +94,21 @@ export function DialogWindow({
     >
       <div className="dlgwin__title" onPointerDown={onTitleDown}>
         <span className="dlgwin__label">{spec.title}</span>
-        <button
-          type="button"
+        <IconButton
           className="dlgwin__btn"
           title={spec.minimised ? 'restore' : 'shade'}
           onClick={() => dialogsStore.toggleMinimised(spec.key)}
         >
           {spec.minimised ? '▢' : '—'}
-        </button>
-        <button
-          type="button"
+        </IconButton>
+        <IconButton
           className="dlgwin__btn"
           title="close"
           data-close={spec.key}
           onClick={() => dialogsStore.close(spec.key)}
         >
           ×
-        </button>
+        </IconButton>
       </div>
 
       {!spec.minimised && (

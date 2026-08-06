@@ -38,6 +38,7 @@ import {
 } from './files';
 import { PYMOLRC_ARG } from './openEditor';
 import { editorTitle, highlight, isPymolrc, syntaxForFilename } from './syntax';
+import { Button, Select, TextInput } from '../../ui';
 import './texteditor.css';
 
 const MODE_LABEL: Record<SyntaxMode, string> = {
@@ -327,15 +328,15 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
       <div className="txted" onKeyDown={onKeyDown}>
         <div className="txted__menu">
           <span className="txted__menu-label">File</span>
-          <button type="button" data-txted-open="" onClick={() => guard(() => void doOpen())}>
+          <Button variant="bare" type="button" data-txted-open="" onClick={() => guard(() => void doOpen())}>
             Open <kbd>Ctrl+O</kbd>
-          </button>
-          <button type="button" data-txted-save="" onClick={() => void doSave()}>
+          </Button>
+          <Button variant="bare" type="button" data-txted-save="" onClick={() => void doSave()}>
             Save <kbd>Ctrl+S</kbd>
-          </button>
-          <button type="button" data-txted-saveas="" onClick={() => void doSaveAs()}>
+          </Button>
+          <Button variant="bare" type="button" data-txted-saveas="" onClick={() => void doSaveAs()}>
             Save as … <kbd>Ctrl+Shift+S</kbd>
-          </button>
+          </Button>
           <span className="txted__sep" />
           <span className="txted__menu-label">Syntax</span>
           {SYNTAX_MODES.map((mode) => (
@@ -353,7 +354,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
           <span className="txted__sep" />
           <label className="txted__radio" title="Select Font… (the Qt context-menu entry)">
             Font
-            <input
+            <TextInput
               type="number"
               data-txted-font=""
               min={8}
@@ -362,7 +363,8 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
               onChange={(e) => setFontSize(Math.min(24, Math.max(8, Number(e.target.value) || 12)))}
             />
           </label>
-          <button
+          <Button
+            variant="bare"
             type="button"
             data-txted-run=""
             disabled={!path || access !== 'server'}
@@ -370,7 +372,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
             onClick={() => void runScript(session, path).catch((e) => setError(messageOf(e)))}
           >
             Run
-          </button>
+          </Button>
         </div>
 
         <div className="txted__bar">
@@ -419,7 +421,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
           <div className="txted__note" role="note">
             <label>
               Active pymolrc files:{' '}
-              <select
+              <Select
                 data-txted-pymolrc=""
                 value={path}
                 onChange={(e) => {
@@ -436,7 +438,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
                     {file}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           </div>
         )}

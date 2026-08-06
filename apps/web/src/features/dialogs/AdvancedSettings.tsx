@@ -28,6 +28,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SETTING_TYPE, type SettingTypeValue } from '@tenmol/protocol/topics/dialogs';
 import { useSession } from '../../app';
+import { Button, TextInput, Checkbox } from '../../ui';
 import { DialogWindow } from './DialogWindow';
 import type { DialogWindowSpec } from './store';
 import './dialogs.css';
@@ -122,15 +123,14 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
     <DialogWindow spec={spec}>
       <div className="advset" style={{ height: spec.height }}>
         <div className="advset__head">
-          <input
+          <TextInput
             className="advset__filter"
             data-advset-filter=""
             placeholder="filter settings…"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
-          <button
-            type="button"
+          <Button
             data-advset-refresh=""
             onClick={() => {
               setLoaded({});
@@ -138,7 +138,7 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
             }}
           >
             Refresh
-          </button>
+          </Button>
           <span className="advset__note" data-advset-count={rows.length}>
             {rows.length} / {names.length}
           </span>
@@ -168,14 +168,13 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
                   {!row ? (
                     <span className="advset__note">…</span>
                   ) : row.type === SETTING_TYPE.Boolean ? (
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       data-advset-value={name}
                       checked={row.value !== '0' && row.value !== 'off' && row.value !== ''}
                       onChange={(e) => void applyEdit(name, e.target.checked ? '1' : '0')}
                     />
                   ) : (
-                    <input
+                    <TextInput
                       className="advset__value"
                       data-advset-value={name}
                       defaultValue={row.value}

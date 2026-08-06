@@ -23,6 +23,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PropertyRow } from '@tenmol/protocol/topics/dialogs';
+import { Checkbox, IconButton, Select, TextInput } from '../../ui';
 import { useSession } from '../../app';
 import { DialogWindow } from '../dialogs/DialogWindow';
 import type { DialogWindowSpec } from '../dialogs/store';
@@ -305,18 +306,18 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
         <div className="props__head">
           <label>
             Object
-            <select data-props-model="" value={model} onChange={(e) => setModel(e.target.value)}>
+            <Select data-props-model="" value={model} onChange={(e) => setModel(e.target.value)}>
               {objects.length === 0 && <option value="">(no objects)</option>}
               {objects.map((name) => (
                 <option key={name} value={name}>
                   {name}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label>
             State
-            <input
+            <TextInput
               type="number"
               data-props-state=""
               min={1}
@@ -327,7 +328,7 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
           </label>
           <label>
             Index
-            <input
+            <TextInput
               type="number"
               data-props-index=""
               min={1}
@@ -336,7 +337,7 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
               onChange={(e) => setIndex(clamp(Number(e.target.value), 1, maxIndex))}
             />
           </label>
-          <button
+          <IconButton
             type="button"
             data-props-refresh=""
             title="Refresh — re-read the object list and re-sync from pk1"
@@ -345,10 +346,9 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
             }}
           >
             ⟳
-          </button>
+          </IconButton>
           <label className="props__follow" title={FOLLOW_TITLE}>
-            <input
-              type="checkbox"
+            <Checkbox
               data-props-follow=""
               checked={follow}
               onChange={(e) => setFollow(e.target.checked)}
@@ -389,7 +389,7 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
                           ) : row.readOnly ? (
                             <span className="props__ro">{row.text}</span>
                           ) : (
-                            <input
+                            <TextInput
                               className="props__value"
                               data-props-value={id}
                               defaultValue={row.text}

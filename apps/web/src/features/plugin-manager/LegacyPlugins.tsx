@@ -18,6 +18,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { Button } from '../../ui';
 import { useSession } from '../../app';
 import {
   ensureRegistry,
@@ -73,9 +74,9 @@ export function LegacyPlugins() {
         <span data-legacy-count="">
           {loading ? 'reading the registry…' : `${leaves} menu item${leaves === 1 ? '' : 's'}`}
         </span>
-        <button type="button" className="plugmgr__btn" onClick={() => void refresh()}>
+        <Button className="plugmgr__btn" onClick={() => void refresh()}>
           reread
-        </button>
+        </Button>
       </div>
 
       {error !== null && (
@@ -94,15 +95,14 @@ export function LegacyPlugins() {
             {row.kind === 'separator' ? (
               <hr className="plugmgr__legacysep" />
             ) : row.clickable ? (
-              <button
-                type="button"
+              <Button
                 className="plugmgr__legacyleaf"
                 data-legacy-leaf={`${row.menuKey}:${row.index}`}
                 title={`${row.menuKey} → ${row.label}`}
                 onClick={() => void click(row.menuKey, row.index, row.label)}
               >
                 {row.label}
-              </button>
+              </Button>
             ) : (
               <span className="plugmgr__legacymenu">{row.label}</span>
             )}

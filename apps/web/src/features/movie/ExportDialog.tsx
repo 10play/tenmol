@@ -19,6 +19,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { MovieEncoders, MovieProducePlan, MovieStatus } from '@tenmol/protocol/topics/movie';
+import { Button, Checkbox, TextInput } from '../../ui';
 import type { MovieSource } from './movieSource';
 
 interface Props {
@@ -172,7 +173,7 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
         <div className="mvedit__row">
           <label className="mvedit__label">
             width
-            <input
+            <TextInput
               type="number"
               className="mvedit__num"
               value={size[0]}
@@ -181,7 +182,7 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
           </label>
           <label className="mvedit__label">
             height
-            <input
+            <TextInput
               type="number"
               className="mvedit__num"
               value={size[1]}
@@ -189,9 +190,9 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
             />
           </label>
           {[720, 480, 360].map((h) => (
-            <button key={h} type="button" onClick={() => setSize(presetSize(h, size))}>
+            <Button variant="bare" key={h} type="button" onClick={() => setSize(presetSize(h, size))}>
               {h}p
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -216,7 +217,7 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
         <div className="mvedit__row">
           <label className="mvedit__label">
             quality
-            <input
+            <TextInput
               type="number"
               className="mvedit__num"
               value={quality}
@@ -225,7 +226,7 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
             />
           </label>
           <label className="mvedit__label">
-            <input type="checkbox" checked={ray} onChange={() => setRay(!ray)} />
+            <Checkbox checked={ray} onChange={() => setRay(!ray)} />
             ray
           </label>
           <span className="mvexport__enc">
@@ -243,7 +244,7 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
         )}
 
         <div className="mvedit__row">
-          <input
+          <TextInput
             className="mvedit__input"
             value={prefix}
             spellCheck={false}
@@ -260,12 +261,12 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
         {result && <p className="mvexport__result">{result}</p>}
 
         <div className="mvedit__row">
-          <button type="button" disabled={busy || !supported} onClick={() => void doExport()}>
+          <Button variant="bare" type="button" disabled={busy || !supported} onClick={() => void doExport()}>
             {busy ? 'exporting…' : 'export'}
-          </button>
-          <button type="button" onClick={onClose}>
+          </Button>
+          <Button variant="bare" type="button" onClick={onClose}>
             close
-          </button>
+          </Button>
         </div>
       </div>
     </div>

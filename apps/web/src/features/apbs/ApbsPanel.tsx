@@ -30,6 +30,7 @@
 import { useEffect, useState } from 'react';
 
 import { useSession } from '../../app';
+import { Button } from '../../ui';
 import {
   describeProgram,
   pipelineIsRunnable,
@@ -79,7 +80,8 @@ util.protein_vacuum_esp("myprotein")`;
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <button
+    <Button
+      variant="bare"
       type="button"
       className="apbs__btn"
       onClick={() => {
@@ -90,7 +92,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       }}
     >
       {copied ? 'copied' : label}
-    </button>
+    </Button>
   );
 }
 

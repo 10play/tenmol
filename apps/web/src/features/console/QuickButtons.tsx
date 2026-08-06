@@ -30,6 +30,7 @@ import {
   subscribeMenuHooks,
   type MenuHook,
 } from '../../shell/panelHooks';
+import { Button, ProgressBar } from '../../ui';
 
 interface QuickButton {
   label: string;
@@ -186,11 +187,11 @@ export function QuickButtons() {
       {ROWS.map((row, i) => (
         <div className="quickbuttons__row" key={i}>
           {row.map((button) => (
-            <button
-              type="button"
+            <Button
+              variant="quick"
               // Still VISIBLY unbuilt when it is unbuilt: Draw/Ray keeps its
               // `todo` marker until someone registers `render_dialog`.
-              className={`quickbutton${live(button, hooks) ? '' : ' quickbutton--todo'}`}
+              className={live(button, hooks) ? undefined : 'quickbutton--todo'}
               key={button.label}
               title={live(button, hooks) ? button.title : `TODO (${button.todo}): ${button.title}`}
               onClick={() => {
@@ -207,7 +208,7 @@ export function QuickButtons() {
               }}
             >
               {button.label}
-            </button>
+            </Button>
           ))}
         </div>
       ))}
@@ -225,21 +226,10 @@ export function QuickButtons() {
        */}
       {progressPercent(progress) >= 0 && (
         <div className="quickbuttons__progress" title="cmd.get_progress(), 10 Hz status thread">
-          <div
-            className="progressbar"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progressPercent(progress)}
-          >
-            <div
-              className="progressbar__fill"
-              style={{ width: `${Math.min(100, progressPercent(progress))}%` }}
-            />
-          </div>
-          <button
-            type="button"
-            className="quickbutton quickbutton--abort"
+          <ProgressBar value={progressPercent(progress)} />
+          <Button
+            variant="quick"
+            className="quickbutton--abort"
             title="cmd.interrupt (packages/engine/modules/pymol/locking.py:88 — asynchronous, takes no lock)"
             onClick={() => {
               session.stores.feedback.appendClient('interrupt');
@@ -249,7 +239,7 @@ export function QuickButtons() {
             }}
           >
             Abort
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { Button, IconButton, TextInput } from '../../ui';
 import { DEFAULT_TEXT_DIALOG_WIDTH } from '../volume/ramp';
 import './dialogs.css';
 
@@ -34,14 +35,13 @@ export function TextDialog({
       <div className="dlgmodal__box" style={{ width: DEFAULT_TEXT_DIALOG_WIDTH }}>
         <div className="dlgmodal__title">
           {title}
-          <button type="button" className="dlgwin__btn" onClick={onClose} title="close">
+          <IconButton className="dlgwin__btn" onClick={onClose} title="close">
             ×
-          </button>
+          </IconButton>
         </div>
         <pre className="dlgmodal__pre">{text}</pre>
         <div className="dlgmodal__row">
-          <button
-            type="button"
+          <Button
             onClick={() => {
               void navigator.clipboard?.writeText(text).then(
                 () => setCopied(true),
@@ -50,12 +50,12 @@ export function TextDialog({
             }}
           >
             Copy
-          </button>
+          </Button>
           {copied && <span className="dlgmodal__note">copied</span>}
           <span className="dlgmodal__spacer" />
-          <button type="button" onClick={onClose}>
+          <Button onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -99,7 +99,7 @@ export function NumberPrompt({
     <div className="dlgmodal" role="dialog" aria-label={spec.title} data-numberprompt="">
       <div className="dlgmodal__box dlgmodal__box--narrow">
         <div className="dlgmodal__title">{spec.title}</div>
-        <input
+        <TextInput
           ref={ref}
           className="dlgmodal__input"
           value={text}
@@ -115,12 +115,12 @@ export function NumberPrompt({
         </div>
         <div className="dlgmodal__row">
           <span className="dlgmodal__spacer" />
-          <button type="button" onClick={() => onDone(null)}>
+          <Button onClick={() => onDone(null)}>
             Cancel
-          </button>
-          <button type="button" data-accept="" onClick={accept}>
+          </Button>
+          <Button data-accept="" onClick={accept}>
             OK
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -145,15 +145,15 @@ export function ConfirmPrompt({
         <div className="dlgmodal__message">{message}</div>
         <div className="dlgmodal__row">
           <span className="dlgmodal__spacer" />
-          <button type="button" data-answer="yes" onClick={() => onDone('yes')}>
+          <Button data-answer="yes" onClick={() => onDone('yes')}>
             Yes
-          </button>
-          <button type="button" data-answer="no" onClick={() => onDone('no')}>
+          </Button>
+          <Button data-answer="no" onClick={() => onDone('no')}>
             No
-          </button>
-          <button type="button" data-answer="cancel" onClick={() => onDone('cancel')}>
+          </Button>
+          <Button data-answer="cancel" onClick={() => onDone('cancel')}>
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     </div>

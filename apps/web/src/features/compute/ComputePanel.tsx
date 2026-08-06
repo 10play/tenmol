@@ -28,6 +28,7 @@ import {
   type MetricParam,
 } from './metrics';
 import { COMPUTE_BOOTSTRAP, COMPUTE_NS, type SasaRelativeResult } from '@tenmol/protocol/topics/compute';
+import { Button, Checkbox, TextInput } from '../../ui';
 import './compute.css';
 
 type Row = {
@@ -219,7 +220,7 @@ export function ComputePanel() {
 
       <div className="compute__sel">
         <label htmlFor="cp-sel">Selection</label>
-        <input
+        <TextInput
           id="cp-sel"
           type="text"
           value={selection}
@@ -237,7 +238,8 @@ export function ComputePanel() {
             return (
               <tr key={m.id} className={off ? 'is-off' : undefined}>
                 <td>
-                  <button
+                  <Button
+                    variant="bare"
                     type="button"
                     className={`compute__btn${m.kind === 'destructive' ? ' is-danger' : ''}`}
                     disabled={off || busy !== null}
@@ -245,7 +247,7 @@ export function ComputePanel() {
                     onClick={() => press(m)}
                   >
                     {busy === m.id ? '…' : m.label}
-                  </button>
+                  </Button>
                   {m.note !== undefined && <div className="compute__note-inline">{m.note}</div>}
                   {extra.length > 0 && (
                     <div className="compute__args">
@@ -290,10 +292,11 @@ export function ComputePanel() {
         <div className="compute__confirm" role="alertdialog" aria-label="confirm destructive action">
           <p className="compute__warn">{confirming.warning}</p>
           <div className="compute__confirm-actions">
-            <button type="button" className="compute__btn" onClick={() => setConfirming(null)}>
+            <Button variant="bare" type="button" className="compute__btn" onClick={() => setConfirming(null)}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="bare"
               type="button"
               className="compute__btn is-danger"
               onClick={() => void execute(confirming)}
@@ -306,7 +309,7 @@ export function ComputePanel() {
                * warning nobody reads.
                */}
               {confirming.kind === 'destructive' ? 'Modify structure and run' : 'Overwrite and run'}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -336,9 +339,8 @@ function ParamField({
   if (param.kind === 'bool') {
     return (
       <label className="compute__arg" htmlFor={id}>
-        <input
+        <Checkbox
           id={id}
-          type="checkbox"
           checked={value === undefined ? param.default : Boolean(value)}
           onChange={(e) => onChange(metricId, param.name, e.target.checked)}
         />
@@ -349,7 +351,7 @@ function ParamField({
   return (
     <label className="compute__arg" htmlFor={id}>
       {param.label}
-      <input
+      <TextInput
         id={id}
         type={param.kind === 'number' ? 'number' : 'text'}
         spellCheck={false}
@@ -392,14 +394,15 @@ function SasaTable({ result }: { result: SasaRelativeResult }) {
       <ul className="compute__sasa-list">
         {records.map((r) => (
           <li key={r.sele} className={r.normalised ? undefined : 'is-raw'}>
-            <button
+            <Button
+              variant="bare"
               type="button"
               className="compute__sasa-sele"
               title={`select ${r.sele}`}
               onClick={() => void session.run(`select sele, ${r.sele}`)}
             >
               {r.chain || '-'}/{r.resi} {r.resn}
-            </button>
+            </Button>
             <span className="compute__sasa-bar" aria-hidden="true">
               <span style={{ width: `${Math.max(0, Math.min(1, r.value)) * 100}%` }} />
             </span>

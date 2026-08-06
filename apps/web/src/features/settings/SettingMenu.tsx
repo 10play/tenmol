@@ -42,6 +42,7 @@ import {
   isRadioActive,
 } from '../menubar/model';
 import { groupRadios, type MenuGroup } from './menuTree';
+import { Button } from '../../ui';
 
 export interface MenuContext {
   /** Live `{type, value}` for a setting name, or undefined while unloaded. */
@@ -126,7 +127,7 @@ function MenuNodeView({
   if (node.kind === 'submenu') {
     return (
       <li className="setmenu__submenu">
-        <button
+        <Button
           type="button"
           className="setmenu__row setmenu__row--menu"
           aria-expanded={open}
@@ -135,7 +136,7 @@ function MenuNodeView({
           <span className="setmenu__mark">{open ? '▾' : '▸'}</span>
           <span className="setmenu__label">{baseLabel(node.label, node.accel)}</span>
           {node.accel && <span className="setmenu__accel">{node.accel}</span>}
-        </button>
+        </Button>
         {open && <MenuDataRenderer nodes={node.items} ctx={ctx} depth={depth + 1} />}
       </li>
     );

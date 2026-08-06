@@ -1,0 +1,45 @@
+/*
+ * Tailwind v4 — imported WITHOUT Preflight.
+ *
+ * `global.css` owns the reset and the pixel-exact PyMOL base, and Tailwind's
+ * Preflight (margin/border/button normalisation) would fight it and break the
+ * `classic` look. So we import only the `theme` (design tokens) and `utilities`
+ * layers — never `preflight`.
+ *
+ * Both `global.css` and the per-feature stylesheets are UNLAYERED, and unlayered
+ * CSS outranks any `@layer`. So a Tailwind utility can never clobber a classic
+ * BEM rule: it only styles the shadcn-rendered subtrees, which carry no BEM
+ * class. That is what lets the two themes coexist in one document.
+ */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/*
+ * Bridge Tailwind's token space onto the PyMOL source variables in `global.css`,
+ * so colour and typography have ONE source. `bg-pm-panel`, `text-pm-text-dim`,
+ * `border-pm-line`, `font-mono`, … all resolve straight to the `--pm-*` values.
+ * The shadcn variants are styled from these, so a change in `global.css` moves
+ * both looks together.
+ */
+@theme {
+  --color-pm-bg: var(--pm-bg);
+  --color-pm-bg-viewport: var(--pm-bg-viewport);
+  --color-pm-panel: var(--pm-panel);
+  --color-pm-panel-alt: var(--pm-panel-alt);
+  --color-pm-edge: var(--pm-edge);
+  --color-pm-line: var(--pm-line);
+  --color-pm-text: var(--pm-text);
+  --color-pm-text-dim: var(--pm-text-dim);
+  --color-pm-text-bright: var(--pm-text-bright);
+  --color-pm-accent: var(--pm-accent);
+  --color-pm-caption: var(--pm-caption);
+  --color-pm-mouse-mode: var(--pm-mouse-mode);
+
+  --font-mono: var(--pm-font-mono);
+  --font-sans: var(--pm-font-ui);
+
+  /* A modern corner radius for the shadcn look; classic never reads it. */
+  --radius-pm: 6px;
+}

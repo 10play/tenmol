@@ -1,0 +1,335 @@
+/*
+ * The shadcn theme — a modern reskin, active only under [data-ui-theme='shadcn'].
+ *
+ * HOW IT STAYS SAFE. Every rule here is prefixed with `:root[data-ui-theme='shadcn']`,
+ * so it is inert in `classic` (the default). It is unlayered, so it competes with
+ * `global.css` at the same level but always WINS on the shadcn tree because the
+ * attribute prefix raises specificity. The classic look is therefore untouched:
+ * flip the attribute back and every rule below evaporates.
+ *
+ * HOW IT REACHES EVERYTHING. The first block re-points the `--pm-*` source
+ * variables, so all of `global.css` and every feature stylesheet recolour at
+ * once — no per-component work for the palette. The rest adds the modern
+ * geometry (radius, borders, focus rings, spacing) to the contract classes and
+ * the `data-slot` atoms the primitive layer emits.
+ *
+ * WHAT IT WILL NOT TOUCH. The internal-gui column's load-bearing metrics
+ * (`--pm-row-h`, `internal_gui_width`, the Executive floor) stay put — "modern
+ * spacing" is expressed in the chrome, console, dialogs and controls, never by
+ * moving the geometry the ortho layout math depends on.
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Palette — re-point the source tokens. Recolours the whole app.  */
+/* ------------------------------------------------------------------ */
+
+:root[data-ui-theme='shadcn'] {
+  --pm-bg: #0a0c10;
+  --pm-bg-viewport: #05070a;
+  --pm-panel: #14171c;
+  --pm-panel-alt: #191d23;
+  --pm-edge: #05070a;
+  --pm-line: #2b313a;
+  --pm-text: #dfe4ea;
+  --pm-text-dim: #97a1ad;
+  --pm-text-bright: #f5f8fb;
+  --pm-accent: #6366f1;
+
+  /* Executive name buttons: flat slate instead of the beveled grey. */
+  --pm-btn-enabled: #3b4250;
+  --pm-btn-disabled: #232833;
+  --pm-btn-cloaked: #2c323d;
+  --pm-btn-pressed: #4b5364;
+  --pm-caption: #34d399;
+
+  --pm-mouse-mode: #fb7185;
+  --pm-control-lit: #cbd5e1;
+  --pm-control-idle: #4b5261;
+
+  /* A modern radius the theme reuses everywhere. */
+  --sh-radius: 6px;
+  --sh-radius-sm: 4px;
+  --sh-ring: 0 0 0 2px color-mix(in oklch, var(--pm-accent) 55%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Buttons — flat, rounded, with a real hover/active/focus model.  */
+/* ------------------------------------------------------------------ */
+
+:root[data-ui-theme='shadcn'] .quickbutton,
+:root[data-ui-theme='shadcn'] [data-slot='button'],
+:root[data-ui-theme='shadcn'] [data-slot='icon-button'],
+:root[data-ui-theme='shadcn'] [data-slot='toggle-button'] {
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-radius-sm);
+  color: var(--pm-text);
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+:root[data-ui-theme='shadcn'] .quickbutton:hover,
+:root[data-ui-theme='shadcn'] [data-slot='button']:hover,
+:root[data-ui-theme='shadcn'] [data-slot='icon-button']:hover,
+:root[data-ui-theme='shadcn'] [data-slot='toggle-button']:hover {
+  background: #232935;
+  border-color: #3a4250;
+  color: var(--pm-text-bright);
+}
+
+:root[data-ui-theme='shadcn'] .quickbutton:active,
+:root[data-ui-theme='shadcn'] [data-slot='button']:active {
+  background: #1a1f28;
+}
+
+:root[data-ui-theme='shadcn'] [data-slot='toggle-button'][data-state='on'],
+:root[data-ui-theme='shadcn'] .overlay-launcher__btn.is-on,
+:root[data-ui-theme='shadcn'] .extgui__btn.is-on {
+  background: color-mix(in oklch, var(--pm-accent) 25%, var(--pm-panel-alt));
+  border-color: var(--pm-accent);
+  color: var(--pm-text-bright);
+}
+
+:root[data-ui-theme='shadcn'] button:focus-visible,
+:root[data-ui-theme='shadcn'] [data-slot='input']:focus-visible,
+:root[data-ui-theme='shadcn'] [data-slot='select']:focus-visible {
+  outline: none;
+  box-shadow: var(--sh-ring);
+  border-color: var(--pm-accent);
+}
+
+/* The abort button keeps its danger colour, modernised. */
+:root[data-ui-theme='shadcn'] .quickbutton--abort {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #fff;
+}
+:root[data-ui-theme='shadcn'] .quickbutton--abort:hover {
+  background: #f43f5e;
+  border-color: #f43f5e;
+}
+
+/* Menubar items: flat, with a rounded hover pill instead of a hard fill. */
+:root[data-ui-theme='shadcn'] .menubar {
+  background: linear-gradient(180deg, #171b21, #12151a);
+  border-bottom: 1px solid var(--pm-line);
+  height: 30px;
+  gap: 1px;
+  padding: 0 4px;
+  align-items: center;
+}
+:root[data-ui-theme='shadcn'] .menubar__item {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--sh-radius-sm);
+  padding: 4px 10px;
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .menubar__item:hover,
+:root[data-ui-theme='shadcn'] .menubar__item.is-open {
+  background: var(--pm-panel-alt);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .menubar__title {
+  color: var(--pm-text-bright);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-family: var(--pm-font-ui);
+  text-transform: none;
+}
+
+/* The console output toolbar buttons. */
+:root[data-ui-theme='shadcn'] .console__bar-btn {
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-radius-sm);
+  padding: 1px 7px;
+}
+:root[data-ui-theme='shadcn'] .console__bar-btn:hover {
+  background: #232935;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Bespoke dropdown menus (features/menubar, features/pymol-menu).   */
+/* ------------------------------------------------------------------ */
+
+:root[data-ui-theme='shadcn'] .menu,
+:root[data-ui-theme='shadcn'] .popup-menu {
+  background: var(--pm-panel);
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-radius);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+  padding: 5px;
+}
+:root[data-ui-theme='shadcn'] .menu__row {
+  border-radius: var(--sh-radius-sm);
+  height: 22px;
+  padding: 0 10px 0 6px;
+}
+:root[data-ui-theme='shadcn'] .menu__row:hover {
+  background: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] .menu__sep {
+  background: var(--pm-line);
+  margin: 4px 6px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Inputs / selects / form controls.                                */
+/* ------------------------------------------------------------------ */
+
+:root[data-ui-theme='shadcn'] .cmdline__input,
+:root[data-ui-theme='shadcn'] [data-slot='input'],
+:root[data-ui-theme='shadcn'] [data-slot='textarea'],
+:root[data-ui-theme='shadcn'] [data-slot='select'] {
+  background: #0d1014;
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-radius-sm);
+  color: var(--pm-text-bright);
+  padding: 3px 8px;
+}
+:root[data-ui-theme='shadcn'] [data-slot='select'] {
+  cursor: pointer;
+}
+:root[data-ui-theme='shadcn'] .cmdline__input:focus,
+:root[data-ui-theme='shadcn'] [data-slot='input']:focus,
+:root[data-ui-theme='shadcn'] [data-slot='textarea']:focus {
+  border-color: var(--pm-accent);
+  box-shadow: var(--sh-ring);
+  outline: none;
+}
+:root[data-ui-theme='shadcn'] [data-slot='checkbox'],
+:root[data-ui-theme='shadcn'] [data-slot='switch'],
+:root[data-ui-theme='shadcn'] [data-slot='slider'] {
+  accent-color: var(--pm-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Panels, dialogs, docks.                                          */
+/* ------------------------------------------------------------------ */
+
+:root[data-ui-theme='shadcn'] [data-slot='panel'],
+:root[data-ui-theme='shadcn'] .extgui {
+  border-radius: var(--sh-radius);
+}
+:root[data-ui-theme='shadcn'] .extgui {
+  border: 1px solid var(--pm-line);
+  overflow: hidden;
+}
+:root[data-ui-theme='shadcn'] .extgui__titlebar {
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .cmdline {
+  background: var(--pm-panel);
+  border-top: 1px solid var(--pm-line);
+  height: 30px;
+  padding: 0 8px;
+}
+:root[data-ui-theme='shadcn'] .cmdline__input {
+  height: 22px;
+}
+:root[data-ui-theme='shadcn'] .console__bar {
+  background: var(--pm-panel);
+  border-bottom: 1px solid var(--pm-line);
+  height: 26px;
+}
+:root[data-ui-theme='shadcn'] .feedback {
+  background: #0b0e12;
+}
+
+/* Overlay launcher — a floating rounded toolbar. */
+:root[data-ui-theme='shadcn'] .overlay-launcher {
+  background: color-mix(in oklch, var(--pm-panel) 88%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--pm-line);
+  border-radius: 999px;
+  padding: 4px 6px;
+  gap: 3px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+:root[data-ui-theme='shadcn'] .overlay-launcher__btn {
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. The internal-gui column — recoloured, geometry preserved.        */
+/* ------------------------------------------------------------------ */
+
+:root[data-ui-theme='shadcn'] .internal-gui {
+  border-left: 1px solid var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .objrow__name {
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-radius-sm);
+  color: var(--pm-text);
+  background: var(--pm-btn-disabled);
+}
+:root[data-ui-theme='shadcn'] .objrow.is-enabled .objrow__name {
+  background: var(--pm-btn-enabled);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .objrow__op {
+  border: none;
+  border-radius: 3px;
+  filter: saturate(0.9);
+}
+:root[data-ui-theme='shadcn'] .objpanel__head {
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .control {
+  background: var(--pm-panel);
+  border-top: 1px solid var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .control__btn:hover {
+  color: var(--pm-text-bright);
+  border-color: var(--pm-line);
+  border-radius: 3px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 7. Splitters, status bar, scrollbars, viewport placeholder.         */
+/* ------------------------------------------------------------------ */
+
+:root[data-ui-theme='shadcn'] .splitter {
+  background: var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .splitter:hover {
+  background: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] .statusbar {
+  background: #0b0e12;
+  border-top: 1px solid var(--pm-line);
+  height: 22px;
+  font-family: var(--pm-font-ui);
+}
+:root[data-ui-theme='shadcn'] .statusbar__progress-fill {
+  background: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] .viewport__placeholder-title {
+  color: var(--pm-text-dim);
+}
+
+:root[data-ui-theme='shadcn'] ::-webkit-scrollbar-thumb {
+  background: #2b313a;
+  border-radius: 999px;
+}
+:root[data-ui-theme='shadcn'] ::-webkit-scrollbar-thumb:hover {
+  background: #3a4250;
+}
+
+/* Progress bars (quick-button + generic primitive). */
+:root[data-ui-theme='shadcn'] .progressbar {
+  border: 1px solid var(--pm-line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+:root[data-ui-theme='shadcn'] .progressbar__fill {
+  background: var(--pm-accent);
+}

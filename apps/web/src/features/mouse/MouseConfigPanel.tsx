@@ -27,6 +27,7 @@ import {
 } from './tables';
 import { useSession } from '../../app';
 import { useMouseMode } from './useMouseMode';
+import { Select } from '../../ui';
 import './mouse.css';
 
 /** Column order: the ten `button_code` names (`controlling.py:30-41`). */
@@ -131,7 +132,7 @@ export function MouseConfigPanel() {
                 const cellId = `${button.name}/${modifier.name}`;
                 return (
                   <td key={button.name}>
-                    <select
+                    <Select
                       className="mousecfg__select"
                       data-testid={`cell-${cellId}`}
                       value={name}
@@ -149,7 +150,7 @@ export function MouseConfigPanel() {
                           {ACTION_LABEL[BUT_ACT_CODE[option] as number]?.trim()} · {option}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </td>
                 );
               })}

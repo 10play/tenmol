@@ -39,6 +39,7 @@ import {
 import { useSession } from '../../app';
 import { pymolMenu, type PymolMenuRow } from '../pymol-menu/menuStore';
 import { useMouseMode } from './useMouseMode';
+import { Button } from '../../ui';
 import './mouse.css';
 
 /** `menu.mouse_config()` in the shape the pop-up host takes. */
@@ -116,7 +117,8 @@ export function ButModeBlock() {
       onWheel={onWheel}
       onContextMenu={(e) => e.preventDefault()}
     >
-      <button
+      <Button
+        variant="bare"
         type="button"
         className="butmode__line butmode__mode"
         data-testid="butmode-mode"
@@ -130,7 +132,7 @@ export function ButModeBlock() {
         <span className="butmode__value" data-testid="butmode-name">
           {mode.loaded ? mode.displayName : '…'}
         </span>
-      </button>
+      </Button>
 
       {mode.grid && (
         <div className="butmode__grid" data-testid="butmode-grid" onMouseDown={cycleMode}>
@@ -158,7 +160,8 @@ export function ButModeBlock() {
         </div>
       )}
 
-      <button
+      <Button
+        variant="bare"
         type="button"
         className="butmode__line butmode__sele"
         data-testid="butmode-selection"
@@ -175,7 +178,7 @@ export function ButModeBlock() {
         <span className="butmode__value butmode__value--sele" data-testid="butmode-level">
           {line.value}
         </span>
-      </button>
+      </Button>
 
       {mode.loaded && mode.mode === null && (
         <div className="butmode__warn">

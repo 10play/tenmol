@@ -30,6 +30,7 @@ import { useCallback, useEffect, useReducer, useState } from 'react';
 
 import { useSession } from '../../app';
 import { registerMenuHook } from '../../shell/panelHooks';
+import { Button, Checkbox, IconButton, Select, TextInput } from '../../ui';
 import { INITIAL, derive, reducer, type Units } from './useRenderForm';
 import './render.css';
 
@@ -191,14 +192,14 @@ export function RenderDialog() {
 
   if (!expanded) {
     return (
-      <button
+      <Button
         type="button"
         className="render__tab"
         title="Ray / Draw render dialog"
         onClick={() => setExpanded(true)}
       >
         Ray / Draw
-      </button>
+      </Button>
     );
   }
 
@@ -206,21 +207,21 @@ export function RenderDialog() {
     <div className="render">
       <div className="render__title">
         Ray / Draw{page === 'result' ? ' — result' : ''}
-        <button
+        <IconButton
           type="button"
           className="render__collapse"
           aria-label="close Ray / Draw"
           onClick={() => setExpanded(false)}
         >
           x
-        </button>
+        </IconButton>
       </div>
 
       {page === 'setup' && (
         <div className="render__body">
           <div className="render__grid">
             <label htmlFor="rd-w">Width</label>
-            <input
+            <TextInput
               id="rd-w"
               type="number"
               min={1}
@@ -228,7 +229,7 @@ export function RenderDialog() {
               onChange={(e) => dispatch({ type: 'width', px: Number(e.target.value) })}
             />
             <span className="render__unit">px</span>
-            <input
+            <TextInput
               type="number"
               step={0.01}
               value={num(d.widthUnits)}
@@ -236,7 +237,7 @@ export function RenderDialog() {
             />
 
             <label htmlFor="rd-h">Height</label>
-            <input
+            <TextInput
               id="rd-h"
               type="number"
               min={1}
@@ -244,7 +245,7 @@ export function RenderDialog() {
               onChange={(e) => dispatch({ type: 'height', px: Number(e.target.value) })}
             />
             <span className="render__unit">px</span>
-            <input
+            <TextInput
               type="number"
               step={0.01}
               value={num(d.heightUnits)}
@@ -252,62 +253,60 @@ export function RenderDialog() {
             />
 
             <label htmlFor="rd-dpi">DPI</label>
-            <input
+            <TextInput
               id="rd-dpi"
               type="number"
               min={1}
               value={state.dpi}
               onChange={(e) => dispatch({ type: 'dpi', value: Number(e.target.value) })}
             />
-            <select
+            <Select
               value={state.units}
               onChange={(e) => dispatch({ type: 'units', value: e.target.value as Units })}
             >
               <option value="inch">inch</option>
               <option value="cm">cm</option>
-            </select>
+            </Select>
             <span className="render__aspect">{d.aspect ? `${num(d.aspect)}:1` : ''}</span>
           </div>
 
           <div className="render__row">
             <label>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={state.lock}
                 onChange={(e) => dispatch({ type: 'lock', value: e.target.checked })}
               />{' '}
               lock aspect ratio
             </label>
             <label>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={state.transparent}
                 onChange={(e) => dispatch({ type: 'transparent', value: e.target.checked })}
               />{' '}
               transparent background
             </label>
-            <button type="button" className="render__btn" onClick={() => void useViewport()}>
+            <Button type="button" className="render__btn" onClick={() => void useViewport()}>
               use viewport size
-            </button>
+            </Button>
           </div>
 
           <div className="render__actions">
-            <button
+            <Button
               type="button"
               className="render__btn"
               disabled={busy !== null}
               onClick={() => void render('draw')}
             >
               {busy === 'draw' ? 'drawing…' : 'Draw'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               className="render__btn render__btn--primary"
               disabled={busy !== null}
               onClick={() => void render('ray')}
             >
               {busy === 'ray' ? 'ray tracing…' : 'Ray'}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -319,29 +318,29 @@ export function RenderDialog() {
             renderer desktop PyMOL uses, so it is identical rather than approximated.
           </p>
           <div className="render__row">
-            <input
+            <TextInput
               className="render__path"
               type="text"
               placeholder="/path/to/image.png"
               value={savePath}
               onChange={(e) => setSavePath(e.target.value)}
             />
-            <button type="button" className="render__btn" onClick={() => void save()}>
+            <Button type="button" className="render__btn" onClick={() => void save()}>
               Save image
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               className="render__btn"
               title="cmd.png(prior=1) — copies the image already rendered"
               onClick={() => void copyImage()}
             >
               Copy image
-            </button>
+            </Button>
           </div>
           <div className="render__actions">
-            <button type="button" className="render__btn" onClick={() => setPage('setup')}>
+            <Button type="button" className="render__btn" onClick={() => setPage('setup')}>
               &lt; Back
-            </button>
+            </Button>
           </div>
         </div>
       )}

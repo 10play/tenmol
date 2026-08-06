@@ -67,6 +67,7 @@ import {
   type PresetList,
 } from './service';
 import { subscribeVolumeRamp, unwatchVolume, watchVolume } from './menuBridge';
+import { Button, Checkbox, Select, TextInput } from '../../ui';
 import './volume.css';
 
 type Modal =
@@ -274,7 +275,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
 
   const footer = (
     <div className="volpanel__buttons">
-      <button
+      <Button
         type="button"
         data-volume-script=""
         onClick={() =>
@@ -286,8 +287,8 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
         }
       >
         Get colors as script
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         data-volume-reset=""
         onClick={() => {
@@ -297,18 +298,17 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
         }}
       >
         Reset Data Range
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         data-volume-help=""
         onClick={() => setModal({ kind: 'text', title: 'Volume panel help', text: VOLUME_HELP })}
       >
         Help
-      </button>
+      </Button>
       <span className="volpanel__spacer" />
       <label className="volpanel__check">
-        <input
-          type="checkbox"
+        <Checkbox
           data-volume-realtime=""
           checked={realTime}
           onChange={(e) => setRealTime(e.target.checked)}
@@ -324,7 +324,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
         <div className="volpanel__head">
           <label className="volpanel__preset">
             preset
-            <select
+            <Select
               data-volume-preset=""
               defaultValue=""
               onChange={(e) => {
@@ -344,7 +344,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
                   {presets.extra.includes(ramp) ? `${ramp} *` : ramp}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <span
             className="volpanel__presetsrc"
@@ -359,9 +359,9 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
           >
             {presets.source === 'constant' ? 'built-in list' : 'live'}
           </span>
-          <button type="button" data-volume-reload="" onClick={() => void reload()}>
+          <Button type="button" data-volume-reload="" onClick={() => void reload()}>
             Reload
-          </button>
+          </Button>
           {/*
             * Whether the engine is reporting outside changes for this name, and
             * how many it has reported. `_volume_windows_qt` is invisible in Qt
@@ -413,7 +413,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
               point {picker.request.point}
               {picker.request.triple ? ' (+neighbours)' : ''}
             </span>
-            <input
+            <TextInput
               type="color"
               data-volume-color=""
               autoFocus
@@ -432,7 +432,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
                 );
               }}
             />
-            <button
+            <Button
               type="button"
               data-volume-color-ok=""
               onClick={() => {
@@ -441,8 +441,8 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
               }}
             >
               OK
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               data-volume-color-cancel=""
               onClick={() => {
@@ -461,7 +461,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
               }}
             >
               Cancel
-            </button>
+            </Button>
           </div>
         )}
 

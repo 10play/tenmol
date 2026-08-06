@@ -61,6 +61,7 @@ import {
   type ShellSettings,
 } from './orthoPanel';
 import { panelsStore, togglePanel } from './panelHooks';
+import { Button, ToggleButton, ThemeToggle } from '../ui';
 import { SESSION_FILE_INDEX, getSettingsTap } from './settingsTap';
 import {
   dockModifier,
@@ -285,32 +286,26 @@ function ExtGuiTitleBar({
       <span className="extgui__title">External GUI</span>
       <span className="extgui__spacer" />
       {(['bottom', 'left', 'right'] as const).map((area) => (
-        <button
+        <Button
           key={area}
-          type="button"
-          className={`extgui__btn${!dock.floating && dock.area === area ? ' is-on' : ''}`}
+          variant="extgui"
+          className={!dock.floating && dock.area === area ? 'is-on' : undefined}
           onClick={() => onChange((state) => setArea(state, area))}
           title={`dock ${area}`}
         >
           {area[0]?.toUpperCase()}
-        </button>
+        </Button>
       ))}
-      <button
-        type="button"
-        className="extgui__btn"
+      <Button
+        variant="extgui"
         onClick={() => onChange((state) => toggleDockable(state))}
         title="Toggle dockable [Ctrl+E]"
       >
         {dock.floating ? 'dock' : 'float'}
-      </button>
-      <button
-        type="button"
-        className="extgui__btn"
-        onClick={() => onChange(toggleVisible)}
-        title="Visible"
-      >
+      </Button>
+      <Button variant="extgui" onClick={() => onChange(toggleVisible)} title="Visible">
         ×
-      </button>
+      </Button>
     </div>
   );
 }
@@ -337,15 +332,14 @@ function ShellHeader({
   const echoActions = useStore(ui, (s) => s.echoActions);
 
   const extGuiButton = (
-    <button
-      type="button"
-      className="menubar__item"
+    <Button
+      variant="menubar"
       data-testid="extgui-visible"
       title="Display > External GUI > Visible"
       onClick={() => onDock(toggleVisible)}
     >
       {dock.visible ? '✓' : ' '} ext gui
-    </button>
+    </Button>
   );
 
   if (isInstalled('menubar')) {
@@ -354,6 +348,7 @@ function ShellHeader({
         <FeatureSlot id="menubar" />
         <span className="menubar__spacer" />
         {extGuiButton}
+        <ThemeToggle />
       </div>
     );
   }
@@ -371,22 +366,21 @@ function ShellHeader({
         </span>
       )}
       {extGuiButton}
-      <button
-        type="button"
-        className="menubar__item"
+      <Button
+        variant="menubar"
         title="the right-hand block column. CLIENT-SIDE ONLY: setting internal_gui must stay 0 in PyMOL or the scene rectangle shrinks under the canvas"
         onClick={() => ui.set({ internalGui: !internalGui })}
       >
         {internalGui ? '✓' : ' '} internal_gui
-      </button>
-      <button
-        type="button"
-        className="menubar__item"
+      </Button>
+      <Button
+        variant="menubar"
         title="echo the command line equivalent of every button press into the console"
         onClick={() => ui.set({ echoActions: !echoActions })}
       >
         {echoActions ? '✓' : ' '} echo actions
-      </button>
+      </Button>
+      <ThemeToggle />
     </div>
   );
 }
@@ -613,15 +607,14 @@ function OverlayLayer() {
     <>
       <div className="overlay-launcher" role="toolbar" aria-label="panels">
         {slots.map((slot) => (
-          <button
+          <ToggleButton
             key={slot.id}
-            type="button"
-            className={`overlay-launcher__btn${open.includes(slot.id) ? ' is-on' : ''}`}
-            aria-pressed={open.includes(slot.id)}
+            variant="launcher"
+            pressed={open.includes(slot.id)}
             onClick={() => toggle(slot.id)}
           >
             {slot.title}
-          </button>
+          </ToggleButton>
         ))}
       </div>
       {/*

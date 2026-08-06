@@ -37,6 +37,7 @@ import {
   type SettingsStore,
 } from '@tenmol/stores/settings';
 import { useStore } from '../../app';
+import { Button, Checkbox, Select, TextInput } from '../../ui';
 import {
   atomSettingDelete,
   atomSettingWrite,
@@ -160,7 +161,7 @@ export function AdvancedSettingsTable({
       <div className="setadv__bar">
         <label className="setadv__filter">
           Filter
-          <input
+          <TextInput
             type="text"
             value={query}
             spellCheck={false}
@@ -243,7 +244,7 @@ function ScopeSelector({
     <span className="setadv__scope">
       <label>
         Scope
-        <select
+        <Select
           value={value.scope}
           onChange={(e) => onChange({ ...value, scope: e.target.value as SettingScope })}
         >
@@ -252,25 +253,25 @@ function ScopeSelector({
               {name}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       {value.scope !== 'global' && !isSelectionScope(value.scope) && (
         <label>
           Object
-          <select value={value.object} onChange={(e) => onChange({ ...value, object: e.target.value })}>
+          <Select value={value.object} onChange={(e) => onChange({ ...value, object: e.target.value })}>
             <option value="">(pick)</option>
             {objects.map((name) => (
               <option key={name} value={name}>
                 {name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       )}
       {isSelectionScope(value.scope) && (
         <label>
           Selection
-          <input
+          <TextInput
             type="text"
             spellCheck={false}
             className="setadv__sel"
@@ -283,7 +284,7 @@ function ScopeSelector({
       {(value.scope === 'object-state' || value.scope === 'atom-state') && (
         <label>
           State
-          <input
+          <TextInput
             type="number"
             min={1}
             value={value.state || 1}
@@ -426,7 +427,7 @@ function Row({
         {hint ? <em className="setadv__hint"> {hint}</em> : null}
       </span>
       <span className="setadv__c-reset">
-        <button
+        <Button
           type="button"
           title={
             scope.scope === 'bond'
@@ -439,7 +440,7 @@ function Row({
           onClick={reset}
         >
           ⟲
-        </button>
+        </Button>
       </span>
       {error ? <span className="setadv__error">{error}</span> : null}
     </div>
@@ -486,7 +487,7 @@ function ReinitializeStrip({
         Reinitialize
       </span>
       {REINITIALIZE_MENU.map((entry) => (
-        <button
+        <Button
           key={entry.what}
           type="button"
           title={`cmd.reinitialize("${entry.what}") — ${entry.help}`}
@@ -498,7 +499,7 @@ function ReinitializeStrip({
           }}
         >
           {armed === entry.what ? `${entry.label}?` : entry.label}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -647,8 +648,7 @@ function ValueEditor({
 
   if (meta.kind === 'boolean' && !writeOnly) {
     return (
-      <input
-        type="checkbox"
+      <Checkbox
         aria-label={meta.name}
         disabled={disabled}
         checked={Number(entry?.value ?? 0) !== 0}
@@ -658,7 +658,7 @@ function ValueEditor({
   }
 
   return (
-    <input
+    <TextInput
       type="text"
       aria-label={meta.name}
       spellCheck={false}

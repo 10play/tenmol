@@ -71,6 +71,7 @@ import {
 } from './hsv';
 import { callOf, useColorAction } from './usePalette';
 import { useSession } from '../../app';
+import { Button, Slider, TextInput } from '../../ui';
 
 const CHANNELS = ['R', 'G', 'B'] as const;
 const HSV_CHANNELS = [
@@ -182,7 +183,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
   return (
     <div className="cedit">
       <div className="cedit__list">
-        <input
+        <TextInput
           className="cedit__filter"
           placeholder={`filter ${palette.named.length} named colours`}
           value={filter}
@@ -193,8 +194,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
             const entry = findByName(palette, n);
             return (
               <li key={n}>
-                <button
-                  type="button"
+                <Button
                   role="option"
                   aria-selected={n === name}
                   className={'cedit__item' + (n === name ? ' is-on' : '')}
@@ -205,7 +205,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
                     style={{ background: entry ? rgbToCss(entry.rgb) : '#000' }}
                   />
                   {n}
-                </button>
+                </Button>
               </li>
             );
           })}
@@ -222,7 +222,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
 
         <label className="cedit__field">
           <span>name</span>
-          <input
+          <TextInput
             aria-label="input_name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -232,8 +232,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
 
         <div className="cedit__space" role="radiogroup" aria-label="colour space">
           {(['rgb', 'hsv'] as const).map((option) => (
-            <button
-              type="button"
+            <Button
               key={option}
               role="radio"
               aria-checked={space === option}
@@ -247,7 +246,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
               }
             >
               {option === 'rgb' ? 'R G B' : 'H S V'}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -255,8 +254,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
           ? CHANNELS.map((channel, i) => (
               <div className="cedit__channel" key={channel}>
                 <span className="cedit__channel-name">{channel}</span>
-                <input
-                  type="range"
+                <Slider
                   min={0}
                   max={100}
                   step={1}
@@ -264,7 +262,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
                   value={Math.round((rgb[i] ?? 0) * 100)}
                   onChange={(e) => setChannel(i, Number(e.target.value) / 100)}
                 />
-                <input
+                <TextInput
                   type="number"
                   min={0}
                   max={1}
@@ -278,8 +276,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
           : HSV_CHANNELS.map((channel, i) => (
               <div className="cedit__channel" key={channel.key}>
                 <span className="cedit__channel-name">{channel.key}</span>
-                <input
-                  type="range"
+                <Slider
                   min={0}
                   max={channel.max}
                   step={1}
@@ -289,7 +286,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
                   value={hsvShown[i]}
                   onChange={(e) => setHsvChannel(i, Number(e.target.value))}
                 />
-                <input
+                <TextInput
                   type="number"
                   min={0}
                   max={channel.max}
@@ -312,7 +309,7 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
         */}
         <label className="cedit__field">
           <span>hex</span>
-          <input
+          <TextInput
             aria-label="input_hex"
             value={hexDraft ?? rgbToCss(rgb)}
             spellCheck={false}
@@ -327,9 +324,9 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
         </label>
 
         <div className="cedit__actions">
-          <button type="button" className="cedit__apply" onClick={() => void apply()}>
+          <Button className="cedit__apply" onClick={() => void apply()}>
             Apply
-          </button>
+          </Button>
           <span className="cedit__hint">
             {existing ? `overwrites index ${existing.index}` : 'creates a new colour'}
           </span>

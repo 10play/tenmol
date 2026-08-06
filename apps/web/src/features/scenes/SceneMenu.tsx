@@ -12,6 +12,7 @@
  */
 
 import { useState } from 'react';
+import { Button, Checkbox } from '../../ui';
 import { F_KEYS, sceneActions, type SceneAction } from './sceneActions';
 
 interface Props {
@@ -32,79 +33,76 @@ export function SceneMenu({ current, scenes, buttons, onRun, onCommand }: Props)
   return (
     <div className="scmenu">
       <div className="scmenu__row">
-        <button type="button" onClick={() => onRun(sceneActions.previous())}>
+        <Button onClick={() => onRun(sceneActions.previous())}>
           Previous [PgUp]
-        </button>
-        <button type="button" onClick={() => onRun(sceneActions.next())}>
+        </Button>
+        <Button onClick={() => onRun(sceneActions.next())}>
           Next [PgDn]
-        </button>
-        <button type="button" onClick={() => onRun(sceneActions.store('new'))}>
+        </Button>
+        <Button onClick={() => onRun(sceneActions.store('new'))}>
           Append
-        </button>
-        <button type="button" onClick={() => toggle('append')}>
+        </Button>
+        <Button onClick={() => toggle('append')}>
           Append…
-        </button>
-        <button type="button" onClick={() => onRun(sceneActions.insertBefore())}>
+        </Button>
+        <Button onClick={() => onRun(sceneActions.insertBefore())}>
           Insert Before
-        </button>
-        <button type="button" onClick={() => onRun(sceneActions.insertAfter())}>
+        </Button>
+        <Button onClick={() => onRun(sceneActions.insertAfter())}>
           Insert After
-        </button>
-        <button type="button" onClick={() => onRun(sceneActions.update('auto'))}>
+        </Button>
+        <Button onClick={() => onRun(sceneActions.update('auto'))}>
           Update
-        </button>
-        <button type="button" onClick={() => onRun(sceneActions.clear('auto'))}>
+        </Button>
+        <Button onClick={() => onRun(sceneActions.clear('auto'))}>
           Delete
-        </button>
+        </Button>
       </div>
 
       {open === 'append' && (
         <div className="scmenu__sub">
-          <button type="button" onClick={() => onCommand('scene new, store, color=0, rep=0')}>
+          <Button onClick={() => onCommand('scene new, store, color=0, rep=0')}>
             Camera
-          </button>
-          <button type="button" onClick={() => onCommand('scene new, store, view=0, rep=0')}>
+          </Button>
+          <Button onClick={() => onCommand('scene new, store, view=0, rep=0')}>
             Color
-          </button>
-          <button type="button" onClick={() => onCommand('scene new, store, view=0, color=0')}>
+          </Button>
+          <Button onClick={() => onCommand('scene new, store, view=0, color=0')}>
             Reps
-          </button>
-          <button type="button" onClick={() => onCommand('scene new, store, view=0')}>
+          </Button>
+          <Button onClick={() => onCommand('scene new, store, view=0')}>
             Reps + Color
-          </button>
+          </Button>
         </div>
       )}
 
       <div className="scmenu__row">
         {(['recall', 'store', 'clear'] as const).map((action) => (
-          <button
+          <Button
             key={action}
-            type="button"
             className={open === action ? 'is-on' : ''}
             onClick={() => toggle(action)}
           >
             {action[0]?.toUpperCase()}
             {action.slice(1)}…
-          </button>
+          </Button>
         ))}
-        <button
-          type="button"
+        <Button
           className={open === 'cache' ? 'is-on' : ''}
           onClick={() => toggle('cache')}
         >
           Cache…
-        </button>
-        <button type="button" onClick={() => onRun(sceneActions.blank())}>
+        </Button>
+        <Button onClick={() => onRun(sceneActions.blank())}>
           Blank
-        </button>
+        </Button>
         {/*
           * `('check', 'Buttons', 'scene_buttons')` (`_gui.py:801`). A real
           * checkbox bound to the real setting: the buttons overlay above reads
           * the same one, so unticking it here hides the overlay there.
           */}
         <label className="scmenu__check">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={buttons === true}
             onChange={() => onRun(sceneActions.buttons(!buttons))}
           />
@@ -116,9 +114,8 @@ export function SceneMenu({ current, scenes, buttons, onRun, onCommand }: Props)
       {(open === 'recall' || open === 'store' || open === 'clear') && (
         <div className="scmenu__sub scmenu__sub--keys">
           {F_KEYS.map((key) => (
-            <button
+            <Button
               key={key}
-              type="button"
               className={scenes.includes(key) ? 'has-scene' : ''}
               onClick={() =>
                 onRun(
@@ -131,7 +128,7 @@ export function SceneMenu({ current, scenes, buttons, onRun, onCommand }: Props)
               }
             >
               {key}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -139,9 +136,9 @@ export function SceneMenu({ current, scenes, buttons, onRun, onCommand }: Props)
       {open === 'cache' && (
         <div className="scmenu__sub">
           {(['enable', 'optimize', 'read_only', 'disable'] as const).map((mode) => (
-            <button key={mode} type="button" onClick={() => onRun(sceneActions.cache(mode))}>
+            <Button key={mode} onClick={() => onRun(sceneActions.cache(mode))}>
               {mode}
-            </button>
+            </Button>
           ))}
         </div>
       )}

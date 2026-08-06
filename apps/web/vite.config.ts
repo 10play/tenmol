@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, extname, join, resolve, sep } from 'node:path';
 
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, type Plugin } from 'vite';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -95,7 +96,7 @@ function tenmolDevFrames(): Plugin {
 }
 
 export default defineConfig(({ command }) => ({
-  plugins: [react(), tenmolDevFrames()],
+  plugins: [react(), tailwindcss(), tenmolDevFrames()],
   define: {
     // The absolute directory the bridge writes frames into and the dev server
     // reads them from. Empty in a production build: the pull-mode fallback is a

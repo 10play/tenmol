@@ -22,6 +22,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PanelMenuNode } from '@tenmol/protocol';
 import type { SceneRecord } from '@tenmol/protocol/topics/movie';
 import { useSession } from '../../app';
+import { Button, TextInput } from '../../ui';
 import { RowMenu } from '../objects/RowMenu';
 import { useScenes } from './useScenes';
 import { SceneMenu } from './SceneMenu';
@@ -338,38 +339,34 @@ export function ScenePanel() {
         <span className="scpanel__title">Scenes</span>
         <span className="scpanel__count">{payload.scenes.length}</span>
         <span className="scpanel__spacer" />
-        <button
-          type="button"
+        <Button
           className="scpanel__btn"
           title="cmd.scene('new','append',quiet=0)"
           onClick={() => void run(sceneActions.store('new'))}
         >
           +
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           className="scpanel__btn"
           title="cmd.scene('','previous')"
           onClick={() => void run(sceneActions.previous())}
         >
           ‹
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           className="scpanel__btn"
           title="cmd.scene('','next')"
           onClick={() => void run(sceneActions.next())}
         >
           ›
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           className="scpanel__btn"
           title="cmd.scene_order('*', sort=1)"
           onClick={() => void run(sceneActions.sort())}
         >
           sort
-        </button>
+        </Button>
       </div>
 
       {/* --- the buttons overlay row ------------------------------------ *
@@ -550,7 +547,7 @@ export function ScenePanel() {
             <div className="scrow__body">
               {renaming === scene.name ? (
                 <span className="scrow__renamewrap">
-                  <input
+                  <TextInput
                     className={`scrow__rename${renameError ? ' is-invalid' : ''}`}
                     value={draft}
                     autoFocus
@@ -576,8 +573,7 @@ export function ScenePanel() {
                   )}
                 </span>
               ) : (
-                <button
-                  type="button"
+                <Button
                   className="scrow__name"
                   onDoubleClick={(event) => {
                     event.stopPropagation();
@@ -586,9 +582,9 @@ export function ScenePanel() {
                   }}
                 >
                   {scene.name}
-                </button>
+                </Button>
               )}
-              <input
+              <TextInput
                 className="scrow__message"
                 value={scene.message}
                 placeholder="message"
@@ -611,20 +607,18 @@ export function ScenePanel() {
             </div>
 
             <div className="scrow__ops">
-              <button
-                type="button"
+              <Button
                 title="cmd.scene(name,'update')"
                 onClick={() => void run(sceneActions.update(scene.name))}
               >
                 upd
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 title="cmd.scene(name,'clear')"
                 onClick={() => void run(sceneActions.clear(scene.name))}
               >
                 del
-              </button>
+              </Button>
             </div>
           </div>
         ))}
