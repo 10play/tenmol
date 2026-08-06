@@ -102,6 +102,13 @@ const COUNT_BATTERY = [
   'resi 1',
   'name CB',
   'hetatm',
+  // Expanded selection language — gated against real PyMOL too.
+  'backbone',
+  'sidechain',
+  'byres name CA',
+  'name C*',
+  'first all',
+  'within 100 of name N',
 ];
 
 export const CORPUS: Script[] = [

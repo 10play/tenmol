@@ -12,7 +12,13 @@
       "elem O": 2,
       "resi 1": 5,
       "name CB": 1,
-      "hetatm": 0
+      "hetatm": 0,
+      "backbone": 8,
+      "sidechain": 1,
+      "byres name CA": 9,
+      "name C*": 5,
+      "first all": 1,
+      "within 100 of name N": 9
     }
   },
   "color_chains": {

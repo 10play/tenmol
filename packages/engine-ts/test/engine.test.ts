@@ -71,6 +71,18 @@ describe('selection algebra', () => {
     expect(count('(chain A or chain B) and elem C')).toBe(EXPECTED.elemC);
   });
 
+  it('supports byres / within / first / last / backbone / sidechain / wildcards', () => {
+    expect(count('backbone')).toBe(8); // N,CA,C,O of both residues
+    expect(count('sidechain')).toBe(1); // ALA CB
+    expect(count('byres name CA')).toBe(EXPECTED.total); // whole residues
+    expect(count('name C*')).toBe(5); // CA,C,CB (ALA) + CA,C (GLY)
+    expect(count('first all')).toBe(1);
+    expect(count('last all')).toBe(1);
+    expect(count('within 100 of name N')).toBe(EXPECTED.total);
+    expect(count('within 0.1 of name CA')).toBe(EXPECTED.ca); // just the CAs
+    expect(count('chain A within 100 of chain B')).toBe(EXPECTED.chainA);
+  });
+
   it('resolves a bare object name and named selections', () => {
     expect(count('m')).toBe(EXPECTED.total);
     ex.select('cas', 'name CA');
