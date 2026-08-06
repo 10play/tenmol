@@ -16,7 +16,7 @@ import type { Backend } from '@tenmol/backend';
 import { CORPUS, type Script } from './corpus';
 import { probeSnapshot, diffSnapshots, type Snapshot } from './probe';
 
-export { CORPUS, SMALL_PDB, FIXTURE_ATOMS, KNOWN_VIEW, GATED_VIEW_INDICES } from './corpus';
+export { CORPUS, SMALL_PDB, FIXTURE_ATOMS, KNOWN_VIEW, KNOWN_VIEW_2, GATED_VIEW_INDICES } from './corpus';
 export type { Script, Op } from './corpus';
 export { probeSnapshot, diffSnapshots } from './probe';
 export type { Snapshot } from './probe';

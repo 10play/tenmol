@@ -4,21 +4,50 @@
     "names": ["m"],
     "counts": {
       "all": 9,
+      "none": 0,
       "name CA": 2,
-      "chain A": 5,
-      "chain B": 4,
+      "name CB": 1,
+      "name C": 2,
+      "name N": 2,
+      "name O": 2,
+      "name CA+CB": 3,
+      "name N+CA+C+O": 8,
       "elem C": 5,
       "elem N": 2,
       "elem O": 2,
+      "chain A": 5,
+      "chain B": 4,
+      "resn ALA": 5,
+      "resn GLY": 4,
       "resi 1": 5,
-      "name CB": 1,
+      "resi 2": 4,
+      "resi 1-2": 9,
+      "resi 1+2": 9,
+      "index 1": 1,
+      "index 1-5": 5,
+      "id 1": 1,
+      "id 6-9": 4,
       "hetatm": 0,
+      "polymer": 9,
+      "solvent": 0,
+      "hydro": 0,
       "backbone": 8,
       "sidechain": 1,
-      "byres name CA": 9,
       "name C*": 5,
+      "name *A": 2,
+      "byres name CA": 9,
+      "byres name CB": 5,
       "first all": 1,
-      "within 100 of name N": 9
+      "last all": 1,
+      "first chain B": 1,
+      "last chain A": 1,
+      "chain A and name CA": 1,
+      "chain A or chain B": 9,
+      "not chain A": 4,
+      "not name CA": 7,
+      "name C* and chain A": 3,
+      "within 100 of name N": 9,
+      "within 2 of name CA": 7
     }
   },
   "color_chains": {
@@ -32,23 +61,99 @@
       "orange": [1, 0.5, 0]
     }
   },
+  "color_override": {
+    "names": ["m"],
+    "counts": { "color marine": 4, "color salmon": 2, "color blue": 0 }
+  },
+  "palette": {
+    "names": ["m"],
+    "counts": { "all": 9 },
+    "colorTuples": {
+      "white": [1, 1, 1],
+      "black": [0, 0, 0],
+      "blue": [0, 0, 1],
+      "green": [0, 1, 0],
+      "red": [1, 0, 0],
+      "cyan": [0, 1, 1],
+      "yellow": [1, 1, 0],
+      "magenta": [1, 0, 1],
+      "orange": [1, 0.5, 0],
+      "marine": [0, 0.5, 1],
+      "purple": [0.75, 0, 0.75],
+      "pink": [1, 0.65, 0.85],
+      "salmon": [1, 0.6, 0.6],
+      "limon": [0.75, 1, 0.25],
+      "slate": [0.5, 0.5, 1],
+      "violet": [1, 0.5, 1],
+      "teal": [0, 0.75, 0.75],
+      "forest": [0.2, 0.6, 0.2],
+      "firebrick": [0.698, 0.13, 0.13],
+      "deepblue": [0.25, 0.25, 0.65],
+      "wheat": [0.99, 0.82, 0.65]
+    }
+  },
   "as_spheres": {
     "names": ["m"],
     "counts": { "rep spheres": 9, "rep lines": 0 }
+  },
+  "as_sticks": {
+    "names": ["m"],
+    "counts": { "rep sticks": 9, "rep lines": 0 }
+  },
+  "as_nonbonded": {
+    "names": ["m"],
+    "counts": { "rep nonbonded": 9, "rep lines": 0 }
+  },
+  "as_nb_spheres": {
+    "names": ["m"],
+    "counts": { "rep nb_spheres": 9, "rep lines": 0 }
   },
   "show_hide": {
     "names": ["m"],
     "counts": { "rep spheres": 2, "rep lines": 5 }
   },
+  "hide_everything": {
+    "names": ["m"],
+    "counts": { "rep lines": 4, "rep spheres": 4, "rep sticks": 0 }
+  },
+  "as_then_show": {
+    "names": ["m"],
+    "counts": { "rep spheres": 9, "rep sticks": 5, "rep lines": 0 }
+  },
   "console_color": {
     "names": ["m"],
     "counts": { "color yellow": 5 }
+  },
+  "console_js": {
+    "names": ["m"],
+    "counts": { "color magenta": 2, "name CA and color magenta": 2, "chain B and color magenta": 1 }
+  },
+  "select_named": {
+    "names": ["m"],
+    "counts": { "sub": 5, "sub and name CA": 1, "not sub": 4 }
+  },
+  "set_settings": {
+    "names": ["m"],
+    "counts": { "all": 9 },
+    "settings": {
+      "sphere_scale": 2.5,
+      "stick_radius": 0.5,
+      "nb_spheres_size": 0.75,
+      "field_of_view": 45
+    }
   },
   "view_roundtrip": {
     "names": ["m"],
     "counts": { "all": 9 },
     "view": [
       0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, 0, 0, -30, 1, 2, 3, 10, 50, -20
+    ]
+  },
+  "view_roundtrip2": {
+    "names": ["m"],
+    "counts": { "all": 9 },
+    "view": [
+      0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 0, -35, 1, 2, 3, 15, 55, -20
     ]
   }
 }

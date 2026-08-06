@@ -7,6 +7,19 @@
  * The fixture structure is a two-chain di-peptide; the expected counts are
  * hand-derivable, which is what lets `fixtures/golden.json` be an authoritative
  * (not self-referential) ground truth.
+ *
+ * DERIVING THE GOLDENS — the fixture's 9 atoms (0-based idx / 1-based id):
+ *   idx0 id1  N  ALA A 1     idx5 id6  N  GLY B 2
+ *   idx1 id2  CA ALA A 1     idx6 id7  CA GLY B 2
+ *   idx2 id3  C  ALA A 1     idx7 id8  C  GLY B 2
+ *   idx3 id4  O  ALA A 1     idx8 id9  O  GLY B 2
+ *   idx4 id5  CB ALA A 1
+ * ALA (chain A, resi 1): N CA C O CB  — 5 atoms, elements N C C O C.
+ * GLY (chain B, resi 2): N CA C O     — 4 atoms, elements N C C O.
+ * Distance bonding (PyMOL connect): every atom is bonded (a cross-chain C-N
+ * peptide bond links resi 1 -> resi 2), so `nonbonded`/`nb_spheres` geometry is
+ * empty, but the rep BIT still lands on every selected atom (what `count_atoms`
+ * and the `rep` selector observe).
  */
 
 export interface FixtureAtom {
@@ -66,6 +79,11 @@ export const KNOWN_VIEW: number[] = [
   0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, 0, 0, -30, 1, 2, 3, 10, 50, -20,
 ];
 
+/** A second view — a real rotation (90° about Z) with different translations. */
+export const KNOWN_VIEW_2: number[] = [
+  0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 0, -35, 1, 2, 3, 15, 55, -20,
+];
+
 export type Op = { call: [string, ...unknown[]] } | { do: string };
 
 export interface Script {
@@ -79,6 +97,8 @@ export interface Script {
   gateView?: boolean;
   /** Colour names to compare as resolved RGB tuples (name -> index -> tuple). */
   gateColorTuples?: string[];
+  /** Setting names to compare as `get_setting_float` values. */
+  gateSettings?: string[];
 }
 
 /**
@@ -91,24 +111,69 @@ export const GATED_VIEW_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 
 const load: Op = { call: ['read_pdbstr', SMALL_PDB, 'm'] };
 
+/**
+ * The full selection-language battery, exercised on the freshly loaded fixture.
+ * Every value is hand-derived from the 9-atom topology above and is a public
+ * PyMOL selector, so the live differential validates it against real PyMOL too.
+ */
 const COUNT_BATTERY = [
+  // ---- trivial + property selectors ----
   'all',
+  'none',
   'name CA',
-  'chain A',
-  'chain B',
+  'name CB',
+  'name C',
+  'name N',
+  'name O',
+  'name CA+CB', // '+' grouping
+  'name N+CA+C+O',
   'elem C',
   'elem N',
   'elem O',
+  'chain A',
+  'chain B',
+  'resn ALA',
+  'resn GLY',
   'resi 1',
-  'name CB',
+  'resi 2',
+  'resi 1-2', // range
+  'resi 1+2', // enumerated
+  'index 1',
+  'index 1-5',
+  'id 1',
+  'id 6-9',
+  // ---- keyword selectors ----
   'hetatm',
-  // Expanded selection language — gated against real PyMOL too.
+  'polymer',
+  'solvent',
+  'hydro',
   'backbone',
   'sidechain',
-  'byres name CA',
+  // ---- wildcards ----
   'name C*',
+  'name *A',
+  // ---- set operators ----
+  'byres name CA',
+  'byres name CB',
   'first all',
+  'last all',
+  'first chain B',
+  'last chain A',
+  'chain A and name CA',
+  'chain A or chain B',
+  'not chain A',
+  'not name CA',
+  'name C* and chain A',
+  // ---- within (distance) ----
   'within 100 of name N',
+  'within 2 of name CA',
+];
+
+/** Every PyMOL named colour whose RGB the port gates (values from Color.cpp). */
+const PALETTE = [
+  'white', 'black', 'blue', 'green', 'red', 'cyan', 'yellow', 'magenta', 'orange',
+  'marine', 'purple', 'pink', 'salmon', 'limon', 'slate', 'violet', 'teal',
+  'forest', 'firebrick', 'deepblue', 'wheat',
 ];
 
 export const CORPUS: Script[] = [
@@ -126,9 +191,43 @@ export const CORPUS: Script[] = [
     gateColorTuples: ['cyan', 'red', 'green', 'yellow', 'orange'],
   },
   {
+    // Recolour with overlap: chain A -> marine, then name CA -> salmon. The two
+    // CA atoms (one in chain A) are overwritten, proving last-write-wins.
+    name: 'color_override',
+    ops: [load, { call: ['color', 'marine', 'chain A'] }, { call: ['color', 'salmon', 'name CA'] }],
+    selectors: ['color marine', 'color salmon', 'color blue'],
+    gateNames: true,
+  },
+  {
+    // The whole palette, resolved name -> index -> RGB tuple. No atoms needed.
+    name: 'palette',
+    ops: [load],
+    selectors: ['all'],
+    gateNames: true,
+    gateColorTuples: PALETTE,
+  },
+  {
     name: 'as_spheres',
     ops: [load, { call: ['show_as', 'spheres', 'all'] }],
     selectors: ['rep spheres', 'rep lines'],
+    gateNames: true,
+  },
+  {
+    name: 'as_sticks',
+    ops: [load, { call: ['show_as', 'sticks', 'all'] }],
+    selectors: ['rep sticks', 'rep lines'],
+    gateNames: true,
+  },
+  {
+    name: 'as_nonbonded',
+    ops: [load, { call: ['show_as', 'nonbonded', 'all'] }],
+    selectors: ['rep nonbonded', 'rep lines'],
+    gateNames: true,
+  },
+  {
+    name: 'as_nb_spheres',
+    ops: [load, { call: ['show_as', 'nb_spheres', 'all'] }],
+    selectors: ['rep nb_spheres', 'rep lines'],
     gateNames: true,
   },
   {
@@ -143,14 +242,67 @@ export const CORPUS: Script[] = [
     gateNames: true,
   },
   {
+    // `hide everything` clears every rep bit on the selection.
+    name: 'hide_everything',
+    ops: [
+      load,
+      { call: ['show', 'spheres', 'all'] },
+      { call: ['hide', 'everything', 'chain A'] },
+    ],
+    selectors: ['rep lines', 'rep spheres', 'rep sticks'],
+    gateNames: true,
+  },
+  {
+    // `as` collapses to a single rep; a later `show` adds a second onto a subset.
+    name: 'as_then_show',
+    ops: [load, { call: ['show_as', 'spheres', 'all'] }, { call: ['show', 'sticks', 'chain A'] }],
+    selectors: ['rep spheres', 'rep sticks', 'rep lines'],
+    gateNames: true,
+  },
+  {
+    // The console command language (`cmd.do`): PyMOL verb form.
     name: 'console_color',
     ops: [load, { do: 'color yellow, elem C' }],
     selectors: ['color yellow'],
     gateNames: true,
   },
   {
+    // The console JavaScript form. `cmd.color("magenta","name CA")` is ALSO valid
+    // Python, so real PyMOL runs the identical line — the whole point of the port.
+    name: 'console_js',
+    ops: [load, { do: 'cmd.color("magenta","name CA")' }],
+    selectors: ['color magenta', 'name CA and color magenta', 'chain B and color magenta'],
+    gateNames: true,
+  },
+  {
+    name: 'select_named',
+    ops: [load, { call: ['select', 'sub', 'resi 1'] }],
+    selectors: ['sub', 'sub and name CA', 'not sub'],
+    gateNames: true,
+  },
+  {
+    name: 'set_settings',
+    ops: [
+      load,
+      { call: ['set', 'sphere_scale', 2.5] },
+      { call: ['set', 'stick_radius', 0.5] },
+      { call: ['set', 'nb_spheres_size', 0.75] },
+      { call: ['set', 'field_of_view', 45] },
+    ],
+    selectors: ['all'],
+    gateNames: true,
+    gateSettings: ['sphere_scale', 'stick_radius', 'nb_spheres_size', 'field_of_view'],
+  },
+  {
     name: 'view_roundtrip',
     ops: [load, { call: ['set_view', KNOWN_VIEW] }],
+    selectors: ['all'],
+    gateNames: true,
+    gateView: true,
+  },
+  {
+    name: 'view_roundtrip2',
+    ops: [load, { call: ['set_view', KNOWN_VIEW_2] }],
     selectors: ['all'],
     gateNames: true,
     gateView: true,

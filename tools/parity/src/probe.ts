@@ -14,6 +14,7 @@ export interface Snapshot {
   counts: Record<string, number>;
   view?: number[];
   colorTuples?: Record<string, [number, number, number] | null>;
+  settings?: Record<string, number>;
 }
 
 /** Run the ops, then collect the observables the script gates. */
@@ -49,6 +50,14 @@ export async function probeSnapshot(backend: Backend, script: Script): Promise<S
     snap.colorTuples = tuples;
   }
 
+  if (script.gateSettings) {
+    const settings: Record<string, number> = {};
+    for (const name of script.gateSettings) {
+      settings[name] = round(Number(await backend.call('get_setting_float', [name])));
+    }
+    snap.settings = settings;
+  }
+
   return snap;
 }
 
@@ -59,6 +68,7 @@ function round(n: number, dp = 6): number {
 
 const VIEW_TOL = 1e-4;
 const RGB_TOL = 1e-5;
+const SETTING_TOL = 1e-5;
 
 /**
  * Compare two snapshots for one script; returns a minimal, human-readable list
@@ -100,6 +110,16 @@ export function diffSnapshots(
       const g = actual.colorTuples?.[name] ?? null;
       if (!rgbEqual(e, g)) {
         out.push(`get_color_tuple('${name}'): expected ${JSON.stringify(e)}, got ${JSON.stringify(g)}`);
+      }
+    }
+  }
+
+  if (script.gateSettings) {
+    for (const name of script.gateSettings) {
+      const e = expected.settings?.[name] ?? NaN;
+      const g = actual.settings?.[name] ?? NaN;
+      if (Math.abs(e - g) > SETTING_TOL) {
+        out.push(`get_setting_float('${name}'): expected ${e}, got ${g}`);
       }
     }
   }
