@@ -216,13 +216,26 @@ describe('LocalBackend', () => {
     expect(await backend.call('get_movie_playing', [])).toBe(0);
   });
 
-  it('does not echo an error for an unrecognised (Python) command line', async () => {
+  it('stays silent for feature/plugin Python bootstrap lines', async () => {
     const backend = new LocalBackend();
     const lines: string[] = [];
     backend.on('feedback', ({ lines: l }) => lines.push(...l));
     await backend.connect();
+    // The exact shapes the app's panels send (with and without the `/` escape).
     await backend.do('from tenmol_bridge.panels.objects import install;install()');
-    expect(lines).toEqual([]); // silent — no prompt echo, no "unknown command"
+    await backend.do('/import tenmol_bridge.panels.settings as _s;_s.install()');
+    await backend.do('import tenmol_bridge.panels.properties as _tp; _tp.install()');
+    expect(lines).toEqual([]); // silent — no prompt echo, no error flood
+  });
+
+  it('gives feedback for a user-typed unrecognised command (never feels dead)', async () => {
+    const backend = new LocalBackend();
+    const lines: string[] = [];
+    backend.on('feedback', ({ lines: l }) => lines.push(...l));
+    await backend.connect();
+    await backend.do('console.log("YO")');
+    expect(lines.some((l) => l.startsWith('PyMOL>console.log'))).toBe(true);
+    expect(lines.some((l) => l.includes('not a ported command'))).toBe(true);
   });
 
   it('echoes a typed command line on the feedback stream', async () => {

@@ -56,6 +56,23 @@ const KNOWN_KEYWORDS = new Set([
 
 type Handler = (args: unknown[], kwargs: Record<string, unknown>) => Json;
 
+/**
+ * A line that is Python, not a PyMOL command — the app's feature panels send
+ * these to install their bridge-side helpers every poll, e.g.
+ * `/import tenmol_bridge.panels.settings as _s;_s.install()`. Real PyMOL runs
+ * them in its interpreter; the port has no Python and must stay silent for them
+ * (they are internal plumbing), while still giving feedback for a user's line.
+ *
+ *   * a leading `/` is PyMOL's inline-Python escape;
+ *   * a leading `@` is a script include;
+ *   * an `import`/`from` statement (with or without the `/` escape) is Python.
+ */
+function isPythonBootstrap(line: string): boolean {
+  const trimmed = line.trimStart();
+  if (trimmed.startsWith('/') || trimmed.startsWith('@')) return true;
+  return splitCommands(line).some((c) => /^(from|import)\s/.test(c.trimStart()));
+}
+
 export class Engine {
   readonly executive = new Executive();
   readonly emitter = new TypedEmitter<BackendEvents>();
@@ -131,18 +148,30 @@ export class Engine {
 
   do(line: string): void {
     const commands = splitCommands(line).map(parseCommand);
-    // A line with NO recognized command is Python the port cannot run (a panel
-    // bootstrap like `from tenmol_bridge... import install`). Real PyMOL hands
-    // it to the interpreter; the port ignores it WITHOUT echoing, so those
-    // lines do not flood the console.
-    if (!commands.some((c) => KNOWN_KEYWORDS.has(c.keyword))) return;
+    const anyKnown = commands.some((c) => KNOWN_KEYWORDS.has(c.keyword));
+
+    // Feature/plugin bootstrap lines (`from tenmol_bridge... import install`)
+    // are Python the bridge runs silently server-side; the port has no Python,
+    // so it stays FULLY silent for them rather than echoing an error every poll.
+    // A user's own line always gets feedback, so the console never feels dead.
+    if (!anyKnown && isPythonBootstrap(line)) return;
+
     this.appendFeedback(`PyMOL>${line}`);
     for (const { keyword, args } of commands) {
-      try {
-        this.runKeyword(keyword, args);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        this.appendFeedback(` ${message}`);
+      if (KNOWN_KEYWORDS.has(keyword)) {
+        try {
+          this.runKeyword(keyword, args);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          this.appendFeedback(` ${message}`);
+        }
+      } else {
+        // Honest parity note: the TS engine has no Python interpreter, so a line
+        // that is not a ported command cannot run. Real PyMOL would try to exec
+        // it as Python; here we say so instead of silently doing nothing.
+        this.appendFeedback(
+          ` Error: '${keyword}' is not a ported command (the TypeScript engine has no Python)`,
+        );
       }
     }
   }
