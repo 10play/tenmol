@@ -46,6 +46,7 @@
  */
 export type DockArea = 'bottom' | 'left' | 'right';
 
+/** The External GUI dock's position and visibility, mirroring `QDockWidget`. */
 export interface ExtGuiDockState {
   /** `QDockWidget.isVisible()` — the menu's `Visible` checkbox. */
   visible: boolean;
@@ -113,6 +114,7 @@ export function dockModifier(state: ExtGuiDockState): string {
  * Persistence
  * ------------------------------------------------------------------ */
 
+/** The minimal `localStorage` surface the dock persistence needs. */
 export interface StorageLike {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
@@ -130,6 +132,7 @@ export const DOCK_STORAGE_KEY = 'tenmol.shell.extgui.v1';
 
 const AREAS: readonly DockArea[] = ['bottom', 'left', 'right'];
 
+/** Read the persisted dock state, falling back to the initial state on any fault. */
 export function loadDock(storage: StorageLike | null): ExtGuiDockState {
   if (!storage) return EXT_GUI_DOCK_INITIAL;
   try {
@@ -152,6 +155,7 @@ export function loadDock(storage: StorageLike | null): ExtGuiDockState {
   }
 }
 
+/** Persist the dock state best-effort; storage failures are swallowed. */
 export function saveDock(storage: StorageLike | null, state: ExtGuiDockState): void {
   if (!storage) return;
   try {

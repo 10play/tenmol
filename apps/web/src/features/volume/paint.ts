@@ -30,6 +30,7 @@ import {
 } from './ramp';
 import type { VolumeRampPoint } from '@tenmol/protocol/topics/dialogs';
 
+/** A hit-testable rectangle, in widget pixels (Qt `QRect` semantics). */
 export interface BoxRect {
   x: number;
   y: number;
@@ -37,9 +38,12 @@ export interface BoxRect {
   height: number;
 }
 
+/** Which of the three editable value boxes a rect belongs to. */
 export type ValueBoxKey = 'vmin' | 'vmax' | 'amax';
+/** The value-box rectangles `paint()` returns, keyed for hit-testing. */
 export type ValueBoxes = Partial<Record<ValueBoxKey, BoxRect>>;
 
+/** Inclusive point-in-rect test, matching Qt's `QRect.contains()`. */
 export function boxContains(rect: BoxRect | undefined, x: number, y: number): boolean {
   if (!rect) return false;
   // Qt's QRect.contains() is inclusive of right()/bottom() == x+w-1 / y+h-1.
@@ -48,6 +52,7 @@ export function boxContains(rect: BoxRect | undefined, x: number, y: number): bo
   );
 }
 
+/** Everything one `paint()` pass needs to draw the ramp canvas. */
 export interface PaintOptions {
   view: RampView;
   points: readonly VolumeRampPoint[];
@@ -300,6 +305,7 @@ function circle(
   ctx.stroke();
 }
 
+/** Format a 0..1 RGB triple as a clamped `rgb(...)` CSS string. */
 export function rgbCss(r: number, g: number, b: number): string {
   const byte = (v: number) => Math.round(Math.min(Math.max(v, 0), 1) * 255);
   return `rgb(${byte(r)}, ${byte(g)}, ${byte(b)})`;

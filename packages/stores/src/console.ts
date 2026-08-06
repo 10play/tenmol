@@ -59,6 +59,7 @@ export type { ConsoleSettings };
  */
 export type OrthoLineKind = 'prompt' | 'output';
 
+/** One line in the in-viewport ortho console, tagged prompt or output. */
 export interface OrthoLine {
   /** Monotonic; equals the `I->CurLine` value the line was written at. */
   seq: number;
@@ -98,6 +99,7 @@ export interface LineEdit {
   cursor: number;
 }
 
+/** The empty editor line, caret at the end sentinel. */
 export const EMPTY_LINE: LineEdit = { text: '', cursor: -1 };
 
 /** Where the caret really is when `cursor` is the sentinel `-1`. */
@@ -188,6 +190,7 @@ export function cursorRight(line: LineEdit): LineEdit {
  * State
  * ------------------------------------------------------------------ */
 
+/** The full ortho-console snapshot: line ring, overlay counters, editor, and history. */
 export interface ConsoleState {
   /** The 256-line ring, oldest first. */
   lines: readonly OrthoLine[];
@@ -232,6 +235,7 @@ export interface ConsoleState {
   visible: boolean;
 }
 
+/** The console store: state plus the ortho key/output mutators that drive it. */
 export interface ConsoleStore extends Store<ConsoleState> {
   /** Lines drained from PyMOL. Already wrapped by `OrthoAddOutput`. */
   addOutput(lines: readonly string[]): void;
@@ -257,12 +261,14 @@ export interface ConsoleStore extends Store<ConsoleState> {
   clear(): void;
 }
 
+/** Ring-size overrides for the console store; both default to PyMOL's 256. */
 export interface ConsoleStoreOptions {
   /** Test seam; production leaves this at 256. */
   capacity?: number;
   historyCapacity?: number;
 }
 
+/** Build an ortho-console store with the ring capacities from `options`. */
 export function createConsoleStore(options: ConsoleStoreOptions = {}): ConsoleStore {
   const capacity = options.capacity ?? ORTHO_SAVE_LINES;
   const historyCapacity = options.historyCapacity ?? ORTHO_HISTORY_LINES;
@@ -438,6 +444,7 @@ export function showLineCount(state: ConsoleState): number {
   return state.settings.internal_feedback + numberOverlayLines(state);
 }
 
+/** An ortho line as `OrthoDrawText` would draw it, with its paint-time position flags. */
 export interface VisibleOrthoLine extends OrthoLine {
   /**
    * `lcount` in `OrthoDrawText`, 1 = the bottom-most drawn line. Exposed

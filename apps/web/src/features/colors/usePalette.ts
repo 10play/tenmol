@@ -14,11 +14,13 @@ import { createStore, type Store } from '@tenmol/stores';
 import { useSession, useStore, type Session } from '../../app';
 import { EMPTY_PALETTE, loadPalette, loadRamps, type CallFn, type PaletteState } from './palette';
 
+/** The store type holding the shared {@link PaletteState}. */
 export type PaletteStore = Store<PaletteState>;
 
 let store: PaletteStore | null = null;
 let inFlight: Promise<void> | null = null;
 
+/** The process-wide colour store, created lazily on first use. */
 export function paletteStore(): PaletteStore {
   if (!store) store = createStore<PaletteState>({ ...EMPTY_PALETTE });
   return store;

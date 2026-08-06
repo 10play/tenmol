@@ -32,10 +32,12 @@ export const ERROR_KINDS = [
   'PythonError',
 ] as const;
 
+/** One of the six closed error kinds; the client's discriminant. */
 export type ErrorKind = (typeof ERROR_KINDS)[number];
 
 const ERROR_KIND_SET: ReadonlySet<string> = new Set<string>(ERROR_KINDS);
 
+/** Type guard: is `v` one of the closed `ErrorKind` strings? */
 export function isErrorKind(v: unknown): v is ErrorKind {
   return typeof v === 'string' && ERROR_KIND_SET.has(v);
 }
@@ -118,6 +120,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
+/** Type guard: does `v` have the shape of a `{t:'err'}` payload? */
 export function isWireError(v: unknown): v is WireError {
   return (
     isRecord(v) &&
@@ -132,6 +135,7 @@ export function isWireError(v: unknown): v is WireError {
  * Constructors (pure) — used by tests, mocks and the JS-side mock bridge
  * ------------------------------------------------------------------ */
 
+/** Build a `WireError` from a kind, message and optional diagnostic extras. */
 export function wireError(
   kind: ErrorKind,
   message: string,
@@ -147,6 +151,7 @@ export function wireError(
   };
 }
 
+/** A `NotAllowed` error for a symbol the bridge policy refuses. */
 export function notAllowed(symbol: string, message?: string): WireError {
   return wireError('NotAllowed', message ?? `'${symbol}' is not permitted by the bridge policy`, {
     type: 'NotAllowed',
@@ -154,6 +159,7 @@ export function notAllowed(symbol: string, message?: string): WireError {
   });
 }
 
+/** An `IncentiveOnly` error for a symbol absent from this open-source build. */
 export function incentiveOnly(symbol: string, message?: string): WireError {
   return wireError(
     'IncentiveOnly',
@@ -162,6 +168,7 @@ export function incentiveOnly(symbol: string, message?: string): WireError {
   );
 }
 
+/** A `NotSerializable` error for a result type with no codec-table entry. */
 export function notSerializable(symbol: string, pyType: string): WireError {
   return wireError(
     'NotSerializable',

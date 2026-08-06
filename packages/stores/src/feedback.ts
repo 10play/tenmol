@@ -46,6 +46,7 @@ import { createStore, type Store } from './createStore';
  */
 export type FeedbackKind = FeedbackSeverity | 'prompt' | 'client';
 
+/** One console line with its classified kind and origin. */
 export interface FeedbackEntry {
   /** Monotonic, assigned by this client. Never reused, never reordered. */
   seq: number;
@@ -86,6 +87,7 @@ export function classifyLine(text: string, previous?: FeedbackKind): FeedbackKin
  * Store
  * ------------------------------------------------------------------ */
 
+/** The console store's state: the capped ring plus dedup/replay bookkeeping. */
 export interface FeedbackState {
   /** Newest last. Capped at `capacity` (plan §6 WP-11: 5,000 lines). */
   lines: readonly FeedbackEntry[];
@@ -101,6 +103,7 @@ export interface FeedbackState {
   replayUntil: number;
 }
 
+/** The console store: appends server/client lines and manages replay. */
 export interface FeedbackStore extends Store<FeedbackState> {
   /** Lines drained from PyMOL by the bridge. */
   appendServer(lines: readonly string[]): void;
@@ -119,12 +122,14 @@ const DEFAULT_CAPACITY = 5000;
 const MAX_OVERLAP = 2000;
 const DEFAULT_REPLAY_WINDOW_MS = 1500;
 
+/** Construction options for {@link createFeedbackStore}. */
 export interface FeedbackStoreOptions {
   capacity?: number;
   /** Injectable clock so the replay window is testable without timers. */
   now?: () => number;
 }
 
+/** Build a {@link FeedbackStore} — the console line ring with replay dedup. */
 export function createFeedbackStore(options: FeedbackStoreOptions = {}): FeedbackStore {
   const capacity = options.capacity ?? DEFAULT_CAPACITY;
   const now = options.now ?? (() => Date.now());

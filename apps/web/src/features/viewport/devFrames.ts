@@ -23,15 +23,19 @@ import { createPngPullSource, type PixelSource, type ViewportTransport } from '@
 declare const __TENMOL_FRAME_DIR__: string;
 declare const __TENMOL_FRAME_ENDPOINT__: string;
 
+/** Dev-server directory PyMOL writes PNG frames to; empty in production builds. */
 export const FRAME_DIR: string =
   typeof __TENMOL_FRAME_DIR__ === 'string' ? __TENMOL_FRAME_DIR__ : '';
+/** Dev-server URL that serves the latest rendered frame PNG. */
 export const FRAME_ENDPOINT: string =
   typeof __TENMOL_FRAME_ENDPOINT__ === 'string' ? __TENMOL_FRAME_ENDPOINT__ : '/__tenmol/frame';
 
+/** True when the dev pull-mode frame source is configured and usable. */
 export function pullSourceAvailable(): boolean {
   return FRAME_DIR.length > 0;
 }
 
+/** Builds the dev-only PNG pull-mode pixel source, or null when unavailable. */
 export function createDevPullSource(transport: ViewportTransport): PixelSource | null {
   if (!pullSourceAvailable()) return null;
   const sep = FRAME_DIR.includes('\\') ? '\\' : '/';

@@ -65,6 +65,7 @@ export const DRAWABLE_INSTANCE_KINDS: readonly InstanceKind[] = [
  */
 const DEFAULT_NONBONDED_SIZE = 0.25;
 
+/** Whether an instance kind has a GPU impostor/point renderer in this module. */
 export function isDrawableInstanceKind(kind: InstanceKind): boolean {
   return DRAWABLE_INSTANCE_KINDS.includes(kind);
 }
@@ -114,6 +115,7 @@ function boxGeometry(): InstancedBufferGeometry {
   return geometry;
 }
 
+/** A built instanced draw: the scene object, its material and instance count. */
 export interface InstancedDraw {
   object: Object3D;
   material: Material;
@@ -123,6 +125,7 @@ export interface InstancedDraw {
   points: boolean;
 }
 
+/** Per-frame tuning for building instanced draws (point size, pixel ratio, normals). */
 export interface InstanceDrawOptions {
   /** `dot_width` from the frame header, in CSS pixels. */
   pointSize?: number;

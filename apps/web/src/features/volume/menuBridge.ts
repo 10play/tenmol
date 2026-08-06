@@ -54,6 +54,7 @@ export const VOLUME_BOOTSTRAP =
 /** The console marker. Must match `panels/volume.py`'s `TAG`. */
 export const VOLUME_TAG = 'TENMOL_VOLUME';
 
+/** A parsed volume console marker: a panel-open or ramp-changed event and its stop count. */
 export interface VolumeEvent {
   kind: 'panel' | 'ramp';
   name: string;
@@ -71,6 +72,7 @@ export interface VolumeEvent {
  */
 const PANEL_LEAF = /^cmd\.volume_panel\(\s*(['"])((?:[^'"\\]|\\.)*)\1\s*\)$/;
 
+/** Extract the object name from a `cmd.volume_panel('x')` command, or null if it is not one. */
 export function volumePanelLeafName(command: string): string | null {
   const match = PANEL_LEAF.exec(command.trim());
   if (!match) return null;
@@ -216,6 +218,7 @@ export async function watchVolume(session: Session, name: string): Promise<boole
   }
 }
 
+/** Tell the server a volume panel for `name` has closed; failures are ignored. */
 export async function unwatchVolume(session: Session, name: string): Promise<void> {
   try {
     await session.call(`${VOLUME_NS}.unwatch`, [name]);

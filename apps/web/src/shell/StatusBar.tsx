@@ -19,6 +19,7 @@
 import { describeConnection, engineState } from '@tenmol/stores';
 import { useSession, useStore, useStoreState } from '../app';
 
+/** The bottom status bar: connection state, object count and feedback summary. */
 export function StatusBar() {
   const session = useSession();
   const connection = useStoreState(session.stores.connection);

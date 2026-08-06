@@ -49,13 +49,16 @@ export const WIZARD_EVENT_BITS = {
   position: 512,
 } as const;
 
+/** The named event bits a wizard's mask can select. */
 export type WizardEventKind = keyof typeof WIZARD_EVENT_BITS;
 
+/** Every event kind, for iterating the mask. */
 export const WIZARD_EVENT_KINDS = Object.keys(WIZARD_EVENT_BITS) as WizardEventKind[];
 
 /** `Wizard.get_event_mask()` default is pick+select (`wizard/__init__.py:56`). */
 export const WIZARD_DEFAULT_EVENT_MASK = WIZARD_EVENT_BITS.pick + WIZARD_EVENT_BITS.select;
 
+/** True when `mask` has `kind` set — i.e. the wizard wants that event. */
 export function wizardWants(mask: number, kind: WizardEventKind): boolean {
   return (mask & WIZARD_EVENT_BITS[kind]) !== 0;
 }
@@ -74,6 +77,7 @@ export const WIZARD_ROW_TYPES = {
   popup: 3,
 } as const;
 
+/** A panel row's decoded type: blank, text, button or popup. */
 export type WizardRowKind = keyof typeof WIZARD_ROW_TYPES;
 
 /**
@@ -113,6 +117,7 @@ export const WIZARD_MENU_CODES = {
   title: 2,
 } as const;
 
+/** A menu entry's decoded code: separator, item or title. */
 export type WizardMenuKind = keyof typeof WIZARD_MENU_CODES;
 
 /**
@@ -133,6 +138,7 @@ export interface WizardMenuItem {
   error?: string;
 }
 
+/** The result of a `get_menu(tag)` call: its resolved items, or an error. */
 export interface WizardMenuResult {
   tag: string;
   /** `null` means `get_menu` returned `None` — no menu, do not open a popup. */
@@ -142,6 +148,7 @@ export interface WizardMenuResult {
 
 /* --------------------------------------------------------------- snapshot */
 
+/** One wizard on the stack: its class and defining module. */
 export interface WizardStackEntry {
   cls: string;
   module: string;
@@ -182,6 +189,7 @@ export type WizardPayload = WizardSnapshot;
 
 /* ---------------------------------------------------------------- events */
 
+/** One wizard method the bridge invoked while dispatching an event. */
 export interface WizardEventCall {
   method: string;
   args: (string | number | boolean | null)[];
@@ -192,6 +200,7 @@ export interface WizardEventCall {
   result: unknown;
 }
 
+/** The outcome of dispatching one event to the top wizard. */
 export interface WizardEventResult {
   kind: WizardEventKind;
   bit: number;
@@ -206,6 +215,7 @@ export interface WizardEventResult {
 
 /* --------------------------------------------------------------- catalog */
 
+/** One launchable wizard in the catalog, and whether it is available. */
 export interface WizardCatalogEntry {
   /** Launch name: `cmd.wizard(name)` imports `pymol.wizard.<name>` and
    *  instantiates `name.capitalize()` (`wizarding.py:35,41`). */
@@ -216,11 +226,13 @@ export interface WizardCatalogEntry {
   note: string;
 }
 
+/** One node of the Qt Wizard menu: a separator, command or nested submenu. */
 export type WizardMenubarNode =
   | { kind: 'separator' }
   | { kind: 'command'; label: string; command: string }
   | { kind: 'submenu'; label: string; items: WizardMenubarNode[] };
 
+/** The full wizard catalog: launchable wizards, the Qt menu, and aliases. */
 export interface WizardCatalog {
   wizards: WizardCatalogEntry[];
   /** The Qt Wizard menu, verbatim from `packages/engine/modules/pymol/_gui.py:834-864`. */

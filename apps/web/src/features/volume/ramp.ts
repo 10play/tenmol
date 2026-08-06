@@ -109,6 +109,7 @@ export interface PlotRect {
   height: number;
 }
 
+/** The drawable plot area inside a ramp view, excluding the axis margins. */
 export function plotRect(view: RampView): PlotRect {
   return {
     left: LEFT_MARGIN,
@@ -118,7 +119,9 @@ export function plotRect(view: RampView): PlotRect {
   };
 }
 
+/** Inclusive right edge of a rect (Qt semantics). */
 export const rectRight = (r: PlotRect): number => r.left + r.width - 1;
+/** Inclusive bottom edge of a rect (Qt semantics). */
 export const rectBottom = (r: PlotRect): number => r.top + r.height - 1;
 
 /* ------------------------------------------------------------------ *
@@ -197,6 +200,7 @@ export function pointsToFlat(points: readonly VolumeRampPoint[]): number[] {
  * Histogram — volume.py:665-709
  * ------------------------------------------------------------------ */
 
+/** A computed histogram: value range plus the normalized path to plot. */
 export interface HistogramResult {
   vmin: number;
   vmax: number;
@@ -358,6 +362,7 @@ export function inPlotArea(view: RampView, x: number, y: number): boolean {
  * Mutations
  * ------------------------------------------------------------------ */
 
+/** Result of inserting a ramp point: the new point list and where the point landed. */
 export interface AddPointResult {
   points: VolumeRampPoint[];
   /** Index the newly added (centre) point ended up at — becomes `self.point`. */
@@ -430,6 +435,7 @@ export function removePoints(
   return next;
 }
 
+/** Axis a drag is latched to, or null for free movement. */
 export type DragConstraint = 'x' | 'y' | null;
 
 /**

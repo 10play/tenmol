@@ -82,6 +82,7 @@ interface DragState {
   inRange: boolean;
 }
 
+/** The movie scrubber: a canvas timeline of frames with drag-to-seek and a context menu. */
 export function MovieTimeline({ panel, frame, run, onSelectFrame, onContextMenu }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const dragRef = useRef<DragState | null>(null);

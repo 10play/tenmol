@@ -21,6 +21,7 @@ export type Units = 'inch' | 'cm';
 /** cm per inch — the Qt form's literal 2.54 factor. */
 const CM_PER_INCH = 2.54;
 
+/** The Draw/Ray form's single source of truth: pixel size, dpi, units, aspect lock, transparency. */
 export interface RenderState {
   width: number;
   height: number;
@@ -31,6 +32,7 @@ export interface RenderState {
   transparent: boolean;
 }
 
+/** The form's default state: 1024x768 at 300 dpi, inches, aspect locked. */
 export const INITIAL: RenderState = {
   width: 1024,
   height: 768,
@@ -40,6 +42,7 @@ export const INITIAL: RenderState = {
   transparent: false,
 };
 
+/** An edit to the render form — a widget change or a viewport-size sync. */
 export type RenderAction =
   | { type: 'width'; px: number }
   | { type: 'height'; px: number }
@@ -76,6 +79,7 @@ export function derive(state: RenderState) {
   };
 }
 
+/** Apply one `RenderAction`, deriving locked dimensions so nothing writes back. */
 export function reducer(state: RenderState, action: RenderAction): RenderState {
   switch (action.type) {
     case 'width': {

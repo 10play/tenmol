@@ -59,6 +59,7 @@ import { walkMenu, type MenuNode } from '@tenmol/protocol/topics/menus';
 /** How the two eyes reach the client. Only `composite` can cross a WebSocket. */
 export type StereoCarrier = 'composite' | 'two-buffers' | 'hmd' | 'monoscopic';
 
+/** One Stereo Mode submenu leaf: what its `stereo <word>` command actually does. */
 export interface StereoLeaf {
   /** The `stereo <word>` argument, i.e. the `stereo_dict` key. */
   word: string;
@@ -170,6 +171,7 @@ export const STEREO_UNAVAILABLE: Readonly<Record<string, string>> = {
 /** Every command in the Stereo Mode submenu, in tree order. */
 export const STEREO_COMMANDS: readonly string[] = Object.keys(STEREO_LEAVES);
 
+/** The `StereoLeaf` for a menu command, or null if it is not a stereo leaf. */
 export function stereoLeaf(command: string): StereoLeaf | null {
   return STEREO_LEAVES[command] ?? null;
 }
@@ -200,6 +202,7 @@ export function hasStereoLeaves(nodes: readonly MenuNode[]): boolean {
  */
 export type ClientReps = readonly RepId[] | null;
 
+/** The side-effect-free bridge call that echoes back the declared client reps. */
 export const RENDER_STATS_FN = '_bridge.render_stats';
 
 /** Pull `geometryReps` out of a `render_stats` payload. Tolerant by design. */
@@ -239,6 +242,7 @@ export function stereoTooltip(command: string, reps: ClientReps): string | null 
  * What the engine actually did
  * ------------------------------------------------------------------ */
 
+/** What the engine actually holds after a stereo command: the `stereo`/`stereo_mode` reads. */
 export interface StereoState {
   /** `cmd.get('stereo')` — 'on' / 'off'. */
   stereo: string;

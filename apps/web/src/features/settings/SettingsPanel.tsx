@@ -31,6 +31,7 @@ import './settings.css';
 
 type Window = 'menu' | 'table' | 'lighting';
 
+/** The settings overlay: Setting menu, advanced settings table, lighting panel, and launcher. */
 export function SettingsPanel() {
   const session = useSession();
   const service = useMemo(() => getSettingsService(session), [session]);

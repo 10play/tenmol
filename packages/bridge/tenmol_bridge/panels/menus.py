@@ -539,6 +539,7 @@ def install(cmd: Any = None) -> str:
 
 
 def uninstall(cmd: Any = None) -> None:
+    """Remove the menus entry point from ``cmd``; a no-op if not installed."""
     target = _resolve_cmd(cmd)
     if hasattr(target, ATTRIBUTE):
         try:

@@ -35,6 +35,7 @@ const MIME: Readonly<Record<PixelEncoding, string>> = {
   'raw-rgba': 'application/octet-stream',
 };
 
+/** Rolling stats for the pixel presenter: frame/drop counts, fps, present time, and last-frame size. */
 export interface PresenterStats {
   frames: number;
   dropped: number;
@@ -47,6 +48,7 @@ export interface PresenterStats {
   height: number;
 }
 
+/** Wiring for the pixel presenter: the target canvas plus present/error callbacks. */
 export interface PixelPresenterOptions {
   canvas: HTMLCanvasElement;
   /** Called once a frame has been blitted (used for the ack + stats). */
@@ -54,6 +56,7 @@ export interface PixelPresenterOptions {
   onError?: (error: Error) => void;
 }
 
+/** The Mode-P presenter: blit encoded frames to a 2-D canvas, dropping stale ones. */
 export interface PixelPresenter {
   present(frame: PixelFramePayload): void;
   /** Re-blit the last frame (after a canvas resize). */
@@ -69,6 +72,7 @@ function now(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
 
+/** Create a pixel presenter bound to a canvas, decoding and blitting frames with drop-not-queue. */
 export function createPixelPresenter(options: PixelPresenterOptions): PixelPresenter {
   const { canvas } = options;
   const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });

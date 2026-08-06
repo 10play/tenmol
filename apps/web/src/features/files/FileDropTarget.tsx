@@ -23,6 +23,7 @@ import { takeOpenFromLocation } from './deepLink';
 import { installFileMenuHooks, requestFilesOpen } from './menuHooks';
 import type { FileClassification } from '@tenmol/protocol/topics/files';
 
+/** Always-mounted window-level drag-and-drop and deep-link file open handler. */
 export function FileDropTarget() {
   const session = useSession();
 

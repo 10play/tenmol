@@ -74,6 +74,7 @@ export function repMaskOfCommand(command: string | undefined): number {
   return REP_MASKS[rep] ?? 0;
 }
 
+/** Tick state of a rep menu leaf against a row's live rep bitmask. */
 export type RepCheck = 'on' | 'partial' | 'off' | 'none';
 
 /**

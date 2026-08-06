@@ -26,12 +26,14 @@
 
 import { fovWidth, isOrthoscopic, type ViewMatrix } from '../camera';
 
+/** The canvas scene rectangle, in CSS pixels. */
 export interface Rect {
   /** The scene rectangle, in CSS pixels, anchored at the top-left of the canvas. */
   width: number;
   height: number;
 }
 
+/** A pick ray in eye space: origin, unit direction, and whether the projection is parallel. */
 export interface EyeRay {
   origin: [number, number, number];
   /** Unit length. */
@@ -163,6 +165,7 @@ export function screenPoint(
  */
 export const PICK_RANGE = 7;
 
+/** The de-duplicated pixel offsets to test around a click, in the backend's exact scan order. */
 export function pickOffsets(range: number = PICK_RANGE): Array<[number, number]> {
   const out: Array<[number, number]> = [];
   const seen = new Set<number>();

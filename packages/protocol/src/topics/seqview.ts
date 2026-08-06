@@ -50,6 +50,7 @@ export const SeqFormat = {
   /** Movie frames — declared but empty in the C (`:1483-1484`). */
   MovieFrames: 5,
 } as const;
+/** One of the `SeqFormat` values (`seq_view_format`). */
 export type SeqFormatValue = (typeof SeqFormat)[keyof typeof SeqFormat];
 
 /** `seq_view_label_mode` (setting 363, global, default 2).  `:1028-1101`. */
@@ -63,10 +64,12 @@ export const SeqLabelMode = {
   /** No labels at all. */
   None: 3,
 } as const;
+/** One of the `SeqLabelMode` values (`seq_view_label_mode`). */
 export type SeqLabelModeValue = (typeof SeqLabelMode)[keyof typeof SeqLabelMode];
 
 /** `seq_view_gap_mode` (setting 767, global, default 1).  `:1230-1258`. */
 export const SeqGapMode = { None: 0, All: 1, Single: 2 } as const;
+/** One of the `SeqGapMode` values (`seq_view_gap_mode`). */
 export type SeqGapModeValue = (typeof SeqGapMode)[keyof typeof SeqGapMode];
 
 /**
@@ -98,6 +101,7 @@ export const SeqUnalignedMode = {
   /** Staggered; blended with the unaligned colour. */
   StaggeredBlend: 5,
 } as const;
+/** One of the `SeqUnalignedMode` values (`seq_view_unaligned_mode`). */
 export type SeqUnalignedModeValue =
   (typeof SeqUnalignedMode)[keyof typeof SeqUnalignedMode];
 
@@ -122,6 +126,7 @@ export const SEL_MODE_KEYWORDS = [
 
 /** `_seeker` / `_seeker_center` — `packages/engine/layer3/Seeker.h:25-27`. */
 export const SEQ_TEMP_SELE = '_seeker';
+/** Temporary selection name for the seeker's centre-of-interest. */
 export const SEQ_TEMP_CENTER_SELE = '_seeker_center';
 
 /**
@@ -213,6 +218,7 @@ export interface SeqviewRow {
   breadcrumbs: SeqviewLabel[];
 }
 
+/** The full sequence-viewer state pushed to the client: visibility, layout, rows, and colours. */
 export interface SeqviewPayload {
   /** True when at least one enabled object has `seq_view` on. */
   visible: boolean;

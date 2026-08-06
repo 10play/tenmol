@@ -456,10 +456,12 @@ class GLFunctions:
     # -- convenience --------------------------------------------------------
 
     def get_string(self, enum: int) -> str:
+        """``glGetString(enum)`` decoded to ``str``; empty string on a null result."""
         raw = self.glGetString(enum)
         return raw.decode("utf-8", "replace") if raw else ""
 
     def get_int(self, enum: int) -> int:
+        """A single integer GL state value via ``glGetIntegerv``."""
         out = c_int(0)
         self.glGetIntegerv(enum, byref(out))
         return int(out.value)
@@ -477,9 +479,16 @@ class GLFunctions:
         return (0, 0)
 
     def is_gles(self) -> bool:
+        """True if this is an OpenGL ES context, keyed off the ``GL_VERSION`` prefix."""
         return self.get_string(GL_VERSION).startswith("OpenGL ES")
 
     def extension_count(self) -> int:
+        """The number of supported GL extensions.
+
+        Prefers the core-profile ``GL_NUM_EXTENSIONS`` query; falls back to
+        splitting the legacy ``GL_EXTENSIONS`` string on a 2.1 context, and
+        swallows the ``GL_INVALID_ENUM`` that query provokes there.
+        """
         try:
             n = self.get_int(GL_NUM_EXTENSIONS)
         except Exception:  # noqa: BLE001
@@ -540,10 +549,15 @@ class GLFramebuffer:
         self._storage(self.width, self.height)
 
     def bind(self) -> None:
+        """Make this FBO the draw target and set the viewport to its size."""
         self._gl.glBindFramebuffer(GL_FRAMEBUFFER, self.fbo)
         self._gl.glViewport(0, 0, self.width, self.height)
 
     def resize(self, width: int, height: int) -> None:
+        """Reallocate the renderbuffers to a new size (clamped to at least 1x1).
+
+        A no-op when the dimensions are unchanged; the FBO name is preserved.
+        """
         width = max(1, int(width))
         height = max(1, int(height))
         if (width, height) == (self.width, self.height):
@@ -551,6 +565,10 @@ class GLFramebuffer:
         self._storage(width, height)
 
     def destroy(self) -> None:
+        """Delete the renderbuffers and FBO and zero the handles.
+
+        Teardown never raises; any GL error during deletion is swallowed.
+        """
         gl = self._gl
         try:
             if self.color_rb:
@@ -681,10 +699,12 @@ class _EGL:
         return raw.decode("ascii", "replace").split() if raw else []
 
     def display_extensions(self, dpy: c_void_p) -> List[str]:
+        """The ``EGL_EXTENSIONS`` list for an initialised display, as tokens."""
         raw = self.eglQueryString(dpy, EGL_EXTENSIONS)
         return raw.decode("ascii", "replace").split() if raw else []
 
     def query(self, dpy: Optional[c_void_p], enum: int) -> str:
+        """An ``eglQueryString`` value decoded to ``str``; empty on a null result."""
         raw = self.eglQueryString(dpy, enum)
         return raw.decode("utf-8", "replace") if raw else ""
 
@@ -1211,6 +1231,13 @@ class EGLContext:
         return bool(cur) and int(cur) == int(self._ctx.value or 0)
 
     def make_current(self) -> None:
+        """Bind this context (and its FBO) on the calling thread.
+
+        A no-op fast path when already current on this thread. If another
+        thread still holds the context, ``eglMakeCurrent`` fails with
+        ``EGL_BAD_ACCESS`` — EGL forbids stealing, so that owner must
+        :meth:`release_current` first; the raised error carries that hint.
+        """
         self._assert_live()
         if self.is_current():
             # Already ours on this thread.  Re-binding is legal but pointless,
@@ -1271,6 +1298,14 @@ class EGLContext:
         self.width, self.height = self._fb.width, self._fb.height
 
     def release(self) -> None:
+        """Tear down the context: delete the FBO, then destroy EGL objects.
+
+        Idempotent. Because ``glDeleteFramebuffers`` acts on the currently
+        bound context, it binds itself first (skipping the FBO deletes if it
+        cannot) so it never deletes another context's names. Only the last
+        context on a shared ``EGLDisplay`` calls ``eglTerminate``. Teardown
+        never raises.
+        """
         if self._released:
             return
         self._released = True
@@ -1319,6 +1354,10 @@ class EGLContext:
         self._dpy = None
 
     def info(self) -> Dict[str, Any]:
+        """A diagnostic snapshot of the live context and its GL strings/FBO.
+
+        Returns a minimal ``{"backend", "released": True}`` dict once released.
+        """
         if self._released or self._gl is None:
             return {"backend": self.backend, "released": True}
         gl = self._gl

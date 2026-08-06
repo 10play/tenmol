@@ -91,6 +91,7 @@ export async function readAutoload(call: CallFn): Promise<Record<string, boolean
   return out;
 }
 
+/** Whether a plugin is autoloaded; a missing entry defaults to enabled. */
 export function isAutoloadEnabled(name: string, map: Readonly<Record<string, boolean>>): boolean {
   return map[name] ?? true;
 }
@@ -122,6 +123,7 @@ export async function setAutoload(call: CallFn, name: string, enabled: boolean):
  * Preferences (inventory row 461)
  * ------------------------------------------------------------------ */
 
+/** Plugin-manager preference names writable through `plugins.pref_set`. */
 export type PreferenceKey = 'verbose' | 'instantsave';
 
 /**
@@ -160,6 +162,7 @@ export async function setPreference(
  * Startup paths (inventory row 462)
  * ------------------------------------------------------------------ */
 
+/** The plugin startup search path, split into user-editable and fixed install entries. */
 export interface StartupPaths {
   /** `get_startup_path(True)` — the slice `set_startup_path` may replace. */
   user: string[];
@@ -174,6 +177,7 @@ export interface StartupPaths {
   installation: string[];
 }
 
+/** Fetch the startup paths, partitioning the fixed installation tail from user entries. */
 export async function readStartupPaths(call: CallFn): Promise<StartupPaths> {
   const all = (await call<string[]>('plugins.get_startup_path')) ?? [];
   const user = (await call<string[]>('plugins.get_startup_path', [true])) ?? [];
@@ -192,6 +196,7 @@ export function movePath(paths: readonly string[], index: number, delta: number)
   return next;
 }
 
+/** Return the list with the entry at `index` removed. */
 export function removePath(paths: readonly string[], index: number): string[] {
   return paths.filter((_, i) => i !== index);
 }

@@ -27,6 +27,7 @@ interface ObjectPanelProps {
   buttonModeName: string;
 }
 
+/** The object ("names list") panel: one row per object with its A/S/H/L/C(/M) toggles. */
 export function ObjectPanel({ buttonModeName }: ObjectPanelProps) {
   const bridge = useBridge();
   const [rows, setRows] = useState<PanelRow[]>(PLACEHOLDER_PANEL);

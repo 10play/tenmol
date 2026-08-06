@@ -19,6 +19,7 @@ export interface MovieFrameCell {
   key?: boolean;
 }
 
+/** The `movie_panel` topic payload: the timeline cells and its length/visibility. */
 export interface MoviePanelPayload {
   cells: MovieFrameCell[];
   nframes: number;

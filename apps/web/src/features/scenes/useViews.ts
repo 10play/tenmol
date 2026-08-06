@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSession } from '../../app';
 import { parseViewNames, viewActions, type ViewAction } from './viewActions';
 
+/** The named-view list plus its refresh and run actions. */
 export interface ViewsController {
   names: readonly string[];
   /** Non-null when the last refresh could not be understood. */
@@ -24,6 +25,7 @@ export interface ViewsController {
   refresh(): Promise<void>;
 }
 
+/** Hook exposing the named-view list, refreshed by parsing a deliberately-failing `cmd.view` probe. */
 export function useViews(): ViewsController {
   const session = useSession();
   const [names, setNames] = useState<readonly string[]>([]);

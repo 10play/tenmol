@@ -644,6 +644,7 @@ export function MapGenerateDialog({
 
 /* ------------------------------------------------------------------- aln */
 
+/** The alignment-file metadata the `.aln` load dialog renders. */
 export type AlnInfo = AlnDialogInfo;
 
 /** `load_aln_dialog` (`file_dialogs.py:204-282`), form `load_aln.ui`. */
@@ -808,6 +809,7 @@ export function OpenProgress({ steps, index }: { steps: FileClassification[]; in
   );
 }
 
+/** The final path segment of a slash-separated path. */
 export function baseName(path: string): string {
   return path.slice(path.lastIndexOf('/') + 1);
 }

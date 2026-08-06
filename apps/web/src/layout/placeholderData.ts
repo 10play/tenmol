@@ -25,6 +25,7 @@ export type ObjectType =
   | 'volume'
   | 'callback';
 
+/** One row of the object panel: a spec/object with its display state. */
 export interface PanelRow {
   name: string;
   specType: SpecType;
@@ -42,6 +43,7 @@ export interface PanelRow {
   caption?: string;
 }
 
+/** A sample object panel, shown before the backend answers. */
 export const PLACEHOLDER_PANEL: PanelRow[] = [
   { name: 'all', specType: 'all', enabled: true, nestLevel: 0, isGroup: false, isOpen: false },
   {
@@ -137,6 +139,7 @@ export interface MouseModeState {
   selectionLine: string;
 }
 
+/** A sample mouse-mode block, static until ButMode is exposed to Python. */
 export const PLACEHOLDER_MOUSE_MODE: MouseModeState = {
   buttonModeName: '3-Button Viewing',
   mouseGrid: true,
@@ -162,6 +165,7 @@ export interface FrameState {
   seqView: boolean;
 }
 
+/** A sample frame/state readout, shown before the `frame` topic lands. */
 export const PLACEHOLDER_FRAME: FrameState = {
   frame: 1,
   nFrame: 1,

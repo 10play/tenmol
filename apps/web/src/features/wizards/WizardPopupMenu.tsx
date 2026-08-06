@@ -24,6 +24,7 @@ import type { WizardMenuItem } from '@tenmol/protocol';
 import { ColorCodedText } from './ColorCodedText';
 import { stripColorCodes } from './colorCodes';
 
+/** Props for `WizardPopupMenu`: title, items, anchor point and pick/close callbacks. */
 export interface WizardPopupMenuProps {
   title: string;
   items: WizardMenuItem[];
@@ -32,6 +33,7 @@ export interface WizardPopupMenuProps {
   onClose(): void;
 }
 
+/** Floating wizard popup menu, clamped on-screen at its anchor, that runs a command on pick. */
 export function WizardPopupMenu({ title, items, anchor, onPick, onClose }: WizardPopupMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ left: anchor.x, top: anchor.y });

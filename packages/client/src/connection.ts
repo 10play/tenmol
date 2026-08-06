@@ -51,6 +51,7 @@ export { PymolError, DisconnectedError, RequestTimeoutError } from '@tenmol/back
  * Socket abstraction (browser WebSocket, `ws` in tests, mocks)
  * ------------------------------------------------------------------ */
 
+/** The subset of the WebSocket API this client relies on, so browser sockets, `ws`, and mocks are interchangeable. */
 export interface WebSocketLike {
   binaryType: string;
   readonly readyState: number;
@@ -62,8 +63,10 @@ export interface WebSocketLike {
   onmessage: ((ev: { data: unknown }) => void) | null;
 }
 
+/** Constructor for a WebSocketLike socket, injectable for tests and Node. */
 export type WebSocketCtor = new (url: string) => WebSocketLike;
 
+/** Named aliases for the numeric `WebSocket.readyState` values. */
 export const SocketReadyState = {
   Connecting: 0,
   Open: 1,
@@ -71,9 +74,10 @@ export const SocketReadyState = {
   Closed: 3,
 } as const;
 
-/** Alias of the shared backend lifecycle union; kept for existing importers. */
+/** Lifecycle phase of a PymolConnection; alias of the shared backend union. */
 export type ConnectionState = BackendConnectionState;
 
+/** Exponential-backoff tuning for automatic reconnection. */
 export interface ReconnectOptions {
   /** First retry delay. */
   initialDelayMs?: number;
@@ -87,6 +91,7 @@ export interface ReconnectOptions {
   maxAttempts?: number;
 }
 
+/** Options configuring a PymolConnection: URL, reconnection, queueing, and timeouts. */
 export interface PymolConnectionOptions {
   /** Defaults to ws://127.0.0.1:8765/ws. */
   url?: string;
@@ -124,6 +129,7 @@ const DEFAULT_RECONNECT: Required<ReconnectOptions> = {
  * Connection
  * ------------------------------------------------------------------ */
 
+/** A resilient WebSocket client to the PyMOL bridge: request/reply, topic subscriptions, and automatic reconnection. */
 export class PymolConnection implements Backend {
   readonly url: string;
 

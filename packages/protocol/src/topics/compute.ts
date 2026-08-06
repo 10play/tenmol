@@ -28,6 +28,7 @@ export const COMPUTE_NS = 'cmd.tenmol_compute' as const;
 export const COMPUTE_BOOTSTRAP =
   'import tenmol_bridge.panels.compute as _tc; _tc.install()';
 
+/** The install handshake reply: which attr and methods the compute service exposes. */
 export interface ComputeHello {
   ok: boolean;
   attr: string;
@@ -54,6 +55,7 @@ export interface SasaRecord {
   normalised: boolean;
 }
 
+/** The reply from `get_sasa_relative`: the per-residue records and a summary. */
 export interface SasaRelativeResult {
   ok: boolean;
   /** The atom property the values were also `alter`ed onto (default `b`). */

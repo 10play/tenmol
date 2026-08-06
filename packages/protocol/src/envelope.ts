@@ -27,21 +27,29 @@ export const PROTOCOL_VERSION = 1;
 
 /** Loopback only, never 0.0.0.0 (plan §A6: the boundary is the transport). */
 export const DEFAULT_HOST = '127.0.0.1';
+/** Default loopback WebSocket port the bridge listens on. */
 export const DEFAULT_PORT = 8765;
+/** URL path of the single control WebSocket. */
 export const WS_PATH = '/ws';
+/** Fully assembled default WebSocket URL from host, port and path. */
 export const DEFAULT_WS_URL = `ws://${DEFAULT_HOST}:${DEFAULT_PORT}${WS_PATH}`;
 
 /** Blob upload/download endpoints (plan §B8: sessions and volumes are never inline). */
 export const UPLOAD_PATH = '/upload';
+/** Endpoint for downloading a stored blob by id. */
 export const BLOB_PATH = '/blob';
+/** Liveness endpoint used to probe the bridge. */
 export const HEALTH_PATH = '/healthz';
 
 /* ------------------------------------------------------------------ *
  * JSON
  * ------------------------------------------------------------------ */
 
+/** A scalar JSON value. */
 export type JsonPrimitive = null | boolean | number | string;
+/** Any JSON value: primitive, array or object. */
 export type Json = JsonPrimitive | Json[] | { [key: string]: Json };
+/** A JSON object with string keys and JSON values. */
 export type JsonObject = { [key: string]: Json };
 
 /* ------------------------------------------------------------------ *
@@ -60,6 +68,7 @@ export const MouseButton = {
   ScrollForward: 3,
   ScrollBackward: 4,
 } as const;
+/** A valid mouse-button code from `MouseButton`. */
 export type MouseButtonValue = (typeof MouseButton)[keyof typeof MouseButton];
 
 /** `packages/engine/layer0/os_gl_glut_pretend.h:11-12` (P_GLUT_DOWN / P_GLUT_UP). */
@@ -67,6 +76,7 @@ export const ButtonState = {
   Down: 0,
   Up: 1,
 } as const;
+/** A valid button-state code (down/up) from `ButtonState`. */
 export type ButtonStateValue = (typeof ButtonState)[keyof typeof ButtonState];
 
 /**
@@ -79,6 +89,7 @@ export const Modifier = {
   Ctrl: 0x2,
   Alt: 0x4,
 } as const;
+/** A single modifier-bit value from `Modifier`. */
 export type ModifierValue = (typeof Modifier)[keyof typeof Modifier];
 
 /** Build a PyMOL modifier mask from a DOM-ish event. */
@@ -165,8 +176,10 @@ export interface InputReshapeMessage {
   force: boolean;
 }
 
+/** Union of all fire-and-forget input frames (button, drag, reshape). */
 export type InputMessage = InputButtonMessage | InputDragMessage | InputReshapeMessage;
 
+/** Discriminant `kind` of an input frame. */
 export type InputKind = InputMessage['kind'];
 
 /** Start receiving `event` frames for a topic. Acknowledged with ok/err. */
@@ -193,12 +206,14 @@ export interface AckMessage {
   frameId: number;
 }
 
+/** Every message the client may send to the server. */
 export type ClientMessage =
   CallMessage | DoMessage | InputMessage | SubMessage | UnsubMessage | AckMessage;
 
 /** Client messages that carry an id and get exactly one terminal ok/err. */
 export type ClientRequest = CallMessage | DoMessage | SubMessage | UnsubMessage;
 
+/** Discriminant `t` tag of a client message. */
 export type ClientMessageType = ClientMessage['t'];
 
 /* ------------------------------------------------------------------ *
@@ -230,6 +245,7 @@ export const INVALIDATION_CLASSES = [
   'names',
   'resync',
 ] as const;
+/** One invalidation category echoed on `ok` frames to drive client resyncs. */
 export type InvalidationClass = (typeof INVALIDATION_CLASSES)[number];
 
 /** Terminal failure for request `id`. */
@@ -276,12 +292,14 @@ export interface HelloMessage {
   modeG?: boolean;
 }
 
+/** Every message the server may send to the client. */
 export type ServerMessage =
   OkMessage | ErrMessage | AnyEventMessage | FeedbackMessage | HelloMessage;
 
 /** Server messages that terminate a request. */
 export type ServerResponse = OkMessage | ErrMessage;
 
+/** Discriminant `t` tag of a server message. */
 export type ServerMessageType = ServerMessage['t'];
 
 /* ------------------------------------------------------------------ *
@@ -296,24 +314,29 @@ function isInt(v: unknown): v is number {
   return typeof v === 'number' && Number.isInteger(v);
 }
 
+/** Type guard for a terminal `ok` success frame. */
 export function isOkMessage(v: unknown): v is OkMessage {
   return isRecord(v) && v['t'] === 'ok' && isInt(v['id']);
 }
 
+/** Type guard for a terminal `err` failure frame. */
 export function isErrMessage(v: unknown): v is ErrMessage {
   return isRecord(v) && v['t'] === 'err' && isInt(v['id']) && isWireError(v['error']);
 }
 
+/** Type guard for either terminal response frame (ok or err). */
 export function isResponseMessage(v: unknown): v is ServerResponse {
   return isOkMessage(v) || isErrMessage(v);
 }
 
+/** Type guard for a topic `event` push frame. */
 export function isEventMessage(v: unknown): v is AnyEventMessage {
   return (
     isRecord(v) && v['t'] === 'event' && isTopic(v['topic']) && isInt(v['seq']) && 'payload' in v
   );
 }
 
+/** Type guard for a `feedback` console-output frame. */
 export function isFeedbackMessage(v: unknown): v is FeedbackMessage {
   return (
     isRecord(v) &&
@@ -323,6 +346,7 @@ export function isFeedbackMessage(v: unknown): v is FeedbackMessage {
   );
 }
 
+/** Type guard for the connection-opening `hello` frame. */
 export function isHelloMessage(v: unknown): v is HelloMessage {
   return (
     isRecord(v) &&
@@ -332,6 +356,7 @@ export function isHelloMessage(v: unknown): v is HelloMessage {
   );
 }
 
+/** Type guard for any valid server-to-client message. */
 export function isServerMessage(v: unknown): v is ServerMessage {
   return (
     isOkMessage(v) ||
@@ -342,6 +367,7 @@ export function isServerMessage(v: unknown): v is ServerMessage {
   );
 }
 
+/** Type guard for a `call` (invoke API symbol) frame. */
 export function isCallMessage(v: unknown): v is CallMessage {
   return (
     isRecord(v) &&
@@ -353,10 +379,12 @@ export function isCallMessage(v: unknown): v is CallMessage {
   );
 }
 
+/** Type guard for a `do` (raw command line) frame. */
 export function isDoMessage(v: unknown): v is DoMessage {
   return isRecord(v) && v['t'] === 'do' && isInt(v['id']) && typeof v['cmd'] === 'string';
 }
 
+/** Type guard for any `input` frame, validating per-kind fields. */
 export function isInputMessage(v: unknown): v is InputMessage {
   if (!isRecord(v) || v['t'] !== 'input') return false;
   switch (v['kind']) {
@@ -378,18 +406,22 @@ export function isInputMessage(v: unknown): v is InputMessage {
   }
 }
 
+/** Type guard for a `sub` (topic subscribe) frame. */
 export function isSubMessage(v: unknown): v is SubMessage {
   return isRecord(v) && v['t'] === 'sub' && isInt(v['id']) && isTopic(v['topic']);
 }
 
+/** Type guard for an `unsub` (topic unsubscribe) frame. */
 export function isUnsubMessage(v: unknown): v is UnsubMessage {
   return isRecord(v) && v['t'] === 'unsub' && isInt(v['id']) && isTopic(v['topic']);
 }
 
+/** Type guard for a pixel-flow-control `ack` frame. */
 export function isAckMessage(v: unknown): v is AckMessage {
   return isRecord(v) && v['t'] === 'ack' && v['what'] === 'pixels' && isInt(v['frameId']);
 }
 
+/** Type guard for any valid client-to-server message. */
 export function isClientMessage(v: unknown): v is ClientMessage {
   return (
     isCallMessage(v) ||

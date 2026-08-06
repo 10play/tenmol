@@ -39,6 +39,7 @@ export interface CompositorTransport {
   isConnected?(): boolean;
 }
 
+/** Construction options for {@link createCompositor}. */
 export interface CompositorOptions {
   transport: CompositorTransport;
   /** Start drawing `rep` in Mode G (the caller re-requests its geometry). */
@@ -51,6 +52,7 @@ export interface CompositorOptions {
   declare?: boolean;
 }
 
+/** Decides per rep whether the client draws it (Mode G) or the server does. */
 export interface Compositor {
   readonly state: CompositionState;
   /** True when this rep is ours to draw right now. Gate `renderer.apply` on it. */
@@ -80,11 +82,13 @@ export interface Compositor {
   destroy(): void;
 }
 
+/** The bridge symbol that toggles the Mode-P pixel producer. */
 export const PIXEL_STREAM_FN = '_bridge.set_pixel_stream';
 
 /** "the server rasterises nothing", used when there is no Mode-P stream. */
 const NO_STREAM: CompositionFrame = { reps: [] };
 
+/** Build a {@link Compositor} wired to the given transport and draw hooks. */
 export function createCompositor(options: CompositorOptions): Compositor {
   const { transport } = options;
   let states: readonly RepRenderState[] = [];

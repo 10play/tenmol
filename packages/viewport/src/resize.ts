@@ -24,6 +24,7 @@
 
 import type { ViewportTransport } from './types';
 
+/** The viewport's measured size: CSS box, device-pixel-ratio, and the device pixels the engine renders at. */
 export interface SizeState {
   cssWidth: number;
   cssHeight: number;
@@ -33,6 +34,7 @@ export interface SizeState {
   height: number;
 }
 
+/** Options for the resize negotiator: the host element, transport, DPR clamp, and debounce. */
 export interface ResizeNegotiatorOptions {
   /** Element whose CSS box defines the viewport. */
   host: HTMLElement;
@@ -46,6 +48,7 @@ export interface ResizeNegotiatorOptions {
   onError?: (error: Error) => void;
 }
 
+/** Handle to the resize negotiator: current size, a manual `sync`, and teardown. */
 export interface ResizeNegotiator {
   readonly size: SizeState;
   /** Measure now; `force` re-sends even if nothing changed (socket reconnect). */
@@ -58,6 +61,7 @@ function currentDpr(max: number): number {
   return Math.min(raw, max);
 }
 
+/** Start watching the host's size and pushing debounced reshape frames to the engine. */
 export function createResizeNegotiator(options: ResizeNegotiatorOptions): ResizeNegotiator {
   const { host, transport } = options;
   const maxDpr = options.maxDpr ?? 2;

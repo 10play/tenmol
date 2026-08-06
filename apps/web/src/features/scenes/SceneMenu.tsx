@@ -25,6 +25,7 @@ interface Props {
 
 type Open = 'append' | 'recall' | 'store' | 'clear' | 'cache' | null;
 
+/** The Scene menu (`_gui.py:775-805`) as a cascading DOM menu. */
 export function SceneMenu({ current, scenes, buttons, onRun, onCommand }: Props) {
   const [open, setOpen] = useState<Open>(null);
   const toggle = (name: Open) => setOpen(open === name ? null : name);

@@ -37,6 +37,7 @@ import {
   busyVisible,
 } from './orthoOverlays';
 
+/** The viewport busy/progress bar, portaled over the canvas during long jobs. */
 export function BusyOverlay() {
   const session = useSession();
   const progress = useStore(session.stores.connection, (s) => s.progress);

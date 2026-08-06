@@ -182,6 +182,7 @@ function buildBlock(
  * The entry point
  * ------------------------------------------------------------------ */
 
+/** Options for `buildGeometry`, currently just the device pixel ratio. */
 export interface BuildOptions {
   /** Framebuffer pixels per CSS pixel; only the point (dots) path uses it. */
   pixelRatio?: number;
@@ -201,6 +202,7 @@ export function unmappedCensus(header: unknown): string | null {
   return parts.length === 0 ? null : parts.join(', ');
 }
 
+/** Turn a decoded Mode-G geometry frame into a renderable Three.js group. */
 export function buildGeometry(frame: GeometryFrame, options: BuildOptions = {}): BuiltGeometry {
   const header = frame.header;
   const key = geometryKey(header);

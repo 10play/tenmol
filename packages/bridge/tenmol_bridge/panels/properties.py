@@ -53,10 +53,19 @@ ITERATE_ONLY: tuple = (
 
 
 class PropsAPI:
+    """Bridge-side accessor for atom-level builtins and custom properties.
+
+    Attached to ``pymol.cmd`` under :data:`ATTR`, it exposes the iterate-only
+    builtins and ``p.all`` custom properties for a single atom addressed by
+    model plus index, so the Properties panel can read what ``get_model``
+    cannot reach.
+    """
+
     def __init__(self, cmd: Any) -> None:
         self._cmd = cmd
 
     def hello(self) -> Dict[str, Any]:
+        """Return the panel's capability handshake: attach attr and iterate-only keys."""
         return {"ok": True, "attr": ATTR, "iterateOnly": list(ITERATE_ONLY)}
 
     def atom_extras(
@@ -140,6 +149,7 @@ def install(cmd: Optional[Any] = None) -> Dict[str, Any]:
 
 
 def uninstall(cmd: Optional[Any] = None) -> bool:
+    """Detach the :class:`PropsAPI` from ``pymol.cmd``; return whether one was present."""
     if cmd is None:
         import pymol
 
@@ -151,6 +161,7 @@ def uninstall(cmd: Optional[Any] = None) -> bool:
 
 
 def installed(cmd: Optional[Any] = None) -> bool:
+    """Return whether a :class:`PropsAPI` is currently attached to ``pymol.cmd``."""
     if cmd is None:
         import pymol
 

@@ -46,26 +46,31 @@ import { createStore, type Store } from './createStore';
  * Transport shape (structural — the store never sees a socket)
  * ------------------------------------------------------------------ */
 
+/** A `{t:'call'}` transport: a dotted `cmd.*` symbol invoked over the wire. */
 export type SettingsCall = <T = unknown>(
   fn: string,
   args?: readonly unknown[],
   kwargs?: Readonly<Record<string, unknown>>,
 ) => Promise<T>;
 
+/** A `{t:'do'}` transport: runs one command line through PyMOL's parser. */
 export type SettingsDo = (commandLine: string) => Promise<unknown>;
 
 /* ------------------------------------------------------------------ *
  * State
  * ------------------------------------------------------------------ */
 
+/** One cached setting value plus PyMOL's own rendering of it. */
 export interface SettingEntry {
   value: SettingValue;
   /** `SettingGetTextPtr` rendering: `on`/`off`, `%d`, `%1.5f`, colour NAME. */
   text: string;
 }
 
+/** Lifecycle of the settings service: idle until bootstrapped, then ready. */
 export type SettingsPhase = 'idle' | 'bootstrapping' | 'ready' | 'error';
 
+/** The full settings-store snapshot: catalogue, value cache, and tap cursor. */
 export interface SettingsState {
   phase: SettingsPhase;
   catalogue: SettingCatalogue | null;
@@ -83,6 +88,7 @@ export interface SettingsState {
   rejected: Readonly<Record<number, string>>;
 }
 
+/** The settings store: state plus the mutators the source drives it with. */
 export interface SettingsStore extends Store<SettingsState> {
   applyCatalogue(catalogue: SettingCatalogue): void;
   applyValues(reply: SettingValuesReply): void;
@@ -103,6 +109,7 @@ export function valueKey(index: number, object = '', state = 0): string {
   return `${index}|${object}|${state}`;
 }
 
+/** Build an empty settings store in the `idle` phase. */
 export function createSettingsStore(): SettingsStore {
   const store = createStore<SettingsState>({
     phase: 'idle',
@@ -161,6 +168,7 @@ export function createSettingsStore(): SettingsStore {
  * Catalogue helpers (pure)
  * ------------------------------------------------------------------ */
 
+/** Build by-index and by-name lookup maps over a catalogue's settings. */
 export function indexSettings(catalogue: SettingCatalogue | null): {
   byIndex: Map<number, SettingMeta>;
   byName: Map<string, SettingMeta>;
@@ -234,6 +242,7 @@ const SCOPES_BY_LEVEL: Record<SettingLevel, readonly SettingScope[]> = {
   'bond-state': ['global', 'object', 'object-state', 'bond', 'bond-state'],
 };
 
+/** The scopes a setting of this level may be written at. */
 export function scopesForLevel(level: SettingLevel): readonly SettingScope[] {
   return SCOPES_BY_LEVEL[level] ?? ['global'];
 }
@@ -280,6 +289,7 @@ function booleanWord(raw: string): number | null {
   return keys.length === 1 || values.size === 1 ? (BOOLEAN_WORDS[keys[0] as string] as number) : null;
 }
 
+/** Thrown when an editor's value cannot be coerced into what `cmd.set` accepts. */
 export class SettingCoercionError extends Error {}
 
 /**
@@ -424,6 +434,7 @@ const FN = {
   drain: 'setting.tenmol_settings_drain',
 } as const;
 
+/** What `createSettingsSource` needs: the two transports, the store, and a hook. */
 export interface SettingsSourceOptions {
   call: SettingsCall;
   do: SettingsDo;
@@ -432,6 +443,7 @@ export interface SettingsSourceOptions {
   onChanged?: (indices: readonly number[], full: boolean) => void;
 }
 
+/** The bridge-facing side of settings: bootstrap, poll, refresh, and every write. */
 export interface SettingsSource {
   /** Install the backend module if needed and load catalogue + all values. */
   bootstrap(): Promise<void>;
@@ -475,6 +487,7 @@ export interface SettingsSource {
   serviceStatus(): Promise<SettingServiceStatus | null>;
 }
 
+/** Wire a settings store to the bridge: read-back-verified writes and a lossless tap poll. */
 export function createSettingsSource(options: SettingsSourceOptions): SettingsSource {
   const { call, store } = options;
   const runLine = options.do;

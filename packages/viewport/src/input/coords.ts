@@ -28,6 +28,7 @@ export interface SurfaceGeometry {
   dpr: number;
 }
 
+/** The minimal pointer shape `toPymolPoint` needs: client X/Y. */
 export interface PointerLike {
   clientX: number;
   clientY: number;

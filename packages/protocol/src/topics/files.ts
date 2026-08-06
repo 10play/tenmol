@@ -49,6 +49,7 @@ export const FILES_BOOTSTRAP = 'import tenmol_bridge.panels.files as _tf; _tf.in
  * Path browsing
  * -------------------------------------------------------------------------- */
 
+/** One entry in a directory listing. */
 export interface FsEntry {
   name: string;
   /** Absolute server path. */
@@ -61,6 +62,7 @@ export interface FsEntry {
   ext: string;
 }
 
+/** A directory's contents plus the anchors the picker navigates by. */
 export interface FsListing {
   path: string;
   /** null at the filesystem root. */
@@ -74,6 +76,7 @@ export interface FsListing {
   truncated: boolean;
 }
 
+/** `stat()` of one path, as the save dialog needs it. */
 export interface FsStat {
   path: string;
   exists: boolean;
@@ -84,6 +87,7 @@ export interface FsStat {
   writable: boolean;
 }
 
+/** A named shortcut (home, cwd, …) in the picker's sidebar. */
 export interface FsPlace {
   label: string;
   path: string;
@@ -146,6 +150,7 @@ export interface FileClassification {
   partial?: 0 | 1;
 }
 
+/** The classified per-file steps of a multi-file open. */
 export interface OpenPlan {
   steps: FileClassification[];
   count: number;
@@ -165,14 +170,17 @@ export const PARTIAL_CHOICES = [
   { id: 'partial', label: 'Merge with current session (partial load)' },
   { id: 'new', label: 'Open in new PyMOL Window' },
 ] as const;
+/** Which of the three partial-load radio choices the user picked. */
 export type PartialChoice = (typeof PARTIAL_CHOICES)[number]['id'];
 
+/** Inputs for the trajectory (`traj`) load dialog. */
 export interface TrajDialogInfo {
   objects: string[];
   ok: boolean;
   message: string;
 }
 
+/** Inputs for the map (`map`) load dialog. */
 export interface MapDialogInfo {
   objectName: string;
   /** `normalize_ccp4_maps` or `normalize_o_maps`. */
@@ -191,6 +199,7 @@ export interface AlnDialogInfo {
   error: string | null;
 }
 
+/** Inputs for the Maestro (`.mae`) load dialog. */
 export interface MaeDialogInfo {
   objectName: string;
   objectProps: string;
@@ -199,12 +208,14 @@ export interface MaeDialogInfo {
   unavailable: string | null;
 }
 
+/** One multiplex/discrete loading option offered by the `.mae` dialog. */
 export interface MaeMultiplexChoice {
   label: string;
   multiplex: number;
   discrete: number;
 }
 
+/** Inputs for the Incentive-only `load_mtz` reflection dialog. */
 export interface MtzDialogInfo {
   unavailable: string | null;
   amplitudes: string[];
@@ -261,6 +272,7 @@ export interface MapGenerateInfo {
   error: string | null;
 }
 
+/** Outcome of `cmd.map_generate` and the representations it built. */
 export interface MapGenerateResult {
   ok: boolean;
   prefix: string;
@@ -284,6 +296,7 @@ export interface MapGenerateResult {
  * macOS Finder "Open With" — `pymol_qt_gui.py:1136-1160`
  * -------------------------------------------------------------------------- */
 
+/** The macOS Finder "Open With" load plan for a single file. */
 export interface OpenWithPlan {
   filename: string;
   reuseHelper: boolean;
@@ -298,6 +311,7 @@ export interface OpenWithPlan {
   classification: FileClassification;
 }
 
+/** The setting snapshot a `.psw` presentation applies, and the previous values. */
 export interface PresentationPreset {
   previous: Record<string, string>;
   current: Record<string, string>;
@@ -320,6 +334,7 @@ export const PLUGIN_DIALOG_KINDS = [
   'asksaveasfilename',
   'askdirectory',
 ] as const;
+/** Which `tkFileDialog` entry point a blocked plugin is waiting inside. */
 export type PluginDialogKind = (typeof PLUGIN_DIALOG_KINDS)[number];
 
 /**
@@ -420,12 +435,14 @@ export interface ProduceResult {
   size?: number;
 }
 
+/** What the Save Session dialog reads on open. */
 export interface SessionFileInfo {
   path: string;
   hasPath: boolean;
   filters: string[];
 }
 
+/** One geometry export format the save dialog offers. */
 export interface GeometryExport {
   label: string;
   filter: string;
@@ -444,9 +461,12 @@ export const PNG_RENDERING_MODES = [
   'ray trace with opaque background',
   'ray trace with transparent background',
 ] as const;
+/** One of the four PNG-dialog rendering choices. */
 export type PngRenderingMode = (typeof PNG_RENDERING_MODES)[number];
 
+/** The movie encoders the movie dialog can drive; `''` means none found. */
 export type MovieEncoder = '' | 'ffmpeg' | 'mpeg_encode' | 'convert';
+/** The movie container formats offered by the export dialog. */
 export type MovieFormat = 'png' | 'mp4' | 'mpg' | 'mov' | 'gif';
 
 /** `file_dialogs.py:702-707` — which encoder writes which container. */
@@ -457,6 +477,7 @@ export const MOVIE_ENCODER_SUPPORT: Record<MovieEncoder, Record<string, 0 | 1>> 
   convert: { mp4: 0, mpg: 0, mov: 0, gif: 1 },
 };
 
+/** Everything the Save Movie dialog reads on open. */
 export interface MovieDialogInfo {
   width: number;
   height: number;
@@ -470,6 +491,7 @@ export interface MovieDialogInfo {
   frames: number;
 }
 
+/** Size and DPI options for the still-image render dialog. */
 export interface RenderInfo {
   width: number;
   height: number;
@@ -483,6 +505,7 @@ export interface RenderInfo {
  * Logs, scripts, fetch, transfer
  * -------------------------------------------------------------------------- */
 
+/** Current command-logging state and the log-file filters. */
 export interface LogStatus {
   /** 0 off, 1 pml, 2 python (`commanding.py:107-155`). */
   logging: 0 | 1 | 2 | number;
@@ -491,6 +514,7 @@ export interface LogStatus {
   filters: string[];
 }
 
+/** One script to run, with the `cd` that precedes it. */
 export interface RunStep {
   filename: string;
   /** `cmd.cd(dirname)` runs BEFORE the script (`pymol_qt_gui.py:860-861`). */
@@ -499,11 +523,13 @@ export interface RunStep {
   command: string;
 }
 
+/** The ordered scripts a Run dialog will execute. */
 export interface RunPlan {
   steps: RunStep[];
   filters: string[];
 }
 
+/** The fetch defaults (path, host, assembly) the Fetch dialog reads. */
 export interface FetchInfo {
   /** `fetch_path` expanded through `exp_path`. */
   fetchPath: string;
@@ -524,6 +550,7 @@ export interface PdbeLookup {
   error: string | null;
 }
 
+/** Result of a file download, with the body inlined when small enough. */
 export interface DownloadResult {
   path: string;
   ok: boolean;
@@ -534,6 +561,7 @@ export interface DownloadResult {
   error: string | null;
 }
 
+/** Result of writing an uploaded file to the server. */
 export interface UploadResult {
   ok: boolean;
   path: string;
@@ -541,6 +569,7 @@ export interface UploadResult {
   error: string | null;
 }
 
+/** One entry of the Open Recent list. */
 export interface RecentEntry {
   path: string;
   /** `'...' + path.slice(-120)` when >= 128 chars (`pymol_qt_gui.py:367-375`). */
@@ -553,6 +582,7 @@ export interface RecentEntry {
  * hello()
  * -------------------------------------------------------------------------- */
 
+/** The file service's `hello()` snapshot: cwd, filters, formats, and capabilities. */
 export interface FilesHello {
   installed: true;
   cwd: string;

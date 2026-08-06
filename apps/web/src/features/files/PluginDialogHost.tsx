@@ -139,6 +139,7 @@ export function requestFromDialogPayload(payload: DialogPayload): PluginDialogRe
   };
 }
 
+/** Renders the browser-side file/message dialogs the bridge raises, and answers them. */
 export function PluginDialogHost() {
   const session = useSession();
   const api = useMemo(

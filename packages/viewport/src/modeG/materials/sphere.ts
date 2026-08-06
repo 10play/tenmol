@@ -126,10 +126,12 @@ void main() {
 }
 `;
 
+/** Uniform bag for the impostor shaders: a name-keyed map of `{ value }` cells. */
 export interface ImpostorUniforms {
   [key: string]: { value: unknown };
 }
 
+/** Build the ray-traced sphere-impostor material used by Mode G. */
 export function createSphereMaterial(): RawShaderMaterial {
   return new RawShaderMaterial({
     glslVersion: GLSL3,

@@ -187,6 +187,7 @@ export function loopKindFor(
  */
 export const DEFAULT_MODE: ModeName = 'three_button_viewing';
 
+/** Resolve a `button_mode_name` display string back to its internal mode key. */
 export function modeFromDisplayName(displayName: string): ModeName {
   for (const [key, label] of Object.entries(MODE_NAME_DICT)) {
     if (label === displayName && isModeName(key)) return key;
@@ -196,6 +197,7 @@ export function modeFromDisplayName(displayName: string): ModeName {
   return isModeName(displayName) ? displayName : DEFAULT_MODE;
 }
 
+/** The 80-slot mouse-mode table for a `button_mode_name` display string. */
 export function tableForDisplayName(displayName: string): number[] {
   return tableForMode(modeFromDisplayName(displayName));
 }

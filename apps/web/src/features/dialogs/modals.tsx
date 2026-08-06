@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_TEXT_DIALOG_WIDTH } from '../volume/ramp';
 import './dialogs.css';
 
+/** Modal showing read-only text with copy and close actions. */
 export function TextDialog({
   title,
   text,
@@ -62,6 +63,7 @@ export function TextDialog({
   );
 }
 
+/** Configuration for a NumberPrompt: title, initial value, and bounds. */
 export interface NumberPromptSpec {
   title: string;
   value: number;
@@ -127,8 +129,10 @@ export function NumberPrompt({
   );
 }
 
+/** The three outcomes of a confirmation prompt. */
 export type ConfirmAnswer = 'yes' | 'no' | 'cancel';
 
+/** Modal yes/no/cancel confirmation prompt. */
 export function ConfirmPrompt({
   title,
   message,

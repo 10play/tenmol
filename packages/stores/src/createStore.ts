@@ -19,10 +19,13 @@
  */
 
 export type Listener<T> = (state: T, previous: T) => void;
+/** Detaches a previously registered listener. */
 export type Unsubscribe = () => void;
 
+/** A patch to merge, either a partial value or a function of the previous state. */
 export type Updater<T> = Partial<T> | ((previous: T) => Partial<T>);
 
+/** A minimal observable state container: read, shallow-merge, and subscribe. */
 export interface Store<T extends object> {
   /** The current snapshot. Stable identity until the next `set`. */
   get(): T;
@@ -38,6 +41,7 @@ export interface Store<T extends object> {
   listenerCount(): number;
 }
 
+/** Creates a framework-free store with immutable snapshots and synchronous notification. */
 export function createStore<T extends object>(initial: T): Store<T> {
   let state = initial;
   const listeners = new Set<Listener<T>>();

@@ -31,6 +31,13 @@ __all__ = ["Engine", "EngineState"]
 
 
 class EngineState:
+    """The engine's lifecycle states, from ``NEW`` through ``STOPPED``.
+
+    ``HEADLESS`` and ``DEGRADED`` are the two partial-boot outcomes: the former
+    has PyMOL but no GL context, the latter has no PyMOL at all — in both the
+    server stays up so the front-end remains developable.
+    """
+
     NEW = "new"
     BOOTING = "booting"
     RUNNING = "running"
@@ -399,6 +406,12 @@ class Engine:
     # -------------------------------------------------------------- shutdown
 
     def shutdown(self) -> None:
+        """Stop PyMOL, release the GL context, and mark the engine STOPPED.
+
+        Idempotent.  The ``pcatch`` feedback hook is uninstalled before
+        ``p.stop()`` because stopping PyMOL nulls its globals, after which a
+        still-installed pcatch would silently drop every subsequent write.
+        """
         if self.state == EngineState.STOPPED:
             return
         # pcatch MUST come out before p.stop(): SingletonPyMOLGlobals is nulled
@@ -423,6 +436,7 @@ class Engine:
     # --------------------------------------------------------------- status
 
     def status(self) -> Dict[str, Any]:
+        """A JSON-safe snapshot of engine state, versions, and tick counters."""
         return {
             "state": self.state,
             "pymolVersion": self.pymol_version,
@@ -439,6 +453,7 @@ class Engine:
         }
 
     def assert_thread(self) -> None:
+        """Raise if called off the engine thread, guarding PyMOL's thread affinity."""
         if self.thread_ident is not None and threading.get_ident() != self.thread_ident:
             raise RuntimeError(
                 "PyMOL touched from thread %s; the engine thread is %s"
@@ -446,6 +461,7 @@ class Engine:
             )
 
     def require_pymol(self) -> Any:
+        """The ``cmd`` API, or raise :class:`PyMOLUnavailable` in a degraded process."""
         if self.cmd is None:
             raise PyMOLUnavailable(
                 "PyMOL is not available in this bridge process: %r" % (self.error,)

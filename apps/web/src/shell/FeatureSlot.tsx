@@ -33,6 +33,7 @@ function componentFor(id: string): ComponentType | null {
   return Lazy;
 }
 
+/** Renders one registry slot: lazy-loads its feature, or shows the absent note. */
 export function FeatureSlot({ id, className }: { id: string; className?: string }) {
   const session = useSession();
   const slot = getSlot(id);

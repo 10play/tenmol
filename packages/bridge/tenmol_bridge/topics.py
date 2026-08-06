@@ -94,6 +94,11 @@ class UnknownTopic(ValueError):
 
 
 def validate_topic(topic: Any) -> str:
+    """Return ``topic`` unchanged if it is one of the closed v1 topics, else raise.
+
+    Raises :class:`UnknownTopic` for any value that is not a string in
+    :data:`TOPICS`, so callers can trust the returned name.
+    """
     if not isinstance(topic, str) or topic not in TOPICS:
         raise UnknownTopic(topic)
     return topic
@@ -105,16 +110,27 @@ def validate_topic(topic: Any) -> str:
 
 
 def hello_frame(pymol_version: str) -> Dict[str, Any]:
+    """Build the ``hello`` handshake frame sent to a client on connect.
+
+    Carries the running PyMOL version and the wire :data:`PROTOCOL_VERSION`
+    so the client can reject a mismatched server.
+    """
     return {"t": T_HELLO, "pymolVersion": pymol_version,
             "protocolVersion": PROTOCOL_VERSION}
 
 
 def ok_frame(msg_id: Optional[int], result: Any) -> Dict[str, Any]:
+    """Build a successful reply frame correlating ``result`` to a request ``msg_id``."""
     return {"id": msg_id, "t": T_OK, "result": result}
 
 
 def err_frame(msg_id: Optional[int], type_: str, message: str,
               traceback_: str = "") -> Dict[str, Any]:
+    """Build an error reply frame for request ``msg_id``.
+
+    Packs the error type, human-readable message and an optional traceback
+    string into the nested ``error`` object the client expects.
+    """
     return {
         "id": msg_id,
         "t": T_ERR,
@@ -123,10 +139,16 @@ def err_frame(msg_id: Optional[int], type_: str, message: str,
 
 
 def event_frame(topic: str, seq: int, payload: Any) -> Dict[str, Any]:
+    """Build an unsolicited event frame for a subscribed ``topic``.
+
+    The per-connection-per-topic ``seq`` lets the client detect dropped
+    events without the server tracking global state.
+    """
     return {"t": T_EVENT, "topic": topic, "seq": seq, "payload": payload}
 
 
 def feedback_frame(lines: Iterable[str]) -> Dict[str, Any]:
+    """Build a feedback frame carrying PyMOL console output ``lines``."""
     return {"t": T_FEEDBACK, "lines": list(lines)}
 
 
@@ -201,12 +223,22 @@ class Subscriptions:
         self._seq: Dict[str, int] = {}
 
     def add(self, topic: str) -> str:
+        """Subscribe this connection to ``topic``, seeding its sequence counter at 0.
+
+        Validates the topic first and returns the canonical name.
+        """
         topic = validate_topic(topic)
         self._topics.add(topic)
         self._seq.setdefault(topic, 0)
         return topic
 
     def remove(self, topic: str) -> str:
+        """Unsubscribe this connection from ``topic`` and return its canonical name.
+
+        The sequence counter is retained so a re-subscription resumes from
+        where it left off. Removing a topic that was never subscribed is a
+        no-op.
+        """
         topic = validate_topic(topic)
         self._topics.discard(topic)
         return topic
@@ -218,6 +250,7 @@ class Subscriptions:
         return iter(sorted(self._topics))
 
     def next_seq(self, topic: str) -> int:
+        """Increment and return the next monotonic sequence number for ``topic``."""
         n = self._seq.get(topic, 0) + 1
         self._seq[topic] = n
         return n

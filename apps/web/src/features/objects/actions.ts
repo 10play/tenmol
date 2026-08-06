@@ -16,6 +16,7 @@
 
 import { quoteName, type PanelAction } from '@tenmol/stores';
 
+/** The panel-row commands (group open/close, reorder, (un)group, disable) as {@link PanelAction}s. */
 export const rowActions = {
   /** `cmd.group(name, action='open'|'close')`. */
   groupOpen: (name: string, open: boolean): PanelAction => ({
@@ -67,6 +68,7 @@ export const rowActions = {
  * The drag-to-reorder rules (`Executive.cpp:15809-15935`), as data
  * ------------------------------------------------------------------ */
 
+/** One row as the drag-to-reorder logic sees it: name, group, and role flags. */
 export interface DragRow {
   name: string;
   group: string;
@@ -75,6 +77,7 @@ export interface DragRow {
   isAll: boolean;
 }
 
+/** The resolved outcome of a drop: do nothing, reorder, group, or ungroup. */
 export type DropPlan =
   | { kind: 'none'; why: string }
   | { kind: 'order'; names: [string, string]; location: 'current' | 'upper' }

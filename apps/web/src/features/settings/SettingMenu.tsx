@@ -43,6 +43,7 @@ import {
 } from '../menubar/model';
 import { groupRadios, type MenuGroup } from './menuTree';
 
+/** The live-state and action callbacks the menu renderer needs to render a menu tree. */
 export interface MenuContext {
   /** Live `{type, value}` for a setting name, or undefined while unloaded. */
   valueOf(name: string): MenuSettingValue | undefined;
@@ -56,6 +57,7 @@ export interface MenuContext {
   hookNote(name: string): string;
 }
 
+/** Renders a `menudata` node tree as nested lists, grouping radios into their own group. */
 export function MenuDataRenderer({
   nodes,
   ctx,

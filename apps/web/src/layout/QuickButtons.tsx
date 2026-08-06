@@ -33,6 +33,7 @@ const ROWS: { label: string; cmd: string; title: string }[][] = [
   ],
 ];
 
+/** Renders the External-GUI quick-button grid (Reset, Zoom, Orient, ...), each running a `cmd` verb. */
 export function QuickButtons() {
   const bridge = useBridge();
   return (

@@ -31,6 +31,7 @@ export interface CommandHistory {
 
 const MAX_HISTORY = 255;
 
+/** Hook providing command-line history navigation, a direct port of PyMOL's `_gui.py` behaviour. */
 export function useCommandHistory(): CommandHistory {
   const history = useRef<string[]>(['']);
   const cur = useRef(0);

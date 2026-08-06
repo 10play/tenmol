@@ -53,6 +53,7 @@ __all__ = [
 
 
 def grants_dir() -> str:
+    """Return the absolute path of the ``grants/`` directory beside this module."""
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "grants")
 
 
@@ -105,6 +106,12 @@ def build_policy(
     extra_grants: Optional[Iterable[Grant]] = None,
     directory: Optional[str] = None,
 ) -> Policy:
+    """Build a :class:`Policy` with every on-disk grant plus any extras applied.
+
+    Instantiates the policy with the given danger/confirmation flags, folds in
+    all grants loaded from ``directory`` (defaulting to :func:`grants_dir`) in
+    deterministic order, then any ``extra_grants``.
+    """
     policy = Policy(
         allow_dangerous=allow_dangerous,
         require_confirmation=require_confirmation,

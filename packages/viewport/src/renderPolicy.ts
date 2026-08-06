@@ -24,6 +24,7 @@ import {
   type RepRenderState,
 } from '@tenmol/protocol';
 
+/** What the environment can actually do: Mode-G accessor and WebGL2. */
 export interface RenderPolicyCaps {
   /** The bridge advertised the Mode-G accessor in its `hello` frame. */
   accessor: boolean;
@@ -31,6 +32,7 @@ export interface RenderPolicyCaps {
   webgl: boolean;
 }
 
+/** The live per-rep render-mode policy: query, set and degrade reps. */
 export interface RenderPolicyController {
   readonly policy: RenderModePolicy;
   readonly caps: RenderPolicyCaps;
@@ -49,14 +51,17 @@ export interface RenderPolicyController {
   describe(): string;
 }
 
+/** Construction options for {@link createRenderPolicy}. */
 export interface RenderPolicyOptions {
   initial?: RenderModePolicy;
   caps?: Partial<RenderPolicyCaps>;
   onChange?: (states: RepRenderState[]) => void;
 }
 
+/** The boot policy: everything in Mode P, no per-rep overrides. */
 export const DEFAULT_POLICY: RenderModePolicy = { default: 'pixel', perRep: [] };
 
+/** Build a {@link RenderPolicyController} seeded from the given options. */
 export function createRenderPolicy(options: RenderPolicyOptions = {}): RenderPolicyController {
   const caps: RenderPolicyCaps = {
     accessor: options.caps?.accessor ?? false,

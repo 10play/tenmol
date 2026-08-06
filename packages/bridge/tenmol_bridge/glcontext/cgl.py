@@ -184,6 +184,11 @@ class CGLContext:
     # -- Context protocol ---------------------------------------------------
 
     def make_current(self) -> None:
+        """Bind this CGL context and its FBO to the calling thread for rendering.
+
+        Records the caller as the owner thread and sets the viewport to the
+        current framebuffer size.
+        """
         self._assert_live()
         err = self._cgl.CGLSetCurrentContext(self._ctx)
         _cgl_check(self._cgl, err, "CGLSetCurrentContext")
@@ -202,6 +207,11 @@ class CGLContext:
         self._storage(width, height)
 
     def release(self) -> None:
+        """Delete the FBO, renderbuffers, context and pixel format; idempotent.
+
+        Teardown deliberately swallows every error — a destructor that raised
+        would leave the process in a worse state than a leaked handle.
+        """
         if self._released:
             return
         self._released = True
@@ -232,6 +242,11 @@ class CGLContext:
         self._pix = ctypes.c_void_p()
 
     def info(self) -> Dict[str, Any]:
+        """GL driver and framebuffer diagnostics: vendor, renderer, versions, bit depths.
+
+        Returns just the backend and a released flag once the context has been
+        torn down.
+        """
         if self._released:
             return {"backend": self.backend, "released": True}
         return {
@@ -301,4 +316,5 @@ class CGLContext:
 
 
 def create_context(width: int, height: int) -> CGLContext:
+    """Create an offscreen CGL/FBO context sized ``width`` x ``height`` (macOS backend)."""
     return CGLContext(width, height)

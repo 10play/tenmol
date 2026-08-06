@@ -40,6 +40,7 @@ interface Loaded {
   value: string;
 }
 
+/** The Advanced Settings window: a filterable, virtualised table of every PyMOL setting. */
 export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
   const session = useSession();
   const [names, setNames] = useState<string[]>([]);

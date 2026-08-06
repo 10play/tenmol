@@ -24,6 +24,7 @@ import { EMPTY_SNAPSHOT, probeChanged, type WizardService } from './service';
 /** 6 Hz. A wizard panel changes on user actions, which also `kick()` directly. */
 export const PROBE_INTERVAL_MS = 160;
 
+/** The reactive state a wizard panel reads: latest snapshot, error, loading flag, and a manual refresh. */
 export interface WizardState {
   snapshot: WizardSnapshot;
   /** Transport / policy failure, e.g. the bridge has no WP-16 grant loaded. */
@@ -34,6 +35,7 @@ export interface WizardState {
   kick(): void;
 }
 
+/** Options for useWizard: the service to poll, when polling is allowed, and callbacks. */
 export interface UseWizardOptions {
   service: WizardService;
   /** Poll only while the socket is open. */
@@ -43,6 +45,7 @@ export interface UseWizardOptions {
   onError?(message: string): void;
 }
 
+/** React hook that polls a wizard service and exposes its snapshot, error, and loading state. */
 export function useWizard(options: UseWizardOptions): WizardState {
   const { service, isEnabled } = options;
   const intervalMs = options.intervalMs ?? PROBE_INTERVAL_MS;

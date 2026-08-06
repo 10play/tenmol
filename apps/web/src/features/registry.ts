@@ -36,9 +36,11 @@
 
 import type { ComponentType } from 'react';
 
+/** Where a feature mounts: one of the shell's six layout regions. */
 export type FeatureRegion =
   'menubar' | 'viewport' | 'internal-gui' | 'external-gui' | 'overlay' | 'service';
 
+/** A declared feature directory: its region, owner, order and absent-note. */
 export interface FeatureSlot {
   id: string;
   /** Human name, shown in the "not installed" placeholder and in diagnostics. */
@@ -170,6 +172,7 @@ export const FEATURE_SLOTS: readonly FeatureSlot[] = [
   { id: 'shortcuts', title: 'Shortcuts', region: 'service', owner: 'WP-23', order: 40, absent: '' },
 ];
 
+/** The id of any declared slot. */
 export type FeatureId = (typeof FEATURE_SLOTS)[number]['id'];
 
 /** What `features/<id>/register.ts` must default-export. */
@@ -210,22 +213,27 @@ export const UNDECLARED_FEATURES: readonly string[] = [...BY_ID.keys()].filter(
   (id) => !SLOT_BY_ID.has(id),
 );
 
+/** The slot declared for `id`, or undefined if none is. */
 export function getSlot(id: string): FeatureSlot | undefined {
   return SLOT_BY_ID.get(id);
 }
 
+/** True when a `register.ts` for `id` exists on disk. */
 export function isInstalled(id: string): boolean {
   return BY_ID.has(id);
 }
 
+/** The lazy import loader for `id`'s feature module, if installed. */
 export function loadFeature(id: string): (() => Promise<{ default: FeatureModule }>) | undefined {
   return BY_ID.get(id);
 }
 
+/** All installed feature ids, sorted. */
 export function installedFeatureIds(): readonly string[] {
   return [...BY_ID.keys()].sort();
 }
 
+/** The slots in `region`, in display order. */
 export function slotsForRegion(region: FeatureRegion): readonly FeatureSlot[] {
   return FEATURE_SLOTS.filter((slot) => slot.region === region).sort((a, b) => a.order - b.order);
 }

@@ -39,6 +39,7 @@ import { resolveBridgeConfig, withToken, type BridgeConfig } from './config';
 /** Topics the shell itself consumes. Features subscribe to their own. */
 const SHELL_TOPICS: Topic[] = ['feedback', 'progress', 'objects'];
 
+/** The four shared stores every feature reads through the session. */
 export interface SessionStores {
   connection: ConnectionStore;
   feedback: FeedbackStore;
@@ -46,6 +47,7 @@ export interface SessionStores {
   ui: UiStore;
 }
 
+/** The one socket, stores, and command surface features share via `useSession()`. */
 export interface Session {
   config: BridgeConfig;
   /** The active engine, behind the abstract `Backend` interface. */
@@ -75,6 +77,7 @@ export interface Session {
 
 let singleton: Session | null = null;
 
+/** The module-singleton session, created on first call. */
 export function getSession(): Session {
   if (!singleton) singleton = createSession(resolveBridgeConfig());
   return singleton;
@@ -327,6 +330,7 @@ function toPanelRow(row: ObjectRow): PanelRow {
   };
 }
 
+/** Render any thrown value as a message, prefixed with a `PymolError`'s Python type. */
 export function errorText(error: unknown): string {
   if (error instanceof Error) {
     // `PymolError` carries the Python class name; showing it is the difference

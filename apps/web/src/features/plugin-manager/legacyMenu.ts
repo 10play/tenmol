@@ -24,12 +24,15 @@
 
 /** Minimal slice of `Session`; keeps this module React-free and testable. */
 export type CallFn = <T>(fn: string, args?: readonly unknown[]) => Promise<T>;
+/** Runs a raw command line on the engine; the `run` half of a `Session`. */
 export type RunFn = (line: string) => Promise<void>;
 
+/** Command namespace the plugins bootstrap installs on the engine. */
 export const PLUGINS_NS = 'cmd.tenmol_plugins';
 /** One `{t:'do'}` line; the bootstrap every panel added since wave 5 uses. */
 export const PLUGINS_BOOTSTRAP = '/import tenmol_bridge.panels.plugins as _p;_p.install()';
 
+/** One node in a legacy plugin menu tree: a command, separator, or nested cascade. */
 export interface LegacyMenuItem {
   kind: 'command' | 'separator' | 'menu';
   index: number;
@@ -39,12 +42,14 @@ export interface LegacyMenuItem {
   items?: LegacyMenuItem[];
 }
 
+/** A top-level registered plugin menu and its items. */
 export interface LegacyMenu {
   key: string;
   label: string;
   items: LegacyMenuItem[];
 }
 
+/** Bridge reply to a menu read: the registered menus, or a failure reason. */
 export interface LegacyMenuReply {
   ok: boolean;
   reason?: string;
@@ -52,6 +57,7 @@ export interface LegacyMenuReply {
   keys?: string[];
 }
 
+/** Bridge reply to invoking a leaf: what ran, or the error it raised. */
 export interface InvokeReply {
   ok: boolean;
   label?: string;
@@ -74,12 +80,14 @@ export async function ensureRegistry(call: CallFn, run: RunFn): Promise<void> {
   }
 }
 
+/** Fetch the registered plugin menus, returning `[]` on any failure. */
 export async function readMenu(call: CallFn): Promise<LegacyMenu[]> {
   const reply = await call<LegacyMenuReply>(`${PLUGINS_NS}.menu`);
   if (!reply?.ok || !Array.isArray(reply.menus)) return [];
   return reply.menus;
 }
 
+/** Click a command leaf, addressed by its menu key and index. */
 export async function invokeLeaf(
   call: CallFn,
   key: string,
@@ -106,8 +114,10 @@ export interface LegacyRow {
   clickable: boolean;
 }
 
+/** The root menus `flattenMenus` walks; every other cascade hangs off these. */
 export const ROOT_KEYS = ['Plugin', 'PluginQt'];
 
+/** Flatten the root menus into a depth-tagged list of rows for rendering. */
 export function flattenMenus(menus: readonly LegacyMenu[]): LegacyRow[] {
   const rows: LegacyRow[] = [];
   const walk = (key: string, items: readonly LegacyMenuItem[], depth: number) => {

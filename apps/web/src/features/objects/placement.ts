@@ -27,8 +27,10 @@ export const POP_MARGIN = 3;
 /** `scroll_dy = 10` (`packages/engine/layer4/PopUp.cpp:438`). */
 export const POP_SCROLL_PX = 10;
 
+/** Which side of its parent a submenu opens on. */
 export type Affinity = 'left' | 'right';
 
+/** Result of {@link placeChild}: the chosen side, its x, and whether it still clamped. */
 export interface ChildPlacement {
   left: number;
   affinity: Affinity;
@@ -36,6 +38,7 @@ export interface ChildPlacement {
   clamped: boolean;
 }
 
+/** Geometry {@link placeChild} needs: the parent box, the child width, the viewport, and the inherited side. */
 export interface PlaceChildInput {
   /** The parent menu's box in client coordinates. */
   parentLeft: number;

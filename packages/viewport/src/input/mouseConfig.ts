@@ -52,10 +52,12 @@ export function displayName(mode: string): string {
   return MODE_NAME_DICT[mode] ?? mode;
 }
 
+/** Narrows a string to a known mouse `ModeName`. */
 export function isModeName(value: string): value is ModeName {
   return Object.prototype.hasOwnProperty.call(MODE_DICT, value);
 }
 
+/** Narrows a string to a known mouse-ring `RingName`. */
 export function isRingName(value: string): value is RingName {
   return Object.prototype.hasOwnProperty.call(RING_DICT, value);
 }
@@ -108,6 +110,7 @@ export interface MouseConfigItem {
   command: string;
 }
 
+/** The nine `mouse_config` pop-up entries, in PyMOL's order. */
 export const MOUSE_CONFIG_MENU: readonly MouseConfigItem[] = [
   { kind: 1, label: '3-Button Motions', command: 'cmd.config_mouse("three_button_motions")' },
   { kind: 1, label: '3-Button Editing', command: 'cmd.config_mouse("three_button_editing")' },

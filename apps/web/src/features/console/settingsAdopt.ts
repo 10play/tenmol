@@ -42,6 +42,7 @@ import type { ConsoleSettingName, ConsoleSettings } from '@tenmol/protocol/topic
 /** The settings `engine.py` pins to 0 for viewport geometry. */
 export const BRIDGE_ZEROED: readonly ConsoleSettingName[] = ['internal_feedback', 'movie_panel'];
 
+/** The outcome of adopting remote settings: the patch for the store and the snapshot to keep as `previous`. */
 export interface AdoptResult {
   /** What to merge into the console store. */
   patch: Partial<ConsoleSettings>;

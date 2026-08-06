@@ -35,6 +35,7 @@ import { openPanel, registerMenuHook } from '../../shell/panelHooks';
 /** Event name. `detail.action` is a `FilesPanel` menu id (or a log action). */
 export const FILES_ACTION_EVENT = 'tenmol:files-action';
 
+/** Payload of the files-action event: the action id and, for opens, the paths involved. */
 export interface FilesActionDetail {
   action: string;
   /** Only for `open-paths`: the files to push through the open pipeline. */
@@ -103,6 +104,7 @@ export const FILE_MENU_HOOKS: Readonly<Record<string, string>> = {
  */
 export const EDIT_PYMOLRC_HOOK = 'edit_pymolrc';
 
+/** Lazily loads and opens the pymolrc text editor. */
 export async function openPymolrc(): Promise<void> {
   const { openPymolrcEditor } = await import('../texteditor/openEditor');
   openPymolrcEditor();

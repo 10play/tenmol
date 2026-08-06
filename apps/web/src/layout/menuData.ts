@@ -29,6 +29,7 @@ export type MenuItem =
   | { kind: 'radio'; label: string; setting: string; value: number | string }
   | { kind: 'recent' };
 
+/** One menu-bar heading and the items that drop down from it. */
 export interface TopLevelMenu {
   label: string;
   items: MenuItem[];
@@ -36,6 +37,7 @@ export interface TopLevelMenu {
 
 const sep: MenuItem = { kind: 'separator' };
 
+/** The application menu bar's full contents, in display order. */
 export const MENU_BAR: TopLevelMenu[] = [
   {
     label: 'File',

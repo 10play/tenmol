@@ -63,6 +63,7 @@ export interface ObjectRow {
   states?: number;
 }
 
+/** Topic payload carrying the full list of objects in the session. */
 export interface ObjectsPayload {
   objects: ObjectRow[];
 }
@@ -99,6 +100,7 @@ export interface PanelSettings {
   hide_underscore_names: number;
 }
 
+/** A full snapshot of the objects panel: rows, button ops and panel settings. */
 export interface PanelSnapshot {
   rows: PanelSnapshotRow[];
   /** `get_op_cnt()` — 5, or 6 with `button_mode_name == '3-Button Motions'`. */
@@ -133,6 +135,7 @@ export interface PanelMenuNode {
   lazy?: boolean;
 }
 
+/** The resolved popup menu for one panel row op, ready to render. */
 export interface PanelMenuPayload {
   name: string;
   kind: PanelRowKind;

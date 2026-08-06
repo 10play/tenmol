@@ -108,6 +108,7 @@ export function live(
   return button.cmd !== null || button.action !== undefined;
 }
 
+/** The External-GUI quick-button grid, movie transport, and abort/progress row. */
 export function QuickButtons() {
   const session = useSession();
   const progress = useStore(session.stores.connection, (s) => s.progress);

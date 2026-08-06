@@ -37,9 +37,11 @@ export interface SeqviewMenuPayload {
   items: PanelMenuNode[];
 }
 
+/** The `cmd.do` line that installs the seqview panel helper into the bridge. */
 export const BOOTSTRAP_LINE =
   'from tenmol_bridge.panels import seqview; seqview.install()';
 
+/** The dotted path the seqview source calls the bridge helper through. */
 export const ENTRY_POINT = 'cmd.tenmol_seqview';
 
 /** `{t:'call'}` — `fn` is a dotted path the bridge resolves against `cmd`. */
@@ -49,6 +51,7 @@ export type CallFn = <T = unknown>(
   kwargs?: Readonly<Record<string, unknown>>,
 ) => Promise<T>;
 
+/** The sequence viewer's data and interaction API over the bridge: rows, selection, menus. */
 export interface SeqviewSource {
   /** One poll pass. Bootstraps on the first call and after a reconnect. */
   rows(first: number, count: number): Promise<SeqviewPayload>;
@@ -97,6 +100,7 @@ export interface SeqviewSource {
   reset(): void;
 }
 
+/** Build a seqview source over a bridge `call` function, self-bootstrapping on first use. */
 export function createSeqviewSource(call: CallFn): SeqviewSource {
   let ready: Promise<void> | null = null;
 

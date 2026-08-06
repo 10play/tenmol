@@ -61,6 +61,7 @@ const EMPTY: SeqviewPayload = {
   window: { first: 0, count: WINDOW, max: WINDOW },
 };
 
+/** PyMOL's `CSeq` sequence viewer as virtualised DOM: renders the visible column window, or nothing when no object has `seq_view` on. */
 export function SequenceViewer(): React.JSX.Element | null {
   const session = useSession();
   const phase = useStore(session.stores.connection, (s) => s.phase);

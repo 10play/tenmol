@@ -47,6 +47,7 @@ import { createCylinderMaterial } from './materials/cylinder';
 import { createSphereMaterial } from './materials/sphere';
 import { createVertexMaterial } from './materials/vertex';
 
+/** The Three.js output of building one geometry frame, with stats and problems. */
 export interface BuiltGeometry {
   key: string;
   object: Object3D;
@@ -291,6 +292,7 @@ export function isEmptyGeometryFrame(header: GeometryFrameHeader): boolean {
  * The entry point
  * ------------------------------------------------------------------ */
 
+/** Turn a decoded geometry frame into a drawable {@link BuiltGeometry}. */
 export function buildGeometry(frame: GeometryFrame): BuiltGeometry {
   const header = frame.header;
   const key = geometryKey(header);

@@ -43,6 +43,7 @@ import {
 import { findByName, type PaletteState } from './palette';
 import { useColorAction } from './usePalette';
 
+/** Props for `SwatchGrid`: the loaded palette and the selection to colour. */
 export interface SwatchGridProps {
   palette: PaletteState;
   /** The selection every command is applied to. */
@@ -51,6 +52,7 @@ export interface SwatchGridProps {
 
 type Submenu = 'elem' | 'chain' | 'ss' | 'rep' | 'spectrum' | 'auto' | 'negative' | null;
 
+/** The "C" colour menu: the by-* submenus above PyMOL's 9-group swatch grid and ramps. */
 export function SwatchGrid({ palette, sele }: SwatchGridProps) {
   const act = useColorAction();
   const [open, setOpen] = useState<Submenu>(null);

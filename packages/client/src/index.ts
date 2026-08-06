@@ -60,6 +60,7 @@ import { PymolConnection, type PymolConnectionOptions } from './connection';
 import { createCmd, type Cmd } from './cmd';
 import type { Backend } from '@tenmol/backend';
 
+/** A connection paired with its `cmd` facade. */
 export interface PymolClient {
   conn: PymolConnection;
   cmd: Cmd;

@@ -34,8 +34,10 @@ export const ROW_FILL = {
   disabled: 0.25,
 } as const;
 
+/** One of the four row fills; a key of {@link ROW_FILL}. */
 export type RowFillName = keyof typeof ROW_FILL;
 
+/** The row state {@link rowFillName} needs to pick a fill. */
 export interface RowFillInput {
   enabled: boolean;
   cloaked: boolean;

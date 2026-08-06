@@ -32,6 +32,7 @@ export const RENDER_STATS_FN = '_bridge.render_stats';
 /** Default poll period. The bridge recomputes the table at 4 Hz. */
 export const DEFAULT_POLL_MS = 250;
 
+/** Configuration for `createInvalidationPoller`: transport, table callback and timing. */
 export interface InvalidationPollerOptions {
   /** Anything with `call(fn, args, kwargs)`. */
   transport: {
@@ -46,6 +47,7 @@ export interface InvalidationPollerOptions {
   onError?: (error: Error) => void;
 }
 
+/** Live counters exposing what the invalidation poller has observed. */
 export interface InvalidationPollerStats {
   /** Round trips issued. */
   polls: number;
@@ -61,6 +63,7 @@ export interface InvalidationPollerStats {
   push: boolean;
 }
 
+/** Handle to a running invalidation poller: start/stop, one-shot poll and stats. */
 export interface InvalidationPoller {
   readonly stats: InvalidationPollerStats;
   start(): void;
@@ -70,6 +73,7 @@ export interface InvalidationPoller {
   readonly running: boolean;
 }
 
+/** Build a poller that watches the bridge version table and reports each epoch change. */
 export function createInvalidationPoller(options: InvalidationPollerOptions): InvalidationPoller {
   const { transport, onTable } = options;
   const intervalMs = Math.max(16, options.intervalMs ?? DEFAULT_POLL_MS);
