@@ -165,7 +165,7 @@ export class Engine {
 
     // A line with a recognized PyMOL command runs the command language.
     if (anyKnown) {
-      this.appendFeedback(`PyMOL>${line}`);
+      this.appendFeedback(`tenmol>${line}`);
       for (const { keyword, args } of commands) {
         if (!KNOWN_KEYWORDS.has(keyword)) continue;
         try {
@@ -184,7 +184,7 @@ export class Engine {
     // point of a web port: PyMOL's console runs Python; here it runs JS,
     // client-side, with the `cmd` API in scope. `/expr` is the explicit escape,
     // and a bare line works too (PyMOL treats a bare non-command line as code).
-    this.appendFeedback(`PyMOL>${line}`);
+    this.appendFeedback(`tenmol>${line}`);
     this.runJs(line.trim().replace(/^\//, ''));
   }
 

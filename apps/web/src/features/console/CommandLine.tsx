@@ -288,7 +288,7 @@ export function CommandLine() {
         htmlFor="command_line"
         title={offline ? 'not connected — commands will not execute' : 'cmd.do'}
       >
-        PyMOL&gt;
+        tenmol&gt;
       </label>
       <input
         id="command_line"

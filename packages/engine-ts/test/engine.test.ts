@@ -331,7 +331,7 @@ describe('LocalBackend', () => {
     backend.on('feedback', ({ lines: l }) => lines.push(...l));
     await backend.connect();
     await backend.do('console.log("YO")');
-    expect(lines.some((l) => l.startsWith('PyMOL>console.log'))).toBe(true);
+    expect(lines.some((l) => l.startsWith('tenmol>console.log'))).toBe(true);
     expect(lines.some((l) => l === 'YO')).toBe(true);
   });
 
@@ -365,6 +365,6 @@ describe('LocalBackend', () => {
     await backend.connect();
     await backend.call('read_pdbstr', [SMALL_PDB, 'm']);
     await backend.do('color cyan, chain A');
-    expect(lines.some((l) => l.startsWith('PyMOL>color cyan'))).toBe(true);
+    expect(lines.some((l) => l.startsWith('tenmol>color cyan'))).toBe(true);
   });
 });

@@ -81,7 +81,7 @@ export function StatusBar() {
       )}
       <span className="statusbar__sep">·</span>
       <span className="statusbar__text statusbar__text--dim">
-        {connection.hello ? `PyMOL ${connection.hello.pymolVersion}` : 'PyMOL —'}
+        {connection.hello ? `tenmol · ${connection.hello.pymolVersion}` : 'tenmol —'}
         {engine !== 'running' && engine !== 'unknown' ? ` (${engine})` : ''}
       </span>
     </div>

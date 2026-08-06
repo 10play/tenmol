@@ -66,9 +66,15 @@ export interface OrthoLine {
   kind: OrthoLineKind;
 }
 
-/** `strncmp(str, I->Prompt, 6) == 0` (`packages/engine/layer1/Ortho.cpp:1661`). */
+/**
+ * `strncmp(str, I->Prompt, 6) == 0` (`packages/engine/layer1/Ortho.cpp:1661`).
+ *
+ * Recognizes BOTH prompts: the local TypeScript engine echoes `tenmol>`, while
+ * the remote PyMOL bridge echoes its own `PyMOL>` — both are command-prompt
+ * lines and must be styled as such.
+ */
 export function orthoLineKind(text: string): OrthoLineKind {
-  return text.startsWith(ORTHO_PROMPT) ? 'prompt' : 'output';
+  return text.startsWith('tenmol>') || text.startsWith(ORTHO_PROMPT) ? 'prompt' : 'output';
 }
 
 /* ------------------------------------------------------------------ *

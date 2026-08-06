@@ -51,7 +51,7 @@ export function ConnectionOverlay() {
   return (
     <div className="connpanel" role="dialog" aria-label="bridge connection">
       <div className="connpanel__box">
-        <div className="connpanel__title">no PyMOL bridge</div>
+        <div className="connpanel__title">no tenmol backend</div>
 
         <dl className="connpanel__facts">
           <dt>state</dt>

@@ -525,7 +525,7 @@ export function qtInitialWindowSize(options: InvocationOptions): { width: number
  */
 export function windowTitle(sessionFile: string | null | undefined): string {
   const path = (sessionFile ?? '').trim();
-  if (path === '') return 'PyMOL';
+  if (path === '') return 'tenmol';
   const base = path.split(/[\\/]/).pop() ?? path;
-  return `PyMOL (${base})`;
+  return `tenmol (${base})`;
 }

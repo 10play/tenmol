@@ -159,7 +159,7 @@ function createSession(initialConfig: BridgeConfig): Session {
     stores.connection.setHello(hello);
     const engine = (hello as { state?: string }).state ?? 'running';
     stores.feedback.appendClient(
-      `-- connected to PyMOL ${hello.pymolVersion} (protocol v${hello.protocolVersion}, engine ${engine}) --`,
+      `-- connected to tenmol ${hello.pymolVersion} (protocol v${hello.protocolVersion}, engine ${engine}) --`,
     );
     if (engine !== 'running') {
       stores.feedback.appendClient(
@@ -213,7 +213,7 @@ function createSession(initialConfig: BridgeConfig): Session {
     if (!conn.isOpen) {
       // Offline: nothing will echo it back, so echo it here (and only here —
       // double echo was a real bug, plan §6 WP-11).
-      stores.feedback.appendClient(`PyMOL>${line}`, 'prompt');
+      stores.feedback.appendClient(`tenmol>${line}`, 'prompt');
       stores.feedback.appendClient(' not connected to a bridge; command not executed', 'error');
       return;
     }
