@@ -1,0 +1,297 @@
+---
+title: "TypeScript console & cmd API"
+description: "tenmol runs frontend scripts in JavaScript instead of PyMOL's Python. The console is a client-side JS REPL with the cmd API in scope — the same PyMOL scripts, just in JavaScript."
+---
+
+## Overview
+
+Upstream PyMOL's command line is a **Python** interpreter: type a command verb and it runs
+the command language; type anything else and it is evaluated as Python, with `cmd` in scope
+(`from pymol import cmd`).
+
+tenmol keeps that exact split, but swaps the scripting language. In tenmol the console is a
+**client-side JavaScript REPL** running against the in-browser TypeScript engine
+(`packages/engine-ts/`). The engine is the port's `PyMOL` instance; it exposes the same
+`cmd.*` surface, so the thesis holds:
+
+> **You can run all the same PyMOL scripts — just write them in JavaScript instead of Python.**
+
+`cmd.fragment('ala')` is identical in both languages. Only the *host language* changes: `for`
+loops, `let`, `===`, and object literals for keyword arguments replace Python's `for … in`,
+assignment, `==`, and `foo=bar` kwargs.
+
+State persists across console lines exactly like a Python REPL: objects you load, selections
+you name, and settings you change stay live for the next line.
+
+<Note>
+  This page documents only what the TypeScript engine actually implements today. Symbols that
+  are not yet ported reject with a `NotPorted` error rather than silently no-op — see
+  [What's not yet ported](#whats-not-yet-ported).
+</Note>
+
+## The console
+
+A console line is dispatched by `Engine.do()` (`packages/engine-ts/src/engine.ts`). The rule:
+
+1. **A PyMOL command verb runs the command language.** If the line (split on `;` and
+   newlines) contains any verb in the recognized set, the whole line is parsed as
+   `keyword arg1, arg2, …` and run through the command handlers.
+2. **Everything else is JavaScript.** The line is evaluated as JS with `cmd`, `print`, and
+   `console` in scope. A bare expression prints its value; `print(...)` / `console.log(...)`
+   print to the console; errors are shown, not thrown.
+3. **`import …` / `from … import …` lines are silent.** These are internal plugin bootstraps
+   (real PyMOL runs them in its interpreter); the port stays silent for them.
+4. **`/expr` is the explicit JavaScript escape** — a leading slash forces the rest of the line
+   to run as JS even if it would otherwise look like a command.
+
+### Command language
+
+```
+fragment ala
+show sticks, ala
+color red, elem C
+zoom ala
+```
+
+### JavaScript
+
+```js
+cmd.fragment('ala')                 // → "ala"   (return value is printed)
+cmd.count_atoms('all')              // → 5
+print(cmd.count_atoms('elem C'))    // prints 3
+console.log(cmd.get_names())        // prints ["ala"]
+1 + 1                               // → 2
+```
+
+`cmd.<fn>(...)` calls the engine **synchronously** and returns its value, so you can compose:
+
+```js
+cmd.color(cmd.count_atoms('all') > 3 ? 'red' : 'blue', 'all')
+```
+
+Statements work too — the console tries expression form first, then falls back to statement
+form for loops, `let`, and multiple statements:
+
+```js
+for (let i = 0; i < 3; i++) cmd.fragment('ala')
+```
+
+The explicit escape, when a line would otherwise be read as a command verb:
+
+```
+/cmd.zoom('all')
+```
+
+## Python → JavaScript, side by side
+
+The `cmd` calls are the same. Only the surrounding language changes.
+
+| PyMOL Python | tenmol JavaScript |
+| --- | --- |
+| `cmd.fragment('ala')` | `cmd.fragment('ala')` |
+| `cmd.count_atoms('all')` | `cmd.count_atoms('all')` |
+| `print(cmd.count_atoms('all'))` | `print(cmd.count_atoms('all'))` or `console.log(cmd.count_atoms('all'))` |
+| `for x in range(3): cmd.fragment('ala')` | `for (let i = 0; i < 3; i++) cmd.fragment('ala')` |
+| `n = cmd.count_atoms('all')` | `let n = cmd.count_atoms('all')` |
+| `if n == 5:` | `if (n === 5) { … }` |
+| `cmd.read_pdbstr(pdb, object='m1')` | `cmd.read_pdbstr(pdb, { object: 'm1' })` |
+| `cmd.color('red', 'elem C')` | `cmd.color('red', 'elem C')` |
+
+Key differences:
+
+- **Syntax is JavaScript.** Braces and semicolons, `let`/`const` for variables, `===` for
+  equality, C-style `for` loops.
+- **Keyword arguments become a trailing object.** Python `object='m1'` becomes `{ object: 'm1' }`
+  as the last argument. (The engine reads kwargs from a trailing object for the handlers that
+  accept them, e.g. `read_pdbstr` and `fragment`.)
+- **String arguments stay quoted**, selections included: `cmd.color('red', 'chain A')`.
+- **`print` and `console.log` both route to the console** output, the same place Python `print`
+  writes upstream.
+
+A fuller port, side by side:
+
+```python
+# PyMOL (Python)
+cmd.read_pdbstr(pdb, object='m1')
+cmd.hide('everything', 'm1')
+cmd.show('sticks', 'm1')
+for name in ['red', 'blue']:
+    cmd.color(name, 'elem C')
+print(cmd.count_atoms('all'))
+```
+
+```js
+// tenmol (JavaScript)
+cmd.read_pdbstr(pdb, { object: 'm1' })
+cmd.hide('everything', 'm1')
+cmd.show('sticks', 'm1')
+for (const name of ['red', 'blue']) {
+  cmd.color(name, 'elem C')
+}
+print(cmd.count_atoms('all'))
+```
+
+## The command language
+
+The console recognizes these verbs directly (from `KNOWN_KEYWORDS` in `engine.ts`). Syntax is
+`keyword arg1, arg2`, comma-separated, exactly as in PyMOL. Multiple commands can be separated
+by `;` or newlines.
+
+| Verb | Form | Maps to |
+| --- | --- | --- |
+| `fragment` | `fragment name [, object]` | `cmd.fragment` |
+| `show` | `show rep [, selection]` | `cmd.show` |
+| `hide` | `hide rep [, selection]` | `cmd.hide` |
+| `as` | `as rep [, selection]` | `cmd.show_as` |
+| `color` | `color color [, selection]` | `cmd.color` |
+| `select` | `select name [, selection]` | `cmd.select` |
+| `delete` | `delete name` | `cmd.delete` |
+| `zoom` | `zoom [selection]` | `cmd.zoom` |
+| `orient` | `orient [selection]` | `cmd.orient` |
+| `turn` | `turn axis, angle` | `cmd.turn` |
+| `set` | `set name, value [, selection]` | `cmd.set` |
+| `bg_color` | `bg_color color` | `cmd.bg_color` |
+| `reset` | `reset` | `cmd.reset` |
+
+Any other verb-shaped line is treated as JavaScript instead (a bare line runs as JS; an
+`import` line is silent plumbing).
+
+## The `cmd` API reference
+
+Every symbol below is registered in `Engine.register()`. Call them as `cmd.<name>(...)` from
+the console, or as command verbs where one exists. Signatures show tenmol JS argument order;
+the PyMOL column is the Python equivalent.
+
+### Loading
+
+| tenmol | PyMOL | Description |
+| --- | --- | --- |
+| `cmd.read_pdbstr(pdb, object?)` | `cmd.read_pdbstr` | Parse a PDB string into a new object (atoms, float32 coords, bonds). Returns the object name. Accepts `{ object }` as a trailing kwarg. |
+| `cmd.fragment(name, object?)` | `cmd.fragment` | Load a built-in molecular fragment and frame it. Returns the object name. Built-in names: `gly`, `ala`, `ser`, `cys`, `phe`, `leu`. |
+
+### Objects & selections
+
+| tenmol | PyMOL | Description |
+| --- | --- | --- |
+| `cmd.get_names(what?, enabledOnly?)` | `cmd.get_names` | List names — objects / selections / all — in creation order. Default `what` is `public_objects`. |
+| `cmd.get_object_list()` | `cmd.get_object_list` | List molecular object names. |
+| `cmd.count_atoms(selection?)` | `cmd.count_atoms` | Count atoms matching a selection. Default `all`. |
+| `cmd.select(name?, selection?)` | `cmd.select` | Create a named selection; returns the atom count. Defaults `sele`, `all`. |
+| `cmd.delete(name?)` | `cmd.delete` | Delete an object or named selection. Default `all`. |
+| `cmd.count_states(object?)` | `cmd.count_states` | Number of states for an object. |
+| `cmd.get_model(selection?)` | `cmd.get_model` | Return `{ atom: [...] }` with `name/resn/resi/chain/elem/coord` per matched atom. |
+
+### Representations
+
+The reps that render in-browser (Mode G) are: **`lines`**, **`spheres`**, **`sticks`**,
+**`nonbonded`**, **`nb_spheres`**.
+
+| tenmol | PyMOL | Description |
+| --- | --- | --- |
+| `cmd.show(rep?, selection?)` | `cmd.show` | Turn a representation on. Defaults `lines`, `all`. |
+| `cmd.hide(rep?, selection?)` | `cmd.hide` | Turn a representation off. Defaults `everything`, `all`. |
+| `cmd.show_as(rep?, selection?)` | `cmd.show_as` / `as` | Show a rep exclusively (hide the others). The console verb is `as`. |
+
+### Color
+
+| tenmol | PyMOL | Description |
+| --- | --- | --- |
+| `cmd.color(color, selection?)` | `cmd.color` | Apply a named (or index) color to a selection. Default selection `all`. |
+| `cmd.get_color_index(name)` | `cmd.get_color_index` | Resolve a color name to its palette index. |
+| `cmd.get_color_tuple(index)` | `cmd.get_color_tuple` | Resolve a color index to an `[r, g, b]` float tuple. |
+| `cmd.bg_color(color?)` | `cmd.bg_color` | Set the background color. Default `black`. |
+
+### Camera
+
+| tenmol | PyMOL | Description |
+| --- | --- | --- |
+| `cmd.get_view()` | `cmd.get_view` | Get the 18-float camera view matrix. |
+| `cmd.set_view(list18)` | `cmd.set_view` | Set the camera from an 18-float array. |
+| `cmd.turn(axis?, angle?)` | `cmd.turn` | Rotate the camera about `x`/`y`/`z` by `angle` degrees. Default axis `y`. |
+| `cmd.zoom(selection?, buffer?)` | `cmd.zoom` | Frame a selection's bounding sphere. Default `all`. |
+| `cmd.orient(selection?, buffer?)` | `cmd.orient` | Frame a selection (bounding-sphere fit today). Default `all`. |
+| `cmd.reset()` | `cmd.reset` | Reset the camera to the default view and refit. |
+| `cmd.view(key, action?, animate?)` | `cmd.view` | Named camera views. `action` is `store` / `recall` / `clear` (default `recall`). `clear` with `*` clears all. |
+| `cmd.get_viewport()` | `cmd.get_viewport` | The scene rectangle in pixels, `[width, height]`. |
+
+### Settings
+
+| tenmol | PyMOL | Description |
+| --- | --- | --- |
+| `cmd.set(name, value, selection?)` | `cmd.set` | Set a global setting (e.g. `sphere_scale`, `stick_radius`, `nb_spheres_size`). |
+| `cmd.get(name)` | `cmd.get` | Get a setting value (or `null`). |
+| `cmd.get_setting(name)` | `cmd.get_setting` | Get the raw stored setting value (or `null`). |
+| `cmd.get_setting_float(name)` | `cmd.get_setting_float` | Get a setting as a float. |
+| `cmd.get_setting_int(name)` | `cmd.get_setting_int` | Get a setting as a truncated int. |
+| `cmd.get_setting_boolean(name)` | `cmd.get_setting_boolean` | Get a setting as `0` / `1`. |
+| `cmd.get_setting_text(name)` | `cmd.get_setting_text` | Get a setting as text. |
+| `cmd.get_setting_tuple(name)` | `cmd.get_setting_tuple` | Get a setting as a single-element tuple. |
+
+<Note>
+  The engine also answers a set of **benign read defaults** so the app's panels (movie,
+  scenes, views, settings) render cleanly on the local engine — e.g. `get_frame`,
+  `get_state`, `count_frames`, `count_states`, `get_scene_list`, `get_type`, `get_version`,
+  `get_renderer`. These return the values a fresh, empty PyMOL session would; they are reads
+  only, not feature implementations.
+</Note>
+
+## The selection language
+
+Selections are parsed by `packages/engine-ts/src/select/selector.ts`. Case-insensitive.
+Property selectors take `+`-grouped multi-values (`name CA+CB`); `resi`, `index`, and `id`
+also take `lo-hi` ranges. `*` and `?` are wildcards in property values. An empty selection
+means **all** (as in PyMOL).
+
+### Property selectors
+
+| Selector | Aliases | PyMOL | Example |
+| --- | --- | --- | --- |
+| `name` | `n.` | `name` | `name CA+CB` |
+| `elem` | `e.` | `elem` | `elem C` |
+| `chain` | `c.` | `chain` | `chain A` |
+| `resn` | `r.` | `resn` | `resn ALA` |
+| `resi` | `i.` | `resi` | `resi 10-20` |
+| `index` | `idx.` | `index` | `index 1-5` |
+| `id` | — | `id` | `id 42` |
+| `segi` | `s.` | `segi` | `segi A` |
+| `alt` | — | `alt` | `alt A` |
+| `color` | — | `color` | `color red` (name or index) |
+| `rep` | — | `rep` | `rep sticks` |
+
+### Keyword selectors
+
+| Selector | Aliases | PyMOL | Meaning |
+| --- | --- | --- | --- |
+| `all` | `*` | `all` | Every atom |
+| `none` | — | `none` | No atoms |
+| `hetatm` | — | `hetatm` | HETATM records |
+| `hydro` | `hydrogens`, `h.` | `hydro` | Hydrogen (and deuterium) atoms |
+| `polymer` | — | `polymer` | Standard (non-solvent, non-het) residues |
+| `solvent` | — | `solvent` | Water residues (HOH/WAT/H2O/TIP/SOL) |
+| `backbone` | `bb.` | `backbone` | Polymer backbone atoms |
+| `sidechain` | `sc.` | `sidechain` | Polymer non-backbone atoms |
+
+### Operators & set selectors
+
+| Selector | Aliases | PyMOL | Example |
+| --- | --- | --- | --- |
+| `and` | `&` | `and` | `chain A and elem C` |
+| `or` | `\|` | `or` | `chain A or chain B` |
+| `not` | `!` | `not` | `not hydro` |
+| *(implicit and)* | — | *(implicit and)* | `chain A elem C` |
+| `( )` | — | `( )` | `not (chain A or chain B)` |
+| `byres` | `br.` | `byres` | `byres (resi 10)` — expand to whole residues |
+| `within N of` | `w. N of` | `within N of` | `within 5 of chain A` |
+| `first` | — | `first` | `first chain A` |
+| `last` | — | `last` | `last chain A` |
+| *(object / named-selection reference)* | — | *(bare name)* | `1abc`, `my_sele` |
+
+## What's not yet ported
+
+Everything outside the surface above rejects with a `PymolError` of type `NotPorted` (mirroring
+the bridge's `NotAllowed`) — never a silent no-op — so gaps are visible and the differential
+parity suite catches them. Reps beyond the five listed above are treated as "nothing to draw"
+in Mode G.
+
+For the full picture of what is ported and how parity with real PyMOL is proven, see
+[The TypeScript engine port](/engine-port).
