@@ -1,3 +1,8 @@
+---
+title: "Spike 08 — Native (C++) wave 2: change counters, pick data, missing instances"
+description: "Status: IMPLEMENTED AND VERIFIED. Plan code-ownership.md §4 Task 6 (ReprVersion), §4 Task 3 (pick data) and the instance half of defect D6 are done."
+---
+
 # Spike 08 — Native (C++) wave 2: change counters, pick data, missing instances
 
 **Status: IMPLEMENTED AND VERIFIED.** Plan `code-ownership.md` §4 Task 6 (ReprVersion),

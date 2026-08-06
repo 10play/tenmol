@@ -1,3 +1,8 @@
+---
+title: "Architecture"
+description: "How tenmol works. This describes the system as built; where a detail lives in one file, that file is named instead of restated."
+---
+
 # Architecture
 
 How tenmol works. This describes the system as built; where a detail lives in one file, that file

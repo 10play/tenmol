@@ -1,3 +1,8 @@
+---
+title: "Settings and colors"
+description: "Map of PyMOL's setting table, its change-notification machinery, and the colour/ramp system. Every claim is anchored to a file:line in packages/engine/…"
+---
+
 # Settings and colors
 
 Map of PyMOL's setting table, its change-notification machinery, and the colour/ramp system.
@@ -752,14 +757,14 @@ object's state-level `CSetting` — a different channel the status thread does n
 
 Colours have **no change feed** at all: `set_color`, `ramp_new`, `space` and session loads mutate
 the palette silently. The palette is therefore re-fetched after any of
-`set_color | ramp_new | ramp_update | space | load | reinitialize | set_session`, mirroring the
+`set_color \| ramp_new \| ramp_update \| space \| load \| reinitialize \| set_session`, mirroring the
 `_invalidate_color_sc` invalidation points (`internal.py:584`, `viewing.py:2210`, `creating.py:486`).
 
 ### D4. Component inventory
 
 | component | replaces | contract |
 |---|---|---|
-| `<SettingsProvider>` | `pmg_tk/Setting.py` var syncing | holds `SettingMeta[]` + value cache keyed `${index}|${object}|${state}`, subscribes to `settings.changed` |
+| `<SettingsProvider>` | `pmg_tk/Setting.py` var syncing | holds `SettingMeta[]` + value cache keyed `${index}\|${object}\|${state}`, subscribes to `settings.changed` |
 | `useSetting(name, {object, state})` | `PymolVar` (`pmg_tk/Setting.py:28`) | `[value, setValue, {meta, isDefault, unset}]` |
 | `<SettingMenu>` | `Setting` menu (`_gui.py:492-773`) | renders the declarative tree; `check` → checkbox item with `trueValue/falseValue`, `radio` → radio group keyed by setting name |
 | `<MenuDataRenderer>` | `_addmenu` (`pymol_qt_gui.py:294-343`) | one generic renderer for `separator/menu/command/check/radio/open_recent_menu` — reuse for Display/Mouse/Scene menus too |

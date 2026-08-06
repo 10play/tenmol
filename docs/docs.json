@@ -1,0 +1,85 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "tenmol",
+  "description": "A fork of PyMOL that keeps the C++/Python engine and replaces the Qt front-end with a React web app.",
+  "colors": {
+    "primary": "#2E7D32",
+    "light": "#66BB6A",
+    "dark": "#1B5E20"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Overview",
+        "pages": ["index", "architecture", "build-and-tooling"]
+      },
+      {
+        "group": "Packages",
+        "pages": [
+          "packages/protocol",
+          "packages/client",
+          "packages/stores",
+          "packages/viewport",
+          "packages/bridge",
+          "packages/web",
+          "packages/e2e"
+        ]
+      },
+      {
+        "group": "Area maps",
+        "pages": [
+          "qt-main-window",
+          "internal-gui",
+          "input-mouse-keyboard",
+          "cmd-api-rpc",
+          "geometry-extraction",
+          "settings-colors",
+          "movies-scenes-states",
+          "dialogs-volume-properties-scenes",
+          "builder",
+          "wizards",
+          "file-io"
+        ]
+      },
+      {
+        "group": "Spikes",
+        "pages": [
+          "spikes/README",
+          "spikes/build",
+          "spikes/feedback",
+          "spikes/geometry",
+          "spikes/geometry-accessor",
+          "spikes/picking",
+          "spikes/state-events",
+          "spikes/cross-platform-gl",
+          "spikes/native-changes"
+        ]
+      },
+      {
+        "group": "API reference",
+        "pages": [
+          "api-reference/index",
+          "api-reference/commands",
+          "api-reference/unsafe-commands",
+          "api-reference/settings",
+          "api-reference/colors"
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/10play/tenmol"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/10play/tenmol"
+    }
+  }
+}

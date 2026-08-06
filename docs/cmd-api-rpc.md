@@ -1,3 +1,8 @@
+---
+title: "The cmd API, and the RPC contract over it"
+description: "Map of PyMOL's cmd surface: what it contains, how command strings are parsed, how feedback escapes, what the two bundled RPC servers do, and what the C++…"
+---
+
 # The `cmd` API, and the RPC contract over it
 
 Map of PyMOL's `cmd` surface: what it contains, how command strings are parsed, how feedback
@@ -603,8 +608,8 @@ Two options, in order of preference:
 
 1. **Reimplement in the bridge.** Duplicate the 60-line dispatch of
    `Parser._complete` (`packages/engine/modules/pymol/parser.py:528-596`) but return
-   `{ "prefix": str, "candidates": [str], "kind": "command"|"selection"|"color"|"setting"|"file"|…,
-   "commonPrefix": str }`. All inputs are public: `cmd.kwhash` (`packages/engine/modules/pymol/cmd.py:332`),
+   `&#123; "prefix": str, "candidates": [str], "kind": "command"|"selection"|"color"|"setting"|"file"|…,
+   "commonPrefix": str &#125;`. All inputs are public: `cmd.kwhash` (`packages/engine/modules/pymol/cmd.py:332`),
    `cmd.auto_arg` (`packages/engine/modules/pymol/cmd.py:380`), and `Shortcut.interpret(keyword, mode)`
    (`packages/engine/modules/pymol/shortcut.py`, used at `packages/engine/modules/pymol/parser.py:58`). `kind` comes for free —
    it is the `type_name` element of each `auto_arg` triple
@@ -821,12 +826,12 @@ Everything this script touches is verified above to exist: `cmd.auto_arg` (`pack
    `'object'`→`ObjectName`, `'setting'`→`SettingName`, `'representation'`→`RepName`,
    `'scene'`→`SceneName`, `'palette'`→`PaletteName`
 3. default-value type: `1`/`0` on a param named `quiet`/`updates`/`animate`/`hand`/`ray` →
-   `boolean | 0 | 1`; other ints → `number`; strings → `string`; tuples → fixed-length tuple
+   `boolean \| 0 \| 1`; other ints → `number`; strings → `string`; tuples → fixed-length tuple
 4. `ARGUMENTS` docstring line `name = int: …` / `= str:` / `= float:` / `= list:` — parsed with the
    same uppercase-section walk `write_html_ref` (`packages/engine/modules/pymol/cmd.py:211`) uses (`:290-303`)
 5. name heuristics: `state`/`frame`/`width`/`height`/`dpi`→`number`, `filename`/`prefix`→`string`,
    `*_sele`/`selection*`→`Selection`
-6. fallback `ApiValue = string | number | boolean | null | ApiValue[] | {[k:string]:ApiValue}`
+6. fallback `ApiValue = string \| number \| boolean \| null \| ApiValue[] \| {[k:string]:ApiValue}`
 
 Return types: annotate from a **hand-maintained override table** of ~40 entries, because they
 cannot be inferred. Seed it from the ones documented above: `get_view` → `View18`

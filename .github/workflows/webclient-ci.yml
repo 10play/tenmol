@@ -194,6 +194,49 @@ jobs:
           echo "checking $BRANCH ($wp) against origin/$BASE_REF"
           TENMOL_WP="$wp" node scripts/ownership.mjs --base "origin/$BASE_REF"
 
+      # ---- gate: docs API reference is not stale --------------------------
+      #
+      # tools/gen-api/emit-docs.mjs regenerates docs/api-reference/ from the
+      # committed tools/gen-api/api-schema.json -- node only, no PyMOL -- so a
+      # drift between the schema and the committed MDX fails here, exactly like
+      # the committed TypeScript client in packages/protocol/src/generated/.
+      - name: docs API reference is current
+        run: |
+          set -euo pipefail
+          node tools/gen-api/emit-docs.mjs
+          if ! git diff --exit-code -- docs/api-reference; then
+            echo "::error::docs/api-reference is stale -- run 'pnpm docs:api' and commit the result"
+            exit 1
+          fi
+
+      # ---- gate: documentation coverage ratchet ---------------------------
+      #
+      # scripts/doc-coverage.mjs counts documented vs undocumented PUBLIC
+      # symbols across the TypeScript packages (via the TypeScript compiler API)
+      # and the Python bridge (scripts/doc_coverage.py, stdlib `ast` on the
+      # runner's python3 -- same footing as tools/parity/drain_lint.py).
+      # --max-undocumented is a CEILING: a newly added export or def with no doc
+      # comment raises the count and fails; the existing backlog below the
+      # ceiling never blocks a merge. Lower it as the backlog is paid down.
+      - name: documentation coverage
+        run: |
+          set -euo pipefail
+          python3 --version
+          node scripts/doc-coverage.mjs --max-undocumented 1192
+
+      # ---- gate: Mintlify site links --------------------------------------
+      #
+      # `mint broken-links` parses docs.json and every page under docs/ and
+      # fails on a dead internal link. The two machine-parsed inventories
+      # (docs/feature-parity.md, docs/code-ownership.md) are excluded via
+      # docs/.mintignore so they are neither rendered nor validated. Pinned so
+      # the gate cannot drift under us.
+      - name: docs broken links
+        run: |
+          set -euo pipefail
+          cd docs
+          npx -y mint@4.2.778 broken-links
+
   # -------------------------------------------------------------------------
   # The real thing: PyMOL is built from packages/engine/ into
   # packages/bridge/.venv and the bridge's pytest suite runs against it.

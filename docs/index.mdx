@@ -1,0 +1,67 @@
+---
+title: "tenmol"
+description: "A fork of PyMOL that keeps the C++/Python engine and replaces the Qt front-end with a React web app."
+---
+
+**tenmol** is a fork of [PyMOL](https://github.com/schrodinger/pymol-open-source) that keeps
+the C++/Python engine and replaces the Qt desktop front-end with a React web app. One PyMOL
+process, one browser, on localhost, with full filesystem access — a local desktop replacement,
+not a multi-tenant server.
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/architecture">
+    Process and threads, boot order, offscreen GL, the wire, the two render modes, picking.
+    Start here.
+  </Card>
+  <Card title="Build & tooling" icon="hammer" href="/build-and-tooling">
+    How the engine compiles, what bootstrap does, the failure catalogue, the JS toolchain.
+  </Card>
+  <Card title="Packages" icon="cubes" href="/packages/protocol">
+    The wire protocol, client, stores, viewport, the Python bridge, and the web app.
+  </Card>
+  <Card title="API reference" icon="terminal" href="/api-reference/index">
+    The generated `cmd.*` command surface — 424 commands, settings, and colors.
+  </Card>
+</CardGroup>
+
+## Run it
+
+```sh
+pnpm install                # once
+bash scripts/bootstrap.sh   # once — builds packages/engine/ into packages/bridge/.venv
+pnpm dev                    # bridge on :8765, web app on :5173
+```
+
+Open [http://localhost:5173](http://localhost:5173). Then, in the app's command line:
+
+```
+load packages/engine/test/dat/1tii.pdb
+show cartoon
+spectrum count, rainbow
+```
+
+`pnpm run doctor` checks every prerequisite (node, pnpm, the venv, `import pymol`, offscreen GL,
+the dev ports) and tells you which one is missing before you try to start anything.
+
+## Checks
+
+```sh
+pnpm test              # web unit + DOM tests (vitest)
+pnpm test:bridge       # bridge tests (pytest, boots a real PyMOL)
+pnpm typecheck         # tsc across every workspace package
+pnpm lint              # eslint; never touches the upstream tree
+pnpm build             # production build of the web app
+pnpm parity            # the parity scoreboard
+```
+
+## The two render modes
+
+The viewport has two render modes. **Mode P** has the server rasterize and stream pixels — full
+PyMOL fidelity, and it needs an offscreen GL context on the host. **Mode G** extracts geometry
+and draws it in the browser with WebGL, so the server never draws at all.
+
+<Note>
+  `docs/feature-parity.md` (the 365-row definition of done) and `docs/code-ownership.md` are
+  machine-readable inputs to `scripts/parity.mjs` and `scripts/ownership.mjs`. They live in the
+  repository and are intentionally kept out of this navigation.
+</Note>

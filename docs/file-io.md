@@ -1,3 +1,8 @@
+---
+title: "File I/O"
+description: "Everything the desktop PyMOL GUI does with the filesystem and the network: open/load, format-specific import dialogs, save/export, sessions (.pse/.psw)…"
+---
+
 # File I/O
 
 Everything the desktop PyMOL GUI does with the filesystem and the network: open/load,
@@ -248,13 +253,13 @@ to load a molecular object" and abort (`:104-109`).
 Widgets (`forms/load_traj.ui`): `input_object` (combo of object names, preselects the
 last), `input_state` (spin, 0-999, default 1, tooltip "Append if state=0"),
 `input_start` (1-99999, default 1), `input_stop` (-1-99999, default -1, "Load entire
-trajectory if stop < 1"), `input_interval` (min 1, default 1), `input_dbm3` (checkbox
+trajectory if stop &lt; 1"), `input_interval` (min 1, default 1), `input_dbm3` (checkbox
 "defer_builds_mode=3"), `output_command` (live command preview), `button_ok` ("Load").
 Emits (`:115-129`): optional `set defer_builds_mode, 3` then
 `load_traj <file>, <object>, <state>, start=, stop=, interval=`, executed via `cmd.do`.
 
 #### 3.6.2 Alignment — `load_aln_dialog` (`file_dialogs.py:204-282`, form `load_aln.ui`)
-- Parses via `pymol.seqalign.aln_magic_read`; a FASTA with <2 records or ragged lengths
+- Parses via `pymol.seqalign.aln_magic_read`; a FASTA with &lt;2 records or ragged lengths
   raises `ValueError` → falls back to plain `cmd.load` (→ `fab`-based extended
   structures) (`:211-222`).
 - Builds an id→object similarity matrix with `difflib.SequenceMatcher` + `numpy`, greedy
@@ -459,7 +464,7 @@ Bidirectional px↔units↔dpi conversion with a re-entrancy guard `UpdateLock`
 transparency checkbox and issues `ray W, H, async=1`, then switches the stack to page 2
 (`:730-742`). Page 2: `button_save` ("Save Image to File" → save dialog +
 `cmd.png(fname, prior=1, dpi=…)`), `button_clip` ("Copy Image to Clipboard" →
-`_copy_image`), `button_back` ("< Back").
+`_copy_image`), `button_back` ("&lt; Back").
 `_copy_image` (`pymol_qt_gui.py:1170-1186`) writes a temp PNG with `prior=1` and pushes
 it to the Qt clipboard; the generic hook is `cmd._copy_image`
 (`packages/engine/modules/pymol/internal.py:272-274`, monkey-patched at `pymol_qt_gui.py:1242`), also
@@ -480,7 +485,7 @@ seeded from `cmd.get_viewport()`), preset buttons `button_720p`/`button_480p`/
 Encoder capability matrix (`:702-707`): none→png only; `ffmpeg`→mp4/mpg/mov/gif;
 `mpeg_encode`→mpg; `convert`→gif. Disabled radios auto-switch to the encoder's default
 (`:711-726`), quality is disabled for `""`/`convert` (`:725`), and a missing binary pops
-"Encoder '<x>' is not installed." (`:727-735`, `pymol.movie.find_exe`
+"Encoder '&lt;x>' is not installed." (`:727-735`, `pymol.movie.find_exe`
 `packages/engine/modules/pymol/movie.py:824-844`). Preselect logic for the three menu entries at
 `:737-754`; `_preselect='png'` hides the whole format group.
 Resolution presets clamp to ≤16:9 and round width to an even number (`:789-794`).

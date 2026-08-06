@@ -1,3 +1,8 @@
+---
+title: "Wizards — the PyMOL wizard surface"
+description: "Map of PyMOL's wizard machinery. Scope: packages/engine/modules/pymol/wizard/ (every file), packages/engine/modules/pymol/wizarding.py…"
+---
+
 # Wizards — the PyMOL wizard surface
 
 Map of PyMOL's wizard machinery. Scope: `packages/engine/modules/pymol/wizard/` (every file),
@@ -37,7 +42,7 @@ The five "render" methods (confirmed against source):
 | `get_prompt()` | `packages/engine/layer1/Wizard.cpp:205` | `list[str]` or `None` |
 | `get_panel()` | `packages/engine/layer1/Wizard.cpp:227` | `list[[int type, str text, str code]]` or `None` |
 | `get_event_mask()` | `packages/engine/layer1/Wizard.cpp:220` | `int` bitmask |
-| `get_menu(tag)` | `packages/engine/layer1/Wizard.cpp:501` | `list[[int code, str text, str|list|callable]]` or `None` |
+| `get_menu(tag)` | `packages/engine/layer1/Wizard.cpp:501` | `list[[int code, str text, str\|list\|callable]]` or `None` |
 | `cleanup()` | `packages/engine/layer1/Wizard.cpp:275` | ignored |
 
 The event methods (all invoked via `WizardCallPython`, which first does
@@ -576,7 +581,7 @@ Event mask `pick|select|position` (`:205-206`); `do_position()` (`:208-210`) re-
 `update_maps(zoom=0)` whenever the camera center moves and no `_dw` selection exists —
 this is the actual "roving" behaviour.
 
-**`update_maps()` (`:107-143`):** for each slot, `isomesh('w{n}_{map}', map, level, sele,
+**`update_maps()` (`:107-143`):** for each slot, `isomesh('w&#123;n&#125;_&#123;map&#125;', map, level, sele,
 radius, state=1)`, coloring new meshes blue/white/magenta (`:126-131`), then
 `zoom(animate=0.67)` / `center(animate=0.67)` / `origin()` per `track` (`:134-142`).
 
@@ -633,9 +638,9 @@ pre-1.7.0.0 title-keyed dicts to the new `state/total title` identifiers.
 `[2,'Messages: On|Off','cmd.get_wizard().toggle_messages()']`, `[2,'Done','cmd.set_wizard()']`.
 
 **Menu `mode`** (`:36-43`) — 9 python-format templates (`mode_names` `:14-24`):
-`{resn}-{resi}`, `{onelettercode}{resi}`, `{chain}/{resn}\`{resi}`,
-`{chain}/{resn}\`{resi}/{name}\`{alt}`,
-`/{model}/{segi}/{chain}/{resn}\`{resi}/{name}\`{alt}`, `{chain}`, `{resn}`, `{resi}`, `{name}`.
+`{resn}-{resi}`, `{onelettercode}{resi}`, `{chain}/{resn}\`&#123;resi&#125;`,
+`{chain}/{resn}\`&#123;resi&#125;/&#123;name&#125;\`{alt}`,
+`/{model}/{segi}/{chain}/{resn}\`&#123;resi&#125;/&#123;name&#125;\`{alt}`, `{chain}`, `{resn}`, `{resi}`, `{name}`.
 
 **Prompt** (`:52-64`): suppressed when `messages` is off; otherwise the full atom identifier
 plus `B = …  XYZ = … … …`.
