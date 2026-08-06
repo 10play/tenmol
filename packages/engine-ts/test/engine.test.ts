@@ -325,14 +325,37 @@ describe('LocalBackend', () => {
     expect(lines).toEqual([]); // silent — no prompt echo, no error flood
   });
 
-  it('gives feedback for a user-typed unrecognised command (never feels dead)', async () => {
+  it('runs a bare console line as JavaScript (print/console.log to feedback)', async () => {
     const backend = new LocalBackend();
     const lines: string[] = [];
     backend.on('feedback', ({ lines: l }) => lines.push(...l));
     await backend.connect();
     await backend.do('console.log("YO")');
     expect(lines.some((l) => l.startsWith('PyMOL>console.log'))).toBe(true);
-    expect(lines.some((l) => l.includes('not a ported command'))).toBe(true);
+    expect(lines.some((l) => l === 'YO')).toBe(true);
+  });
+
+  it('console JavaScript can query and drive the engine via cmd', async () => {
+    const backend = new LocalBackend();
+    const lines: string[] = [];
+    backend.on('feedback', ({ lines: l }) => lines.push(...l));
+    await backend.connect();
+    await backend.do('fragment ala'); // command language
+    await backend.do('cmd.count_atoms("all")'); // JS expression -> value shown
+    expect(lines.some((l) => l === '5')).toBe(true);
+    // JS statements can act: show every atom as spheres.
+    await backend.do('cmd.show_as("spheres", "all"); print("done")');
+    expect(await backend.call('count_atoms', ['rep spheres'])).toBe(5);
+    expect(lines.some((l) => l === 'done')).toBe(true);
+  });
+
+  it('/expr is the explicit JavaScript escape', async () => {
+    const backend = new LocalBackend();
+    const lines: string[] = [];
+    backend.on('feedback', ({ lines: l }) => lines.push(...l));
+    await backend.connect();
+    await backend.do('/1 + 2');
+    expect(lines.some((l) => l === '3')).toBe(true);
   });
 
   it('echoes a typed command line on the feedback stream', async () => {

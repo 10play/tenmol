@@ -69,20 +69,17 @@ const KNOWN_KEYWORDS = new Set([
 type Handler = (args: unknown[], kwargs: Record<string, unknown>) => Json;
 
 /**
- * A line that is Python, not a PyMOL command — the app's feature panels send
- * these to install their bridge-side helpers every poll, e.g.
- * `/import tenmol_bridge.panels.settings as _s;_s.install()`. Real PyMOL runs
- * them in its interpreter; the port has no Python and must stay silent for them
- * (they are internal plumbing), while still giving feedback for a user's line.
- *
- *   * a leading `/` is PyMOL's inline-Python escape;
- *   * a leading `@` is a script include;
- *   * an `import`/`from` statement (with or without the `/` escape) is Python.
+ * A Python line the port cannot and should not run: the app's feature panels
+ * install their bridge-side helpers with lines like
+ * `/import tenmol_bridge.panels.settings as _s;_s.install()`, sent every poll.
+ * Those are internal plumbing (real PyMOL runs them in its interpreter), so the
+ * port stays silent for them — but ONLY for import statements, so a user's own
+ * `/expr` or bare line is still run as JavaScript (see `do`).
  */
-function isPythonBootstrap(line: string): boolean {
-  const trimmed = line.trimStart();
-  if (trimmed.startsWith('/') || trimmed.startsWith('@')) return true;
-  return splitCommands(line).some((c) => /^(from|import)\s/.test(c.trimStart()));
+function isPythonImport(line: string): boolean {
+  const stripped = line.trim().replace(/^\//, '');
+  if (line.trim().startsWith('@')) return true; // `@script` include
+  return splitCommands(stripped).some((c) => /^(from|import)\s/.test(c.trim()));
 }
 
 export class Engine {
@@ -166,30 +163,86 @@ export class Engine {
     const commands = splitCommands(line).map(parseCommand);
     const anyKnown = commands.some((c) => KNOWN_KEYWORDS.has(c.keyword));
 
-    // Feature/plugin bootstrap lines (`from tenmol_bridge... import install`)
-    // are Python the bridge runs silently server-side; the port has no Python,
-    // so it stays FULLY silent for them rather than echoing an error every poll.
-    // A user's own line always gets feedback, so the console never feels dead.
-    if (!anyKnown && isPythonBootstrap(line)) return;
-
-    this.appendFeedback(`PyMOL>${line}`);
-    for (const { keyword, args } of commands) {
-      if (KNOWN_KEYWORDS.has(keyword)) {
+    // A line with a recognized PyMOL command runs the command language.
+    if (anyKnown) {
+      this.appendFeedback(`PyMOL>${line}`);
+      for (const { keyword, args } of commands) {
+        if (!KNOWN_KEYWORDS.has(keyword)) continue;
         try {
           this.runKeyword(keyword, args);
         } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          this.appendFeedback(` ${message}`);
+          this.appendFeedback(` ${err instanceof Error ? err.message : String(err)}`);
         }
-      } else {
-        // Honest parity note: the TS engine has no Python interpreter, so a line
-        // that is not a ported command cannot run. Real PyMOL would try to exec
-        // it as Python; here we say so instead of silently doing nothing.
-        this.appendFeedback(
-          ` Error: '${keyword}' is not a ported command (the TypeScript engine has no Python)`,
-        );
       }
+      return;
     }
+
+    // Feature/plugin Python bootstraps are silent internal plumbing.
+    if (isPythonImport(line)) return;
+
+    // EVERYTHING ELSE IS A SCRIPT — run it as JAVASCRIPT. This is the whole
+    // point of a web port: PyMOL's console runs Python; here it runs JS,
+    // client-side, with the `cmd` API in scope. `/expr` is the explicit escape,
+    // and a bare line works too (PyMOL treats a bare non-command line as code).
+    this.appendFeedback(`PyMOL>${line}`);
+    this.runJs(line.trim().replace(/^\//, ''));
+  }
+
+  /* ----------------------------- JS console --------------------------- */
+
+  /** The `cmd` object exposed to console JavaScript: `cmd.<symbol>(...args)`. */
+  private jsCmd(): Record<string, (...args: unknown[]) => unknown> {
+    const call = (fn: string, args: unknown[]): unknown => this.call(fn, args);
+    return new Proxy(
+      {},
+      {
+        get(_t, prop: string | symbol) {
+          if (typeof prop !== 'string') return undefined;
+          return (...args: unknown[]) => call(prop, args);
+        },
+      },
+    ) as Record<string, (...args: unknown[]) => unknown>;
+  }
+
+  /**
+   * Run a line of console JavaScript. `console.log`/`print` and the expression
+   * value are routed to the feedback stream, so output shows in the PyMOL
+   * console the same way Python `print` does upstream. Errors are shown, not
+   * thrown.
+   */
+  private runJs(code: string): void {
+    if (code === '') return;
+    const out: string[] = [];
+    const fmt = (v: unknown): string => {
+      if (typeof v === 'string') return v;
+      try {
+        return JSON.stringify(v) ?? String(v);
+      } catch {
+        return String(v);
+      }
+    };
+    const log = (...a: unknown[]): void => {
+      out.push(a.map(fmt).join(' '));
+    };
+    const consoleShim = { log, info: log, warn: log, error: log, debug: log };
+    const cmd = this.jsCmd();
+    try {
+      let value: unknown;
+      try {
+        // Expression form first, so `1+1` / `cmd.count_atoms("all")` show a value.
+        const fn = new Function('cmd', 'print', 'console', `return (\n${code}\n);`);
+        value = fn(cmd, log, consoleShim);
+      } catch (e) {
+        if (!(e instanceof SyntaxError)) throw e;
+        // Statement form: `for (...) {...}`, `let x = ...`, multiple statements.
+        const fn = new Function('cmd', 'print', 'console', code);
+        value = fn(cmd, log, consoleShim);
+      }
+      if (value !== undefined) out.push(fmt(value));
+    } catch (err) {
+      out.push(` ${err instanceof Error ? err.message : String(err)}`);
+    }
+    for (const l of out) this.appendFeedback(l);
   }
 
   private runKeyword(keyword: string, args: string[]): void {
