@@ -85,9 +85,11 @@ export function WizardPanel({ snapshot, onExec, onMenu }: WizardPanelProps) {
   if (snapshot.depth === 0) return null;
 
   return (
-    <div className="wizpanel" data-testid="wizard-panel">
-      <div className="wizpanel__head">
-        <span className="wizpanel__head-title">{snapshot.cls ?? 'Wizard'}</span>
+    <div className="wizpanel modern:bg-pm-panel modern:text-pm-text" data-testid="wizard-panel">
+      <div className="wizpanel__head modern:border-b modern:border-line">
+        <span className="wizpanel__head-title modern:text-pm-text-dim">
+          {snapshot.cls ?? 'Wizard'}
+        </span>
         {snapshot.depth > 1 && (
           <span
             className="wizpanel__depth"
@@ -169,7 +171,7 @@ function PanelRow({
 
   if (row.type === 1) {
     return (
-      <div className="wizrow wizrow--text" style={style}>
+      <div className="wizrow wizrow--text modern:text-pm-text" style={style}>
         <ColorCodedText text={row.text} />
       </div>
     );
@@ -179,7 +181,7 @@ function PanelRow({
     return (
       <button
         type="button"
-        className="wizrow wizrow--popup"
+        className="wizrow wizrow--popup modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:hover:border-btn-border-strong modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
         style={style}
         aria-haspopup="menu"
         title={`get_menu(${row.code})`}
@@ -190,7 +192,7 @@ function PanelRow({
         }}
       >
         <ColorCodedText text={row.text} />
-        <span className="wizrow__caret">▾</span>
+        <span className="wizrow__caret modern:text-pm-text-dim">▾</span>
       </button>
     );
   }
@@ -198,7 +200,10 @@ function PanelRow({
   return (
     <button
       type="button"
-      className={'wizrow wizrow--button' + (pressed ? ' is-pressed' : '')}
+      className={
+        'wizrow wizrow--button modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:hover:border-btn-border-strong modern:hover:bg-btn-hover modern:hover:text-pm-text-bright' +
+        (pressed ? ' is-pressed' : '')
+      }
       style={style}
       title={row.code}
       aria-label={stripColorCodes(row.text)}
