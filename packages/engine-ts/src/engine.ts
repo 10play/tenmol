@@ -15,6 +15,7 @@
 import { TypedEmitter, PymolError, type BackendEvents } from '@tenmol/backend';
 import {
   Rep,
+  REP_NAMES,
   decodeBinaryFrame,
   isGeometryFrame,
   type HelloMessage,
@@ -31,6 +32,24 @@ import { SelectionError } from './select/selector';
 /** PROTOCOL contract: the reps this engine can render in Mode G today. */
 const RENDERABLE_REPS = [Rep.Line, Rep.Sphere] as const;
 
+/** Representation name -> RepId, for `_bridge.pull_geometry(object, repName)`. */
+const REP_BY_NAME = new Map<string, number>();
+for (const [id, name] of Object.entries(REP_NAMES)) REP_BY_NAME.set(name, Number(id));
+
+/** Console verbs the `do` parser recognizes; anything else is silent Python. */
+const KNOWN_KEYWORDS = new Set([
+  'show',
+  'hide',
+  'as',
+  'color',
+  'select',
+  'delete',
+  'zoom',
+  'orient',
+  'turn',
+  'set',
+]);
+
 type Handler = (args: unknown[], kwargs: Record<string, unknown>) => Json;
 
 export class Engine {
@@ -45,6 +64,12 @@ export class Engine {
   private dragging = false;
   private lastX = 0;
   private lastY = 0;
+
+  // Last reshaped viewport size, answered by `get_viewport`. The Mode-G client
+  // polls this to size its GL scene rectangle; without it the scene defaults to
+  // 1x1 and nothing is visible.
+  private width = 640;
+  private height = 480;
 
   constructor() {
     this.register();
@@ -101,9 +126,14 @@ export class Engine {
   /* -------------------------------- do -------------------------------- */
 
   do(line: string): void {
+    const commands = splitCommands(line).map(parseCommand);
+    // A line with NO recognized command is Python the port cannot run (a panel
+    // bootstrap like `from tenmol_bridge... import install`). Real PyMOL hands
+    // it to the interpreter; the port ignores it WITHOUT echoing, so those
+    // lines do not flood the console.
+    if (!commands.some((c) => KNOWN_KEYWORDS.has(c.keyword))) return;
     this.appendFeedback(`PyMOL>${line}`);
-    for (const command of splitCommands(line)) {
-      const { keyword, args } = parseCommand(command);
+    for (const { keyword, args } of commands) {
       try {
         this.runKeyword(keyword, args);
       } catch (err) {
@@ -147,7 +177,13 @@ export class Engine {
         this.call('set', [args[0] ?? '', args[1] ?? '1', args[2] ?? '']);
         return;
       default:
-        throw new Error(`Error: unknown command '${keyword}'`);
+        // Not a ported command keyword. In real PyMOL a non-command line is
+        // handed to the Python interpreter (that is how `from pymol import cmd`
+        // works at the prompt). The port has no Python, so it is a silent
+        // no-op — NOT a spurious "unknown command" echo. This is what keeps
+        // panel-bootstrap lines like `from tenmol_bridge... import install`
+        // from flooding the console when a feature targets the local engine.
+        return;
     }
   }
 
@@ -173,7 +209,9 @@ export class Engine {
         return null;
       }
       case 'reshape':
-        return { width: msg.width ?? 0, height: msg.height ?? 0 };
+        this.width = msg.width ?? this.width;
+        this.height = msg.height ?? this.height;
+        return { width: this.width, height: this.height };
       default:
         return null;
     }
@@ -287,6 +325,18 @@ export class Engine {
     h('get_setting_int', (args) => Math.trunc(ex.getSettingFloat(str(args[0]))));
     h('get_setting_boolean', (args) => (ex.getSettingFloat(str(args[0])) !== 0 ? 1 : 0));
 
+    // `cmd.get_viewport()` — the scene rectangle in pixels (width, height). The
+    // Mode-G viewport polls this to size its GL scissor/viewport.
+    h('get_viewport', () => [this.width, this.height]);
+
+    // `_bridge.pull_geometry(object, repName, state)` — the Mode-G PULL path.
+    // The viewport requests a rep; we push the frame out of band (like the
+    // bridge does) and answer with the PullResult status. This is what makes
+    // rendering reliable: a frame the viewport missed on the initial push is
+    // re-fetched here the moment it tracks the object.
+    h('_engine.pull_geometry', (args) => this.pullGeometry(args));
+    h('_bridge.pull_geometry', (args) => this.pullGeometry(args));
+
     h('get_color_index', (args) => getColorIndex(str(args[0])));
     h('get_color_tuple', (args) => {
       const t = getColorTuple(Number(args[0]));
@@ -360,20 +410,55 @@ export class Engine {
   }
 
   private emitGeometry(): void {
-    const scale = this.executive.getSettingFloat('sphere_scale') || 1;
     for (const mol of this.executive.moleculesInOrder()) {
       if (!mol.enabled) continue;
-      for (const rep of RENDERABLE_REPS) {
-        const buf =
-          rep === Rep.Sphere
-            ? buildSpheresFrame(mol, 1, this.seq, scale)
-            : buildLinesFrame(mol, 1, this.seq);
-        if (!buf) continue;
-        this.seq++;
-        const frame = decodeBinaryFrame(buf);
-        this.emitter.emit('binary:frame', frame);
-        if (isGeometryFrame(frame)) this.emitter.emit('geometry:frame', frame);
-      }
+      for (const rep of RENDERABLE_REPS) this.emitRepFrame(mol.name, rep, 1);
     }
+  }
+
+  /**
+   * The Mode-G pull. `args = [object, repName, state]`. Pushes the frame out of
+   * band and answers with a `PullResult` the viewport's geometry cache reads
+   * (`packages/viewport/src/modeG/cache.ts`): `not-built`/`empty` mean "nothing
+   * to draw", any other status means a frame was (or will be) pushed.
+   */
+  private pullGeometry(args: unknown[]): Json {
+    const object = String(args[0] ?? '');
+    const repNameArg = String(args[1] ?? '');
+    const rep = REP_BY_NAME.get(repNameArg) ?? -1;
+    const state = 1;
+    const mol = this.executive.molecule(object);
+    const result = (status: string, bytes = 0): Json => ({
+      object,
+      rep: repNameArg,
+      state,
+      status,
+      bytes,
+    });
+    if (!mol) return result('not-built');
+    // Reps this engine cannot render yet are simply "nothing to draw" — never a
+    // Mode-P fallback, because the local engine has no pixel stream.
+    if (rep !== Rep.Sphere && rep !== Rep.Line) return result('not-built');
+    const bytes = this.emitRepFrame(object, rep, state);
+    return bytes > 0 ? result('updated', bytes) : result('empty');
+  }
+
+  /** Build and push the frame for one object/rep/state; returns bytes, or 0. */
+  private emitRepFrame(object: string, rep: number, state: number): number {
+    const mol = this.executive.molecule(object);
+    if (!mol || !mol.enabled) return 0;
+    const scale = this.executive.getSettingFloat('sphere_scale') || 1;
+    const buf =
+      rep === Rep.Sphere
+        ? buildSpheresFrame(mol, state, this.seq, scale)
+        : rep === Rep.Line
+          ? buildLinesFrame(mol, state, this.seq)
+          : null;
+    if (!buf) return 0;
+    this.seq++;
+    const frame = decodeBinaryFrame(buf);
+    this.emitter.emit('binary:frame', frame);
+    if (isGeometryFrame(frame)) this.emitter.emit('geometry:frame', frame);
+    return buf.byteLength;
   }
 }
