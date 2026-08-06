@@ -61,7 +61,37 @@ import {
   type ShellSettings,
 } from './orthoPanel';
 import { panelsStore, togglePanel } from './panelHooks';
-import { Button, ToggleButton, ThemeToggle } from '../ui';
+import {
+  AppWindow,
+  Blocks,
+  Box,
+  Cpu,
+  FolderOpen,
+  Palette,
+  Puzzle,
+  Settings,
+  SlidersHorizontal,
+  SquarePen,
+  X,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react';
+import { Button, IconButton, ToggleButton, ThemeToggle } from '../ui';
+
+/** Lucide icons for the overlay-launcher panels, keyed by feature slot id. */
+const LAUNCHER_ICONS: Record<string, LucideIcon> = {
+  settings: Settings,
+  files: FolderOpen,
+  dialogs: AppWindow,
+  builder: Blocks,
+  colors: Palette,
+  volume: Box,
+  properties: SlidersHorizontal,
+  texteditor: SquarePen,
+  compute: Cpu,
+  'plugin-manager': Puzzle,
+  apbs: Zap,
+};
 import { SESSION_FILE_INDEX, getSettingsTap } from './settingsTap';
 import {
   dockModifier,
@@ -305,9 +335,9 @@ function ExtGuiTitleBar({
       >
         {dock.floating ? 'dock' : 'float'}
       </Button>
-      <Button variant="extgui" onClick={() => onChange(toggleVisible)} title="Visible">
+      <IconButton variant="extgui" icon={X} onClick={() => onChange(toggleVisible)} title="Visible">
         ×
-      </Button>
+      </IconButton>
     </div>
   );
 }
@@ -609,6 +639,7 @@ function OverlayLayer() {
           <ToggleButton
             key={slot.id}
             variant="launcher"
+            icon={LAUNCHER_ICONS[slot.id]}
             pressed={open.includes(slot.id)}
             onClick={() => toggle(slot.id)}
           >

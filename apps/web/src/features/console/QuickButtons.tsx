@@ -22,6 +22,27 @@
  */
 
 import { useSyncExternalStore } from 'react';
+import {
+  Ban,
+  Blocks,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  Compass,
+  Eraser,
+  Eye,
+  Maximize,
+  Play,
+  RefreshCw,
+  Repeat,
+  RotateCcw,
+  SkipBack,
+  SkipForward,
+  SlidersHorizontal,
+  Square,
+  Trash2,
+  type LucideIcon,
+} from 'lucide-react';
 
 import { errorText, useSession, useStore } from '../../app';
 import { menuHooks, openPanel, subscribeMenuHooks, type MenuHook } from '../../shell/panelHooks';
@@ -36,45 +57,57 @@ interface QuickButton {
   todo?: string;
   /** Handled in TypeScript rather than by a bare command line. */
   action?: 'getView' | 'builder' | 'properties' | 'render';
+  /** Lucide icon shown in the shadcn theme (classic stays text-only). */
+  icon?: LucideIcon;
+  /** Media-style controls hide their glyph label under the icon. */
+  iconOnly?: boolean;
 }
 
 const ROWS: QuickButton[][] = [
   [
-    { label: 'Reset', cmd: 'reset', title: 'cmd.reset' },
-    { label: 'Zoom', cmd: 'zoom animate=1.0', title: 'cmd.zoom(animate=1.0)' },
-    { label: 'Orient', cmd: 'orient animate=1.0', title: 'cmd.orient(animate=1.0)' },
+    { label: 'Reset', cmd: 'reset', title: 'cmd.reset', icon: RotateCcw },
+    { label: 'Zoom', cmd: 'zoom animate=1.0', title: 'cmd.zoom(animate=1.0)', icon: Maximize },
+    { label: 'Orient', cmd: 'orient animate=1.0', title: 'cmd.orient(animate=1.0)', icon: Compass },
     {
       label: 'Draw/Ray',
       cmd: null,
       action: 'render',
       title: 'the render dialog (WidgetMenu wrapping render_dialog, :222)',
       todo: 'WP-19',
+      icon: Camera,
     },
   ],
   [
-    { label: 'Unpick', cmd: 'unpick', title: 'cmd.unpick' },
-    { label: 'Deselect', cmd: 'deselect', title: 'cmd.deselect' },
-    { label: 'Rock', cmd: 'rock', title: 'cmd.rock' },
+    { label: 'Unpick', cmd: 'unpick', title: 'cmd.unpick', icon: Ban },
+    { label: 'Deselect', cmd: 'deselect', title: 'cmd.deselect', icon: Eraser },
+    { label: 'Rock', cmd: 'rock', title: 'cmd.rock', icon: Repeat },
     {
       label: 'Get View',
       cmd: null,
       action: 'getView',
       title: 'cmd.get_view(2, quiet=0) + get_view(3) to the clipboard',
+      icon: Eye,
     },
   ],
   [
-    { label: '|<', cmd: 'rewind', title: 'cmd.rewind' },
-    { label: '<', cmd: 'backward', title: 'cmd.backward' },
-    { label: 'Stop', cmd: 'mstop', title: 'cmd.mstop' },
-    { label: 'Play', cmd: 'mplay', title: 'cmd.mplay' },
-    { label: '>', cmd: 'forward', title: 'cmd.forward' },
-    { label: '>|', cmd: 'ending', title: 'cmd.ending' },
-    { label: 'MClear', cmd: 'mclear', title: 'cmd.mclear' },
+    { label: '|<', cmd: 'rewind', title: 'cmd.rewind', icon: SkipBack, iconOnly: true },
+    { label: '<', cmd: 'backward', title: 'cmd.backward', icon: ChevronLeft, iconOnly: true },
+    { label: 'Stop', cmd: 'mstop', title: 'cmd.mstop', icon: Square, iconOnly: true },
+    { label: 'Play', cmd: 'mplay', title: 'cmd.mplay', icon: Play, iconOnly: true },
+    { label: '>', cmd: 'forward', title: 'cmd.forward', icon: ChevronRight, iconOnly: true },
+    { label: '>|', cmd: 'ending', title: 'cmd.ending', icon: SkipForward, iconOnly: true },
+    { label: 'MClear', cmd: 'mclear', title: 'cmd.mclear', icon: Trash2, iconOnly: true },
   ],
   [
-    { label: 'Builder', cmd: null, action: 'builder', title: 'the builder dock' },
-    { label: 'Properties', cmd: null, action: 'properties', title: 'the properties dialog' },
-    { label: 'Rebuild', cmd: 'rebuild', title: 'cmd.rebuild' },
+    { label: 'Builder', cmd: null, action: 'builder', title: 'the builder dock', icon: Blocks },
+    {
+      label: 'Properties',
+      cmd: null,
+      action: 'properties',
+      title: 'the properties dialog',
+      icon: SlidersHorizontal,
+    },
+    { label: 'Rebuild', cmd: 'rebuild', title: 'cmd.rebuild', icon: RefreshCw },
   ],
 ];
 
@@ -184,6 +217,8 @@ export function QuickButtons() {
           {row.map((button) => (
             <Button
               variant="quick"
+              icon={button.icon}
+              iconOnly={button.iconOnly}
               // Still VISIBLY unbuilt when it is unbuilt: Draw/Ray keeps its
               // `todo` marker until someone registers `render_dialog`.
               className={live(button, hooks) ? undefined : 'quickbutton--todo'}
@@ -224,6 +259,7 @@ export function QuickButtons() {
           <ProgressBar value={progressPercent(progress)} />
           <Button
             variant="quick"
+            icon={Ban}
             className="quickbutton--abort"
             title="cmd.interrupt (packages/engine/modules/pymol/locking.py:88 — asynchronous, takes no lock)"
             onClick={() => {

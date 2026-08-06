@@ -449,3 +449,40 @@
 :root[data-ui-theme='shadcn'] .progressbar__fill {
   background: var(--pm-accent);
 }
+
+/* ------------------------------------------------------------------ */
+/* 10. Icon buttons — lucide icons in the modern theme.                */
+/* ------------------------------------------------------------------ */
+
+:root[data-ui-theme='shadcn'] .ui-has-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+:root[data-ui-theme='shadcn'] .ui-btn-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  opacity: 0.92;
+}
+/* Icon-only controls (movie transport, close) collapse to a tidy square. */
+:root[data-ui-theme='shadcn'] .quickbutton.ui-has-icon:has(.ui-sr),
+:root[data-ui-theme='shadcn'] .extgui__btn.ui-has-icon:has(.ui-sr) {
+  min-width: 0;
+  padding: 0 9px;
+  gap: 0;
+}
+
+/* The label kept in the DOM for a11y + tests, hidden from view. */
+.ui-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
