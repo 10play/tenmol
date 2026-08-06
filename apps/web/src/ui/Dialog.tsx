@@ -30,8 +30,8 @@ export function DialogContent({
         data-slot="dialog-content"
         className={cn(
           'fixed left-1/2 top-1/2 z-[80] w-full max-w-md -translate-x-1/2 -translate-y-1/2',
-          'rounded-md border border-pm-line bg-pm-panel p-4 font-sans text-[12px] text-pm-text',
-          'shadow-2xl shadow-black/60',
+          'rounded-[12px] border border-white/10 bg-pm-panel/90 backdrop-blur-2xl backdrop-saturate-150',
+          'p-5 font-sans text-[12px] text-pm-text shadow-2xl shadow-black/70',
           className,
         )}
         {...props}
