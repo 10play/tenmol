@@ -1,3 +1,8 @@
+---
+title: "Geometry extraction"
+description: "Can PyMOL's *already-computed* render geometry be pulled out of the C++ backend and shipped to a browser, so the browser draws it instead of recomputing…"
+---
+
 # Geometry extraction
 
 Can PyMOL's *already-computed* render geometry be pulled out of the C++ backend and shipped to a

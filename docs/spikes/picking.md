@@ -1,3 +1,8 @@
+---
+title: "Spike 04 — Picking (BLOCKER resolution)"
+description: "Status: RESOLVED. Recommendation: backend-authoritative picking on a headless CGL + FBO OpenGL context."
+---
+
 # Spike 04 — Picking (BLOCKER resolution)
 
 **Status: RESOLVED. Recommendation: backend-authoritative picking on a headless CGL + FBO
@@ -26,7 +31,7 @@ Scripts: `/private/tmp/claude-501/.../scratchpad/pick/e1..e14*.py` (throwaway, n
 > **§7 and §8 are done, with two exceptions worth naming:**
 >
 > * §7.3's last residual risk — "**Linux/Windows parity is a separate spike**" — is **answered for
->   Linux**: [`07-cross-platform-gl.md`](./07-cross-platform-gl.md) §2.8 reproduces this spike's
+>   Linux**: `07-cross-platform-gl.md` §2.8 reproduces this spike's
 >   picking result on real Linux under EGL, 3/3 clicks. Windows is still unanswered.
 > * §8 item 8 ("gate the picking tests behind a logged-in macOS session") landed as the `gl`
 >   pytest marker in `packages/bridge/pyproject.toml:69`, whose text is this item almost word for
@@ -34,7 +39,7 @@ Scripts: `/private/tmp/claude-501/.../scratchpad/pick/e1..e14*.py` (throwaway, n
 >
 > **The one thing §6 got wrong, and it is worth knowing.** §6.5's verdict table says client-side
 > picking "requires new C++ (pick-data extraction)" and is "strictly worse". The C++ was then
-> written ([`08-native-changes.md`](./08-native-changes.md) §3) and the comparison was **measured
+> written (`08-native-changes.md` §3) and the comparison was **measured
 > rather than argued**: resolving the shipped `(atom index, bond)` pair client-side reproduces a
 > real GL pick **18/18 on spheres and 15/15 on surface** — but only after porting two rules this
 > spike's §5 half-names and 08 §3.3/§3.4 pin down: the `cRange = 7` outward **ring scan** (a click
@@ -593,7 +598,7 @@ selection or an edit.
    correction; measured: `reshape(640,480)` → `get_viewport() == (420, 462)` with defaults on).
 4. `p.reshape(W, H, 1)` then **`p.draw(); p.idle()` at least 3 times** before accepting input
    (`IDLE_AND_READY == 3`, `packages/engine/layer5/PyMOL.cpp:105`).
-5. **Pump loop on the PyMOL thread, tick ≤ 30 ms** (must be < 150 ms, see §3.2):
+5. **Pump loop on the PyMOL thread, tick ≤ 30 ms** (must be &lt; 150 ms, see §3.2):
    `PyMOL_Idle()` then `PyMOL_Draw()`; publish a frame when `PyMOL_GetRedisplay()` is true.
 6. All `cmd.*` calls must be marshalled onto that same thread — set
    `pymol.glutThread = <that thread ident>` (critique A4) and override
@@ -656,8 +661,8 @@ a Python wrapper.**
    (`CmdRefresh` never sets `DrawnFlag`, so the deferred queue stays locked at
    `IdleAndReady < 3`).
 4. **WP-01 / protocol owner** — add a `pick` result shape:
-   `{object, state /*1-based*/, index /*1-based, as get_click_string reports*/, bond,
-   resn, resi, chain, segi, name, alt, rank, id, pos:[x,y,z]}` plus `type: 'none'|'object'|
+   `&#123;object, state /*1-based*/, index /*1-based, as get_click_string reports*/, bond,
+   resn, resi, chain, segi, name, alt, rank, id, pos:[x,y,z]&#125;` plus `type: 'none'|'object'|
    'object:molecule'|'object:cgo'`.
 5. **WP-02 / bridge owner** — owns the CGL provisioning; the pump; `pymol.glutThread`; and
    thread-affinity for all `cmd` calls. Must **not** copy

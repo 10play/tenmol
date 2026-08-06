@@ -1,3 +1,8 @@
+---
+title: "Spike 02 — Headless feedback capture"
+description: "> ## STATUS — re-verified on 2026-08-02: STILL TRUE, IN FULL > > This is the spike that has aged best. §1's two rules are implemented verbatim in >…"
+---
+
 # Spike 02 — Headless feedback capture
 
 > ## STATUS — re-verified on 2026-08-02: **STILL TRUE, IN FULL**

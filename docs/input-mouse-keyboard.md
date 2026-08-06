@@ -1,3 +1,8 @@
+---
+title: "Input: mouse and keyboard"
+description: "Map of PyMOL's input path, from the Qt widget down to SceneDrag. Every claim is anchored to a path:line in packages/engine/, which is unmodified upstream.…"
+---
+
 # Input: mouse and keyboard
 
 Map of PyMOL's input path, from the Qt widget down to `SceneDrag`. Every claim is anchored to a
@@ -832,7 +837,7 @@ Use **Pointer Events** (not MouseEvent) so pen/touch unify, and `setPointerCaptu
 | `pointerdown` (mouse) | `_button(BTN[e.button], 0, X(e), Y(e), MOD(e))` |
 | `pointerup` / `pointercancel` | `_button(BTN[e.button], 1, X(e), Y(e), MOD(e))` |
 | `pointermove` | `_drag(X(e), Y(e), MOD(e))` |
-| `wheel` (deltaY<0) | `_button(3, 0, …)` then `_button(3, 1, …)` |
+| `wheel` (deltaY&lt;0) | `_button(3, 0, …)` then `_button(3, 1, …)` |
 | `wheel` (deltaY>0) | `_button(4, 0, …)` then `_button(4, 1, …)` |
 | `wheel` with shift & \|deltaX\|>\|deltaY\| | use `deltaX` sign (mirrors `keymapping.py:116-121`) |
 | `contextmenu` | `preventDefault()` — right-button semantics are PyMOL's |
@@ -901,7 +906,7 @@ Gotchas:
 
 ### 16.3 devicePixelRatio changes
 
-Listen to `matchMedia(\`(resolution: ${dpr}dppx)\`)` change + `ResizeObserver`. On change:
+Listen to `matchMedia(\`(resolution: $&#123;dpr&#125;dppx)\`)` change + `ResizeObserver`. On change:
 1. resize the WebGL drawing buffer,
 2. `cmd.set('display_scale_factor', Math.round(dpr))` (`pymol_gl_widget.py:222`) — note it must be
    an **integer** or the C side warns and forces 1 (`packages/engine/layer1/Setting.cpp:2953-2958`),

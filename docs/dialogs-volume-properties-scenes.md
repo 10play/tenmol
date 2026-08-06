@@ -1,3 +1,8 @@
+---
+title: "Dialogs: volume, properties, scenes, shortcuts, settings, text editor"
+description: "Scope: packages/engine/modules/pmg_qt/volume.py, packages/engine/modules/pmg_qt/properties_dialog.py, packages/engine/modules/pmg_qt/scene_bin_gui.py…"
+---
+
 # Dialogs: volume, properties, scenes, shortcuts, settings, text editor
 
 Scope: `packages/engine/modules/pmg_qt/volume.py`, `packages/engine/modules/pmg_qt/properties_dialog.py`,
@@ -190,7 +195,7 @@ No point under cursor:
 - `Ctrl + R-Drag` -> zoom band; on release `vmin, vmax = sorted([xToData(convertX(x0)), xToData(convertX(x1))])`
   (`volume.py:356-362`). Zero-width drag is ignored.
 
-Point under cursor (found by `findPoint`, squared-distance < `4*DOT_RADIUS^2`,
+Point under cursor (found by `findPoint`, squared-distance &lt; `4*DOT_RADIUS^2`,
 `volume.py:651-663`):
 - `L-Click` (release, not dragged) -> open `QColorDialog` for that point
   (`setPointColor`, `volume.py:406-421`). The dialog is **modal** (`.open()`),
@@ -634,7 +639,7 @@ earlier design; do not port unless product wants it.
 - Multi-char patterns not starting with `F` are lowercased and must be in
   `internal.special_key_names` (derived from `special_key_codes`,
   `internal.py:398-425`: `F1..F12`, `left, up, right, down, pgup, pgdn, home,
-  end, insert`), else `CmdException("special '<pat>' key not found.")`.
+  end, insert`), else `CmdException("special '&lt;pat>' key not found.")`.
 - Single character with no modifier -> `CmdException("Can't map regular letters.")`;
   with `SHFT` -> `CmdException("Can't map regular letters with SHFT.")`.
 - Stores into `cmd.key_mappings[key]`, value is either a command string or a
@@ -784,13 +789,13 @@ obvious from the `.py` files; the owning agent for `file_dialogs.py` /
 - **load_mae.ui**: `input_mimic` (checked, "Use settings to match cartoon/ribbon color and ballstick style"), `label_3` "Object/group name" + `input_object_name`, `label` "Object properties" + `input_object_props` (default `*`), `label_2` "Atom properties" + `input_atom_props` (default `*`), `label` "Multiple entries" + `input_multiplex` (QComboBox: "automatic handling", "as one multi-state object (trajectory)", "as one multi-state object (discrete states)", "as separate objects"), `groupBox_2` + `output_command`, `button_ok` ("Load").
 - **load_map.ui**: `groupBox_3` "Map Object" [`input_object_name`, `input_normalize` (checked), `label` normalization caveat], `groupBox` "Representation" [`label_2` "se&lection" + `input_selection` (editable combo: (blank), enabled, sele, center), `label_3` "b&uffer" + `input_buffer` (default 2.0), `check_carve`, `label_4` "level" + `input_level` (min -99, default 1.0, 4 decimals, step 0.1), `check_volume` + `input_name_volume`, `check_isosurface` + `input_name_isosurface`, `check_isomesh` + `input_name_isomesh`], `groupBox_2` + `output_command`, `button_ok`.
 - **load_mtz.ui**: `groupBox` "Column Labels" [`label_4` "Amplitudes" + `input_amplitudes`, `label_5` "Phases" + `input_phases`, `label_6` "Weights" + `input_weights` — all QComboBox], `groupBox_2` "Resolution" [`label` "Low" + `input_reso_min` (50.0), `label_2` "High" + `input_reso_max` (1.0)], `groupBox_3` "Map Options" [`label_3` "New Map Name Prefix" + `input_prefix`], `buttonBox`.
-- **load_traj.ui**: `groupBox` "Target Object" [`label` + `input_object` (combo), `label_3` "State" + `input_state` (max 999, default 1, tip "Append if state=0")], `groupBox_3` "Frames" [`input_start` (1..99999, 1), `input_stop` (-1..99999, -1, tip "Load entire trajectory if stop < 1"), `input_interval` (min 1)], `groupBox_4` "Memory Optimization" [`input_dbm3` "defer_builds_mode=3 (don't keep geometry for other states in memory)"], `groupBox_2` + `output_command`, `button_ok`.
+- **load_traj.ui**: `groupBox` "Target Object" [`label` + `input_object` (combo), `label_3` "State" + `input_state` (max 999, default 1, tip "Append if state=0")], `groupBox_3` "Frames" [`input_start` (1..99999, 1), `input_stop` (-1..99999, -1, tip "Load entire trajectory if stop &lt; 1"), `input_interval` (min 1)], `groupBox_4` "Memory Optimization" [`input_dbm3` "defer_builds_mode=3 (don't keep geometry for other states in memory)"], `groupBox_2` + `output_command`, `button_ok`.
 - **movieexport.ui**: `group_format` "Movie Format" [`label` "E&ncoder" + `input_encoder` (blank, ffmpeg, mpeg_encode, convert), `label_quality` + `input_quality` (60..100, default 90, suffix %), radios `format_mp4`, `format_mpg`, `format_mov`, `format_gif`, `format_png` (checked)], `label_2` "Wid&th" + `input_width` (max 9999), `label_3` "Hei&ght" + `input_height`, `label_7` "Common:" + `button_720p`/`button_480p`/`button_360p`, `group_mode` "Rendering" [`input_draw` (checked), `input_ray`], `button_ok` (QCommandLinkButton "Save Movie as ...").
 - **pluginitem.ui**: `w_title`, `w_version`, `w_loadtime`, `w_info` ("Info"), `w_enable` ("Load"), `w_startup` ("Load on startup"), `w_settings` ("Settings"), `w_uninstall` ("Uninstall").
 - **pluginmanager.ui**: `tabWidget` with 4 tabs — tab1 (`e_filter`, `c_loaded`, `c_startup`, `f_installed_scroll`/`f_installed_widget`, `b_startup_all`, `b_startup_none`), tab2 (`groupBox` "Install from local file" + `b_local`; `groupBox_2` "Install from PyMOLWiki or any URL" + `label`, `label_2` "URL:", `e_wiki`, `b_wiki` "Fetch"; `groupBox_3` "Install from Repository" + `l_repositories`, `b_add_repo`, `b_remove_repo`, `l_repo_plugins`, `b_info`, `b_install`), tab3 (`groupBox_4` "Plugin override search path" + `slb_path`, `bb_path_add`, `bb_path_remove`, `bb_path_up`, `bb_path_down`, `label_4` restart notice; `groupBox_5` "Preferences" + `t_preferences`), tab4 (`textBrowser`).
 - **png.ui**: `label` (2.0 note), `input_rendering` (QComboBox: "capture current display", "draw antialiased OpenGL image", "ray trace with opaque background", "ray trace with transparent background"), `button_ok` (QCommandLinkButton "Save PNG image as ...").
 - **props.ui**: see §2.1.
-- **render.ui**: `stack` (QStackedWidget, 2 pages). page_1: `label` "Width" + `input_width` (px, max 99999) + `input_width_units` (suffix cm, max 999), `label_2` "Height" + `input_height`/`input_height_units`, `button_current` ("Reset", tip "Use current viewport size"), `button_lock` ("Lock aspect ratio", checked), `label_5` "Units" + `input_units` (cm/inch), `label_3` "at" + `input_dpi` (editable combo 300/150/90, currentIndex 1) + `label_4` "DPI", `input_transparent` ("transparent background (\"Ray\" only)", checked), `line_2`, `button_draw` ("Draw (fast)"), `label_6` "- or -", `button_ray` ("Ray (slow)"). page_2: `button_save` ("Save Image to File"), `button_clip` ("Copy Image to Clipboard"), `button_back` ("< Back").
+- **render.ui**: `stack` (QStackedWidget, 2 pages). page_1: `label` "Width" + `input_width` (px, max 99999) + `input_width_units` (suffix cm, max 999), `label_2` "Height" + `input_height`/`input_height_units`, `button_current` ("Reset", tip "Use current viewport size"), `button_lock` ("Lock aspect ratio", checked), `label_5` "Units" + `input_units` (cm/inch), `label_3` "at" + `input_dpi` (editable combo 300/150/90, currentIndex 1) + `label_4` "DPI", `input_transparent` ("transparent background (\"Ray\" only)", checked), `line_2`, `button_draw` ("Draw (fast)"), `label_6` "- or -", `button_ray` ("Ray (slow)"). page_2: `button_save` ("Save Image to File"), `button_clip` ("Copy Image to Clipboard"), `button_back` ("&lt; Back").
 - **save_molecule.ui**: `label_2` "Se&lection" + `input_selection` (editable combo: enabled, all), `label` "S&tate" + `input_state` ("-1 (current)", "0 (all states)"), `tabWidget` with 3 tabs — tab_3 (`input_retain_order`), tab_4 (`input_no_pdb_conect_nodup`, `input_pdb_conect_all`, `input_no_ignore_pdb_segi`, `input_pdb_retain_ids`, `input_multisave`), tab (`label_3` "Write objects or states to ...", `input_multi_off` (checked), `input_multi_object` + `input_multi_object_fmt` (`{name}`), `input_multi_state` + `input_multi_state_fmt` (`{name}_{state}`), `input_multi_prompt` (checked)), `button_ok` ("Save...").
 - **save_object.ui**: `label` "Object", `input_name` (QComboBox), `button_ok` ("Save...").
 - **shortcut_menu.ui**: `shortcutTable`, `showAllButton`, `showBasicButton`, `addNewButton` — dead.

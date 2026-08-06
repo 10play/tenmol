@@ -1,3 +1,8 @@
+---
+title: "Spike 00 — Build PyMOL from this tree so import pymol works (macOS arm64)"
+description: "Status: SUCCESS. PyMOL 3.2.0a0 builds and imports on darwin 24.6.0 / arm64, headless, with no Qt, no PySide, no GLUT, no display, and with MMTF/BCIF support…"
+---
+
 # Spike 00 — Build PyMOL from this tree so `import pymol` works (macOS arm64)
 
 **Status: SUCCESS.** PyMOL 3.2.0a0 builds and imports on darwin 24.6.0 / arm64, headless,
@@ -21,7 +26,7 @@ corrects).
 >
 > "`_cmd._draw()` SEGFAULTS without a GL context" is true as stated but reads as "never call
 > `_draw`", and the architecture was written that way for a while. The precise rule, from
-> [`04-picking.md`](./04-picking.md) §1 and `docs/code-ownership.md:103-107`:
+> `04-picking.md` §1 and `docs/code-ownership.md:103-107`:
 >
 > * `_cmd._draw` segfaults **only** when `options.no_gui == 0` (⇒ `HaveGUI = pmgui = 1`) **and no
 >   GL context is current** — at the `glGetString` on `packages/engine/layer5/PyMOL.cpp:2307`.
@@ -216,7 +221,7 @@ EXIT=0
 ```
 
 Note `_PYMOL_NO_MSGPACKC` is **absent** — msgpack is on. `_PYMOL_NO_MAIN` is **present** —
-no GLUT main. 254 `.o` files (`find build -name '*.o' | wc -l` → `254`).
+no GLUT main. 254 `.o` files (`find build -name '*.o' \| wc -l` → `254`).
 
 ---
 
