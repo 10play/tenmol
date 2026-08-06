@@ -1,78 +1,134 @@
 /*
- * The modern theme — a fresh, contemporary dark UI (Linear / Vercel / Raycast
- * flavour), active only under [data-ui-theme='shadcn']. Inert in classic (the
- * default), so the pixel-exact PyMOL look is untouched.
+ * The modern theme — a clean, biotech-futuristic reskin.
  *
- * WHAT MADE THE OLD REVISION STILL FEEL DATED, and what this fixes:
- *   - monospace fonts on all the CHROME  ->  clean sans-serif everywhere except
- *     the genuine terminal surfaces (console scrollback, command input) and the
- *     aligned mouse-mode data grid, which stay mono on purpose;
- *   - skeuomorphic gradient buttons        ->  flat, subtle, bordered buttons;
- *   - flat grey section labels             ->  real uppercase tracked headers;
- *   - cramped spacing                      ->  more padding / breathing room;
- *   - dull grey accent                     ->  one vivid accent used throughout.
+ * Two attributes drive it, both stamped by the ThemeProvider on <html>:
+ *   [data-ui-theme='shadcn']            -> the modern look is active
+ *   [data-appearance='dark'|'light']    -> which token set (dark is default)
  *
- * WHY CSS AND NOT TAILWIND UTILITIES ON EACH ELEMENT. The app ships PyMOL's own
- * faithful stylesheet, and those rules are UNLAYERED, so they outrank Tailwind's
- * `@layer utilities`. Only a higher-specificity unlayered rule can override a
- * faithful base rule — which is what these `:root[data-ui-theme='shadcn'] …`
- * selectors are, keyed off the Tailwind `@theme` tokens (tailwind.css) and the
- * shadcn `data-slot` attributes. The NEW surfaces (Radix DropdownMenu / Dialog /
- * Tooltip) are real Tailwind-utility shadcn components with no competing class.
+ * Everything is scoped to [data-ui-theme='shadcn'], so classic (the default) is
+ * pixel-exact and untouched. Component rules read ONLY tokens, so light mode is a
+ * values-only override of ~24 vars with zero duplicated component CSS.
  *
- * The internal-gui column's load-bearing metrics (row model, Executive floor,
- * internal_gui_width) are preserved; "modern spacing" lives in the chrome.
+ * WHY CSS AND NOT TAILWIND UTILITIES ON EACH ELEMENT: the app ships PyMOL's own
+ * faithful, UNLAYERED stylesheet; only a higher-specificity unlayered rule can
+ * override it, which is what these `:root[data-ui-theme='shadcn'] …` selectors
+ * are (keyed off the '--pm-*' vars + shadcn 'data-slot' attributes). The genuinely
+ * new surfaces (Radix DropdownMenu/Dialog/Tooltip) are real Tailwind-utility
+ * shadcn components.
+ *
+ * LOAD-BEARING METRICS ARE PRESERVED: --pm-row-h 18, --pm-toggle-w 17,
+ * --pm-control-h 20, --pm-panel-head-h 17, internal_gui_width 220, the Executive
+ * floor. "Modern spacing" lives only in the chrome.
  */
 
-/* ------------------------------------------------------------------ */
-/* 1. Palette + tokens — fresh neutral dark, one vivid accent.         */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* 1. TOKENS — dark (default) then light override.                     */
+/* ================================================================== */
 
 :root[data-ui-theme='shadcn'] {
-  --pm-bg: #0e0e11;
-  --pm-bg-viewport: #050507;
-  --pm-panel: #161619;
-  --pm-panel-alt: #1c1c21;
-  --pm-edge: #000000;
-  --pm-line: rgba(255, 255, 255, 0.08);
-  --pm-text: #eaeaef;
-  --pm-text-dim: #8a8a95;
-  --pm-text-bright: #ffffff;
-  --pm-accent: #635bff; /* vivid blurple */
-
-  --pm-btn-enabled: #3a3a42;
-  --pm-btn-disabled: #24242a;
-  --pm-btn-cloaked: #2e2e35;
-  --pm-btn-pressed: #45454f;
-  --pm-caption: #3ecf8e; /* fresh green */
-
+  /* app-wide '--pm-*' the whole codebase already reads */
+  --pm-bg: #0b0d12;
+  --pm-bg-viewport: #05070a;
+  --pm-panel: #12151c;
+  --pm-panel-alt: #171b24;
+  --pm-edge: #05070a;
+  --pm-line: rgba(148, 163, 184, 0.12);
+  --pm-text: #dfe4ee;
+  --pm-text-dim: #8b93a7;
+  --pm-text-bright: #f5f7fb;
+  --pm-accent: #6366f1;
+  --pm-caption: #3ecf8e;
   --pm-mouse-mode: #ff7a85;
-  --pm-control-lit: #d6d6dd;
-  --pm-control-idle: #5f5f69;
-
-  --sh-r: 8px;
-  --sh-r-sm: 7px;
-  --sh-blur: saturate(180%) blur(24px);
-  --sh-line: rgba(255, 255, 255, 0.08);
-  --sh-line-2: rgba(255, 255, 255, 0.14);
-  --sh-fill: rgba(255, 255, 255, 0.055);
-  --sh-fill-hover: rgba(255, 255, 255, 0.1);
-  --sh-pop: 0 16px 48px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
-  --sh-ring: 0 0 0 3px color-mix(in srgb, var(--pm-accent) 40%, transparent);
+  --pm-btn-enabled: #2a3040;
+  --pm-btn-disabled: #1a1f2b;
+  --pm-btn-cloaked: #232a38;
+  --pm-btn-pressed: #333c50;
 
   --pm-font-ui:
-    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
-  --pm-font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+    'Space Grotesk Variable', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    system-ui, sans-serif;
+  --pm-font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
+  /* design tokens */
+  --sh-panel-frost: rgba(18, 21, 28, 0.72);
+  --sh-console-bg: #05070a;
+  --sh-line-strong: rgba(148, 163, 184, 0.2);
+  --sh-accent-text: #ffffff;
+  --sh-accent-soft: rgba(99, 102, 241, 0.16);
+  --sh-danger: #f5455c;
+  --sh-btn-fill: rgba(148, 163, 184, 0.08);
+  --sh-btn-hover: rgba(148, 163, 184, 0.14);
+  --sh-btn-border: rgba(148, 163, 184, 0.14);
+  --sh-btn-border-strong: rgba(148, 163, 184, 0.2);
+  --sh-focus-ring: color-mix(in srgb, #6366f1 42%, transparent);
+  --sh-pop: 0 16px 48px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
+  --sh-blur: saturate(180%) blur(24px);
+  --sh-r: 8px;
+  --sh-r-sm: 6px;
+
+  color-scheme: dark;
   font-family: var(--pm-font-ui);
 }
 
-/* ------------------------------------------------------------------ */
-/* 2. TYPOGRAPHY — the big one. Sans-serif chrome; mono only where it   */
-/*    is a real terminal or aligned data.                              */
-/* ------------------------------------------------------------------ */
+:root[data-ui-theme='shadcn'][data-appearance='light'] {
+  --pm-bg: #f4f6fb;
+  --pm-panel: #ffffff;
+  --pm-panel-alt: #f1f4f9;
+  --pm-edge: #dfe4ec;
+  --pm-line: rgba(15, 23, 42, 0.1);
+  --pm-text: #2b3245;
+  --pm-text-dim: #6b7488;
+  --pm-text-bright: #0f1420;
+  --pm-accent: #5b57f0;
+  --pm-caption: #0f9d6b;
+  --pm-btn-enabled: #dfe4ee;
+  --pm-btn-disabled: #eef1f6;
+  --pm-btn-cloaked: #e6eaf1;
+  --pm-btn-pressed: #cfd6e4;
 
-/* Blanket sans on the chrome that PyMOL drew in monospace. */
+  --sh-panel-frost: rgba(255, 255, 255, 0.8);
+  --sh-line-strong: rgba(15, 23, 42, 0.16);
+  --sh-accent-soft: rgba(91, 87, 240, 0.12);
+  --sh-danger: #e11d48;
+  --sh-btn-fill: rgba(15, 23, 42, 0.04);
+  --sh-btn-hover: rgba(15, 23, 42, 0.07);
+  --sh-btn-border: rgba(15, 23, 42, 0.1);
+  --sh-btn-border-strong: rgba(15, 23, 42, 0.16);
+  --sh-focus-ring: color-mix(in srgb, #5b57f0 34%, transparent);
+  --sh-pop: 0 12px 40px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.1);
+  --sh-blur: saturate(140%) blur(24px);
+
+  color-scheme: light;
+  /* the molecular scene + terminal read correctly only on a dark stage */
+  --pm-bg-viewport: #05070a;
+  --sh-console-bg: #05070a;
+}
+
+/* ================================================================== */
+/* 2. FOCUS — outline only, never a container box-shadow ring.         */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] button:focus-visible,
+:root[data-ui-theme='shadcn'] [data-slot]:focus-visible,
+:root[data-ui-theme='shadcn'] input:focus-visible,
+:root[data-ui-theme='shadcn'] select:focus-visible,
+:root[data-ui-theme='shadcn'] textarea:focus-visible,
+:root[data-ui-theme='shadcn'] a:focus-visible {
+  outline: 2px solid var(--sh-focus-ring);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+/* Shells can never glow — accent appears only on atoms + on/selected controls. */
+:root[data-ui-theme='shadcn']
+  :where(.shell, .extgui, .internal-gui, .console, [data-slot='panel']):focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ================================================================== */
+/* 3. TYPOGRAPHY — sans chrome; mono only for terminal + aligned data. */
+/* ================================================================== */
+
 :root[data-ui-theme='shadcn'] .objrow__name,
 :root[data-ui-theme='shadcn'] .objrow__group,
 :root[data-ui-theme='shadcn'] .objrow__caption,
@@ -91,8 +147,15 @@
 :root[data-ui-theme='shadcn'] [class*='__bar'] {
   font-family: var(--pm-font-ui) !important;
 }
+/* Terminal + aligned data keep mono. */
+:root[data-ui-theme='shadcn'] .feedback,
+:root[data-ui-theme='shadcn'] .cmdline__input,
+:root[data-ui-theme='shadcn'] .butmode__grid,
+:root[data-ui-theme='shadcn'] .butmode__frame {
+  font-family: var(--pm-font-mono) !important;
+}
 
-/* Section headers -> real uppercase tracked labels (OBJECTS, WIZARD, OUTPUT…). */
+/* Section headers -> muted uppercase tracked labels (never accent). */
 :root[data-ui-theme='shadcn'] [class*='__head'],
 :root[data-ui-theme='shadcn'] .console__bar-title,
 :root[data-ui-theme='shadcn'] .butmode__title {
@@ -101,86 +164,89 @@
   font-weight: 600;
   font-size: 10px;
   color: var(--pm-text-dim);
+  background: transparent;
 }
 
-/* ------------------------------------------------------------------ */
-/* 3. Buttons — flat, subtle, bordered (Linear/Vercel), not gradient.  */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* 4. THE ONE BUTTON SYSTEM — flat, no gradients/bevels/shadows.       */
+/* ================================================================== */
 
 :root[data-ui-theme='shadcn'] .quickbutton,
 :root[data-ui-theme='shadcn'] [data-slot='button'],
 :root[data-ui-theme='shadcn'] [data-slot='icon-button'],
 :root[data-ui-theme='shadcn'] [data-slot='toggle-button'] {
-  background: var(--sh-fill);
-  border: 1px solid var(--sh-line);
+  background: var(--sh-btn-fill);
+  border: 1px solid var(--sh-btn-border);
   border-radius: var(--sh-r-sm);
   color: var(--pm-text);
   box-shadow: none;
+  font-family: var(--pm-font-ui);
   font-weight: 500;
   transition:
     background 0.13s ease,
     border-color 0.13s ease,
     color 0.13s ease;
 }
-
-:root[data-ui-theme='shadcn'] .quickbutton {
-  height: 24px;
-  padding: 0 11px;
-}
-
 :root[data-ui-theme='shadcn'] .quickbutton:hover,
 :root[data-ui-theme='shadcn'] [data-slot='button']:hover,
 :root[data-ui-theme='shadcn'] [data-slot='icon-button']:hover,
 :root[data-ui-theme='shadcn'] [data-slot='toggle-button']:hover {
-  background: var(--sh-fill-hover);
-  border-color: var(--sh-line-2);
+  background: var(--sh-btn-hover);
+  border-color: var(--sh-btn-border-strong);
   color: var(--pm-text-bright);
 }
-
 :root[data-ui-theme='shadcn'] .quickbutton:active,
 :root[data-ui-theme='shadcn'] [data-slot='button']:active,
 :root[data-ui-theme='shadcn'] [data-slot='icon-button']:active {
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--pm-text) 4%, transparent);
+}
+:root[data-ui-theme='shadcn'] .quickbutton:disabled,
+:root[data-ui-theme='shadcn'] [data-slot='button']:disabled {
+  opacity: 0.45;
 }
 
-/* Selected / on -> the accent fill. */
+/* on / selected / toggled -> flat accent, NO glow. */
 :root[data-ui-theme='shadcn'] [data-slot='toggle-button'][data-state='on'],
+:root[data-ui-theme='shadcn'] .quickbutton.is-on,
 :root[data-ui-theme='shadcn'] .overlay-launcher__btn.is-on,
 :root[data-ui-theme='shadcn'] .extgui__btn.is-on,
-:root[data-ui-theme='shadcn'] .console__bar-btn.is-on {
+:root[data-ui-theme='shadcn'] .console__bar-btn.is-on,
+:root[data-ui-theme='shadcn'] .mvctl__btn.is-on {
   background: var(--pm-accent);
   border-color: transparent;
-  color: #fff;
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--pm-accent) 45%, transparent);
+  color: var(--sh-accent-text);
 }
 
-:root[data-ui-theme='shadcn'] button:focus-visible,
-:root[data-ui-theme='shadcn'] [data-slot='input']:focus-visible,
-:root[data-ui-theme='shadcn'] [data-slot='select']:focus-visible {
-  outline: none;
-  box-shadow: var(--sh-ring);
-  border-color: var(--pm-accent);
-}
-
+/* destructive */
 :root[data-ui-theme='shadcn'] .quickbutton--abort {
-  background: #ff453a;
+  background: var(--sh-danger);
   border-color: transparent;
   color: #fff;
 }
 :root[data-ui-theme='shadcn'] .quickbutton--abort:hover {
-  background: #ff5a50;
+  background: color-mix(in srgb, var(--sh-danger) 88%, white);
 }
 
-/* ------------------------------------------------------------------ */
-/* 4. Top bar — a modern app title bar.                                */
-/* ------------------------------------------------------------------ */
+/* heights per context (the 3 sizes). */
+:root[data-ui-theme='shadcn'] .quickbutton {
+  height: 24px;
+  padding: 0 11px;
+}
+:root[data-ui-theme='shadcn'] .console__bar-btn {
+  height: 22px;
+  padding: 0 9px;
+}
+
+/* ================================================================== */
+/* 5. MENU BAR + Radix menus + bespoke dropdowns.                      */
+/* ================================================================== */
 
 :root[data-ui-theme='shadcn'] .menubar {
-  background: rgba(14, 14, 17, 0.72);
+  background: var(--sh-panel-frost);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border-bottom: 1px solid var(--sh-line);
-  height: 34px;
+  border-bottom: 1px solid var(--pm-line);
+  height: 32px;
   gap: 2px;
   padding: 0 8px;
   align-items: center;
@@ -190,14 +256,17 @@
   border: 1px solid transparent;
   box-shadow: none;
   border-radius: var(--sh-r-sm);
-  padding: 5px 11px;
+  padding: 4px 10px;
   color: var(--pm-text-dim);
   font-weight: 500;
-  font-size: 12.5px;
+  font-size: 12px;
 }
-:root[data-ui-theme='shadcn'] .menubar__item:hover,
+:root[data-ui-theme='shadcn'] .menubar__item:hover {
+  background: var(--sh-btn-hover);
+  color: var(--pm-text-bright);
+}
 :root[data-ui-theme='shadcn'] .menubar__item.is-open {
-  background: var(--sh-fill-hover);
+  background: var(--sh-accent-soft);
   color: var(--pm-text-bright);
 }
 :root[data-ui-theme='shadcn'] .menubar__title {
@@ -208,63 +277,62 @@
   text-transform: none;
 }
 
-:root[data-ui-theme='shadcn'] .console__bar-btn {
-  padding: 3px 10px;
-  height: 22px;
-}
-
-/* ------------------------------------------------------------------ */
-/* 5. Bespoke dropdown menus (features/menubar, features/pymol-menu).   */
-/* ------------------------------------------------------------------ */
-
+/* bespoke menubar / pymol-menu dropdowns + their submenus */
 :root[data-ui-theme='shadcn'] .menu,
+:root[data-ui-theme='shadcn'] .menu--sub,
 :root[data-ui-theme='shadcn'] .popup-menu {
-  background: rgba(26, 26, 30, 0.9);
+  background: var(--sh-panel-frost);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border: 1px solid var(--sh-line-2);
+  border: 1px solid var(--sh-line-strong);
   border-radius: var(--sh-r);
   box-shadow: var(--sh-pop);
-  padding: 6px;
+  padding: 5px;
 }
 :root[data-ui-theme='shadcn'] .menu__row {
   border-radius: var(--sh-r-sm);
   height: 26px;
-  padding: 0 10px 0 9px;
+  padding: 0 10px 0 8px;
   font-size: 12.5px;
+  color: var(--pm-text);
 }
 :root[data-ui-theme='shadcn'] .menu__row:hover {
   background: var(--pm-accent);
-  color: #fff;
+  color: var(--sh-accent-text);
+}
+:root[data-ui-theme='shadcn'] .menu__row.is-disabled,
+:root[data-ui-theme='shadcn'] .menu__row.is-disabled:hover {
+  color: var(--pm-text-dim);
+  background: transparent;
 }
 :root[data-ui-theme='shadcn'] .menu__sep {
-  background: var(--sh-line);
+  background: var(--pm-line);
   margin: 5px 8px;
 }
+:root[data-ui-theme='shadcn'] .menu__arrow {
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .menu__row:hover .menu__arrow,
+:root[data-ui-theme='shadcn'] .menu__row:hover .menu__mark {
+  color: var(--sh-accent-text);
+}
 
-/* ------------------------------------------------------------------ */
-/* 6. Inputs / selects / fields.                                       */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* 6. FORMS — inputs / selects / checkbox / slider.                    */
+/* ================================================================== */
 
-:root[data-ui-theme='shadcn'] .cmdline__input,
 :root[data-ui-theme='shadcn'] [data-slot='input'],
 :root[data-ui-theme='shadcn'] [data-slot='textarea'],
 :root[data-ui-theme='shadcn'] [data-slot='select'] {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--sh-line);
+  background: var(--sh-btn-fill);
+  border: 1px solid var(--sh-btn-border);
   border-radius: var(--sh-r-sm);
   color: var(--pm-text-bright);
-  padding: 5px 10px;
+  padding: 5px 9px;
+  font-family: var(--pm-font-ui);
 }
 :root[data-ui-theme='shadcn'] [data-slot='select'] {
   cursor: pointer;
-}
-:root[data-ui-theme='shadcn'] .cmdline__input:focus,
-:root[data-ui-theme='shadcn'] [data-slot='input']:focus,
-:root[data-ui-theme='shadcn'] [data-slot='textarea']:focus {
-  border-color: var(--pm-accent);
-  box-shadow: var(--sh-ring);
-  outline: none;
 }
 :root[data-ui-theme='shadcn'] [data-slot='checkbox'],
 :root[data-ui-theme='shadcn'] [data-slot='switch'],
@@ -272,68 +340,153 @@
   accent-color: var(--pm-accent);
 }
 
-/* ------------------------------------------------------------------ */
-/* 7. Panels, docks, console — cards with subtle borders + vibrancy.   */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* 7. CONSOLE + COMMAND LINE — one terminal, calm focus.               */
+/* ================================================================== */
 
-:root[data-ui-theme='shadcn'] .shell__main {
-  background: var(--pm-bg);
-}
-:root[data-ui-theme='shadcn'] [data-slot='panel'],
-:root[data-ui-theme='shadcn'] .extgui {
-  border-radius: var(--sh-r);
-}
-:root[data-ui-theme='shadcn'] .extgui {
-  border: 1px solid var(--sh-line);
-  box-shadow: var(--sh-pop);
-  overflow: hidden;
-}
-:root[data-ui-theme='shadcn'] .extgui__titlebar {
-  background: rgba(28, 28, 33, 0.8);
+:root[data-ui-theme='shadcn'] .console__bar {
+  background: var(--sh-panel-frost);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border-bottom: 1px solid var(--sh-line);
+  border-bottom: 1px solid var(--pm-line);
+  height: 28px;
+  padding: 0 10px;
+}
+:root[data-ui-theme='shadcn'] .feedback {
+  background: var(--sh-console-bg);
+  color: var(--pm-text);
+  padding: 8px 12px;
+  line-height: 1.55;
 }
 :root[data-ui-theme='shadcn'] .cmdline {
-  background: rgba(20, 20, 24, 0.82);
+  background: var(--sh-panel-frost);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border-top: 1px solid var(--sh-line);
-  height: 36px;
+  border-top: 1px solid var(--pm-line);
+  height: 34px;
   padding: 0 12px;
   gap: 8px;
 }
 :root[data-ui-theme='shadcn'] .cmdline__label {
-  color: var(--pm-accent);
+  color: var(--pm-text-dim);
   font-weight: 600;
 }
 :root[data-ui-theme='shadcn'] .cmdline__input {
-  height: 26px;
-  font-family: var(--pm-font-mono);
-}
-:root[data-ui-theme='shadcn'] .console__bar {
-  background: rgba(20, 20, 24, 0.82);
-  backdrop-filter: var(--sh-blur);
-  -webkit-backdrop-filter: var(--sh-blur);
-  border-bottom: 1px solid var(--sh-line);
-  height: 30px;
+  height: 24px;
+  background: var(--sh-console-bg);
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-sm);
+  color: var(--pm-text-bright);
+  caret-color: var(--pm-accent);
   padding: 0 10px;
 }
-:root[data-ui-theme='shadcn'] .feedback {
-  background: rgba(6, 6, 9, 0.6);
-  font-family: var(--pm-font-mono);
-  padding: 8px 12px;
-  line-height: 1.55;
+/* calm when merely (auto)focused; ring only on keyboard focus. */
+:root[data-ui-theme='shadcn'] .cmdline__input:focus {
+  border-color: var(--pm-line);
+  box-shadow: none;
+  outline: none;
 }
 
-/* Overlay launcher — floating pill with vibrancy. */
-:root[data-ui-theme='shadcn'] .overlay-launcher {
-  background: rgba(22, 22, 26, 0.72);
+/* ================================================================== */
+/* 8. PANELS + DOCK — single-owner seams, flush docked, float floats.  */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] .shell__main {
+  background: var(--pm-bg);
+}
+:root[data-ui-theme='shadcn'] .internal-gui {
+  background: var(--pm-panel);
+  border-left: none; /* the splitter owns this seam */
+}
+/* docked ext-gui is flush: no border, no shadow. */
+:root[data-ui-theme='shadcn'] .extgui {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+:root[data-ui-theme='shadcn'] .extgui__titlebar {
+  background: var(--pm-panel-alt);
+  border-bottom: 1px solid var(--pm-line);
+}
+/* floating surfaces carry the frost + shadow + radius. */
+:root[data-ui-theme='shadcn'] .extgui--float,
+:root[data-ui-theme='shadcn'] [data-slot='panel'] {
+  background: var(--sh-panel-frost);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
-  border: 1px solid var(--sh-line-2);
+  border: 1px solid var(--sh-line-strong);
+  border-radius: var(--sh-r);
+  box-shadow: var(--sh-pop);
+}
+
+/* ================================================================== */
+/* 9. OBJECT ROWS — calm accent tint, geometry preserved.             */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] .objpanel__head {
+  border-bottom: 1px solid var(--pm-line);
+  padding: 8px 10px;
+}
+:root[data-ui-theme='shadcn'] .objrow__name {
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-sm);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text);
+  font-size: 11px;
+}
+:root[data-ui-theme='shadcn'] .objrow.is-enabled .objrow__name {
+  background: var(--sh-accent-soft);
+  border-color: color-mix(in srgb, var(--pm-accent) 40%, transparent);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .objrow__name:hover {
+  background: var(--sh-btn-hover);
+}
+:root[data-ui-theme='shadcn'] .objrow__op {
+  border: none;
+  border-radius: 5px;
+  filter: saturate(0.95);
+}
+
+/* ================================================================== */
+/* 10. MOVIE TRANSPORT — one flat segmented control.                   */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] .mvctl {
+  gap: 3px;
+  padding: 0 2px;
+  height: auto;
+  align-items: center;
+}
+:root[data-ui-theme='shadcn'] .mvctl__btn {
+  height: 24px;
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-sm);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text-dim);
+  padding: 0;
+}
+:root[data-ui-theme='shadcn'] .mvctl__btn:hover {
+  background: var(--sh-btn-hover);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .mvctl__btn.is-on {
+  background: var(--pm-accent);
+  color: var(--sh-accent-text);
+  border-color: transparent;
+}
+
+/* ================================================================== */
+/* 11. OVERLAY LAUNCHER — the floating PDV-style pill toolbar.          */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] .overlay-launcher {
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
+  border: 1px solid var(--sh-line-strong);
   border-radius: 999px;
-  padding: 6px 8px;
+  padding: 6px;
   gap: 4px;
   box-shadow: var(--sh-pop);
 }
@@ -345,80 +498,60 @@
   padding: 5px 13px;
   color: var(--pm-text-dim);
   font-weight: 500;
-}
-:root[data-ui-theme='shadcn'] .overlay-launcher__btn:hover {
-  background: var(--sh-fill-hover);
-  color: var(--pm-text-bright);
-}
-
-/* ------------------------------------------------------------------ */
-/* 8. Internal-gui column — recoloured, geometry preserved.            */
-/* ------------------------------------------------------------------ */
-
-:root[data-ui-theme='shadcn'] .internal-gui {
-  background: var(--pm-panel);
-  border-left: 1px solid var(--sh-line);
-}
-:root[data-ui-theme='shadcn'] .objpanel__head,
-:root[data-ui-theme='shadcn'] .scpanel__head,
-:root[data-ui-theme='shadcn'] .mvpanel__head {
-  background: transparent;
-  border-bottom: 1px solid var(--sh-line);
-  padding: 8px 10px;
-}
-:root[data-ui-theme='shadcn'] .objrow {
-  padding: 0 4px;
-}
-:root[data-ui-theme='shadcn'] .objrow__name {
-  border: 1px solid var(--sh-line);
-  border-radius: 6px;
-  color: var(--pm-text);
-  background: var(--sh-fill);
-  font-size: 11.5px;
-}
-:root[data-ui-theme='shadcn'] .objrow.is-enabled .objrow__name {
-  background: rgba(99, 91, 255, 0.16);
-  border-color: rgba(99, 91, 255, 0.4);
-  color: var(--pm-text-bright);
-}
-:root[data-ui-theme='shadcn'] .objrow__name:hover {
-  background: var(--sh-fill-hover);
-}
-:root[data-ui-theme='shadcn'] .objrow__op {
-  border: none;
-  border-radius: 5px;
-  filter: saturate(0.95);
-}
-:root[data-ui-theme='shadcn'] .control {
-  background: transparent;
-  border-top: 1px solid var(--sh-line);
-}
-:root[data-ui-theme='shadcn'] .control__btn:hover {
-  color: var(--pm-text-bright);
-  border-color: var(--sh-line);
-  border-radius: 6px;
-  background: var(--sh-fill);
-}
-
-/* ------------------------------------------------------------------ */
-/* 9. Splitters, status bar, scrollbars, viewport HUD.                 */
-/* ------------------------------------------------------------------ */
-
-:root[data-ui-theme='shadcn'] .splitter {
-  background: transparent;
-}
-:root[data-ui-theme='shadcn'] .splitter:hover {
-  background: var(--pm-accent);
-}
-:root[data-ui-theme='shadcn'] .statusbar {
-  background: rgba(12, 12, 15, 0.85);
-  backdrop-filter: var(--sh-blur);
-  -webkit-backdrop-filter: var(--sh-blur);
-  border-top: 1px solid var(--sh-line);
-  height: 26px;
   font-size: 11px;
 }
+:root[data-ui-theme='shadcn'] .overlay-launcher__btn:hover {
+  background: var(--sh-btn-hover);
+  color: var(--pm-text-bright);
+}
+
+/* ================================================================== */
+/* 12. STATUS BAR, SPLITTERS, SCROLLBARS, PROGRESS.                    */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] .statusbar {
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
+  border-top: 1px solid var(--pm-line);
+  height: 24px;
+  font-size: 11px;
+  padding: 0 12px;
+}
 :root[data-ui-theme='shadcn'] .statusbar__progress-fill {
+  background: var(--pm-accent);
+}
+
+/* Single-owner seam: the splitter draws one centered hairline; accent only on hover. */
+:root[data-ui-theme='shadcn'] .splitter {
+  background: transparent;
+  position: relative;
+}
+:root[data-ui-theme='shadcn'] .splitter::after {
+  content: '';
+  position: absolute;
+  background: var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .splitter--v::after {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  top: 0;
+  bottom: 0;
+}
+:root[data-ui-theme='shadcn'] .splitter--h::after {
+  top: 50%;
+  transform: translateY(-50%);
+  height: 1px;
+  left: 0;
+  right: 0;
+}
+:root[data-ui-theme='shadcn'] .splitter--v:hover::after {
+  width: 2px;
+  background: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] .splitter--h:hover::after {
+  height: 2px;
   background: var(--pm-accent);
 }
 
@@ -430,29 +563,29 @@
   background: transparent;
 }
 :root[data-ui-theme='shadcn'] ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.16);
+  background: color-mix(in srgb, var(--pm-text) 18%, transparent);
   border: 3.5px solid transparent;
   background-clip: padding-box;
   border-radius: 999px;
 }
 :root[data-ui-theme='shadcn'] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: color-mix(in srgb, var(--pm-text) 30%, transparent);
   background-clip: padding-box;
 }
 
 :root[data-ui-theme='shadcn'] .progressbar {
-  border: 1px solid var(--sh-line);
+  border: 1px solid var(--pm-line);
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--sh-btn-fill);
 }
 :root[data-ui-theme='shadcn'] .progressbar__fill {
   background: var(--pm-accent);
 }
 
-/* ------------------------------------------------------------------ */
-/* 10. Icon buttons — lucide icons in the modern theme.                */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* 13. ICON BUTTONS — lucide icons in the modern theme.                */
+/* ================================================================== */
 
 :root[data-ui-theme='shadcn'] .ui-has-icon {
   display: inline-flex;
@@ -461,20 +594,20 @@
   gap: 6px;
 }
 :root[data-ui-theme='shadcn'] .ui-btn-icon {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   flex: 0 0 auto;
   opacity: 0.92;
 }
-/* Icon-only controls (movie transport, close) collapse to a tidy square. */
+/* icon-only controls collapse to a square */
+:root[data-ui-theme='shadcn'] .ui-has-icon:has(.ui-sr) {
+  gap: 0;
+}
 :root[data-ui-theme='shadcn'] .quickbutton.ui-has-icon:has(.ui-sr),
 :root[data-ui-theme='shadcn'] .extgui__btn.ui-has-icon:has(.ui-sr) {
   min-width: 0;
   padding: 0 9px;
-  gap: 0;
 }
-
-/* The label kept in the DOM for a11y + tests, hidden from view. */
 .ui-sr {
   position: absolute;
   width: 1px;

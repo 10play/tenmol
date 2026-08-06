@@ -1,12 +1,14 @@
 /**
  * The live look-switcher — the control that makes "easily replaceable" concrete.
  *
- * It is itself a real shadcn/Radix `DropdownMenu` (the showcase interactive
- * component), with its trigger rendered as a shell-header `menubar__item` so it
- * sits with the other web-only chrome toggles. Picking an option flips the
- * {@link ThemeProvider} live — no reload, no state loss — and persists the
- * choice. With no provider mounted (unit tests) it degrades to a no-op button.
+ * A real shadcn/Radix `DropdownMenu` (classic ⇄ modern), with its trigger
+ * rendered as a shell-header `menubar__item`. When the modern theme is active it
+ * also shows a Sun/Moon button that flips light/dark. Both persist and flip the
+ * {@link ThemeProvider} live — no reload. With no provider mounted (unit tests)
+ * they degrade to inert buttons.
  */
+
+import { Moon, Sun } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -16,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './DropdownMenu';
+import { IconButton } from './Button';
 import { useThemeControls, type UiTheme } from './theme';
 
 const OPTIONS: ReadonlyArray<{ value: UiTheme; label: string }> = [
@@ -24,32 +27,45 @@ const OPTIONS: ReadonlyArray<{ value: UiTheme; label: string }> = [
 ];
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useThemeControls();
+  const { theme, setTheme, appearance, toggleAppearance } = useThemeControls();
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className="menubar__item"
-          data-testid="theme-toggle"
-          title="Switch the UI theme — classic PyMOL ↔ modern shadcn"
+    <>
+      {theme === 'shadcn' && (
+        <IconButton
+          variant="menubar"
+          icon={appearance === 'dark' ? Sun : Moon}
+          data-testid="appearance-toggle"
+          title={appearance === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          onClick={toggleAppearance}
         >
-          ◐ {theme === 'shadcn' ? 'modern' : 'classic'}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>UI theme</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {OPTIONS.map((option) => (
-          <DropdownMenuCheckboxItem
-            key={option.value}
-            checked={theme === option.value}
-            onCheckedChange={() => setTheme(option.value)}
+          {appearance === 'dark' ? 'light' : 'dark'}
+        </IconButton>
+      )}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="menubar__item"
+            data-testid="theme-toggle"
+            title="Switch the UI theme — classic PyMOL ↔ modern shadcn"
           >
-            {option.label}
-          </DropdownMenuCheckboxItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            ◐ {theme === 'shadcn' ? 'modern' : 'classic'}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>UI theme</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {OPTIONS.map((option) => (
+            <DropdownMenuCheckboxItem
+              key={option.value}
+              checked={theme === option.value}
+              onCheckedChange={() => setTheme(option.value)}
+            >
+              {option.label}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }

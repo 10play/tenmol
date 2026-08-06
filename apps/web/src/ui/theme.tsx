@@ -1,25 +1,29 @@
 /**
  * The theme seam — the one switch that makes the whole UI replaceable.
  *
- * Two looks ship at once. `classic` is the pixel-exact PyMOL reproduction the
- * app has always had; `shadcn` is the modern reskin. Every primitive in
- * `src/ui/` reads {@link useTheme} and renders one or the other, so swapping the
- * entire look is this context's value — nothing else moves.
+ * Two axes, orthogonal on purpose:
+ *   - THEME    `classic` | `shadcn`  — the pixel-exact PyMOL look vs the modern
+ *              reskin. Stamped as `data-ui-theme` on <html>.
+ *   - APPEARANCE `dark` | `light`    — only meaningful for the modern theme,
+ *              which redefines its ~24 design tokens for light mode. Stamped as
+ *              `data-appearance`. Classic never reads these tokens, so it is
+ *              unaffected. The 3D viewport and the console deliberately stay dark
+ *              in both appearances.
+ *
+ * Every `src/ui` primitive reads {@link useTheme}; swapping the whole look is
+ * this context's value — nothing else moves.
  *
  * TWO PROPERTIES THIS FILE GUARANTEES, both load-bearing:
- *
  *   1. With NO provider mounted, `useTheme()` returns `'classic'` (the context
  *      default). Every existing DOM test renders primitives with no provider and
  *      therefore exercises the classic passthrough DOM — which is why the ~140
  *      class-name-pinned tests need no edits.
+ *   2. Resolution precedence: URL param > localStorage > (appearance also falls
+ *      back to `prefers-color-scheme`) > default. `?theme=` / `?appearance=`
+ *      exist so a screenshot / e2e run can pin either without clicking.
  *
- *   2. Resolution precedence is URL param > localStorage > `'classic'`. The
- *      `?theme=` param exists so a screenshot / e2e run can pin either look
- *      without clicking; localStorage makes a user's choice stick across reloads.
- *
- * State lives here, NOT in `@tenmol/stores`' UI store, on purpose: the whole
- * `src/ui/` layer stays portable (it depends on nothing but React), which is the
- * point of an abstraction that is meant to be lifted out and replaced.
+ * State lives here, NOT in `@tenmol/stores`, so the whole `src/ui` layer stays
+ * portable — the point of an abstraction meant to be lifted out and replaced.
  */
 
 import {
@@ -33,50 +37,78 @@ import {
 } from 'react';
 
 export type UiTheme = 'classic' | 'shadcn';
+export type UiAppearance = 'dark' | 'light';
 
-const STORAGE_KEY = 'tenmol.ui.theme';
+const THEME_KEY = 'tenmol.ui.theme';
+const APPEARANCE_KEY = 'tenmol.ui.appearance';
 
 function isTheme(value: unknown): value is UiTheme {
   return value === 'classic' || value === 'shadcn';
 }
-
-/** URL param > localStorage > 'classic'. Every read is defensive: a headless or
- * storage-disabled context must fall back, never throw. */
-function readInitialTheme(): UiTheme {
-  try {
-    const search = globalThis.location?.search ?? '';
-    const param = new URLSearchParams(search).get('theme');
-    if (isTheme(param)) return param;
-  } catch {
-    /* no location (node) */
-  }
-  try {
-    const stored = globalThis.localStorage?.getItem(STORAGE_KEY);
-    if (isTheme(stored)) return stored;
-  } catch {
-    /* storage disabled by policy */
-  }
-  return 'classic';
+function isAppearance(value: unknown): value is UiAppearance {
+  return value === 'dark' || value === 'light';
 }
 
-function persistTheme(theme: UiTheme): void {
+function param(name: string): string | null {
   try {
-    globalThis.localStorage?.setItem(STORAGE_KEY, theme);
+    return new URLSearchParams(globalThis.location?.search ?? '').get(name);
+  } catch {
+    return null;
+  }
+}
+function stored(key: string): string | null {
+  try {
+    return globalThis.localStorage?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+}
+function persist(key: string, value: string): void {
+  try {
+    globalThis.localStorage?.setItem(key, value);
   } catch {
     /* quota / private mode: the choice simply will not stick */
   }
 }
 
+/** URL param > localStorage > 'classic'. */
+function readInitialTheme(): UiTheme {
+  const p = param('theme');
+  if (isTheme(p)) return p;
+  const s = stored(THEME_KEY);
+  return isTheme(s) ? s : 'classic';
+}
+
+/** URL param > localStorage > prefers-color-scheme > 'dark'. */
+function readInitialAppearance(): UiAppearance {
+  const p = param('appearance');
+  if (isAppearance(p)) return p;
+  const s = stored(APPEARANCE_KEY);
+  if (isAppearance(s)) return s;
+  try {
+    if (globalThis.matchMedia?.('(prefers-color-scheme: light)').matches) return 'light';
+  } catch {
+    /* no matchMedia */
+  }
+  return 'dark';
+}
+
 export interface ThemeControls {
   theme: UiTheme;
+  appearance: UiAppearance;
   setTheme: (theme: UiTheme) => void;
   toggle: () => void;
+  setAppearance: (appearance: UiAppearance) => void;
+  toggleAppearance: () => void;
 }
 
 const ThemeContext = createContext<ThemeControls>({
   theme: 'classic',
+  appearance: 'dark',
   setTheme: () => undefined,
   toggle: () => undefined,
+  setAppearance: () => undefined,
+  toggleAppearance: () => undefined,
 });
 
 export function ThemeProvider({
@@ -88,6 +120,7 @@ export function ThemeProvider({
   theme?: UiTheme;
 }) {
   const [theme, setThemeState] = useState<UiTheme>(() => forced ?? readInitialTheme());
+  const [appearance, setAppearanceState] = useState<UiAppearance>(() => readInitialAppearance());
 
   useEffect(() => {
     if (forced && forced !== theme) setThemeState(forced);
@@ -95,27 +128,40 @@ export function ThemeProvider({
 
   const setTheme = useCallback((next: UiTheme) => {
     setThemeState(next);
-    persistTheme(next);
+    persist(THEME_KEY, next);
   }, []);
-
   const toggle = useCallback(() => {
-    setThemeState((current) => {
-      const next: UiTheme = current === 'classic' ? 'shadcn' : 'classic';
-      persistTheme(next);
+    setThemeState((cur) => {
+      const next: UiTheme = cur === 'classic' ? 'shadcn' : 'classic';
+      persist(THEME_KEY, next);
+      return next;
+    });
+  }, []);
+  const setAppearance = useCallback((next: UiAppearance) => {
+    setAppearanceState(next);
+    persist(APPEARANCE_KEY, next);
+  }, []);
+  const toggleAppearance = useCallback(() => {
+    setAppearanceState((cur) => {
+      const next: UiAppearance = cur === 'dark' ? 'light' : 'dark';
+      persist(APPEARANCE_KEY, next);
       return next;
     });
   }, []);
 
-  // Stamp the root so CSS (shadcn tokens, any `[data-ui-theme]` hook) can see the
-  // active look. Harmless in tests: without a provider nothing stamps.
+  // Stamp the root so the theme CSS can hook the active look + appearance.
   useEffect(() => {
     const root = globalThis.document?.documentElement;
     if (root) root.setAttribute('data-ui-theme', theme);
   }, [theme]);
+  useEffect(() => {
+    const root = globalThis.document?.documentElement;
+    if (root) root.setAttribute('data-appearance', appearance);
+  }, [appearance]);
 
   const value = useMemo<ThemeControls>(
-    () => ({ theme, setTheme, toggle }),
-    [theme, setTheme, toggle],
+    () => ({ theme, appearance, setTheme, toggle, setAppearance, toggleAppearance }),
+    [theme, appearance, setTheme, toggle, setAppearance, toggleAppearance],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
@@ -126,7 +172,7 @@ export function useTheme(): UiTheme {
   return useContext(ThemeContext).theme;
 }
 
-/** The theme plus its setters, for the toggle control. */
+/** The theme + appearance plus their setters, for the toggle controls. */
 export function useThemeControls(): ThemeControls {
   return useContext(ThemeContext);
 }
