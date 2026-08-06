@@ -1,3 +1,8 @@
+---
+title: "Building the engine, and the toolchain"
+description: "Two halves. The first is how the PyMOL engine in packages/engine/ compiles — upstream's build, which this fork inherits unchanged and which is the part that…"
+---
+
 # Building the engine, and the toolchain
 
 Two halves. The first is how the PyMOL engine in `packages/engine/` compiles — upstream's build,
@@ -73,8 +78,8 @@ roughly double.
    `include/freetype2`, `include/libxml2`, `include/openvr`, `lib64`, `lib`.
 4. **Two extensions are declared**: `pymol._cmd` (the whole engine) and `chempy.champ._champ`
    (10 C files from `contrib/champ`).
-5. **`build_cmake()`** makes `build/temp.../<target>`, `os.chdir`s into it, runs `cmake <srcdir>
-   -D...` then `cmake --build . --config Release -j<os.cpu_count()>`. Note the `chdir`: the build is
+5. **`build_cmake()`** makes `build/temp.../<target>`, `os.chdir`s into it, runs `cmake &lt;srcdir>
+   -D...` then `cmake --build . --config Release -j&lt;os.cpu_count()>`. Note the `chdir`: the build is
    not reentrant.
 6. **Version** comes from `layer0/Version.h` by regex. Currently `3.2.0a`.
 

@@ -6,6 +6,7 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
+import jsdoc from 'eslint-plugin-jsdoc';
 import globals from 'globals';
 
 /** Everything that belongs to upstream PyMOL, to a build, or to codegen output. */
@@ -72,6 +73,30 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'warn',
       eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-console': 'off',
+    },
+  },
+
+  {
+    // Documentation well-formedness for the public API surface. These are
+    // CHECK-only rules: they validate JSDoc that already exists (param names
+    // match, types are the preferred spelling, no stray asterisks), but they do
+    // NOT require a doc block. Presence and coverage are the ratchet gate's job
+    // (scripts/doc-coverage.mjs), so this never floods the ~2000-symbol backlog
+    // with warnings under `--max-warnings 0`.
+    files: ['packages/*/src/**/*.{ts,tsx}', 'apps/web/src/**/*.{ts,tsx}'],
+    plugins: { jsdoc },
+    settings: { jsdoc: { mode: 'typescript' } },
+    rules: {
+      // disableMissingParamChecks: this repo documents only the parameters that
+      // need explaining, not every one in order. The rule still flags a @param
+      // whose name matches no actual parameter (genuine doc/signature drift).
+      'jsdoc/check-param-names': [
+        'error',
+        { disableMissingParamChecks: true, checkDestructured: false },
+      ],
+      'jsdoc/check-property-names': 'error',
+      'jsdoc/check-types': 'error',
+      'jsdoc/empty-tags': 'error',
     },
   },
 

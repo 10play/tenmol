@@ -1,3 +1,8 @@
+---
+title: "Spike 06 — The C++ geometry accessor (_cmd.web_get_rep_geometry)"
+description: "Status: IMPLEMENTED AND VERIFIED. Plan code-ownership.md §4 tasks 1 and 2 are done. The product owner moved Mode G onto the critical path; this is the C++…"
+---
+
 # Spike 06 — The C++ geometry accessor (`_cmd.web_get_rep_geometry`)
 
 **Status: IMPLEMENTED AND VERIFIED.** Plan `code-ownership.md` §4 tasks 1 and 2 are done.
@@ -20,7 +25,7 @@ Nothing is inferred from source reading alone.
 > `web_resolve_pick` to the same two sentinel regions this spike created.
 >
 > **§10's gap list is largely CLOSED, by spike 08 and by the wave after it.** Read
-> [`08-native-changes.md`](./08-native-changes.md) §4–§5 before acting on any of it:
+> `08-native-changes.md` §4–§5 before acting on any of it:
 >
 > | §10 item | today |
 > | --- | --- |
@@ -345,9 +350,9 @@ Wall-clock for the accessor call only, all reps built beforehand, headless, sing
 | structure | rep | accessor | `get_vrml(2)` | speed-up |
 |---|---|---|---|---|
 | 1UBQ (660 at.) | cartoon | 0.0001 s | 0.014 s | 140× |
-| 1UBQ | surface | < 0.0001 s | 0.024 s | > 240× |
+| 1UBQ | surface | &lt; 0.0001 s | 0.024 s | > 240× |
 | 4HHB (4,779 at.) | cartoon | 0.001 s | 0.165 s | 165× |
-| 4HHB | surface | < 0.001 s | 0.150 s | > 150× |
+| 4HHB | surface | &lt; 0.001 s | 0.150 s | > 150× |
 | **1AON (58,870 at.)** | **cartoon** | **0.008 s** | **1.950 s** | **244×** |
 | **1AON** | **surface** | **0.003 s** | **2.095 s** | **698×** |
 

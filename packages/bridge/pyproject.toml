@@ -79,3 +79,21 @@ markers = [
     "gl: needs a real offscreen GL context (on macOS, a logged-in user session with WindowServer). Gate these the way the ray image-diff tests are gated.",
     "engine: boots the one and only SingletonPyMOL in this process",
 ]
+
+# Docstring WELL-FORMEDNESS for the bridge, via ruff's pydocstyle rules.
+#
+# OPT-IN, not yet a CI gate. Presence/coverage of docstrings is already a hard
+# gate (scripts/doc-coverage.mjs counts them and fails below a ceiling). This
+# block adds FORMAT quality on top: run `pnpm docs:lint:py` (or
+# `ruff check --select D2,D4 packages/bridge`) locally. Only D2xx (whitespace)
+# and D4xx (content) are selected -- NOT D1xx, which would REQUIRE a docstring
+# and duplicate the ratchet gate. Wire it into webclient-ci.yml's static job as
+# a hard gate once the existing docstrings pass it clean (the follow-on ratchet).
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["D2", "D4"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"

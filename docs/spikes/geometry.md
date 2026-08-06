@@ -1,3 +1,8 @@
+---
+title: "Spike 03 — Geometry Extraction: empirical test of "new C++ is mandatory""
+description: "Status: BLOCKER RESOLVED — verdict below. Method: every number in this document was produced by running the commands in §11 on this machine. Nothing here is…"
+---
+
 # Spike 03 — Geometry Extraction: empirical test of "new C++ is mandatory"
 
 **Status:** BLOCKER RESOLVED — verdict below.
@@ -8,7 +13,7 @@ result I already measured.
 > ## STATUS — one conclusion in here is WRONG, and it is in §0
 >
 > **The verdict stands: new C++ was mandatory, and it was written**
-> ([`06-geometry-accessor.md`](./06-geometry-accessor.md)). Everything this spike measured about
+> (`06-geometry-accessor.md`). Everything this spike measured about
 > the **existing exporters** is still true and is still the reason Mode G needs an accessor rather
 > than `get_vrml` — identity loss (§4.2), silent drops of ellipsoids/labels/volume/alpha (§4.1,
 > §4.3), primitive substitution for lines/mesh/dots (§4), ASCII blow-up (§8) and zero dirty
@@ -22,14 +27,14 @@ result I already measured.
 > context** — §1 records `cmd.get_renderer() -> ('', '', '')` and §9 records it again — so
 > `cmd.png(..., ray=0)` silently fell through to the CPU ray tracer, which is why `ray=0` and
 > `ray=1` produced identical bytes in identical time. With the CGL context that
-> [`04-picking.md`](./04-picking.md) §2 later proved exists, `cmd.get_renderer()` returns
+> `04-picking.md` §2 later proved exists, `cmd.get_renderer()` returns
 > `('Apple', 'Apple M4 Max', '2.1 Metal - 89.4')` and **the same call is 0.075 s, a 123×
 > difference**. `docs/code-ownership.md:201-215` is where the two spikes finally met and
 > is the authority; server-side pixels ("Mode P") are a shipped render mode, not an impossibility.
 >
 > **The safe way to read §9:** every number in it is correct *for a bridge with no GL context*, and
 > in that configuration it remains the reason a GL-free backend cannot serve interactive pixels
-> — which is exactly the trade-off [`07-cross-platform-gl.md`](./07-cross-platform-gl.md) §10 later
+> — which is exactly the trade-off `07-cross-platform-gl.md` §10 later
 > measured on both paths.
 >
 > Two smaller notes. §7's `pymol._cache` "stopgap" was **never shipped** and should not be

@@ -1,3 +1,8 @@
+---
+title: "The Qt application shell"
+description: "Read-only survey of PyMOL's Qt main window: layout, menu bar, command line, feedback area, quick buttons, dialogs, startup and shutdown. Every claim is…"
+---
+
 # The Qt application shell
 
 Read-only survey of PyMOL's Qt main window: layout, menu bar, command line, feedback area, quick
@@ -76,7 +81,7 @@ Behaviours:
 - `pymol.gui.ext_hide` / `ext_show` explicitly **no-op with a printed "ignoring gui.ext_hide"** when a Qt window exists (`packages/engine/modules/pymol/gui.py:44-66`).
 
 ### In the port
-`apps/web/src/shell/extGuiDock.ts` drives a dock with modes (`docked-top | docked-side | floating | hidden`), persisted in client state, plus `Ctrl+E` binding. `ext_hide`/`ext_show` stay no-ops; the bridge should still surface them so scripts don't error.
+`apps/web/src/shell/extGuiDock.ts` drives a dock with modes (`docked-top \| docked-side \| floating \| hidden`), persisted in client state, plus `Ctrl+E` binding. `ext_hide`/`ext_show` stay no-ops; the bridge should still surface them so scripts don't error.
 
 ---
 
@@ -312,14 +317,14 @@ Then a separator and 3 radios on `secondary_structure`: `Helix`=1, `Antiparallel
 ### 6.5 `Movie` — `_gui.py:234-376`
 
 - `Append ▸ {0.25, 0.5, 1, 2, 3, 4, 6, 8, 12, 18, 24, 30, 48, 60} second` → `cmd.movie.add_blank(i)` (`_gui.py:235-238`; `packages/engine/modules/pymol/movie.py:268`).
-- `Program ▸ Camera Loop ▸ Nutate` — 15°/{4,8,12}s, 30°/{4,8,12,16}s, 60°/{8,16,24,32}s → `self.mvprg("movie.add_nutate(<sec>,<deg>,start=%d)")` (`_gui.py:241-256`).
-- `Program ▸ Camera Loop ▸ X-Rock` — 30°/{2,4,8}, 60°/{4,8,16}, 90°/{6,12,24}, 120°/{8,16,32}, 180°/{12,24,48} (angle written as `179.99`) → `movie.add_rock(sec,deg,axis='x',start=%d)` (`_gui.py:258-278`).
+- `Program ▸ Camera Loop ▸ Nutate` — 15°/&#123;4,8,12&#125;s, 30°/&#123;4,8,12,16&#125;s, 60°/&#123;8,16,24,32&#125;s → `self.mvprg("movie.add_nutate(<sec>,<deg>,start=%d)")` (`_gui.py:241-256`).
+- `Program ▸ Camera Loop ▸ X-Rock` — 30°/&#123;2,4,8&#125;, 60°/&#123;4,8,16&#125;, 90°/&#123;6,12,24&#125;, 120°/&#123;8,16,32&#125;, 180°/&#123;12,24,48&#125; (angle written as `179.99`) → `movie.add_rock(sec,deg,axis='x',start=%d)` (`_gui.py:258-278`).
 - `Program ▸ Camera Loop ▸ X-Roll` — 4/8/16/32 seconds → `movie.add_roll(<s>.0,axis='x',start=%d)` (`_gui.py:279-284`).
 - `Program ▸ Camera Loop ▸ Y-Rock` — same grid, `axis='y'` (`_gui.py:286-306`).
 - `Program ▸ Camera Loop ▸ Y-Roll` — 4/8/16/32 seconds, `axis='y'` (`_gui.py:307-312`).
-- `Program ▸ Scene Loop ▸ {Nutate|X-Rock|Y-Rock}` (rock=4/2/1) → for angle∈{30,60,90,120} × the matching seconds tuple `((2,4,8),(4,8,16),(6,12,24),(8,16,32))`, item label `"<angle> deg. over <sec> sec."` firing `set sweep_angle,<angle>;cmd.movie.add_scenes(None, <sec>, rock=<rock>, start=%d)` (`_gui.py:315-327`).
+- `Program ▸ Scene Loop ▸ {Nutate|X-Rock|Y-Rock}` (rock=4/2/1) → for angle∈&#123;30,60,90,120&#125; × the matching seconds tuple `((2,4,8),(4,8,16),(6,12,24),(8,16,32))`, item label `"<angle> deg. over <sec> sec."` firing `set sweep_angle,<angle>;cmd.movie.add_scenes(None, <sec>, rock=<rock>, start=%d)` (`_gui.py:315-327`).
 - `Program ▸ Scene Loop ▸ Steady ▸ {1,2,4,8,12,16,24} seconds each` → `movie.add_scenes(None,<v>.0,rock=0,start=%d)` (`_gui.py:329-333`).
-- `Program ▸ State Loop` / `State Sweep` ▸ `{Full Speed | 1/2 | 1/3 | 1/4 | 1/8 | 1/16 Speed}` ▸ `{no pause | 1 | 2 | 4 second pause}` → `movie.add_state_loop(<speed>, <pause>, start=%d)` / `movie.add_state_sweep(...)` (`_gui.py:336-349`). That is 2 × 6 × 4 = **48** leaf items.
+- `Program ▸ State Loop` / `State Sweep` ▸ `{Full Speed \| 1/2 \| 1/3 \| 1/4 \| 1/8 \| 1/16 Speed}` ▸ `{no pause \| 1 \| 2 \| 4 second pause}` → `movie.add_state_loop(<speed>, <pause>, start=%d)` / `movie.add_state_sweep(...)` (`_gui.py:336-349`). That is 2 × 6 × 4 = **48** leaf items.
 - `Update Last Program` → `self.mvprg()` re-runs `self.movie_command` (`_gui.py:958-969`).
 - `Remove Last Program` → `self.mvprg_remove_last()` → `cmd.mdelete(-1, self.movie_start)` (`_gui.py:950-956`).
 - `Reset` → `mset;rewind`.
@@ -385,7 +390,7 @@ At startup, exactly one item is added imperatively: `Initialize Plugin System` �
 
 ### 6.12 `Help` — `_gui.py:867-888`
 All `webbrowser.open(...)` except `About PyMOL`:
-`PyMOL Home Page` http://www.pymol.org · `PyMOL Product Page` https://www.schrodinger.com/platform/products/pymol/ · `PyMOL Community Wiki` http://www.pymolwiki.org · `PyMOL Command Reference` http://pymol.org/pymol-command-ref.html · `PyMOL 3 Documentation` https://learn.schrodinger.com/public/pymol/current/Content/pymol/pymol_home.htm · `Legacy Online Documentation` http://pymol.org/d/ · `Topics ▸ Selection Algebra | Settings | Timeline Python API` (pymolwiki pages) · `PyMOL Mailing List` https://lists.sourceforge.net/lists/listinfo/pymol-users · `About PyMOL` → `self.show_about` · `Sponsorship Information` http://pymol.org/funding.html · `How to Cite PyMOL` http://pymol.org/citing.
+`PyMOL Home Page` http://www.pymol.org · `PyMOL Product Page` https://www.schrodinger.com/platform/products/pymol/ · `PyMOL Community Wiki` http://www.pymolwiki.org · `PyMOL Command Reference` http://pymol.org/pymol-command-ref.html · `PyMOL 3 Documentation` https://learn.schrodinger.com/public/pymol/current/Content/pymol/pymol_home.htm · `Legacy Online Documentation` http://pymol.org/d/ · `Topics ▸ Selection Algebra \| Settings \| Timeline Python API` (pymolwiki pages) · `PyMOL Mailing List` https://lists.sourceforge.net/lists/listinfo/pymol-users · `About PyMOL` → `self.show_about` · `Sponsorship Information` http://pymol.org/funding.html · `How to Cite PyMOL` http://pymol.org/citing.
 
 ### 6.13 Menu items whose callable is `None`
 `PyMOLDesktopGUI` declares 22 class attributes as `None` (`_gui.py:12-40`). `PyMOLQtGUI` supplies all of them (imports at `pymol_qt_gui.py:36-45` + methods), but if a subclass didn't, `_addmenu` would print `warning: skipping <item>` and silently omit the entry (`pymol_qt_gui.py:306-307`). Note `_gui.py:39-40` declares `shortcut_menu_edit_dialog` and `scene_panel_dialog`, while the menu data actually references `self.scene_panel_menu_dialog` (`_gui.py:776`) — the declared-but-unused name is `scene_panel_dialog`; the real method is `scene_panel_menu_dialog` (`pymol_qt_gui.py:891`).
@@ -417,7 +422,7 @@ Backing store — **sqlite**, `packages/engine/modules/pymol/_gui.py:975-1032`:
 - `keyMap` (`keymapping.py:10-17`): Escape→27, Tab→9, Backspace→8, Return/Enter→13, Delete→127.
 - `specialMap` (`keymapping.py:19-41`): Left100, Up101, Right102, Down103, PageUp104, PageDown105, Home106, End107, Insert108, F1..F12 → 1..12. Special keys use `state = -2` (`PyMOL_Special`), ordinary keys `state = -1` (`PyMOL_Key`).
 - Modifier mask (`keymapping.py:44-58`): Shift=0x1, Meta **or** Ctrl=0x2, Alt=0x4.
-- Ctrl-<key> without text ⇒ `k = key - 64`; Alt-<key> ⇒ `k = key`; keys outside 0..255 are dropped (`keymapping.py:84-96`).
+- Ctrl-&lt;key> without text ⇒ `k = key - 64`; Alt-&lt;key> ⇒ `k = key`; keys outside 0..255 are dropped (`keymapping.py:84-96`).
 
 Saved user shortcuts: `pymol.save_shortcut.load_and_set(self.cmd)` at window construction (`pymol_qt_gui.py:419`), which reads `~/.pymol/shortcuts_save.json` and calls `cmd.set_key(key, value[2])` per entry (`packages/engine/modules/pymol/save_shortcut.py:6`, `:65-72`). The returned dict is stored as `self.saved_shortcuts` and handed to `PyMOLShortcutMenu` (`pymol_qt_gui.py:888`).
 
@@ -466,7 +471,7 @@ Wiring: sliders → spinboxes (`v/100`), spinboxes → sliders (`round(v*100)`) 
 Two-page `QStackedWidget` (`stack`).
 Page 1 fields: `input_width`/`input_height` (`QSpinBox`, px), `input_width_units`/`input_height_units` (`QDoubleSpinBox`, suffix follows `input_units`), `input_units` (`QComboBox`: inch / cm — factor `1.0` vs `2.54`), `input_dpi` (editable `QComboBox` with `QIntValidator`, pre-filled from `cmd.get_setting_int('image_dots_per_inch')` when > 0), `button_current` ("Use current viewport size" → `cmd.get_viewport()`), `button_lock` (`QCheckBox`, aspect-ratio lock; computes `form.aspectratio = w/h`, unchecks itself on `ZeroDivisionError`), `input_transparent` (checkbox), `button_draw`, `button_ray`.
 Actions: `run_draw` → `cmd.do('draw %d, %d')`; `run_ray` → `cmd.set('opaque_background', not input_transparent.isChecked())` then `cmd.do('ray %d, %d, async=1')`; both then switch to page 2.
-Page 2: `button_save` ("Save Image to File") → `getSaveFileNameWithExt(filter='PNG File (*.png)')` then `cmd.png(fname, prior=1, dpi=<dpi>)`; `button_clip` ("Copy Image to Clipboard") → `_copy_image(cmd, False, dpi)` inside `PopupOnException`; `button_back` ("< Back") → page 1.
+Page 2: `button_save` ("Save Image to File") → `getSaveFileNameWithExt(filter='PNG File (*.png)')` then `cmd.png(fname, prior=1, dpi=<dpi>)`; `button_clip` ("Copy Image to Clipboard") → `_copy_image(cmd, False, dpi)` inside `PopupOnException`; `button_back` ("&lt; Back") → page 1.
 Circular-update protection uses `UpdateLock([ZeroDivisionError])` with `@lock.skipIfCircular` (`packages/engine/modules/pymol/Qt/utils.py:5-62`).
 `_copy_image` (`pymol_qt_gui.py:1170-1185`): renders to a `tempfile.mktemp('.png')`, loads a `QImage`, `QApplication.clipboard().setImage(...)`, unlinks, prints `" Image copied to clipboard"` when not quiet. It is installed as `pymol.cmd._copy_image` at `pymol_qt_gui.py:1242`.
 

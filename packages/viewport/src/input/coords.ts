@@ -40,7 +40,11 @@ export interface PymolPoint {
 }
 
 /**
+ * Convert a pointer event to PyMOL window coordinates.
+ *
+ * @param ev the pointer event, in CSS client coordinates
  * @param rect the canvas' bounding client rect
+ * @param geom the surface geometry (CSS size and device-pixel ratio)
  */
 export function toPymolPoint(
   ev: PointerLike,

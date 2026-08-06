@@ -1,3 +1,8 @@
+---
+title: "Movies, Scenes, States/Frames, Sequence Viewer"
+description: "Map of four coupled PyMOL subsystems. The engine (packages/engine/, C++ + Python cmd) is unmodified upstream and is reached over the Python bridge. Every…"
+---
+
 # Movies, Scenes, States/Frames, Sequence Viewer
 
 Map of four coupled PyMOL subsystems. The engine (`packages/engine/`, C++ + Python `cmd`) is
@@ -726,12 +731,12 @@ Release actions (`packages/engine/layer1/Control.cpp:290-380`):
 
 | # | glyph | action | logged as |
 |---|---|---|---|
-| 0 | `|<` | `SceneSetFrame(G,4,0)` | `cmd.rewind()` |
+| 0 | `\|<` | `SceneSetFrame(G,4,0)` | `cmd.rewind()` |
 | 1 | `<` | `SceneSetFrame(G,5,-1)` | `cmd.back()` |
 | 2 | `■` | `MoviePlay(stop)`, also clears `sculpting` and `rock` | `cmd.mstop()` |
 | 3 | `▶` | toggle play; Ctrl → rewind first | `cmd.mplay()` / `cmd.mstop()` |
 | 4 | `>` | `SceneSetFrame(G,5,1)` | `cmd.forward()` |
-| 5 | `>|` | `ending`; Ctrl → `middle` | `cmd.ending()` / `cmd.middle()` |
+| 5 | `>\|` | `ending`; Ctrl → `middle` | `cmd.ending()` / `cmd.middle()` |
 | 6 | seq | toggle `seq_view` + `SeqChanged` | `cmd.set('seq_view',0/1)` |
 | 7 | rock | toggle `rock` + restart sweep/frame timers | `cmd.rock(1)` / `cmd.rock(0)` |
 | 8 | full | full screen | `cmd.full_screen()` |
@@ -825,8 +830,8 @@ highlight" (`packages/engine/layer1/Seq.cpp:136-148`); `SeqUpdate` runs `SeekerU
 `is_abbr`, `hint_no_space`.
 
 So the wire payload for a React sequence viewer is, per object row:
-`{ object, objectColor, isLabelRow, cells: [{ text, offset, colorIndex|rgb, selected,
-spacer, unaligned, state, tag, atomIndices }] }`, plus the label rows.
+`&#123; object, objectColor, isLabelRow, cells: [&#123; text, offset, colorIndex|rgb, selected,
+spacer, unaligned, state, tag, atomIndices &#125;] &#125;`, plus the label rows.
 **No such cmd API exists today** — see §14.
 
 ### 12.3 Display modes (`seq_view_format`)
@@ -930,7 +935,7 @@ not clickable). During a drag the row is pinned to `LastRow` (`packages/engine/l
 | **Right click on a selected cell** | opens the `pick_sele` menu for the active selection (`:363-364`) |
 | **Right click on an unselected cell** | builds `cTempSeekerSele` and opens the `seq_option` menu, titled with `ObjectMoleculeGetAtomSele(...)` truncated at the last `/` (`:365-393`, menu at `packages/engine/modules/pymol/menu.py:1800-1840`) |
 | **Right click outside any cell** | `pick_sele` menu for the active selection (`packages/engine/layer1/Seq.cpp:240-248`) |
-| **Left double-click outside any cell** (<0.35 s, `cDoubleTime` `packages/engine/layer3/Seeker.cpp:315`) | clears the active selection: `cmd.select('<sele>','none', enable=1)` (`:328-341`) |
+| **Left double-click outside any cell** (&lt;0.35 s, `cDoubleTime` `packages/engine/layer3/Seeker.cpp:315`) | clears the active selection: `cmd.select('<sele>','none', enable=1)` (`:328-341`) |
 | **Wheel** | horizontal scroll by ±1 (`packages/engine/layer1/Seq.cpp:218-223`) |
 | **Click on the scrollbar strip** | scrollbar drag (`packages/engine/layer1/Seq.cpp:226-231`) |
 | Clicking a cell that carries a `state` | sets that object's `state` setting and `SceneChanged` (`packages/engine/layer3/Seeker.cpp:463-466`, `:408-411`) |
@@ -942,7 +947,7 @@ range variant `:70-167`):
   (`packages/engine/layer3/Executive.cpp:3420`), auto-numbered `selNN` when `auto_number_selections`
   (`:3436-3443`).
 - `sele_mode_kw` = `SceneGetSeleModeKeyword` (`packages/engine/layer1/Scene.cpp:504`), one of
-  `"" | byresi | bychain | bysegi | byobject | bymol | bca.` indexed by
+  `"" \| byresi \| bychain \| bysegi \| byobject \| bymol \| bca.` indexed by
   `mouse_selection_mode` (`packages/engine/layer1/Scene.cpp:460-468`).
 - Include: `((KW(?sele)) or KW(?tmp))`; Exclude: `((KW(?sele)) and not KW(?tmp))`;
   Fresh: `KW(?tmp)` (`packages/engine/layer3/Seeker.cpp:130-140`, `:202-221`).
