@@ -20,6 +20,16 @@
  * clicking Stop while rocking must stop the rock too.
  */
 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Square,
+} from 'lucide-react';
+
 import type { MovieStatus } from '@tenmol/protocol/topics/movie';
 import { Button } from '../../ui';
 import { transport, type MovieAction } from './movieSource';
@@ -87,6 +97,8 @@ export function TransportBar({ status, run, onLog }: Props) {
       <Button
         variant="bare"
         type="button"
+        icon={SkipBack}
+        iconOnly
         className="mvctl__btn"
         title="rewind — cmd.rewind()"
         data-testid="mv-rewind"
@@ -97,6 +109,8 @@ export function TransportBar({ status, run, onLog }: Props) {
       <Button
         variant="bare"
         type="button"
+        icon={ChevronLeft}
+        iconOnly
         className="mvctl__btn"
         title="back one frame — cmd.backward()"
         data-testid="mv-back"
@@ -107,6 +121,8 @@ export function TransportBar({ status, run, onLog }: Props) {
       <Button
         variant="bare"
         type="button"
+        icon={Square}
+        iconOnly
         className="mvctl__btn"
         title="stop — also clears sculpting and rock"
         data-testid="mv-stop"
@@ -117,6 +133,8 @@ export function TransportBar({ status, run, onLog }: Props) {
       <Button
         variant="bare"
         type="button"
+        icon={playing ? Pause : Play}
+        iconOnly
         className={`mvctl__btn${playing ? ' is-on' : ''}`}
         title={playing ? 'stop — cmd.mstop()' : 'play — cmd.mplay() (Ctrl rewinds first)'}
         data-testid="mv-play"
@@ -127,6 +145,8 @@ export function TransportBar({ status, run, onLog }: Props) {
       <Button
         variant="bare"
         type="button"
+        icon={ChevronRight}
+        iconOnly
         className="mvctl__btn"
         title="forward one frame — cmd.forward()"
         data-testid="mv-forward"
@@ -137,6 +157,8 @@ export function TransportBar({ status, run, onLog }: Props) {
       <Button
         variant="bare"
         type="button"
+        icon={SkipForward}
+        iconOnly
         className="mvctl__btn"
         title="ending — cmd.ending() (Ctrl = middle)"
         data-testid="mv-ending"

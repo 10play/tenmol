@@ -1,6 +1,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './app/App';
+// Self-hosted variable fonts for the modern theme (no CDN). Classic never uses
+// them — it keeps its own system stack. The @font-face rules are harmless when
+// unreferenced.
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/jetbrains-mono';
 import './styles/global.css';
 // After global.css: Tailwind's utilities live in `@layer utilities`, which the
 // unlayered classic stylesheet always outranks. See styles/tailwind.css.
