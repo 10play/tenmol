@@ -92,6 +92,10 @@ export class Engine {
   private width = 640;
   private height = 480;
 
+  // Named camera views — `cmd.view(key, 'store'|'recall'|'clear')`. PyMOL keeps
+  // these as 18-float entries in a Python dict; the port mirrors that.
+  private readonly views = new Map<string, number[]>();
+
   constructor() {
     this.register();
   }
@@ -379,6 +383,19 @@ export class Engine {
     h('_engine.pull_geometry', (args) => this.pullGeometry(args));
     h('_bridge.pull_geometry', (args) => this.pullGeometry(args));
 
+    // `cmd.tenmol_objects('snapshot')` — the object-panel endpoint. Answering it
+    // means the panel renders from real rows (group/enabled/reps/caption)
+    // instead of the get_names fallback, and its "endpoint unavailable" notice
+    // goes away.
+    h('tenmol_objects', (args) => this.objectsPanel(str(args[0], 'snapshot')));
+
+    // NOTE ON PANEL ENDPOINTS. The movie/scene *panel* endpoints
+    // (get_movie_panel, get_scene_panel, cmd.do-as-a-call, ...) return rich
+    // structures the features dereference, and those features PROBE-then-degrade
+    // gracefully when the endpoint is missing. A wrong-shape stub crashes them
+    // and making cmd.do callable removes the graceful-fallback trigger, so both
+    // are deliberately left NotPorted until the real shapes are implemented.
+
     h('get_color_index', (args) => getColorIndex(str(args[0])));
     h('get_color_tuple', (args) => {
       const t = getColorTuple(Number(args[0]));
@@ -460,7 +477,40 @@ export class Engine {
     h('get_idle', () => 0);
     h('get_version', () => ['tenmol-engine-ts', 0, 0, '', '', '']);
     h('get_renderer', () => ['tenmol-engine-ts (WebGL2)', 'browser', '']);
-    h('view', () => null);
+    // `cmd.view(key, action, animate)` — named camera views. The views panel
+    // lists them by a deliberately-failing recall and parsing the error's
+    // "Choices:" block (there is no getter, upstream), so an unknown recall MUST
+    // raise with the sorted names, exactly as PyMOL's Shortcut.auto_err does.
+    h('view', (args) => {
+      const key = str(args[0]);
+      const action = str(args[1], 'recall') || 'recall';
+      if (action === 'store') {
+        this.views.set(key, ex.view.get());
+        return null;
+      }
+      if (action === 'clear') {
+        if (key === '*') this.views.clear();
+        else this.views.delete(key);
+        return null;
+      }
+      // recall
+      const stored = this.views.get(key);
+      if (stored) {
+        ex.view.set(stored);
+        this.emitView();
+        return null;
+      }
+      const names = [...this.views.keys()].sort();
+      throw new PymolError(
+        {
+          kind: 'CmdException',
+          type: 'CmdException',
+          message: `unknown view: '${key}'. Choices:\n  ${names.join('  ')}`,
+          traceback: '',
+        },
+        'view',
+      );
+    });
     h('scene', () => null);
     h('wizards.catalog', () => []);
     // NOTE: only stub a symbol when the EMPTY shape is known. wizards.probe /
@@ -476,6 +526,64 @@ export class Engine {
     h('_engine.atom_report', (args) => this.atomReport(str(args[0], 'all') || 'all'));
 
     h('get_model', (args) => this.getModel(str(args[0], 'all') || 'all'));
+  }
+
+  /**
+   * `cmd.tenmol_objects(action, ...)` — the object-panel endpoint
+   * (`PanelSnapshot` in `packages/protocol/src/topics/objects.ts`). Only
+   * 'snapshot' is answered with content; menus return empty (no popups yet).
+   */
+  private objectsPanel(action: string): Json {
+    if (action !== 'snapshot') return [] as unknown as Json;
+    const allRow = {
+      name: 'all',
+      type: 'all',
+      enabled: true,
+      group: '',
+      nest: 0,
+      reps: 0,
+      color: null,
+      caption: '',
+      isGroup: false,
+      isOpen: true,
+      isAll: true,
+      repIndices: [] as number[],
+    };
+    const rows = [allRow];
+    for (const mol of this.executive.moleculesInOrder()) {
+      let reps = 0;
+      for (const a of mol.atoms) reps |= a.visRep;
+      const repIndices: number[] = [];
+      for (let r = 0; r < 32; r++) if (reps & (1 << r)) repIndices.push(r);
+      rows.push({
+        name: mol.name,
+        type: 'object:molecule',
+        enabled: mol.enabled,
+        group: '',
+        nest: 0,
+        reps,
+        color: null,
+        caption: '',
+        isGroup: false,
+        isOpen: true,
+        isAll: false,
+        repIndices,
+      });
+    }
+    return {
+      rows,
+      opCount: 6,
+      buttonMode: '3-Button Motions',
+      ops: ['A', 'S', 'H', 'L', 'C', 'M'],
+      settings: {
+        group_full_member_names: 0,
+        group_arrow_prefix: 0,
+        internal_gui_name_color_mode: 0,
+        internal_gui_control_size: 18,
+        internal_gui_width: 220,
+        hide_underscore_names: 1,
+      },
+    } as unknown as Json;
   }
 
   /* --------------------------- probe helpers -------------------------- */

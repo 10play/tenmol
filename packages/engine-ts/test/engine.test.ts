@@ -206,6 +206,31 @@ describe('LocalBackend', () => {
     expect(await backend.call('count_atoms', ['rep spheres'])).toBe(5);
   });
 
+  it('answers the object-panel endpoint with a real snapshot', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.do('fragment ala');
+    const snap = (await backend.call('tenmol_objects', ['snapshot'])) as {
+      rows: Array<{ name: string; isAll: boolean }>;
+      ops: string[];
+    };
+    expect(snap.rows[0]!.isAll).toBe(true); // synthetic 'all' row
+    expect(snap.rows.map((r) => r.name)).toContain('ala');
+    expect(snap.ops).toEqual(['A', 'S', 'H', 'L', 'C', 'M']);
+  });
+
+  it('cmd.view stores/recalls, and an unknown recall lists names (views panel)', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.call('view', ['front', 'store']);
+    await backend.call('view', ['side', 'store']);
+    await expect(backend.call('view', ['front', 'recall'])).resolves.toBeNull();
+    // The panel provokes the listing with an unknown key; the error carries the
+    // sorted names after "Choices:".
+    const err = await backend.call('view', ['__probe__', 'recall']).catch((e: unknown) => e);
+    expect(String((err as Error).message)).toMatch(/unknown view:.*Choices:[\s\S]*front[\s\S]*side/);
+  });
+
   it('answers benign read symbols instead of NotPorted (clean panels)', async () => {
     const backend = new LocalBackend();
     await backend.connect();
