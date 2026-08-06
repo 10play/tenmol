@@ -1,0 +1,166 @@
+# Claude AI code review on pull requests.
+#
+# Triggered automatically whenever a PR is opened or updated, and on-demand
+# when anyone comments exactly "@claude review" on a PR.
+#
+# Requires one repo/org secret:
+#   ANTHROPIC_API_KEY  — your Anthropic API key
+#
+# The review is posted as a PR comment. On re-runs it posts a new comment
+# (keeps the history intact; doesn't spam by re-reviewing unchanged SHAs).
+
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: read
+
+jobs:
+  review:
+    # Auto-trigger: any PR event.
+    # Manual trigger: a PR comment that is exactly "@claude review" (case-insensitive).
+    if: |
+      github.event_name == 'pull_request' ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request != '' &&
+        contains(github.event.comment.body, '@claude review')
+      )
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need full history so we can diff against the base branch.
+          fetch-depth: 0
+
+      - name: Resolve PR metadata (for issue_comment trigger)
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+            PR_NUM="${{ github.event.issue.number }}"
+            SHA=$(gh pr view "$PR_NUM" --json headRefOid -q .headRefOid)
+            BASE=$(gh pr view "$PR_NUM" --json baseRefName -q .baseRefName)
+            echo "number=$PR_NUM" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+            echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+            echo "base=${{ github.event.pull_request.base.ref }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch base branch
+        run: git fetch origin "${{ steps.pr.outputs.base }}"
+
+      - name: Build diff
+        id: diff
+        run: |
+          DIFF=$(git diff "origin/${{ steps.pr.outputs.base }}...HEAD" \
+                   -- ':!*.lock' ':!pnpm-lock.yaml' ':!package-lock.json' \
+                      ':!*.min.js' ':!*.min.css' \
+                 | head -c 60000)
+          # Write to a temp file; avoid env-var size limits.
+          echo "$DIFF" > /tmp/pr.diff
+          echo "lines=$(wc -l < /tmp/pr.diff)" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if diff is empty
+        if: steps.diff.outputs.lines == '0'
+        run: |
+          echo "Nothing to review — diff is empty after filtering."
+          exit 0
+
+      - name: Run Claude review
+        id: claude
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python3 - << 'PYEOF'
+          import json, os, sys, urllib.request, textwrap
+
+          diff = open("/tmp/pr.diff").read()
+
+          system = textwrap.dedent("""
+              You are an expert code reviewer for the tenmol project: a PyMOL web client
+              consisting of a React/TypeScript viewport (apps/web/) and a Python WebSocket
+              bridge (packages/bridge/) that drives PyMOL over a JSON protocol.
+
+              Review the supplied diff concisely. Structure your review as:
+
+              ## Summary
+              One paragraph: what the PR does.
+
+              ## Issues
+              List any bugs, correctness problems, security concerns, or API misuses.
+              Use sub-headings (### Critical / ### Major / ### Minor) only when there are
+              issues in that category. If none, say "No issues found."
+
+              ## Suggestions
+              Optional improvements: code quality, performance, maintainability.
+              Keep this brief — don't nitpick style already handled by the formatter.
+
+              ## Verdict
+              One of: ✅ **LGTM** | ⚠️ **Needs minor changes** | 🔴 **Needs changes**
+          """).strip()
+
+          payload = {
+              "model": "claude-opus-4-5",
+              "max_tokens": 2048,
+              "system": system,
+              "messages": [{
+                  "role": "user",
+                  "content": f"Please review this pull request diff:\n\n```diff\n{diff}\n```"
+              }]
+          }
+
+          req = urllib.request.Request(
+              "https://api.anthropic.com/v1/messages",
+              data=json.dumps(payload).encode(),
+              headers={
+                  "content-type": "application/json",
+                  "x-api-key": os.environ["ANTHROPIC_API_KEY"],
+                  "anthropic-version": "2023-06-01",
+              },
+              method="POST",
+          )
+
+          with urllib.request.urlopen(req, timeout=120) as resp:
+              body = json.load(resp)
+
+          review = body["content"][0]["text"]
+          # Write to file so the next step can read it without shell quoting issues.
+          with open("/tmp/claude-review.md", "w") as f:
+              f.write(review)
+
+          print("Claude review written to /tmp/claude-review.md")
+          PYEOF
+
+      - name: Post review comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REVIEW=$(cat /tmp/claude-review.md)
+          SHA="${{ steps.pr.outputs.sha }}"
+          SHORT_SHA="${SHA:0:7}"
+
+          BODY="<!-- claude-review -->
+          ## 🤖 Claude Code Review (${SHORT_SHA})
+
+          ${REVIEW}
+
+          ---
+          <sub>Triggered by ${{ github.event_name }} · [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})</sub>"
+
+          gh pr comment "${{ steps.pr.outputs.number }}" \
+            --repo "${{ github.repository }}" \
+            --body "$BODY"
