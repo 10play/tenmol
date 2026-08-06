@@ -75,6 +75,7 @@ export interface TapBatch {
 /** `values[0]`, exactly as Qt compares it (`pymol_qt_gui.py:337`). */
 export type TapValue = number | string | null;
 
+/** The settings PUSH channel: a shared, reference-counted `setting_callbacks` tap. */
 export interface SettingsTap {
   /**
    * Start polling. Reference-counted: the LAST consumer to detach stops it, so
@@ -98,6 +99,7 @@ export interface SettingsTap {
 
 const BY_SESSION = new WeakMap<Session, SettingsTap>();
 
+/** The one `SettingsTap` per session, created on first use and cached. */
 export function getSettingsTap(session: Session): SettingsTap {
   const existing = BY_SESSION.get(session);
   if (existing) return existing;

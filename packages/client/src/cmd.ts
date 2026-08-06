@@ -141,6 +141,7 @@ export const COMPLETE_FN = 'cmd._parser.complete';
  * the generator can be diffed against them later.
  * ------------------------------------------------------------------ */
 
+/** Hand-written, strongly typed subset of the PyMOL `cmd` surface mirroring the Python signatures. */
 export interface TypedPymolCmd {
   /**
    * `cmd.load(filename, object='', state=0, format='', finish=1, discrete=-1,

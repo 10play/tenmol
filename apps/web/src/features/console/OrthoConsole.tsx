@@ -70,6 +70,7 @@ const COMPLETE_FN = 'cmd._parser.complete';
 /** `cOrthoBottomSceneMargin` (`packages/engine/layer1/Ortho.h:25`) — the band's extra height. */
 const BOTTOM_SCENE_MARGIN = 18;
 
+/** PyMOL's in-viewport text console, portalled over the render surface: the feedback ring plus the input line. */
 export function OrthoConsole() {
   const source = getConsoleSource();
   const store = source.store;

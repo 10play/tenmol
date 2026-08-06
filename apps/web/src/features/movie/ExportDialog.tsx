@@ -61,6 +61,7 @@ export function encoderFor(format: Format, encoders: MovieEncoders | null): stri
   return null;
 }
 
+/** Dialog for exporting the movie as image frames or an encoded video. */
 export function ExportDialog({ status, source, call, onClose, log }: Props) {
   const [size, setSize] = useState<[number, number]>([640, 480]);
   const [format, setFormat] = useState<Format>('png');

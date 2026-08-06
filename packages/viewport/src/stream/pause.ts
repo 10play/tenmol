@@ -68,6 +68,7 @@ export type PauseReason =
   | 'manual'
   | (string & {});
 
+/** Tracks the set of active pause reasons and the effective paused state. */
 export interface PauseCoordinator {
   /** Add/remove a reason. Returns the effective paused state. */
   set(reason: PauseReason, active: boolean): boolean;
@@ -75,6 +76,7 @@ export interface PauseCoordinator {
   readonly reasons: readonly PauseReason[];
 }
 
+/** Create a {@link PauseCoordinator} that notifies `onChange` on effective transitions. */
 export function createPauseCoordinator(
   onChange: (paused: boolean, reasons: readonly PauseReason[]) => void,
 ): PauseCoordinator {
@@ -105,6 +107,7 @@ export function createPauseCoordinator(
  * The per-client wrapper
  * ------------------------------------------------------------------ */
 
+/** Counters exposed by a per-client pause wrapper, for the HUD and tests. */
 export interface PerClientPauseStats {
   paused: boolean;
   /** Frames that arrived while paused and were dropped without acking. */
@@ -121,6 +124,7 @@ export interface PerClientPauseStats {
   clients: number;
 }
 
+/** Options controlling how {@link perClientPause} pauses locally vs. globally. */
 export interface PerClientPauseOptions {
   /**
    * Used ONLY for the read-only capability probe and for `_bridge.request_frame`
@@ -140,6 +144,7 @@ export interface PerClientPauseOptions {
   onNote?: (message: string) => void;
 }
 
+/** A {@link PixelSource} whose `setPaused` gates frames for this client alone. */
 export interface PerClientPauseSource extends PixelSource {
   setPaused(paused: boolean): void;
   readonly pauseStats: PerClientPauseStats;
@@ -309,6 +314,7 @@ export function perClientPause(
  * The whole binding: visibility -> reasons -> per-client pause
  * ------------------------------------------------------------------ */
 
+/** Options for {@link createStreamPauseController}: the source plus visibility wiring. */
 export interface StreamPauseControllerOptions extends PerClientPauseOptions {
   /** The source to wrap. Use the returned `source`, not this one. */
   source: PixelSource;
@@ -320,6 +326,7 @@ export interface StreamPauseControllerOptions extends PerClientPauseOptions {
   onChange?: (paused: boolean, reasons: readonly PauseReason[]) => void;
 }
 
+/** The wired-up controller: a pause-gated source plus reason and visibility state. */
 export interface StreamPauseController {
   /** The source the viewport must use. */
   readonly source: PerClientPauseSource;

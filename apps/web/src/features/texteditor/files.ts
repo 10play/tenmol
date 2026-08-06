@@ -23,6 +23,7 @@ import { FILES_BOOTSTRAP, FILES_NS } from '@tenmol/protocol/topics/files';
 import type { Session } from '../../app';
 import { defaultPymolrcPath } from './syntax';
 
+/** Whether file I/O goes through the bridge (`server`) or the browser. */
 export type FileAccess = 'server' | 'browser';
 
 /**
@@ -40,6 +41,7 @@ export type FileAccess = 'server' | 'browser';
  */
 export type AccessState = FileAccess | 'probing';
 
+/** The outcome of a read: the file's path, its text, and which path served it. */
 export interface ReadResult {
   path: string;
   text: string;
@@ -178,6 +180,7 @@ export const MISSING_ROUTE =
  * 3271 ms into the e2e spec.
  */
 export const PROBE_ATTEMPTS = 5;
+/** Base delay between probe rounds, in milliseconds, before back-off. */
 export const PROBE_DELAY_MS = 250;
 
 /**
@@ -192,6 +195,7 @@ export const PROBE_DELAY_MS = 250;
  */
 export const PROBE_MAX_DELAY_MS = 500;
 
+/** Tuning for {@link probeServerFiles}: retry count, delay, and a liveness check. */
 export interface ProbeOptions {
   attempts?: number;
   delayMs?: number;
@@ -221,6 +225,10 @@ async function askOnce(session: Session): Promise<true | null> {
   }
 }
 
+/**
+ * Bootstrap the files namespace and retry until the server route answers,
+ * resolving `true` if the server fs is usable and `false` if it never appears.
+ */
 export async function probeServerFiles(
   session: Session,
   options: ProbeOptions = {},
@@ -299,6 +307,7 @@ export interface PymolrcTarget {
   home: string;
 }
 
+/** Resolve which pymolrc `File ▸ Edit pymolrc` should open, plus alternatives. */
 export async function resolvePymolrc(session: Session): Promise<PymolrcTarget> {
   const value = await session.call<{ paths?: unknown; home?: unknown }>(`${FILES_NS}.pymolrc`, []);
   const candidates = Array.isArray(value?.paths)

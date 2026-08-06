@@ -31,6 +31,7 @@ function now(): number {
  * Push: the WebSocket pixel stream (WP-04)
  * ------------------------------------------------------------------ */
 
+/** Options for the WebSocket pixel-stream source. */
 export interface StreamPixelSourceOptions {
   transport: ViewportTransport;
   /**
@@ -46,8 +47,10 @@ export interface StreamPixelSourceOptions {
   onUnavailable?: (error: Error) => void;
 }
 
+/** The bridge symbol that negotiates and configures the pixel stream. */
 export const PIXEL_STREAM_FN = '_bridge.set_pixel_stream';
 
+/** The real Mode-P source: subscribes to the bridge's pushed pixel frames. */
 export function createStreamPixelSource(options: StreamPixelSourceOptions): PixelSource {
   const { transport } = options;
   let unsubscribe: (() => void) | null = null;
@@ -167,6 +170,7 @@ export function createStreamPixelSource(options: StreamPixelSourceOptions): Pixe
  * Pull: cmd.png + HTTP GET
  * ------------------------------------------------------------------ */
 
+/** Options for the pull-mode fallback source. */
 export interface PngPullSourceOptions {
   transport: ViewportTransport;
   /**
@@ -188,6 +192,7 @@ export interface PngPullSourceOptions {
   onError?: (error: Error) => void;
 }
 
+/** The fallback Mode-P source: one `cmd.png` write + HTTP GET per frame. */
 export function createPngPullSource(options: PngPullSourceOptions): PixelSource {
   const { transport } = options;
   const doFetch = options.fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));

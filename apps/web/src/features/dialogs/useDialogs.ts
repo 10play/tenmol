@@ -18,6 +18,7 @@ import {
   type DialogWindowSpec,
 } from './store';
 
+/** Subscribe to the open dialog windows, optionally filtered to one kind. */
 export function useDialogWindows(kind?: DialogKind): readonly DialogWindowSpec[] {
   const windows = useSyncExternalStore(
     dialogsStore.subscribe,

@@ -66,6 +66,7 @@ const TITLES: Record<Exclude<ToolkitDialog, null>, string> = {
   scenes: 'Scene Panel',
 };
 
+/** What {@link useToolkitHooks} returns: the menu hooks plus the open dialog. */
 export interface ToolkitHooks {
   /** Merged into `MenuRuntime.hooks`. */
   hooks: Readonly<Record<string, (args: unknown[]) => void | Promise<void>>>;
@@ -74,6 +75,7 @@ export interface ToolkitHooks {
   close: () => void;
 }
 
+/** Wires the menu-bar toolkit dialogs (colors, shortcuts, scenes, ...) to hooks. */
 export function useToolkitHooks(note: MenuRuntime['note']): ToolkitHooks {
   const [dialog, setDialog] = useState<ToolkitDialog>(null);
   const close = useCallback(() => setDialog(null), []);

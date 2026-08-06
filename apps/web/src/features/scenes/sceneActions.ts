@@ -21,6 +21,7 @@
 
 import type { PanelMenuCode, PanelMenuNode } from '@tenmol/protocol';
 
+/** One `cmd.scene` invocation: the function, its args/kwargs, and echo text. */
 export interface SceneAction {
   fn: string;
   args: readonly unknown[];
@@ -39,6 +40,7 @@ const scene = (
   return { fn: 'cmd.scene', args, kwargs, echo: `cmd.scene(${rendered})` };
 };
 
+/** The full `cmd.scene` command surface — store, recall, reorder, and friends. */
 export const sceneActions = {
   store: (key = 'new') => scene([key, 'store'], { quiet: 0 }),
   /** Append> submenu: the four flag combinations `_gui.py:782-785` offers. */
@@ -192,6 +194,7 @@ export function dragOrder(
   return sceneActions.order([anchor, pressed]);
 }
 
+/** Move `name` to `beforeIndex` in the scene order, returning the new list. */
 export function reorder(order: readonly string[], name: string, beforeIndex: number): string[] {
   const without = order.filter((entry) => entry !== name);
   const at = Math.max(0, Math.min(without.length, beforeIndex));

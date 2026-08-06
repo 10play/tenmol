@@ -235,6 +235,12 @@ class Decision:
     invalidates: tuple = ()
 
     def raise_if_denied(self) -> "Decision":
+        """Return self if the call may proceed, else raise :class:`NotAllowed`.
+
+        Raises for a denied symbol, and also for a dangerous symbol that still
+        needs a one-time session confirmation (carrying the ``confirm`` symbol
+        and ``why`` reason so the client can prompt).
+        """
         if not self.allowed:
             raise NotAllowed(self.reason or "not allowed: %s" % self.symbol,
                              symbol=self.symbol)
@@ -301,6 +307,12 @@ class Policy:
     # -- grants ------------------------------------------------------------
 
     def add_grant(self, grant: Grant) -> "Policy":
+        """Fold one work package's :class:`Grant` into this policy and return self.
+
+        Unions the grant's roots, symbols, private paths and confirm-once set
+        into the policy, overlays its dangerous and invalidation maps, and
+        keeps the grant on record. Chainable.
+        """
         self.roots |= set(grant.roots)
         self.symbols |= set(grant.symbols)
         self.private |= set(grant.private)
@@ -316,6 +328,7 @@ class Policy:
         self._confirmed.add(symbol)
 
     def is_confirmed(self, symbol: str) -> bool:
+        """Return whether ``symbol`` has been confirmed in this session."""
         return symbol in self._confirmed
 
     def needs_confirmation(self, symbol: str) -> bool:
@@ -339,6 +352,14 @@ class Policy:
     # -- the check ---------------------------------------------------------
 
     def check(self, symbol: Any) -> Decision:  # noqa: ANN401 - client input
+        """Evaluate a dotted symbol against shape, namespace and grant rules.
+
+        Returns a :class:`Decision` describing whether the client may call
+        ``symbol``, whether it is dangerous, whether it needs a one-time
+        confirmation, whether it is bridge-routed, and which topics it
+        invalidates. Rejects non-strings, over-long or non-identifier
+        segments, and dunder segments before any namespace check.
+        """
         if not isinstance(symbol, str) or not symbol:
             return Decision(
                 symbol=str(symbol),
@@ -448,6 +469,11 @@ class Policy:
         )
 
     def invalidation_for(self, symbol: str) -> tuple:
+        """Return the topics a successful call to ``symbol`` invalidates.
+
+        Prefers a whole-dotted-path entry, falling back to the leaf name;
+        an empty tuple when the symbol invalidates nothing.
+        """
         return self.invalidates.get(symbol) or self.invalidates.get(
             symbol.rsplit(".", 1)[-1], ()
         )

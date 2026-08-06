@@ -57,11 +57,13 @@ export function modifiersFor(event: {
   return (event.shiftKey ? 1 : 0) | (event.ctrlKey ? 2 : 0) | (event.altKey ? 4 : 0);
 }
 
+/** Props for `WizardKeyCapture`: the wizard's event mask and a keystroke callback. */
 export interface WizardKeyCaptureProps {
   eventMask: number;
   onKey(k: number, mod: number): void;
 }
 
+/** Hidden focused input that forwards keystrokes to a wizard when it wants key events. */
 export function WizardKeyCapture({ eventMask, onKey }: WizardKeyCaptureProps) {
   const wantsKeys = (eventMask & WIZARD_EVENT_BITS.key) !== 0;
   const ref = useRef<HTMLInputElement>(null);

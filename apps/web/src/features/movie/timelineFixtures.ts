@@ -2,6 +2,7 @@
 
 import { beginProgram, removeLastProgram } from './mvprg';
 
+/** Test helper: runs `beginProgram` then `removeLastProgram`, returning the emitted command and the removal. */
 export function mvprgRoundTrip(
   template: string,
   movieLength: number,

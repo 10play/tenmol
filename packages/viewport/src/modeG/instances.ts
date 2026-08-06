@@ -33,6 +33,7 @@ import { INSTANCE_ITEM_SIZE, type InstanceBuffer, type InstanceKind } from '@ten
 /** Instance kinds this renderer can draw today. */
 export const DRAWABLE_INSTANCE_KINDS: readonly InstanceKind[] = ['sphere', 'cylinder', 'cylinder2'];
 
+/** Whether this renderer can draw the given instance kind. */
 export function isDrawableInstanceKind(kind: InstanceKind): boolean {
   return DRAWABLE_INSTANCE_KINDS.includes(kind);
 }
@@ -86,6 +87,7 @@ function boxGeometry(): InstancedBufferGeometry {
   return geometry;
 }
 
+/** A built instanced draw: the Three.js mesh, its instance count and kind. */
 export interface InstancedDraw {
   mesh: Mesh;
   count: number;

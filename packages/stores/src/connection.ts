@@ -44,6 +44,7 @@ export type ConnectionPhase =
 /** `pump.EngineState`, reported in the bridge's `hello` frame. */
 export type EngineState = 'running' | 'headless' | 'degraded' | 'unknown';
 
+/** The bridge's `hello` frame: build, protocol, engine state, and GL info. */
 export interface BridgeHello {
   pymolVersion: string;
   protocolVersion: number;
@@ -56,6 +57,7 @@ export interface BridgeHello {
   incentiveOnly?: unknown;
 }
 
+/** The full transport-state snapshot the UI renders the connection from. */
 export interface ConnectionState {
   phase: ConnectionPhase;
   url: string;
@@ -79,6 +81,7 @@ export interface ConnectionState {
   progress: number;
 }
 
+/** Store of the connection state with the transitions the session drives it through. */
 export interface ConnectionStore extends Store<ConnectionState> {
   setPhase(phase: ConnectionPhase, patch?: Partial<ConnectionState>): void;
   opened(): void;
@@ -89,6 +92,7 @@ export interface ConnectionStore extends Store<ConnectionState> {
   setProgress(value: number): void;
 }
 
+/** Create a connection store seeded with the target url and token presence. */
 export function createConnectionStore(url: string, hasToken: boolean): ConnectionStore {
   const store = createStore<ConnectionState>({
     phase: 'idle',

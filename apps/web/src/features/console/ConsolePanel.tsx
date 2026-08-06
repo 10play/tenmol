@@ -39,6 +39,7 @@ const FONTS: readonly { label: string; css: string }[] = [
   { label: 'monospace', css: 'monospace' },
 ];
 
+/** The PyMOL console panel: scrollback view plus the command input line. */
 export function ConsolePanel() {
   const session = useSession();
   const source = getConsoleSource();

@@ -22,6 +22,7 @@ import {
   type WizardSnapshot,
 } from '@tenmol/protocol';
 
+/** The `session.call` shape this service is built over. */
 export type CallFn = <T = unknown>(
   fn: string,
   args?: readonly unknown[],
@@ -48,6 +49,7 @@ export interface WizardEventPayload {
   mod?: number;
 }
 
+/** The typed wizard RPC surface over `session.call`. */
 export interface WizardService {
   probe(): Promise<WizardProbe>;
   snapshot(): Promise<WizardSnapshot>;
@@ -60,6 +62,7 @@ export interface WizardService {
   catalog(): Promise<WizardCatalog>;
 }
 
+/** Build a `WizardService` that dispatches each method through `call`. */
 export function createWizardService(call: CallFn): WizardService {
   return {
     probe: () => call<WizardProbe>(WIZARD_RPC.probe),

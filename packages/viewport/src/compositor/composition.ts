@@ -42,6 +42,7 @@ export interface CompositionFrame {
   reps?: readonly RepId[] | undefined;
 }
 
+/** The decision this module produces: which reps the viewport draws, suppresses, and has declared. */
 export interface CompositionState {
   /** Reps we asked the bridge to stop drawing. Sorted, de-duplicated. */
   declared: readonly RepId[];
@@ -125,6 +126,7 @@ export function declarationChanged(a: readonly RepId[], b: readonly RepId[]): bo
   return a.length !== b.length || a.some((rep, index) => rep !== b[index]);
 }
 
+/** The initial state before any rep is declared or any pixel frame seen. */
 export const EMPTY_COMPOSITION: CompositionState = {
   declared: EMPTY,
   drawing: EMPTY,

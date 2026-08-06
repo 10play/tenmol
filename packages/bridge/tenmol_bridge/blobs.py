@@ -26,11 +26,20 @@ __all__ = ["Blob", "BlobStore", "EngineBlobWriter", "BlobNotFound"]
 
 
 class BlobNotFound(BridgeError):
+    """Raised when a blob id is unknown, evicted, or has no bytes to read."""
+
     pass
 
 
 @dataclass
 class Blob:
+    """One out-of-band payload: either in-memory ``data`` or a file ``path``.
+
+    A blob carries its own mime type and size plus optional ``meta`` the client
+    needs to interpret the bytes; file-backed blobs skip copying PyMOL's output
+    into RAM and may own the file so eviction deletes it.
+    """
+
     id: str
     mime: str
     size: int
@@ -44,6 +53,10 @@ class Blob:
     owns_file: bool = False
 
     def read(self) -> bytes:
+        """The blob's bytes, from memory or by reading its backing file.
+
+        Raises :class:`BlobNotFound` if the blob has neither data nor a path.
+        """
         if self.data is not None:
             return self.data
         if self.path is not None:
@@ -52,6 +65,11 @@ class Blob:
         raise BlobNotFound("blob %s has neither data nor path" % self.id)
 
     def as_wire(self) -> Dict[str, Any]:
+        """The blob's JSON placeholder: a ``__blob__`` handle with its fetch URL.
+
+        This is what rides inside a frame in place of the bytes; the client
+        follows ``url`` (``/blob/{id}``) to retrieve the payload out of band.
+        """
         out: Dict[str, Any] = {
             "__blob__": True,
             "id": self.id,
@@ -90,6 +108,10 @@ class BlobStore:
         name: str = "",
         meta: Optional[Dict[str, Any]] = None,
     ) -> Blob:
+        """Store in-memory ``data`` as a new blob and return its handle.
+
+        The bytes are copied and counted against the store's byte budget.
+        """
         blob = Blob(
             id=secrets.token_urlsafe(16),
             mime=mime,
@@ -108,6 +130,11 @@ class BlobStore:
         owns_file: bool = False,
         meta: Optional[Dict[str, Any]] = None,
     ) -> Blob:
+        """Register an on-disk file as a blob without copying it into RAM.
+
+        The mime type is guessed from the extension when not given; pass
+        ``owns_file`` so eviction deletes the file the store created.
+        """
         if not os.path.isfile(path):
             raise BlobNotFound("no such file: %s" % path)
         guessed = mime or mimetypes.guess_type(path)[0] or "application/octet-stream"
@@ -134,6 +161,7 @@ class BlobStore:
     # -- get ---------------------------------------------------------------
 
     def get(self, blob_id: str) -> Blob:
+        """The blob for ``blob_id``, or raise :class:`BlobNotFound`."""
         with self._lock:
             blob = self._blobs.get(blob_id)
         if blob is None:
@@ -141,10 +169,12 @@ class BlobStore:
         return blob
 
     def drop(self, blob_id: str) -> None:
+        """Evict a single blob, deleting its file if the store owns it."""
         with self._lock:
             self._drop_locked(blob_id)
 
     def stats(self) -> Dict[str, Any]:
+        """Current blob count, byte usage, and the configured budget/TTL."""
         with self._lock:
             return {
                 "count": len(self._blobs),
@@ -154,6 +184,7 @@ class BlobStore:
             }
 
     def clear(self) -> None:
+        """Evict every blob, deleting any files the store owns."""
         with self._lock:
             for blob_id in list(self._blobs):
                 self._drop_locked(blob_id)

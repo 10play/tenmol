@@ -259,12 +259,14 @@ class SceneCoverage:
     at: float = 0.0
 
     def visible_reps(self) -> FrozenSet[int]:
+        """The union of every rep drawn by any enabled object in the scene."""
         out: set = set()
         for reps in self.objects.values():
             out |= reps
         return frozenset(out)
 
     def to_json(self) -> Dict[str, Any]:
+        """The coverage as a JSON-safe dict for the mask telemetry block."""
         return {
             "exact": self.exact,
             "source": self.source,
@@ -314,11 +316,24 @@ class CoverageProbe:
         self.total_ms = 0.0
 
     def stale(self, now: float, scan_ms: float) -> bool:
+        """True when the last coverage is inexact or older than ``scan_ms``.
+
+        An inexact probe is always re-run; an exact one is trusted for up to
+        ``scan_ms`` so the expensive iterate does not run on every dirty tick.
+        """
         if not self.last.exact:
             return True
         return (now - self.last.at) * 1000.0 >= scan_ms
 
     def probe(self, engine: Any) -> SceneCoverage:
+        """Read the current per-object rep visibility.  Engine thread only.
+
+        Combines ``cmd.get_vis()`` with an OR-ing ``cmd.iterate`` over enabled
+        atoms and overrides the result with ``_cmd.web_get_versions`` for the
+        non-molecular objects ``get_vis`` misreports.  A missing ``cmd`` or any
+        exception yields an inexact :class:`SceneCoverage` rather than raising,
+        so the pump never goes down.
+        """
         cmd = getattr(engine, "cmd", None)
         if cmd is None:
             self.last = SceneCoverage(source="no-pymol", at=time.monotonic())
@@ -427,6 +442,7 @@ class CoverageProbe:
         return out
 
     def stats(self) -> Dict[str, Any]:
+        """Probe counters plus the last coverage, for the mask telemetry."""
         payload: Dict[str, Any] = {
             "probes": self.probes,
             "errors": self.errors,
@@ -459,6 +475,7 @@ class MaskPlan:
     reason: str = "no-declaration"
 
     def to_json(self) -> Dict[str, Any]:
+        """The plan as a JSON-safe dict for the mask telemetry block."""
         return {
             "maskedObjects": list(self.masked),
             "reps": None if self.reps is None else list(self.reps),
@@ -635,6 +652,12 @@ class StreamParams:
     coverage_scan_ms: float = 250.0
 
     def clamp(self) -> "StreamParams":
+        """Coerce every field into its legal range in place, and return self.
+
+        Guards the stream against a client sending nonsense (a 900-quality, a
+        negative fps); ``mask_mode`` is the one field that raises rather than
+        clamps, since an unknown mode has no safe default.
+        """
         self.quality = max(1, min(100, int(self.quality)))
         self.dpr = max(0.1, min(8.0, float(self.dpr)))
         self.settle_scale = max(1.0, min(4.0, float(self.settle_scale)))
@@ -731,6 +754,7 @@ class RedisplayGate:
         return self.mode
 
     def detach(self) -> None:
+        """Remove the pre-draw probe, restoring the wrapped tick if one was used."""
         pump, self._attached_to = self._attached_to, None
         if pump is None:
             return
@@ -781,15 +805,18 @@ class RedisplayGate:
         return was
 
     def add_sink(self, sink: Callable[[bool], None]) -> None:
+        """Register a callback fired with each probe's dirty flag."""
         with self._lock:
             self._sinks.append(sink)
 
     def remove_sink(self, sink: Callable[[bool], None]) -> None:
+        """Unregister a previously added dirty-flag callback, if present."""
         with self._lock:
             if sink in self._sinks:
                 self._sinks.remove(sink)
 
     def stats(self) -> Dict[str, Any]:
+        """Attach mode and probe counters for the stream telemetry."""
         return {
             "mode": self.mode,
             "probes": self.probes,
@@ -884,6 +911,11 @@ class PixelReadback:
     # -- the readback ------------------------------------------------------
 
     def buffer_for(self, width: int, height: int) -> Any:
+        """The reusable RGBA readback buffer, grown to fit ``width x height``.
+
+        Kept between calls and only reallocated when a larger frame arrives, so
+        a steady-size stream never churns the allocator.
+        """
         need = int(width) * int(height) * 4
         if self._buffer is None or self._buffer_bytes < need:
             self._buffer = (ctypes.c_ubyte * need)()
@@ -916,6 +948,7 @@ class PixelReadback:
         return buf, (time.perf_counter() - t0) * 1000.0
 
     def info(self) -> Dict[str, Any]:
+        """The bound GL source, buffer size, and backend, for telemetry."""
         return {
             "source": self.source,
             "bufferBytes": self._buffer_bytes,
@@ -952,9 +985,15 @@ class Subscriber:
     # -- flow control ------------------------------------------------------
 
     def in_flight(self) -> int:
+        """How many frames have been sent to this client but not yet acked."""
         return max(0, self.last_sent - self.last_acked)
 
     def outbox_depth(self) -> int:
+        """The sink's queued-but-unsent frame count, duck-typed and best-effort.
+
+        Reads ``sink.outbox.qsize()`` or a ``sink.queued()`` callable; anything
+        missing or raising counts as zero so flow control degrades gracefully.
+        """
         outbox = getattr(self.sink, "outbox", None)
         if outbox is not None:
             try:
@@ -985,6 +1024,11 @@ class Subscriber:
         return "unacked"
 
     def ack(self, frame_id: int, now: Optional[float] = None) -> bool:
+        """Record a client ack, updating the window and ack latency.
+
+        Returns False for a stale or future ``frame_id`` (at or below the last
+        ack, or beyond the last sent), which the caller treats as a no-op.
+        """
         frame_id = int(frame_id)
         if frame_id <= self.last_acked or frame_id > self.last_sent:
             return False
@@ -995,12 +1039,14 @@ class Subscriber:
         return True
 
     def record_sent(self, frame_id: int, nbytes: int, now: float) -> None:
+        """Note that ``frame_id`` was just sent, advancing the flow window."""
         self.last_sent = frame_id
         self.sent_at = now
         self.frames_sent += 1
         self.bytes_sent += nbytes
 
     def stats(self) -> Dict[str, Any]:
+        """This client's per-subscriber send/ack counters for telemetry."""
         return {
             "framesSent": self.frames_sent,
             "framesSkipped": self.frames_skipped,
@@ -1151,6 +1197,7 @@ class FrameStream:
         return self
 
     def detach(self) -> None:
+        """Remove the tick hook and the dirty probe.  Idempotent."""
         if not self._attached:
             return
         try:
@@ -1180,6 +1227,7 @@ class FrameStream:
         return sub
 
     def remove_client(self, key_or_sink: Any) -> None:
+        """Unsubscribe, matching by subscription key or by the sink itself."""
         with self._lock:
             if key_or_sink in self._subs:
                 del self._subs[key_or_sink]
@@ -1190,6 +1238,7 @@ class FrameStream:
                     return
 
     def subscriber(self, key_or_sink: Any) -> Optional[Subscriber]:
+        """The :class:`Subscriber` for a key or sink, or None if not subscribed."""
         with self._lock:
             sub = self._subs.get(key_or_sink)
             if sub is not None:
@@ -1201,6 +1250,7 @@ class FrameStream:
 
     @property
     def client_count(self) -> int:
+        """The number of currently subscribed clients."""
         with self._lock:
             return len(self._subs)
 
@@ -1273,10 +1323,17 @@ class FrameStream:
         return self.describe()
 
     def viewport(self) -> Tuple[int, int]:
+        """The engine's current ``(width, height)`` in pixels."""
         engine = self.pump.engine
         return int(engine.width), int(engine.height)
 
     def describe(self) -> Dict[str, Any]:
+        """The current ``PixelsPayload``: params, flow state, and last plan.
+
+        Answered on the asyncio thread and must not touch PyMOL, so the ``reps``
+        it reports are the last planned bitmap content, not a promise about the
+        next frame — the frame's own ``PixelFrameHeader.reps`` is authoritative.
+        """
         width, height = self.viewport()
         blocked = 0
         with self._lock:
@@ -1787,6 +1844,7 @@ class FrameStream:
         }
 
     def stats(self) -> Dict[str, Any]:
+        """The full stream telemetry: frame counters, per-client stats, mask."""
         with self._lock:
             subs = {str(key): sub.stats() for key, sub in self._subs.items()}
         return {

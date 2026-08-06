@@ -106,6 +106,7 @@ function initialForms(): Record<string, Form> {
   return out;
 }
 
+/** The Compute panel: run `pymol.util` metrics on a selection and show the numbers back. */
 export function ComputePanel() {
   const session = useSession();
   const [selection, setSelection] = useState('polymer');

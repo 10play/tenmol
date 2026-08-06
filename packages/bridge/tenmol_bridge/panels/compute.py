@@ -76,12 +76,20 @@ def _resi_sort_key(resi: str) -> tuple:
 
 
 class ComputeAPI:
+    """The compute panel's back end, attached to ``cmd`` as ``cmd.<ATTR>``.
+
+    Wraps the ``pymol.util`` helpers whose native return shapes the wire codec
+    cannot carry, re-keying them into JSON-safe records next to the code that
+    knows what each field means.
+    """
+
     def __init__(self, cmd: Any) -> None:
         self._cmd = cmd
 
     # ------------------------------------------------------------------ #
 
     def hello(self) -> Dict[str, Any]:
+        """A handshake reporting the attach point and the methods on offer."""
         return {"ok": True, "attr": ATTR, "methods": ["sasa_relative"]}
 
     def sasa_relative(
@@ -170,6 +178,7 @@ def install(cmd: Optional[Any] = None) -> Dict[str, Any]:
 
 
 def uninstall(cmd: Optional[Any] = None) -> bool:
+    """Detach the API from ``cmd``; returns False if it was not installed."""
     if cmd is None:
         import pymol
 
@@ -181,6 +190,7 @@ def uninstall(cmd: Optional[Any] = None) -> bool:
 
 
 def installed(cmd: Optional[Any] = None) -> bool:
+    """Whether a :class:`ComputeAPI` is currently attached to ``cmd``."""
     if cmd is None:
         import pymol
 

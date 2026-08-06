@@ -10,8 +10,10 @@
 import { createContext, type ReactNode } from 'react';
 import { getSession, type Session } from './session';
 
+/** React context carrying the bridge session; null until a `BridgeProvider` supplies it. */
 export const SessionContext = createContext<Session | null>(null);
 
+/** Puts the bridge session on React context; effect-free, so double-mounting is safe. */
 export function BridgeProvider({
   children,
   session = getSession(),

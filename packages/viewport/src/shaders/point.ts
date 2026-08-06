@@ -54,6 +54,7 @@ void main() {
 }
 `;
 
+/** The point/dot impostor fragment shader, parameterised by a lighting snippet. */
 export const POINT_FRAG = (lighting: string): string => /* glsl */ `precision highp float;
 precision highp int;
 

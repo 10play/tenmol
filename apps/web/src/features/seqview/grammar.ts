@@ -17,8 +17,10 @@ export const DOUBLE_CLICK_MS = 350;
 
 /** `P_GLUT_LEFT/MIDDLE/RIGHT` (`packages/engine/layer0/os_gl_glut_pretend.h:11-26`). */
 export const Button = { Left: 0, Middle: 1, Right: 2 } as const;
+/** A GLUT mouse-button code: left, middle or right. */
 export type ButtonValue = (typeof Button)[keyof typeof Button];
 
+/** The modifier keys held during a click or drag. */
 export interface Mods {
   shift: boolean;
   ctrl: boolean;
@@ -42,6 +44,7 @@ export interface SeqDrag {
   boxStopCol: number;
 }
 
+/** A side-effecting outcome of the reducer, each mapping to one C++ call. */
 export type SeqAction =
   /** `SeekerSelectionToggle` (`:169`). */
   | { type: 'toggle'; row: number; col: number; include: boolean; startOver: boolean }
@@ -67,6 +70,7 @@ export type SeqAction =
   /** Wheel — horizontal scroll by ±1 (`packages/engine/layer1/Seq.cpp:218-223`). */
   | { type: 'scroll'; delta: number };
 
+/** The full context a `click` decision reads: cell, mods, timing and live drag. */
 export interface ClickInput {
   button: ButtonValue;
   /** -1 when the pointer is not over a row/cell. */
@@ -89,6 +93,7 @@ export interface ClickInput {
   drag: SeqDrag | null;
 }
 
+/** What the reducer returns: actions to emit plus the next drag state. */
 export interface Outcome {
   actions: SeqAction[];
   drag: SeqDrag | null;

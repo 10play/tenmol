@@ -96,6 +96,7 @@ class BridgeWindow:
         self._shims = shims
 
     def window_cmd(self, action: int, x: int, y: int, width: int, height: int) -> None:
+        """Handle ``cmd.window`` by forwarding the geometry request to the ``window`` shim."""
         self._shims.dispatch(
             "window",
             {"action": int(action), "x": int(x), "y": int(y),
@@ -103,9 +104,11 @@ class BridgeWindow:
         )
 
     def session_save_as(self) -> None:
+        """Handle PyMOL's "save session as" window action via the ``session_save_as`` shim."""
         self._shims.dispatch("session_save_as", {})
 
     def file_save_png(self) -> None:
+        """Handle PyMOL's "save PNG" window action via the ``file_save_png`` shim."""
         self._shims.dispatch("file_save_png", {})
 
     def __repr__(self) -> str:  # shows up in PyMOL tracebacks
@@ -129,6 +132,11 @@ class Shims:
     def set_handler(
         self, name: str, handler: Optional[Callable[[Dict[str, Any]], Any]]
     ) -> None:
+        """Register (or, with ``None``, clear) the handler for a named shim seam.
+
+        Raises :class:`BridgeError` for a name outside :data:`HANDLER_NAMES`.
+        Later WPs wire up handlers through this without editing this file.
+        """
         if name not in HANDLER_NAMES:
             raise BridgeError(
                 "unknown shim handler %r; known handlers are %s"
@@ -141,6 +149,12 @@ class Shims:
                 self._handlers[name] = handler
 
     def dispatch(self, name: str, payload: Dict[str, Any]) -> Any:
+        """Route a fired shim to its registered handler, returning that handler's result.
+
+        With no handler registered the request is recorded in a bounded pending
+        buffer (so the UI can show it went unheard) and ``None`` is returned
+        rather than dropping it silently.
+        """
         with self._lock:
             handler = self._handlers.get(name)
         if handler is None:
@@ -154,6 +168,7 @@ class Shims:
         return handler(payload)
 
     def pending(self) -> List[Dict[str, Any]]:
+        """A snapshot copy of the shim fires that arrived with no handler registered."""
         with self._lock:
             return list(self._pending)
 
@@ -196,6 +211,11 @@ class Shims:
         return self
 
     def uninstall(self) -> None:
+        """Restore the original PyMOL attributes patched by :meth:`install`.
+
+        A no-op when not installed; if PyMOL can no longer be imported the seams
+        are simply marked uninstalled.
+        """
         if not self._installed:
             return
         try:
@@ -217,9 +237,11 @@ class Shims:
 
     @property
     def installed(self) -> bool:
+        """Whether the seams are currently patched into PyMOL."""
         return self._installed
 
     def info(self) -> Dict[str, Any]:
+        """Introspection block: install state, registered/known handlers, pending count."""
         return {
             "installed": self._installed,
             "handlers": sorted(self._handlers),

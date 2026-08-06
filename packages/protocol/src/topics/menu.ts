@@ -20,6 +20,7 @@ export interface MenuNode {
   checked?: boolean;
 }
 
+/** A resolved popup menu: which `pymol.menu` function ran, on what target, and its nodes. */
 export interface MenuPayload {
   /** The `pymol.menu` function that was resolved, e.g. 'mol_show'. */
   menu: string;

@@ -33,14 +33,17 @@ import type {
   SceneThumbnail,
 } from '@tenmol/protocol/topics/movie';
 
+/** Invoke a bridge `cmd.*` function with positional args and kwargs. */
 export type CallFn = <T = unknown>(
   fn: string,
   args?: readonly unknown[],
   kwargs?: Readonly<Record<string, unknown>>,
 ) => Promise<T>;
 
+/** The `{t:'do'}` line that imports `panels/movie.py` into the engine. */
 export const BOOTSTRAP_COMMAND = '/import tenmol_bridge.panels.movie';
 
+/** The movie/scene data source: bootstrap, status/panel/scene reads, and every write. */
 export interface MovieSource {
   /** Import `panels/movie.py` into the engine. Idempotent, cached, silent. */
   ensure(): Promise<boolean>;
@@ -59,6 +62,7 @@ export interface MovieSource {
   readonly lastError: string | null;
 }
 
+/** Build a `MovieSource` over one bridge call function. */
 export function createMovieSource(call: CallFn): MovieSource {
   let ensured: Promise<boolean> | null = null;
   let ready = false;
@@ -337,8 +341,10 @@ export const MVIEW_ACTIONS = [
   'toggle_interp',
   'purge',
 ] as const;
+/** One of the ten `cmd.mview` actions. */
 export type MviewAction = (typeof MVIEW_ACTIONS)[number];
 
+/** Build a `cmd.mview` action for one of the ten keyframe verbs. */
 export function mview(
   action: MviewAction,
   kwargs: Record<string, unknown> = {},

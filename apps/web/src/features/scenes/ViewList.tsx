@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useViews } from './useViews';
 import { viewActions, viewNameProblem } from './viewActions';
 
+/** Panel listing named camera views, with a field to store the current one. */
 export function ViewList() {
   const { names, error, run, refresh } = useViews();
   const [draft, setDraft] = useState('');

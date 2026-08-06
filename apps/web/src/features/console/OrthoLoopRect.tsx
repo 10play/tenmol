@@ -46,6 +46,7 @@ interface Drag {
   box: LoopBox;
 }
 
+/** Overlay that draws the rubber-band selection/zoom rectangle during a viewport loop drag. */
 export function OrthoLoopRect() {
   const session = useSession();
   const [host, setHost] = useState<HTMLElement | null>(null);

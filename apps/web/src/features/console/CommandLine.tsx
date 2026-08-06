@@ -81,6 +81,7 @@ const COMPLETE_FN = 'cmd._parser.complete';
  */
 const BROWSER_CHORDS = new Set(['C', 'X', 'V', 'A', 'R', 'W', 'T', 'N', 'P', 'F']);
 
+/** The console command input: a PyMOL prompt with history navigation and completion. */
 export function CommandLine() {
   const session = useSession();
   const history = useCommandHistory(session.stores.ui);

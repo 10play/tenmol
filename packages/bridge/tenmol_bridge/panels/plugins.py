@@ -119,13 +119,16 @@ class _Menu:
     # -- the Qt surface ------------------------------------------------- #
 
     def actions(self) -> List[_Action]:
+        """This menu's actions in insertion order, mirroring ``QMenu.actions``."""
         return self._actions
 
     def removeAction(self, action: _Action) -> None:  # noqa: N802 - Qt's name
+        """Remove ``action`` from this menu if present, like ``QMenu.removeAction``."""
         if action in self._actions:
             self._actions.remove(action)
 
     def addSeparator(self) -> _Action:  # noqa: N802 - Qt's name
+        """Append a separator action and return it, like ``QMenu.addSeparator``."""
         action = _Action("separator")
         self._actions.append(action)
         return action
@@ -133,16 +136,19 @@ class _Menu:
     def addAction(  # noqa: N802 - Qt's name
         self, label: str, callback: Optional[Callable[[], Any]] = None
     ) -> _Action:
+        """Append a command action bound to ``callback``, like ``QMenu.addAction``."""
         action = _Action("command", label, callback)
         self._actions.append(action)
         return action
 
     def addMenu(self, label: str) -> "_Menu":  # noqa: N802 - Qt's name
+        """Append a submenu named ``label`` and return it, like ``QMenu.addMenu``."""
         child = _Menu(label)
         self._actions.append(_Action("menu", label, submenu=child))
         return child
 
     def setTearOffEnabled(self, on: bool) -> None:  # noqa: N802 - Qt's name
+        """Record the tear-off flag; accepted for API parity but otherwise inert."""
         self.tear_off = bool(on)
 
 
@@ -201,12 +207,19 @@ def _node(key: str, menu: _Menu, by_id: Dict[int, str]) -> Dict[str, Any]:
 
 
 class PluginMenuAPI:
+    """The wire-facing panel API for the plugin menu registry.
+
+    Exposes the plugin menu tree, leaf invocation, plugin loading/discovery,
+    and status over the bridge's ``cmd``-attached RPC surface.
+    """
+
     def __init__(self, cmd: Any) -> None:
         self._cmd = cmd
 
     # ------------------------------------------------------------------ #
 
     def hello(self) -> Dict[str, Any]:
+        """A capability handshake: the attach attr, method names, and install state."""
         return {
             "ok": True,
             "attr": ATTR,
@@ -287,6 +300,7 @@ class PluginMenuAPI:
         return self.status()
 
     def status(self) -> Dict[str, Any]:
+        """The registered plugins as wire rows, each with its loaded/autoload flags."""
         from pymol import plugins
 
         rows = []
@@ -401,6 +415,7 @@ def uninstall(cmd: Optional[Any] = None) -> bool:
 
 
 def installed(cmd: Optional[Any] = None) -> bool:
+    """True if the plugin menu API is attached to ``cmd`` (defaulting to ``pymol.cmd``)."""
     import pymol
 
     if cmd is None:

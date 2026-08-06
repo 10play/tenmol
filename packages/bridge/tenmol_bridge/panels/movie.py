@@ -983,6 +983,12 @@ class _ModalOverride:
         return getattr(self._cmd, name)
 
     def mpng(self, *args: Any, **kwargs: Any) -> Any:
+        """Forward to ``cmd.mpng`` while overriding its ``modal`` argument.
+
+        The one method the proxy intercepts: forcing ``modal`` (typically 0)
+        makes ``produce`` render and encode inline inside this pump task rather
+        than spawning the modal draw window and a daemon encode thread.
+        """
         kwargs["modal"] = self._modal
         return self._cmd.mpng(*args, **kwargs)
 
@@ -1146,6 +1152,11 @@ def install(cmd: Optional[Any] = None) -> List[str]:
 
 
 def uninstall(cmd: Optional[Any] = None) -> List[str]:
+    """Remove the :data:`EXPORTS` this module bound onto ``cmd``; return their names.
+
+    Only deletes attributes whose ``__wrapped__`` is one of our exports, so
+    unrelated ``cmd`` members are left alone.
+    """
     target = _resolve(cmd)
     removed: List[str] = []
     for name, function in EXPORTS.items():

@@ -232,6 +232,7 @@ void main() {
 }
 `;
 
+/** Builds the raymarched impostor shader material for drawing cylinders (bonds, sticks). */
 export function createCylinderMaterial(): RawShaderMaterial {
   return new RawShaderMaterial({
     glslVersion: GLSL3,

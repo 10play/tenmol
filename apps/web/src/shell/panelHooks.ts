@@ -39,11 +39,13 @@
 
 import { createStore, type Store } from '@tenmol/stores';
 
+/** Which overlay slots the shell currently has open. */
 export interface PanelsState {
   /** Overlay slot ids currently mounted by the shell. */
   open: readonly string[];
 }
 
+/** Store tracking the set of open overlay panels. */
 export type PanelsStore = Store<PanelsState>;
 
 /** What a hook does. The argument list is a menu action's `args` (usually []). */
@@ -62,10 +64,12 @@ const hookListeners = new Set<() => void>();
 /** Identity-stable view of `hooks`; invalidated by `notify`. */
 let snapshot: Readonly<Record<string, MenuHook>> | null = null;
 
+/** The shared store of open overlay panels. */
 export function panelsStore(): PanelsStore {
   return store;
 }
 
+/** True if the overlay slot `id` is currently open. */
 export function isPanelOpen(id: string): boolean {
   return store.get().open.includes(id);
 }
@@ -89,11 +93,13 @@ export function openPanel(id: string, intent?: () => void): void {
   else pending.set(id, [intent]);
 }
 
+/** Unmount overlay slot `id` if it is open. */
 export function closePanel(id: string): void {
   if (!isPanelOpen(id)) return;
   store.set((state) => ({ open: state.open.filter((x) => x !== id) }));
 }
 
+/** Open overlay slot `id` if closed, close it if open. */
 export function togglePanel(id: string): void {
   if (isPanelOpen(id)) closePanel(id);
   else openPanel(id);
@@ -109,10 +115,12 @@ export function panelMounted(id: string): void {
   for (const intent of [...queue]) intent();
 }
 
+/** `FeatureSlot` unmounted a slot's component: forget it is mounted. */
 export function panelUnmounted(id: string): void {
   mounted.delete(id);
 }
 
+/** True if slot `id`'s lazy component is currently mounted. */
 export function isPanelMounted(id: string): boolean {
   return mounted.has(id);
 }
@@ -152,6 +160,7 @@ export function menuHooks(): Readonly<Record<string, MenuHook>> {
   return snapshot;
 }
 
+/** True if a feature has registered a menu hook under `name`. */
 export function hasMenuHook(name: string): boolean {
   return hooks.has(name);
 }

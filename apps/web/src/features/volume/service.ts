@@ -41,6 +41,7 @@ import {
 } from '@tenmol/protocol/topics/dialogs';
 import { histogramFromField } from './ramp';
 
+/** A wire reference to a binary blob the bridge holds: its id, MIME type, size, and fetch URL. */
 export interface BlobHandle {
   __blob__: true;
   id: string;
@@ -121,6 +122,7 @@ export async function listPresets(session: Session, name: string): Promise<strin
 /** Which of the three sources answered. Shown in the panel, never hidden. */
 export type PresetSource = 'tenmol_volume.ramps' | 'menu.vol_color' | 'constant';
 
+/** The available ramp presets, which source answered, and which names are non-built-in. */
 export interface PresetList {
   names: readonly string[];
   source: PresetSource;
@@ -186,6 +188,7 @@ export async function registerRamp(
   await session.call('volume_ramp_new', [rname, flat]);
 }
 
+/** A fetched volume histogram plus which of the three fallback paths produced it. */
 export interface HistogramFetch {
   histogram: number[];
   /** Which path produced it — surfaced in the panel so the fallback is visible. */

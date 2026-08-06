@@ -54,8 +54,10 @@ export interface MovieProgramState {
   command: string | null;
 }
 
+/** The live `mvprg` state — module-scoped, lost on reload just like Qt's. */
 export const movieProgram: MovieProgramState = { start: 0, command: null };
 
+/** Clear the movie-program state back to its start-of-session values. */
 export function resetMovieProgram(): void {
   movieProgram.start = 0;
   movieProgram.command = null;

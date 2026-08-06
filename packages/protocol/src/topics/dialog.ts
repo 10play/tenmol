@@ -20,6 +20,7 @@ export const DIALOG_KINDS = [
   'open-directory',
   'message',
 ] as const;
+/** One of the blocking dialog varieties the bridge can raise in the browser. */
 export type DialogKind = (typeof DIALOG_KINDS)[number];
 
 /** The seven `tkFileDialog` entry points `mimic_tk.py:36-108` implements. */
@@ -32,8 +33,10 @@ export const TK_DIALOG_ENTRIES = [
   'asksaveasfile',
   'askdirectory',
 ] as const;
+/** One of the `tkFileDialog` entry points the shim implements. */
 export type TkDialogEntry = (typeof TK_DIALOG_ENTRIES)[number];
 
+/** A dialog request pushed to the browser, carrying everything needed to render and answer it. */
 export interface DialogPayload {
   /** Correlates the answer back to the blocked `Future`. */
   dialogId: number;

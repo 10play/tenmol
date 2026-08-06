@@ -126,6 +126,7 @@ export const ORTHO_KEY_SETTING_INDEX = {
   movie_panel: 618,
 } as const;
 
+/** The name of any setting the console reads or the ortho keys drive. */
 export type ConsoleSettingName =
   keyof typeof CONSOLE_SETTING_INDEX | keyof typeof ORTHO_KEY_SETTING_INDEX;
 
@@ -140,6 +141,7 @@ export const CONSOLE_SETTING_NAMES = Object.keys(
   ALL_CONSOLE_SETTING_INDEX,
 ) as readonly ConsoleSettingName[];
 
+/** Current numeric value of every console-relevant setting, keyed by name. */
 export type ConsoleSettings = Record<ConsoleSettingName, number>;
 
 /** The `packages/engine/layer1/SettingInfo.h` defaults, verbatim. */
@@ -213,10 +215,12 @@ export interface AnsiStyle {
   inverse: boolean;
 }
 
+/** A run of text sharing one SGR style, the unit of ANSI-parsed output. */
 export interface AnsiSpan extends AnsiStyle {
   text: string;
 }
 
+/** The reset SGR state a span starts from: default colours, no attributes. */
 export const ANSI_DEFAULT_STYLE: AnsiStyle = {
   fg: null,
   bg: null,

@@ -74,6 +74,11 @@ BANNED_FROM_TICK: Dict[str, str] = {
 
 
 def get_module(name: str) -> Any:
+    """Import and return the named state submodule from the frozen barrel.
+
+    Raises ``AttributeError`` for a name not in ``MODULES``, or for a listed
+    module that has not landed yet (an import failure is reported as such).
+    """
     if name not in MODULES:
         raise AttributeError(
             "%r is not a state module; the frozen barrel lists %s"
@@ -89,6 +94,7 @@ def get_module(name: str) -> Any:
 
 
 def available() -> List[str]:
+    """The subset of listed state modules that actually import right now, sorted."""
     out: List[str] = []
     for name in sorted(MODULES):
         try:

@@ -25,8 +25,10 @@ import { filterPatterns, humanSize, withExtension } from '@tenmol/protocol/topic
 import type { FsEntry, FsListing, FsPlace } from '@tenmol/protocol/topics/files';
 import type { FilesApi } from './filesApi';
 
+/** Which Qt file-dialog the picker stands in for: multi-select open, save, or choose-directory. */
 export type PickerMode = 'open' | 'save' | 'dir';
 
+/** What to open the picker for: mode, title, filters, and any prefilled name or start directory. */
 export interface PickerRequest {
   mode: PickerMode;
   title: string;
@@ -40,6 +42,7 @@ export interface PickerRequest {
   accept?: string | undefined;
 }
 
+/** What the user chose: the selected paths and the filter that was active. */
 export interface PickerResult {
   paths: string[];
   filter: string;
@@ -54,6 +57,7 @@ interface Props {
   onAccept: (result: PickerResult) => void;
 }
 
+/** The server-side path browser dialog: lists bridge directories and resolves to a chosen path. */
 export function PathPicker({ api, request, onCancel, onAccept }: Props) {
   const filters = request.filters?.length ? request.filters : ['All Files (*)'];
   const [filter, setFilter] = useState(filters[0] ?? 'All Files (*)');
@@ -344,12 +348,14 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
   );
 }
 
+/** Join a directory and a name, leaving an already-absolute name untouched. */
 export function joinPath(dir: string, name: string): string {
   if (!dir) return name;
   if (name.startsWith('/')) return name;
   return dir.endsWith('/') ? dir + name : `${dir}/${name}`;
 }
 
+/** Split an absolute path into clickable breadcrumb segments, each with its cumulative path. */
 export function breadcrumbs(path: string): { label: string; path: string }[] {
   if (!path) return [];
   const parts = path.split('/').filter(Boolean);

@@ -20,6 +20,7 @@ interface MenuBarProps {
   onDialog?: (dialog: string) => void;
 }
 
+/** The top menu bar: renders {@link MENU_BAR} as dropdowns whose leaves fire a command line or a dialog request. */
 export function MenuBar({ onDialog }: MenuBarProps) {
   const bridge = useBridge();
   const [openIndex, setOpenIndex] = useState<number | null>(null);

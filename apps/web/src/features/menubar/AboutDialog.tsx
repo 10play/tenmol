@@ -13,6 +13,7 @@
 
 import { useEffect, useRef } from 'react';
 
+/** The Help ▸ About PyMOL modal dialog showing version and credit lines. */
 export function AboutDialog({ lines, onClose }: { lines: string[]; onClose: () => void }) {
   const ref = useRef<HTMLButtonElement>(null);
 

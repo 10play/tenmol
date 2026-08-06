@@ -55,6 +55,7 @@ export * from '@tenmol/protocol';
 import { PymolConnection, type PymolConnectionOptions } from './connection';
 import { createCmd, type Cmd } from './cmd';
 
+/** A connection paired with its `cmd` facade. */
 export interface PymolClient {
   conn: PymolConnection;
   cmd: Cmd;

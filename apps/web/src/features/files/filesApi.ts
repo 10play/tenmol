@@ -60,6 +60,7 @@ export interface FilesTransport {
   do(commandLine: string): Promise<unknown>;
 }
 
+/** The typed client surface for `cmd.tenmol_files` file-I/O calls. */
 export interface FilesApi {
   ready(): boolean;
   ensure(): Promise<FilesHello>;
@@ -158,6 +159,7 @@ export interface FilesApi {
   upload(name: string, base64: string, directory?: string): Promise<UploadResult>;
 }
 
+/** Build a `FilesApi` bound to a transport, bootstrapping the bridge module lazily. */
 export function createFilesApi(transport: FilesTransport): FilesApi {
   let cached: FilesHello | null = null;
   let pending: Promise<FilesHello> | null = null;

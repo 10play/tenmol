@@ -94,6 +94,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   );
 }
 
+/** The APBS Electrostatics panel: probes for `apbs`/`pdb2pqr` and shows the copyable command recipes rather than porting the Qt plugin. */
 export function ApbsPanel() {
   const session = useSession();
   const [probe, setProbe] = useState<ApbsProbe | null>(null);

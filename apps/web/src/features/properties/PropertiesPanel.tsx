@@ -62,6 +62,7 @@ const FOLLOW_TITLE =
   'There is no pk1-changed event to subscribe to: the selection topic accepts ' +
   'a subscription and nothing publishes to it.';
 
+/** The Properties Inspector window: object/state/atom header plus the editable property tree. */
 export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
   const session = useSession();
 

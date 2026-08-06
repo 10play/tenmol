@@ -54,6 +54,7 @@ def real_stderr() -> Optional[IO[str]]:
 
 
 def set_log_enabled(enabled: bool) -> None:
+    """Turn bridge :func:`log` output on or off process-wide."""
     global _LOG_ENABLED
     _LOG_ENABLED = bool(enabled)
 
@@ -178,10 +179,12 @@ class BridgeConfig:
 
     @property
     def tick_interval(self) -> float:
+        """Seconds between engine ticks, derived from ``tick_hz`` (floored at 1 Hz)."""
         return 1.0 / max(self.tick_hz, 1.0)
 
     @property
     def status_interval(self) -> float:
+        """Seconds between status broadcasts, derived from ``status_hz`` (floored at 1 Hz)."""
         return 1.0 / max(self.status_hz, 1.0)
 
     def origin_allowed(self, origin: Optional[str]) -> bool:
@@ -196,6 +199,11 @@ class BridgeConfig:
         return origin in self.origins
 
     def peer_allowed(self, host: Optional[str]) -> bool:
+        """Whether a connecting peer host passes the loopback gate.
+
+        Disabled (always True) when loopback is not required; otherwise only the
+        IPv4/IPv6 localhost forms are accepted, and a missing host is rejected.
+        """
         if not self.require_loopback_peer:
             return True
         if not host:
@@ -203,6 +211,11 @@ class BridgeConfig:
         return host in ("127.0.0.1", "::1", "localhost", "::ffff:127.0.0.1")
 
     def token_ok(self, presented: Optional[str]) -> bool:
+        """Constant-time check of a presented auth token against the configured one.
+
+        A ``None`` configured token disables the check; a missing presented token
+        is rejected. Uses :func:`secrets.compare_digest` to avoid timing leaks.
+        """
         if self.token is None:
             return True
         if not presented:
@@ -211,6 +224,7 @@ class BridgeConfig:
 
 
 def coerce_origins(values: Optional[Sequence[str]]) -> List[str]:
+    """Merge caller-supplied origins onto the built-in defaults, de-duplicated in order."""
     out = _default_origins()
     for value in values or ():
         if value not in out:

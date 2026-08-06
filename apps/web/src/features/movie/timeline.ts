@@ -26,6 +26,7 @@ export const PALETTE = {
   bot: 'rgb(51,51,102)',
 } as const;
 
+/** Pixel bounds of the timeline panel's drawable area. */
 export interface PanelRect {
   left: number;
   right: number;
@@ -154,6 +155,7 @@ export type PanelGesture =
   | { kind: 'seek'; frame: number }
   | { kind: 'menu'; frame: number; object: string; column: boolean };
 
+/** A completed pointer gesture on the timeline, decoded into a movie command. */
 export interface GestureInput {
   button: 0 | 1 | 2;
   shift: boolean;
@@ -200,6 +202,7 @@ export interface GestureInput {
  */
 export const DRAG_ABANDON_PX = 50;
 
+/** True while `y` is within the abandon slack of the panel block. */
 export function dragInRange(
   y: number,
   block: { top: number; bottom: number },
@@ -344,6 +347,7 @@ export const GHOST = {
   red: 'rgba(255,128,128,0.5)',
 } as const;
 
+/** The ghost preview boxes to draw for an in-progress drag, per button/modifier. */
 export function dragBoxes(input: {
   button: 0 | 1 | 2;
   ctrl: boolean;
@@ -420,6 +424,7 @@ export type WheelGesture =
   | { kind: 'frame'; delta: 1 | -1 }
   | { kind: 'rowHeight'; value: number };
 
+/** Decode a wheel event into a frame step or a row-height change. */
 export function classifyWheel(input: {
   deltaY: number;
   ctrl: boolean;

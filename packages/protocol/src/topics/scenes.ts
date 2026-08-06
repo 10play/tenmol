@@ -14,6 +14,7 @@ export interface SceneEntry {
   stores: readonly string[];
 }
 
+/** Payload of the `scenes` topic: the scene bin plus the currently recalled scene. */
 export interface ScenesPayload {
   /** `cmd.get_scene_list()`, in bin order. */
   scenes: SceneEntry[];

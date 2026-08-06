@@ -68,8 +68,10 @@ function faceIndex(mode: number, nverts: number): Uint32Array | null {
   }
   return out;
 }
+/** `cPickableNoPick` — an instance the ray cast and box scan must skip. */
 export const PICKABLE_NO_PICK = -4;
 
+/** A successful pick: which object/rep/atom (and the far atom of a bond) the ray hit, and where. */
 export interface PickHit {
   object: string;
   rep: RepId;
@@ -99,6 +101,7 @@ export interface PickHit {
   ringRadius: number;
 }
 
+/** Tuning for a pick or box query: pixel ratio, point radius, and an optional rep filter. */
 export interface PickOptions {
   /** Framebuffer pixels per CSS pixel. The ring scan is in framebuffer pixels. */
   pixelRatio?: number;
@@ -108,6 +111,7 @@ export interface PickOptions {
   reps?: readonly RepId[];
 }
 
+/** Live primitive counts held by a `PickIndex`, for the HUD and tests. */
 export interface PickIndexStats {
   keys: number;
   spheres: number;
@@ -120,6 +124,7 @@ export interface PickIndexStats {
   keysWithoutPickData: number;
 }
 
+/** The pick index: apply/remove geometry frames, then resolve a click, exact cast, or rubber-band box to atom identities. */
 export interface PickIndex {
   readonly stats: PickIndexStats;
   /** Add or replace one `object|rep|state` key. */
@@ -158,6 +163,7 @@ export interface BandRect {
   bottom: number;
 }
 
+/** One atom caught by the rubber band: its object and atom index. */
 export interface BoxHit {
   object: string;
   /** `CGO_PICK_COLOR` operand 0 — an atom index within `object`, 0-based. */
@@ -356,6 +362,7 @@ function instanceEntry(frame: GeometryFrame, buffer: InstanceBuffer): InstanceEn
   return { kind, count: buffer.count, itemSize, data, atom, bond, atom2 };
 }
 
+/** Build an empty pick index that stores uploaded geometry and answers ray casts against it. */
 export function createPickIndex(): PickIndex {
   const keys = new Map<string, KeyEntry>();
   const stats: PickIndexStats = {

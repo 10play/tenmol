@@ -383,19 +383,23 @@ class Atom(object):
     # insertion code, so it stands in for resv+inscode.
     @property
     def residue_key(self) -> Tuple[Any, ...]:
+        """The tuple that groups atoms into one residue, mirroring ``AtomInfoSameResidue``."""
         return (self.resv, self.resi, self.chain, self.segi, self.resn, self.hetatm)
 
     # ``AtomInfoSameChainP`` (``:2099``): chain AND segi.
     @property
     def chain_key(self) -> Tuple[Any, ...]:
+        """The ``(chain, segi)`` tuple that groups residues into one chain."""
         return (self.chain, self.segi)
 
     @property
     def is_polymer(self) -> bool:
+        """True if this atom carries PyMOL's polymer flag."""
         return bool(self.flags & FLAG_POLYMER)
 
     @property
     def is_guide(self) -> bool:
+        """True if this atom is its residue's guide atom (e.g. CA)."""
         return bool(self.flags & FLAG_GUIDE)
 
     @property

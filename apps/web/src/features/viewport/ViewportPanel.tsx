@@ -49,6 +49,7 @@ const TOGGLE_REPS: readonly number[] = [
   Rep.Ribbon,
 ];
 
+/** The viewport feature slot: mounts `@tenmol/viewport`, keeps rep toggles in step, renders the HUD. */
 export function ViewportPanel(): React.JSX.Element {
   const session = useSession();
   const hostRef = useRef<HTMLDivElement>(null);

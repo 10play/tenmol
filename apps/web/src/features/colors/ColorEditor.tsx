@@ -79,6 +79,7 @@ const HSV_CHANNELS = [
   { key: 'V', max: HSV_RANGES.v, unit: '%' },
 ] as const;
 
+/** The colour-editor panel: name/list, live swatch, RGB or HSV inputs, and Apply. */
 export function ColorEditor({ palette }: { palette: PaletteState }) {
   const session = useSession();
   const act = useColorAction();

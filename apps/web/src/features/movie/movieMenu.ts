@@ -20,6 +20,7 @@
 export interface MenuSeparator {
   kind: 'separator';
 }
+/** A cascading submenu containing further nodes. */
 export interface MenuSubmenu {
   kind: 'menu';
   label: string;
@@ -49,11 +50,13 @@ export interface MenuProgram {
   label: string;
   template: string;
 }
+/** A checkbox bound to a boolean setting toggle. */
 export interface MenuCheck {
   kind: 'check';
   label: string;
   setting: string;
 }
+/** A radio item that sets a setting to one specific value. */
 export interface MenuRadio {
   kind: 'radio';
   label: string;
@@ -71,6 +74,7 @@ export interface MenuProgramRemove {
   label: string;
 }
 
+/** Any node of the ported Movie menu tree. */
 export type MovieMenuNode =
   | MenuSeparator
   | MenuSubmenu

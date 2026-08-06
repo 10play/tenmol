@@ -38,12 +38,14 @@ export interface ColorEntry {
   rgb: readonly [number, number, number];
 }
 
+/** A named colour ramp and the object it lives on (`object:ramp`). */
 export interface ColorRamp {
   name: string;
   /** Object name of the ramp (`object:ramp`). */
   object: string;
 }
 
+/** The colour table plus ramps, as a full snapshot or an incremental patch. */
 export interface ColorsPayload {
   /** `cmd.get_color_indices()` enriched with `cmd.get_color_tuple()`. */
   colors: ColorEntry[];
@@ -87,19 +89,29 @@ export const COLOR_LANDMARKS: Readonly<Record<string, number>> = {
  * Special indices — packages/engine/layer1/Color.h:36-47
  * ------------------------------------------------------------------ */
 
+/** Inherit the colour from the enclosing scope (unset). */
 export const C_COLOR_DEFAULT = -1;
+/** The next auto colour a new object would receive. */
 export const C_COLOR_NEW_AUTO = -2;
+/** The current auto colour. */
 export const C_COLOR_CUR_AUTO = -3;
+/** Per-atom colour. */
 export const C_COLOR_ATOMIC = -4;
+/** The object's own colour. */
 export const C_COLOR_OBJECT = -5;
+/** Contrast-with-background colour. */
 export const C_COLOR_FRONT = -6;
+/** The background colour. */
 export const C_COLOR_BACK = -7;
 /** Indices <= this are ramp objects. `packages/engine/layer1/Color.h:46`. */
 export const C_COLOR_EXT_CUTOFF = -10;
 
+/** High bit marking an index as an inline `0x40RRGGBB` colour. */
 export const C_COLOR_TRGB_BITS = 0x40000000;
+/** Mask isolating the inline-colour marker bits. */
 export const C_COLOR_TRGB_MASK = 0xc0000000;
 
+/** The seven reserved colour keywords `ColorGetIndex` matches exactly. */
 export type SpecialColorKeyword =
   'default' | 'auto' | 'current' | 'atomic' | 'object' | 'front' | 'back';
 
@@ -168,6 +180,7 @@ export function rampSlot(index: number): number {
   return C_COLOR_EXT_CUTOFF - index;
 }
 
+/** The distinct kinds of value a colour index can encode. */
 export type ColorKind = 'slot' | 'inline' | 'ramp' | 'special' | 'invalid';
 
 /** Which of the four kinds of number is this? */

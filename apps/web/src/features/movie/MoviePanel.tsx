@@ -35,6 +35,7 @@ interface Popup {
   at: { x: number; y: number };
 }
 
+/** The movie feature panel: control bar, timeline, editors, menu and export. */
 export function MoviePanel() {
   const session = useSession();
   const { status, panel, source, error, run, runLine, refreshPanel } = useMovie();

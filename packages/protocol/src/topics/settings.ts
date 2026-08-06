@@ -101,6 +101,7 @@ export interface SettingCatalogueMeta {
   helpRows: number;
 }
 
+/** Every setting the build knows, plus aliases, counts, and provenance. */
 export interface SettingCatalogue {
   version: number;
   count: number;
@@ -119,6 +120,7 @@ export interface SettingCatalogue {
 /** `[index, value, text]` — text is `cmd.get`'s rendering. */
 export type SettingValueRow = readonly [number, SettingValue, string];
 
+/** `cmd.get`'s values for a batch of indices in one object/state scope. */
 export interface SettingValuesReply {
   /** '' for the global scope. */
   object: string;
@@ -131,6 +133,7 @@ export interface SettingValuesReply {
 /** `cmd.get_object_settings` -> the overrides an object genuinely carries. */
 export type ObjectOverrideRow = readonly [number, SettingKind, SettingValue];
 
+/** Where a value comes from: the object/state overrides and per-atom settings in scope. */
 export interface SettingScopeReply {
   object: string;
   state: number;
@@ -170,6 +173,7 @@ export interface SettingBondRow {
   value: SettingValue;
 }
 
+/** `cmd.get_bond`'s reply: the bond-level overrides carried over a selection. */
 export interface SettingBondsReply {
   selection: string;
   state: number;
@@ -201,6 +205,7 @@ export interface SettingDrainReply {
   observing: boolean;
 }
 
+/** The backend settings module's self-report: installed, cursor, and call counts. */
 export interface SettingServiceStatus {
   installed: boolean;
   cursor: number;
@@ -214,6 +219,7 @@ export interface SettingServiceStatus {
  * The topic payload (the barrel's one requirement)
  * ------------------------------------------------------------------ */
 
+/** One pushed setting change: index, name, value, and its rendered text. */
 export interface SettingChange {
   /** Setting index, e.g. 254 = scenes_changed (`packages/engine/layer1/SettingInfo.h:339`). */
   index: number;

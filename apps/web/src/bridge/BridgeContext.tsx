@@ -60,6 +60,7 @@ const MAX_FEEDBACK_LINES = 255;
  */
 const SHELL_TOPICS: Topic[] = ['objects', 'frame', 'settings', 'feedback'];
 
+/** Context provider that owns the PyMOL client connection and shell topic subscriptions. */
 export function BridgeProvider({ children }: { children: ReactNode }) {
   const clientRef = useRef<PymolClient | null>(null);
   if (clientRef.current === null) {
@@ -144,6 +145,7 @@ export function BridgeProvider({ children }: { children: ReactNode }) {
   return <BridgeContext.Provider value={bridge}>{children}</BridgeContext.Provider>;
 }
 
+/** Hook to access the bridge; throws when used outside a BridgeProvider. */
 export function useBridge(): Bridge {
   const ctx = useContext(BridgeContext);
   if (!ctx) throw new Error('useBridge must be used inside <BridgeProvider>');

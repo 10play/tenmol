@@ -29,6 +29,7 @@ import {
   type LegacyMenu,
 } from './legacyMenu';
 
+/** Renders the legacy-plugin menu registry as a panel, RPCing a leaf's Python on click. */
 export function LegacyPlugins() {
   const session = useSession();
   const [menus, setMenus] = useState<LegacyMenu[]>([]);
