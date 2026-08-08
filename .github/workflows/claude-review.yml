@@ -45,7 +45,7 @@ jobs:
 
       - name: Run Claude review
         env:
-          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: |
           python3 - << 'PYEOF'
           import subprocess, sys
@@ -153,7 +153,7 @@ jobs:
 
       - name: Run Claude response
         env:
-          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: |
           python3 - << 'PYEOF'
           import subprocess, sys
