@@ -23,63 +23,82 @@ jobs:
         id: diff
         run: |
           git fetch origin ${{ github.base_ref }}
-          DIFF=$(git diff origin/${{ github.base_ref }}...HEAD -- \
-            ':!package-lock.json' ':!yarn.lock' ':!bun.lockb' ':!*.min.js' ':!*.min.css' \
+          DIFF=$(git diff origin/${{ github.base_ref }}...HEAD \
+            -- ':!package-lock.json' ':!yarn.lock' ':!bun.lockb' ':!*.min.js' ':!*.min.css' \
             | head -c 60000)
-          echo "diff<<DIFF_EOF" >> $GITHUB_OUTPUT
-          echo "$DIFF" >> $GITHUB_OUTPUT
-          echo "DIFF_EOF" >> $GITHUB_OUTPUT
+          {
+            echo 'DIFF<<DIFF_EOF'
+            echo "$DIFF"
+            echo 'DIFF_EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Install Claude CLI
         run: npm install -g @anthropic-ai/claude-code
 
+      - name: Write review prompt
+        run: |
+          cat > /tmp/review-prompt.txt << 'PROMPT_EOF'
+You are reviewing a pull request for the tenmol repo — a React Native app with a Python/WebSocket backend.
+
+Review the diff below. Produce a structured review with these sections:
+
+## Summary
+One paragraph describing what the PR does.
+
+## Issues
+List any problems found, grouped:
+- 🔴 Critical (bugs, security issues, data loss risk)
+- 🟡 Major (logic errors, missing error handling, performance)
+- 🔵 Minor (style, naming, small improvements)
+
+If none in a category, omit it.
+
+## Suggestions
+Optional improvements (not blocking).
+
+## Verdict
+One of:
+- ✅ LGTM — ready to merge
+- ⚠️ Minor issues — can merge after addressing
+- 🔴 Needs changes — must fix before merging
+
+Keep it concise and actionable. If the diff is empty or trivial, say so.
+PROMPT_EOF
+
       - name: Run Claude review
-        id: review
         env:
           CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: |
-          PROMPT="You are reviewing a pull request for the tenmol repo — a React Native app with a Python/WebSocket backend.
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          DIFF="${{ steps.diff.outputs.DIFF }}"
 
-          PR: #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }}
+          FULL_PROMPT="$(cat /tmp/review-prompt.txt)
 
-          Diff:
-          ${{ steps.diff.outputs.diff }}
+PR: #${PR_NUMBER} — ${PR_TITLE}
 
-          Write a structured code review with these sections:
-          ## Summary
-          One paragraph overview of the changes.
+Diff:
+${DIFF}"
 
-          ## Issues
-          List any Critical, Major, or Minor issues found. Be specific — include file + line references.
-
-          ## Suggestions
-          Optional improvements or nits.
-
-          ## Verdict
-          End with one of:
-          - ✅ LGTM
-          - ⚠️ Minor issues (can merge after addressing)
-          - 🔴 Needs changes before merging"
-
-          REVIEW=$(claude -p "$PROMPT" 2>&1)
-          echo "review<<REVIEW_EOF" >> $GITHUB_OUTPUT
-          echo "$REVIEW" >> $GITHUB_OUTPUT
-          echo "REVIEW_EOF" >> $GITHUB_OUTPUT
+          echo "$FULL_PROMPT" | claude -p > /tmp/review-output.txt 2>&1
+          echo "Review output:"
+          cat /tmp/review-output.txt
 
       - name: Post review comment
         uses: actions/github-script@v7
         with:
           script: |
-            const review = `${{ steps.review.outputs.review }}`;
+            const fs = require('fs');
+            const review = fs.readFileSync('/tmp/review-output.txt', 'utf8');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `<!-- claude-review -->\n🤖 **Claude Code Review**\n\n${review}\n\n---\n_Reply with \`@claude <question>\` to follow up._`
+              body: `## 🤖 Claude Code Review\n\n${review}\n\n---\n_Tip: Comment \`@claude <question>\` to ask follow-up questions._`
             });
 
   respond-to-comment:
-    name: Respond to @claude mention
+    name: Respond to @claude comment
     if: |
       github.event_name == 'issue_comment' &&
       github.event.issue.pull_request != null &&
@@ -94,27 +113,33 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get PR diff for context
-        id: diff
-        run: |
-          PR_NUMBER=${{ github.event.issue.number }}
-          PR_DATA=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
-          BASE=$(echo "$PR_DATA" | jq -r '.base.ref')
-          HEAD=$(echo "$PR_DATA" | jq -r '.head.sha')
-          git fetch origin $BASE
-          git fetch origin $HEAD
-          DIFF=$(git diff origin/$BASE...$HEAD -- \
-            ':!package-lock.json' ':!yarn.lock' ':!bun.lockb' \
-            | head -c 30000)
-          echo "diff<<DIFF_EOF" >> $GITHUB_OUTPUT
-          echo "$DIFF" >> $GITHUB_OUTPUT
-          echo "DIFF_EOF" >> $GITHUB_OUTPUT
-          echo "base=$BASE" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get PR info
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            core.setOutput('base_ref', pr.data.base.ref);
+            core.setOutput('head_ref', pr.data.head.ref);
+            core.setOutput('title', pr.data.title);
 
-      - name: Get recent comment thread for context
-        id: context
+      - name: Checkout PR branch
+        run: |
+          git fetch origin ${{ steps.pr.outputs.head_ref }}
+          git checkout ${{ steps.pr.outputs.head_ref }}
+
+      - name: Get PR diff
+        run: |
+          git fetch origin ${{ steps.pr.outputs.base_ref }}
+          git diff origin/${{ steps.pr.outputs.base_ref }}...HEAD \
+            -- ':!package-lock.json' ':!yarn.lock' ':!bun.lockb' ':!*.min.js' ':!*.min.css' \
+            | head -c 40000 > /tmp/pr-diff.txt
+
+      - name: Get recent comments
         uses: actions/github-script@v7
         with:
           script: |
@@ -122,51 +147,55 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              per_page: 20
+              per_page: 10
             });
-            const thread = comments.data
-              .slice(-10)
-              .map(c => `**${c.user.login}:** ${c.body}`)
-              .join('\n\n---\n\n');
-            core.setOutput('thread', thread);
+            const fs = require('fs');
+            const commentLog = comments.data.slice(-10).map(c =>
+              `[${c.user.login}]: ${c.body}`
+            ).join('\n\n---\n\n');
+            fs.writeFileSync('/tmp/comments.txt', commentLog);
 
       - name: Install Claude CLI
         run: npm install -g @anthropic-ai/claude-code
 
+      - name: Write response prompt
+        run: |
+          USER_COMMENT="${{ github.event.comment.body }}"
+          QUESTION="${USER_COMMENT//@claude/}"
+          PR_TITLE="${{ steps.pr.outputs.title }}"
+          DIFF=$(cat /tmp/pr-diff.txt)
+          COMMENTS=$(cat /tmp/comments.txt)
+
+          cat > /tmp/respond-prompt.txt << PROMPT_EOF
+You are a code review assistant for the tenmol repo — a React Native app with a Python/WebSocket backend.
+
+A team member asked you a question about PR #${{ context.issue.number }} — ${PR_TITLE}.
+
+PR Diff (truncated):
+${DIFF}
+
+Recent PR comments for context:
+${COMMENTS}
+
+Their question: ${QUESTION}
+
+Answer concisely and helpfully. Reference specific lines or code when relevant.
+PROMPT_EOF
+
       - name: Run Claude response
-        id: response
         env:
           CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
-          COMMENTER: ${{ github.event.comment.user.login }}
         run: |
-          # Strip @claude prefix from the question
-          QUESTION=$(echo "$COMMENT_BODY" | sed 's/@claude//g' | xargs)
+          claude -p "$(cat /tmp/respond-prompt.txt)" > /tmp/response-output.txt 2>&1
+          echo "Response output:"
+          cat /tmp/response-output.txt
 
-          PROMPT="You are a code review assistant for tenmol — a React Native app with a Python/WebSocket backend.
-
-          You are responding to a comment on PR #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
-
-          Recent comment thread:
-          ${{ steps.context.outputs.thread }}
-
-          PR diff for context:
-          ${{ steps.diff.outputs.diff }}
-
-          $COMMENTER asks: $QUESTION
-
-          Answer directly and helpfully. Be concise. Reference specific code from the diff where relevant."
-
-          RESPONSE=$(claude -p "$PROMPT" 2>&1)
-          echo "response<<RESPONSE_EOF" >> $GITHUB_OUTPUT
-          echo "$RESPONSE" >> $GITHUB_OUTPUT
-          echo "RESPONSE_EOF" >> $GITHUB_OUTPUT
-
-      - name: Post response
+      - name: Post response comment
         uses: actions/github-script@v7
         with:
           script: |
-            const response = `${{ steps.response.outputs.response }}`;
+            const fs = require('fs');
+            const response = fs.readFileSync('/tmp/response-output.txt', 'utf8');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
