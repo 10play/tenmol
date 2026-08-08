@@ -13,10 +13,12 @@
 import type { ComponentPropsWithRef } from 'react';
 import { cn } from './cn';
 
+/** A native `<select>` restyled by the shadcn theme; behaviour unchanged. */
 export function Select({ className, ...rest }: ComponentPropsWithRef<'select'>) {
   return <select data-slot="select" className={cn(className)} {...rest} />;
 }
 
+/** A native checkbox `<input>` restyled by the shadcn theme; behaviour unchanged. */
 export function Checkbox({ className, ...rest }: Omit<ComponentPropsWithRef<'input'>, 'type'>) {
   return <input type="checkbox" data-slot="checkbox" className={cn(className)} {...rest} />;
 }
@@ -28,6 +30,7 @@ export function Switch({ className, ...rest }: Omit<ComponentPropsWithRef<'input
   );
 }
 
+/** A native range `<input>` restyled by the shadcn theme; behaviour unchanged. */
 export function Slider({ className, ...rest }: Omit<ComponentPropsWithRef<'input'>, 'type'>) {
   return <input type="range" data-slot="slider" className={cn(className)} {...rest} />;
 }

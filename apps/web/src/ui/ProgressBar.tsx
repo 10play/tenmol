@@ -11,6 +11,7 @@
 import type { ComponentPropsWithRef } from 'react';
 import { cn } from './cn';
 
+/** Props for {@link ProgressBar}: a `value` within `[min,max]` plus a fill class. */
 export interface ProgressBarProps extends Omit<ComponentPropsWithRef<'div'>, 'role'> {
   value: number;
   min?: number;
@@ -19,6 +20,7 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithRef<'div'>, 'ro
   fillClassName?: string;
 }
 
+/** A determinate progress bar mirroring the classic `progressbar` DOM contract. */
 export function ProgressBar({
   value,
   min = 0,

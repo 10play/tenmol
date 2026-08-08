@@ -11,6 +11,7 @@
 import type { ComponentPropsWithRef } from 'react';
 import { cn } from './cn';
 
+/** A native single-line `<input>` restyled by the shadcn theme; behaviour unchanged. */
 export function TextInput({ type = 'text', className, ...rest }: ComponentPropsWithRef<'input'>) {
   return <input type={type} data-slot="input" className={cn(className)} {...rest} />;
 }

@@ -26,6 +26,7 @@ const OPTIONS: ReadonlyArray<{ value: UiTheme; label: string }> = [
   { value: 'shadcn', label: 'Modern — shadcn' },
 ];
 
+/** Shell control to switch theme (classic/shadcn) and, in the modern theme, light/dark. */
 export function ThemeToggle() {
   const { theme, setTheme, appearance, toggleAppearance } = useThemeControls();
   return (

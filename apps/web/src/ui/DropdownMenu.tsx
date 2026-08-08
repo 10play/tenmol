@@ -18,10 +18,14 @@ import { Check, ChevronRight } from 'lucide-react';
 import type { ComponentPropsWithRef } from 'react';
 import { cn } from './cn';
 
+/** Root of a Radix dropdown menu. */
 export const DropdownMenu = RadixDropdownMenu.Root;
+/** The control that opens the {@link DropdownMenu}. */
 export const DropdownMenuTrigger = RadixDropdownMenu.Trigger;
+/** Groups related {@link DropdownMenuItem}s for accessibility. */
 export const DropdownMenuGroup = RadixDropdownMenu.Group;
 
+/** The portalled, floating menu surface. */
 export function DropdownMenuContent({
   className,
   sideOffset = 4,
@@ -45,6 +49,7 @@ export function DropdownMenuContent({
   );
 }
 
+/** A selectable menu row. */
 export function DropdownMenuItem({
   className,
   ...props
@@ -63,6 +68,7 @@ export function DropdownMenuItem({
   );
 }
 
+/** A menu row with a checkmark indicator for a toggled option. */
 export function DropdownMenuCheckboxItem({
   className,
   children,
@@ -89,6 +95,7 @@ export function DropdownMenuCheckboxItem({
   );
 }
 
+/** A non-interactive section heading within the menu. */
 export function DropdownMenuLabel({
   className,
   ...props
@@ -102,6 +109,7 @@ export function DropdownMenuLabel({
   );
 }
 
+/** A horizontal rule separating groups of menu rows. */
 export function DropdownMenuSeparator({
   className,
   ...props

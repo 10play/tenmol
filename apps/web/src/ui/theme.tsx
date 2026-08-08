@@ -36,7 +36,9 @@ import {
   type ReactNode,
 } from 'react';
 
+/** The look-and-feel axis: the pixel-exact `classic` PyMOL UI or the modern `shadcn` theme. */
 export type UiTheme = 'classic' | 'shadcn';
+/** The light/dark axis, independent of {@link UiTheme}. */
 export type UiAppearance = 'dark' | 'light';
 
 const THEME_KEY = 'tenmol.ui.theme';
@@ -93,6 +95,7 @@ function readInitialAppearance(): UiAppearance {
   return 'dark';
 }
 
+/** The current theme + appearance and the setters/togglers exposed by {@link useThemeControls}. */
 export interface ThemeControls {
   theme: UiTheme;
   appearance: UiAppearance;
@@ -111,6 +114,11 @@ const ThemeContext = createContext<ThemeControls>({
   toggleAppearance: () => undefined,
 });
 
+/**
+ * Resolves theme + appearance (URL param > localStorage > system > default),
+ * stamps `data-ui-theme`/`data-appearance` on `<html>`, and provides
+ * {@link ThemeControls} to the tree.
+ */
 export function ThemeProvider({
   children,
   theme: forced,

@@ -11,10 +11,14 @@ import { X } from 'lucide-react';
 import type { ComponentPropsWithRef } from 'react';
 import { cn } from './cn';
 
+/** Root of a Radix modal dialog; wraps trigger, content and close. */
 export const Dialog = RadixDialog.Root;
+/** The control that opens the {@link Dialog}. */
 export const DialogTrigger = RadixDialog.Trigger;
+/** A control that closes the {@link Dialog}. */
 export const DialogClose = RadixDialog.Close;
 
+/** The centred, portalled dialog surface (overlay + panel + a built-in close). */
 export function DialogContent({
   className,
   children,
@@ -48,6 +52,7 @@ export function DialogContent({
   );
 }
 
+/** The dialog's accessible title (labels the modal for screen readers). */
 export function DialogTitle({
   className,
   ...props
@@ -61,6 +66,7 @@ export function DialogTitle({
   );
 }
 
+/** The dialog's supporting description text, announced after the title. */
 export function DialogDescription({
   className,
   ...props

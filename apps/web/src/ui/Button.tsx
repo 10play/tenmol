@@ -24,6 +24,7 @@ import type { LucideIcon } from 'lucide-react';
 import { cn } from './cn';
 import { useTheme } from './theme';
 
+/** The semantic button roles; each maps to a legacy BEM base class it replaces. */
 export type ButtonVariant =
   | 'bare'
   | 'quick'
@@ -81,6 +82,7 @@ interface IconProps {
   iconOnly?: boolean | undefined;
 }
 
+/** Props for {@link Button}: native `<button>` props plus a semantic `variant` and optional icon. */
 export interface ButtonProps extends ComponentPropsWithRef<'button'>, IconProps {
   variant?: ButtonVariant;
 }
@@ -102,6 +104,11 @@ function body(
   );
 }
 
+/**
+ * The base button. Renders its variant's legacy BEM class (for the classic
+ * contract) plus the Tailwind `MODERN_VARIANT` in the shadcn theme, forwarding
+ * every other prop verbatim.
+ */
 export function Button({
   variant = 'bare',
   type = 'button',
@@ -157,6 +164,7 @@ export function IconButton({
   );
 }
 
+/** Props for {@link ToggleButton}: {@link ButtonProps} plus a `pressed` state. */
 export interface ToggleButtonProps extends ButtonProps {
   /** Pressed state. Mirrored to `aria-pressed` and the legacy `is-on` token. */
   pressed?: boolean;

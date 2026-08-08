@@ -12,19 +12,23 @@
 import type { ComponentPropsWithRef } from 'react';
 import { cn } from './cn';
 
+/** A surface container; the shadcn theme gives it a card treatment. */
 export function Panel({ className, ...rest }: ComponentPropsWithRef<'div'>) {
   return <div data-slot="panel" className={cn(className)} {...rest} />;
 }
 
+/** The header strip of a {@link Panel}. */
 export function PanelHeader({ className, ...rest }: ComponentPropsWithRef<'div'>) {
   return <div data-slot="panel-header" className={cn(className)} {...rest} />;
 }
 
+/** Props for {@link Toolbar}: div props with an overridable ARIA `role`. */
 export interface ToolbarProps extends ComponentPropsWithRef<'div'> {
   /** Defaults to `toolbar` — the role the launcher/quick-button rows already use. */
   role?: string;
 }
 
+/** A horizontal band of controls (`role="toolbar"` by default). */
 export function Toolbar({ className, role = 'toolbar', ...rest }: ToolbarProps) {
   return <div data-slot="toolbar" role={role} className={cn(className)} {...rest} />;
 }
