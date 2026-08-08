@@ -103,6 +103,7 @@ export interface BuilderMouseState {
 /** One `get_panel()` row: `[type, text, command]`, type 1 = title, 2 = button. */
 export type WizardPanelRow = [number, string, string];
 
+/** The armed editor wizard's prompt and panel, or null when none is active. */
 export interface BuilderWizardState {
   /** Python class name, e.g. `AttachWizard`. */
   name: string;
@@ -130,6 +131,7 @@ export interface BuilderSettings {
   sculpting_cycles: number;
 }
 
+/** The full Builder topic payload: editor, mouse, wizard and settings state. */
 export interface BuilderState {
   editor: BuilderEditorState;
   mouse: BuilderMouseState;

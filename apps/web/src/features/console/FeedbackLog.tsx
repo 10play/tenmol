@@ -48,6 +48,7 @@ import { getConsoleSource } from './consoleSource';
 
 const WINDOW = 1200;
 
+/** The console output pane: renders feedback lines with ANSI colour and follow. */
 export function FeedbackLog() {
   const session = useSession();
   const lines = useStore(session.stores.feedback, (s) => s.lines);

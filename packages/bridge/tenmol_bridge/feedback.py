@@ -79,6 +79,11 @@ class FeedbackDrain:
             )
 
     def poll(self) -> Optional[List[str]]:
+        """Drain the engine's pending console lines once.  Pump thread only.
+
+        Returns the lines (possibly empty), or ``None`` when the lock attempt
+        failed — that means the engine is busy, not that it had nothing to say.
+        """
         if self.unavailable_reason is not None:
             return []
         lines = self._cmd._get_feedback()
@@ -114,24 +119,29 @@ class FeedbackBroker:
         self.dropped_listener_errors = 0
 
     def backlog(self) -> List[str]:
+        """A snapshot of the retained console lines, for replay to a late subscriber."""
         with self._lock:
             return list(self._backlog)
 
     # -- sources (pump thread owns these) ---------------------------------
     def add_source(self, source: FeedbackSource) -> None:
+        """Register a feedback source to be drained by ``poll_sources``."""
         with self._lock:
             self._sources.append(source)
 
     def clear_sources(self) -> None:
+        """Forget every registered source (used when the engine is rebuilt)."""
         with self._lock:
             self._sources = []
 
     # -- listeners (asyncio thread) ---------------------------------------
     def add_listener(self, listener: FeedbackListener) -> None:
+        """Subscribe a callback to receive every published batch of lines."""
         with self._lock:
             self._listeners.append(listener)
 
     def remove_listener(self, listener: FeedbackListener) -> None:
+        """Unsubscribe a listener; a no-op if it was already removed."""
         with self._lock:
             try:
                 self._listeners.remove(listener)
@@ -140,6 +150,7 @@ class FeedbackBroker:
 
     @property
     def listener_count(self) -> int:
+        """The number of currently subscribed feedback listeners."""
         with self._lock:
             return len(self._listeners)
 
@@ -165,6 +176,11 @@ class FeedbackBroker:
         return collected
 
     def publish(self, lines: Sequence[str]) -> None:
+        """Append ``lines`` to the backlog and fan them out to every listener.
+
+        A listener that raises is counted and skipped so a dead session can
+        never take down the pump thread.
+        """
         if not lines:
             return
         with self._lock:

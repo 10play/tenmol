@@ -68,6 +68,7 @@ export const DEFAULT_MOUSE_MODE: ModeName = 'three_button_viewing';
 /** How stale the cached mouse mode may get before the next press re-reads it. */
 const MODE_TTL_MS = 1000;
 
+/** How the driver reaches the backend: one RPC call by function name. */
 export type CameraCall = (fn: string, args?: readonly unknown[]) => Promise<unknown>;
 
 /** A screen-space rectangle in DOM CSS pixels, y DOWN. */
@@ -84,6 +85,7 @@ export interface AtomRef {
   index: number;
 }
 
+/** Everything `createCameraDriver` needs: the RPC call plus optional hooks. */
 export interface CameraDriverOptions {
   call: CameraCall;
   onError?: (error: Error) => void;
@@ -111,6 +113,7 @@ export interface CameraDriverOptions {
   view?: () => readonly number[] | null;
 }
 
+/** One drag sample: the motion since the last, plus button and modifiers. */
 export interface DragDelta {
   /** Pixels moved since the last sample, in DOM coordinates. */
   dx: number;
@@ -136,6 +139,7 @@ export interface GestureSample {
   mod: number;
 }
 
+/** Per-action tallies of the calls the driver issued, for the HUD and tests. */
 export interface CameraCounters {
   turns: number;
   moves: number;
@@ -155,6 +159,7 @@ export interface CameraCounters {
   errors: number;
 }
 
+/** Turns pointer gestures into PyMOL camera/edit calls per the mouse mode. */
 export interface CameraDriver {
   /** A button went down. Resolves the action and starts the gesture. */
   press(sample: GestureSample): void;
@@ -237,6 +242,7 @@ export function boxSelectExpression(
   return `(${kw}(${list}))`;
 }
 
+/** Build a {@link CameraDriver} bound to the given transport and options. */
 export function createCameraDriver(options: CameraDriverOptions): CameraDriver {
   const degPerPx = options.degPerPx ?? DEG_PER_PX;
   const movePerPx = options.movePerPx ?? MOVE_PER_PX;

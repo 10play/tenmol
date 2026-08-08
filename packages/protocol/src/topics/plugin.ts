@@ -22,6 +22,7 @@ export interface PluginEntry {
   error: string;
 }
 
+/** The read-only Plugin Manager payload: installed plugins and startup paths. */
 export interface PluginPayload {
   plugins: PluginEntry[];
   /** `pymol.plugins.get_startup_path()` — read-only in v1. */

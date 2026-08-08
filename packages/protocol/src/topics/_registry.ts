@@ -45,10 +45,12 @@ export const TOPICS = [
   'geometry', // WP-26 (promoted: Mode G is critical path)
 ] as const;
 
+/** A valid wire-protocol topic name. */
 export type Topic = (typeof TOPICS)[number];
 
 const TOPIC_SET: ReadonlySet<string> = new Set<string>(TOPICS);
 
+/** Type guard: is `v` one of the registered topic names? */
 export function isTopic(v: unknown): v is Topic {
   return typeof v === 'string' && TOPIC_SET.has(v);
 }
@@ -71,6 +73,7 @@ export function isTopic(v: unknown): v is Topic {
  */
 export type TopicSource = 'status' | 'state' | 'frame' | 'ondemand';
 
+/** Per-topic metadata: which bridge clock produces it, ownership, and delivery quirks. */
 export interface TopicMeta {
   topic: Topic;
   /** Work package that owns `topics/<topic>.ts` and the bridge producer. */
@@ -88,6 +91,7 @@ export interface TopicMeta {
   note: string;
 }
 
+/** The metadata table for every registered topic. */
 export const TOPIC_META: Readonly<Record<Topic, TopicMeta>> = {
   feedback: {
     topic: 'feedback',

@@ -18,6 +18,7 @@ import { useSession } from '../../app';
 import { installVolumeMenuBridge } from '../volume/menuBridge';
 import { PopupMenu } from './PopupMenu';
 
+/** Always-mounted host that renders the popup menu and registers its leaf hooks. */
 export function MenuHost() {
   const session = useSession();
   useEffect(() => installVolumeMenuBridge(session), [session]);

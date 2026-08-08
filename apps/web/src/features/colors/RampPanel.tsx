@@ -37,6 +37,7 @@ const DEFAULT_STOPS: Stop[] = [
   { value: '1', color: 'blue' },
 ];
 
+/** Editor for creating colour ramps and applying volume-ramp presets. */
 export function RampPanel({ palette }: { palette: PaletteState }) {
   const act = useColorAction();
   const [name, setName] = useState('ramp1');

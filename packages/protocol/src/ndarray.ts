@@ -30,6 +30,7 @@ export interface WireNdarray {
   data: string;
 }
 
+/** Type guard: is this JSON value an encoded `WireNdarray`? */
 export function isWireNdarray(value: unknown): value is WireNdarray {
   return (
     typeof value === 'object' &&
@@ -48,6 +49,7 @@ const VIEWS: Record<string, (b: ArrayBuffer) => ArrayBufferView & { length: numb
   int8: (b) => new Int8Array(b),
 };
 
+/** Thrown when a wire ndarray declares a dtype with no known typed-array view. */
 export class UnsupportedDtype extends Error {
   constructor(readonly dtype: string) {
     super(`unsupported ndarray dtype "${dtype}"`);

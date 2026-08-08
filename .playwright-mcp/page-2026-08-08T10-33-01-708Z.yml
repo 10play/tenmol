@@ -1,0 +1,65 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e4]:
+    - generic [ref=f1e5]: loading…
+    - button "✓ ext gui" [ref=f1e6]
+    - button "dark" [ref=f1e7]:
+      - img [ref=f1e8]
+      - generic [ref=f1e10]: dark
+    - button "◐ modern" [ref=f1e11]
+  - generic [ref=f1e12]:
+    - generic [ref=f1e13]:
+      - generic [ref=f1e14]: loading…
+      - generic [ref=f1e15]: loading…
+      - generic [ref=f1e16]: loading…
+    - separator "internal_gui_width" [ref=f1e17]
+    - generic [ref=f1e18]:
+      - generic [ref=f1e19]: loading…
+      - generic [ref=f1e20]: loading…
+      - generic [ref=f1e21]: loading…
+      - generic [ref=f1e22]: loading…
+  - separator "External GUI height" [ref=f1e23]
+  - generic [ref=f1e26]: loading…
+  - generic [ref=f1e27]:
+    - generic [ref=f1e29]: connected (headless)
+    - generic [ref=f1e30]: ·
+    - generic [ref=f1e31]: ws://100.71.244.15:8005/ws
+    - 'generic "row source: none" [ref=f1e32]': 0 rows
+    - generic [ref=f1e33]: ·
+    - generic [ref=f1e34]: PyMOL 3.2.0a (headless)
+  - toolbar "panels" [ref=f1e35]:
+    - button "Settings" [ref=f1e36] [cursor=pointer]:
+      - img [ref=f1e37]
+      - text: Settings
+    - button "File dialogs" [ref=f1e40] [cursor=pointer]:
+      - img [ref=f1e41]
+      - text: File dialogs
+    - button "Dialogs" [ref=f1e43] [cursor=pointer]:
+      - img [ref=f1e44]
+      - text: Dialogs
+    - button "Builder" [ref=f1e46] [cursor=pointer]:
+      - img [ref=f1e47]
+      - text: Builder
+    - button "Colours" [ref=f1e50] [cursor=pointer]:
+      - img [ref=f1e51]
+      - text: Colours
+    - button "Volume" [ref=f1e57] [cursor=pointer]:
+      - img [ref=f1e58]
+      - text: Volume
+    - button "Properties" [ref=f1e61] [cursor=pointer]:
+      - img [ref=f1e62]
+      - text: Properties
+    - button "Text editor" [ref=f1e63] [cursor=pointer]:
+      - img [ref=f1e64]
+      - text: Text editor
+    - button "Compute" [ref=f1e67] [cursor=pointer]:
+      - img [ref=f1e68]
+      - text: Compute
+    - button "Plugin manager (read-only in v1)" [ref=f1e71] [cursor=pointer]:
+      - img [ref=f1e72]
+      - text: Plugin manager (read-only in v1)
+    - button "APBS" [ref=f1e74] [cursor=pointer]:
+      - img [ref=f1e75]
+      - text: APBS
+  - generic [ref=f1e77]: loading…
+  - generic [ref=f1e78]: loading…
+  - generic [ref=f1e79]: loading…

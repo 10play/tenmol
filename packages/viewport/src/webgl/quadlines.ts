@@ -54,8 +54,11 @@ export const QUADLINE_ITEM_SIZE = 14;
 
 /* `packages/engine/layer1/SettingInfo.h:711-713`. Global settings with no wire slot yet; the
  * same treatment `FOG_START` and `DEFAULT_NONBONDED_SIZE` already get. */
+/** Multiplier turning the raw line width into a distance-scaled width. */
 export const DYNAMIC_WIDTH_FACTOR = 0.06;
+/** Floor for the dynamically scaled line width. */
 export const DYNAMIC_WIDTH_MIN = 0.75;
+/** Ceiling for the dynamically scaled line width. */
 export const DYNAMIC_WIDTH_MAX = 2.5;
 /** `R_SMALL4` (`packages/engine/layer0/os_predef.h`), the floor `SceneGetScreenVertexScale` uses. */
 const R_SMALL4 = 1e-4;
@@ -181,6 +184,7 @@ function cornerGeometry(): InstancedBufferGeometry {
   return geometry;
 }
 
+/** A built instanced quad-line draw: its mesh, material and segment count. */
 export interface QuadLineDraw {
   object: Mesh;
   material: RawShaderMaterial;

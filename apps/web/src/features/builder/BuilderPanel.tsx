@@ -75,6 +75,7 @@ export const OPEN_EVENT = 'tenmol:open-builder';
  */
 const BOND_PICK_WIZARDS = new Set(['ValenceWizard', 'UnbondWizard']);
 
+/** The molecular Builder panel: fragment/atom placement and bond-editing controls. */
 export function BuilderPanel() {
   const session = useSession();
   const controller = useMemo(

@@ -35,6 +35,7 @@ import { isEmptyGeometryFrame, type BuiltGeometry } from './frames';
 /** `cSetting_fog_start` default (`packages/engine/layer1/SettingInfo.h`). */
 export const FOG_START = 0.45;
 
+/** Construction options for the Mode-G geometry renderer: its canvas, clear colour, and hooks. */
 export interface GeometryRendererOptions {
   canvas: HTMLCanvasElement;
   /** Clear colour. `null` = transparent, for compositing over Mode P. */
@@ -43,6 +44,7 @@ export interface GeometryRendererOptions {
   onError?: (error: Error) => void;
 }
 
+/** Live counters the renderer exposes: draw calls, instances, triangles, and last build/render times. */
 export interface GeometryRendererStats {
   keys: number;
   drawCalls: number;
@@ -54,6 +56,7 @@ export interface GeometryRendererStats {
   lastRenderMs: number;
 }
 
+/** The Mode-G renderer handle: apply geometry frames, size the canvas, and draw. */
 export interface GeometryRenderer {
   readonly stats: GeometryRendererStats;
   readonly canvas: HTMLCanvasElement;
@@ -96,6 +99,7 @@ function now(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
 
+/** Whether this browser can create a WebGL2 context — the gate for Mode G at all. */
 export function isWebGL2Available(): boolean {
   try {
     const canvas = document.createElement('canvas');
@@ -105,6 +109,7 @@ export function isWebGL2Available(): boolean {
   }
 }
 
+/** Build a Mode-G geometry renderer over the given canvas, with a hand-driven camera. */
 export function createGeometryRenderer(options: GeometryRendererOptions): GeometryRenderer {
   const { canvas } = options;
 

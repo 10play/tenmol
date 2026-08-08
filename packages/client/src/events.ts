@@ -11,7 +11,9 @@
 
 import type { BinaryFrame, GeometryFrame, HelloMessage, PixelFrame, TopicPayloads } from '@tenmol/protocol';
 
+/** A callback receiving one event's payload. */
 export type Listener<T> = (payload: T) => void;
+/** The function `on` returns to remove its listener. */
 export type Unsubscribe = () => void;
 
 /** Non-topic events emitted by {@link PymolConnection}. */
@@ -40,6 +42,7 @@ export interface ConnectionEvents {
  */
 export type ClientEvents = TopicPayloads & ConnectionEvents;
 
+/** Any key a client can listen on: a protocol topic or a lifecycle event name. */
 export type ClientEventName = keyof ClientEvents & string;
 
 /**

@@ -15,6 +15,7 @@ import {
   type PropertyRow,
 } from '@tenmol/protocol/topics/dialogs';
 
+/** A named, fetchable set of property rows shown as one group in the properties panel. */
 export interface PropertyGroup {
   /** Stable id used as the React key and by the tests. */
   id: string;
@@ -26,6 +27,7 @@ export interface PropertyGroup {
   note?: string;
 }
 
+/** A top-level, optionally hidden section grouping related property groups. */
 export interface PropertySection {
   id: string;
   label: string;
@@ -33,6 +35,7 @@ export interface PropertySection {
   hidden?: boolean;
 }
 
+/** Set of property keys that are read-only and cannot be edited. */
 export const READONLY = new Set<string>(PROPERTY_READONLY_KEYS);
 
 /**
@@ -256,6 +259,7 @@ const ONE_LETTER: Record<string, string> = {
   LYN: 'K',
 };
 
+/** Map a three-letter residue name to its one-letter code, or `?` if unknown. */
 export function oneLetter(resn: string): string {
   return ONE_LETTER[resn.toUpperCase()] ?? '?';
 }

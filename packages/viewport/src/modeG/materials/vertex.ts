@@ -80,6 +80,7 @@ void main() {
 }
 `;
 
+/** Which per-vertex attributes a geometry has, driving the vertex material. */
 export interface VertexMaterialFlags {
   hasColor: boolean;
   hasNormal: boolean;
@@ -90,6 +91,7 @@ export interface VertexMaterialFlags {
   transparent?: boolean;
 }
 
+/** Build the GLSL3 raw shader material for a mesh with the given vertex flags. */
 export function createVertexMaterial(flags: VertexMaterialFlags): RawShaderMaterial {
   const material = new RawShaderMaterial({
     glslVersion: GLSL3,

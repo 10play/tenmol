@@ -37,6 +37,7 @@ export const PANEL_MENUS = ['Setting', 'Display', 'Mouse', 'Scene'] as const;
 /** Provenance of the tree, for the "where did this come from" affordance. */
 export const MENUDATA_SOURCE = MENU_DATA.source;
 
+/** One of the four settings-panel top-level menu names. */
 export type PanelMenuName = (typeof PANEL_MENUS)[number];
 
 /** The items of one top-level menu of the harvested tree. */
@@ -62,6 +63,7 @@ const KIND_TYPE: Record<SettingKind, number> = {
   blank: 0,
 };
 
+/** Map a setting kind to PyMOL's numeric type code (`Setting.h` order). */
 export function settingType(kind: SettingKind): number {
   return KIND_TYPE[kind] ?? 0;
 }

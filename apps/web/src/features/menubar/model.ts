@@ -22,6 +22,7 @@ import { STEREO_UNAVAILABLE } from './stereo';
  * Toolkit hooks
  * ------------------------------------------------------------------ */
 
+/** The work package owning a not-yet-built menu hook, and the note shown while it is disabled. */
 export interface HookOwner {
   /** Work package that owns the surface this hook opens. */
   owner: string;

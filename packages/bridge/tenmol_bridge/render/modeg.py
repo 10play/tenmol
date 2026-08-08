@@ -250,6 +250,7 @@ def rep_id(rep: Any) -> int:
 
 
 def rep_name(rep: Any) -> str:
+    """The canonical name of a representation, falling back to ``rep<n>`` if unknown."""
     return REP_NAMES.get(rep_id(rep), "rep%s" % rep)
 
 
@@ -277,9 +278,17 @@ class _Packer:
 
     @property
     def size(self) -> int:
+        """Current packed length in bytes, including alignment padding."""
         return self._size
 
     def add(self, data: Any, dtype: str, item_size: int) -> Dict[str, Any]:
+        """Append one typed buffer at a 4-aligned offset, returning its descriptor.
+
+        Pads the buffer up to :data:`ALIGNMENT` before writing, then records the
+        ``byteOffset``, ``byteLength``, ``dtype`` and ``itemSize`` the client
+        needs to view the region.  Raises :class:`BridgeError` if ``data`` is not
+        a whole number of ``dtype`` elements.
+        """
         raw = bytes(memoryview(data).cast("B"))
         elem = self.DTYPE_BYTES[dtype]
         if len(raw) % elem:
@@ -302,6 +311,7 @@ class _Packer:
         return ref
 
     def payload(self) -> bytes:
+        """The concatenated buffer: every added chunk with its padding, in order."""
         return b"".join(self._chunks)
 
 
@@ -490,10 +500,12 @@ class GeometryResult:
 
     @property
     def ok(self) -> bool:
+        """Whether the fetch produced a fresh geometry frame (``status == "ok"``)."""
         return self.status == "ok"
 
     @property
     def nbytes(self) -> int:
+        """Size in bytes of the binary frame, or 0 when there is no payload."""
         return len(self.frame) if self.frame else 0
 
     def to_json(self) -> Dict[str, Any]:
@@ -610,6 +622,14 @@ class GeometryService:
         return self._versions_fn
 
     def capabilities(self, engine: Any = None) -> Dict[str, Any]:
+        """Report what Mode G can do on this build: accessor, capable reps, limits.
+
+        ``accessor`` is True only when PyMOL has actually started AND exposes the
+        geometry symbol — a merely importable ``_cmd`` in a degraded bridge is not
+        enough.  ``exactInvalidation`` distinguishes rep-version-counter tracking
+        from the coarser vis-fingerprint fallback (defect D1), and the payload
+        also advertises the max frame size and the fallback reason when unavailable.
+        """
         engine = engine if engine is not None else getattr(self.pump, "engine", None)
         # BOTH conditions matter.  ``from pymol import _cmd`` succeeds in a
         # DEGRADED bridge — the module is importable, PyMOL just never started
@@ -653,6 +673,11 @@ class GeometryService:
 
     @staticmethod
     def parse_key(key: str) -> Optional[Tuple[str, int, int]]:
+        """Inverse of :meth:`key`: split a geometry key into ``(object, state, rep)``.
+
+        Returns ``None`` if the key is not exactly three NUL-separated parts or
+        the state/rep components are not integers.
+        """
         parts = key.split("\x00")
         if len(parts) != 3:
             return None
@@ -1542,10 +1567,17 @@ class GeometryService:
         return self.invalidate(level=RepInv.VISIB)
 
     def dirty_keys(self) -> Dict[str, int]:
+        """A snapshot copy of the keys pending refetch and their invalidation levels."""
         with self._lock:
             return dict(self._dirty)
 
     def forget(self, key: Optional[str] = None) -> None:
+        """Evict one cached geometry key, or the whole cache when ``key`` is ``None``.
+
+        A full forget also re-primes the version table (a mirror of the C++
+        counters, not our own cache) and bumps the epoch, since diffing against a
+        table whose companion cache is gone would be meaningless.
+        """
         with self._lock:
             if key is None:
                 self._cache.clear()
@@ -1564,6 +1596,12 @@ class GeometryService:
     # -- diagnostics -------------------------------------------------------
 
     def stats(self) -> Dict[str, Any]:
+        """Diagnostics for ``/healthz``: fetch/hit/error counts, cache size, and versions.
+
+        Includes the current capabilities block and the versions payload — the
+        pull half of invalidation (defect D1) that a Mode-G client polls by epoch
+        before deciding which reps to refetch.
+        """
         with self._lock:
             cached = len(self._cache)
             cached_bytes = sum(int(e.get("bytes", 0)) for e in self._cache.values())

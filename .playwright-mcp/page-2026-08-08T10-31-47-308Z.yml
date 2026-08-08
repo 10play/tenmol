@@ -1,0 +1,407 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e80]:
+      - button "File" [ref=e82]
+      - button "Edit" [ref=e84]
+      - button "Build" [ref=e86]
+      - button "Movie" [ref=e88]
+      - button "Display" [ref=e90]
+      - button "Setting" [ref=e92]
+      - button "Scene" [ref=e94]
+      - button "Mouse" [ref=e96]
+      - button "Wizard" [ref=e98]
+      - button "Plugin" [ref=e100]
+      - button "Help" [ref=e102]
+    - generic "packages/engine/modules/pymol/_gui.py:55 PyMOLDesktopGUI.get_menudata" [ref=e103]: 11 menus · 111 settings
+    - button "✓ ext gui" [ref=e6]
+    - button "dark" [ref=e7]:
+      - img [ref=e8]
+      - generic [ref=e10]: dark
+    - button "◐ modern" [ref=e11]
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e108]:
+        - button "×" [ref=e109] [cursor=pointer]
+        - generic [ref=e110]: 928×450 @1x · 13 fps · 0.8 ms present
+        - generic [ref=e111]: "Mode P: 153 frames · png 5 kB"
+        - generic [ref=e112]: "Mode G: 0 frames · 0 draws · 0 instances · 0 tris"
+        - generic [ref=e113]:
+          - generic [ref=e114]:
+            - generic [ref=e115]: cartoon
+            - button "P" [ref=e116] [cursor=pointer]
+            - button "G" [ref=e117] [cursor=pointer]
+          - generic [ref=e118]:
+            - generic [ref=e119]: sticks
+            - button "P" [ref=e120] [cursor=pointer]
+            - button "G" [ref=e121] [cursor=pointer]
+          - generic [ref=e122]:
+            - generic [ref=e123]: spheres
+            - button "P" [ref=e124] [cursor=pointer]
+            - button "G" [ref=e125] [cursor=pointer]
+          - generic [ref=e126]:
+            - generic [ref=e127]: surface
+            - button "P" [ref=e128] [cursor=pointer]
+            - button "G" [ref=e129] [cursor=pointer]
+          - generic [ref=e130]:
+            - generic [ref=e131]: lines
+            - button "P" [ref=e132] [cursor=pointer]
+            - button "G" [ref=e133] [cursor=pointer]
+          - generic [ref=e134]:
+            - generic [ref=e135]: ribbon
+            - button "P" [ref=e136] [cursor=pointer]
+            - button "G" [ref=e137] [cursor=pointer]
+      - textbox "PyMOL in-viewport command prompt":
+        - generic [ref=e139]:
+          - generic [ref=e140]: "-- connected to PyMOL 3.2.0a (protocol v1, engine headless) --"
+          - generic [ref=e141]: "-- the bridge has no offscreen GL: picking, Mode P and the deferred draw queue are unavailable --"
+          - generic [ref=e142]: PyMOL>/from tenmol_bridge.panels.menus import install;install()
+          - generic [ref=e143]: PyMOL>import tenmol_bridge.panels.files as _tf; _tf.install()
+          - generic [ref=e144]: PyMOL>/from tenmol_bridge.panels.objects import install;install()
+          - generic [ref=e145]: PyMOL>import tenmol_bridge.panels.files as _tf; _tf.install()
+          - generic [ref=e146]: PyMOL>draw 1024, 768
+          - generic [ref=e147]: PyMOL>reset
+          - generic [ref=e148]: PyMOL>zoom animate=1.0
+          - generic [ref=e149]: PyMOL>zoom animate=1.0
+          - generic [ref=e150]: PyMOL>orient animate=1.0
+          - generic [ref=e151]: PyMOL>orient animate=1.0
+          - generic [ref=e152]: PyMOL>orient animate=1.0
+          - generic [ref=e153]: PyMOL>mstop
+          - generic [ref=e154]: PyMOL>deselect
+          - generic [ref=e155]: PyMOL>mclear
+          - generic [ref=e156]: PyMOL>wizard nucmutagenesis
+          - generic [ref=e157]: PyMOL>_
+      - generic:
+        - generic: Pick a nucleotide position...
+      - button "Ray / Draw" [ref=e528] [cursor=pointer]
+    - separator "internal_gui_width" [ref=e17]
+    - generic [ref=e18]:
+      - generic [ref=e158]:
+        - generic [ref=e159]:
+          - generic [ref=e160]: Objects
+          - 'generic "row source: panel" [ref=e161]': panel
+        - generic [ref=e162]:
+          - generic [ref=e163]:
+            - button "all" [ref=e164]:
+              - generic [ref=e165]: all
+            - generic [ref=e166]:
+              - button "A" [ref=e167]
+              - button "S" [ref=e168]
+              - button "H" [ref=e169]
+              - button "L" [ref=e170]
+              - button "C" [ref=e171]
+          - generic [ref=e172]:
+            - button "obj01 1/1" [ref=e173]:
+              - generic [ref=e174]: obj01
+              - generic [ref=e175]: 1/1
+            - generic [ref=e176]:
+              - button "A" [ref=e177]
+              - button "S" [ref=e178]
+              - button "H" [ref=e179]
+              - button "L" [ref=e180]
+              - button "C" [ref=e181]
+      - generic [ref=e182]:
+        - generic [ref=e184]:
+          - button "▸ Wizard" [ref=e185] [cursor=pointer]
+          - button "Dismiss" [ref=e186] [cursor=pointer]
+        - generic [ref=e187]:
+          - generic [ref=e188]:
+            - generic [ref=e189]: Nucmutagenesis
+            - generic "AttachWizard > Nucmutagenesis" [ref=e190]: stack 2
+          - generic [ref=e191]:
+            - generic [ref=e193]: Mutagenesis
+            - button "Mutate to Adenine ▾" [ref=e194] [cursor=pointer]:
+              - generic [ref=e195]: Mutate to Adenine
+              - generic [ref=e196]: ▾
+            - 'button "Auto Center: ON ▾" [ref=e197] [cursor=pointer]':
+              - generic [ref=e198]: "Auto Center: ON"
+              - generic [ref=e199]: ▾
+            - button "Show Lines ▾" [ref=e200] [cursor=pointer]:
+              - generic [ref=e201]: Show Lines
+              - generic [ref=e202]: ▾
+            - button "Apply" [ref=e203] [cursor=pointer]:
+              - generic [ref=e204]: Apply
+            - button "Clear" [ref=e205] [cursor=pointer]:
+              - generic [ref=e206]: Clear
+            - button "Done" [ref=e207] [cursor=pointer]:
+              - generic [ref=e208]: Done
+        - generic [ref=e209]:
+          - generic "packages/engine/layer1/SceneMouse.cpp:427,468 — WP-10 owns the ray pick" [ref=e210]: pick seam (until the viewport routes picks here)
+          - textbox "selection, e.g. ala and name CA" [ref=e211]
+          - generic [ref=e212]:
+            - button "do_pick" [disabled] [ref=e213]
+            - button "do_pick(bond)" [disabled] [ref=e214]
+            - button "do_select" [disabled] [ref=e215]
+      - generic [ref=e216]:
+        - generic [ref=e217]:
+          - generic [ref=e218]: Movie
+          - generic [ref=e219]: frame 1/1 · state 1 · 30 fps
+          - button "export" [ref=e220] [cursor=pointer]
+        - toolbar "movie transport" [ref=e221]:
+          - button "|<" [ref=e222] [cursor=pointer]:
+            - img [ref=e223]
+            - generic [ref=e225]: "|<"
+          - button "<" [ref=e226] [cursor=pointer]:
+            - img [ref=e227]
+            - generic [ref=e229]: <
+          - button "[]" [ref=e230] [cursor=pointer]:
+            - img [ref=e231]
+            - generic [ref=e233]: "[]"
+          - button ">" [ref=e234] [cursor=pointer]:
+            - img [ref=e235]
+            - generic [ref=e237]: ">"
+          - button ">" [ref=e238] [cursor=pointer]:
+            - img [ref=e239]
+            - generic [ref=e241]: ">"
+          - button ">|" [ref=e242] [cursor=pointer]:
+            - img [ref=e243]
+            - generic [ref=e245]: ">|"
+          - button "seq" [ref=e246] [cursor=pointer]
+          - button "rock" [ref=e247] [cursor=pointer]
+          - button "full" [ref=e248] [cursor=pointer]
+        - slider "movie frame" [ref=e250]: "1"
+        - navigation [ref=e251]:
+          - button "timeline" [ref=e252] [cursor=pointer]
+          - button "edit" [ref=e253] [cursor=pointer]
+          - button "menu" [ref=e254] [cursor=pointer]
+          - button "sweep" [ref=e255] [cursor=pointer]
+        - generic [ref=e260]:
+          - generic [ref=e261]: 1 frame
+          - generic [ref=e262]: L drag = seek · R drag = mmove · shift+R = mcopy · ctrl+L = minsert/mdelete · ctrl+M = mview clear · ctrl+shift = all rows · ctrl+shift wheel = row height
+      - generic [ref=e264]:
+        - generic [ref=e265]:
+          - generic [ref=e266]: Scenes
+          - generic [ref=e267]: "0"
+          - button "+" [ref=e268] [cursor=pointer]
+          - button "‹" [ref=e269] [cursor=pointer]
+          - button "›" [ref=e270] [cursor=pointer]
+          - button "sort" [ref=e271] [cursor=pointer]
+        - toolbar "scene buttons" [ref=e272]:
+          - generic [ref=e273]: no scenes
+        - paragraph [ref=e274]: Double-click a row to recall that scene.
+        - generic [ref=e275]:
+          - generic [ref=e276]:
+            - generic [ref=e277]: Views
+            - generic [ref=e278]: "0"
+            - textbox "view name" [ref=e279]:
+              - /placeholder: name
+            - button "store" [ref=e280] [cursor=pointer]
+            - button "clear all" [ref=e281] [cursor=pointer]
+            - button "↻" [ref=e282] [cursor=pointer]
+          - list [ref=e283]:
+            - generic [ref=e284]: no views
+        - generic [ref=e285]:
+          - generic [ref=e286]:
+            - button "Previous [PgUp]" [ref=e287] [cursor=pointer]
+            - button "Next [PgDn]" [ref=e288] [cursor=pointer]
+            - button "Append" [ref=e289] [cursor=pointer]
+            - button "Append…" [ref=e290] [cursor=pointer]
+            - button "Insert Before" [ref=e291] [cursor=pointer]
+            - button "Insert After" [ref=e292] [cursor=pointer]
+            - button "Update" [ref=e293] [cursor=pointer]
+            - button "Delete" [ref=e294] [cursor=pointer]
+          - generic [ref=e295]:
+            - button "Recall…" [ref=e296] [cursor=pointer]
+            - button "Store…" [ref=e297] [cursor=pointer]
+            - button "Clear…" [ref=e298] [cursor=pointer]
+            - button "Cache…" [ref=e299] [cursor=pointer]
+            - button "Blank" [ref=e300] [cursor=pointer]
+            - generic [ref=e301]:
+              - checkbox "Buttons" [checked] [ref=e302]
+              - text: Buttons
+            - generic [ref=e303]: "current: (none)"
+      - generic [ref=e304]:
+        - generic [ref=e305]:
+          - button "Mouse Mode 3-Button Viewing" [ref=e501] [cursor=pointer]:
+            - generic [ref=e307]: Mouse Mode
+            - generic [ref=e308]: 3-Button Viewing
+          - generic [ref=e309] [cursor=pointer]:
+            - generic [ref=e310]:
+              - generic [ref=e311]: Buttons
+              - generic [ref=e312]: L
+              - generic [ref=e313]: M
+              - generic [ref=e314]: R
+              - generic [ref=e315]: Wheel
+            - generic [ref=e316]:
+              - generic [ref=e317]: "& Keys"
+              - generic [ref=e318]: Rota
+              - generic [ref=e319]: Move
+              - generic [ref=e320]: MovZ
+              - generic [ref=e321]: Slab
+            - generic [ref=e322]:
+              - generic [ref=e323]: Shft
+              - generic [ref=e324]: +Box
+              - generic [ref=e325]: "-Box"
+              - generic [ref=e326]: Clip
+              - generic [ref=e327]: MovS
+            - generic [ref=e328]:
+              - generic [ref=e329]: Ctrl
+              - generic [ref=e330]: Move
+              - generic [ref=e331]: PkAt
+              - generic [ref=e332]: Pk1
+              - generic [ref=e333]: MvSZ
+            - generic [ref=e334]:
+              - generic [ref=e335]: CtSh
+              - generic [ref=e336]: Sele
+              - generic [ref=e337]: Orig
+              - generic [ref=e338]: Clip
+              - generic [ref=e339]: MovZ
+            - generic [ref=e340]:
+              - generic [ref=e341]: SnglClk
+              - generic [ref=e342]: +/-
+              - generic [ref=e343]: Cent
+              - generic [ref=e344]: Menu
+            - generic [ref=e345]:
+              - generic [ref=e346]: DblClk
+              - generic [ref=e347]: Menu
+              - generic [ref=e348]: "-"
+              - generic [ref=e349]: PkAt
+          - button "Selecting Residues" [ref=e502] [cursor=pointer]:
+            - generic [ref=e503]: Selecting
+            - generic [ref=e504]: Residues
+        - button "Mouse & Keys…" [ref=e350] [cursor=pointer]
+  - separator "External GUI height" [ref=e23]
+  - generic [ref=e25]:
+    - generic [ref=e351]:
+      - generic [ref=e352]:
+        - generic [ref=e353]: Output
+        - 'generic "ortho ring: 256 lines (packages/engine/layer1/Ortho.cpp:62)" [ref=e354]': 17 lines · ortho 17/256
+        - button "ortho" [ref=e355]
+        - button "follow" [ref=e356]
+        - combobox "Select Font... (pymol_qt_gui.py:963-975 — getMonospaceFont)" [ref=e357]:
+          - option "default" [selected]
+          - option "Monaco"
+          - option "Consolas"
+          - option "Menlo"
+          - option "monospace"
+        - button "A-" [ref=e358]
+        - button "A+" [ref=e359]
+        - button "clear" [ref=e360]
+        - button "splash" [ref=e361]
+      - generic [ref=e362]:
+        - generic [ref=e363]: "-- connected to PyMOL 3.2.0a (protocol v1, engine headless) --"
+        - generic [ref=e364]: "-- the bridge has no offscreen GL: picking, Mode P and the deferred draw queue are unavailable --"
+        - generic [ref=e365]: PyMOL>/from tenmol_bridge.panels.menus import install;install()
+        - generic [ref=e366]: PyMOL>import tenmol_bridge.panels.files as _tf; _tf.install()
+        - generic [ref=e367]: PyMOL>/from tenmol_bridge.panels.objects import install;install()
+        - generic [ref=e368]: PyMOL>import tenmol_bridge.panels.files as _tf; _tf.install()
+        - generic [ref=e369]: PyMOL>draw 1024, 768
+        - generic [ref=e370]: PyMOL>reset
+        - generic [ref=e371]: PyMOL>zoom animate=1.0
+        - generic [ref=e372]: PyMOL>zoom animate=1.0
+        - generic [ref=e373]: PyMOL>orient animate=1.0
+        - generic [ref=e374]: PyMOL>orient animate=1.0
+        - generic [ref=e375]: PyMOL>orient animate=1.0
+        - generic [ref=e376]: PyMOL>mstop
+        - generic [ref=e377]: PyMOL>deselect
+        - generic [ref=e378]: PyMOL>mclear
+        - generic [ref=e379]: PyMOL>wizard nucmutagenesis
+      - generic [ref=e380]:
+        - generic "cmd.do" [ref=e381]: PyMOL>
+        - textbox "PyMOL>" [ref=e382]
+    - generic [ref=e383]:
+      - generic [ref=e384]:
+        - button "Reset" [ref=e385]:
+          - img [ref=e386]
+          - text: Reset
+        - button "Zoom" [ref=e389]:
+          - img [ref=e390]
+          - text: Zoom
+        - button "Orient" [ref=e395]:
+          - img [ref=e396]
+          - text: Orient
+        - button "Draw/Ray" [ref=e399]:
+          - img [ref=e400]
+          - text: Draw/Ray
+      - generic [ref=e403]:
+        - button "Unpick" [ref=e404]:
+          - img [ref=e405]
+          - text: Unpick
+        - button "Deselect" [ref=e408]:
+          - img [ref=e409]
+          - text: Deselect
+        - button "Rock" [ref=e412]:
+          - img [ref=e413]
+          - text: Rock
+        - button "Get View" [ref=e418]:
+          - img [ref=e419]
+          - text: Get View
+      - generic [ref=e422]:
+        - button "|<" [ref=e423]:
+          - img [ref=e424]
+          - generic [ref=e426]: "|<"
+        - button "<" [ref=e427]:
+          - img [ref=e428]
+          - generic [ref=e430]: <
+        - button "Stop" [ref=e431]:
+          - img [ref=e432]
+          - generic [ref=e434]: Stop
+        - button "Play" [ref=e435]:
+          - img [ref=e436]
+          - generic [ref=e438]: Play
+        - button ">" [ref=e439]:
+          - img [ref=e440]
+          - generic [ref=e442]: ">"
+        - button ">|" [ref=e443]:
+          - img [ref=e444]
+          - generic [ref=e446]: ">|"
+        - button "MClear" [ref=e447]:
+          - img [ref=e448]
+          - generic [ref=e451]: MClear
+      - generic [ref=e452]:
+        - button "Builder" [ref=e453]:
+          - img [ref=e454]
+          - text: Builder
+        - button "Properties" [ref=e457]:
+          - img [ref=e458]
+          - text: Properties
+        - button "Rebuild" [ref=e459]:
+          - img [ref=e460]
+          - text: Rebuild
+  - generic [ref=e27]:
+    - generic [ref=e29]: connected (headless)
+    - generic [ref=e30]: ·
+    - generic [ref=e31]: ws://100.71.244.15:8005/ws
+    - 'generic "row source: topic" [ref=e465]': 2 rows
+    - generic [ref=e33]: ·
+    - generic [ref=e34]: PyMOL 3.2.0a (headless)
+  - toolbar "panels" [ref=e35]:
+    - button "Settings" [pressed] [ref=e36] [cursor=pointer]:
+      - img [ref=e37]
+      - text: Settings
+    - button "File dialogs" [ref=e40] [cursor=pointer]:
+      - img [ref=e41]
+      - text: File dialogs
+    - button "Dialogs" [ref=e43] [cursor=pointer]:
+      - img [ref=e44]
+      - text: Dialogs
+    - button "Builder" [ref=e46] [cursor=pointer]:
+      - img [ref=e47]
+      - text: Builder
+    - button "Colours" [active] [pressed] [ref=e50] [cursor=pointer]:
+      - img [ref=e51]
+      - text: Colours
+    - button "Volume" [ref=e57] [cursor=pointer]:
+      - img [ref=e58]
+      - text: Volume
+    - button "Properties" [ref=e61] [cursor=pointer]:
+      - img [ref=e62]
+      - text: Properties
+    - button "Text editor" [ref=e63] [cursor=pointer]:
+      - img [ref=e64]
+      - text: Text editor
+    - button "Compute" [ref=e67] [cursor=pointer]:
+      - img [ref=e68]
+      - text: Compute
+    - button "Plugin manager (read-only in v1)" [ref=e71] [cursor=pointer]:
+      - img [ref=e72]
+      - text: Plugin manager (read-only in v1)
+    - button "APBS" [ref=e74] [cursor=pointer]:
+      - img [ref=e75]
+      - text: APBS
+  - group "Settings" [ref=e529]:
+    - button "Setting" [ref=e530] [cursor=pointer]
+    - button "Edit All…" [ref=e531] [cursor=pointer]
+    - button "Lighting" [ref=e532] [cursor=pointer]
+    - generic [ref=e533]: 779 settings
+  - button "C" [ref=e534] [cursor=pointer]:
+    - generic [ref=e535]: C

@@ -95,6 +95,7 @@ const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
   { id: 'paths', label: 'Startup Paths' },
 ];
 
+/** Renders the Plugin Manager panel: the Installed, Legacy, Settings, and Startup-Paths tabs. */
 export function PluginManager() {
   const reg = usePluginRegistry();
   const [tab, setTab] = useState<Tab>('installed');

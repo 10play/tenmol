@@ -135,6 +135,7 @@ export interface PixelSource {
   readonly rasterizes?: boolean;
 }
 
+/** The sink a {@link PixelSource} pushes decoded Mode-P frames into. */
 export interface PixelSink {
   frame(frame: PixelFramePayload): void;
   error(error: Error): void;
@@ -149,6 +150,7 @@ export interface GeometrySource {
   request?(object: string, rep: RepId, state: number): void;
 }
 
+/** The sink a {@link GeometrySource} pushes Mode-G geometry frames into. */
 export interface GeometrySink {
   frame(frame: GeometryFrame): void;
   /** The rep cannot be served in Mode G; fall back to Mode P with a reason. */
@@ -160,6 +162,7 @@ export interface GeometrySink {
  * Options
  * ------------------------------------------------------------------ */
 
+/** Construction options for a viewport: container, transport, render policy and callbacks. */
 export interface ViewportOptions {
   /** The viewport creates and owns its canvases inside this element. */
   container: HTMLElement;
@@ -188,6 +191,7 @@ export interface ViewportOptions {
  * Stats / handle
  * ------------------------------------------------------------------ */
 
+/** A snapshot of viewport size, frame rate, render mode and composition state. */
 export interface ViewportStats {
   /** Framebuffer size in device pixels — what PyMOL is rendering at. */
   width: number;
@@ -277,6 +281,7 @@ export interface LocalPickStats {
   };
 }
 
+/** The public control surface a mounted viewport hands back to the app. */
 export interface ViewportHandle {
   readonly stats: ViewportStats;
   /** The Mode-P canvas (2-D) and the Mode-G canvas (WebGL2). */

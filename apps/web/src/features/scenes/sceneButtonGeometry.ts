@@ -56,6 +56,7 @@ export function dip2pixel(value: number, scale: number): number {
   return value * scale;
 }
 
+/** The scene block's pixel rectangle (`CScene::rect`) the buttons are laid out within. */
 export interface SceneBlockRect {
   left: number;
   right: number;
@@ -63,6 +64,7 @@ export interface SceneBlockRect {
   top: number;
 }
 
+/** Inputs to the scene-button layout: the block rect, scale settings, names, and scroll offset. */
 export interface SceneButtonLayoutInput {
   /** `CScene::rect`, in pixels. */
   rect: SceneBlockRect;
@@ -76,6 +78,7 @@ export interface SceneButtonLayoutInput {
   skip?: number;
 }
 
+/** One laid-out scene button: its name, truncated label, and pixel box. */
 export interface SceneButtonRect {
   name: string;
   /** `name` cut to `max_char`; PyMOL stops drawing characters, it does not "…". */
@@ -105,6 +108,7 @@ export interface SceneButtonRect {
   stackOffset: number;
 }
 
+/** The scene list's scrollbar geometry and its entry/window limits. */
 export interface SceneScrollBar {
   left: number;
   right: number;
@@ -116,6 +120,7 @@ export interface SceneScrollBar {
   visible: number;
 }
 
+/** The full result of laying out the scene buttons: metrics, scrollbar, and the button rects. */
 export interface SceneButtonLayout {
   /** `I->ButtonsShown`: false for an empty list or a block 6 px wide. */
   shown: boolean;

@@ -9,6 +9,7 @@
 import { Fragment } from 'react';
 import { parseColorCodes, stripColorCodes } from './colorCodes';
 
+/** Renders a wizard string with PyMOL's `\RGB` inline colour markup applied. */
 export function ColorCodedText({ text, className }: { text: string; className?: string }) {
   const spans = parseColorCodes(text);
   const plain = stripColorCodes(text);

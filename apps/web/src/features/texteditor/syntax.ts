@@ -21,8 +21,10 @@
 
 import type { SyntaxMode } from '@tenmol/protocol/topics/dialogs';
 
+/** The highlight category a token is drawn in. */
 export type TokenKind = 'comment' | 'keyword' | 'argument' | 'skipped' | 'string' | 'plain';
 
+/** One highlighted run of text on a line. */
 export interface Token {
   kind: TokenKind;
   text: string;
@@ -31,6 +33,7 @@ export interface Token {
 /** `pml.py:14-17` block states, kept as a small discriminated value. */
 export type BlockState = 'none' | 'python' | 'embed' | 'skip' | 'continued';
 
+/** One line's tokens plus the block state carried into the next line. */
 export interface LineResult {
   tokens: Token[];
   next: BlockState;
@@ -104,6 +107,7 @@ const PYTHON_KEYWORDS = new Set([
   'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield',
 ]);
 
+/** Tokenise one Python line into string, comment and keyword runs. */
 export function highlightPythonLine(line: string): LineResult {
   const tokens: Token[] = [];
   // One pass: strings, then comments, then identifiers.

@@ -26,6 +26,7 @@ function settingValue(settings: MovieSettings, name: string): unknown {
   return (settings as unknown as Record<string, unknown>)[name];
 }
 
+/** Recursively renders a list of movie-menu nodes as a cascading DOM menu. */
 export function MovieMenuTree({
   nodes,
   ...handlers
@@ -153,6 +154,7 @@ export function MovieMenuTree({
   );
 }
 
+/** The full Movie menu, rendered from `MOVIE_MENU`. */
 export function MovieMenu(props: MovieMenuProps) {
   return (
     <div className="mvmenu">
@@ -172,6 +174,7 @@ interface MotionMenuProps {
   onClose: () => void;
 }
 
+/** The Camera/Object Motion context menu, popped up at a screen point. */
 export function MotionMenu({ items, at, onCommand, onClose }: MotionMenuProps) {
   const [open, setOpen] = useState<string | null>(null);
   return (

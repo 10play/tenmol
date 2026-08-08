@@ -64,6 +64,7 @@ const NO_FILES_NOTICE =
   'this bridge serves no files (cmd.tenmol_files did not install) — ' +
   'the browser picker and download are the fallback; Open and Save ask again first';
 
+/** Hosted window providing a text editor for pymolrc and other bridge-served files. */
 export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
   const session = useSession();
   const [path, setPath] = useState('');

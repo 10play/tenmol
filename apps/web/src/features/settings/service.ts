@@ -36,6 +36,7 @@ import {
 } from '@tenmol/stores/settings';
 import type { Session } from '../../app';
 
+/** The per-session settings bundle: store, source, poller and push counter. */
 export interface SettingsService {
   store: SettingsStore;
   source: SettingsSource;
@@ -48,6 +49,7 @@ export interface SettingsService {
 
 const BY_SESSION = new WeakMap<Session, SettingsService>();
 
+/** The one {@link SettingsService} for a session, created and cached on first call. */
 export function getSettingsService(session: Session): SettingsService {
   const existing = BY_SESSION.get(session);
   if (existing) return existing;

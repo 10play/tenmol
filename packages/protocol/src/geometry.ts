@@ -88,11 +88,13 @@ export const Rep = {
   Volume: 20,
 } as const;
 
+/** Total number of PyMOL rep slots (`cRepCnt`). */
 export const REP_COUNT = 21; // cRepCnt, packages/engine/layer1/Rep.h:73
 
 /** A `cRep_t` value. Kept as `number`: upstream may add reps. */
 export type RepId = number;
 
+/** Rep id to its PyMOL command-name (e.g. `sticks`, `spheres`); {@link repName} handles unknown ids. */
 export const REP_NAMES: Readonly<Record<number, string>> = {
   [Rep.Cyl]: 'sticks',
   [Rep.Sphere]: 'spheres',
@@ -117,6 +119,7 @@ export const REP_NAMES: Readonly<Record<number, string>> = {
   [Rep.Volume]: 'volume',
 };
 
+/** PyMOL command-name for a rep id, or `rep<N>` for ids not in {@link REP_NAMES}. */
 export function repName(rep: RepId): string {
   return REP_NAMES[rep] ?? `rep${rep}`;
 }
@@ -182,6 +185,7 @@ export function geometryKey(k: GeometryKey): string {
   return [k.object, k.state, k.rep].join(GEOMETRY_KEY_SEP);
 }
 
+/** Inverse of {@link geometryKey}; null when the string is not a well-formed key. */
 export function parseGeometryKey(s: string): GeometryKey | null {
   const parts = s.split(GEOMETRY_KEY_SEP);
   if (parts.length !== 3) return null;
@@ -192,6 +196,7 @@ export function parseGeometryKey(s: string): GeometryKey | null {
   return { object, state: st, rep: rp };
 }
 
+/** True when two keys name the same object/state/rep triple. */
 export function sameGeometryKey(a: GeometryKey, b: GeometryKey): boolean {
   return a.object === b.object && a.state === b.state && a.rep === b.rep;
 }
@@ -202,8 +207,10 @@ export function sameGeometryKey(a: GeometryKey, b: GeometryKey): boolean {
 
 /** `'pixel'` = Mode P (server-rendered bitmap), `'geometry'` = Mode G (three.js). */
 export const RENDER_MODES = ['pixel', 'geometry'] as const;
+/** The render path for one rep: one of {@link RENDER_MODES}. */
 export type RenderMode = (typeof RENDER_MODES)[number];
 
+/** Runtime guard for {@link RenderMode}. */
 export function isRenderMode(v: unknown): v is RenderMode {
   return v === 'pixel' || v === 'geometry';
 }
@@ -234,6 +241,7 @@ export const MODE_G_FALLBACK_REASONS = [
   /** The user pinned this rep to Mode P. */
   'user-preference',
 ] as const;
+/** Why a Mode-G rep is being served in Mode P instead; one of {@link MODE_G_FALLBACK_REASONS}. */
 export type ModeGFallbackReason = (typeof MODE_G_FALLBACK_REASONS)[number];
 
 /** The effective mode for one rep of one object, with the reason if degraded. */
@@ -293,6 +301,7 @@ export const MODE_G_CAPABLE_REPS: readonly RepId[] = [
 
 const MODE_G_CAPABLE_SET: ReadonlySet<RepId> = new Set(MODE_G_CAPABLE_REPS);
 
+/** True when a rep has any Mode-G expression at all ({@link MODE_G_CAPABLE_REPS}). */
 export function isModeGCapable(rep: RepId): boolean {
   return MODE_G_CAPABLE_SET.has(rep);
 }
@@ -333,8 +342,10 @@ export const GLMode = {
   TriangleStrip: 5,
   TriangleFan: 6,
 } as const;
+/** A legal `CGO_BEGIN` primitive mode value; one of {@link GLMode}. */
 export type GLModeValue = (typeof GLMode)[keyof typeof GLMode];
 
+/** Runtime guard for a legal {@link GLModeValue} (integer 0..6). */
 export function isGLMode(v: unknown): v is GLModeValue {
   return typeof v === 'number' && v >= 0 && v <= 6 && Number.isInteger(v);
 }
@@ -357,13 +368,20 @@ export const CGOArrayBit = {
  *   VERTEX_ACCESSIBILITY_SIZE 1               (packages/engine/layer1/CGO.cpp:65)
  */
 export const CGO_VERTEX_POS_SIZE = 3;
+/** Floats per vertex normal (xyz). */
 export const CGO_VERTEX_NORMAL_SIZE = 3;
+/** Floats per vertex colour (rgba). */
 export const CGO_VERTEX_COLOR_SIZE = 4;
+/** Floats per vertex holding the packed RGBA pick colour. */
 export const CGO_VERTEX_PICKCOLOR_RGBA_SIZE = 1;
+/** Floats per vertex holding the {atom, bond} pick indices. */
 export const CGO_VERTEX_PICKCOLOR_INDEX_SIZE = 2;
+/** Total pick-colour floats per vertex (packed rgba plus indices). */
 export const CGO_VERTEX_PICKCOLOR_SIZE =
   CGO_VERTEX_PICKCOLOR_RGBA_SIZE + CGO_VERTEX_PICKCOLOR_INDEX_SIZE;
+/** Floats per vertex for the accessibility scalar. */
 export const CGO_VERTEX_ACCESSIBILITY_SIZE = 1;
+/** Floats per vertex texture coordinate. */
 export const CGO_VERTEX_TEXCOORD_SIZE = 3;
 
 /** Opcodes referenced by the geometry feed, `packages/engine/layer1/CGO.h:82-270`. */
@@ -416,6 +434,7 @@ export const CGO_OP_SIZE: Readonly<Record<string, number>> = {
  * Instance buffers — NEVER tessellated (plan §1.3 constraint 1)
  * ------------------------------------------------------------------ */
 
+/** The impostor instance-buffer kinds a Mode-G payload may carry, never tessellated. */
 export const INSTANCE_KINDS = [
   'sphere',
   'cylinder',
@@ -425,6 +444,7 @@ export const INSTANCE_KINDS = [
   'line',
   'cross',
 ] as const;
+/** One of {@link INSTANCE_KINDS}. */
 export type InstanceKind = (typeof INSTANCE_KINDS)[number];
 
 /**
@@ -501,8 +521,10 @@ export interface InstanceBuffer {
  * Buffer references
  * ------------------------------------------------------------------ */
 
+/** Element type of a {@link BufferRef}'s bytes. */
 export type GeometryDType = 'f32' | 'i32' | 'u32' | 'u8';
 
+/** Byte width of each {@link GeometryDType}. */
 export const DTYPE_BYTES: Readonly<Record<GeometryDType, number>> = {
   f32: 4,
   i32: 4,
@@ -510,6 +532,7 @@ export const DTYPE_BYTES: Readonly<Record<GeometryDType, number>> = {
   u8: 1,
 };
 
+/** Runtime guard for {@link GeometryDType}. */
 export function isGeometryDType(v: unknown): v is GeometryDType {
   return v === 'f32' || v === 'i32' || v === 'u32' || v === 'u8';
 }
@@ -540,6 +563,7 @@ export function itemCount(ref: BufferRef): number {
   return elementCount(ref) / ref.itemSize;
 }
 
+/** The concrete typed-array type for a given {@link GeometryDType}. */
 export type TypedArrayFor<D extends GeometryDType> = D extends 'f32'
   ? Float32Array
   : D extends 'i32'
@@ -548,17 +572,20 @@ export type TypedArrayFor<D extends GeometryDType> = D extends 'f32'
       ? Uint32Array
       : Uint8Array;
 
+/** Any typed array a geometry buffer may decode to. */
 export type GeometryTypedArray = Float32Array | Int32Array | Uint32Array | Uint8Array;
 
 /* ------------------------------------------------------------------ *
  * Frame headers
  * ------------------------------------------------------------------ */
 
+/** Discriminant tag of a binary frame header. */
 export type BinaryFrameKind = 'indexed-mesh' | 'cgo-draw-arrays' | 'pixels';
 
 /** Mode-G kinds only. */
 export type GeometryKind = 'indexed-mesh' | 'cgo-draw-arrays';
 
+/** Fields shared by every binary frame header, Mode G and Mode P alike. */
 export interface BinaryFrameCommon {
   /** Binary-frame payload version; independent of PROTOCOL_VERSION. */
   v: 1;
@@ -569,6 +596,7 @@ export interface BinaryFrameCommon {
   payloadBytes: number;
 }
 
+/** Common fields of a Mode-G frame header: the geometry key plus optional matrix/invalidation/partial metadata. */
 export interface GeometryFrameCommon extends BinaryFrameCommon, GeometryKey {
   kind: GeometryKind;
   /**
@@ -641,6 +669,7 @@ export interface CgoDrawArraysBlock {
   data: BufferRef;
 }
 
+/** Mode-G header for a CGO rep: draw-arrays blocks plus impostor instance buffers. */
 export interface CgoDrawArraysHeader extends GeometryFrameCommon {
   kind: 'cgo-draw-arrays';
   /** May be empty when the rep is purely instanced (spheres, dots). */
@@ -664,8 +693,10 @@ export interface CgoDrawArraysHeader extends GeometryFrameCommon {
  *   raw-rgba                      <- localhost debugging only, 4.9 MB/frame
  */
 export const PIXEL_ENCODINGS = ['jpeg', 'png', 'webp', 'raw-rgba'] as const;
+/** One of {@link PIXEL_ENCODINGS}. */
 export type PixelEncoding = (typeof PIXEL_ENCODINGS)[number];
 
+/** Runtime guard for {@link PixelEncoding}. */
 export function isPixelEncoding(v: unknown): v is PixelEncoding {
   return typeof v === 'string' && (PIXEL_ENCODINGS as readonly string[]).includes(v);
 }
@@ -673,6 +704,7 @@ export function isPixelEncoding(v: unknown): v is PixelEncoding {
 /** Lossless encodings, used once the scene settles. */
 export const LOSSLESS_PIXEL_ENCODINGS: readonly PixelEncoding[] = ['png', 'raw-rgba'];
 
+/** True when the encoding preserves every pixel exactly ({@link LOSSLESS_PIXEL_ENCODINGS}). */
 export function isLosslessEncoding(e: PixelEncoding): boolean {
   return LOSSLESS_PIXEL_ENCODINGS.includes(e);
 }
@@ -782,7 +814,9 @@ export function isBackgroundOnlyFrame(
  * Frame unions
  * ------------------------------------------------------------------ */
 
+/** Either Mode-G header kind. */
 export type GeometryFrameHeader = IndexedMeshHeader | CgoDrawArraysHeader;
+/** Any binary frame header, Mode G or Mode P. */
 export type BinaryFrameHeader = GeometryFrameHeader | PixelFrameHeader;
 
 /** A decoded binary frame: parsed header + a VIEW onto the payload. */
@@ -792,13 +826,17 @@ export interface BinaryFrame<H extends BinaryFrameHeader = BinaryFrameHeader> {
   payload: Uint8Array;
 }
 
+/** A decoded Mode-G frame. */
 export type GeometryFrame<H extends GeometryFrameHeader = GeometryFrameHeader> = BinaryFrame<H>;
+/** A decoded Mode-P frame. */
 export type PixelFrame = BinaryFrame<PixelFrameHeader>;
 
+/** Narrows a decoded frame to Mode G. */
 export function isGeometryFrame(f: BinaryFrame): f is GeometryFrame {
   return f.header.kind !== 'pixels';
 }
 
+/** Narrows a decoded frame to Mode P. */
 export function isPixelFrame(f: BinaryFrame): f is PixelFrame {
   return f.header.kind === 'pixels';
 }
@@ -811,6 +849,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
+/** Runtime guard for a {@link BufferRef}. */
 export function isBufferRef(v: unknown): v is BufferRef {
   return (
     isRecord(v) &&
@@ -821,6 +860,7 @@ export function isBufferRef(v: unknown): v is BufferRef {
   );
 }
 
+/** Runtime guard for an {@link InstanceBuffer}. */
 export function isInstanceBuffer(v: unknown): v is InstanceBuffer {
   return (
     isRecord(v) &&
@@ -832,12 +872,14 @@ export function isInstanceBuffer(v: unknown): v is InstanceBuffer {
   );
 }
 
+/** Runtime guard for an {@link IndexedMeshHeader}. */
 export function isIndexedMeshHeader(v: unknown): v is IndexedMeshHeader {
   if (!isRecord(v) || v['kind'] !== 'indexed-mesh') return false;
   const buffers = v['buffers'];
   return isRecord(buffers) && isBufferRef(buffers['position']);
 }
 
+/** Runtime guard for a {@link CgoDrawArraysHeader}. */
 export function isCgoDrawArraysHeader(v: unknown): v is CgoDrawArraysHeader {
   if (!isRecord(v) || v['kind'] !== 'cgo-draw-arrays') return false;
   const blocks = v['blocks'];
@@ -855,6 +897,7 @@ export function isCgoDrawArraysHeader(v: unknown): v is CgoDrawArraysHeader {
   );
 }
 
+/** Runtime guard for either {@link GeometryFrameHeader} kind. */
 export function isGeometryFrameHeader(v: unknown): v is GeometryFrameHeader {
   if (!isRecord(v)) return false;
   if (v['v'] !== 1) return false;
@@ -864,6 +907,7 @@ export function isGeometryFrameHeader(v: unknown): v is GeometryFrameHeader {
   return isIndexedMeshHeader(v) || isCgoDrawArraysHeader(v);
 }
 
+/** Runtime guard for a {@link PixelFrameHeader}. */
 export function isPixelFrameHeader(v: unknown): v is PixelFrameHeader {
   return (
     isRecord(v) &&
@@ -878,6 +922,7 @@ export function isPixelFrameHeader(v: unknown): v is PixelFrameHeader {
   );
 }
 
+/** Runtime guard for any {@link BinaryFrameHeader}. */
 export function isBinaryFrameHeader(v: unknown): v is BinaryFrameHeader {
   return isGeometryFrameHeader(v) || isPixelFrameHeader(v);
 }
@@ -974,6 +1019,7 @@ export function geometryFrameProblems(header: GeometryFrameHeader): string[] {
  * Frame codec
  * ------------------------------------------------------------------ */
 
+/** Width of the little-endian uint32 header-length prefix. */
 export const BINARY_FRAME_LENGTH_BYTES = 4;
 /** JSON header is space-padded so the payload starts 4-byte aligned. */
 export const BINARY_FRAME_ALIGNMENT = 4;
@@ -1184,7 +1230,9 @@ function viewOfPayload(payload: Uint8Array, ref: BufferRef): GeometryTypedArray 
  * WP-01 scope, plan §6.
  */
 export function viewOf(payload: Uint8Array, ref: BufferRef): GeometryTypedArray;
+/** Overload taking a decoded {@link BinaryFrame} directly. */
 export function viewOf(frame: BinaryFrame, ref: BufferRef): GeometryTypedArray;
+/** Implementation accepting either a payload or a decoded frame. */
 export function viewOf(source: Uint8Array | BinaryFrame, ref: BufferRef): GeometryTypedArray {
   if (source instanceof Uint8Array) return viewOfPayload(source, ref);
   if (
@@ -1234,6 +1282,7 @@ export interface CgoSubArray {
   length: number;
 }
 
+/** Float offsets and lengths of every sub-array inside one draw-arrays block. */
 export interface CgoArraysLayout {
   nverts: number;
   arraybits: number;

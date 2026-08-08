@@ -110,6 +110,7 @@ import {
 /** How often the shell re-reads the three PyMOL values it mirrors. */
 const SHELL_POLL_MS = 1000;
 
+/** The root window: PyMOL's viewport, right-hand internal-GUI column and docked External GUI. */
 export function AppShell() {
   const session = useSession();
   const ui = session.stores.ui;

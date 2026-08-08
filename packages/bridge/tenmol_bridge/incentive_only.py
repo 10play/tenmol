@@ -34,6 +34,13 @@ __all__ = [
 
 @dataclass(frozen=True)
 class IncentiveSymbol:
+    """One command that exists only in PyMOL's Incentive build and throws here.
+
+    Records the leaf name the client addresses, the ``raise`` site in this tree,
+    where the feature lived in the Qt front-end, and what the client should do
+    about it (disable the control, annotate it, or hide the file-format filter).
+    """
+
     #: dotted name as the client addresses it (``cmd.clean`` == ``clean``)
     symbol: str
     #: file:line of the ``raise`` in this tree
@@ -142,10 +149,12 @@ UNAVAILABLE_FORMATS: Dict[str, str] = {
 
 
 def is_incentive_only(symbol: str) -> bool:
+    """Whether ``symbol`` (dotted or bare) names a known Incentive-only command."""
     return symbol.rsplit(".", 1)[-1] in SYMBOLS
 
 
 def describe(symbol: str) -> Optional[IncentiveSymbol]:
+    """The :class:`IncentiveSymbol` for ``symbol``, or None if it is available here."""
     return SYMBOLS.get(symbol.rsplit(".", 1)[-1])
 
 

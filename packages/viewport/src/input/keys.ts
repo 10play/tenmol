@@ -110,6 +110,7 @@ export function asciiUpperFromCode(code: string): number {
   return -1;
 }
 
+/** The subset of `KeyboardEvent` the key-mapping helpers read. */
 export interface KeyEventLike {
   key: string;
   code?: string;
@@ -240,6 +241,7 @@ export const RESERVED_KEYS: readonly string[] = [
   'down',
 ];
 
+/** True for a shortcut name the Create-New dialog silently refuses. */
 export function isReservedKey(name: string): boolean {
   return RESERVED_KEYS.includes(name);
 }

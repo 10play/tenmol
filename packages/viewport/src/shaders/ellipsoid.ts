@@ -82,6 +82,7 @@ void main() {
 }
 `;
 
+/** Builds the ellipsoid fragment shader, splicing in the given lighting snippet. */
 export const ELLIPSOID_FRAG = (lighting: string): string => /* glsl */ `precision highp float;
 precision highp int;
 

@@ -49,6 +49,7 @@ import { REINITIALIZE_MENU, isSessionBlacklisted } from './sessionLifecycle';
 const ROW_HEIGHT = 22;
 const OVERSCAN = 8;
 
+/** The scope, object, state and selection a settings write is addressed to. */
 export interface ScopeSelection {
   scope: SettingScope;
   object: string;
@@ -85,6 +86,7 @@ function isSelectionScope(scope: SettingScope): boolean {
 /** The one raw call the atom-state path needs; `cmd.alter_state` is not on `SettingsSource`. */
 export type RawCall = (fn: string, args: readonly unknown[]) => Promise<unknown>;
 
+/** Virtualised table of every PyMOL setting, editable across scopes. */
 export function AdvancedSettingsTable({
   store,
   source,

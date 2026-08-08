@@ -102,6 +102,7 @@ export function hsvToRgb(hsv: Hsv): Rgb {
  */
 export const HSV_RANGES = { h: 360, s: 100, v: 100 } as const;
 
+/** Convert a 0..1 HSV triple to the display units H(deg)/S/V(%) the rows show. */
 export function hsvToDisplay(hsv: Hsv): [number, number, number] {
   return [
     Math.round(hsv[0] * HSV_RANGES.h),
@@ -110,6 +111,7 @@ export function hsvToDisplay(hsv: Hsv): [number, number, number] {
   ];
 }
 
+/** Convert display units back to a 0..1 HSV triple, wrapping hue and clamping S/V. */
 export function displayToHsv(display: readonly [number, number, number]): Hsv {
   const clamp = (value: number, max: number) =>
     Math.max(0, Math.min(max, Number.isFinite(value) ? value : 0)) / max;

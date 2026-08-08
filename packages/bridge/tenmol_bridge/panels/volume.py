@@ -116,6 +116,7 @@ class VolumeAPI:
     # ------------------------------------------------------------------ #
 
     def hello(self) -> Dict[str, Any]:
+        """Handshake descriptor: the panel's attr name, tag, echo state, and method list."""
         return {
             "ok": True,
             "attr": ATTR,
@@ -133,6 +134,7 @@ class VolumeAPI:
         }
 
     def status(self) -> Dict[str, Any]:
+        """Live panel state: event-log cursor, pending event count, and watched names."""
         with self._lock:
             return {
                 "ok": True,
@@ -218,6 +220,10 @@ class VolumeAPI:
         return {"ok": True, "name": name, "watching": watching}
 
     def unwatch(self, name: str) -> Dict[str, Any]:
+        """"The panel for ``name`` closed" -- drop it from the watch set.
+
+        Idempotent; returns the resulting watch list.
+        """
         name = str(name)
         with self._lock:
             if name in self._watching:
@@ -226,6 +232,7 @@ class VolumeAPI:
         return {"ok": True, "name": name, "watching": watching}
 
     def watching(self) -> List[str]:
+        """A snapshot copy of the object names with an open volume panel."""
         with self._lock:
             return list(self._watching)
 
@@ -404,4 +411,5 @@ def uninstall(cmd: Optional[Any] = None) -> bool:
 
 
 def installed(cmd: Optional[Any] = None) -> bool:
+    """Whether the volume panel API is currently patched onto ``cmd``."""
     return isinstance(getattr(_resolve_cmd(cmd), ATTR, None), VolumeAPI)

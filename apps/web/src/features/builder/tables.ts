@@ -42,6 +42,7 @@ export interface FragmentButton {
 
 /* --- Chemical tab, row 0 (builder.py:1075-1087) ------------------------- */
 
+/** The ten element buttons of the Chemical tab's first row. */
 export const ELEMENTS: readonly ElementButton[] = [
   { label: 'H', tooltip: 'Hydrogen', symbol: 'H', geometry: 1, valence: 1, text: 'hydrogen' },
   { label: 'C', tooltip: 'Carbon', symbol: 'C', geometry: 4, valence: 4, text: 'carbon' },
@@ -57,6 +58,7 @@ export const ELEMENTS: readonly ElementButton[] = [
   { label: 'I', tooltip: 'Iodine', symbol: 'I', geometry: 1, valence: 1, text: 'iodine' },
 ];
 
+/** The two prebuilt fragment buttons (-CF3, -OMe) alongside the element row. */
 export const CHEM_ROW0_FRAGMENTS: readonly FragmentButton[] = [
   {
     label: '-CF3',
@@ -71,6 +73,7 @@ export const CHEM_ROW0_FRAGMENTS: readonly FragmentButton[] = [
 
 /* --- Chemical tab, row 1 (builder.py:1088-1099) ------------------------- */
 
+/** The Chemical tab's functional-group fragment buttons (methyl, vinyl, carbonyl, …). */
 export const FUNCTIONAL_GROUPS: readonly FragmentButton[] = [
   { label: 'CH4', tooltip: 'Methyl', fragment: 'methane', hydrogen: 1, anchor: 0, text: 'methyl' },
   { label: 'C=C', tooltip: 'Ethylene', fragment: 'ethylene', hydrogen: 4, anchor: 0, text: 'vinyl' },
@@ -127,6 +130,7 @@ export interface RingButton extends FragmentButton {
   icon: string;
 }
 
+/** The ten ring fragment buttons (cyclopropane through benzocycloheptane). */
 export const RINGS: readonly RingButton[] = [
   {
     icon: 'cyc3',
@@ -224,9 +228,11 @@ export const RINGS: readonly RingButton[] = [
 
 /* --- Protein tab (builder.py:1132-1154) --------------------------------- */
 
+/** The Protein tab's first row of amino-acid residue buttons. */
 export const AMINO_ACIDS_ROW0: readonly string[] = [
   'Ace', 'Ala', 'Arg', 'Asn', 'Asp', 'Cys', 'Gln', 'Glu', 'Gly', 'His', 'Ile', 'Leu',
 ];
+/** The Protein tab's second row of amino-acid residue buttons. */
 export const AMINO_ACIDS_ROW1: readonly string[] = [
   'Lys', 'Met', 'Phe', 'Pro', 'Ser', 'Thr', 'Trp', 'Tyr', 'Val', 'NMe', 'NHH',
 ];
@@ -241,12 +247,14 @@ export const SECONDARY_STRUCTURE: readonly { label: string; ss: number; phi: num
 
 /* --- Nucleic acid tab (builder.py:1156-1224) ---------------------------- */
 
+/** A button that grows a nucleic-acid base fragment. */
 export interface BaseButton {
   label: string;
   tooltip: string;
   fragment: string;
 }
 
+/** The four DNA base buttons (A, C, T, G). */
 export const DNA_BASES: readonly BaseButton[] = [
   { label: 'A', tooltip: 'Deoxyadenosine', fragment: 'atp' },
   { label: 'C', tooltip: 'Deoxycytidine', fragment: 'ctp' },
@@ -254,6 +262,7 @@ export const DNA_BASES: readonly BaseButton[] = [
   { label: 'G', tooltip: 'Deoxyguanosine', fragment: 'gtp' },
 ];
 
+/** The four RNA base buttons (A, C, U, G). */
 export const RNA_BASES: readonly BaseButton[] = [
   { label: 'A', tooltip: 'Adenosine', fragment: 'atp' },
   { label: 'C', tooltip: 'Cytosine', fragment: 'ctp' },
@@ -272,6 +281,7 @@ export const RNA_HINT_LINKS: readonly { text: string; href: string }[] = [
 
 /* --- Action row 2, bond orders (builder.py:1245-1248) ------------------- */
 
+/** The bond-order buttons (single, double, triple, aromatic) of the action row. */
 export const BOND_ORDERS: readonly { glyph: string; order: string; text: string; tooltip: string }[] =
   [
     { glyph: '|', order: '1', text: 'single', tooltip: 'Create single bond' },
@@ -282,6 +292,7 @@ export const BOND_ORDERS: readonly { glyph: string; order: string; text: string;
 
 /* --- Action row 3, setting checkboxes (builder.py:1256-1261) ------------ */
 
+/** The action-row setting checkboxes (electrostatics, VDW bumps, undo). */
 export const SETTING_CHECKBOXES: readonly {
   label: string;
   setting: keyof BuilderSettings;

@@ -93,6 +93,7 @@ export const INTERNAL_GUI_MODE = {
  * The block stack
  * ------------------------------------------------------------------ */
 
+/** The inputs `layoutInternalGui` needs to size the block column. */
 export interface OrthoPanelInput {
   /** Column height in CSS px — everything left over goes to Executive. */
   height: number;
@@ -128,6 +129,7 @@ export interface OrthoPanelLayout {
   control: number;
 }
 
+/** ButMode block height, taller when `mouse_grid` shows the full grid. */
 export function butModeHeight(mouseGrid: boolean): number {
   return mouseGrid ? ORTHO.butModeGridHeight : ORTHO.butModeHeight;
 }
@@ -188,6 +190,7 @@ export function wizardHeight(lines: number, controlSize: number = ORTHO.controlS
  */
 export const EXECUTIVE_MIN_HEIGHT = ORTHO.controlHeight + ORTHO.butModeGridHeight;
 
+/** Stack the four blocks, giving the residual height to the Executive block. */
 export function layoutInternalGui(input: OrthoPanelInput): OrthoPanelLayout {
   const control = ORTHO.controlHeight;
   const butMode = butModeHeight(input.mouseGrid);
@@ -326,6 +329,7 @@ export interface GutterState {
   lastClickAt: number;
 }
 
+/** The gutter's starting state: default width, nothing saved to restore. */
 export const GUTTER_INITIAL: GutterState = {
   width: ORTHO.internalGuiWidth,
   savedWidth: 0,
@@ -417,6 +421,7 @@ export const BRIDGE_ZEROED: readonly (keyof ShellSettings)[] = ['internal_gui'];
  */
 export const CLIENT_OWNED: readonly (keyof ShellSettings)[] = ['internal_gui_width'];
 
+/** `adoptShellSettings`'s output: the UI patch plus the snapshot to carry forward. */
 export interface ShellAdoptResult {
   /** What to merge into the UI store. */
   patch: Partial<ShellSettings>;
@@ -488,6 +493,7 @@ export function shellSettingWriteBacks(
  * Row 53 leftovers that are arithmetic rather than DOM
  * ------------------------------------------------------------------ */
 
+/** The window-invocation options that drive PyMOL's Qt main-window sizing. */
 export interface InvocationOptions {
   win_x: number;
   win_y: number;

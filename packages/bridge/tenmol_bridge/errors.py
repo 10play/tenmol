@@ -146,14 +146,20 @@ class BadMessage(BridgeError):
 
 
 class EngineNotRunning(BridgeError):
+    """An engine-bound RPC arrived before the engine thread was ready to serve it."""
+
     kind = KIND_ENGINE_NOT_RUNNING
 
 
 class EngineTimeout(BridgeError):
+    """An engine call did not complete within its deadline."""
+
     kind = KIND_TIMEOUT
 
 
 class Shutdown(BridgeError):
+    """The bridge is shutting down and refused the request."""
+
     kind = KIND_SHUTDOWN
 
 

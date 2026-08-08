@@ -47,6 +47,7 @@ export interface DiscoveredPlugin {
   autoload: boolean;
 }
 
+/** The read-mostly plugin-manager view: discovered plugins, paths, prefs, and writers. */
 export interface PluginRegistry {
   plugins: DiscoveredPlugin[];
   /** Scan order, user entries first. Kept for the read-only overview. */
@@ -83,6 +84,7 @@ const EMPTY: Derived = {
   error: null,
 };
 
+/** The deepest startup path that contains a plugin file, so nested dirs attribute correctly. */
 export function longestOwningPath(filename: string, paths: readonly string[]): string {
   // A plugin directory nested under another startup path must attribute to the
   // deepest match, not the first.
@@ -137,6 +139,7 @@ export async function loadPluginRegistry(
   };
 }
 
+/** React hook wrapping the registry load with load/save state and safe writers. */
 export function usePluginRegistry(): PluginRegistry {
   const session = useSession();
   const [state, setState] = useState(EMPTY);

@@ -686,6 +686,12 @@ class WGLContext:
         return bool(self._w.opengl32.wglMakeCurrent(None, None))
 
     def make_current(self) -> None:
+        """Make this WGL context current on the calling thread and bind its FBO.
+
+        A no-op fast path when already current (it just re-records ownership
+        and re-binds the FBO). Raises on ``wglMakeCurrent`` failure, with a
+        specific note when the HDC lost its pixel format despite CS_OWNDC.
+        """
         self._assert_live()
         if self.is_current():
             self.owner_thread = threading.get_ident()
@@ -722,6 +728,15 @@ class WGLContext:
         self.width, self.height = self._fb.width, self._fb.height
 
     def release(self) -> None:
+        """Tear down the FBO, context, DC and hidden window; idempotent.
+
+        Binds this context before deleting the FBO (glDeleteFramebuffers acts
+        on the current context, so deleting under a foreign one destroys its
+        objects instead), then deletes the WGL context, releases the DC and
+        destroys the window and window class. Window teardown must run on the
+        creating thread or the HWND leaks; a warning is recorded otherwise.
+        All teardown is exception-swallowing so it never raises.
+        """
         if self._released:
             return
         self._released = True
@@ -775,6 +790,13 @@ class WGLContext:
         self._class_name = None
 
     def info(self) -> Dict[str, Any]:
+        """Return a diagnostics dict describing this context and its GL driver.
+
+        Reports vendor/renderer/version/GLSL strings, FBO id and size, colour
+        and depth bit depths, pixel-format details and any accumulated
+        warnings. Collapses to a minimal ``{"backend", "released": True}`` once
+        the context has been released.
+        """
         if self._released or self._gl is None:
             return {"backend": self.backend, "released": True}
         gl = self._gl

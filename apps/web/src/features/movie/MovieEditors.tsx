@@ -24,6 +24,7 @@ interface Props {
   run: (action: MovieAction) => Promise<void>;
 }
 
+/** The three timeline editors — `mset`, per-frame `mdo`, and `mview` — under the movie panel. */
 export function MovieEditors({ panel, frame, state, objects, run }: Props) {
   const [spec, setSpec] = useState('1 x30');
   const [command, setCommand] = useState('');

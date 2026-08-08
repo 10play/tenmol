@@ -591,9 +591,11 @@ class _RecentDB:
         self._bind()
 
     def list(self) -> List[str]:
+        """Return the recent filenames from PyMOL's ``~/.pymol/recent.db``."""
         return list(self.recent_filenames)  # type: ignore[attr-defined]
 
     def add(self, filename: str) -> None:
+        """Record ``filename`` as recently used, pruning the table like PyMOL does."""
         self.recent_filenames_add(filename)  # type: ignore[attr-defined]
 
 
@@ -720,6 +722,12 @@ class DialogBroker:
     # -- the client side (all non-blocking, all engine-thread safe) ---------
 
     def pending(self) -> List[Dict[str, Any]]:
+        """Return the open dialog requests for the client to render, newest-id last.
+
+        Each entry carries the dialog id, kind, a copy of its options and how
+        long the blocked thread has been waiting. Non-blocking and safe to call
+        from the engine thread.
+        """
         with self._cv:
             return [
                 {
@@ -732,6 +740,12 @@ class DialogBroker:
             ]
 
     def answer(self, dialog_id: int, value: Any) -> Dict[str, Any]:
+        """Deliver the browser's ``value`` to the thread blocked on ``dialog_id``.
+
+        Wakes the waiting :meth:`ask` caller via the condition variable. Returns
+        ``{"answered": False, ...}`` if no such dialog is open. A ``None`` value
+        is treated as a Cancel by the blocked side.
+        """
         dialog_id = int(dialog_id)
         with self._cv:
             if dialog_id not in self._open:
@@ -743,9 +757,11 @@ class DialogBroker:
         return {"answered": True, "error": None}
 
     def cancel(self, dialog_id: int) -> Dict[str, Any]:
+        """Cancel ``dialog_id`` by answering it with ``None`` (the user-dismissed case)."""
         return self.answer(dialog_id, None)
 
     def history(self) -> List[Dict[str, Any]]:
+        """Return a snapshot of the recent dialog lifecycle log (open/answered/timeout)."""
         with self._cv:
             return list(self._log)
 
@@ -808,6 +824,11 @@ class BridgeFileDialog:
     # -- the seven tkFileDialog entry points -------------------------------
 
     def askopenfilename(self, **options: Any) -> Any:
+        """tkinter ``askopenfilename``: return the picked path, or ``""`` on cancel.
+
+        With ``multiple``, returns a list of paths (empty on cancel) instead,
+        matching tkinter's overloaded return shape that plugins depend on.
+        """
         multiple = bool(options.get("multiple"))
         answer = self._broker.ask(
             "askopenfilenames" if multiple else "askopenfilename",
@@ -822,10 +843,15 @@ class BridgeFileDialog:
         return str(answer[0]) if isinstance(answer, list) else str(answer)
 
     def askopenfilenames(self, **options: Any) -> List[str]:
+        """tkinter ``askopenfilenames``: return a (possibly empty) list of picked paths."""
         options["multiple"] = 1
         return self.askopenfilename(**options)
 
     def askopenfile(self, mode: str = "r", **options: Any) -> Any:
+        """tkinter ``askopenfile``: pick a path and return it opened in ``mode``, else ``None``.
+
+        With ``multiple``, returns a list of open file objects.
+        """
         r = self.askopenfilename(**options)
         if options.get("multiple"):
             return [open(f, mode) for f in r]
@@ -834,22 +860,26 @@ class BridgeFileDialog:
         return open(r, mode)
 
     def askopenfiles(self, mode: str = "r", **options: Any) -> Any:
+        """tkinter ``askopenfiles``: return a list of file objects for the picked paths."""
         options["multiple"] = 1
         return self.askopenfile(mode, **options)
 
     def asksaveasfilename(self, **options: Any) -> str:
+        """tkinter ``asksaveasfilename``: return the chosen save path, or ``""`` on cancel."""
         answer = self._broker.ask("asksaveasfilename", self._payload(options, False))
         if answer is CANCELLED:
             return ""
         return str(answer[0]) if isinstance(answer, list) else str(answer)
 
     def asksaveasfile(self, mode: str = "w", **options: Any) -> Any:
+        """tkinter ``asksaveasfile``: return the chosen path opened in ``mode``, else ``None``."""
         r = self.asksaveasfilename(**options)
         if not r:
             return None
         return open(r, mode)
 
     def askdirectory(self, **options: Any) -> str:
+        """tkinter ``askdirectory``: return the chosen directory path, or ``""`` on cancel."""
         answer = self._broker.ask("askdirectory", self._payload(options, False))
         if answer is CANCELLED:
             return ""
@@ -869,6 +899,12 @@ class _TkFileDialogFinder:
         self.names = ("tkinter.filedialog", "tkFileDialog")
 
     def find_spec(self, fullname: str, path: Any = None, target: Any = None) -> Any:
+        """Return a spec pointing at this finder for the shimmed tk names, else ``None``.
+
+        The meta_path hook that lets ``import tkinter.filedialog`` resolve to
+        the shim while still letting the import machinery ``setattr`` it onto
+        the parent package.
+        """
         if fullname in self.names:
             from importlib.machinery import ModuleSpec
 
@@ -876,12 +912,15 @@ class _TkFileDialogFinder:
         return None
 
     def create_module(self, spec: Any) -> Any:
+        """Return the pre-built shim module rather than letting Python create one."""
         return self.module
 
     def exec_module(self, module: Any) -> None:
+        """No-op: the shim module is already fully populated."""
         return None
 
     def load_module(self, fullname: str) -> Any:  # pragma: no cover - legacy path
+        """Legacy loader path: register the shim under ``fullname`` and return it."""
         sys.modules[fullname] = self.module
         return self.module
 
@@ -937,6 +976,12 @@ def install_tk_filedialog(broker: DialogBroker) -> Dict[str, Any]:
 
 
 def uninstall_tk_filedialog() -> bool:
+    """Reverse :func:`install_tk_filedialog`, restoring the original process globals.
+
+    Removes the meta_path finder, restores the saved ``sys.modules`` entries
+    and the ``tkinter.filedialog`` attribute, and clears the shim state.
+    Returns whether a shim was installed to remove.
+    """
     if _TK_STATE["shim"] is None:
         return False
     finder = _TK_STATE["finder"]
@@ -962,6 +1007,7 @@ def uninstall_tk_filedialog() -> bool:
 
 
 def tk_filedialog_installed() -> bool:
+    """Return whether the tk file-dialog shim is currently installed."""
     return _TK_STATE["shim"] is not None
 
 
@@ -1120,6 +1166,7 @@ class FilesAPI:
         return os.getcwd()
 
     def home(self) -> str:
+        """Return the user's home directory (``~`` expanded)."""
         return os.path.expanduser("~")
 
     def initialdir(self) -> str:
@@ -1207,6 +1254,12 @@ class FilesAPI:
         return result
 
     def stat(self, path: str) -> Dict[str, Any]:
+        """Return existence, type, size, mtime and writability for ``path``.
+
+        The path is ``~``/``$VAR`` expanded first. When it does not exist,
+        ``writable`` reports whether its parent directory is writable, so a
+        Save dialog can tell whether a new file could be created there.
+        """
         full = self.expand(path)
         out: Dict[str, Any] = {
             "path": full,
@@ -1238,6 +1291,11 @@ class FilesAPI:
         return out
 
     def mkdir(self, path: str) -> Dict[str, Any]:
+        """Create ``path`` (and any missing parents), reporting success or the OS error.
+
+        The path is expanded first. Returns ``created`` plus an ``error``
+        string rather than raising, so the picker can surface it.
+        """
         full = self.expand(path)
         try:
             os.makedirs(full)
@@ -1292,6 +1350,7 @@ class FilesAPI:
         return out
 
     def recent_add(self, filename: str) -> Dict[str, Any]:
+        """Add ``filename`` to the recent-files history, reporting success or error."""
         try:
             self._recent.add(filename)
         except Exception as exc:  # noqa: BLE001
@@ -1301,6 +1360,7 @@ class FilesAPI:
     # ------------------------------------------------------------ loading
 
     def classify(self, filename: str) -> Dict[str, Any]:
+        """Classify ``filename`` by extension into its load kind and format details."""
         return classify_filename(filename)
 
     def note_open(self, filename: str) -> Dict[str, Any]:
@@ -1823,9 +1883,11 @@ class FilesAPI:
         return state
 
     def uninstall_tk_dialogs(self) -> Dict[str, Any]:
+        """Remove the tk file-dialog shim; report whether one was present."""
         return {"removed": uninstall_tk_filedialog()}
 
     def tk_dialogs_status(self) -> Dict[str, Any]:
+        """Report whether the tk shim is installed, the engine thread, timeout and pending dialogs."""
         return {
             "installed": tk_filedialog_installed(),
             "engineThread": engine_thread(),
@@ -1842,14 +1904,17 @@ class FilesAPI:
         return self.broker.answer(dialog_id, value)
 
     def dialog_cancel(self, dialog_id: int) -> Dict[str, Any]:
+        """Cancel the blocking dialog ``dialog_id`` as if the user dismissed it."""
         return self.broker.cancel(dialog_id)
 
     def dialog_history(self) -> List[Dict[str, Any]]:
+        """Return the recent dialog lifecycle log from the broker."""
         return self.broker.history()
 
     # ------------------------------------------------------------ saving
 
     def with_ext(self, fname: str, filter_text: str) -> str:
+        """Return ``fname`` with the extension implied by ``filter_text`` appended if missing."""
         return with_extension(fname, filter_text)
 
     def save_check(self, fname: str, filter_text: str = "") -> Dict[str, Any]:
@@ -2167,6 +2232,10 @@ class FilesAPI:
         }
 
     def set_fetch_path(self, path: str) -> Dict[str, Any]:
+        """Set PyMOL's ``fetch_path`` setting (expanding ``path``) and return the fetch info.
+
+        ``quiet=0`` so the change is echoed to the console like the Qt dialog.
+        """
         self.cmd.set("fetch_path", self.expand(path), quiet=0)
         return self.fetch_info()
 
@@ -2199,6 +2268,11 @@ class FilesAPI:
         return {"code": code, "pending": True, "cached": False}
 
     def pdbe_result(self, code: str) -> Dict[str, Any]:
+        """Poll the result of the PDBe assembly/chain lookup started by :meth:`pdbe_start`.
+
+        Non-blocking: reports whether the worker was ever started, whether it is
+        still pending, and the assemblies, chains and any error gathered so far.
+        """
         code = (code or "").strip().lower()
         with self._pdbe_lock:
             state = self._pdbe.get(code)
@@ -2544,6 +2618,11 @@ def install(cmd: Any = None) -> Dict[str, Any]:
 
 
 def uninstall(cmd: Any = None) -> bool:
+    """Detach the files service from ``pymol.cmd``; return whether one was present.
+
+    Also tears down the process-global tkinter file-dialog shim, so it never
+    outlives the broker that would answer it.
+    """
     if cmd is None:
         import pymol
 
@@ -2559,6 +2638,7 @@ def uninstall(cmd: Any = None) -> bool:
 
 
 def installed(cmd: Any = None) -> bool:
+    """Return whether a :class:`FilesAPI` is currently attached to ``pymol.cmd``."""
     if cmd is None:
         import pymol
 

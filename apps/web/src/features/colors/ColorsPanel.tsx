@@ -33,6 +33,7 @@ import './colors.css';
 const TABS = ['palette', 'bands', 'editor', 'spectrum', 'ramps', 'space'] as const;
 type Tab = (typeof TABS)[number];
 
+/** The colours overlay: a floating launcher opening the palette/editor/spectrum/ramps/space tabs. */
 export function ColorsPanel() {
   const session = useSession();
   const palette = usePalette();

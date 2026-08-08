@@ -156,6 +156,7 @@ class RenderService:
         return self
 
     def detach(self) -> None:
+        """Remove the tick hook and tear down the pixel stream.  Idempotent."""
         if not self._attached:
             return
         try:
@@ -190,6 +191,7 @@ class RenderService:
             raise BadMessage("render service does not serve topic %r" % (topic,))
 
     def remove_client(self, session: Any) -> None:
+        """Unsubscribe a session from both the pixel stream and geometry fan-out."""
         if self._pixels_attached:
             self.stream.remove_client(session)
         with self._lock:
@@ -371,6 +373,7 @@ class RenderService:
     # -- diagnostics -------------------------------------------------------
 
     def stats(self) -> Dict[str, Any]:
+        """Combined render telemetry: pixel stream, geometry, and rep policy."""
         return {
             "attached": self._attached,
             "modeP": self.stream.stats(),

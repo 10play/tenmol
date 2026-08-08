@@ -71,6 +71,7 @@ function effectiveCommand(row: Row): string {
   return row.userDefined !== '' ? row.userDefined : row.command;
 }
 
+/** The Keyboard Shortcut Menu: a filterable table for viewing, editing, and creating key bindings. */
 export function ShortcutEditor({ onClose }: { onClose: () => void }) {
   const session = useSession();
   const [rows, setRows] = useState<Row[]>(seed);

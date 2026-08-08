@@ -37,10 +37,12 @@ export type ViewMatrix = readonly [
   number,
 ];
 
+/** Length of a `set_view()` matrix — the 18 floats of a full view. */
 export const VIEW_MATRIX_LENGTH = 18;
 /** What `cmd.get_view()` actually returns. */
 export const GET_VIEW_LENGTH = 25;
 
+/** Type guard: an 18-number array is a `ViewMatrix`. */
 export function isViewMatrix(v: unknown): v is ViewMatrix {
   return (
     Array.isArray(v) && v.length === VIEW_MATRIX_LENGTH && v.every((n) => typeof n === 'number')
@@ -57,6 +59,7 @@ export function toViewMatrix(v: readonly number[]): ViewMatrix {
   return v.slice(0, VIEW_MATRIX_LENGTH) as unknown as ViewMatrix;
 }
 
+/** A view topic event: the camera matrix and, optionally, the true viewport size. */
 export interface ViewPayload {
   view: ViewMatrix;
   /**

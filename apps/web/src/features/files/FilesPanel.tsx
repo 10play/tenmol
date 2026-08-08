@@ -87,6 +87,7 @@ interface PickerState extends PickerRequest {
   resolve: (result: PickerResult | null) => void;
 }
 
+/** The Files panel: load/save molecules and sessions, with recent-file and picker dialogs. */
 export function FilesPanel() {
   const session = useSession();
   const api = useMemo(

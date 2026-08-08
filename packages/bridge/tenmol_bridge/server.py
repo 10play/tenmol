@@ -114,6 +114,15 @@ class BridgeServer:
     # -- lifecycle ---------------------------------------------------------
 
     def start(self) -> None:
+        """Boot the pump and, unless degraded, install shims and attach rendering.
+
+        Idempotent. Starts the engine pump, logs the resulting engine state
+        (DEGRADED / HEADLESS / RUNNING), installs the command shims when a live
+        PyMOL is present, wires the status poller and dialog-broker probe, and
+        attaches the render service (with pixel readback only when RUNNING).
+        A failed pump start leaves the server up so the front-end stays
+        developable.
+        """
         if self._started:
             return
         self._started = True
@@ -155,6 +164,13 @@ class BridgeServer:
             log("render service NOT attached (engine is %s)" % (self.pump.state,))
 
     def stop(self) -> None:
+        """Tear down in reverse of :meth:`start` and drop the blob store.
+
+        Idempotent. Detaches rendering, uninstalls the shims on the engine
+        thread, removes the status sink and dialog probe, stops the pump and
+        clears cached blobs. Cleanup steps swallow their own exceptions so a
+        single failure cannot block shutdown.
+        """
         if not self._started:
             return
         self.pump.status_poller.remove_sink(self._on_status)
@@ -536,6 +552,12 @@ class BridgeServer:
     # -- guards ------------------------------------------------------------
 
     def check_http(self, request: Request) -> Optional[JSONResponse]:
+        """Reject non-loopback peers and disallowed origins, else return ``None``.
+
+        Returns a 403 :class:`JSONResponse` when the request's client host is
+        not loopback-allowed or its ``Origin`` header is not permitted;
+        ``None`` means the request may proceed.
+        """
         client = request.client.host if request.client else None
         if not self.config.peer_allowed(client):
             return JSONResponse({"error": "non-loopback peer"}, status_code=403)
@@ -544,9 +566,16 @@ class BridgeServer:
         return None
 
     def check_token(self, presented: Optional[str]) -> bool:
+        """Return whether the ``presented`` auth token matches the configured one."""
         return self.config.token_ok(presented)
 
     def hello(self) -> Dict[str, Any]:
+        """Build the ``hello`` handshake frame from the current pump status.
+
+        Snapshots the engine state, viewport size, threading identity, GL
+        info, the incentive manifest and Mode G capabilities so the client
+        can configure itself without probing.
+        """
         status = self.pump.status()
         return hello_frame(
             pymolVersion=self.pump.pymol_version,
@@ -648,6 +677,12 @@ def _enrich_settings(
 
 
 def create_app(config: Optional[BridgeConfig] = None) -> FastAPI:
+    """Construct the FastAPI app that fronts a :class:`BridgeServer`.
+
+    Wires a lifespan that starts the server on boot and stops it on shutdown,
+    stashes the server/config/pump on ``app.state``, and registers the health,
+    WebSocket and other routes. This is the ASGI entry point for the bridge.
+    """
     server = BridgeServer(config)
 
     @asynccontextmanager

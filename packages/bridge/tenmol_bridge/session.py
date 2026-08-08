@@ -154,6 +154,12 @@ TOPICS: frozenset = frozenset(
 
 
 class UnknownTopic(BadMessage):
+    """A ``sub``/``unsub`` named a topic outside the v1 vocabulary.
+
+    Carries the offending ``topic`` and reports the full sorted set of valid
+    v1 topics so the client can see what it should have asked for.
+    """
+
     def __init__(self, topic: Any) -> None:
         super().__init__(
             "unknown topic %r; v1 topics are: %s"
@@ -164,6 +170,11 @@ class UnknownTopic(BadMessage):
 
 
 def validate_topic(topic: Any) -> str:
+    """Return ``topic`` unchanged if it is a known v1 topic, else raise.
+
+    Rejects non-strings and any name outside :data:`TOPICS` with
+    :class:`UnknownTopic`.
+    """
     if not isinstance(topic, str) or topic not in TOPICS:
         raise UnknownTopic(topic)
     return topic
@@ -173,32 +184,46 @@ def validate_topic(topic: Any) -> str:
 
 
 def hello_frame(**fields: Any) -> Dict[str, Any]:
+    """Build the server's opening ``hello`` frame, stamped with the protocol version.
+
+    Extra keyword fields are merged in so the caller can attach capabilities or
+    session metadata to the greeting.
+    """
     frame = {"t": T_HELLO, "protocolVersion": PROTOCOL_VERSION}
     frame.update(fields)
     return frame
 
 
 def ok_frame(msg_id: Optional[int], result: Any, **extra: Any) -> Dict[str, Any]:
+    """Build a successful RPC reply carrying ``result`` for request ``msg_id``.
+
+    Extra keyword fields are merged onto the frame for out-of-band metadata
+    (such as a binary-frame handle) the response needs to advertise.
+    """
     frame: Dict[str, Any] = {"id": msg_id, "t": T_OK, "result": result}
     frame.update(extra)
     return frame
 
 
 def err_frame(msg_id: Optional[int], error: Mapping[str, Any]) -> Dict[str, Any]:
+    """Build an error reply for request ``msg_id`` from an error payload mapping."""
     return {"id": msg_id, "t": T_ERR, "error": dict(error)}
 
 
 def err_frame_from_exception(
     msg_id: Optional[int], exc: BaseException
 ) -> Dict[str, Any]:
+    """Build an error reply for ``msg_id`` from an exception, via :func:`error_payload`."""
     return err_frame(msg_id, error_payload(exc))
 
 
 def event_frame(topic: str, seq: int, payload: Any) -> Dict[str, Any]:
+    """Build a published ``event`` frame tagged with its topic and per-topic sequence."""
     return {"t": T_EVENT, "topic": topic, "seq": seq, "payload": payload}
 
 
 def feedback_frame(lines: Iterable[Any]) -> Dict[str, Any]:
+    """Build a ``feedback`` frame carrying captured engine console lines."""
     return {"t": T_FEEDBACK, "lines": list(lines)}
 
 
@@ -322,6 +347,13 @@ HEADER_ALIGNMENT = 4
 
 
 def encode_binary_frame(meta: Mapping[str, Any], payload: bytes) -> bytes:
+    """Pack a JSON ``meta`` header plus raw ``payload`` into one binary wire frame.
+
+    The layout is a little-endian ``uint32`` header length, the UTF-8 JSON
+    header, then the payload bytes.  The header is padded with spaces (legal
+    JSON whitespace) so the payload starts on a :data:`HEADER_ALIGNMENT`
+    boundary, matching ``GEOMETRY_HEADER_ALIGNMENT`` on the TypeScript side.
+    """
     header = json.dumps(meta, separators=(",", ":")).encode("utf-8")
     pad = (-(len(header) + _HEADER_STRUCT.size)) % HEADER_ALIGNMENT
     if pad:
@@ -398,6 +430,12 @@ def _ascii_safe(text: str) -> str:
 
 
 def decode_binary_frame(frame: bytes) -> Tuple[Dict[str, Any], memoryview]:
+    """Split a binary wire frame back into its JSON ``meta`` header and payload view.
+
+    Inverse of :func:`encode_binary_frame`.  The payload is returned as a
+    zero-copy :class:`memoryview` into ``frame``.  Raises :class:`BadMessage`
+    if the frame is shorter than its length field or truncated mid-header.
+    """
     if len(frame) < _HEADER_STRUCT.size:
         raise BadMessage("binary frame shorter than its header length field")
     (header_len,) = _HEADER_STRUCT.unpack_from(frame, 0)
@@ -430,12 +468,22 @@ class Subscriptions:
         self._seq: Dict[str, int] = {}
 
     def add(self, topic: Any) -> str:
+        """Subscribe to ``topic`` (validated), seeding its sequence counter at 0.
+
+        Returns the canonical topic name.  Idempotent — re-adding leaves an
+        existing counter untouched.
+        """
         name = validate_topic(topic)
         self._topics.add(name)
         self._seq.setdefault(name, 0)
         return name
 
     def remove(self, topic: Any) -> str:
+        """Unsubscribe from ``topic`` (validated), returning its canonical name.
+
+        The sequence counter is intentionally kept, so a later re-subscribe
+        resumes numbering rather than resetting.
+        """
         name = validate_topic(topic)
         self._topics.discard(name)
         return name
@@ -450,6 +498,11 @@ class Subscriptions:
         return len(self._topics)
 
     def next_seq(self, topic: str) -> int:
+        """Advance and return the monotonic sequence number for ``topic``.
+
+        A gap in the numbers a client receives is its signal that an event was
+        dropped, which drives the store-binding resync.
+        """
         value = self._seq.get(topic, 0) + 1
         self._seq[topic] = value
         return value
@@ -514,11 +567,17 @@ class ClientSession:
                 log("outbox full, dropped %d frames for one client" % self.dropped)
 
     async def send(self, frame: Any) -> None:
+        """Await a slot in the outbox and enqueue ``frame`` for the writer.
+
+        Unlike :meth:`send_soon` this applies backpressure and must be called
+        from the asyncio loop.  A no-op once the session is closed.
+        """
         if self._closed:
             return
         await self.outbox.put(frame)
 
     async def send_binary(self, meta: Mapping[str, Any], payload: bytes) -> None:
+        """Encode ``meta``/``payload`` as a binary frame and enqueue it for the writer."""
         await self.outbox.put(encode_binary_frame(meta, payload))
 
     async def emit(self, topic: str, payload: Any) -> None:
@@ -527,6 +586,11 @@ class ClientSession:
             await self.send(event_frame(topic, self.subs.next_seq(topic), payload))
 
     def emit_soon(self, topic: str, payload: Any) -> None:
+        """Thread-safe :meth:`emit`: publish an event to ``topic`` if subscribed.
+
+        The non-awaiting counterpart of :meth:`emit`, safe to call from a
+        non-loop thread (the status thread uses it).
+        """
         if topic in self.subs:
             self.send_soon(event_frame(topic, self.subs.next_seq(topic), payload))
 
@@ -660,11 +724,21 @@ class ClientSession:
     # -- task bookkeeping ---------------------------------------------------
 
     def spawn(self, coro: Any) -> None:
+        """Run ``coro`` as a tracked task tied to this session's lifetime.
+
+        The task is held in a strong reference set (so it is not GC'd mid-flight)
+        and discarded on completion; :meth:`close` cancels any still running.
+        """
         task = self.loop.create_task(coro)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
 
     async def close(self) -> None:
+        """Mark the session closed, cancel its spawned tasks, and wake the writer.
+
+        A sentinel ``None`` is pushed onto the outbox so :meth:`writer` unblocks
+        and drains rather than hanging on an empty queue.
+        """
         self._closed = True
         for task in list(self._tasks):
             task.cancel()
@@ -675,9 +749,16 @@ class ClientSession:
 
     @property
     def closed(self) -> bool:
+        """Whether :meth:`close` has been called on this session."""
         return self._closed
 
     def stats(self) -> Dict[str, Any]:
+        """Per-session counters for ``/healthz``: id, subscriptions, and traffic totals.
+
+        Reports sent-frame and dropped-frame counts, binary-frame count and byte
+        total, and the current outbox depth, so a slow or greedy client can be
+        identified from the server side.
+        """
         return {
             "id": self.id,
             "topics": list(self.subs),

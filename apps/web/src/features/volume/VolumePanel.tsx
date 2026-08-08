@@ -75,6 +75,7 @@ type Modal =
   | { kind: 'text'; title: string; text: string }
   | { kind: 'number'; spec: NumberPromptSpec; apply: (value: number) => void };
 
+/** The volume color-ramp editor: edit an `object:volume`'s transfer-function points. */
 export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
   const session = useSession();
   const name = spec.arg;

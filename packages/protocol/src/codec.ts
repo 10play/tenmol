@@ -41,8 +41,10 @@ import type { Json } from './envelope';
  * dedicated binary path. msgpack exists for `call` results that contain numpy.
  */
 export const WIRE_ENCODINGS = ['json', 'msgpack'] as const;
+/** A negotiated frame encoding: `'json'` or `'msgpack'`. */
 export type WireEncoding = (typeof WIRE_ENCODINGS)[number];
 
+/** The v1 default encoding until the client negotiates msgpack. */
 export const DEFAULT_WIRE_ENCODING: WireEncoding = 'json';
 
 /* ------------------------------------------------------------------ *
@@ -59,6 +61,7 @@ export const MsgpackExtType = {
   /** A blob handle: `[blobId, byteLength, mimeType]`. */
   Blob: 0x11,
 } as const;
+/** One of the `MsgpackExtType` code values (0x10..0x1f). */
 export type MsgpackExtTypeValue = (typeof MsgpackExtType)[keyof typeof MsgpackExtType];
 
 /**
@@ -99,9 +102,12 @@ export const MSGPACK_CONFIG: MsgpackCodecConfig = {
  * NdArray — the numpy wire form (plan §B8 row 3)
  * ------------------------------------------------------------------ */
 
+/** The numpy dtypes an `NdArray` may carry on the wire. Closed set. */
 export const ND_DTYPES = ['float32', 'float64', 'int32', 'int64', 'uint8', 'bool'] as const;
+/** One of the supported `NdArray` dtypes. */
 export type NdDType = (typeof ND_DTYPES)[number];
 
+/** Bytes per element for each supported dtype. */
 export const ND_DTYPE_BYTES: Readonly<Record<NdDType, number>> = {
   float32: 4,
   float64: 8,
@@ -111,6 +117,7 @@ export const ND_DTYPE_BYTES: Readonly<Record<NdDType, number>> = {
   bool: 1,
 };
 
+/** Type guard: is `v` one of the supported dtype strings? */
 export function isNdDType(v: unknown): v is NdDType {
   return typeof v === 'string' && (ND_DTYPES as readonly string[]).includes(v);
 }
@@ -128,6 +135,7 @@ export interface NdArray {
   data: Uint8Array;
 }
 
+/** Type guard: does `v` have the shape/dtype/data of an `NdArray`? */
 export function isNdArray(v: unknown): v is NdArray {
   return (
     typeof v === 'object' &&
@@ -139,6 +147,7 @@ export function isNdArray(v: unknown): v is NdArray {
   );
 }
 
+/** Total element count implied by an `NdArray`'s shape (product of dims). */
 export function ndArrayElementCount(a: Pick<NdArray, 'shape'>): number {
   return a.shape.reduce((n, d) => n * d, 1);
 }
@@ -197,6 +206,7 @@ export interface BlobRef {
   path?: string;
 }
 
+/** Type guard: is `v` a `BlobRef` handle rather than an inline value? */
 export function isBlobRef(v: unknown): v is BlobRef {
   return (
     typeof v === 'object' &&
@@ -220,6 +230,7 @@ export const BLOB_ONLY_SYMBOLS: readonly string[] = [
   'ray',
 ];
 
+/** True when this API symbol's result is always a `BlobRef`, never inline. */
 export function isBlobOnly(fn: string): boolean {
   return BLOB_ONLY_SYMBOLS.includes(fn);
 }
@@ -260,8 +271,10 @@ export const CHEMPY_ATOM_FIELDS: readonly string[] = [
   'id',
 ];
 
+/** Whitelisted `chempy.Bond` fields; anything else is dropped. */
 export const CHEMPY_BOND_FIELDS: readonly string[] = ['index', 'order', 'stereo', 'id'];
 
+/** A `cmd.get_model()` result: whitelisted atom and bond records. */
 export interface ChempyModel {
   atom: Json[];
   bond: Json[];

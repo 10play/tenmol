@@ -22,6 +22,7 @@
 import { useCallback, useRef } from 'react';
 import type { UiStore } from '@tenmol/stores';
 
+/** The console's command-line history: push, up/down recall, and prefix search. */
 export interface CommandHistory {
   push(cmd: string): void;
   /** Up. Returns the text to show, or null to leave the line alone. */
@@ -35,6 +36,7 @@ export interface CommandHistory {
 
 const MAX_HISTORY = 255;
 
+/** Hook giving the console its PyMOL-faithful command history, mirrored into the `ui` store. */
 export function useCommandHistory(ui: UiStore): CommandHistory {
   const history = useRef<string[] | null>(null);
   if (history.current === null) {

@@ -41,6 +41,7 @@ interface Props {
   onLog?: (line: string) => void;
 }
 
+/** Movie playback controls: play/stop, stepping, rock, and seq-view toggles. */
 export function TransportBar({ status, run, onLog }: Props) {
   const playing = status.playing;
   const rocking = status.rocking || status.settings.rock === true;

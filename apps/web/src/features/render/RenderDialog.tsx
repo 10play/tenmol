@@ -48,6 +48,7 @@ export const RENDER_HOOK = 'render_dialog';
 /** Also accepted, for symmetry with `features/builder`'s `tenmol:open-builder`. */
 export const OPEN_EVENT = 'tenmol:open-render';
 
+/** The Draw/Ray dialog: a size-and-render setup page and a save page for the result. */
 export function RenderDialog() {
   const session = useSession();
   const [state, dispatch] = useReducer(reducer, INITIAL);

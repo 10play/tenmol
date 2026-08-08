@@ -26,6 +26,7 @@ export interface ViewportSurface {
 
 const LAYER_STYLE = 'position:absolute;inset:0;width:100%;height:100%;display:block;';
 
+/** Build the viewport's DOM inside a container: stacked pixel/GL canvases and an overlay. */
 export function createSurface(container: HTMLElement): ViewportSurface {
   const previousPosition = container.style.position;
   if (getComputedStyle(container).position === 'static') container.style.position = 'relative';

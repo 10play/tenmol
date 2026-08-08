@@ -23,6 +23,7 @@ import { DEFAULT_WS_URL } from '@tenmol/protocol';
 
 const TOKEN_KEY = 'tenmol.token';
 
+/** Resolved bridge endpoint and the token used to reach it. */
 export interface BridgeConfig {
   /** Full ws:// URL including the token query parameter, if any. */
   url: string;
@@ -35,6 +36,7 @@ export interface BridgeConfig {
   tokenSource: 'url' | 'storage' | 'env' | 'none';
 }
 
+/** Resolve the bridge config, taking the token from URL, storage or env. */
 export function resolveBridgeConfig(): BridgeConfig {
   const base = readEnv('VITE_TENMOL_WS_URL') ?? DEFAULT_WS_URL;
   const fromQuery = takeTokenFromLocation();

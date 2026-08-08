@@ -34,6 +34,7 @@ import { useColorAction } from './usePalette';
 
 const PREVIEW_STOPS = 24;
 
+/** Panel for applying a colour spectrum or palette across a selection by expression. */
 export function SpectrumPanel({ palette, sele }: { palette: PaletteState; sele: string }) {
   const act = useColorAction();
   const [mode, setMode] = useState<'palette' | 'colors'>('palette');

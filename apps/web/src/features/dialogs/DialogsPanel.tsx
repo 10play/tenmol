@@ -50,6 +50,7 @@ const ALL_KINDS: readonly DialogKind[] = [
   'texteditor',
 ];
 
+/** Host that renders the currently open hosted dialog windows (settings, volume, properties, editor). */
 export function DialogsPanel() {
   const session = useSession();
   const windows = useHostedWindows(ALL_KINDS);

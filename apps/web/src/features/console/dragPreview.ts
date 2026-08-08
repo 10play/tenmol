@@ -54,8 +54,10 @@ export interface PreviewState {
   savedText: string;
 }
 
+/** The empty preview state: nothing saved, no preview showing. */
 export const NO_PREVIEW: PreviewState = { savedPos: -1, savedText: '' };
 
+/** The result of applying a drop preview: new text, selection, and saved state. */
 export interface PreviewResult {
   text: string;
   /** `setSelection(pos, len(droppedtext))` (`:1116`). */

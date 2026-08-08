@@ -70,6 +70,7 @@ function useSubmenuPosition(
   return fixed;
 }
 
+/** Props for the menu list: the nodes to render plus availability and annotation hooks. */
 export interface MenuListProps {
   nodes: readonly MenuNode[];
   values: Readonly<Record<string, MenuSettingValue>>;
@@ -92,6 +93,7 @@ export interface MenuListProps {
   annotate?: (node: MenuNode) => string | null;
 }
 
+/** A dropdown menu column, opening nested submenus beside their parent row. */
 export function MenuList({
   nodes,
   values,

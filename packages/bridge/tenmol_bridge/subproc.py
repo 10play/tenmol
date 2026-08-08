@@ -318,6 +318,11 @@ class _Drainer(threading.Thread):
         self._prefix = prefix
 
     def run(self) -> None:  # pragma: no cover - exercised through the socket
+        """Pump the child's pipe line by line to the console until it closes.
+
+        Decodes bytes leniently and prefixes each line; a closed or broken pipe
+        ends the loop quietly and the stream is closed on the way out.
+        """
         try:
             for raw in self._stream:
                 if isinstance(raw, bytes):

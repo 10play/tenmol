@@ -14,6 +14,7 @@ import { IconButton } from '../../ui';
 import { dialogsStore, type DialogWindowSpec } from './store';
 import './dialogs.css';
 
+/** The draggable, resizable, raisable window chrome every area-10 dialog uses. */
 export function DialogWindow({
   spec,
   footer,

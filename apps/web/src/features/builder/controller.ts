@@ -20,12 +20,14 @@ import {
   type BuilderTables,
 } from '@tenmol/protocol/topics/builder';
 
+/** The transport the Builder needs: a `cmd.*` call and a one-shot `{t:'do'}` runner. */
 export interface BuilderTransport {
   call<T>(fn: string, args?: readonly unknown[], kwargs?: Record<string, unknown>): Promise<T>;
   /** `{t:'do'}` — used exactly once, for the bootstrap line. */
   run(commandLine: string): Promise<void>;
 }
 
+/** The Builder's React-free half: open, poll, and drive every `cmd.builder_*` action. */
 export interface BuilderController {
   /** Install `cmd.builder_*` and run `showEvent`. Safe to call repeatedly. */
   open(): Promise<BuilderState>;
@@ -60,6 +62,7 @@ export interface BuilderController {
   dismiss(): Promise<BuilderState>;
 }
 
+/** Build a `BuilderController` over one transport, bootstrapping the engine shim on first use. */
 export function createBuilderController(transport: BuilderTransport): BuilderController {
   // The bootstrap is a `{t:'do'}`, which the bridge classifies as `resync`; it
   // must therefore happen once per connection, not once per button.

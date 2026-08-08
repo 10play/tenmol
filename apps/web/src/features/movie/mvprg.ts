@@ -17,6 +17,7 @@ export interface MvprgState {
   movieCommand: string | null;
 }
 
+/** The empty "last program" state: no start frame, no stored command. */
 export const MVPRG_INITIAL: MvprgState = { movieStart: 0, movieCommand: null };
 
 /**

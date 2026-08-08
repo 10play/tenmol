@@ -236,6 +236,7 @@ def bump() -> int:
 
 
 def version() -> int:
+    """The current wizard-state version counter, for change detection."""
     with _lock:
         return _version
 
@@ -268,6 +269,7 @@ def uninstall(cmd: Any = None) -> bool:
 
 
 def installed() -> bool:
+    """Whether the wizard refresh entry points are currently wrapped."""
     with _lock:
         return bool(_wrapped)
 

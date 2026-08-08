@@ -33,6 +33,7 @@ export interface DefaultShortcut {
   description: string;
 }
 
+/** PyMOL's built-in key bindings, the seed for the shortcut editor. */
 export const DEFAULT_SHORTCUTS: readonly DefaultShortcut[] = [
   { key: 'left', command: '_ backward', description: 'previous movie frame' },
   { key: 'right', command: '_ forward', description: 'next movie frame' },

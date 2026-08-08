@@ -33,6 +33,7 @@ import { repCheck, type RepCheck } from './reps';
 /** `PopUp.cpp` opens a submenu 0.25 s after the pointer settles on its row. */
 export const SUBMENU_DELAY_MS = 250;
 
+/** Props for {@link RowMenu}: the menu tree, anchor, rep state, and callbacks. */
 export interface RowMenuProps {
   title: string;
   op: OpButton;
@@ -59,6 +60,7 @@ export interface RowMenuProps {
   onClose: () => void;
 }
 
+/** The popup menu for one object-panel row, mirroring PyMOL's `PopUp.cpp`. */
 export function RowMenu({
   title,
   op,

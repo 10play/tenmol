@@ -36,6 +36,7 @@ export type Swatch = readonly [string, string];
 /** `[groupName, swatches]`. */
 export type SwatchGroup = readonly [string, readonly Swatch[]];
 
+/** The swatch grid: nine named colour groups, each an ordered list of PyMOL's `(swatchDigits, colorName)` pairs. */
 export const ALL_COLORS_LIST: readonly SwatchGroup[] = [
   [
     'reds',
@@ -176,6 +177,7 @@ export const ALL_COLORS_LIST: readonly SwatchGroup[] = [
 /** `[repLabel, settingName]`; both empty means a separator. */
 export type RepSetting = readonly [string, string];
 
+/** The three "by rep" sublists, each a run of `(repLabel, settingName)` colour-setting writes. */
 export const REP_SETTING_LISTS: readonly (readonly RepSetting[])[] = [
   [
     ['lines', 'line_color'],
@@ -210,6 +212,7 @@ export const REP_SETTING_LISTS: readonly (readonly RepSetting[])[] = [
   ],
 ];
 
+/** Display names for the three `REP_SETTING_LISTS` sublists. */
 export const REP_SETTING_MODE_NAMES = ['molecule', 'measurement', 'extra'] as const;
 
 /* ------------------------------------------------------------------ *
@@ -232,6 +235,7 @@ export interface ElemChoice {
   name?: string;
 }
 
+/** One "by element" page: a titled set of carbon-colour choices, applied by `cba` (index) or `cbh` (name). */
 export interface ElemPage {
   title: string;
   /** 'cba' colours carbons by index, 'cbh' colours hydrogens by name. */
@@ -239,6 +243,7 @@ export interface ElemPage {
   choices: readonly ElemChoice[];
 }
 
+/** The six "by element" pages — five `cba` index pages plus the `cbh` hydrogen page. */
 export const BY_ELEM_PAGES: readonly ElemPage[] = [
   {
     title: 'set 1',
@@ -346,6 +351,7 @@ export const BY_ELEM_PAGES: readonly ElemPage[] = [
  * `packages/bridge/tests/test_p8_a5.py::test_the_ten_fixed_carbon_shortcuts_leave_the_object_colour_alone`.
  * ------------------------------------------------------------------ */
 
+/** One fixed-carbon `util.cba*` verb and the colour it hard-codes for carbons. */
 export interface CarbonShortcut {
   /** The `util.` function name, which is also what the user would type. */
   fn: string;
@@ -353,6 +359,7 @@ export interface CarbonShortcut {
   color: string;
 }
 
+/** The ten `cba<letter>` command-line carbon-colour shortcuts, in menu order. */
 export const FIXED_CARBON_SHORTCUTS: readonly CarbonShortcut[] = [
   { fn: 'cbag', color: 'carbon' },
   { fn: 'cbac', color: 'cyan' },
@@ -382,7 +389,9 @@ export const FIXED_CARBON_SHORTCUTS: readonly CarbonShortcut[] = [
  * so it goes through the settings store, exactly like "by rep".
  * ------------------------------------------------------------------ */
 
+/** The reps (mesh, surface) whose colour menu carries a `negative` submenu. */
 export const NEGATIVE_REPS = ['mesh', 'surface'] as const;
+/** A single member of `NEGATIVE_REPS`. */
 export type NegativeRep = (typeof NEGATIVE_REPS)[number];
 
 /** The two setting names `mesh_color` writes, for a given rep. */
@@ -394,6 +403,7 @@ export function negativeSettings(rep: string): { visible: string; color: string 
  * By secondary structure — menu.py:420-426
  * ------------------------------------------------------------------ */
 
+/** The three "by secondary structure" helix/sheet/loop colour presets. */
 export const BY_SS_PRESETS: readonly {
   helix: string;
   sheet: string;
@@ -411,6 +421,7 @@ export const BY_SS_PRESETS: readonly {
  * strip next to "by chain" so the user can see what they are about to get.
  * ------------------------------------------------------------------ */
 
+/** `util._color_cycle` — the 40 auto-colour indices, shown as the "by chain" preview strip. */
 export const COLOR_CYCLE: readonly number[] = [
   26, 5, 154, 6, 9, 29, 11, 13, 10, 5262, 12, 36, 5271, 124, 17, 18, 5270, 20, 5272, 52, 5258, 5274,
   5257, 5256, 15, 5277, 5279, 5276, 53, 5278, 5275, 5269, 22, 5266, 5280, 5267, 5268, 104, 23, 51,
@@ -426,6 +437,7 @@ export const COLOR_CYCLE: readonly number[] = [
  * `packages/bridge/tests/test_colors.py`.
  * ------------------------------------------------------------------ */
 
+/** One spectrum palette: a colour-band prefix and the index range sampled from it. */
 export interface Palette {
   name: string;
   prefix: string;
@@ -434,6 +446,7 @@ export interface Palette {
   last: number;
 }
 
+/** Every spectrum palette, ported from `constants_palette.palette_dict`. */
 export const PALETTES: readonly Palette[] = [
   { name: 'rainbow_cycle', prefix: 'o', digits: 3, first: 0, last: 999 },
   { name: 'rainbow_cycle_rev', prefix: 'o', digits: 3, first: 999, last: 0 },
@@ -517,6 +530,7 @@ export const PALETTE_COLORS_DICT: Readonly<Record<string, string>> = {
 
 /** `_spectrumany_interpolations` — viewing.py:1968-1973. */
 export const SPECTRUM_INTERPOLATIONS = ['rgb', 'hls', 'hsv'] as const;
+/** One of the `spectrumany` interpolation spaces. */
 export type SpectrumInterpolation = (typeof SPECTRUM_INTERPOLATIONS)[number];
 
 /* ------------------------------------------------------------------ *
@@ -549,6 +563,7 @@ export const VOLUME_RAMPS: readonly string[] = ['2fofc', 'esp', 'fofc', 'rainbow
  * Colour space — importing.py:227-288 + constants.py:141-148
  * ------------------------------------------------------------------ */
 
+/** The `color_space` LUT choices, each with a one-line help string. */
 export const COLOR_SPACES: readonly { name: string; help: string }[] = [
   { name: 'rgb', help: 'purge the LUT (default)' },
   { name: 'pymol', help: 'synthesised 512x512 LUT, pymol_space_* settings' },

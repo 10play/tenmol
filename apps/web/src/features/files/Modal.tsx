@@ -20,6 +20,7 @@ interface ModalProps {
   wide?: boolean;
 }
 
+/** Backdrop-and-box dialog shell for the file dialogs, with a title bar and optional footer. */
 export function Modal({ title, onClose, children, footer, wide }: ModalProps) {
   return (
     <div className="fdlg__backdrop" role="dialog" aria-modal="true" aria-label={title}>
@@ -46,6 +47,7 @@ export function Modal({ title, onClose, children, footer, wide }: ModalProps) {
   );
 }
 
+/** Labeled form row pairing a caption with its control. */
 export function Field({
   label,
   children,
@@ -65,6 +67,7 @@ export function Field({
   );
 }
 
+/** Labeled checkbox control for the file dialogs. */
 export function Check({
   label,
   checked,

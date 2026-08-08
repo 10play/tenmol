@@ -72,6 +72,7 @@ function asPayload(frame: PixelFramePayload | PixelFrame): PixelFramePayload {
   };
 }
 
+/** Create the viewport: mounts the render surface and drives both render modes. */
 export function createViewport(options: ViewportOptions): ViewportHandle {
   const { container, transport } = options;
   const onError = options.onError ?? ((error: Error) => console.warn('[tenmol/viewport]', error));

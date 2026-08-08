@@ -43,6 +43,7 @@ export interface MenuCall {
   selfArg?: boolean;
 }
 
+/** What a menu leaf does when activated — one of five recorded behaviours. */
 export type MenuAction =
   /** A command STRING. Runs through `{t:'do'}`, so PyMOL echoes `PyMOL>…`. */
   | { type: 'do'; command: string }
@@ -64,10 +65,12 @@ export type MenuAction =
    */
   | { type: 'dropped'; reason: string };
 
+/** A horizontal rule between menu items. */
 export interface MenuSeparatorNode {
   kind: 'separator';
 }
 
+/** A nested submenu carrying its own list of child nodes. */
 export interface MenuSubmenuNode {
   kind: 'submenu';
   label: string;
@@ -75,6 +78,7 @@ export interface MenuSubmenuNode {
   items: MenuNode[];
 }
 
+/** A clickable leaf that fires a `MenuAction`. */
 export interface MenuCommandNode {
   kind: 'command';
   label: string;
@@ -123,6 +127,7 @@ export interface MenuErrorNode {
   raw: string;
 }
 
+/** Any node in a menu tree; the client renders each `kind` generically. */
 export type MenuNode =
   | MenuSeparatorNode
   | MenuSubmenuNode
@@ -132,6 +137,7 @@ export type MenuNode =
   | MenuDynamicNode
   | MenuErrorNode;
 
+/** The whole menu-bar snapshot the bridge harvests and the client renders. */
 export interface MenusPayload {
   /** Bumped when the node shape changes; the client asserts on it. */
   schema: number;

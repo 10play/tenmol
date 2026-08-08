@@ -31,6 +31,7 @@ import {
 } from './tables';
 import { useSession } from '../../app';
 
+/** The current mouse configuration: mode, selection level, grid and 80-slot table. */
 export interface MouseModeState {
   /** `mode_dict` key, e.g. `three_button_viewing`. */
   mode: ModeName | null;
@@ -68,6 +69,7 @@ export function modeFromDisplayName(displayName: string): ModeName | null {
 /** 4 Hz. The mode only changes on a user action or a script, never per frame. */
 const POLL_MS = 250;
 
+/** React hook that polls the live mouse mode and exposes it with a manual `refresh`. */
 export function useMouseMode(): MouseModeState & { refresh: () => void } {
   const session = useSession();
   const [state, setState] = useState<MouseModeState>(INITIAL);
