@@ -200,15 +200,29 @@
 /* 5. MENU BAR + Radix menus + bespoke dropdowns.                      */
 /* ================================================================== */
 
+/* The frost lives on a ::before, NOT on `.menubar`/`.menu` themselves: a
+   `backdrop-filter` makes its element a CONTAINING BLOCK for `position: fixed`
+   descendants, and the cascading submenus (`.menu--sub`) are fixed so they can
+   escape the parent list's scroll clip (menubar.css). With the filter on the
+   element, a submenu resolved its inline viewport `left/top` against the frosted
+   ancestor instead of the viewport and opened hundreds of px off, over the
+   console. A pseudo-element is a sibling of the rows, never an ancestor of the
+   fixed list, so the frost stays and the flyouts land correctly. */
 :root[data-ui-theme='shadcn'] .menubar {
-  background: var(--sh-panel-frost);
-  backdrop-filter: var(--sh-blur);
-  -webkit-backdrop-filter: var(--sh-blur);
   border-bottom: 1px solid var(--pm-line);
   height: 32px;
   gap: 2px;
   padding: 0 8px;
   align-items: center;
+}
+:root[data-ui-theme='shadcn'] .menubar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
 }
 :root[data-ui-theme='shadcn'] .menubar__item {
   background: transparent;
@@ -236,17 +250,31 @@
   text-transform: none;
 }
 
-/* bespoke menubar / pymol-menu dropdowns + their submenus */
+/* bespoke menubar / pymol-menu dropdowns + their submenus.
+   Frost on a ::before (see the `.menubar` note): a dropdown or a submenu is the
+   fixed-positioning ANCESTOR of its own nested `.menu--sub`, so the filter must
+   not sit on the element itself or the child flyout mis-resolves its viewport
+   coordinates. */
 :root[data-ui-theme='shadcn'] .menu,
 :root[data-ui-theme='shadcn'] .menu--sub,
 :root[data-ui-theme='shadcn'] .popup-menu {
-  background: var(--sh-panel-frost);
-  backdrop-filter: var(--sh-blur);
-  -webkit-backdrop-filter: var(--sh-blur);
+  background: transparent;
   border: 1px solid var(--sh-line-strong);
   border-radius: var(--sh-r);
   box-shadow: var(--sh-pop);
   padding: 5px;
+}
+:root[data-ui-theme='shadcn'] .menu::before,
+:root[data-ui-theme='shadcn'] .menu--sub::before,
+:root[data-ui-theme='shadcn'] .popup-menu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
 }
 :root[data-ui-theme='shadcn'] .menu__row {
   border-radius: var(--sh-r-sm);
