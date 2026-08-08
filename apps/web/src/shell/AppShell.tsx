@@ -60,38 +60,11 @@ import {
   type GutterState,
   type ShellSettings,
 } from './orthoPanel';
-import { panelsStore, togglePanel } from './panelHooks';
-import {
-  AppWindow,
-  Blocks,
-  Box,
-  Cpu,
-  FolderOpen,
-  Palette,
-  Puzzle,
-  Settings,
-  SlidersHorizontal,
-  SquarePen,
-  X,
-  Zap,
-  type LucideIcon,
-} from 'lucide-react';
-import { Button, IconButton, ToggleButton, ThemeToggle } from '../ui';
-
-/** Lucide icons for the overlay-launcher panels, keyed by feature slot id. */
-const LAUNCHER_ICONS: Record<string, LucideIcon> = {
-  settings: Settings,
-  files: FolderOpen,
-  dialogs: AppWindow,
-  builder: Blocks,
-  colors: Palette,
-  volume: Box,
-  properties: SlidersHorizontal,
-  texteditor: SquarePen,
-  compute: Cpu,
-  'plugin-manager': Puzzle,
-  apbs: Zap,
-};
+import { panelsStore } from './panelHooks';
+import { X } from 'lucide-react';
+import { Button, IconButton, ThemeToggle } from '../ui';
+import { useTheme } from '../ui/theme';
+import { LauncherButtons } from './OverlayLauncher';
 import { SESSION_FILE_INDEX, getSettingsTap } from './settingsTap';
 import {
   dockModifier,
@@ -389,7 +362,7 @@ function ShellHeader({
 
   if (isInstalled('menubar')) {
     return (
-      <div className="menubar modern:h-8 modern:items-center modern:gap-0.5 modern:px-2 modern:border-b modern:border-line">
+      <div className="menubar modern:h-6 modern:items-center modern:gap-0.5 modern:px-2 modern:border-b modern:border-line">
         <FeatureSlot id="menubar" />
         <span className="menubar__spacer" />
         {extGuiButton}
@@ -399,7 +372,7 @@ function ShellHeader({
   }
 
   return (
-    <div className="menubar modern:h-8 modern:items-center modern:gap-0.5 modern:px-2 modern:border-b modern:border-line">
+    <div className="menubar modern:h-6 modern:items-center modern:gap-0.5 modern:px-2 modern:border-b modern:border-line">
       <span className="menubar__title modern:text-[13px] modern:font-bold modern:tracking-[-0.01em] modern:normal-case modern:text-pm-text-bright">
         PyMOL
       </span>
@@ -643,27 +616,19 @@ function OverlayLayer() {
   // children (`shell/panelHooks.ts`).
   const open = useStore(panelsStore(), (state) => state.open);
   const slots = slotsForRegion('overlay').filter((slot) => isInstalled(slot.id));
+  // The modern theme hosts the launcher INSIDE the status bar (see StatusBar);
+  // classic keeps its flush corner bar here. Either way the OPEN panels are
+  // rendered below.
+  const modern = useTheme() === 'shadcn';
   if (slots.length === 0) return null;
-
-  const toggle = (id: string) => togglePanel(id);
 
   return (
     <>
-      <div className="overlay-launcher" role="toolbar" aria-label="panels">
-        {slots.map((slot) => (
-          <ToggleButton
-            key={slot.id}
-            variant="launcher"
-            icon={LAUNCHER_ICONS[slot.id]}
-            iconOnly
-            title={slot.title}
-            pressed={open.includes(slot.id)}
-            onClick={() => toggle(slot.id)}
-          >
-            {slot.title}
-          </ToggleButton>
-        ))}
-      </div>
+      {!modern && (
+        <div className="overlay-launcher" role="toolbar" aria-label="panels">
+          <LauncherButtons iconOnly />
+        </div>
+      )}
       {/*
        * Rendered WITHOUT a wrapper. These panels bring their own positioning —
        * `features/settings` is `position: absolute; right: 8px`, anchored to

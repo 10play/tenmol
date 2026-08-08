@@ -141,7 +141,11 @@ export function SettingsPanel() {
 
   return (
     <>
-      <div className="setlaunch" role="group" aria-label="Settings">
+      <div
+        className="setlaunch modern:rounded-md modern:border modern:border-line-strong modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)] modern:shadow-[var(--sh-pop)] modern:px-1 modern:py-0.5"
+        role="group"
+        aria-label="Settings"
+      >
         <button
           type="button"
           className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"

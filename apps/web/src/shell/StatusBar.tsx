@@ -18,6 +18,8 @@
 
 import { describeConnection, engineState } from '@tenmol/stores';
 import { useSession, useStore, useStoreState } from '../app';
+import { useTheme } from '../ui/theme';
+import { LauncherButtons } from './OverlayLauncher';
 
 /** The bottom status bar: connection state, object count and feedback summary. */
 export function StatusBar() {
@@ -30,6 +32,7 @@ export function StatusBar() {
   const engine = engineState(connection);
   const gl = connection.hello?.gl;
   const busy = connection.progress >= 0;
+  const modern = useTheme() === 'shadcn';
 
   return (
     <div className="statusbar modern:h-6 modern:px-3 modern:text-[11px] modern:font-sans modern:border-t modern:border-line modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]">
@@ -56,6 +59,14 @@ export function StatusBar() {
       )}
 
       <span className="statusbar__spacer" />
+
+      {/* Modern hosts the overlay-panel launcher inline here — the same bottom
+          strip the classic corner bar sits on, but as first-class components. */}
+      {modern && (
+        <div className="statusbar__launcher" role="toolbar" aria-label="panels">
+          <LauncherButtons iconOnly />
+        </div>
+      )}
 
       <span className="statusbar__text statusbar__text--dim" title={`row source: ${source}`}>
         {objectCount} {objectCount === 1 ? 'row' : 'rows'}
