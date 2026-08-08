@@ -10,7 +10,18 @@
 
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [master, "wp-*"]
+    paths:
+      - "packages/engine/**"
+      - "scripts/bootstrap.sh"
+      - ".github/workflows/build.yml"
+  pull_request:
+    paths:
+      - "packages/engine/**"
+      - "scripts/bootstrap.sh"
+      - ".github/workflows/build.yml"
 
 jobs:
   build-Linux:
