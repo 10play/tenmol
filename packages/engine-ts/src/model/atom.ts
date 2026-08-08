@@ -34,6 +34,8 @@ export interface AtomInfo {
   q: number;
   /** Colour index into the colour table (PyMOL `color`). */
   color: number;
+  /** Secondary structure: 'H' (helix), 'S' (strand), or '' (loop/unassigned). */
+  ss: string;
   /**
    * Per-rep visibility bitmask (PyMOL `visRep`). Bit `1 << rep` set means that
    * rep is shown for this atom. Ported from the `visRep` int in `AtomInfoType`.

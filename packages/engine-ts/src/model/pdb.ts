@@ -129,6 +129,7 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
           b: parseFloat(col(line, 61, 66)) || 0,
           q: parseFloat(col(line, 55, 60)) || 0,
           color: 0, // assigned below by CPK; overwritten by `color`
+          ss: '', // assigned by `dss`
           visRep: defaultVisRep(),
         };
         if (Number.isFinite(serial)) serialToIndex.set(serial, mol.atoms.length);

@@ -35,6 +35,10 @@ import {
 } from './geometry/frames';
 import { parseCommand, splitCommands } from './cmd/parser';
 import { SelectionError } from './select/selector';
+import type { RegistrarCtx } from './cmd/registrar';
+import { registerColoring } from './cmd/coloring';
+import { registerTransforms } from './cmd/transforms';
+import { registerAnalysis } from './cmd/analysis';
 
 /** PROTOCOL contract: the reps this engine can render in Mode G today. */
 const RENDERABLE_REPS = [
@@ -159,15 +163,26 @@ export class Engine {
 
   /* -------------------------------- do -------------------------------- */
 
+  /**
+   * Is this word a PyMOL command (so the console runs the command language
+   * rather than JavaScript)? Any registered `cmd` symbol counts, plus the
+   * curated console verbs — so a newly-ported command is a console verb for
+   * free, and `scene new, store` runs the scene command instead of throwing a
+   * JavaScript syntax error.
+   */
+  private isCommandWord(kw: string): boolean {
+    return KNOWN_KEYWORDS.has(kw) || this.handlers.has(kw);
+  }
+
   do(line: string): void {
     const commands = splitCommands(line).map(parseCommand);
-    const anyKnown = commands.some((c) => KNOWN_KEYWORDS.has(c.keyword));
+    const anyCommand = commands.some((c) => this.isCommandWord(c.keyword));
 
     // A line with a recognized PyMOL command runs the command language.
-    if (anyKnown) {
+    if (anyCommand) {
       this.appendFeedback(`tenmol>${line}`);
       for (const { keyword, args } of commands) {
-        if (!KNOWN_KEYWORDS.has(keyword)) continue;
+        if (!this.isCommandWord(keyword)) continue;
         try {
           this.runKeyword(keyword, args);
         } catch (err) {
@@ -288,13 +303,18 @@ export class Engine {
         this.call('set', [args[0] ?? '', args[1] ?? '1', args[2] ?? '']);
         return;
       default:
-        // Not a ported command keyword. In real PyMOL a non-command line is
-        // handed to the Python interpreter (that is how `from pymol import cmd`
-        // works at the prompt). The port has no Python, so it is a silent
-        // no-op — NOT a spurious "unknown command" echo. This is what keeps
-        // panel-bootstrap lines like `from tenmol_bridge... import install`
-        // from flooding the console when a feature targets the local engine.
-        return;
+        // Any other registered command: call it generically with the console's
+        // positional string arguments (the handler coerces them). This is what
+        // makes every ported `cmd` symbol a console verb — `scene`, `spectrum`,
+        // `rotate`, `dss`, ... — without a bespoke case each.
+        if (this.handlers.has(keyword)) {
+          this.call(keyword, args);
+          return;
+        }
+        // A command-shaped word we do not implement: report it (PyMOL's own
+        // "unknown command"), rather than letting it fall through to the JS
+        // evaluator and throw a syntax error.
+        throw new Error(`Error: unknown command '${keyword}'`);
     }
   }
 
@@ -591,6 +611,18 @@ export class Engine {
     h('_engine.atom_report', (args) => this.atomReport(str(args[0], 'all') || 'all'));
 
     h('get_model', (args) => this.getModel(str(args[0], 'all') || 'all'));
+
+    // Subsystems in their own modules register their `cmd.*` handlers here.
+    const ctx: RegistrarCtx = {
+      command: (name, fn) => void this.handlers.set(name, fn),
+      executive: ex,
+      publish: () => this.publish(),
+      emitView: () => this.emitView(),
+      str: (v, d = '') => str(v, d),
+    };
+    registerColoring(ctx);
+    registerTransforms(ctx);
+    registerAnalysis(ctx);
   }
 
   /**

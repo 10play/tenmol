@@ -13,15 +13,25 @@ import { runCorpus, runLocalCorpus, diffCorpus } from '../src/index';
  * `fixtures/golden.json`, making real PyMOL the authority for the fast gate.
  */
 const REMOTE = process.env['TENMOL_PARITY_REMOTE'];
+/** The bridge enforces an Origin allow-list; a Node ws client must send it. */
+const ORIGIN = process.env['TENMOL_PARITY_ORIGIN'];
 const suite = REMOTE ? describe : describe.skip;
 
 suite('live differential — TypeScript engine vs. real PyMOL', () => {
   it('produces identical observables for every script', async () => {
     const { default: WS } = await import('ws');
+    // Inject the allowed Origin header so the bridge accepts a non-browser client.
+    const WsCtor = ORIGIN
+      ? (class extends WS {
+          constructor(url: string) {
+            super(url, { origin: ORIGIN });
+          }
+        } as unknown as WebSocketCtor)
+      : (WS as unknown as WebSocketCtor);
     const remote = createRemoteBackend({
       url: REMOTE!,
       autoReconnect: false,
-      WebSocketImpl: WS as unknown as WebSocketCtor,
+      WebSocketImpl: WsCtor,
     });
     await remote.connect();
 

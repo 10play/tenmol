@@ -51,6 +51,44 @@ for (let i = 0; i < PALETTE.length; i++) {
 // Aliases PyMOL accepts.
 NAME_TO_INDEX.set('grey', NAME_TO_INDEX.get('gray')!);
 
+/** Next index for a runtime-defined colour (`cmd.set_color`). */
+let nextColorIndex = PALETTE.length;
+
+/**
+ * `cmd.set_color(name, rgb)` — define or redefine a named colour. Returns its
+ * table index. Values in `rgb` are 0..1. An existing name keeps its index.
+ */
+export function setColor(name: string, rgb: RGB): number {
+  const key = name.trim().toLowerCase();
+  const existing = NAME_TO_INDEX.get(key);
+  const idx = existing ?? nextColorIndex++;
+  NAME_TO_INDEX.set(key, idx);
+  INDEX_TO_RGB.set(idx, [rgb[0], rgb[1], rgb[2]]);
+  return idx;
+}
+
+/**
+ * CPK element → colour name (`packages/engine/layer1/AtomInfo.cpp` element
+ * colours). Used by `util.cbag`/`cbac`/… and the by-element default. Carbon is
+ * left to the caller (cbag=green, cbac=cyan, …); everything else is CPK.
+ */
+export const ELEMENT_COLOR: Readonly<Record<string, string>> = {
+  N: 'blue',
+  O: 'red',
+  S: 'yellow',
+  H: 'white',
+  P: 'orange',
+  F: 'green',
+  Cl: 'green',
+  Br: 'firebrick',
+  I: 'purple',
+  Ca: 'green',
+  Mg: 'forest',
+  Zn: 'slate',
+  Fe: 'orange',
+  Na: 'purple',
+};
+
 /**
  * `cmd.get_color_index(name)` — resolve a colour name to its table index, or
  * `-1` when unknown (PyMOL returns -1 for an unknown colour name).
