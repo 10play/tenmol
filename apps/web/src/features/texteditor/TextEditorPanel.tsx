@@ -325,25 +325,25 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
 
   return (
     <DialogWindow spec={{ ...spec, title: path ? editorTitle(path) : spec.title }}>
-      <div className="txted" onKeyDown={onKeyDown}>
-        <div className="txted__menu">
-          <span className="txted__menu-label">File</span>
+      <div className="txted modern:bg-pm-panel modern:text-pm-text" onKeyDown={onKeyDown}>
+        <div className="txted__menu modern:border-b modern:border-line modern:pb-1">
+          <span className="txted__menu-label modern:text-pm-text-dim">File</span>
           <Button
             variant="bare"
             type="button"
             data-txted-open=""
             onClick={() => guard(() => void doOpen())}
           >
-            Open <kbd>Ctrl+O</kbd>
+            Open <kbd className="modern:border-line">Ctrl+O</kbd>
           </Button>
           <Button variant="bare" type="button" data-txted-save="" onClick={() => void doSave()}>
-            Save <kbd>Ctrl+S</kbd>
+            Save <kbd className="modern:border-line">Ctrl+S</kbd>
           </Button>
           <Button variant="bare" type="button" data-txted-saveas="" onClick={() => void doSaveAs()}>
-            Save as … <kbd>Ctrl+Shift+S</kbd>
+            Save as … <kbd className="modern:border-line">Ctrl+Shift+S</kbd>
           </Button>
-          <span className="txted__sep" />
-          <span className="txted__menu-label">Syntax</span>
+          <span className="txted__sep modern:bg-line" />
+          <span className="txted__menu-label modern:text-pm-text-dim">Syntax</span>
           {SYNTAX_MODES.map((mode) => (
             <label key={mode} className="txted__radio">
               <input
@@ -356,7 +356,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
               {MODE_LABEL[mode]}
             </label>
           ))}
-          <span className="txted__sep" />
+          <span className="txted__sep modern:bg-line" />
           <label className="txted__radio" title="Select Font… (the Qt context-menu entry)">
             Font
             <TextInput
@@ -396,13 +396,15 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
            * able to tell it apart from a settled answer without matching on
            * an ellipsis. The e2e spec waits on exactly this.
            */}
-          <span className="txted__access" data-txted-access={access}>
+          <span className="txted__access modern:text-pm-text-dim" data-txted-access={access}>
             {ACCESS_LABEL[access]}
           </span>
         </div>
 
-        {error && <div className="txted__error">{error}</div>}
-        {!error && status && <div className="txted__status">{status}</div>}
+        {error && <div className="txted__error modern:text-danger">{error}</div>}
+        {!error && status && (
+          <div className="txted__status modern:text-pm-text-dim">{status}</div>
+        )}
         {/*
          * pymolrc is read ONCE, at startup (`invocation.get_user_config()` is
          * consumed before the GUI exists), so editing it changes nothing in
@@ -411,7 +413,10 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
          * reads as a broken editor.
          */}
         {isPymolrc(path) && (
-          <div className="txted__note" role="note">
+          <div
+            className="txted__note modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-dim"
+            role="note"
+          >
             pymolrc is read at startup — restart PyMOL to apply, or paste the lines into the command
             line to try them now.
           </div>
@@ -423,7 +428,10 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
          * open on the first file — so the same choice is a control inside it.
          */}
         {choices.length > 1 && (
-          <div className="txted__note" role="note">
+          <div
+            className="txted__note modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-dim"
+            role="note"
+          >
             <label>
               Active pymolrc files:{' '}
               <Select

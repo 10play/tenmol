@@ -142,15 +142,15 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
           >
             Refresh
           </Button>
-          <span className="advset__note" data-advset-count={rows.length}>
+          <span className="advset__note modern:text-pm-text-dim" data-advset-count={rows.length}>
             {rows.length} / {names.length}
           </span>
         </div>
 
-        {error && <div className="advset__error">{error}</div>}
+        {error && <div className="advset__error modern:text-danger">{error}</div>}
 
         <div
-          className="advset__scroll"
+          className="advset__scroll modern:bg-pm-panel-alt modern:text-pm-text modern:border-line"
           ref={scrollRef}
           onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
         >
@@ -160,7 +160,7 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
               const top = (first + i) * ROW_HEIGHT;
               return (
                 <div
-                  className="advset__row"
+                  className="advset__row modern:border-line"
                   key={name}
                   style={{ top, height: ROW_HEIGHT }}
                   data-advset-row={name}
@@ -169,7 +169,7 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
                     {name}
                   </span>
                   {!row ? (
-                    <span className="advset__note">…</span>
+                    <span className="advset__note modern:text-pm-text-dim">…</span>
                   ) : row.type === SETTING_TYPE.Boolean ? (
                     <Checkbox
                       data-advset-value={name}

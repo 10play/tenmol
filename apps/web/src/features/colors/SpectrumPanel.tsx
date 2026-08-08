@@ -89,14 +89,24 @@ export function SpectrumPanel({ palette, sele }: { palette: PaletteState; sele: 
       <div className="cspec__modes">
         <button
           type="button"
-          className={'cspec__mode' + (mode === 'palette' ? ' is-on' : '')}
+          className={
+            'cspec__mode modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover' +
+            (mode === 'palette'
+              ? ' is-on modern:bg-pm-accent modern:text-accent-text modern:border-transparent'
+              : '')
+          }
           onClick={() => setMode('palette')}
         >
           palette ({PALETTES.length})
         </button>
         <button
           type="button"
-          className={'cspec__mode' + (mode === 'colors' ? ' is-on' : '')}
+          className={
+            'cspec__mode modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover' +
+            (mode === 'colors'
+              ? ' is-on modern:bg-pm-accent modern:text-accent-text modern:border-transparent'
+              : '')
+          }
           onClick={() => setMode('colors')}
           title="cmd.spectrum with an unresolvable palette delegates to spectrumany"
         >
@@ -108,6 +118,7 @@ export function SpectrumPanel({ palette, sele }: { palette: PaletteState; sele: 
         <label>
           expression
           <input
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
             value={expression}
             onChange={(e) => setExpression(e.target.value)}
             spellCheck={false}
@@ -130,11 +141,19 @@ export function SpectrumPanel({ palette, sele }: { palette: PaletteState; sele: 
           <>
             <label>
               min
-              <input value={minimum} onChange={(e) => setMinimum(e.target.value)} />
+              <input
+                className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
+                value={minimum}
+                onChange={(e) => setMinimum(e.target.value)}
+              />
             </label>
             <label>
               max
-              <input value={maximum} onChange={(e) => setMaximum(e.target.value)} />
+              <input
+                className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
+                value={maximum}
+                onChange={(e) => setMaximum(e.target.value)}
+              />
             </label>
           </>
         )}
@@ -147,6 +166,7 @@ export function SpectrumPanel({ palette, sele }: { palette: PaletteState; sele: 
           <label>
             interpolation
             <select
+              className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
               value={interpolation}
               onChange={(e) => setInterpolation(e.target.value as SpectrumInterpolation)}
             >
@@ -158,7 +178,11 @@ export function SpectrumPanel({ palette, sele }: { palette: PaletteState; sele: 
             </select>
           </label>
         )}
-        <button type="button" className="cspec__go" onClick={() => void run()}>
+        <button
+          type="button"
+          className="cspec__go modern:rounded-md modern:border modern:border-transparent modern:bg-pm-accent modern:text-accent-text modern:transition-colors"
+          onClick={() => void run()}
+        >
           spectrum
         </button>
         {result && <span className="cspec__result">{result}</span>}
@@ -169,6 +193,7 @@ export function SpectrumPanel({ palette, sele }: { palette: PaletteState; sele: 
           <label>
             colours
             <input
+              className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
               value={colors}
               onChange={(e) => setColors(e.target.value)}
               spellCheck={false}
@@ -182,7 +207,7 @@ export function SpectrumPanel({ palette, sele }: { palette: PaletteState; sele: 
               </button>
             ))}
           </div>
-          <p className="cspec__note">
+          <p className="cspec__note modern:text-pm-text-dim">
             Colours are written as packed <code>0x40RRGGBB</code> values with <code>cmd.alter</code>
             , then <code>recolor</code> (<code>viewing.py:2053</code>) — so after this the atoms
             carry inline colours, not table indices.
@@ -191,7 +216,7 @@ export function SpectrumPanel({ palette, sele }: { palette: PaletteState; sele: 
       ) : (
         <>
           <input
-            className="cspec__filter"
+            className="cspec__filter modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
             placeholder="filter palettes"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
@@ -203,7 +228,10 @@ export function SpectrumPanel({ palette, sele }: { palette: PaletteState; sele: 
                 <button
                   key={p.name}
                   type="button"
-                  className={'cspec__palette' + (p.name === paletteName ? ' is-on' : '')}
+                  className={
+                    'cspec__palette modern:rounded modern:hover:bg-btn-hover' +
+                    (p.name === paletteName ? ' is-on modern:bg-accent-soft' : '')
+                  }
                   onClick={() => setPaletteName(p.name)}
                   title={`${p.name} — band '${p.prefix}', ${p.first}..${p.last}`}
                 >

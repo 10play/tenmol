@@ -85,15 +85,21 @@ export function DialogWindow({
   const window_ = (
     <div
       ref={ref}
-      className={'dlgwin' + (spec.minimised ? ' is-minimised' : '')}
+      className={
+        'dlgwin modern:bg-pm-panel modern:text-pm-text modern:border-line' +
+        (spec.minimised ? ' is-minimised' : '')
+      }
       style={{ left: spec.x, top: spec.y, width: spec.width, zIndex: spec.z }}
       onPointerDown={() => dialogsStore.raise(spec.key)}
       role="dialog"
       aria-label={spec.title}
       data-dialog={spec.key}
     >
-      <div className="dlgwin__title" onPointerDown={onTitleDown}>
-        <span className="dlgwin__label">{spec.title}</span>
+      <div
+        className="dlgwin__title modern:bg-none modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line"
+        onPointerDown={onTitleDown}
+      >
+        <span className="dlgwin__label modern:text-pm-text-bright">{spec.title}</span>
         <IconButton
           className="dlgwin__btn"
           title={spec.minimised ? 'restore' : 'shade'}
@@ -116,7 +122,7 @@ export function DialogWindow({
           <div className="dlgwin__body" style={{ height: spec.height }}>
             {children}
           </div>
-          {footer && <div className="dlgwin__footer">{footer}</div>}
+          {footer && <div className="dlgwin__footer modern:border-line">{footer}</div>}
           <div className="dlgwin__grip" onPointerDown={onResizeDown} title="resize" />
         </>
       )}

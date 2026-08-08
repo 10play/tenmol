@@ -240,7 +240,7 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
         </div>
 
         {plan && (
-          <p className="mvedit__note">
+          <p className="mvedit__note modern:text-pm-text-dim">
             {plan.width || plan.height ? `${plan.width}x${plan.height}` : 'viewport'} ·{' '}
             {plan.frameGlob} ·{' '}
             {plan.encoder === 'mpeg_encode' ? `q${plan.mpegQuality}` : `crf ${plan.crf}`}
@@ -262,7 +262,7 @@ export function ExportDialog({ status, source, call, onClose, log }: Props) {
         </div>
 
         {!supported && (
-          <p className="mvedit__error">
+          <p className="mvedit__error modern:text-danger">
             no encoder for .{format} on this machine (pymol.movie.find_exe found none)
           </p>
         )}

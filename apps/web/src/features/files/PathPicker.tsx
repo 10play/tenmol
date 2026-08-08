@@ -173,15 +173,20 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
       aria-modal="true"
       aria-label={request.title}
     >
-      <div className="fdlg fdlg--picker">
-        <div className="fdlg__title">
+      <div className="fdlg fdlg--picker modern:rounded-lg modern:border modern:border-line modern:bg-pm-panel modern:text-pm-text">
+        <div className="fdlg__title modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-bright">
           {request.title}
-          <button type="button" className="fdlg__x" onClick={onCancel} title="Cancel">
+          <button
+            type="button"
+            className="fdlg__x modern:text-pm-text-dim modern:hover:text-pm-text-bright"
+            onClick={onCancel}
+            title="Cancel"
+          >
             ×
           </button>
         </div>
 
-        <div className="fpick__crumbs">
+        <div className="fpick__crumbs modern:border-line">
           {breadcrumbs(dir ?? '').map((crumb) => (
             <button
               key={crumb.path}
@@ -198,7 +203,7 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
               usable, because the bridge runs the text through `cmd.exp_path`
               (`packages/engine/modules/pymol/cmd.py:112`) before listing. */}
           <input
-            className="fpick__goto"
+            className="fpick__goto modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
             data-testid="fpick-goto"
             placeholder="go to path…"
             defaultValue=""
@@ -211,7 +216,7 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
           />
           <button
             type="button"
-            className={`fpick__toggle${showHidden ? ' is-on' : ''}`}
+            className={`fpick__toggle modern:rounded modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-dim modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright${showHidden ? ' is-on' : ''}`}
             title="show dotfiles"
             onClick={() => setShowHidden((v) => !v)}
           >
@@ -219,7 +224,7 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
           </button>
           <button
             type="button"
-            className="fpick__toggle"
+            className="fpick__toggle modern:rounded modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-dim modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
             title="create a directory here"
             onClick={() => {
               const folder = window.prompt('New directory name');
@@ -232,7 +237,7 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
         </div>
 
         <div className="fpick__body">
-          <div className="fpick__places">
+          <div className="fpick__places modern:border-line">
             {places.map((place) => (
               <button
                 key={place.path + place.label}
@@ -256,7 +261,7 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
                 onClick={() => void load(listing.parent)}
               >
                 <span className="fpick__icon">↑</span>
-                <span className="fpick__name">..</span>
+                <span className="fpick__name modern:text-pm-accent">..</span>
               </button>
             )}
             {dirs.map((entry) => (
@@ -267,7 +272,7 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
                 onClick={() => void load(entry.path)}
               >
                 <span className="fpick__icon">▸</span>
-                <span className="fpick__name">{entry.name}</span>
+                <span className="fpick__name modern:text-pm-accent">{entry.name}</span>
               </button>
             ))}
             {request.mode !== 'dir' &&
@@ -291,13 +296,13 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
           </div>
         </div>
 
-        {error && <div className="fdlg__error">{error}</div>}
+        {error && <div className="fdlg__error modern:text-danger">{error}</div>}
 
-        <div className="fdlg__foot">
+        <div className="fdlg__foot modern:border-line modern:bg-pm-panel-alt">
           {request.mode === 'save' && (
             <input
               ref={nameRef}
-              className="fdlg__input fpick__nameinput"
+              className="fdlg__input fpick__nameinput modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
               value={name}
               placeholder="file name"
               onChange={(e) => setName(e.target.value)}
@@ -308,7 +313,7 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
           )}
           {request.mode !== 'dir' && (
             <select
-              className="fdlg__select"
+              className="fdlg__select modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               title="Qt filter strings, reproduced exactly"
@@ -321,12 +326,16 @@ export function PathPicker({ api, request, onCancel, onAccept }: Props) {
             </select>
           )}
           <span className="fdlg__spacer" />
-          <button type="button" className="fdlg__btn" onClick={onCancel}>
+          <button
+            type="button"
+            className="fdlg__btn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={onCancel}
+          >
             Cancel
           </button>
           <button
             type="button"
-            className="fdlg__btn fdlg__btn--go"
+            className="fdlg__btn fdlg__btn--go modern:rounded-md modern:border-transparent modern:bg-pm-accent modern:text-accent-text"
             data-testid="fpick-accept"
             onClick={() => void accept()}
           >

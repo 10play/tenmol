@@ -330,8 +330,8 @@ export function ScenePanel() {
   };
 
   return (
-    <div className="scpanel">
-      <div className="scpanel__head">
+    <div className="scpanel modern:bg-pm-panel modern:text-pm-text">
+      <div className="scpanel__head modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line">
         <span className="scpanel__title">Scenes</span>
         <span className="scpanel__count">{payload.scenes.length}</span>
         <span className="scpanel__spacer" />
@@ -375,7 +375,7 @@ export function ScenePanel() {
        */}
       {buttons !== false && (
         <div
-          className={'scbar' + (layout?.shown ? ' scbar--laid' : '')}
+          className={'scbar modern:bg-pm-panel-alt' + (layout?.shown ? ' scbar--laid' : '')}
           role="toolbar"
           aria-label="scene buttons"
           onWheel={(event) => {
@@ -397,7 +397,9 @@ export function ScenePanel() {
               : undefined
           }
         >
-          {payload.scenes.length === 0 && <span className="scbar__empty">no scenes</span>}
+          {payload.scenes.length === 0 && (
+            <span className="scbar__empty modern:text-pm-text-dim">no scenes</span>
+          )}
           {layout?.scrollBar && (
             <div
               className="scbar__scroll"
@@ -430,7 +432,7 @@ export function ScenePanel() {
                 type="button"
                 className={
                   'scbar__btn' +
-                  (scene.current ? ' is-current' : '') +
+                  (scene.current ? ' is-current' : ' modern:bg-btn modern:text-pm-text') +
                   (dragIndex === orderIndex ? ' is-dragging' : '') +
                   (box?.truncated ? ' is-truncated' : '')
                 }
@@ -469,11 +471,11 @@ export function ScenePanel() {
        * verbatim in meaning, reworded for what this panel actually does:
        * upstream says "load into Workspace", which is Qt's word for recall.
        */}
-      <p className="scpanel__hint">Double-click a row to recall that scene.</p>
+      <p className="scpanel__hint modern:text-pm-text-dim">Double-click a row to recall that scene.</p>
       <div className="scpanel__rows">
         {payload.scenes.map((scene, index) => (
           <div
-            className={`scrow${scene.current ? ' is-current' : ''}${
+            className={`scrow${scene.current ? ' is-current modern:bg-accent-soft' : ''}${
               selected === scene.name ? ' is-selected' : ''
             }${dragging !== null && dropAt === index ? ' is-dropzone' : ''}`}
             key={scene.name}
@@ -499,7 +501,7 @@ export function ScenePanel() {
              */}
             <button
               type="button"
-              className={`scrow__handle${dragging === scene.name ? ' is-dragging' : ''}`}
+              className={`scrow__handle modern:text-pm-text-dim${dragging === scene.name ? ' is-dragging' : ''}`}
               title="drag to reorder — cmd.scene_order"
               aria-label={`reorder ${scene.name}`}
               onPointerDown={(event) => {
@@ -592,7 +594,7 @@ export function ScenePanel() {
               />
               <div className="scrow__stores">
                 {(scene.stores ?? []).map((store) => (
-                  <span className="scrow__store" key={store}>
+                  <span className="scrow__store modern:rounded modern:bg-pm-panel-alt modern:text-pm-text-dim" key={store}>
                     {store}
                   </span>
                 ))}

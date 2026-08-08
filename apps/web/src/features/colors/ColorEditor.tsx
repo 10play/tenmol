@@ -189,7 +189,11 @@ export function ColorEditor({ palette }: { palette: PaletteState }) {
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
-        <ul role="listbox" aria-label="named colours">
+        <ul
+          role="listbox"
+          aria-label="named colours"
+          className="modern:bg-pm-panel-alt modern:border-line"
+        >
           {names.map((n) => {
             const entry = findByName(palette, n);
             return (

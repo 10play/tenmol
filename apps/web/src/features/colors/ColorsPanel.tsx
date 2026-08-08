@@ -65,10 +65,17 @@ export function ColorsPanel() {
   }
 
   return (
-    <div className="colors" role="dialog" aria-label="Colours">
-      <div className="colors__title">
+    <div
+      className="colors modern:bg-pm-panel modern:text-pm-text"
+      role="dialog"
+      aria-label="Colours"
+    >
+      <div className="colors__title modern:bg-pm-panel-alt modern:border-b modern:border-line modern:text-pm-text-dim">
         <span>Colours</span>
-        <span className="colors__status" title="cmd.get_color_indices(all=1) + get_color_tuple">
+        <span
+          className="colors__status modern:text-pm-text-dim"
+          title="cmd.get_color_indices(all=1) + get_color_tuple"
+        >
           {palette.status === 'ready'
             ? `${palette.entries.length} slots / ${palette.named.length} named` +
               (integrity.custom > 0 ? ` (+${integrity.custom} set_color)` : '') +
@@ -93,17 +100,19 @@ export function ColorsPanel() {
       </div>
 
       {!integrity.ok && palette.status === 'ready' && (
-        <div className="colors__warn">
+        <div className="colors__warn modern:bg-accent-soft modern:text-pm-text">
           colour table does not match this PyMOL build: {integrity.problems.join('; ')}
         </div>
       )}
 
-      <div className="colors__sele">
+      <div className="colors__sele modern:border-b modern:border-line">
         <label>
           selection
           <TextInput value={sele} onChange={(e) => setSele(e.target.value)} spellCheck={false} />
         </label>
-        <span className="colors__sele-note">every command below is applied to this selection</span>
+        <span className="colors__sele-note modern:text-pm-text-dim">
+          every command below is applied to this selection
+        </span>
       </div>
 
       <div className="colors__tabs" role="tablist">
@@ -170,7 +179,7 @@ function SpacePanel() {
           </Button>
         ))}
       </div>
-      <p className="cspace__note">
+      <p className="cspace__note modern:text-pm-text-dim">
         Changing the space rewrites every colour&rsquo;s RGB through the LUT, so the whole palette
         is refetched afterwards — the client cannot keep a cached table across this.
       </p>

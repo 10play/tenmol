@@ -31,7 +31,7 @@ export function SceneMenu({ current, scenes, buttons, onRun, onCommand }: Props)
   const toggle = (name: Open) => setOpen(open === name ? null : name);
 
   return (
-    <div className="scmenu">
+    <div className="scmenu modern:border-line">
       <div className="scmenu__row">
         <Button onClick={() => onRun(sceneActions.previous())}>Previous [PgUp]</Button>
         <Button onClick={() => onRun(sceneActions.next())}>Next [PgDn]</Button>
@@ -72,7 +72,7 @@ export function SceneMenu({ current, scenes, buttons, onRun, onCommand }: Props)
          * checkbox bound to the real setting: the buttons overlay above reads
          * the same one, so unticking it here hides the overlay there.
          */}
-        <label className="scmenu__check">
+        <label className="scmenu__check modern:text-pm-text-dim">
           <Checkbox
             checked={buttons === true}
             onChange={() => onRun(sceneActions.buttons(!buttons))}

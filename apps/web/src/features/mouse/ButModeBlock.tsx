@@ -112,7 +112,7 @@ export function ButModeBlock() {
 
   return (
     <div
-      className="butmode"
+      className="butmode modern:bg-pm-panel modern:text-pm-text"
       data-testid="butmode"
       onWheel={onWheel}
       onContextMenu={(e) => e.preventDefault()}
@@ -128,8 +128,8 @@ export function ButModeBlock() {
         // fires; acting again here made every right-click count twice.
         onContextMenu={(e) => e.preventDefault()}
       >
-        <span className="butmode__label">Mouse Mode</span>
-        <span className="butmode__value" data-testid="butmode-name">
+        <span className="butmode__label modern:text-pm-text-dim">Mouse Mode</span>
+        <span className="butmode__value modern:text-pm-accent" data-testid="butmode-name">
           {mode.loaded ? mode.displayName : '…'}
         </span>
       </Button>
@@ -137,22 +137,24 @@ export function ButModeBlock() {
       {mode.grid && (
         <div className="butmode__grid" data-testid="butmode-grid" onMouseDown={cycleMode}>
           <div className="butmode__row butmode__row--head">
-            <span className="butmode__rowlabel butmode__rowlabel--head">Buttons</span>
+            <span className="butmode__rowlabel butmode__rowlabel--head modern:text-pm-text-dim">
+              Buttons
+            </span>
             {GRID_COLUMNS.map((column) => (
-              <span className="butmode__cell butmode__cell--head" key={column}>
+              <span className="butmode__cell butmode__cell--head modern:text-pm-text-dim" key={column}>
                 {column}
               </span>
             ))}
           </div>
           {GRID_ROWS.map((row) => (
             <div className="butmode__row" key={row.label}>
-              <span className="butmode__rowlabel">{row.label}</span>
+              <span className="butmode__rowlabel modern:text-pm-text-dim">{row.label}</span>
               {row.buttons.map((slot) => (
-                <span className="butmode__cell" key={slot} data-slot={slot}>
+                <span className="butmode__cell modern:text-pm-text" key={slot} data-slot={slot}>
                   {slotLabel(mode.table, slot)}
                 </span>
               ))}
-              <span className="butmode__cell">
+              <span className="butmode__cell modern:text-pm-text">
                 {row.wheel === null ? '' : slotLabel(mode.table, row.wheel)}
               </span>
             </div>
@@ -174,8 +176,11 @@ export function ButModeBlock() {
         onMouseDown={cycleSelection}
         onContextMenu={(e) => e.preventDefault()}
       >
-        <span className="butmode__label">{line.prefix.trim()}</span>
-        <span className="butmode__value butmode__value--sele" data-testid="butmode-level">
+        <span className="butmode__label modern:text-pm-text-dim">{line.prefix.trim()}</span>
+        <span
+          className="butmode__value butmode__value--sele modern:text-pm-accent"
+          data-testid="butmode-level"
+        >
           {line.value}
         </span>
       </Button>

@@ -787,7 +787,7 @@ export function FilesPanel() {
       <div className="files__strip">
         <button
           type="button"
-          className="files__menubtn"
+          className="files__menubtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
           data-testid="files-menu-button"
           onClick={() => {
             setMenuOpen((v) => !v);
@@ -800,7 +800,7 @@ export function FilesPanel() {
         {presentation && (
           <button
             type="button"
-            className="files__menubtn"
+            className="files__menubtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
             data-testid="files-leave-presentation"
             title="Restore internal_gui / internal_feedback / presentation"
             onClick={() => void leavePresentation(presentation.previous)}
@@ -809,12 +809,15 @@ export function FilesPanel() {
           </button>
         )}
         {error && (
-          <span className="files__error" title={error}>
+          <span className="files__error modern:text-danger" title={error}>
             file service unavailable
           </span>
         )}
         {menuOpen && (
-          <div className="files__menu" data-testid="files-menu">
+          <div
+            className="files__menu modern:rounded-md modern:border modern:border-line modern:bg-pm-panel modern:text-pm-text"
+            data-testid="files-menu"
+          >
             {menu.map((item) =>
               item.separator ? (
                 <div key={item.id} className="files__menusep" />

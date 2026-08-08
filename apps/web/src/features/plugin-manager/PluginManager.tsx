@@ -112,14 +112,14 @@ export function PluginManager() {
     (draft.length !== reg.paths.user.length || draft.some((p, i) => p !== reg.paths.user[i]));
 
   return (
-    <div className="plugmgr">
-      <div className="plugmgr__tabs" role="tablist">
+    <div className="plugmgr modern:bg-pm-panel modern:text-pm-text">
+      <div className="plugmgr__tabs modern:bg-pm-panel-alt modern:border-b modern:border-line" role="tablist">
         {TABS.map((t) => (
           <Button
             key={t.id}
             role="tab"
             aria-selected={tab === t.id}
-            className={`plugmgr__tab${tab === t.id ? ' is-on' : ''}`}
+            className={`plugmgr__tab${tab === t.id ? ' is-on modern:bg-pm-accent modern:text-accent-text modern:border-transparent' : ''}`}
             onClick={() => setTab(t.id)}
           >
             {t.label}
@@ -138,9 +138,9 @@ export function PluginManager() {
           <table className="plugmgr__table">
             <thead>
               <tr>
-                <th className="plugmgr__enabled">Enabled</th>
-                <th>Plugin</th>
-                <th>File</th>
+                <th className="plugmgr__enabled modern:text-pm-text-dim modern:border-line">Enabled</th>
+                <th className="modern:text-pm-text-dim modern:border-line">Plugin</th>
+                <th className="modern:text-pm-text-dim modern:border-line">File</th>
               </tr>
             </thead>
             <tbody>

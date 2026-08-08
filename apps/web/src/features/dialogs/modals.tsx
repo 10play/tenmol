@@ -32,14 +32,17 @@ export function TextDialog({
   const [copied, setCopied] = useState(false);
   return (
     <div className="dlgmodal" role="dialog" aria-label={title} data-textdialog="">
-      <div className="dlgmodal__box" style={{ width: DEFAULT_TEXT_DIALOG_WIDTH }}>
-        <div className="dlgmodal__title">
+      <div
+        className="dlgmodal__box modern:bg-pm-panel modern:text-pm-text modern:border-line"
+        style={{ width: DEFAULT_TEXT_DIALOG_WIDTH }}
+      >
+        <div className="dlgmodal__title modern:text-pm-text-bright">
           {title}
           <IconButton className="dlgwin__btn" onClick={onClose} title="close">
             ×
           </IconButton>
         </div>
-        <pre className="dlgmodal__pre">{text}</pre>
+        <pre className="dlgmodal__pre modern:bg-pm-panel-alt modern:text-pm-text modern:border-line">{text}</pre>
         <div className="dlgmodal__row">
           <Button
             onClick={() => {
@@ -51,7 +54,7 @@ export function TextDialog({
           >
             Copy
           </Button>
-          {copied && <span className="dlgmodal__note">copied</span>}
+          {copied && <span className="dlgmodal__note modern:text-pm-text-dim">copied</span>}
           <span className="dlgmodal__spacer" />
           <Button onClick={onClose}>Close</Button>
         </div>
@@ -95,8 +98,8 @@ export function NumberPrompt({
 
   return (
     <div className="dlgmodal" role="dialog" aria-label={spec.title} data-numberprompt="">
-      <div className="dlgmodal__box dlgmodal__box--narrow">
-        <div className="dlgmodal__title">{spec.title}</div>
+      <div className="dlgmodal__box dlgmodal__box--narrow modern:bg-pm-panel modern:text-pm-text modern:border-line">
+        <div className="dlgmodal__title modern:text-pm-text-bright">{spec.title}</div>
         <TextInput
           ref={ref}
           className="dlgmodal__input"
@@ -108,7 +111,7 @@ export function NumberPrompt({
             if (e.key === 'Escape') onDone(null);
           }}
         />
-        <div className="dlgmodal__hint">
+        <div className="dlgmodal__hint modern:text-pm-text-dim">
           {spec.min.toPrecision(6)} … {spec.max.toPrecision(6)}
         </div>
         <div className="dlgmodal__row">
@@ -136,8 +139,8 @@ export function ConfirmPrompt({
 }) {
   return (
     <div className="dlgmodal" role="dialog" aria-label={title} data-confirmprompt="">
-      <div className="dlgmodal__box dlgmodal__box--narrow">
-        <div className="dlgmodal__title">{title}</div>
+      <div className="dlgmodal__box dlgmodal__box--narrow modern:bg-pm-panel modern:text-pm-text modern:border-line">
+        <div className="dlgmodal__title modern:text-pm-text-bright">{title}</div>
         <div className="dlgmodal__message">{message}</div>
         <div className="dlgmodal__row">
           <span className="dlgmodal__spacer" />

@@ -288,7 +288,7 @@ export function BuilderPanel() {
 
   return (
     <div
-      className="builder"
+      className="builder modern:bg-pm-panel modern:text-pm-text modern:border-line modern:rounded-lg"
       role="dialog"
       aria-label="Builder"
       /*
@@ -313,8 +313,8 @@ export function BuilderPanel() {
         }
       }}
     >
-      <div className="builder__title">
-        <span className="builder__title-text">Builder</span>
+      <div className="builder__title modern:border-line">
+        <span className="builder__title-text modern:text-pm-text-bright">Builder</span>
         {busy && <span className="builder__busy" aria-label="working" />}
         <span className="builder__spacer" />
         <span className="builder__mouse" title="cmd.edit_mode(1) rotates the mouse ring">
@@ -326,12 +326,18 @@ export function BuilderPanel() {
       </div>
 
       {drift.length > 0 && (
-        <div className="builder__error" data-testid="builder-drift">
+        <div
+          className="builder__error modern:rounded-md modern:border modern:border-danger modern:bg-danger/10 modern:text-danger"
+          data-testid="builder-drift"
+        >
           button table drift vs the bridge: {drift.join(' | ')}
         </div>
       )}
       {error && (
-        <div className="builder__error" data-testid="builder-error">
+        <div
+          className="builder__error modern:rounded-md modern:border modern:border-danger modern:bg-danger/10 modern:text-danger"
+          data-testid="builder-error"
+        >
           {error}
         </div>
       )}
@@ -353,7 +359,7 @@ export function BuilderPanel() {
             role="tab"
             key={name}
             aria-selected={tab === name}
-            className={`builder__tab${tab === name ? ' is-active' : ''}`}
+            className={`builder__tab${tab === name ? ' is-active modern:bg-pm-accent modern:text-accent-text modern:border-transparent modern:hover:bg-pm-accent' : ''}`}
             onClick={() => setTab(name)}
           >
             {name}
@@ -361,7 +367,7 @@ export function BuilderPanel() {
         ))}
       </div>
 
-      <div className="builder__body">
+      <div className="builder__body modern:border-line modern:rounded-md">
         {tab === 'Chemical' && (
           <div className="builder__grid" data-testid="tab-chemical">
             <div className="builder__row">
@@ -480,7 +486,7 @@ export function BuilderPanel() {
                   role="tab"
                   key={name}
                   aria-selected={nucTab === name}
-                  className={`builder__tab${nucTab === name ? ' is-active' : ''}`}
+                  className={`builder__tab${nucTab === name ? ' is-active modern:bg-pm-accent modern:text-accent-text modern:border-transparent modern:hover:bg-pm-accent' : ''}`}
                   onClick={() => setNucTab(name)}
                 >
                   {name}
@@ -953,9 +959,12 @@ function WizardStrip({
   const wizard = state?.wizard;
   if (!wizard) return null;
   return (
-    <div className="builder__wizard" data-testid="builder-wizard">
+    <div
+      className="builder__wizard modern:rounded-md modern:border modern:border-pm-accent modern:bg-accent-soft modern:text-pm-text"
+      data-testid="builder-wizard"
+    >
       <div className="builder__wizard-head">
-        <span className="builder__wizard-name">{wizard.name}</span>
+        <span className="builder__wizard-name modern:text-pm-text-bright">{wizard.name}</span>
         {wizard.repeating && <span className="builder__note">repeating</span>}
         <span className="builder__spacer" />
         <Button type="button" className="bbtn bbtn--small" onClick={onDismiss}>
@@ -1007,8 +1016,8 @@ function ConfirmModal({
 }) {
   return (
     <div className="builder__modal" role="alertdialog" aria-label={title}>
-      <div className="builder__modal-box">
-        <div className="builder__modal-title">{title}</div>
+      <div className="builder__modal-box modern:rounded-lg modern:border modern:border-line modern:bg-pm-panel modern:text-pm-text">
+        <div className="builder__modal-title modern:text-pm-text-bright">{title}</div>
         <pre className="builder__modal-message">{message}</pre>
         <div className="builder__row">
           <Button type="button" className="bbtn" onClick={onConfirm}>

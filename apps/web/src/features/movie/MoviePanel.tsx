@@ -133,23 +133,31 @@ export function MoviePanel() {
   const nframes = status.nframes;
 
   return (
-    <div className="mvpanel">
-      <div className="mvpanel__head">
-        <span className="mvpanel__title">Movie</span>
+    <div className="mvpanel modern:bg-pm-panel modern:text-pm-text">
+      <div className="mvpanel__head modern:border-b modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-dim">
+        <span className="mvpanel__title modern:text-pm-text-bright">Movie</span>
         <span className="mvpanel__clock">
           frame {status.frame}/{nframes || 0} · state {status.state}
           {status.fps ? ` · ${status.fps} fps` : ''}
           {status.locked ? ' · LOCKED' : ''}
         </span>
         <span className="mvpanel__spacer" />
-        <button type="button" className="mvpanel__tabbtn" onClick={() => setExporting(true)}>
+        <button
+          type="button"
+          className="mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+          onClick={() => setExporting(true)}
+        >
           export
         </button>
       </div>
 
-      {error && <div className="mvpanel__error">{error}</div>}
+      {error && (
+        <div className="mvpanel__error modern:rounded modern:bg-danger modern:text-accent-text">
+          {error}
+        </div>
+      )}
       {!source.ready && source.lastError && (
-        <div className="mvpanel__error">
+        <div className="mvpanel__error modern:rounded modern:bg-danger modern:text-accent-text">
           movie panel endpoint unavailable ({source.lastError}) — transport still works
         </div>
       )}
@@ -178,7 +186,7 @@ export function MoviePanel() {
           <button
             key={name}
             type="button"
-            className={`mvpanel__tabbtn${tab === name ? ' is-on' : ''}`}
+            className={`mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright${tab === name ? ' is-on modern:border-transparent modern:bg-pm-accent modern:text-accent-text' : ''}`}
             onClick={() => setTab(name)}
           >
             {name}
@@ -223,10 +231,14 @@ export function MoviePanel() {
 
         {tab === 'sweep' && (
           <div className="mvedit">
-            <section className="mvedit__block">
+            <section className="mvedit__block modern:rounded-md">
               <header className="mvedit__head">rock / spin / nutate — ControlRock</header>
               <div className="mvedit__row mvedit__row--wrap">
-                <button type="button" onClick={() => void run(transport.rock(status.rocking ? 0 : 1))}>
+                <button
+                  type="button"
+                  className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+                  onClick={() => void run(transport.rock(status.rocking ? 0 : 1))}
+                >
                   {status.rocking ? 'stop rocking' : 'start rocking'}
                 </button>
                 {(
@@ -240,7 +252,7 @@ export function MoviePanel() {
                   <button
                     key={label}
                     type="button"
-                    className={status.settings.sweep_mode === mode ? 'is-on' : ''}
+                    className={`modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright${status.settings.sweep_mode === mode ? ' is-on modern:border-transparent modern:bg-pm-accent modern:text-accent-text' : ''}`}
                     onClick={() => setSetting('sweep_mode', mode)}
                   >
                     {label}
@@ -248,7 +260,7 @@ export function MoviePanel() {
                 ))}
               </div>
               <div className="mvedit__row mvedit__row--wrap">
-                <span className="mvedit__note">
+                <span className="mvedit__note modern:text-pm-text-dim">
                   sweep_angle {status.settings.sweep_angle ?? '?'} · sweep_speed{' '}
                   {status.settings.sweep_speed ?? '?'} · rock_delay {status.settings.rock_delay ?? '?'}
                   {status.settings.sweep_angle !== null &&
@@ -259,41 +271,66 @@ export function MoviePanel() {
               </div>
               <div className="mvedit__row mvedit__row--wrap">
                 {[10, 30, 60, 90, 0].map((angle) => (
-                  <button key={angle} type="button" onClick={() => setSetting('sweep_angle', angle)}>
+                  <button
+                    key={angle}
+                    type="button"
+                    className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+                    onClick={() => setSetting('sweep_angle', angle)}
+                  >
                     angle {angle === 0 ? '0 (spin)' : angle}
                   </button>
                 ))}
               </div>
             </section>
 
-            <section className="mvedit__block">
+            <section className="mvedit__block modern:rounded-md">
               <header className="mvedit__head">camera — get_view / set_view</header>
               <div className="mvedit__row">
-                <button type="button" onClick={() => void getView()}>
+                <button
+                  type="button"
+                  className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+                  onClick={() => void getView()}
+                >
                   get_view
                 </button>
-                <button type="button" onClick={() => void setView()}>
+                <button
+                  type="button"
+                  className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+                  onClick={() => void setView()}
+                >
                   set_view
                 </button>
-                <button type="button" onClick={() => void run(camera.reset())}>
+                <button
+                  type="button"
+                  className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+                  onClick={() => void run(camera.reset())}
+                >
                   reset
                 </button>
-                <button type="button" onClick={() => void run(camera.zoom())}>
+                <button
+                  type="button"
+                  className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+                  onClick={() => void run(camera.zoom())}
+                >
                   zoom
                 </button>
-                <button type="button" onClick={() => void run(camera.orient())}>
+                <button
+                  type="button"
+                  className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+                  onClick={() => void run(camera.orient())}
+                >
                   orient
                 </button>
               </div>
               <textarea
-                className="mvedit__view"
+                className="mvedit__view modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
                 value={viewText}
                 spellCheck={false}
                 placeholder="18 floats, or paste a set_view (...) block"
                 onChange={(event) => setViewText(event.target.value)}
                 aria-label="camera view"
               />
-              <p className="mvedit__note">
+              <p className="mvedit__note modern:text-pm-text-dim">
                 `get_view` returns 25 floats from C and slices to 18; `set_view` requires exactly 18
                 (viewing.py:634).
               </p>

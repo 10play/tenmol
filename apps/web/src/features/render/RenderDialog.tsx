@@ -204,8 +204,8 @@ export function RenderDialog() {
   }
 
   return (
-    <div className="render">
-      <div className="render__title">
+    <div className="render modern:bg-pm-panel modern:text-pm-text">
+      <div className="render__title modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line">
         Ray / Draw{page === 'result' ? ' — result' : ''}
         <IconButton
           type="button"
@@ -228,7 +228,7 @@ export function RenderDialog() {
               value={state.width}
               onChange={(e) => dispatch({ type: 'width', px: Number(e.target.value) })}
             />
-            <span className="render__unit">px</span>
+            <span className="render__unit modern:text-pm-text-dim">px</span>
             <TextInput
               type="number"
               step={0.01}
@@ -244,7 +244,7 @@ export function RenderDialog() {
               value={state.height}
               onChange={(e) => dispatch({ type: 'height', px: Number(e.target.value) })}
             />
-            <span className="render__unit">px</span>
+            <span className="render__unit modern:text-pm-text-dim">px</span>
             <TextInput
               type="number"
               step={0.01}
@@ -267,7 +267,9 @@ export function RenderDialog() {
               <option value="inch">inch</option>
               <option value="cm">cm</option>
             </Select>
-            <span className="render__aspect">{d.aspect ? `${num(d.aspect)}:1` : ''}</span>
+            <span className="render__aspect modern:text-pm-text-dim">
+              {d.aspect ? `${num(d.aspect)}:1` : ''}
+            </span>
           </div>
 
           <div className="render__row">
@@ -313,7 +315,7 @@ export function RenderDialog() {
 
       {page === 'result' && (
         <div className="render__body">
-          <p className="render__note">
+          <p className="render__note modern:text-pm-text-dim">
             The rendered image is in the viewport. Ray output is the CPU ray tracer, the same
             renderer desktop PyMOL uses, so it is identical rather than approximated.
           </p>
@@ -345,7 +347,11 @@ export function RenderDialog() {
         </div>
       )}
 
-      {status !== null && <div className="render__status">{status}</div>}
+      {status !== null && (
+        <div className="render__status modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line">
+          {status}
+        </div>
+      )}
     </div>
   );
 }

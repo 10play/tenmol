@@ -293,7 +293,7 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
   return (
     <DialogWindow spec={spec}>
       <div
-        className="props"
+        className="props modern:bg-pm-panel modern:text-pm-text"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key !== 'Delete' && e.key !== 'Backspace') return;
@@ -303,7 +303,7 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
           void unset(row);
         }}
       >
-        <div className="props__head">
+        <div className="props__head modern:text-pm-text-dim">
           <label>
             Object
             <Select data-props-model="" value={model} onChange={(e) => setModel(e.target.value)}>
@@ -358,24 +358,36 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
           {busy && <span className="props__busy">…</span>}
         </div>
 
-        {error && <div className="props__error">{error}</div>}
+        {error && <div className="props__error modern:text-danger">{error}</div>}
 
-        <div className="props__tree" data-props-tree="">
+        <div
+          className="props__tree modern:rounded-md modern:border modern:border-line modern:bg-pm-panel-alt"
+          data-props-tree=""
+        >
           {sections
             .filter((s) => !s.hidden)
             .map((section) => (
               <div className="props__section" key={section.id}>
-                <div className="props__section-label">{section.label}</div>
+                <div className="props__section-label modern:text-pm-text-bright">
+                  {section.label}
+                </div>
                 {section.groups.map((group) => (
                   <div className="props__group" key={group.id}>
-                    <div className="props__group-label">{group.label}</div>
-                    {group.rows.length === 0 && <div className="props__empty">—</div>}
+                    <div className="props__group-label modern:text-pm-text-dim">{group.label}</div>
+                    {group.rows.length === 0 && (
+                      <div className="props__empty modern:text-pm-text-dim">—</div>
+                    )}
                     {group.rows.map((row) => {
                       const id = `${group.id}/${row.key}`;
                       return (
                         <div
                           key={id}
-                          className={'props__row' + (selected === id ? ' is-selected' : '')}
+                          className={
+                            'props__row modern:rounded' +
+                            (selected === id
+                              ? ' is-selected modern:bg-accent-soft modern:text-pm-text-bright'
+                              : '')
+                          }
                           data-props-row={id}
                           onClick={() => setSelected(id)}
                         >
@@ -387,7 +399,7 @@ export function PropertiesPanel({ spec }: { spec: DialogWindowSpec }) {
                               unavailable
                             </span>
                           ) : row.readOnly ? (
-                            <span className="props__ro">{row.text}</span>
+                            <span className="props__ro modern:text-pm-text-dim">{row.text}</span>
                           ) : (
                             <TextInput
                               className="props__value"

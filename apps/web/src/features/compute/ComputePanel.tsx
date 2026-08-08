@@ -216,8 +216,10 @@ export function ComputePanel() {
   );
 
   return (
-    <div className="compute">
-      <div className="compute__title">Compute</div>
+    <div className="compute modern:bg-pm-panel modern:text-pm-text">
+      <div className="compute__title modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line">
+        Compute
+      </div>
 
       <div className="compute__sel">
         <label htmlFor="cp-sel">Selection</label>
@@ -274,8 +276,12 @@ export function ComputePanel() {
                   )}
                   {row?.table && <SasaTable result={row.table} />}
                   {row?.diagnostics && row.diagnostics.length > 0 && (
-                    <details className="compute__diag" data-diagnostics={m.id} open>
-                      <summary>
+                    <details
+                      className="compute__diag modern:text-pm-text-dim"
+                      data-diagnostics={m.id}
+                      open
+                    >
+                      <summary className="modern:text-pm-text-dim">
                         what PyMOL reported ({row.diagnostics.length}{' '}
                         {row.diagnostics.length === 1 ? 'line' : 'lines'})
                       </summary>
@@ -348,7 +354,7 @@ function ParamField({
   const id = `cp-${metricId}-${param.name}`;
   if (param.kind === 'bool') {
     return (
-      <label className="compute__arg" htmlFor={id}>
+      <label className="compute__arg modern:text-pm-text-dim" htmlFor={id}>
         <Checkbox
           id={id}
           checked={value === undefined ? param.default : Boolean(value)}
@@ -359,7 +365,7 @@ function ParamField({
     );
   }
   return (
-    <label className="compute__arg" htmlFor={id}>
+    <label className="compute__arg modern:text-pm-text-dim" htmlFor={id}>
       {param.label}
       <TextInput
         id={id}
@@ -389,10 +395,11 @@ function ParamField({
 function SasaTable({ result }: { result: SasaRelativeResult }) {
   const session = useSession();
   const records = result.records ?? [];
-  if (records.length === 0) return <div className="compute__empty">no residues</div>;
+  if (records.length === 0)
+    return <div className="compute__empty modern:text-pm-text-dim">no residues</div>;
   return (
     <div className="compute__sasa">
-      <div className="compute__sasa-head">
+      <div className="compute__sasa-head modern:text-pm-text-dim">
         {records.length} residues, value written to “{result.var}”
         {result.unnormalised > 0 && (
           <span className="compute__warn-inline">
@@ -413,8 +420,11 @@ function SasaTable({ result }: { result: SasaRelativeResult }) {
             >
               {r.chain || '-'}/{r.resi} {r.resn}
             </Button>
-            <span className="compute__sasa-bar" aria-hidden="true">
-              <span style={{ width: `${Math.max(0, Math.min(1, r.value)) * 100}%` }} />
+            <span className="compute__sasa-bar modern:bg-accent-soft" aria-hidden="true">
+              <span
+                className="modern:bg-pm-accent"
+                style={{ width: `${Math.max(0, Math.min(1, r.value)) * 100}%` }}
+              />
             </span>
             <span className="compute__sasa-num">
               {r.normalised ? `${(r.value * 100).toFixed(0)}%` : r.value.toFixed(1)}

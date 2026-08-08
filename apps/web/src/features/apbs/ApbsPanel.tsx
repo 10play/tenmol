@@ -115,8 +115,10 @@ export function ApbsPanel() {
   const runnable = known && pipelineIsRunnable(view);
 
   return (
-    <div className="apbs">
-      <div className="apbs__title">APBS Electrostatics</div>
+    <div className="apbs modern:border-line modern:bg-pm-panel modern:text-pm-text">
+      <div className="apbs__title modern:border-b modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-dim">
+        APBS Electrostatics
+      </div>
       <div className="apbs__body">
         <p className="apbs__lead">
           Not available in the web client yet. The Qt plugin is a seven-page stack of options around
@@ -126,28 +128,42 @@ export function ApbsPanel() {
 
         <div className="apbs__probe" data-testid="apbs-probe">
           {probe === null ? (
-            <p className="apbs__status">Checking for the two programs…</p>
+            <p className="apbs__status modern:text-pm-text-dim">Checking for the two programs…</p>
           ) : probe.error !== null ? (
-            <p className="apbs__status">Could not check for the programs: {probe.error}</p>
+            <p className="apbs__status modern:text-pm-text-dim">
+              Could not check for the programs: {probe.error}
+            </p>
           ) : (
-            <ul className="apbs__list">
-              <li className={view.apbs.path ? 'apbs__found' : 'apbs__missing'}>
+            <ul className="apbs__list modern:rounded modern:border modern:border-line modern:bg-pm-panel-alt">
+              <li
+                className={
+                  view.apbs.path
+                    ? 'apbs__found modern:text-pm-text-bright'
+                    : 'apbs__missing modern:text-pm-text-dim'
+                }
+              >
                 {describeProgram(view.apbs)}
               </li>
-              <li className={view.pdb2pqr.path ? 'apbs__found' : 'apbs__missing'}>
+              <li
+                className={
+                  view.pdb2pqr.path
+                    ? 'apbs__found modern:text-pm-text-bright'
+                    : 'apbs__missing modern:text-pm-text-dim'
+                }
+              >
                 {describeProgram(view.pdb2pqr)}
               </li>
             </ul>
           )}
         </div>
 
-        <p className="apbs__status">
+        <p className="apbs__status modern:text-pm-text-dim">
           {runnable
             ? 'Both programs are installed, so the full pipeline is available from the command line today — the dialog is what is missing, not the capability.'
             : 'Until both are installed the dialog would have nothing to drive, which is why the port is scheduled after v1 rather than in it.'}
         </p>
 
-        <p className="apbs__status">
+        <p className="apbs__status modern:text-pm-text-dim">
           Plugin file on the startup path:{' '}
           {probe === null ? 'checking…' : view.pluginOnStartupPath ? 'yes (apbs_gui)' : 'no'}. It is
           not imported: the web client has no Qt, so it never runs plugin autoload and{' '}
@@ -155,14 +171,18 @@ export function ApbsPanel() {
         </p>
 
         <p className="apbs__lead">Electrostatics with nothing installed:</p>
-        <pre className="apbs__script">{VACUUM}</pre>
+        <pre className="apbs__script modern:rounded-md modern:border modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-bright">
+          {VACUUM}
+        </pre>
         <CopyButton text={VACUUM} label="copy vacuum ESP" />
 
         <p className="apbs__lead">The APBS workflow itself, as commands you can paste:</p>
-        <pre className="apbs__script">{SCRIPT}</pre>
+        <pre className="apbs__script modern:rounded-md modern:border modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-bright">
+          {SCRIPT}
+        </pre>
         <CopyButton text={SCRIPT} label="copy script" />
 
-        <p className="apbs__note">
+        <p className="apbs__note modern:border-t modern:border-line modern:text-pm-text-dim">
           Full port is WP-30. Tracked rather than dropped — see the APBS rows in the parity
           inventory. Child-process output from those two programs already has a home: the bridge
           streams it onto the <code>feedback</code> topic (<code>subproc.execute</code>).

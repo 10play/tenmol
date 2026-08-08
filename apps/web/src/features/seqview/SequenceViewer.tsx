@@ -453,7 +453,7 @@ export function SequenceViewer(): React.JSX.Element | null {
         </span>
         {aligned && (
           <span
-            className="seqview__alignment"
+            className="seqview__alignment modern:text-pm-accent"
             title="ExecutiveGetActiveAlignment — rows are lined up by tag and gaps are suppressed"
           >
             aligned by {payload.alignment}
@@ -622,7 +622,7 @@ export function SequenceViewer(): React.JSX.Element | null {
             {selectionRuns(row.cells).map((run) => (
               <span
                 key={run.from}
-                className="seqview__tick"
+                className="seqview__tick modern:bg-pm-accent"
                 style={{
                   left: `${(((row.first + run.from) / Math.max(row.nCols, 1)) * 100).toFixed(3)}%`,
                   width: `${((run.length / Math.max(row.nCols, 1)) * 100).toFixed(3)}%`,
@@ -632,7 +632,7 @@ export function SequenceViewer(): React.JSX.Element | null {
           </div>
         ))}
         <div
-          className="seqview__thumb"
+          className="seqview__thumb modern:bg-accent-soft"
           style={{
             left: `${((first / Math.max(maxCols, 1)) * 100).toFixed(3)}%`,
             width: `${Math.min(100, (WINDOW / Math.max(maxCols, 1)) * 100).toFixed(3)}%`,

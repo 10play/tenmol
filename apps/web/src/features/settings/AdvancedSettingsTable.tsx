@@ -219,7 +219,7 @@ export function AdvancedSettingsTable({
             defaults + ranges: {catalogue.meta.defaultsSource} · {catalogue.meta.minMaxNote}
           </span>
         ) : (
-          <span className="setadv__warn">
+          <span className="setadv__warn modern:text-danger">
             defaults and ranges unavailable — {catalogue?.meta.defaultsNote}
           </span>
         )}
@@ -389,7 +389,7 @@ function Row({
 
   return (
     <div
-      className={`setadv__row${writable ? '' : ' is-locked'}`}
+      className={`setadv__row modern:border-line${writable ? '' : ' is-locked'}`}
       style={{ height: ROW_HEIGHT }}
       data-index={meta.index}
       data-name={meta.name}
@@ -399,7 +399,7 @@ function Row({
         {meta.name}
         {isSessionBlacklisted(meta) && (
           <em
-            className="setadv__nopse"
+            className="setadv__nopse modern:text-pm-text-dim"
             title={
               meta.level === 'unused'
                 ? 'unused level — never written to a .pse (Setting.cpp:628-631)'
@@ -429,7 +429,7 @@ function Row({
       </span>
       <span className="setadv__c-default">
         {meta.default === undefined ? '—' : String(meta.default)}
-        {hint ? <em className="setadv__hint"> {hint}</em> : null}
+        {hint ? <em className="setadv__hint modern:text-pm-text-dim"> {hint}</em> : null}
       </span>
       <span className="setadv__c-reset">
         <Button
@@ -449,7 +449,7 @@ function Row({
           ⟲
         </Button>
       </span>
-      {error ? <span className="setadv__error">{error}</span> : null}
+      {error ? <span className="setadv__error modern:text-danger">{error}</span> : null}
     </div>
   );
 }
@@ -531,7 +531,7 @@ function AtomStateStrip({ note, scope }: { note: string; scope: ScopeSelection }
         (scope.selection.trim() === ''
           ? 'type a selection, then write a value — atom-state goes through cmd.alter_state'
           : `state ${scope.state || 1} of ${scope.selection}: write a value to see what alter_state answered`)}
-      <em className="setadv__hint">
+      <em className="setadv__hint modern:text-pm-text-dim">
         {' '}
         · atom-state overrides cannot be listed back: the scope RPC uses cmd.iterate, not
         cmd.iterate_state

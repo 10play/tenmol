@@ -96,7 +96,7 @@ export function MouseConfigPanel() {
   };
 
   return (
-    <div className="mousecfg">
+    <div className="mousecfg modern:bg-pm-panel modern:text-pm-text">
       <div className="mousecfg__head">
         <span>
           Mouse configuration — {mode.loaded ? mode.displayName : '…'} (
@@ -114,7 +114,7 @@ export function MouseConfigPanel() {
           <tr>
             <th />
             {BUTTONS.map((button) => (
-              <th key={button.name} title={button.name}>
+              <th key={button.name} title={button.name} className="modern:text-pm-text-dim">
                 {button.label}
               </th>
             ))}
@@ -123,7 +123,7 @@ export function MouseConfigPanel() {
         <tbody>
           {MODIFIERS.map((modifier) => (
             <tr key={modifier.name}>
-              <th scope="row" title={modifier.name}>
+              <th scope="row" title={modifier.name} className="modern:text-pm-text-dim">
                 {modifier.label}
               </th>
               {BUTTONS.map((button) => {

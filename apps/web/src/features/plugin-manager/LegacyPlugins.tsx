@@ -70,7 +70,7 @@ export function LegacyPlugins() {
 
   return (
     <div className="plugmgr__body">
-      <div className="plugmgr__legacyhead">
+      <div className="plugmgr__legacyhead modern:text-pm-text-dim">
         <span data-legacy-count="">
           {loading ? 'reading the registry…' : `${leaves} menu item${leaves === 1 ? '' : 's'}`}
         </span>
@@ -93,7 +93,7 @@ export function LegacyPlugins() {
             style={row.depth > 0 ? { paddingLeft: row.depth * 14 } : undefined}
           >
             {row.kind === 'separator' ? (
-              <hr className="plugmgr__legacysep" />
+              <hr className="plugmgr__legacysep modern:border-line" />
             ) : row.clickable ? (
               <Button
                 className="plugmgr__legacyleaf"
@@ -104,7 +104,7 @@ export function LegacyPlugins() {
                 {row.label}
               </Button>
             ) : (
-              <span className="plugmgr__legacymenu">{row.label}</span>
+              <span className="plugmgr__legacymenu modern:text-pm-text-bright">{row.label}</span>
             )}
           </li>
         ))}
@@ -117,7 +117,7 @@ export function LegacyPlugins() {
 
       {last !== null && (
         <div
-          className={`plugmgr__legacyresult${last.ok ? '' : ' is-error'}`}
+          className={`plugmgr__legacyresult modern:rounded-md modern:border modern:border-line modern:bg-pm-panel-alt${last.ok ? ' modern:text-pm-text-dim' : ' is-error modern:text-danger'}`}
           data-legacy-result=""
           role="status"
         >

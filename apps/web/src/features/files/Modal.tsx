@@ -23,15 +23,24 @@ interface ModalProps {
 export function Modal({ title, onClose, children, footer, wide }: ModalProps) {
   return (
     <div className="fdlg__backdrop" role="dialog" aria-modal="true" aria-label={title}>
-      <div className={`fdlg${wide ? ' fdlg--wide' : ''}`}>
-        <div className="fdlg__title">
+      <div
+        className={`fdlg${wide ? ' fdlg--wide' : ''} modern:rounded-lg modern:border modern:border-line modern:bg-pm-panel modern:text-pm-text`}
+      >
+        <div className="fdlg__title modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-bright">
           {title}
-          <button type="button" className="fdlg__x" onClick={onClose} title="Close">
+          <button
+            type="button"
+            className="fdlg__x modern:text-pm-text-dim modern:hover:text-pm-text-bright"
+            onClick={onClose}
+            title="Close"
+          >
             ×
           </button>
         </div>
         <div className="fdlg__body">{children}</div>
-        {footer && <div className="fdlg__foot">{footer}</div>}
+        {footer && (
+          <div className="fdlg__foot modern:border-line modern:bg-pm-panel-alt">{footer}</div>
+        )}
       </div>
     </div>
   );
@@ -48,7 +57,7 @@ export function Field({
 }) {
   return (
     <label className="fdlg__field">
-      <span className="fdlg__label" title={hint}>
+      <span className="fdlg__label modern:text-pm-text-dim" title={hint}>
         {label}
       </span>
       <span className="fdlg__control">{children}</span>
@@ -85,8 +94,10 @@ export function Check({
 /** The `groupBox_2` "This will run the following command" preview. */
 export function Preview({ command }: { command: string }) {
   return (
-    <div className="fdlg__preview">
-      <div className="fdlg__preview-title">This will run the following command</div>
+    <div className="fdlg__preview modern:border-line">
+      <div className="fdlg__preview-title modern:bg-pm-panel-alt modern:text-pm-text-dim">
+        This will run the following command
+      </div>
       <pre className="fdlg__preview-body">{command}</pre>
     </div>
   );
@@ -96,7 +107,7 @@ export function Preview({ command }: { command: string }) {
 export function Unavailable({ message }: { message: string | null | undefined }) {
   if (!message) return null;
   return (
-    <div className="fdlg__unavailable">
+    <div className="fdlg__unavailable modern:rounded modern:bg-danger modern:text-accent-text">
       <strong>Not available in this build.</strong> {message}
     </div>
   );

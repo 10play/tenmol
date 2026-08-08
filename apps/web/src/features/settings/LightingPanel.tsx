@@ -191,7 +191,7 @@ export function LightingPanel({ store, source }: { store: SettingsStore; source:
   return (
     <div className="lighting">
       <div className="lighting__presets">
-        <span className="lighting__presets-label">Presets:</span>
+        <span className="lighting__presets-label modern:text-pm-text-dim">Presets:</span>
         {LIGHTING_PRESETS.map((preset) => (
           <Button key={preset.name} type="button" onClick={() => apply(preset)}>
             {preset.name}
@@ -199,8 +199,8 @@ export function LightingPanel({ store, source }: { store: SettingsStore; source:
         ))}
       </div>
       {LIGHTING_SECTIONS.map((section) => (
-        <fieldset key={section.heading} className="lighting__section">
-          <legend>{section.heading}</legend>
+        <fieldset key={section.heading} className="lighting__section modern:border-line">
+          <legend className="modern:text-pm-text-dim">{section.heading}</legend>
           {section.sliders.map((slider) => {
             const meta = byName.get(slider.setting);
             const entry = meta ? entries[valueKey(meta.index)] : undefined;

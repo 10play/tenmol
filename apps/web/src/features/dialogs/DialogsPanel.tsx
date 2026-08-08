@@ -85,8 +85,11 @@ export function DialogsPanel() {
 /** Portalled for the same reason the windows are — see `DialogWindow`. */
 function Launcher({ volumes }: { volumes: readonly string[] }) {
   const strip = (
-    <div className="dlglaunch" data-dialogs-launcher="">
-      <span className="dlglaunch__title">dialogs</span>
+    <div
+      className="dlglaunch modern:bg-pm-panel modern:text-pm-text modern:border-line"
+      data-dialogs-launcher=""
+    >
+      <span className="dlglaunch__title modern:text-pm-text-dim">dialogs</span>
       <Button data-open="properties" onClick={() => dialogsStore.open('properties')}>
         Properties
       </Button>

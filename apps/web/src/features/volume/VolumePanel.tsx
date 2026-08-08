@@ -274,7 +274,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
   /* --------------------------------------------------------------- render */
 
   const footer = (
-    <div className="volpanel__buttons">
+    <div className="volpanel__buttons modern:text-pm-text">
       <Button
         type="button"
         data-volume-script=""
@@ -320,8 +320,8 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
 
   return (
     <DialogWindow spec={spec} footer={footer}>
-      <div className="volpanel">
-        <div className="volpanel__head">
+      <div className="volpanel modern:bg-pm-panel modern:text-pm-text">
+        <div className="volpanel__head modern:text-pm-text-dim">
           <label className="volpanel__preset">
             preset
             <Select
@@ -347,7 +347,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
             </Select>
           </label>
           <span
-            className="volpanel__presetsrc"
+            className="volpanel__presetsrc modern:text-pm-text-dim"
             data-volume-preset-source={presets.source}
             data-volume-preset-extra={presets.extra.length}
             title={
@@ -369,7 +369,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
            * one that is up to date; this is that state, shown.
            */}
           <span
-            className="volpanel__watch"
+            className="volpanel__watch modern:text-pm-text-dim"
             data-volume-watch={watched ? 'live' : 'off'}
             data-volume-remote={remoteReloads}
             title={
@@ -381,13 +381,13 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
             {watched ? `tracking${remoteReloads ? ` +${remoteReloads}` : ''}` : 'untracked'}
           </span>
           <span className="volpanel__spacer" />
-          <span className="volpanel__count" data-volume-count={points.length}>
+          <span className="volpanel__count modern:text-pm-text-dim" data-volume-count={points.length}>
             {points.length} stops
           </span>
         </div>
 
-        {error && <div className="volpanel__error">{error}</div>}
-        {!error && status && <div className="volpanel__status">{status}</div>}
+        {error && <div className="volpanel__error modern:text-danger">{error}</div>}
+        {!error && status && <div className="volpanel__status modern:text-pm-text-dim">{status}</div>}
 
         <VolumeCanvas
           view={view}
@@ -408,7 +408,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
         />
 
         {picker && (
-          <div className="volpanel__picker">
+          <div className="volpanel__picker modern:rounded-md modern:border modern:border-line modern:bg-pm-panel-alt modern:text-pm-text">
             <span>
               point {picker.request.point}
               {picker.request.triple ? ' (+neighbours)' : ''}

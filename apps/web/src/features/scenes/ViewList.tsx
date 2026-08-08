@@ -88,7 +88,9 @@ export function ViewList() {
       )}
 
       <div className="vwlist__rows" role="list">
-        {names.length === 0 && <span className="scbar__empty">no views</span>}
+        {names.length === 0 && (
+          <span className="scbar__empty modern:text-pm-text-dim">no views</span>
+        )}
         {names.map((name) => (
           <span className="vwrow" key={name} role="listitem">
             <Button
