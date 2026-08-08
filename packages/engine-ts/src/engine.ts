@@ -16,7 +16,11 @@ import { TypedEmitter, PymolError, type BackendEvents } from '@tenmol/backend';
 import {
   REP_NAMES,
   decodeBinaryFrame,
+  encodeBinaryFrame,
+  geometryKey,
+  parseGeometryKey,
   isGeometryFrame,
+  type CgoDrawArraysHeader,
   type HelloMessage,
   type Json,
   type ObjectRow,
@@ -721,11 +725,47 @@ export class Engine {
     this.emitter.emit('view' as keyof BackendEvents & string, { view: this.executive.view.get() } as never);
   }
 
+  /** object/rep/state keys that currently have geometry on the client. */
+  private liveKeys = new Set<string>();
+
   private emitGeometry(): void {
+    const liveNow = new Set<string>();
     for (const mol of this.executive.moleculesInOrder()) {
       if (!mol.enabled) continue;
-      for (const rep of RENDERABLE_REPS) this.emitRepFrame(mol.name, rep, 1);
+      for (const rep of RENDERABLE_REPS) {
+        if (this.emitRepFrame(mol.name, rep, 1) > 0) {
+          liveNow.add(geometryKey({ object: mol.name, state: 1, rep }));
+        }
+      }
     }
+    // Any key that was live but produced nothing this pass (rep hidden, object
+    // disabled/deleted, selection emptied) is DROPPED with a tombstone — an
+    // empty geometry frame the renderer treats as a removal (defect D1). Without
+    // this the client keeps drawing the last frame it saw for that key.
+    for (const key of this.liveKeys) {
+      if (liveNow.has(key)) continue;
+      const parsed = parseGeometryKey(key);
+      if (parsed) this.emitTombstone(parsed.object, parsed.rep, parsed.state);
+    }
+    this.liveKeys = liveNow;
+  }
+
+  /** Emit an empty geometry frame for one key, dropping it on the client. */
+  private emitTombstone(object: string, rep: number, state: number): void {
+    const header: CgoDrawArraysHeader = {
+      v: 1,
+      kind: 'cgo-draw-arrays',
+      seq: this.seq++,
+      payloadBytes: 0,
+      object,
+      state,
+      rep,
+      blocks: [],
+      instances: [],
+    };
+    const frame = decodeBinaryFrame(encodeBinaryFrame(header, new Uint8Array(0)));
+    this.emitter.emit('binary:frame', frame);
+    if (isGeometryFrame(frame)) this.emitter.emit('geometry:frame', frame);
   }
 
   /**
