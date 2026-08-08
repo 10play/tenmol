@@ -25,9 +25,10 @@ const norm = (a: V): V => {
  *  and dihedral chi (A-B-C-D). Self-Normalizing NeRF. */
 function place(A: V, B: V, C: V, l: number, thetaDeg: number, chiDeg: number): V {
   const theta = (thetaDeg * Math.PI) / 180;
-  // Negated so the placed atom's A-B-C-D dihedral equals `chiDeg` under the
-  // `dihedral()` convention used by the engine (right-handed, matching PyMOL).
-  const chi = (-chiDeg * Math.PI) / 180;
+  // With this NeRF placement the built atom's A-B-C-D dihedral, as measured by
+  // the engine's IUPAC `dihedral()`, equals `chiDeg` — so buildChain(phi=-57,
+  // psi=-47) yields geometry `dss` reads back as a right-handed alpha helix.
+  const chi = (chiDeg * Math.PI) / 180;
   const bc = norm(sub(C, B));
   const n = norm(cross(sub(B, A), bc));
   const m = cross(n, bc);

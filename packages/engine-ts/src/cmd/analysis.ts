@@ -43,8 +43,11 @@ function norm(a: Vec3): Vec3 {
 }
 
 /**
- * Signed dihedral angle (degrees) about the p2->p3 axis, in [-180, 180].
- * Mirrors PyMOL's `get_dihedral3` convention.
+ * Signed dihedral angle (degrees) about the p2->p3 axis, in [-180, 180], in the
+ * IUPAC convention PyMOL uses — so a right-handed alpha helix reads (phi, psi) ≈
+ * (-57, -47) and a beta strand ≈ (-120, +130), which is what {@link classify}
+ * expects. (The bare `atan2(y, x)` here is the negated convention; the leading
+ * minus restores the IUPAC sign.)
  */
 function dihedral(p1: Vec3, p2: Vec3, p3: Vec3, p4: Vec3): number {
   const b1 = sub(p2, p1);
@@ -55,7 +58,7 @@ function dihedral(p1: Vec3, p2: Vec3, p3: Vec3, p4: Vec3): number {
   const m1 = cross(n1, norm(b2));
   const x = dot(n1, n2);
   const y = dot(m1, n2);
-  return (Math.atan2(y, x) * 180) / Math.PI;
+  return (-Math.atan2(y, x) * 180) / Math.PI;
 }
 
 /* ------------------------------ secondary structure ---------------------- */
