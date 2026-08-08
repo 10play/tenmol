@@ -45,12 +45,11 @@ jobs:
 
       - name: Run Claude review
         env:
-          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: |
           python3 - << 'PYEOF'
           import subprocess, sys
 
-          number = open('/tmp/pr-title.txt').read()  # reuse as filename carrier
           pr_title = open('/tmp/pr-title.txt').read().strip()
           diff = open('/tmp/pr-diff.txt').read().strip() or '(empty diff)'
 
@@ -78,7 +77,6 @@ jobs:
           output = (result.stdout or result.stderr or '(no output)').strip()
           open('/tmp/review-output.txt', 'w').write(output)
           print(f"Claude returned {len(output)} chars")
-          sys.exit(0)
           PYEOF
 
       - name: Post review comment
@@ -91,10 +89,10 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `## 🤖 Claude Code Review\n\n${review}\n\n---\n_Comment \`@claude <question>\` to ask a follow-up._`
+              body: `🤖 **Claude Code Review**\n\n${review}\n\n---\n_Comment \`@claude <question>\` to ask a follow-up._`
             });
 
-  # ── Respond to @claude comments on PRs ───────────────────────────────────
+  # ── Respond to @claude comments ──────────────────────────────────────────
   respond-to-claude:
     name: Respond to @claude
     if: |
@@ -107,13 +105,12 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - name: Save comment and get PR info
+      - name: Get PR info + comments
         id: info
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            // Save raw comment body to file — avoids all shell-quoting issues
             fs.writeFileSync('/tmp/user-comment.txt', context.payload.comment.body);
 
             const pr = await github.rest.pulls.get({
@@ -153,7 +150,7 @@ jobs:
 
       - name: Run Claude response
         env:
-          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: |
           python3 - << 'PYEOF'
           import subprocess, sys
