@@ -400,6 +400,32 @@
       -20
     ]
   },
+  "measurement": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "calls": {
+      "dist_N_CA": 1.458,
+      "angle_N_CA_C": 110.8914,
+      "dih_N_CA_C_O": 0,
+      "extent": [
+        [
+          0,
+          -0.77,
+          0
+        ],
+        [
+          6.1,
+          3.7,
+          1.2
+        ]
+      ],
+      "fasta": ">m_A\nA\n>m_B\nG\n"
+    }
+  },
   "by_element": {
     "counts": {
       "color carbon": 5,

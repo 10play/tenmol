@@ -102,6 +102,12 @@ export interface Script {
   /** Compare `get_chains()` (the sorted distinct chain identifiers). */
   gateChains?: boolean;
   /**
+   * Arbitrary command calls whose JSON results are compared (numbers rounded).
+   * Gates new query commands (get_distance/get_angle/get_dihedral/get_extent/
+   * centerofmass/get_fastastr/…) directly against real PyMOL.
+   */
+  gateCalls?: Array<{ label: string; call: [string, ...unknown[]] }>;
+  /**
    * Compare per-atom coordinates of this selection (via `get_model`), keyed by
    * `chain/resi/name` and rounded — the observable an OBJECT transform
    * (`rotate`/`translate`) changes while leaving the camera untouched.
@@ -344,6 +350,20 @@ export const CORPUS: Script[] = [
     selectors: ['all'],
     gateNames: true,
     gateView: true,
+  },
+  {
+    // Geometry-query commands, compared numerically against real PyMOL.
+    name: 'measurement',
+    ops: [load],
+    selectors: ['all'],
+    gateNames: true,
+    gateCalls: [
+      { label: 'dist_N_CA', call: ['get_distance', 'resi 1 and name N', 'resi 1 and name CA'] },
+      { label: 'angle_N_CA_C', call: ['get_angle', 'resi 1 and name N', 'resi 1 and name CA', 'resi 1 and name C'] },
+      { label: 'dih_N_CA_C_O', call: ['get_dihedral', 'resi 1 and name N', 'resi 1 and name CA', 'resi 1 and name C', 'resi 1 and name O'] },
+      { label: 'extent', call: ['get_extent', 'all'] },
+      { label: 'fasta', call: ['get_fastastr', 'all'] },
+    ],
   },
   {
     // Colour by element (`util.cbag`): non-carbon atoms take their PyMOL element

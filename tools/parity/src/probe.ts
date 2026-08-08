@@ -18,6 +18,20 @@ export interface Snapshot {
   chains?: string[];
   /** Per-atom coordinates keyed by `chain/resi/name`, rounded to 3 dp. */
   coords?: Record<string, [number, number, number]>;
+  /** Arbitrary command results, keyed by label; numbers rounded. */
+  calls?: Record<string, unknown>;
+}
+
+/** Recursively round every number in a JSON value to `dp` decimals. */
+function roundJson(v: unknown, dp = 4): unknown {
+  if (typeof v === 'number') return Number.isFinite(v) ? round(v, dp) : v;
+  if (Array.isArray(v)) return v.map((x) => roundJson(x, dp));
+  if (v && typeof v === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, val] of Object.entries(v)) out[k] = roundJson(val, dp);
+    return out;
+  }
+  return v;
 }
 
 interface ModelAtom {
@@ -73,6 +87,14 @@ export async function probeSnapshot(backend: Backend, script: Script): Promise<S
 
   if (script.gateChains) {
     snap.chains = (await backend.call<string[]>('get_chains', ['all'])) ?? [];
+  }
+
+  if (script.gateCalls) {
+    const calls: Record<string, unknown> = {};
+    for (const g of script.gateCalls) {
+      calls[g.label] = roundJson(await backend.call(g.call[0], g.call.slice(1)));
+    }
+    snap.calls = calls;
   }
 
   if (script.gateModel !== undefined) {
@@ -160,6 +182,14 @@ export function diffSnapshots(
     const a = JSON.stringify(expected.chains ?? []);
     const b = JSON.stringify(actual.chains ?? []);
     if (a !== b) out.push(`get_chains(): expected ${a}, got ${b}`);
+  }
+
+  if (script.gateCalls) {
+    for (const g of script.gateCalls) {
+      const e = JSON.stringify(expected.calls?.[g.label]);
+      const a = JSON.stringify(actual.calls?.[g.label]);
+      if (e !== a) out.push(`${g.label} (${g.call[0]}): expected ${e}, got ${a}`);
+    }
   }
 
   if (script.gateModel !== undefined) {
