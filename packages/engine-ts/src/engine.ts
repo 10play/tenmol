@@ -29,9 +29,7 @@ import { REP_BUILDERS, RENDERABLE_REPS, isRenderableRep } from './geometry/regis
 import { parseCommand, splitCommands } from './cmd/parser';
 import { SelectionError } from './select/selector';
 import type { RegistrarCtx } from './cmd/registrar';
-import { registerColoring } from './cmd/coloring';
-import { registerTransforms } from './cmd/transforms';
-import { registerAnalysis } from './cmd/analysis';
+import { ALL_REGISTRARS } from './cmd/registrars';
 
 /** Representation name -> RepId, for `_bridge.pull_geometry(object, repName)`. */
 const REP_BY_NAME = new Map<string, number>();
@@ -604,9 +602,7 @@ export class Engine {
       emitView: () => this.emitView(),
       str: (v, d = '') => str(v, d),
     };
-    registerColoring(ctx);
-    registerTransforms(ctx);
-    registerAnalysis(ctx);
+    for (const register of ALL_REGISTRARS) register(ctx);
   }
 
   /**
