@@ -294,7 +294,7 @@ export function CommandLine() {
       <input
         id="command_line"
         ref={inputRef}
-        className="cmdline__input modern:h-6 modern:px-2.5 modern:rounded-[6px] modern:border modern:border-line modern:font-mono modern:text-pm-text-bright modern:bg-[var(--sh-console-bg)] modern:[caret-color:var(--pm-accent)]"
+        className="cmdline__input modern:h-6 modern:px-2.5 modern:rounded-[6px] modern:border modern:border-line modern:font-mono modern:text-[var(--sh-console-text)] modern:bg-[var(--sh-console-bg)] modern:[caret-color:var(--pm-accent)]"
         type="text"
         spellCheck={false}
         autoComplete="off"

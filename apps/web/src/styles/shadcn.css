@@ -52,6 +52,9 @@
   /* design tokens */
   --sh-panel-frost: rgba(18, 21, 28, 0.72);
   --sh-console-bg: #05070a;
+  /* The console/viewport stay dark in BOTH appearances, so their text must NOT
+     track --pm-text (which flips to dark in light mode → invisible). Pinned. */
+  --sh-console-text: #dfe4ee;
   --sh-line-strong: rgba(148, 163, 184, 0.2);
   --sh-accent-text: #ffffff;
   --sh-accent-soft: rgba(99, 102, 241, 0.16);
@@ -499,4 +502,60 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ================================================================== */
+/* 14. LIGHT-MODE FIXES — bespoke surfaces that hardcode a dark #hex   */
+/*     background but draw text with a token that FLIPS to dark in     */
+/*     light appearance (found by the panel-layout audit). Re-point    */
+/*     their surfaces at the flipping tokens so both appearances read. */
+/* ================================================================== */
+
+/* Console output: the pane bg is pinned dark, so a line that tracks --pm-text
+   went invisible in light. Pin it to the console text colour. */
+:root[data-ui-theme='shadcn'] .feedback__line--info {
+  color: var(--sh-console-text);
+}
+
+/* Object row context menu (RowMenu) + its submenu flyout hardcode dark #26292c
+   with rows in --pm-text → dark-on-dark in light. Token surfaces flip correctly. */
+:root[data-ui-theme='shadcn'] .rowmenu,
+:root[data-ui-theme='shadcn'] .rowmenu__panel {
+  background: var(--pm-panel);
+  border-color: var(--sh-line-strong);
+  color: var(--pm-text);
+}
+:root[data-ui-theme='shadcn'] .rowmenu__head {
+  background: var(--pm-panel-alt);
+  border-color: var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .rowmenu__row:hover {
+  background: var(--sh-accent-soft);
+  color: var(--pm-text-bright);
+}
+
+/* Wizard key/event editor inputs + buttons + list hovers hardcode dark fills. */
+:root[data-ui-theme='shadcn'] .wizkeys__input,
+:root[data-ui-theme='shadcn'] .wizevents__input {
+  background: var(--sh-btn-fill);
+  border-color: var(--sh-btn-border);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .wizevents__buttons button {
+  background: var(--sh-btn-fill);
+  border: 1px solid var(--sh-btn-border);
+  color: var(--pm-text);
+}
+:root[data-ui-theme='shadcn'] .wizlaunch__item:hover:not(:disabled),
+:root[data-ui-theme='shadcn'] .wizmenu__item:hover:not(:disabled) {
+  background: var(--sh-accent-soft);
+  color: var(--pm-text-bright);
+}
+
+/* Minor: a couple of hardcoded greys that read poorly on a light panel. */
+:root[data-ui-theme='shadcn'] .cbands__region em {
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__legacyleaf {
+  color: var(--pm-text);
 }
