@@ -655,6 +655,8 @@ function OverlayLayer() {
             key={slot.id}
             variant="launcher"
             icon={LAUNCHER_ICONS[slot.id]}
+            iconOnly
+            title={slot.title}
             pressed={open.includes(slot.id)}
             onClick={() => toggle(slot.id)}
           >

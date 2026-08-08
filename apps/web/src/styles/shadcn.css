@@ -362,25 +362,40 @@
 /* 11. OVERLAY LAUNCHER — the floating PDV-style pill toolbar.          */
 /* ================================================================== */
 
+/* A compact, FLOATING icon pill in the bottom-right corner — the classic
+   position (shell.css), but lifted clear of the status bar and detached from the
+   edges so it reads as a floating toolbar, not a bar jammed in the corner. The
+   buttons are icon-only (labels are tooltips + kept in the DOM for a11y/tests),
+   so eleven panels fit a tidy ~430px pill that sits over the empty bottom-right
+   instead of stretching across and colliding with the status bar / command line.
+   This unlayered rule overrides the classic `right:0; bottom:0` anchor. */
 :root[data-ui-theme='shadcn'] .overlay-launcher {
+  position: fixed;
+  left: auto;
+  right: 12px;
+  bottom: 34px;
+  transform: none;
+  max-width: calc(100vw - 24px);
   background: var(--sh-panel-frost);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
   border: 1px solid var(--sh-line-strong);
   border-radius: 999px;
-  padding: 6px;
-  gap: 4px;
+  padding: 5px;
+  gap: 2px;
   box-shadow: var(--sh-pop);
 }
 :root[data-ui-theme='shadcn'] .overlay-launcher__btn {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  justify-content: center;
   background: transparent;
   border: 1px solid transparent;
   box-shadow: none;
   border-radius: 999px;
-  padding: 5px 13px;
   color: var(--pm-text-dim);
-  font-weight: 500;
-  font-size: 11px;
 }
 :root[data-ui-theme='shadcn'] .overlay-launcher__btn:hover {
   background: var(--sh-btn-hover);
