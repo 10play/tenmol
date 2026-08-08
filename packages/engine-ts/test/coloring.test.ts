@@ -98,14 +98,14 @@ describe('set_color', () => {
 });
 
 describe('util.cbag / colour-by-element', () => {
-  it('colours nitrogens blue, oxygens red, carbons the variant colour', () => {
+  it('colours nitrogens, oxygens and carbons with their element colours', () => {
     const h = makeHarness();
     const n = h.call('util.cbag', ['all']) as number;
     expect(n).toBe(9);
 
-    // CPK: N -> blue, O -> red; carbons -> carbon (green-ish) for cbag.
-    expect(h.ex.countAtoms('color blue')).toBe(2); // 2 nitrogens
-    expect(h.ex.countAtoms('color red')).toBe(2); // 2 oxygens
+    // PyMOL CPK: N -> `nitrogen`, O -> `oxygen`; carbons -> `carbon` for cbag.
+    expect(h.ex.countAtoms('color nitrogen')).toBe(2); // 2 nitrogens
+    expect(h.ex.countAtoms('color oxygen')).toBe(2); // 2 oxygens
     expect(h.ex.countAtoms('color carbon')).toBe(5); // 5 carbons
     expect(h.publishCount).toBe(1);
   });
@@ -120,17 +120,17 @@ describe('util.cbag / colour-by-element', () => {
       const h = makeHarness();
       h.call(cmd, ['all']);
       expect(h.ex.countAtoms(`color ${col}`)).toBe(5); // 5 carbons
-      expect(h.ex.countAtoms('color blue')).toBe(2); // nitrogens unchanged (CPK)
+      expect(h.ex.countAtoms('color nitrogen')).toBe(2); // nitrogens unchanged (CPK)
     }
   });
 
   it('respects the selection argument', () => {
     const h = makeHarness();
     h.call('util.cbag', ['chain A']);
-    // Only chain A recoloured: its 1 nitrogen -> blue.
-    expect(h.ex.countAtoms('color blue')).toBe(1);
-    // chain B still at its loaded (default) colour, not blue.
-    expect(h.ex.countAtoms('chain B and color blue')).toBe(0);
+    // Only chain A recoloured: its 1 nitrogen -> the `nitrogen` colour.
+    expect(h.ex.countAtoms('color nitrogen')).toBe(1);
+    // chain B still at its loaded (default) colour.
+    expect(h.ex.countAtoms('chain B and color nitrogen')).toBe(0);
   });
 });
 

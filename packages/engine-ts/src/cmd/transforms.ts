@@ -12,10 +12,11 @@
  *   16     rear (far) clip distance from the camera
  *   17     signed field of view
  *
- * The scene-rotation convention matches `ViewState.turn`: a camera-space
- * axis-angle rotation is PRE-multiplied onto the model->camera 3x3, so
- * `rotate('y', 90)` reproduces `turn('y', 90)` exactly, and the arbitrary-axis
- * form (`rotate([x,y,z], a)`) is the Rodrigues generalisation of it.
+ * As in PyMOL, `rotate` and `translate` are OBJECT transforms — they mutate the
+ * selected atoms' coordinates about the origin and leave the camera (`get_view`)
+ * untouched; `turn`/`move` are the camera verbs. With `camera=1` (the default) a
+ * transform's axis/vector is given in camera space and mapped back to model
+ * space by the inverse (transpose) of the model->camera 3x3.
  */
 import type { Json } from '@tenmol/protocol';
 import type { RegistrarCtx } from './registrar';
@@ -23,19 +24,6 @@ import type { RegistrarCtx } from './registrar';
 /* ------------------------------ 3x3 helpers ------------------------------ */
 
 type Mat3 = number[]; // column-major, length 9: index = col*3 + row
-
-/** Column-major 3x3 multiply: returns a*b (same convention as view.ts). */
-function mul3(a: Mat3, b: Mat3): Mat3 {
-  const out: Mat3 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-  for (let c = 0; c < 3; c++) {
-    for (let r = 0; r < 3; r++) {
-      let s = 0;
-      for (let k = 0; k < 3; k++) s += (a[k * 3 + r] as number) * (b[c * 3 + k] as number);
-      out[c * 3 + r] = s;
-    }
-  }
-  return out;
-}
 
 /**
  * Rotation about an arbitrary axis by `deg` degrees (Rodrigues' formula),
@@ -71,6 +59,16 @@ function transform3(m: Mat3, v: readonly [number, number, number]): [number, num
     (m[0] as number) * v[0] + (m[3] as number) * v[1] + (m[6] as number) * v[2],
     (m[1] as number) * v[0] + (m[4] as number) * v[1] + (m[7] as number) * v[2],
     (m[2] as number) * v[0] + (m[5] as number) * v[1] + (m[8] as number) * v[2],
+  ];
+}
+
+/** Transpose a column-major 3x3. For a rotation this is its inverse, so it maps
+ * a camera-space direction back into model space (view 3x3 is model->camera). */
+function transpose3(m: Mat3): Mat3 {
+  return [
+    m[0] as number, m[3] as number, m[6] as number,
+    m[1] as number, m[4] as number, m[7] as number,
+    m[2] as number, m[5] as number, m[8] as number,
   ];
 }
 
@@ -138,22 +136,63 @@ function flag(v: unknown, dflt: boolean): boolean {
 export function registerTransforms(ctx: RegistrarCtx): void {
   const view = ctx.executive.view;
 
+  /**
+   * Apply a per-coordinate map to every atom the selection matches, in the
+   * given state (`state<=0` -> all states). Mutates the molecule's Float32
+   * coordinate sets in place (so `get_model`/`get_coords` see the new values,
+   * exactly as PyMOL's object transforms do).
+   */
+  const applyCoords = (
+    sel: string,
+    state: number,
+    fn: (p: [number, number, number]) => [number, number, number],
+  ): void => {
+    const byObj = new Map<string, number[]>();
+    for (const ua of ctx.executive.atomsMatching(sel)) {
+      let arr = byObj.get(ua.objName);
+      if (!arr) byObj.set(ua.objName, (arr = []));
+      arr.push(ua.index);
+    }
+    for (const [objName, idxs] of byObj) {
+      const mol = ctx.executive.molecule(objName);
+      if (!mol) continue;
+      const sets = state > 0 ? [mol.states[state - 1]] : mol.states;
+      for (const set of sets) {
+        if (!set) continue;
+        for (const i of idxs) {
+          const o = i * 3;
+          const q = fn([set[o] as number, set[o + 1] as number, set[o + 2] as number]);
+          set[o] = q[0];
+          set[o + 1] = q[1];
+          set[o + 2] = q[2];
+        }
+      }
+    }
+  };
+
   /* ------------------------------- rotate ------------------------------- */
   // rotate(axis, angle, selection='all', state=0, camera=1, object=None, origin=None)
+  // Like PyMOL, `rotate` transforms the OBJECT's coordinates about the origin;
+  // the camera (get_view) is unchanged. `turn` is the camera-rotation verb.
   ctx.command('rotate', (args, kwargs): Json => {
-    const axis = parseAxis(pick(args, kwargs, 0, 'axis'));
+    const axisRaw = parseAxis(pick(args, kwargs, 0, 'axis'));
     const angle = num(pick(args, kwargs, 1, 'angle'), 0);
-    const object = pick(args, kwargs, 5, 'object');
+    if (!axisRaw) return null;
+    const sel = ctx.str(pick(args, kwargs, 2, 'selection'), 'all') || 'all';
+    const state = num(pick(args, kwargs, 3, 'state'), 0);
     const camera = flag(pick(args, kwargs, 4, 'camera'), true);
-    if (!axis) return null;
-    // Only the camera path is ported: rotate the scene about a camera-space axis.
-    // (Object-coordinate rotation is out of scope; see engine-port-gaps.md.)
-    if (object != null && object !== '' && !camera) return null;
+    const originArg = parseTriple(pick(args, kwargs, 6, 'origin'));
     const v = view.get();
-    const rot = mul3(rotationMatrix(axis, angle), v.slice(0, 9));
-    for (let i = 0; i < 9; i++) v[i] = rot[i] as number;
-    view.set(v);
-    ctx.emitView();
+    // camera=1 (default): the axis is given in camera space; map it to model
+    // space with the inverse (transpose) of the model->camera rotation.
+    const axis = camera ? transform3(transpose3(v.slice(0, 9)), axisRaw) : axisRaw;
+    const rot = rotationMatrix(axis, angle);
+    const pivot = originArg ?? ([v[12], v[13], v[14]] as [number, number, number]);
+    applyCoords(sel, state, (p) => {
+      const r = transform3(rot, [p[0] - pivot[0], p[1] - pivot[1], p[2] - pivot[2]]);
+      return [pivot[0] + r[0], pivot[1] + r[1], pivot[2] + r[2]];
+    });
+    ctx.publish();
     return null;
   });
 
@@ -186,36 +225,19 @@ export function registerTransforms(ctx: RegistrarCtx): void {
 
   /* ------------------------------ translate ----------------------------- */
   // translate(vector, selection='all', state=0, camera=1, object=None)
+  // Like PyMOL, `translate` shifts the OBJECT's coordinates; the camera is
+  // unchanged. `move` is the camera-translation verb.
   ctx.command('translate', (args, kwargs): Json => {
-    const vec = parseTriple(pick(args, kwargs, 0, 'vector'));
-    if (!vec) return null;
-    const object = pick(args, kwargs, 4, 'object');
+    const vecRaw = parseTriple(pick(args, kwargs, 0, 'vector'));
+    if (!vecRaw) return null;
+    const sel = ctx.str(pick(args, kwargs, 1, 'selection'), 'all') || 'all';
+    const state = num(pick(args, kwargs, 2, 'state'), 0);
     const camera = flag(pick(args, kwargs, 3, 'camera'), true);
-
-    // Bonus: object-space translation of atom coordinates.
-    if (object != null && object !== '' && !camera) {
-      const mol = ctx.executive.molecule(ctx.str(object));
-      if (!mol) return null;
-      for (const set of mol.states) {
-        for (let o = 0; o < set.length; o += 3) {
-          set[o] = (set[o] as number) + vec[0];
-          set[o + 1] = (set[o + 1] as number) + vec[1];
-          set[o + 2] = (set[o + 2] as number) + vec[2];
-        }
-      }
-      ctx.publish();
-      return null;
-    }
-
-    // Camera-space translation of the whole scene (SceneTranslate).
     const v = view.get();
-    v[9] = (v[9] as number) + vec[0];
-    v[10] = (v[10] as number) + vec[1];
-    v[11] = (v[11] as number) + vec[2];
-    v[15] = (v[15] as number) - vec[2];
-    v[16] = (v[16] as number) - vec[2];
-    view.set(v);
-    ctx.emitView();
+    // camera=1 (default): the vector is in camera space; map it to model space.
+    const vec = camera ? transform3(transpose3(v.slice(0, 9)), vecRaw) : vecRaw;
+    applyCoords(sel, state, (p) => [p[0] + vec[0], p[1] + vec[1], p[2] + vec[2]]);
+    ctx.publish();
     return null;
   });
 

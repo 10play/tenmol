@@ -38,7 +38,25 @@ const PALETTE: ReadonlyArray<readonly [string, RGB]> = [
   ['firebrick', [0.698, 0.13, 0.13]],
   ['deepblue', [0.25, 0.25, 0.65]],
   ['wheat', [0.99, 0.82, 0.65]],
+  // Element (CPK) colours — PyMOL's `atomColors` table (layer1/Color.cpp). These
+  // are what `util.cbag`/`cbc`/… and the by-element default resolve to, so the
+  // per-atom colour matches PyMOL exactly (the differential gates their RGB).
   ['carbon', [0.2, 1, 0.2]],
+  ['nitrogen', [0.2, 0.2, 1]],
+  ['oxygen', [1, 0.3, 0.3]],
+  ['hydrogen', [0.9, 0.9, 0.9]],
+  ['sulfur', [0.9, 0.775, 0.25]],
+  ['phosphorus', [1, 128 / 255, 0]],
+  ['fluorine', [0.7, 1, 1]],
+  ['chlorine', [31 / 255, 240 / 255, 31 / 255]],
+  ['bromine', [166 / 255, 41 / 255, 41 / 255]],
+  ['iodine', [148 / 255, 0, 148 / 255]],
+  ['sodium', [171 / 255, 92 / 255, 242 / 255]],
+  ['magnesium', [138 / 255, 255 / 255, 0]],
+  ['calcium', [61 / 255, 255 / 255, 0]],
+  ['zinc', [125 / 255, 128 / 255, 176 / 255]],
+  ['iron', [224 / 255, 102 / 255, 51 / 255]],
+  ['potassium', [143 / 255, 64 / 255, 212 / 255]],
 ];
 
 const NAME_TO_INDEX = new Map<string, number>();
@@ -68,25 +86,29 @@ export function setColor(name: string, rgb: RGB): number {
 }
 
 /**
- * CPK element → colour name (`packages/engine/layer1/AtomInfo.cpp` element
- * colours). Used by `util.cbag`/`cbac`/… and the by-element default. Carbon is
- * left to the caller (cbag=green, cbac=cyan, …); everything else is CPK.
+ * Element → PyMOL element-colour name (`packages/engine/layer1/AtomInfo.cpp`
+ * `AtomInfoGetColorWithVDW`). Used by `util.cbag`/`cbac`/… and the by-element
+ * default. Non-carbon atoms get their element colour (e.g. N → the `nitrogen`
+ * colour, NOT plain `blue`), which is what real PyMOL assigns — so a per-atom
+ * `color nitrogen` count and RGB match. Carbon is left to the caller (each
+ * `cbXX` variant picks a different carbon colour).
  */
 export const ELEMENT_COLOR: Readonly<Record<string, string>> = {
-  N: 'blue',
-  O: 'red',
-  S: 'yellow',
-  H: 'white',
-  P: 'orange',
-  F: 'green',
-  Cl: 'green',
-  Br: 'firebrick',
-  I: 'purple',
-  Ca: 'green',
-  Mg: 'forest',
-  Zn: 'slate',
-  Fe: 'orange',
-  Na: 'purple',
+  N: 'nitrogen',
+  O: 'oxygen',
+  S: 'sulfur',
+  H: 'hydrogen',
+  P: 'phosphorus',
+  F: 'fluorine',
+  Cl: 'chlorine',
+  Br: 'bromine',
+  I: 'iodine',
+  Ca: 'calcium',
+  Mg: 'magnesium',
+  Zn: 'zinc',
+  Fe: 'iron',
+  Na: 'sodium',
+  K: 'potassium',
 };
 
 /**

@@ -12,6 +12,38 @@ representations, and a subset of the selection language. Everything else is
 below. A symbol that isn't implemented rejects with a `PymolError` of type
 `NotPorted` (never a silent no-op), so the UI shows exactly what's missing.
 
+### Wave 1 (implemented + gated against real PyMOL)
+
+The following are now implemented and proven 1:1 against a live PyMOL bridge by
+the differential suite (`tools/parity`, live diff = zero divergence):
+
+- **Coloring**: `spectrum`, `set_color`, `util.cbag/cbac/cbay/cbas/cbap/cbaw`,
+  `util.cbc`, `util.rainbow`; colour-by-element uses PyMOL's element colours
+  (`nitrogen`/`oxygen`/… ) so per-atom colour matches exactly.
+- **Transforms**: `rotate` and `translate` (OBJECT transforms — they move the
+  atoms' coordinates about the origin, camera unchanged, matching PyMOL; `turn`/
+  `move` are the camera verbs), `center`, `move`, `clip`.
+- **Analysis**: `dss`, `get_chains`, `count_states`, `identify`,
+  `iterate`/`iterate_state`/`alter` (JS per-atom expressions).
+- **Selection**: `s1 within N of s2` (infix), `around`/`expand`/`near_to`/
+  `beyond`, `neighbor`/`bound_to`, `bymol`/`byobject`/`bychain`, `b`/`q` numeric
+  comparisons, `ss H/S/L`, `visible`/`enabled`/`present`/`bonded`/`metals`/
+  `donor`/`acceptor`, and `/object/segi/chain/resi/name` slash notation.
+
+**Known parity divergences (deliberately NOT gated in the differential):**
+
+- **Default representation after load.** TS shows `lines`; this PyMOL build's
+  `auto_show` classifies into `cartoon + sticks + nb_spheres`. Blocked on
+  `cartoon` (below). The differential establishes an explicit rep baseline
+  rather than depending on the loaded default.
+- **`ss` on unassigned atoms.** PyMOL pre-labels some backbone atoms `L`; TS
+  leaves `ss` empty until `dss`. `dss` itself is a phi/psi heuristic, not
+  PyMOL's full H-bond assignment, so exact SS counts are not gated.
+- **`donor`/`acceptor`** selectors are element heuristics that over-count
+  vs. PyMOL's chemistry-aware flags.
+- **Element-colour RGB precision** beyond N/O/C/H/S (halogens, metals) uses the
+  canonical /255 CPK values; only the fixture's elements (N/O/C) are gated.
+
 ---
 
 ## 1. Representations (rendering) — 5 of 21

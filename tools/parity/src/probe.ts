@@ -15,6 +15,19 @@ export interface Snapshot {
   view?: number[];
   colorTuples?: Record<string, [number, number, number] | null>;
   settings?: Record<string, number>;
+  chains?: string[];
+  /** Per-atom coordinates keyed by `chain/resi/name`, rounded to 3 dp. */
+  coords?: Record<string, [number, number, number]>;
+}
+
+interface ModelAtom {
+  name: string;
+  resi: string;
+  chain: string;
+  coord: [number, number, number];
+}
+interface GetModel {
+  atom: ModelAtom[];
 }
 
 /** Run the ops, then collect the observables the script gates. */
@@ -58,6 +71,23 @@ export async function probeSnapshot(backend: Backend, script: Script): Promise<S
     snap.settings = settings;
   }
 
+  if (script.gateChains) {
+    snap.chains = (await backend.call<string[]>('get_chains', ['all'])) ?? [];
+  }
+
+  if (script.gateModel !== undefined) {
+    const model = await backend.call<GetModel>('get_model', [script.gateModel]);
+    const coords: Record<string, [number, number, number]> = {};
+    for (const a of model?.atom ?? []) {
+      coords[`${a.chain}/${a.resi}/${a.name}`] = [
+        round(a.coord[0], 3),
+        round(a.coord[1], 3),
+        round(a.coord[2], 3),
+      ];
+    }
+    snap.coords = coords;
+  }
+
   return snap;
 }
 
@@ -69,6 +99,8 @@ function round(n: number, dp = 6): number {
 const VIEW_TOL = 1e-4;
 const RGB_TOL = 1e-5;
 const SETTING_TOL = 1e-5;
+/** Coords are compared at 3-dp (float32 through two get_model encodings). */
+const COORD_TOL = 1.5e-3;
 
 /**
  * Compare two snapshots for one script; returns a minimal, human-readable list
@@ -120,6 +152,25 @@ export function diffSnapshots(
       const g = actual.settings?.[name] ?? NaN;
       if (Math.abs(e - g) > SETTING_TOL) {
         out.push(`get_setting_float('${name}'): expected ${e}, got ${g}`);
+      }
+    }
+  }
+
+  if (script.gateChains) {
+    const a = JSON.stringify(expected.chains ?? []);
+    const b = JSON.stringify(actual.chains ?? []);
+    if (a !== b) out.push(`get_chains(): expected ${a}, got ${b}`);
+  }
+
+  if (script.gateModel !== undefined) {
+    const e = expected.coords ?? {};
+    const g = actual.coords ?? {};
+    const keys = new Set([...Object.keys(e), ...Object.keys(g)]);
+    for (const k of keys) {
+      const ec = e[k];
+      const gc = g[k];
+      if (!ec || !gc || ec.some((v, i) => Math.abs(v - gc[i]!) > COORD_TOL)) {
+        out.push(`get_model coord '${k}': expected ${JSON.stringify(ec)}, got ${JSON.stringify(gc)}`);
       }
     }
   }

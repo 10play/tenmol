@@ -99,6 +99,14 @@ export interface Script {
   gateColorTuples?: string[];
   /** Setting names to compare as `get_setting_float` values. */
   gateSettings?: string[];
+  /** Compare `get_chains()` (the sorted distinct chain identifiers). */
+  gateChains?: boolean;
+  /**
+   * Compare per-atom coordinates of this selection (via `get_model`), keyed by
+   * `chain/resi/name` and rounded — the observable an OBJECT transform
+   * (`rotate`/`translate`) changes while leaving the camera untouched.
+   */
+  gateModel?: string;
 }
 
 /**
@@ -164,9 +172,34 @@ const COUNT_BATTERY = [
   'not chain A',
   'not name CA',
   'name C* and chain A',
-  // ---- within (distance) ----
-  'within 100 of name N',
-  'within 2 of name CA',
+  // ---- within (distance, PyMOL's infix `s1 within X of s2`) ----
+  'all within 100 of name N',
+  'all within 2 of name CA',
+  // ---- proximity set-operators ----
+  'name N around 3', // atoms within 3 of an N, excluding the N's
+  'name CA around 2',
+  'chain A expand 2', // chain A plus atoms within 2
+  'neighbor name CA', // atoms bonded to a CA
+  'bound_to name CA',
+  // ---- by-entity expansion ----
+  'bymol chain A',
+  'byobject name CA',
+  'bychain resi 1',
+  // ---- numeric property comparisons ----
+  'b < 10',
+  'b > 50',
+  'q > 0.5',
+  'q = 1',
+  // ---- flag/keyword selectors ----
+  'bonded',
+  'visible',
+  'present',
+  'metals',
+  'not backbone',
+  // ---- slash notation /object/segi/chain/resi/name ----
+  '/m//A/1/CA',
+  '/m//A//',
+  '/m////CA',
 ];
 
 /** Every PyMOL named colour whose RGB the port gates (values from Color.cpp). */
@@ -182,6 +215,7 @@ export const CORPUS: Script[] = [
     ops: [load],
     selectors: COUNT_BATTERY,
     gateNames: true,
+    gateChains: true,
   },
   {
     name: 'color_chains',
@@ -242,10 +276,14 @@ export const CORPUS: Script[] = [
     gateNames: true,
   },
   {
-    // `hide everything` clears every rep bit on the selection.
+    // `hide everything` clears every rep bit on the selection. Start from an
+    // explicit `as lines` baseline so the assertion is about the hide logic,
+    // not the loaded default rep (PyMOL's auto_show classification — cartoon +
+    // sticks + nb_spheres — is a separate, unported gap; see engine-port-gaps).
     name: 'hide_everything',
     ops: [
       load,
+      { call: ['show_as', 'lines', 'all'] },
       { call: ['show', 'spheres', 'all'] },
       { call: ['hide', 'everything', 'chain A'] },
     ],
@@ -306,5 +344,63 @@ export const CORPUS: Script[] = [
     selectors: ['all'],
     gateNames: true,
     gateView: true,
+  },
+  {
+    // Colour by element (`util.cbag`): non-carbon atoms take their PyMOL element
+    // colour, carbons take the cbag carbon colour. Gated by both the per-atom
+    // `color <element>` counts AND the resolved element-colour RGBs.
+    name: 'by_element',
+    ops: [load, { do: 'util.cbag' }],
+    selectors: ['color carbon', 'color nitrogen', 'color oxygen'],
+    gateNames: true,
+    gateColorTuples: ['carbon', 'nitrogen', 'oxygen'],
+  },
+  {
+    // `set_color` defines a colour; `color` applies it. Gated by the atom count
+    // AND the exact RGB the new name resolves to.
+    name: 'set_color_custom',
+    ops: [
+      load,
+      { call: ['set_color', 'myslate', [0.1, 0.2, 0.3]] },
+      { call: ['color', 'myslate', 'name CA'] },
+    ],
+    selectors: ['color myslate'],
+    gateNames: true,
+    gateColorTuples: ['myslate'],
+  },
+  {
+    // `center` pivots on the selection centroid (a camera change).
+    name: 'center_ca',
+    ops: [load, { call: ['set_view', KNOWN_VIEW] }, { call: ['center', 'name CA'] }],
+    selectors: ['all'],
+    gateNames: true,
+    gateView: true,
+  },
+  {
+    // `move z` translates the camera along its view axis.
+    name: 'move_z',
+    ops: [load, { call: ['set_view', KNOWN_VIEW] }, { call: ['move', 'z', 5] }],
+    selectors: ['all'],
+    gateNames: true,
+    gateView: true,
+  },
+  {
+    // `rotate` is an OBJECT transform: the atom coordinates move about the
+    // origin while the camera (get_view) is unchanged. Gated on the coords.
+    name: 'rotate_object',
+    ops: [load, { call: ['set_view', KNOWN_VIEW] }, { call: ['rotate', 'y', 90] }],
+    selectors: ['all'],
+    gateNames: true,
+    gateView: true, // must be UNCHANGED from KNOWN_VIEW
+    gateModel: 'all',
+  },
+  {
+    // `translate` likewise shifts the object's coordinates, not the camera.
+    name: 'translate_object',
+    ops: [load, { call: ['set_view', KNOWN_VIEW] }, { call: ['translate', [1, 2, 3]] }],
+    selectors: ['all'],
+    gateNames: true,
+    gateView: true,
+    gateModel: 'all',
   },
 ];

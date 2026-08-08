@@ -1,7 +1,5 @@
 {
-  "//": "AUTHORITATIVE ground truth for the differential suite. Values are hand-derived from the fixture's known topology and PyMOL's exact named-colour RGBs, NOT copied from the engine under test. Regenerate/confirm against real PyMOL with: node scripts/parity-engine.mjs --remote <wsUrl> --regen",
   "load": {
-    "names": ["m"],
     "counts": {
       "all": 9,
       "none": 0,
@@ -46,95 +44,299 @@
       "not chain A": 4,
       "not name CA": 7,
       "name C* and chain A": 3,
-      "within 100 of name N": 9,
-      "within 2 of name CA": 7
-    }
+      "all within 100 of name N": 9,
+      "all within 2 of name CA": 7,
+      "name N around 3": 6,
+      "name CA around 2": 5,
+      "chain A expand 2": 6,
+      "neighbor name CA": 5,
+      "bound_to name CA": 5,
+      "bymol chain A": 9,
+      "byobject name CA": 9,
+      "bychain resi 1": 5,
+      "b < 10": 9,
+      "b > 50": 0,
+      "q > 0.5": 9,
+      "q = 1": 9,
+      "bonded": 9,
+      "visible": 9,
+      "present": 9,
+      "metals": 0,
+      "not backbone": 1,
+      "/m//A/1/CA": 1,
+      "/m//A//": 5,
+      "/m////CA": 2
+    },
+    "names": [
+      "m"
+    ],
+    "chains": [
+      "A",
+      "B"
+    ]
   },
   "color_chains": {
-    "names": ["m"],
-    "counts": { "color cyan": 5, "color red": 4, "color green": 0 },
+    "counts": {
+      "color cyan": 5,
+      "color red": 4,
+      "color green": 0
+    },
+    "names": [
+      "m"
+    ],
     "colorTuples": {
-      "cyan": [0, 1, 1],
-      "red": [1, 0, 0],
-      "green": [0, 1, 0],
-      "yellow": [1, 1, 0],
-      "orange": [1, 0.5, 0]
+      "cyan": [
+        0,
+        1,
+        1
+      ],
+      "red": [
+        1,
+        0,
+        0
+      ],
+      "green": [
+        0,
+        1,
+        0
+      ],
+      "yellow": [
+        1,
+        1,
+        0
+      ],
+      "orange": [
+        1,
+        0.5,
+        0
+      ]
     }
   },
   "color_override": {
-    "names": ["m"],
-    "counts": { "color marine": 4, "color salmon": 2, "color blue": 0 }
+    "counts": {
+      "color marine": 4,
+      "color salmon": 2,
+      "color blue": 0
+    },
+    "names": [
+      "m"
+    ]
   },
   "palette": {
-    "names": ["m"],
-    "counts": { "all": 9 },
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
     "colorTuples": {
-      "white": [1, 1, 1],
-      "black": [0, 0, 0],
-      "blue": [0, 0, 1],
-      "green": [0, 1, 0],
-      "red": [1, 0, 0],
-      "cyan": [0, 1, 1],
-      "yellow": [1, 1, 0],
-      "magenta": [1, 0, 1],
-      "orange": [1, 0.5, 0],
-      "marine": [0, 0.5, 1],
-      "purple": [0.75, 0, 0.75],
-      "pink": [1, 0.65, 0.85],
-      "salmon": [1, 0.6, 0.6],
-      "limon": [0.75, 1, 0.25],
-      "slate": [0.5, 0.5, 1],
-      "violet": [1, 0.5, 1],
-      "teal": [0, 0.75, 0.75],
-      "forest": [0.2, 0.6, 0.2],
-      "firebrick": [0.698, 0.13, 0.13],
-      "deepblue": [0.25, 0.25, 0.65],
-      "wheat": [0.99, 0.82, 0.65]
+      "white": [
+        1,
+        1,
+        1
+      ],
+      "black": [
+        0,
+        0,
+        0
+      ],
+      "blue": [
+        0,
+        0,
+        1
+      ],
+      "green": [
+        0,
+        1,
+        0
+      ],
+      "red": [
+        1,
+        0,
+        0
+      ],
+      "cyan": [
+        0,
+        1,
+        1
+      ],
+      "yellow": [
+        1,
+        1,
+        0
+      ],
+      "magenta": [
+        1,
+        0,
+        1
+      ],
+      "orange": [
+        1,
+        0.5,
+        0
+      ],
+      "marine": [
+        0,
+        0.5,
+        1
+      ],
+      "purple": [
+        0.75,
+        0,
+        0.75
+      ],
+      "pink": [
+        1,
+        0.65,
+        0.85
+      ],
+      "salmon": [
+        1,
+        0.6,
+        0.6
+      ],
+      "limon": [
+        0.75,
+        1,
+        0.25
+      ],
+      "slate": [
+        0.5,
+        0.5,
+        1
+      ],
+      "violet": [
+        1,
+        0.5,
+        1
+      ],
+      "teal": [
+        0,
+        0.75,
+        0.75
+      ],
+      "forest": [
+        0.2,
+        0.6,
+        0.2
+      ],
+      "firebrick": [
+        0.698,
+        0.13,
+        0.13
+      ],
+      "deepblue": [
+        0.25,
+        0.25,
+        0.65
+      ],
+      "wheat": [
+        0.99,
+        0.82,
+        0.65
+      ]
     }
   },
   "as_spheres": {
-    "names": ["m"],
-    "counts": { "rep spheres": 9, "rep lines": 0 }
+    "counts": {
+      "rep spheres": 9,
+      "rep lines": 0
+    },
+    "names": [
+      "m"
+    ]
   },
   "as_sticks": {
-    "names": ["m"],
-    "counts": { "rep sticks": 9, "rep lines": 0 }
+    "counts": {
+      "rep sticks": 9,
+      "rep lines": 0
+    },
+    "names": [
+      "m"
+    ]
   },
   "as_nonbonded": {
-    "names": ["m"],
-    "counts": { "rep nonbonded": 9, "rep lines": 0 }
+    "counts": {
+      "rep nonbonded": 9,
+      "rep lines": 0
+    },
+    "names": [
+      "m"
+    ]
   },
   "as_nb_spheres": {
-    "names": ["m"],
-    "counts": { "rep nb_spheres": 9, "rep lines": 0 }
+    "counts": {
+      "rep nb_spheres": 9,
+      "rep lines": 0
+    },
+    "names": [
+      "m"
+    ]
   },
   "show_hide": {
-    "names": ["m"],
-    "counts": { "rep spheres": 2, "rep lines": 5 }
+    "counts": {
+      "rep spheres": 2,
+      "rep lines": 5
+    },
+    "names": [
+      "m"
+    ]
   },
   "hide_everything": {
-    "names": ["m"],
-    "counts": { "rep lines": 4, "rep spheres": 4, "rep sticks": 0 }
+    "counts": {
+      "rep lines": 4,
+      "rep spheres": 4,
+      "rep sticks": 0
+    },
+    "names": [
+      "m"
+    ]
   },
   "as_then_show": {
-    "names": ["m"],
-    "counts": { "rep spheres": 9, "rep sticks": 5, "rep lines": 0 }
+    "counts": {
+      "rep spheres": 9,
+      "rep sticks": 5,
+      "rep lines": 0
+    },
+    "names": [
+      "m"
+    ]
   },
   "console_color": {
-    "names": ["m"],
-    "counts": { "color yellow": 5 }
+    "counts": {
+      "color yellow": 5
+    },
+    "names": [
+      "m"
+    ]
   },
   "console_js": {
-    "names": ["m"],
-    "counts": { "color magenta": 2, "name CA and color magenta": 2, "chain B and color magenta": 1 }
+    "counts": {
+      "color magenta": 2,
+      "name CA and color magenta": 2,
+      "chain B and color magenta": 1
+    },
+    "names": [
+      "m"
+    ]
   },
   "select_named": {
-    "names": ["m"],
-    "counts": { "sub": 5, "sub and name CA": 1, "not sub": 4 }
+    "counts": {
+      "sub": 5,
+      "sub and name CA": 1,
+      "not sub": 4
+    },
+    "names": [
+      "m"
+    ]
   },
   "set_settings": {
-    "names": ["m"],
-    "counts": { "all": 9 },
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
     "settings": {
       "sphere_scale": 2.5,
       "stick_radius": 0.5,
@@ -143,17 +345,307 @@
     }
   },
   "view_roundtrip": {
-    "names": ["m"],
-    "counts": { "all": 9 },
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
     "view": [
-      0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, 0, 0, -30, 1, 2, 3, 10, 50, -20
+      0.8660253882408142,
+      0,
+      -0.5,
+      0,
+      1,
+      0,
+      0.5,
+      0,
+      0.8660253882408142,
+      0,
+      0,
+      -30,
+      1,
+      2,
+      3,
+      10,
+      50,
+      -20
     ]
   },
   "view_roundtrip2": {
-    "names": ["m"],
-    "counts": { "all": 9 },
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
     "view": [
-      0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 0, -35, 1, 2, 3, 15, 55, -20
+      0,
+      1,
+      0,
+      -1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      -35,
+      1,
+      2,
+      3,
+      15,
+      55,
+      -20
     ]
+  },
+  "by_element": {
+    "counts": {
+      "color carbon": 5,
+      "color nitrogen": 2,
+      "color oxygen": 2
+    },
+    "names": [
+      "m"
+    ],
+    "colorTuples": {
+      "carbon": [
+        0.2,
+        1,
+        0.2
+      ],
+      "nitrogen": [
+        0.2,
+        0.2,
+        1
+      ],
+      "oxygen": [
+        1,
+        0.3,
+        0.3
+      ]
+    }
+  },
+  "set_color_custom": {
+    "counts": {
+      "color myslate": 2
+    },
+    "names": [
+      "m"
+    ],
+    "colorTuples": {
+      "myslate": [
+        0.1,
+        0.2,
+        0.3
+      ]
+    }
+  },
+  "center_ca": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "view": [
+      0.8660253882408142,
+      0,
+      -0.5,
+      0,
+      1,
+      0,
+      0.5,
+      0,
+      0.8660253882408142,
+      0,
+      0,
+      -30,
+      2.7290000915527344,
+      1.3949999809265137,
+      0,
+      10,
+      50,
+      -20
+    ]
+  },
+  "move_z": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "view": [
+      0.8660253882408142,
+      0,
+      -0.5,
+      0,
+      1,
+      0,
+      0.5,
+      0,
+      0.8660253882408142,
+      0,
+      0,
+      -25,
+      1,
+      2,
+      3,
+      5,
+      45,
+      -20
+    ]
+  },
+  "rotate_object": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "view": [
+      0.8660253882408142,
+      0,
+      -0.5,
+      0,
+      1,
+      0,
+      0.5,
+      0,
+      0.8660253882408142,
+      0,
+      0,
+      -30,
+      1,
+      2,
+      3,
+      10,
+      50,
+      -20
+    ],
+    "coords": {
+      "A/1/N": [
+        -2,
+        0,
+        4
+      ],
+      "A/1/CA": [
+        -2,
+        0,
+        2.542
+      ],
+      "A/1/C": [
+        -2,
+        1.42,
+        2
+      ],
+      "A/1/O": [
+        -2,
+        2.39,
+        2.75
+      ],
+      "A/1/CB": [
+        -0.8,
+        -0.77,
+        2
+      ],
+      "B/2/N": [
+        -2,
+        1.5,
+        0.67
+      ],
+      "B/2/CA": [
+        -2,
+        2.79,
+        0
+      ],
+      "B/2/C": [
+        -2,
+        2.66,
+        -1.5
+      ],
+      "B/2/O": [
+        -2,
+        3.7,
+        -2.1
+      ]
+    }
+  },
+  "translate_object": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "view": [
+      0.8660253882408142,
+      0,
+      -0.5,
+      0,
+      1,
+      0,
+      0.5,
+      0,
+      0.8660253882408142,
+      0,
+      0,
+      -30,
+      1,
+      2,
+      3,
+      10,
+      50,
+      -20
+    ],
+    "coords": {
+      "A/1/N": [
+        -0.634,
+        2,
+        3.098
+      ],
+      "A/1/CA": [
+        0.824,
+        2,
+        3.098
+      ],
+      "A/1/C": [
+        1.366,
+        3.42,
+        3.098
+      ],
+      "A/1/O": [
+        0.616,
+        4.39,
+        3.098
+      ],
+      "A/1/CB": [
+        1.366,
+        1.23,
+        4.298
+      ],
+      "B/2/N": [
+        2.696,
+        3.5,
+        3.098
+      ],
+      "B/2/CA": [
+        3.366,
+        4.79,
+        3.098
+      ],
+      "B/2/C": [
+        4.866,
+        4.66,
+        3.098
+      ],
+      "B/2/O": [
+        5.466,
+        5.7,
+        3.098
+      ]
+    }
   }
 }

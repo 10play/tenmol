@@ -34,6 +34,10 @@ suite('live differential — TypeScript engine vs. real PyMOL', () => {
       WebSocketImpl: WsCtor,
     });
     await remote.connect();
+    // The bridge is a persistent singleton; wipe any residual objects, named
+    // selections, settings and colours from earlier work so the run is
+    // deterministic (per-script `delete all` alone leaves those behind).
+    await remote.call('reinitialize', []).catch(() => undefined);
 
     const remoteSnaps = await runCorpus(remote);
     const localSnaps = await runLocalCorpus();

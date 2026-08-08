@@ -98,15 +98,32 @@ function expectVec(v: number[], slice: number, exp: [number, number, number], ep
 
 /* -------------------------------- tests -------------------------------- */
 
-describe('rotate (camera)', () => {
-  it('rotate("y", 90) applies the turn-y matrix to the 3x3', () => {
+// `rotate`/`translate` are OBJECT transforms in PyMOL: they move the atoms'
+// coordinates about the origin and leave the camera (get_view) untouched. Under
+// the identity view a camera-space axis IS the model-space axis, so the results
+// are hand-derivable. (Validated against real PyMOL by the live differential.)
+const coord = (t: ReturnType<typeof setup>, i: number): [number, number, number] =>
+  t.ex.molecule('m')!.coord(i, 1);
+const expectCoord = (t: ReturnType<typeof setup>, i: number, e: [number, number, number]) => {
+  const c = coord(t, i);
+  close(c[0], e[0], 1e-4);
+  close(c[1], e[1], 1e-4);
+  close(c[2], e[2], 1e-4);
+};
+
+describe('rotate (object)', () => {
+  it('rotate("y", 90) rotates coords about the origin; the camera is unchanged', () => {
     const t = setup();
     t.call('rotate', ['y', 90]);
+    // N sits on the origin (0,0,0) and does not move; CA (2,4,6) -> (6,4,-2).
+    expectCoord(t, 0, [0, 0, 0]);
+    expectCoord(t, 1, [6, 4, -2]);
+    expectCoord(t, 2, [3, 2, -1]);
+    // The view is untouched (rotate moves the object, not the camera).
     const v = t.view();
-    // column-major turn-y(90): [c,0,-s, 0,1,0, s,0,c] with c=0,s=1.
-    const exp = [0, 0, -1, 0, 1, 0, 1, 0, 0];
-    for (let i = 0; i < 9; i++) close(v[i]!, exp[i]!);
-    expect(t.counts().views).toBe(1);
+    for (let i = 0; i < 9; i++) close(v[i]!, IDENTITY_VIEW[i]!);
+    expectVec(v, 9, [0, 0, -40]);
+    expect(t.counts().publishes).toBe(1);
   });
 
   it('an arbitrary [0,1,0] axis equals the "y" shorthand', () => {
@@ -114,45 +131,37 @@ describe('rotate (camera)', () => {
     const b = setup();
     a.call('rotate', ['y', 37]);
     b.call('rotate', [[0, 1, 0], 37]);
-    const va = a.view();
-    const vb = b.view();
-    for (let i = 0; i < 9; i++) close(va[i]!, vb[i]!);
-  });
-
-  it('rotate 360 about any axis returns to identity', () => {
-    for (const axis of ['x', 'y', 'z']) {
-      const t = setup();
-      t.call('rotate', [axis, 360]);
-      const v = t.view();
-      const id = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-      for (let i = 0; i < 9; i++) close(v[i]!, id[i]!, 1e-9);
+    for (let i = 0; i < 3; i++) {
+      const ca = coord(a, i);
+      const cb = coord(b, i);
+      for (let k = 0; k < 3; k++) close(ca[k]!, cb[k]!, 1e-5);
     }
   });
 
-  it('four 90-degree turns compose back to identity', () => {
-    const t = setup();
-    for (let i = 0; i < 4; i++) t.call('rotate', ['x', 90]);
-    const v = t.view();
-    const id = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-    for (let i = 0; i < 9; i++) close(v[i]!, id[i]!, 1e-9);
+  it('rotate 360 about any axis returns coords to the original', () => {
+    for (const axis of ['x', 'y', 'z']) {
+      const t = setup();
+      t.call('rotate', [axis, 360]);
+      expectCoord(t, 1, [2, 4, 6]);
+    }
   });
 
-  it('a non-axis-aligned rotation stays a proper rotation (det=1, orthonormal)', () => {
+  it('four 90-degree rotations compose back to the original coords', () => {
     const t = setup();
+    for (let i = 0; i < 4; i++) t.call('rotate', ['x', 90]);
+    expectCoord(t, 1, [2, 4, 6]);
+  });
+
+  it('a rotation is rigid: distance from the origin is preserved', () => {
+    const t = setup();
+    const before = coord(t, 1); // CA (2,4,6)
+    const r0 = Math.hypot(before[0], before[1], before[2]);
     t.call('rotate', [[1, 1, 1], 120]);
+    const after = coord(t, 1);
+    close(Math.hypot(after[0], after[1], after[2]), r0, 1e-4);
+    // The camera stays put.
     const v = t.view();
-    // Column-major columns.
-    const c0 = [v[0]!, v[1]!, v[2]!];
-    const c1 = [v[3]!, v[4]!, v[5]!];
-    const c2 = [v[6]!, v[7]!, v[8]!];
-    const dot = (a: number[], b: number[]) => a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
-    close(dot(c0, c0), 1);
-    close(dot(c1, c1), 1);
-    close(dot(c2, c2), 1);
-    close(dot(c0, c1), 0);
-    close(dot(c0, c2), 0);
-    // 120 deg about (1,1,1) cyclically permutes the axes: e_x -> e_y -> e_z.
-    expectVec(v, 0, [0, 1, 0], 1e-9);
+    for (let i = 0; i < 9; i++) close(v[i]!, IDENTITY_VIEW[i]!);
   });
 });
 
@@ -179,23 +188,25 @@ describe('move (camera translate)', () => {
 });
 
 describe('translate', () => {
-  it('camera-space vector shifts Pos and carries clips in z', () => {
+  it('shifts the object coordinates; the camera is unchanged', () => {
     const t = setup();
-    t.call('translate', [[1, 2, 3]]);
+    t.call('translate', [[1, 2, 3]]); // identity view => model vector == [1,2,3]
+    // Every atom moved by (1,2,3).
+    expectCoord(t, 0, [1, 2, 3]); // N: (0,0,0) -> (1,2,3)
+    expectCoord(t, 1, [3, 6, 9]); // CA: (2,4,6) -> (3,6,9)
+    // The camera (Pos and clip planes) is untouched.
     const v = t.view();
-    close(v[9]!, 1);
-    close(v[10]!, 2);
-    close(v[11]!, -37); // -40 + 3
-    close(v[15]!, 17); // 20 - 3
-    close(v[16]!, 57); // 60 - 3
+    expectVec(v, 9, [0, 0, -40]);
+    close(v[15]!, 20);
+    close(v[16]!, 60);
+    expect(t.counts().publishes).toBe(1);
   });
 
-  it('object-space translation moves atom coordinates (bonus)', () => {
+  it('camera=0 treats the vector as model-space', () => {
     const t = setup();
-    t.call('translate', [[10, 0, 0]], { object: 'm', camera: 0 });
-    const mol = t.ex.molecule('m')!;
+    t.call('translate', [[10, 0, 0]], { camera: 0 });
     // N atom moved from x=0 to x=10.
-    expect(mol.coord(0, 1)[0]).toBeCloseTo(10, 5);
+    expect(t.ex.molecule('m')!.coord(0, 1)[0]).toBeCloseTo(10, 5);
     expect(t.counts().publishes).toBe(1);
   });
 });
