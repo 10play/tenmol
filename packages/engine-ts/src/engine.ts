@@ -14,7 +14,6 @@
 
 import { TypedEmitter, PymolError, type BackendEvents } from '@tenmol/backend';
 import {
-  Rep,
   REP_NAMES,
   decodeBinaryFrame,
   isGeometryFrame,
@@ -26,28 +25,13 @@ import { Executive } from './exec/executive';
 import { getColorIndex, getColorTuple } from './exec/color';
 import { parsePdb } from './model/pdb';
 import { buildFragment } from './model/fragments';
-import {
-  buildLinesFrame,
-  buildNbSpheresFrame,
-  buildNonbondedFrame,
-  buildSpheresFrame,
-  buildSticksFrame,
-} from './geometry/frames';
+import { REP_BUILDERS, RENDERABLE_REPS, isRenderableRep } from './geometry/registry';
 import { parseCommand, splitCommands } from './cmd/parser';
 import { SelectionError } from './select/selector';
 import type { RegistrarCtx } from './cmd/registrar';
 import { registerColoring } from './cmd/coloring';
 import { registerTransforms } from './cmd/transforms';
 import { registerAnalysis } from './cmd/analysis';
-
-/** PROTOCOL contract: the reps this engine can render in Mode G today. */
-const RENDERABLE_REPS = [
-  Rep.Line,
-  Rep.Sphere,
-  Rep.Cyl,
-  Rep.Nonbonded,
-  Rep.NonbondedSphere,
-] as const;
 
 /** Representation name -> RepId, for `_bridge.pull_geometry(object, repName)`. */
 const REP_BY_NAME = new Map<string, number>();
@@ -770,7 +754,7 @@ export class Engine {
     if (!mol) return result('not-built');
     // Reps this engine cannot render yet are simply "nothing to draw" — never a
     // Mode-P fallback, because the local engine has no pixel stream.
-    if (!(RENDERABLE_REPS as readonly number[]).includes(rep)) return result('not-built');
+    if (!isRenderableRep(rep)) return result('not-built');
     const bytes = this.emitRepFrame(object, rep, state);
     return bytes > 0 ? result('updated', bytes) : result('empty');
   }
@@ -779,21 +763,14 @@ export class Engine {
   private emitRepFrame(object: string, rep: number, state: number): number {
     const mol = this.executive.molecule(object);
     if (!mol || !mol.enabled) return 0;
-    const scale = this.executive.getSettingFloat('sphere_scale') || 1;
-    const stickRadius = this.executive.getSettingFloat('stick_radius') || 0.25;
-    const nbSize = this.executive.getSettingFloat('nb_spheres_size') || 0.25;
-    const buf =
-      rep === Rep.Sphere
-        ? buildSpheresFrame(mol, state, this.seq, scale)
-        : rep === Rep.Line
-          ? buildLinesFrame(mol, state, this.seq)
-          : rep === Rep.Cyl
-            ? buildSticksFrame(mol, state, this.seq, stickRadius)
-            : rep === Rep.Nonbonded
-              ? buildNonbondedFrame(mol, state, this.seq)
-              : rep === Rep.NonbondedSphere
-                ? buildNbSpheresFrame(mol, state, this.seq, nbSize)
-                : null;
+    const builder = REP_BUILDERS[rep];
+    if (!builder) return 0;
+    const buf = builder({
+      mol,
+      state,
+      seq: this.seq,
+      getSettingFloat: (name) => this.executive.getSettingFloat(name),
+    });
     if (!buf) return 0;
     this.seq++;
     const frame = decodeBinaryFrame(buf);
