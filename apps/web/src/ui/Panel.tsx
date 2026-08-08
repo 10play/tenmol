@@ -12,9 +12,18 @@
 import type { ComponentPropsWithRef } from 'react';
 import { cn } from './cn';
 
-/** A surface container; the shadcn theme gives it a card treatment. */
+/** A surface container; the shadcn theme gives it a frosted card treatment. */
 export function Panel({ className, ...rest }: ComponentPropsWithRef<'div'>) {
-  return <div data-slot="panel" className={cn(className)} {...rest} />;
+  return (
+    <div
+      data-slot="panel"
+      className={cn(
+        'modern:rounded-[8px] modern:border modern:border-line-strong modern:shadow-[var(--sh-pop)] modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]',
+        className,
+      )}
+      {...rest}
+    />
+  );
 }
 
 /** The header strip of a {@link Panel}. */

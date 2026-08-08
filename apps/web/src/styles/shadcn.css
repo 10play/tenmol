@@ -208,13 +208,8 @@
    ancestor instead of the viewport and opened hundreds of px off, over the
    console. A pseudo-element is a sibling of the rows, never an ancestor of the
    fixed list, so the frost stays and the flyouts land correctly. */
-:root[data-ui-theme='shadcn'] .menubar {
-  border-bottom: 1px solid var(--pm-line);
-  height: 32px;
-  gap: 2px;
-  padding: 0 8px;
-  align-items: center;
-}
+/* `.menubar` surface (height/padding/gap/border) is Tailwind on the component
+   (shell/AppShell.tsx); only the frost ::before stays here. */
 :root[data-ui-theme='shadcn'] .menubar::before {
   content: '';
   position: absolute;
@@ -224,31 +219,8 @@
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
 }
-:root[data-ui-theme='shadcn'] .menubar__item {
-  background: transparent;
-  border: 1px solid transparent;
-  box-shadow: none;
-  border-radius: var(--sh-r-sm);
-  padding: 4px 10px;
-  color: var(--pm-text-dim);
-  font-weight: 500;
-  font-size: 12px;
-}
-:root[data-ui-theme='shadcn'] .menubar__item:hover {
-  background: var(--sh-btn-hover);
-  color: var(--pm-text-bright);
-}
-:root[data-ui-theme='shadcn'] .menubar__item.is-open {
-  background: var(--sh-accent-soft);
-  color: var(--pm-text-bright);
-}
-:root[data-ui-theme='shadcn'] .menubar__title {
-  color: var(--pm-text-bright);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  font-size: 13px;
-  text-transform: none;
-}
+/* `.menubar__item` and `.menubar__title` are Tailwind on the component
+   (features/menubar/MenuBar.tsx, shell/AppShell.tsx). */
 
 /* bespoke menubar / pymol-menu dropdowns + their submenus.
    Frost on a ::before (see the `.menubar` note): a dropdown or a submenu is the
@@ -331,43 +303,11 @@
 /* 7. CONSOLE + COMMAND LINE — one terminal, calm focus.               */
 /* ================================================================== */
 
-:root[data-ui-theme='shadcn'] .console__bar {
-  background: var(--sh-panel-frost);
-  backdrop-filter: var(--sh-blur);
-  -webkit-backdrop-filter: var(--sh-blur);
-  border-bottom: 1px solid var(--pm-line);
-  height: 28px;
-  padding: 0 10px;
-}
-:root[data-ui-theme='shadcn'] .feedback {
-  background: var(--sh-console-bg);
-  color: var(--pm-text);
-  padding: 8px 12px;
-  line-height: 1.55;
-}
-:root[data-ui-theme='shadcn'] .cmdline {
-  background: var(--sh-panel-frost);
-  backdrop-filter: var(--sh-blur);
-  -webkit-backdrop-filter: var(--sh-blur);
-  border-top: 1px solid var(--pm-line);
-  height: 34px;
-  padding: 0 12px;
-  gap: 8px;
-}
-:root[data-ui-theme='shadcn'] .cmdline__label {
-  color: var(--pm-text-dim);
-  font-weight: 600;
-}
-:root[data-ui-theme='shadcn'] .cmdline__input {
-  height: 24px;
-  background: var(--sh-console-bg);
-  border: 1px solid var(--pm-line);
-  border-radius: var(--sh-r-sm);
-  color: var(--pm-text-bright);
-  caret-color: var(--pm-accent);
-  padding: 0 10px;
-}
-/* calm when merely (auto)focused; ring only on keyboard focus. */
+/* The console surfaces (`.console__bar`, `.feedback`, `.cmdline`,
+   `.cmdline__label`, `.cmdline__input` base) are Tailwind on the components
+   (features/console/*). Only the focus calm-down stays here — it must beat the
+   §2 unlayered focus-visible ring, which a utility class in `@layer utilities`
+   cannot. */
 :root[data-ui-theme='shadcn'] .cmdline__input:focus {
   border-color: var(--pm-line);
   box-shadow: none;
@@ -378,62 +318,17 @@
 /* 8. PANELS + DOCK — single-owner seams, flush docked, float floats.  */
 /* ================================================================== */
 
-:root[data-ui-theme='shadcn'] .shell__main {
-  background: var(--pm-bg);
-}
-:root[data-ui-theme='shadcn'] .internal-gui {
-  background: var(--pm-panel);
-  border-left: none; /* the splitter owns this seam */
-}
-/* docked ext-gui is flush: no border, no shadow. */
-:root[data-ui-theme='shadcn'] .extgui {
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
-}
-:root[data-ui-theme='shadcn'] .extgui__titlebar {
-  background: var(--pm-panel-alt);
-  border-bottom: 1px solid var(--pm-line);
-}
-/* floating surfaces carry the frost + shadow + radius. */
-:root[data-ui-theme='shadcn'] .extgui--float,
-:root[data-ui-theme='shadcn'] [data-slot='panel'] {
-  background: var(--sh-panel-frost);
-  backdrop-filter: var(--sh-blur);
-  -webkit-backdrop-filter: var(--sh-blur);
-  border: 1px solid var(--sh-line-strong);
-  border-radius: var(--sh-r);
-  box-shadow: var(--sh-pop);
-}
+/* Panel surfaces are Tailwind on the components: the shell dock/column/main in
+   shell/AppShell.tsx (docked ext-gui flush; floating ext-gui frosted), and the
+   `[data-slot='panel']` card treatment in ui/Panel.tsx. */
 
 /* ================================================================== */
 /* 9. OBJECT ROWS — calm accent tint, geometry preserved.             */
 /* ================================================================== */
 
-:root[data-ui-theme='shadcn'] .objpanel__head {
-  border-bottom: 1px solid var(--pm-line);
-  padding: 8px 10px;
-}
-:root[data-ui-theme='shadcn'] .objrow__name {
-  border: 1px solid var(--sh-btn-border);
-  border-radius: var(--sh-r-sm);
-  background: var(--sh-btn-fill);
-  color: var(--pm-text);
-  font-size: 11px;
-}
-:root[data-ui-theme='shadcn'] .objrow.is-enabled .objrow__name {
-  background: var(--sh-accent-soft);
-  border-color: color-mix(in srgb, var(--pm-accent) 40%, transparent);
-  color: var(--pm-text-bright);
-}
-:root[data-ui-theme='shadcn'] .objrow__name:hover {
-  background: var(--sh-btn-hover);
-}
-:root[data-ui-theme='shadcn'] .objrow__op {
-  border: none;
-  border-radius: 5px;
-  filter: saturate(0.95);
-}
+/* Object-row surfaces (`.objpanel__head`, `.objrow__name` incl. its enabled
+   tint, `.objrow__op`) are Tailwind on the component
+   (features/objects/ObjectPanel.tsx). */
 
 /* ================================================================== */
 /* 10. MOVIE TRANSPORT — one flat segmented control.                   */
@@ -496,18 +391,8 @@
 /* 12. STATUS BAR, SPLITTERS, SCROLLBARS, PROGRESS.                    */
 /* ================================================================== */
 
-:root[data-ui-theme='shadcn'] .statusbar {
-  background: var(--sh-panel-frost);
-  backdrop-filter: var(--sh-blur);
-  -webkit-backdrop-filter: var(--sh-blur);
-  border-top: 1px solid var(--pm-line);
-  height: 24px;
-  font-size: 11px;
-  padding: 0 12px;
-}
-:root[data-ui-theme='shadcn'] .statusbar__progress-fill {
-  background: var(--pm-accent);
-}
+/* The `.statusbar` surface + its progress fill are Tailwind on the component
+   (shell/StatusBar.tsx). */
 
 /* Single-owner seam: the splitter draws one centered hairline; accent only on hover. */
 :root[data-ui-theme='shadcn'] .splitter {

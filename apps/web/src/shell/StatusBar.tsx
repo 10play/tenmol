@@ -32,7 +32,7 @@ export function StatusBar() {
   const busy = connection.progress >= 0;
 
   return (
-    <div className="statusbar">
+    <div className="statusbar modern:h-6 modern:px-3 modern:text-[11px] modern:font-sans modern:border-t modern:border-line modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]">
       <span className={`statusbar__dot statusbar__dot--${connection.phase}`} />
       <span className="statusbar__text" title={connection.lastError ?? undefined}>
         {describeConnection(connection)}
@@ -48,7 +48,7 @@ export function StatusBar() {
             title={`cmd.get_progress() = ${connection.progress.toFixed(3)}`}
           >
             <span
-              className="statusbar__progress-fill"
+              className="statusbar__progress-fill modern:bg-pm-accent"
               style={{ width: `${Math.round(Math.min(1, connection.progress) * 100)}%` }}
             />
           </span>

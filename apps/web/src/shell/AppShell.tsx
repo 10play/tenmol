@@ -219,7 +219,11 @@ export function AppShell() {
 
   const extGui = dock.visible ? (
     <div
-      className={`extgui extgui--${dockModifier(dock)}${isSideDock(dock) ? ' extgui--side' : ''}`}
+      className={`extgui extgui--${dockModifier(dock)}${isSideDock(dock) ? ' extgui--side' : ''}${
+        dock.floating
+          ? ' modern:rounded-[8px] modern:border modern:border-line-strong modern:shadow-[var(--sh-pop)] modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]'
+          : ' modern:border-0 modern:rounded-none modern:shadow-none'
+      }`}
       data-dock={dockModifier(dock)}
       data-testid="extgui"
       // Only the BOTTOM dock has a user-dragged size; the side and floating
@@ -247,7 +251,7 @@ export function AppShell() {
     <div className="shell" ref={rootRef}>
       <ShellHeader dock={dock} onDock={setDock} />
 
-      <div className="shell__main">
+      <div className="shell__main modern:bg-pm-bg">
         {docked && dock.area === 'left' && extGui}
 
         <div className="shell__viewport">
@@ -267,7 +271,11 @@ export function AppShell() {
               data-testid="gutter"
               title={`internal_gui_width — drag to resize, double-click to collapse to ${ORTHO.controlMinWidth} px`}
             />
-            <div className="internal-gui" ref={columnRef} style={{ width: panelWidth }}>
+            <div
+              className="internal-gui modern:border-l-0 modern:bg-pm-panel"
+              ref={columnRef}
+              style={{ width: panelWidth }}
+            >
               {slotsForRegion('internal-gui').map((slot) => (
                 <FeatureSlot key={slot.id} id={slot.id} />
               ))}
@@ -316,7 +324,10 @@ function ExtGuiTitleBar({
   onChange: (next: (state: ExtGuiDockState) => ExtGuiDockState) => void;
 }) {
   return (
-    <div className="extgui__titlebar" data-testid="extgui-titlebar">
+    <div
+      className="extgui__titlebar modern:border-b modern:border-line modern:bg-pm-panel-alt"
+      data-testid="extgui-titlebar"
+    >
       <span className="extgui__title">External GUI</span>
       <span className="extgui__spacer" />
       {(['bottom', 'left', 'right'] as const).map((area) => (
@@ -378,7 +389,7 @@ function ShellHeader({
 
   if (isInstalled('menubar')) {
     return (
-      <div className="menubar">
+      <div className="menubar modern:h-8 modern:items-center modern:gap-0.5 modern:px-2 modern:border-b modern:border-line">
         <FeatureSlot id="menubar" />
         <span className="menubar__spacer" />
         {extGuiButton}
@@ -388,8 +399,10 @@ function ShellHeader({
   }
 
   return (
-    <div className="menubar">
-      <span className="menubar__title">PyMOL</span>
+    <div className="menubar modern:h-8 modern:items-center modern:gap-0.5 modern:px-2 modern:border-b modern:border-line">
+      <span className="menubar__title modern:text-[13px] modern:font-bold modern:tracking-[-0.01em] modern:normal-case modern:text-pm-text-bright">
+        PyMOL
+      </span>
       <span className="shell-chrome__note" title="WP-14 owns apps/web/src/features/menubar/**">
         menu bar not installed
       </span>
