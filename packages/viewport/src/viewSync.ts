@@ -50,6 +50,39 @@ export function viewReplyIsFresh(requestedEpoch: number, currentEpoch: number): 
 }
 
 /**
+ * Tracks how many times the client has advanced the view locally, so a
+ * `get_view()` reply can be rejected if the client moved on since it was
+ * requested. EVERY optimistic local view change — rotation AND pinch-zoom —
+ * must go through `advance()`; funnelling them here is what stops a future
+ * change from re-introducing the "stale reply clobbers the local view" bug on a
+ * path someone forgot to guard.
+ */
+export interface LocalViewTracker {
+  /** Capture this when issuing a `get_view()`; pass it back to `accepts`. */
+  readonly epoch: number;
+  /** Record that the client just advanced the view locally. */
+  advance(): void;
+  /** A reply captured at `capturedEpoch` is fresh iff nothing advanced since. */
+  accepts(capturedEpoch: number): boolean;
+}
+
+/** Build a {@link LocalViewTracker} starting at epoch 0. */
+export function createLocalViewTracker(): LocalViewTracker {
+  let epoch = 0;
+  return {
+    get epoch(): number {
+      return epoch;
+    },
+    advance(): void {
+      epoch++;
+    },
+    accepts(capturedEpoch: number): boolean {
+      return viewReplyIsFresh(capturedEpoch, epoch);
+    },
+  };
+}
+
+/**
  * True when the bridge rasterises nothing — a `--no-gl` backend. Either the
  * active pixel source or the raw one declaring `rasterizes === false` is
  * enough; `undefined` means "a stream is still expected" and is NOT a negative

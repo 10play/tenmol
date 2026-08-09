@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createRenderPolicy } from './renderPolicy';
 import {
+  createLocalViewTracker,
   handOffSceneToModeG,
   serverRasterisesNothing,
   shouldHandOffToModeG,
@@ -36,6 +37,42 @@ describe('viewReplyIsFresh', () => {
     let epoch = requestedAtEpoch;
     for (let i = 0; i < 4; i++) epoch++; // four more local turns land first
     expect(viewReplyIsFresh(requestedAtEpoch, epoch)).toBe(false);
+  });
+});
+
+describe('createLocalViewTracker', () => {
+  it('accepts a reply when nothing advanced the view since it was requested', () => {
+    const t = createLocalViewTracker();
+    const requested = t.epoch;
+    expect(t.accepts(requested)).toBe(true);
+  });
+
+  it('rejects a reply that a ROTATION advanced past', () => {
+    const t = createLocalViewTracker();
+    const requested = t.epoch; // get_view issued
+    t.advance(); // an optimistic rotation lands first
+    expect(t.accepts(requested)).toBe(false);
+  });
+
+  it('rejects a reply that a PINCH-ZOOM advanced past (the reported gap)', () => {
+    // The exact race the review named: a get_view() is in flight when a
+    // pinch-zoom updates the view. Before the fix, pinch did not advance the
+    // epoch and the stale reply clobbered the zoom. Now it must be rejected.
+    const t = createLocalViewTracker();
+    const requested = t.epoch;
+    t.advance(); // pinch.update advances the SAME tracker as rotation
+    expect(t.accepts(requested)).toBe(false);
+  });
+
+  it('rejects a reply outrun by a mix of rotation and pinch moves', () => {
+    const t = createLocalViewTracker();
+    const requested = t.epoch;
+    t.advance(); // rotate
+    t.advance(); // pinch
+    t.advance(); // rotate
+    expect(t.accepts(requested)).toBe(false);
+    // A reply requested at the CURRENT epoch is still fresh.
+    expect(t.accepts(t.epoch)).toBe(true);
   });
 });
 

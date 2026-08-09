@@ -31,10 +31,10 @@ import { repName } from '@tenmol/protocol';
 
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
 import {
+  createLocalViewTracker,
   handOffSceneToModeG,
   serverRasterisesNothing,
   shouldHandOffToModeG,
-  viewReplyIsFresh,
 } from './viewSync';
 import { createCompositor } from './compositor';
 import { createCameraDriver, type BandBox, type CameraCounters } from './input/camera';
@@ -121,10 +121,11 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   let view: ViewMatrix | null = null;
   let viewInFlight = false;
   let viewWanted = false;
-  // Bumped whenever the client advances the view locally (optimistic rotation).
-  // A `get_view` reply that was requested BEFORE the last local move is stale
-  // and must not clobber the newer client view, or a remote drag rubber-bands.
-  let localViewEpoch = 0;
+  // Advanced whenever the client moves the view locally (optimistic rotation OR
+  // pinch-zoom). A `get_view` reply requested BEFORE the last local move is
+  // stale and must not clobber the newer client view, or the camera rubber-bands
+  // on a remote link. EVERY local view change must go through `localView.advance`.
+  const localView = createLocalViewTracker();
   let lastInputAt = 0;
   let dirty = true;
   let destroyed = false;
@@ -381,13 +382,13 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       return;
     }
     viewInFlight = true;
-    const requestedAtEpoch = localViewEpoch;
+    const requestedAtEpoch = localView.epoch;
     void transport
       .call('get_view')
       .then((result) => {
         // Drop a reply the client has already moved past: the optimistic view
         // is newer and correct, and this stale server sample would snap it back.
-        if (!viewReplyIsFresh(requestedAtEpoch, localViewEpoch)) return;
+        if (!localView.accepts(requestedAtEpoch)) return;
         view = viewFromResult(result);
         renderer.setView(view);
         dirty = true;
@@ -444,7 +445,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     // `refreshView` keeps a stale reply from snapping the picture back mid-drag.
     onView: (next) => {
       view = next;
-      localViewEpoch++;
+      localView.advance();
       renderer.setView(next);
       dirty = true;
     },
@@ -535,6 +536,10 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
         if (view === null || pinchStartZ === null) return;
         const next = pinchZoom(view, pinchStartZ, totalScaleFactor);
         view = next;
+        // Same epoch invariant as optimistic rotation: a `get_view` reply in
+        // flight when this pinch lands is now stale and must be rejected, or it
+        // snaps the zoom back mid-gesture.
+        localView.advance();
         renderer.setView(next);
         dirty = true;
         // The backend stays authoritative: we round-trip through set_view
