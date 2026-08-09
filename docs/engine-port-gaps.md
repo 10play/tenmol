@@ -1,11 +1,47 @@
-# TypeScript engine — what's NOT implemented yet
+# TypeScript engine — coverage & remaining gaps
 
-A complete, honest map of the gap between the in-browser TypeScript engine
-(`@tenmol/engine-ts`, used on `?backend=local`) and real PyMOL. The remote
-backend (`?backend=remote`) drives real PyMOL and has none of these gaps; this
-document is only about the **client-side TypeScript port**.
+A map of the gap between the in-browser TypeScript engine (`@tenmol/engine-ts`,
+used on `?backend=local`) and real PyMOL. The remote backend (`?backend=remote`)
+drives real PyMOL; this document is only about the **client-side TypeScript port**.
 
-Legend: ✅ implemented · 🟡 partial / stub · ❌ not implemented.
+Legend: ✅ implemented · 🟡 partial / approximate · ❌ not implemented.
+
+## Status (after waves 1–5)
+
+The port now registers the **entire public `cmd.*` surface** (~346 verbs): every
+verb resolves to a handler — a real implementation where the browser allows it,
+or a documented, side-effect-free no-op for genuinely environment-bound verbs
+(file/network I/O, ray-to-disk). `NotPorted` now fires **only for unknown
+symbols**. **11 of 21 representations render client-side**: lines, sticks,
+spheres, nonbonded, nb_spheres, **cartoon, ribbon, surface, mesh, dots, dashes**.
+
+**Approximate / simplified (work, but not byte-parity — none are gated):**
+- **surface/mesh** — solvent-*accessible* surface (probe not rolled), not the
+  solvent-*excluded* surface; marching cubes at a fixed grid spacing.
+- **dss** — φ/ψ heuristic, not PyMOL's H-bond assignment.
+- **align/super** — LCS residue pairing + Kabsch, not the full DP sequence aligner
+  (no iterative outlier refinement; raw_score/cycles = 0).
+- **sculpt/minimize** — a real steepest-descent MM minimizer with illustrative
+  force constants, not PyMOL's exact `sculpt_*` field.
+- **maps/isosurfaces** — gaussian/vdw density + marching cubes; not experimental
+  map formats (MTZ/CCP4 loading is a no-op).
+- **symexp** — space-group operators embedded for P1/P21/P212121/C2 (others fall
+  back to identity + lattice).
+- **h_add**, **get_area** (dot-SASA), **morph**, **ramps** — reasonable ports.
+
+**Genuinely not modelled (documented no-ops):** file `load`/`fetch`/`save`/`png`,
+`ray`/`draw` to disk (WebGL already renders on screen), and other FS/OS-bound verbs.
+
+**Not yet rendered visually (data present, no viewport draw):**
+- **labels** — the label text/positions are stored, but the viewport has no text
+  overlay yet, so `label` shows nothing on screen.
+- **cell / ellipsoids / slice / volume / callback / CGO objects** reps.
+- Measurement **dash** styling is a solid line (no gap pattern) and the value
+  label is not drawn (same viewport-text gap as labels).
+
+The per-rep / per-command detail below predates waves 1–5 and is kept for
+reference on the harder items still worth deepening (SES surface, label text,
+volume rendering, ray tracing).
 
 As of this writing the port implements ~30 of PyMOL's ~424 API commands, 5 of 21
 representations, and a subset of the selection language. Everything else is
