@@ -1,0 +1,239 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  # ── Auto-review every PR ──────────────────────────────────────────────────
+  auto-review:
+    name: Auto Review PR
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Load review rules
+        run: |
+          rules_dir=".github/review-rules"
+          if [ -d "$rules_dir" ] && [ "$(ls "$rules_dir"/*.md 2>/dev/null)" ]; then
+            echo "# Review Rules" > /tmp/review-rules.md
+            echo "" >> /tmp/review-rules.md
+            echo "The following rules MUST be enforced in every review." >> /tmp/review-rules.md
+            echo "Flag violations using the severity notation defined in each rule." >> /tmp/review-rules.md
+            echo "" >> /tmp/review-rules.md
+            for f in "$rules_dir"/*.md; do
+              echo "---" >> /tmp/review-rules.md
+              cat "$f" >> /tmp/review-rules.md
+              echo "" >> /tmp/review-rules.md
+            done
+            echo "Loaded $(ls "$rules_dir"/*.md | wc -l) review rule(s)"
+          else
+            echo "(no review rules found)" > /tmp/review-rules.md
+            echo "No review rules found in $rules_dir"
+          fi
+
+      - name: Get PR metadata
+        id: meta
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            fs.writeFileSync('/tmp/pr-title.txt', context.payload.pull_request.title);
+            core.setOutput('number', context.issue.number);
+            core.setOutput('base', context.payload.pull_request.base.ref);
+
+      - name: Get PR diff
+        run: |
+          git fetch origin ${{ steps.meta.outputs.base }}
+          git diff origin/${{ steps.meta.outputs.base }}...HEAD \
+            -- ':!package-lock.json' ':!yarn.lock' ':!bun.lockb' \
+               ':!*.min.js' ':!*.min.css' ':!pnpm-lock.yaml' \
+            | head -c 60000 > /tmp/pr-diff.txt
+          echo "Diff: $(wc -c < /tmp/pr-diff.txt) bytes"
+
+      - name: Install Claude CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude review
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+        run: |
+          python3 - << 'PYEOF'
+          import subprocess, sys, os
+
+          pr_title   = open('/tmp/pr-title.txt').read().strip()
+          diff       = open('/tmp/pr-diff.txt').read().strip() or '(empty diff)'
+          rules      = open('/tmp/review-rules.md').read().strip()
+
+          prompt = (
+              "You are reviewing a pull request for the tenmol repo — "
+              "a React / TypeScript frontend with a Python + PyMOL WebSocket backend.\n\n"
+              f"{rules}\n\n"
+              "---\n\n"
+              f"PR: {pr_title}\n\nDiff:\n{diff}\n\n"
+              "Produce a structured review that checks compliance with every rule above:\n\n"
+              "## Summary\nOne paragraph describing what the PR does.\n\n"
+              "## Rule Violations\n"
+              "List any rule violations found, referencing the rule name.\n"
+              "- 🔴 Critical (bugs, security, data loss, undocumented PyMOL divergence)\n"
+              "- 🟡 Major (logic errors, missing tests, missing e2e coverage)\n"
+              "- 🔵 Minor (style, naming, small improvements)\n"
+              "Omit any severity with no issues.\n\n"
+              "## Other Issues\n"
+              "Non-rule issues (optional).\n\n"
+              "## Suggestions\nOptional improvements (not blocking).\n\n"
+              "## Verdict\n"
+              "One of: ✅ LGTM | ⚠️ Minor issues — merge after addressing | 🔴 Needs changes\n\n"
+              "Be concise and actionable."
+          )
+
+          result = subprocess.run(
+              ['claude', '-p', prompt],
+              capture_output=True, text=True, timeout=300
+          )
+          output = (result.stdout or result.stderr or '(no output)').strip()
+          open('/tmp/review-output.txt', 'w').write(output)
+          print(f"Claude returned {len(output)} chars")
+          sys.exit(0)
+          PYEOF
+
+      - name: Post review comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const review = fs.readFileSync('/tmp/review-output.txt', 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## 🤖 Claude Code Review\n\n${review}\n\n---\n_Comment \`@claude <question>\` to ask a follow-up._`
+            });
+
+  # ── Respond to @claude comments on PRs ───────────────────────────────────
+  respond-to-claude:
+    name: Respond to @claude
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Save comment and get PR info
+        id: info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            fs.writeFileSync('/tmp/user-comment.txt', context.payload.comment.body);
+
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            fs.writeFileSync('/tmp/pr-title.txt', pr.data.title);
+            core.setOutput('base', pr.data.base.ref);
+            core.setOutput('head', pr.data.head.ref);
+
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 10
+            });
+            const log = comments.data.slice(-10)
+              .map(c => `[${c.user.login}]: ${c.body}`)
+              .join('\n\n---\n\n');
+            fs.writeFileSync('/tmp/comments.txt', log);
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Load review rules
+        run: |
+          rules_dir=".github/review-rules"
+          if [ -d "$rules_dir" ] && [ "$(ls "$rules_dir"/*.md 2>/dev/null)" ]; then
+            echo "# Review Rules" > /tmp/review-rules.md
+            echo "" >> /tmp/review-rules.md
+            for f in "$rules_dir"/*.md; do
+              echo "---" >> /tmp/review-rules.md
+              cat "$f" >> /tmp/review-rules.md
+              echo "" >> /tmp/review-rules.md
+            done
+          else
+            echo "(no review rules)" > /tmp/review-rules.md
+          fi
+
+      - name: Get PR diff
+        run: |
+          git fetch origin ${{ steps.info.outputs.base }} ${{ steps.info.outputs.head }}
+          git diff origin/${{ steps.info.outputs.base }}...origin/${{ steps.info.outputs.head }} \
+            -- ':!package-lock.json' ':!yarn.lock' ':!bun.lockb' \
+               ':!*.min.js' ':!*.min.css' ':!pnpm-lock.yaml' \
+            | head -c 40000 > /tmp/pr-diff.txt
+
+      - name: Install Claude CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude response
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+        run: |
+          python3 - << 'PYEOF'
+          import subprocess, sys
+
+          pr_title  = open('/tmp/pr-title.txt').read().strip()
+          raw       = open('/tmp/user-comment.txt').read()
+          question  = raw.replace('@claude', '').strip()
+          diff      = open('/tmp/pr-diff.txt').read().strip() or '(empty diff)'
+          comments  = open('/tmp/comments.txt').read().strip()
+          rules     = open('/tmp/review-rules.md').read().strip()
+
+          prompt = (
+              "You are a code review assistant for the tenmol repo "
+              "(React / TypeScript frontend, Python/PyMOL WebSocket backend).\n\n"
+              f"{rules}\n\n"
+              "---\n\n"
+              f"PR: {pr_title}\n\nDiff (truncated):\n{diff}\n\n"
+              f"Recent PR comments:\n{comments}\n\n"
+              f"Question: {question}\n\n"
+              "Answer concisely and helpfully, keeping the review rules in mind. "
+              "Reference specific code when relevant."
+          )
+
+          result = subprocess.run(
+              ['claude', '-p', prompt],
+              capture_output=True, text=True, timeout=300
+          )
+          output = (result.stdout or result.stderr or '(no output)').strip()
+          open('/tmp/response-output.txt', 'w').write(output)
+          sys.exit(0)
+          PYEOF
+
+      - name: Post response
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const response = fs.readFileSync('/tmp/response-output.txt', 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🤖 **Claude:** ${response}`
+            });
