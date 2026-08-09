@@ -21,6 +21,26 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Load review rules
+        run: |
+          rules_dir=".github/review-rules"
+          if [ -d "$rules_dir" ] && [ "$(ls "$rules_dir"/*.md 2>/dev/null)" ]; then
+            echo "# Review Rules" > /tmp/review-rules.md
+            echo "" >> /tmp/review-rules.md
+            echo "The following rules MUST be enforced in every review." >> /tmp/review-rules.md
+            echo "Flag violations using the severity notation defined in each rule." >> /tmp/review-rules.md
+            echo "" >> /tmp/review-rules.md
+            for f in "$rules_dir"/*.md; do
+              echo "---" >> /tmp/review-rules.md
+              cat "$f" >> /tmp/review-rules.md
+              echo "" >> /tmp/review-rules.md
+            done
+            echo "Loaded $(ls "$rules_dir"/*.md | wc -l) review rule(s)"
+          else
+            echo "(no review rules found)" > /tmp/review-rules.md
+            echo "No review rules found in $rules_dir"
+          fi
+
       - name: Get PR metadata
         id: meta
         uses: actions/github-script@v7
@@ -48,23 +68,28 @@ jobs:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: |
           python3 - << 'PYEOF'
-          import subprocess, sys
+          import subprocess, sys, os
 
-          number = open('/tmp/pr-title.txt').read()  # reuse as filename carrier
-          pr_title = open('/tmp/pr-title.txt').read().strip()
-          diff = open('/tmp/pr-diff.txt').read().strip() or '(empty diff)'
+          pr_title   = open('/tmp/pr-title.txt').read().strip()
+          diff       = open('/tmp/pr-diff.txt').read().strip() or '(empty diff)'
+          rules      = open('/tmp/review-rules.md').read().strip()
 
           prompt = (
               "You are reviewing a pull request for the tenmol repo — "
-              "a React Native / TypeScript frontend with a Python + PyMOL WebSocket backend.\n\n"
+              "a React / TypeScript frontend with a Python + PyMOL WebSocket backend.\n\n"
+              f"{rules}\n\n"
+              "---\n\n"
               f"PR: {pr_title}\n\nDiff:\n{diff}\n\n"
-              "Produce a structured review:\n\n"
+              "Produce a structured review that checks compliance with every rule above:\n\n"
               "## Summary\nOne paragraph describing what the PR does.\n\n"
-              "## Issues\n"
-              "- 🔴 Critical (bugs, security, data loss)\n"
-              "- 🟡 Major (logic errors, missing error handling, performance)\n"
+              "## Rule Violations\n"
+              "List any rule violations found, referencing the rule name.\n"
+              "- 🔴 Critical (bugs, security, data loss, undocumented PyMOL divergence)\n"
+              "- 🟡 Major (logic errors, missing tests, missing e2e coverage)\n"
               "- 🔵 Minor (style, naming, small improvements)\n"
-              "Omit any category with no issues.\n\n"
+              "Omit any severity with no issues.\n\n"
+              "## Other Issues\n"
+              "Non-rule issues (optional).\n\n"
               "## Suggestions\nOptional improvements (not blocking).\n\n"
               "## Verdict\n"
               "One of: ✅ LGTM | ⚠️ Minor issues — merge after addressing | 🔴 Needs changes\n\n"
@@ -113,7 +138,6 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            // Save raw comment body to file — avoids all shell-quoting issues
             fs.writeFileSync('/tmp/user-comment.txt', context.payload.comment.body);
 
             const pr = await github.rest.pulls.get({
@@ -140,6 +164,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Load review rules
+        run: |
+          rules_dir=".github/review-rules"
+          if [ -d "$rules_dir" ] && [ "$(ls "$rules_dir"/*.md 2>/dev/null)" ]; then
+            echo "# Review Rules" > /tmp/review-rules.md
+            echo "" >> /tmp/review-rules.md
+            for f in "$rules_dir"/*.md; do
+              echo "---" >> /tmp/review-rules.md
+              cat "$f" >> /tmp/review-rules.md
+              echo "" >> /tmp/review-rules.md
+            done
+          else
+            echo "(no review rules)" > /tmp/review-rules.md
+          fi
+
       - name: Get PR diff
         run: |
           git fetch origin ${{ steps.info.outputs.base }} ${{ steps.info.outputs.head }}
@@ -163,14 +202,18 @@ jobs:
           question  = raw.replace('@claude', '').strip()
           diff      = open('/tmp/pr-diff.txt').read().strip() or '(empty diff)'
           comments  = open('/tmp/comments.txt').read().strip()
+          rules     = open('/tmp/review-rules.md').read().strip()
 
           prompt = (
               "You are a code review assistant for the tenmol repo "
-              "(React Native + TypeScript, Python/PyMOL WebSocket backend).\n\n"
+              "(React / TypeScript frontend, Python/PyMOL WebSocket backend).\n\n"
+              f"{rules}\n\n"
+              "---\n\n"
               f"PR: {pr_title}\n\nDiff (truncated):\n{diff}\n\n"
               f"Recent PR comments:\n{comments}\n\n"
               f"Question: {question}\n\n"
-              "Answer concisely and helpfully. Reference specific code when relevant."
+              "Answer concisely and helpfully, keeping the review rules in mind. "
+              "Reference specific code when relevant."
           )
 
           result = subprocess.run(
