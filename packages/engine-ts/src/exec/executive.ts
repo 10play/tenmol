@@ -8,6 +8,7 @@ import { Rep, REP_NAMES } from '@tenmol/protocol';
 import { repBit } from '../model/atom';
 import type { ObjectMolecule } from '../model/molecule';
 import { getColorIndex } from './color';
+import type { MeasurementObject } from './measurement';
 import {
   atomKey,
   countAtoms as selCount,
@@ -43,6 +44,8 @@ const DEFAULT_SETTINGS: Readonly<Record<string, number | string>> = {
 export class Executive {
   private readonly order: string[] = [];
   private readonly objects = new Map<string, ObjectMolecule>();
+  /** Measurement objects (distance/angle/dihedral), rendered as dashes. */
+  private readonly measures = new Map<string, MeasurementObject>();
   /** name -> stable atom identities (see selector `atomKey`). */
   private readonly selections = new Map<string, Set<string>>();
   private readonly settings = new Map<string, number | string>(Object.entries(DEFAULT_SETTINGS));
@@ -70,6 +73,21 @@ export class Executive {
     return this.order.map((n) => this.objects.get(n)!).filter(Boolean);
   }
 
+  /* --------------------------- measurements --------------------------- */
+
+  addMeasurement(m: MeasurementObject): void {
+    if (!this.objects.has(m.name) && !this.measures.has(m.name)) this.order.push(m.name);
+    this.measures.set(m.name, m);
+  }
+
+  measurement(name: string): MeasurementObject | undefined {
+    return this.measures.get(name);
+  }
+
+  measurementsInOrder(): MeasurementObject[] {
+    return this.order.map((n) => this.measures.get(n)!).filter(Boolean);
+  }
+
   /** A unique object name from `base`, PyMOL's `obj`, `obj_1`, ... disambiguation. */
   uniqueName(base: string): string {
     if (!this.objects.has(base) && !this.selections.has(base)) return base;
@@ -84,7 +102,7 @@ export class Executive {
   getNames(type = 'public_objects', enabledOnly = false): string[] {
     const objs = this.order.filter((n) => {
       if (n.startsWith('_') && type.startsWith('public')) return false;
-      if (enabledOnly && !this.objects.get(n)?.enabled) return false;
+      if (enabledOnly && !(this.objects.get(n)?.enabled ?? this.measures.get(n)?.enabled)) return false;
       return true;
     });
     const sels = [...this.selections.keys()].filter((n) => !(n.startsWith('_') && type.startsWith('public')));
@@ -108,10 +126,11 @@ export class Executive {
     if (pattern === 'all' || pattern === '*') {
       this.order.length = 0;
       this.objects.clear();
+      this.measures.clear();
       this.selections.clear();
       return;
     }
-    if (this.objects.delete(pattern)) {
+    if (this.objects.delete(pattern) || this.measures.delete(pattern)) {
       const i = this.order.indexOf(pattern);
       if (i >= 0) this.order.splice(i, 1);
     }

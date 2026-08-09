@@ -45,9 +45,9 @@ describe('Backend contract', () => {
 
   it('errors are the same class on both backends (NotAllowed/NotPorted)', async () => {
     await local.connect();
-    // The local engine rejects an unported symbol; the remote would reject an
+    // The local engine rejects an unknown symbol; the remote would reject an
     // ungranted one — both with a PymolError carrying a `.type`.
-    const err = await local.call('ray', []).catch((e: unknown) => e);
+    const err = await local.call('no_such_symbol_xyz', []).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(Error);
     expect((err as { type?: string }).type).toBe('NotPorted');
   });

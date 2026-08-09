@@ -259,11 +259,13 @@ describe('LocalBackend', () => {
     expect(await backend.call('count_atoms', ['name CA'])).toBe(EXPECTED.ca);
   });
 
-  it('rejects an unported symbol with a NotPorted PymolError', async () => {
+  it('rejects an unknown symbol with a NotPorted PymolError', async () => {
     const backend = new LocalBackend();
     await backend.connect();
-    await expect(backend.call('ray', [])).rejects.toBeInstanceOf(PymolError);
-    await backend.call('ray', []).catch((e: PymolError) => {
+    // A symbol that is not a PyMOL command at all still errors cleanly (the whole
+    // public API surface is now registered; unknown names are the only NotPorted).
+    await expect(backend.call('no_such_symbol_xyz', [])).rejects.toBeInstanceOf(PymolError);
+    await backend.call('no_such_symbol_xyz', []).catch((e: PymolError) => {
       expect(e.type).toBe('NotPorted');
     });
   });

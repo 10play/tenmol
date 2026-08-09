@@ -14,6 +14,7 @@
 
 import { TypedEmitter, PymolError, type BackendEvents } from '@tenmol/backend';
 import {
+  Rep,
   REP_NAMES,
   decodeBinaryFrame,
   encodeBinaryFrame,
@@ -30,6 +31,7 @@ import { getColorIndex, getColorTuple } from './exec/color';
 import { parsePdb } from './model/pdb';
 import { buildFragment } from './model/fragments';
 import { REP_BUILDERS, RENDERABLE_REPS, isRenderableRep } from './geometry/registry';
+import { buildMeasurementFrame } from './exec/measurement';
 import { parseCommand, splitCommands } from './cmd/parser';
 import { SelectionError } from './select/selector';
 import type { RegistrarCtx } from './cmd/registrar';
@@ -737,6 +739,17 @@ export class Engine {
           liveNow.add(geometryKey({ object: mol.name, state: 1, rep }));
         }
       }
+    }
+    // Measurement objects (distance/angle/dihedral) render as dashes.
+    for (const m of this.executive.measurementsInOrder()) {
+      if (!m.enabled) continue;
+      const buf = buildMeasurementFrame(m, this.seq);
+      if (!buf) continue;
+      this.seq++;
+      const frame = decodeBinaryFrame(buf);
+      this.emitter.emit('binary:frame', frame);
+      if (isGeometryFrame(frame)) this.emitter.emit('geometry:frame', frame);
+      liveNow.add(geometryKey({ object: m.name, state: 1, rep: Rep.Dash }));
     }
     // Any key that was live but produced nothing this pass (rep hidden, object
     // disabled/deleted, selection emptied) is DROPPED with a tombstone — an

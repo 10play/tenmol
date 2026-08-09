@@ -177,7 +177,7 @@ export function registerSymmetry(ctx: RegistrarCtx): void {
     const dst = resolveMolecule(ex, ctx.str(args[1]));
     if (!src || !dst || !src.cell) return 0;
     dst.cell = { ...src.cell };
-    dst.spacegroup = src.spacegroup;
+    if (src.spacegroup !== undefined) dst.spacegroup = src.spacegroup;
     return 1;
   });
 
@@ -307,7 +307,7 @@ export function registerSymmetry(ctx: RegistrarCtx): void {
               mate.states.push(out);
             }
             mate.cell = { ...mol.cell };
-            mate.spacegroup = mol.spacegroup;
+            if (mol.spacegroup !== undefined) mate.spacegroup = mol.spacegroup;
             ex.addMolecule(mate);
             created.push(name);
           }

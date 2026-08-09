@@ -29,6 +29,7 @@ import { registerRamps } from './ramps';
 import { registerMisc } from './misc';
 import { registerSculpt } from './sculpt';
 import { registerExtras } from './extras';
+import { registerDashes } from './dashes';
 
 /** Every subsystem registrar, applied in order to the engine's context. */
 export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
@@ -55,4 +56,5 @@ export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
   registerMisc,
   registerSculpt,
   registerExtras,
+  registerDashes,
 ];
