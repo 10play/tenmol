@@ -19,6 +19,8 @@ import { buildRibbonFrame } from './ribbon';
 import { buildSurfaceFrame } from './surface';
 import { buildMeshFrame } from './mesh';
 import { buildDotsFrame } from './dots';
+import { buildExtentFrame } from './extent';
+import { buildCellFrame } from './cell';
 
 /** Everything a rep geometry builder needs from the engine to build one frame. */
 export interface RepBuildCtx {
@@ -51,6 +53,8 @@ export const REP_BUILDERS: Partial<Record<RepId, RepBuilder>> = {
   [Rep.Surface]: buildSurfaceFrame,
   [Rep.Mesh]: buildMeshFrame,
   [Rep.Dot]: buildDotsFrame,
+  [Rep.Extent]: buildExtentFrame,
+  [Rep.Cell]: buildCellFrame,
 };
 
 /** The reps this engine can render in Mode G today (the registry's keys). */
