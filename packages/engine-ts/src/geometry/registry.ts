@@ -16,6 +16,9 @@ import {
 } from './frames';
 import { buildCartoonFrame } from './cartoon';
 import { buildRibbonFrame } from './ribbon';
+import { buildSurfaceFrame } from './surface';
+import { buildMeshFrame } from './mesh';
+import { buildDotsFrame } from './dots';
 
 /** Everything a rep geometry builder needs from the engine to build one frame. */
 export interface RepBuildCtx {
@@ -45,6 +48,9 @@ export const REP_BUILDERS: Partial<Record<RepId, RepBuilder>> = {
     buildNbSpheresFrame(mol, state, seq, getSettingFloat('nb_spheres_size') || 0.25),
   [Rep.Cartoon]: buildCartoonFrame,
   [Rep.Ribbon]: buildRibbonFrame,
+  [Rep.Surface]: buildSurfaceFrame,
+  [Rep.Mesh]: buildMeshFrame,
+  [Rep.Dot]: buildDotsFrame,
 };
 
 /** The reps this engine can render in Mode G today (the registry's keys). */

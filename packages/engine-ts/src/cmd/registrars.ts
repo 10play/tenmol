@@ -16,6 +16,13 @@ import { registerEditing } from './editing';
 import { registerDisplay } from './display';
 import { registerSettings2 } from './settings2';
 import { registerSystem } from './system';
+import { registerAlign } from './align';
+import { registerMaps } from './maps';
+import { registerBuilder } from './builder';
+import { registerExporters } from './exporters';
+import { registerSymmetry } from './symmetry';
+import { registerProps } from './props';
+import { registerControlflow } from './controlflow';
 
 /** Every subsystem registrar, applied in order to the engine's context. */
 export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
@@ -29,4 +36,11 @@ export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
   registerDisplay,
   registerSettings2,
   registerSystem,
+  registerAlign,
+  registerMaps,
+  registerBuilder,
+  registerExporters,
+  registerSymmetry,
+  registerProps,
+  registerControlflow,
 ];
