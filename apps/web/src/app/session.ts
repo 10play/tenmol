@@ -170,7 +170,12 @@ function createSession(initialConfig: BridgeConfig): Session {
     poller.kick();
     // The in-browser engine starts empty; load a demo protein once so the
     // client shows something out of the box (remote is left as the user left it).
-    if (config.backend === 'local' && !demoLoaded) {
+    // Skip in the render-only harness (`?render=1`) — it loads its own scene and
+    // the demo would race/clobber it.
+    const inRenderMode =
+      typeof location !== 'undefined' &&
+      new URLSearchParams(location.search).get('render') === '1';
+    if (config.backend === 'local' && !demoLoaded && !inRenderMode) {
       demoLoaded = true;
       void loadLocalDemo(conn);
     }

@@ -16,6 +16,7 @@
     "@tenmol/engine-ts": "workspace:*",
     "@tenmol/protocol": "workspace:*",
     "@tenmol/stores": "workspace:*",
+    "@tenmol/visual": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
