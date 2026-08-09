@@ -30,7 +30,12 @@ import type {
 import { repName } from '@tenmol/protocol';
 
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
-import { serverRasterisesNothing, viewReplyIsFresh } from './viewSync';
+import {
+  handOffSceneToModeG,
+  serverRasterisesNothing,
+  shouldHandOffToModeG,
+  viewReplyIsFresh,
+} from './viewSync';
 import { createCompositor } from './compositor';
 import { createCameraDriver, type BandBox, type CameraCounters } from './input/camera';
 import { createPickIndex, dispatchViewportPick } from './picking';
@@ -331,10 +336,9 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     // and each rep still degrades honestly with `no-accessor` if a pull says so.
     // On a normal GL backend this never runs, so the faithful Mode-P input,
     // picking and per-rep-toggle behaviour is left exactly as it was.
-    if (!modeGOwnsScene && webgl && renderer.available) {
+    if (shouldHandOffToModeG(webgl && renderer.available, modeGOwnsScene)) {
       modeGOwnsScene = true;
-      policy.setCaps({ accessor: true });
-      policy.setDefault('geometry');
+      handOffSceneToModeG(policy);
     }
   };
   syncStreamAvailability();
