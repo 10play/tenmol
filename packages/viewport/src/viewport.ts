@@ -30,6 +30,7 @@ import type {
 import { repName } from '@tenmol/protocol';
 
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
+import { serverRasterisesNothing, viewReplyIsFresh } from './viewSync';
 import { createCompositor } from './compositor';
 import { createCameraDriver, type BandBox, type CameraCounters } from './input/camera';
 import { createPickIndex, dispatchViewportPick } from './picking';
@@ -319,7 +320,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   // dropped by `compositor.shouldDraw`.
   let modeGOwnsScene = false;
   const syncStreamAvailability = (): void => {
-    if (pixelSource.rasterizes !== false && rawPixelSource.rasterizes !== false) return;
+    if (!serverRasterisesNothing(pixelSource.rasterizes, rawPixelSource.rasterizes)) return;
     compositor.setStreamAvailable(false);
     // The bridge rasterises NOTHING (a `--no-gl` backend): Mode G is the only
     // path to a picture, so hand it the whole scene. This runs the instant
@@ -382,7 +383,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       .then((result) => {
         // Drop a reply the client has already moved past: the optimistic view
         // is newer and correct, and this stale server sample would snap it back.
-        if (localViewEpoch !== requestedAtEpoch) return;
+        if (!viewReplyIsFresh(requestedAtEpoch, localViewEpoch)) return;
         view = viewFromResult(result);
         renderer.setView(view);
         dirty = true;
