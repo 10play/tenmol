@@ -102,9 +102,12 @@
   --sh-blur: saturate(140%) blur(24px);
 
   color-scheme: light;
-  /* the molecular scene + terminal read correctly only on a dark stage */
+  /* The molecular SCENE stays on a dark stage (the viewport is always dark), but
+     the dock console follows the light theme so it matches its own header + the
+     rest of the chrome. Its text flips dark to stay readable on the light bg. */
   --pm-bg-viewport: #05070a;
-  --sh-console-bg: #05070a;
+  --sh-console-bg: #ffffff;
+  --sh-console-text: #2b3245;
 }
 
 /* ================================================================== */
@@ -558,4 +561,52 @@
 }
 :root[data-ui-theme='shadcn'] .plugmgr__legacyleaf {
   color: var(--pm-text);
+}
+
+/* The console log colours are tuned for a dark terminal; on the LIGHT console
+   the amber/red lines drop below readable contrast, so darken them there. */
+:root[data-ui-theme='shadcn'][data-appearance='light'] .feedback__line--warning {
+  color: #b26a00;
+}
+:root[data-ui-theme='shadcn'][data-appearance='light'] .feedback__line--error {
+  color: #d11d3b;
+}
+:root[data-ui-theme='shadcn'][data-appearance='light'] .feedback__line--prompt {
+  color: #c2410c;
+}
+
+/* ================================================================== */
+/* 15. LAYOUT FIXES found in review.                                    */
+/* ================================================================== */
+
+/* LOADING PLACEHOLDER must not distort layout. An overlay panel is lazy, and
+   its Suspense fallback (`.feature-loading`, shell/FeatureSlot.tsx) rendered as
+   an in-flow div at the app root — adding a row BELOW the status bar while the
+   chunk loaded. The panel it stands in for is `position: absolute`, so the
+   placeholder should float too: a transient frosted chip, out of flow. */
+:root[data-ui-theme='shadcn'] .feature-loading {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  z-index: 70;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
+  border: 1px solid var(--sh-line-strong);
+  box-shadow: var(--sh-pop);
+  color: var(--pm-text-dim);
+}
+
+/* SINGLE SCROLL in the internal-gui column. The movie + scenes panels are their
+   own scroll containers (sticky heads), but when the column itself has to scroll
+   (all the panels' min-heights exceed its height) you get a scrollbar inside a
+   scrollbar. In modern, let those two panels expand to their content and let the
+   COLUMN be the one scroll container. */
+:root[data-ui-theme='shadcn'] .mvpanel,
+:root[data-ui-theme='shadcn'] .scpanel {
+  flex: 0 0 auto;
+  overflow: visible;
 }
