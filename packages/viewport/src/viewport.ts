@@ -30,6 +30,7 @@ import type {
 import { repName } from '@tenmol/protocol';
 
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
+import { createLabelOverlay, type LabelPoint } from './labels';
 import { createCompositor } from './compositor';
 import { createCameraDriver, type BandBox, type CameraCounters } from './input/camera';
 import { createPickIndex, dispatchViewportPick } from './picking';
@@ -78,6 +79,8 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   const onError = options.onError ?? ((error: Error) => console.warn('[tenmol/viewport]', error));
 
   const surface = createSurface(container);
+  const labelOverlay = createLabelOverlay(surface.overlay);
+  let labelsNeedUpdate = false;
   const webgl = isWebGL2Available();
 
   /** Objects Mode G may ask for. Fed by the app from the `objects` topic. */
@@ -641,10 +644,17 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   const loop = (): void => {
     if (destroyed) return;
     raf = requestAnimationFrame(loop);
+    const cameraChanged = dirty;
     if (dirty && renderer.available) {
       renderer.render();
       dirty = false;
     }
+    // Reproject text labels whenever the camera moved or the label set changed
+    // (they are locked to model-space atom positions).
+    if (labelOverlay.count > 0 && (cameraChanged || labelsNeedUpdate)) {
+      labelOverlay.render(view, sceneRect());
+    }
+    labelsNeedUpdate = false;
     stats.pixelFrames = presenter.stats.frames;
     stats.pixelFramesDropped = presenter.stats.dropped;
     stats.fps = presenter.stats.fps;
@@ -719,6 +729,10 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     stats,
     canvases: { pixel: surface.pixelCanvas, gl: surface.glCanvas },
     objects,
+    setLabels(labels: readonly LabelPoint[]): void {
+      labelOverlay.set(labels);
+      labelsNeedUpdate = true;
+    },
     setRepMode(rep: RepId, mode: RenderMode): RepRenderState {
       const state = policy.setRep(rep, mode);
       // `caps.accessor` starts false and is only flipped true when a geometry
@@ -819,6 +833,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     },
     destroy(): void {
       destroyed = true;
+      labelOverlay.destroy();
       if (raf !== null && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(raf);
       pause.destroy();
       clearInterval(viewPoll);

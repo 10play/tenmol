@@ -21,6 +21,7 @@ import { buildMeshFrame } from './mesh';
 import { buildDotsFrame } from './dots';
 import { buildExtentFrame } from './extent';
 import { buildCellFrame } from './cell';
+import { buildEllipsoidsFrame } from './ellipsoids';
 
 /** Everything a rep geometry builder needs from the engine to build one frame. */
 export interface RepBuildCtx {
@@ -55,6 +56,8 @@ export const REP_BUILDERS: Partial<Record<RepId, RepBuilder>> = {
   [Rep.Dot]: buildDotsFrame,
   [Rep.Extent]: buildExtentFrame,
   [Rep.Cell]: buildCellFrame,
+  [Rep.Ellipsoid]: ({ mol, state, seq, getSettingFloat }) =>
+    buildEllipsoidsFrame(mol, state, seq, (getSettingFloat('ellipsoid_scale') || 1) * 1.5382),
 };
 
 /** The reps this engine can render in Mode G today (the registry's keys). */

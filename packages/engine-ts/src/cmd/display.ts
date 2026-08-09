@@ -239,6 +239,27 @@ export function registerDisplay(ctx: RegistrarCtx): void {
     return out;
   });
 
+  /**
+   * Labels WITH model-space coordinates, for the viewport's text overlay:
+   * `{object, id, x, y, z, text}` per labelled atom in the selection. The client
+   * projects (x,y,z) with the camera each frame; positions are camera-independent
+   * so this only needs re-reading when labels or coordinates change.
+   */
+  ctx.command('get_labels', (args): Json => {
+    const selection = str(args[0], 'all') || 'all';
+    const state = Number(args[1] ?? 0) || 1;
+    const out: Array<{ object: string; id: number; x: number; y: number; z: number; text: string }> = [];
+    for (const ua of ex.atomsMatching(selection)) {
+      const text = ATOM_LABEL.get(ua.atom);
+      if (text === undefined) continue;
+      const mol = ex.molecule(ua.objName);
+      if (!mol) continue;
+      const [x, y, z] = mol.coord(ua.index, state > 0 ? state : 1);
+      out.push({ object: ua.objName, id: ua.atom.id, x, y, z, text });
+    }
+    return out;
+  });
+
   /* ------------------------------- set_vis ------------------------------ */
 
   // `cmd.set_vis(dict)` restores a visibility snapshot from `cmd.get_vis`. The

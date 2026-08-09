@@ -37,6 +37,12 @@ export interface AtomInfo {
   /** Secondary structure: 'H' (helix), 'S' (strand), or '' (loop/unassigned). */
   ss: string;
   /**
+   * Anisotropic displacement (ADP) from an ANISOU record, in Å²:
+   * [U11, U22, U33, U12, U13, U23]. Absent for atoms without ANISOU (the
+   * `ellipsoids` rep then falls back to an isotropic B-factor sphere).
+   */
+  u?: readonly [number, number, number, number, number, number];
+  /**
    * Per-rep visibility bitmask (PyMOL `visRep`). Bit `1 << rep` set means that
    * rep is shown for this atom. Ported from the `visRep` int in `AtomInfoType`.
    */

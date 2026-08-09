@@ -78,6 +78,8 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
   let inModel = false;
   let seenAtomsThisModel = 0;
   const serialToIndex = new Map<number, number>();
+  /** serial -> ANISOU U matrix [U11,U22,U33,U12,U13,U23] in Å² (record is ×1e-4). */
+  const anisou = new Map<number, [number, number, number, number, number, number]>();
   let firstModelDone = false;
 
   const flushState = (): void => {
@@ -103,6 +105,18 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
         mol.cell = { a, b, c, alpha, beta, gamma };
         const sg = col(line, 56, 66).trim();
         mol.spacegroup = sg || 'P 1';
+      }
+      continue;
+    }
+    if (rec === 'ANISOU') {
+      // U11(29-35) U22(36-42) U33(43-49) U12(50-56) U13(57-63) U23(64-70),
+      // integers in 1e-4 Å². Keyed by serial to attach to the matching atom.
+      const serial = parseInt(col(line, 7, 11).trim(), 10);
+      const u = ([
+        [29, 35], [36, 42], [43, 49], [50, 56], [57, 63], [64, 70],
+      ] as const).map(([a, b]) => (parseInt(col(line, a, b).trim(), 10) || 0) * 1e-4);
+      if (Number.isFinite(serial)) {
+        anisou.set(serial, [u[0]!, u[1]!, u[2]!, u[3]!, u[4]!, u[5]!]);
       }
       continue;
     }
@@ -182,6 +196,14 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
     for (const s of [12, 17, 22, 27]) {
       const other = serialToIndex.get(parseInt(line.slice(s - 1, s + 4).trim(), 10));
       if (other !== undefined) addBond(base, other);
+    }
+  }
+
+  // Attach ANISOU ADPs to their atoms (by serial), for the ellipsoids rep.
+  if (anisou.size > 0) {
+    for (const [serial, idx] of serialToIndex) {
+      const u = anisou.get(serial);
+      if (u && mol.atoms[idx]) mol.atoms[idx]!.u = u;
     }
   }
 
