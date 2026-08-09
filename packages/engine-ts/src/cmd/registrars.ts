@@ -23,6 +23,10 @@ import { registerExporters } from './exporters';
 import { registerSymmetry } from './symmetry';
 import { registerProps } from './props';
 import { registerControlflow } from './controlflow';
+import { registerWizards } from './wizards';
+import { registerMovie2 } from './movie2';
+import { registerRamps } from './ramps';
+import { registerMisc } from './misc';
 
 /** Every subsystem registrar, applied in order to the engine's context. */
 export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
@@ -43,4 +47,8 @@ export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
   registerSymmetry,
   registerProps,
   registerControlflow,
+  registerWizards,
+  registerMovie2,
+  registerRamps,
+  registerMisc,
 ];
