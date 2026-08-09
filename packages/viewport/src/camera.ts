@@ -186,9 +186,11 @@ export function pinchZoom(view: ViewMatrix, startZ: number, totalScaleFactor: nu
 }
 
 /**
- * Apply `cmd.turn(axis, degrees)` to a view matrix locally, so a GL-free client
- * can render a rotation WITHOUT the `cmd.turn` + `get_view` round trip that
- * otherwise caps a remote drag at one frame per RTT (measured ~2 fps).
+ * tenmol-only: apply `cmd.turn(axis, degrees)` to a view matrix locally, so a
+ * GL-free client can render a rotation WITHOUT the `cmd.turn` + `get_view` round
+ * trip that otherwise caps a remote drag at one frame per RTT (measured ~2 fps).
+ * PyMOL stays authoritative — this only advances the client between the turns it
+ * has already sent, and `get_view` reconciles the moment the drag pauses.
  *
  * The relationship is `R' = R · Raxis(-degrees)`, verified byte-for-byte against
  * a live bridge for x, y, z and composed drags (`cmd.turn('y',θ)` on identity

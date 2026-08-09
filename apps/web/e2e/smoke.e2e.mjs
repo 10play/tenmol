@@ -790,6 +790,77 @@ export const tests = [
   },
   {
     /**
+     * THE DEFAULT PRODUCTION GL-FREE PATH — the one the frozen-viewport fix
+     * repairs, and the one the sibling spec above deliberately routes around.
+     *
+     * That spec passes `?viewportPull=off` and calls `setRepMode` by hand to
+     * isolate Mode G. This one ships the real configuration: `withFallback`'s
+     * dev PNG pull fallback is LIVE, and nothing bootstraps Mode G manually. The
+     * bug was that the pull fallback reported `rasterizes: true` and its
+     * header-less frames pinned the compositor at `rasterizing: true`, which
+     * suppressed Mode G and left the picture frozen. So here the client must, on
+     * its own: detect the GL-free bridge, refuse the doomed fallback, hand the
+     * scene to Mode G, and rotate on a drag.
+     */
+    name: 'GL-free (default config): auto-hands the scene to Mode G and rotates',
+    async fn({ noGl, assert }) {
+      const stack = await noGl();
+      // NOTE: no `viewportPull=off` — `withFallback` is fully in play.
+      const page = await openApp(stack, { query: '?viewportHandle=1' });
+      await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
+
+      const health = await (await fetch(stack.healthz)).json();
+      assert(health.gl?.available === false, 'this stack was supposed to have no GL');
+
+      await run(page, 'load packages/engine/test/dat/1tii.pdb, gf', 2600);
+      await run(page, 'hide everything', 900);
+      await run(page, 'show cartoon', 1800);
+      await run(page, 'orient', 1600);
+
+      // NO manual setRepMode: the fix must bootstrap Mode G by itself. Poll a
+      // few seconds for the hand-off to land and the first geometry to draw.
+      let stats;
+      for (let i = 0; i < 20; i++) {
+        stats = await page.evaluate(() =>
+          JSON.parse(JSON.stringify(window.__tenmolViewport.stats)),
+        );
+        if (stats.geometryTriangles > 1000 && stats.composition.rasterizing === false) break;
+        await page.waitForTimeout(500);
+      }
+      assert(
+        stats.composition.rasterizing === false,
+        'the pull fallback pinned rasterizing=true (Mode G suppressed)',
+      );
+      assert(
+        stats.geometryTriangles > 1000,
+        `Mode G did not auto-engage (${stats.geometryTriangles} tris)`,
+      );
+
+      // A drag must rotate the view even in the default config.
+      const box = await page.locator('canvas').first().boundingBox();
+      const cx = box.x + box.width / 2;
+      const cy = box.y + box.height / 2;
+      const before = await ask(page, 'round(cmd.get_view()[0], 4)');
+      await page.mouse.move(cx, cy);
+      await page.mouse.down();
+      for (let k = 1; k <= 12; k++) {
+        await page.mouse.move(cx + k * 8, cy);
+        await page.waitForTimeout(45);
+      }
+      await page.mouse.up();
+      await page.waitForTimeout(1600);
+      assert(
+        (await ask(page, 'round(cmd.get_view()[0], 4)')) !== before,
+        'the camera did not move',
+      );
+
+      const after = await (await fetch(stack.healthz)).json();
+      assert(after.draws === 0, `the server drew ${after.draws} times`);
+      await page.close();
+    },
+  },
+  {
+    /**
      * The Text Editor writing to the PyMOL host.
      *
      * This is the spec that would have caught the bug it now guards:

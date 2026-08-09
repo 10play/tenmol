@@ -143,9 +143,11 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       transport,
       onUnavailable: (error) => {
         // No pixel producer at all. That is the GL-free backend, not a broken
-        // one: tell the compositor the server rasterises nothing, or Mode G
-        // waits forever for a `reps` header that will never arrive.
-        compositor.setStreamAvailable(false);
+        // one: route through `syncStreamAvailability` (NOT a bare
+        // `setStreamAvailable(false)`) so the same Mode-G scene hand-off a
+        // caller-supplied source gets also runs on the built-in default source,
+        // or Mode G waits forever for a `reps` header that will never arrive.
+        syncStreamAvailability();
         onError(new Error(`Mode P stream unavailable: ${error.message}`));
       },
     });
@@ -428,10 +430,13 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     call: (fn, args = []) => transport.call(fn, [...args]),
     onError,
     view: () => view,
-    // Optimistic rotation: render the drag now instead of a round trip later.
-    // Marks the local view newer than any in-flight `get_view` (see the epoch
-    // guard in `refreshView`), so the authoritative reply reconciles on the
-    // next idle sample rather than snapping the picture back mid-drag.
+    // tenmol-only: optimistic rotation. PyMOL is the source of truth for the
+    // view, but on a GL-free bridge waiting for `cmd.turn`+`get_view` per drag
+    // sample caps rotation at ~1 fps/RTT. We render the turn locally NOW and let
+    // `get_view` reconcile once the drag pauses — a transient, self-correcting
+    // divergence, and only on the GL-free path (the driver is consulted solely
+    // when `compositor.state.rasterizing === false`). The epoch guard in
+    // `refreshView` keeps a stale reply from snapping the picture back mid-drag.
     onView: (next) => {
       view = next;
       localViewEpoch++;
