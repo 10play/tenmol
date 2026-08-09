@@ -182,4 +182,56 @@ export function registerWizards(ctx: RegistrarCtx): void {
     }
     return null;
   });
+
+  /* ----------------------- app panel RPC endpoints ---------------------- */
+  // The web app's Wizard panel polls `wizards.probe` and, when a wizard is
+  // active, `wizards.snapshot`; the launcher reads `wizards.catalog`. These are
+  // the app<->engine RPCs (not PyMOL cmd verbs), returning the live stack state.
+
+  let version = 0;
+  let lastSig = '';
+  const clsOf = (w: Wizard): string => w.name.charAt(0).toUpperCase() + w.name.slice(1);
+  const probe = (): Json => {
+    const t = top();
+    const sig = `${stack.length}|${t?.name ?? ''}`;
+    if (sig !== lastSig) {
+      version++;
+      lastSig = sig;
+    }
+    return {
+      version,
+      depth: stack.length,
+      cls: t ? clsOf(t) : null,
+      module: t ? `pymol.wizard.${t.name}` : null,
+    };
+  };
+  ctx.command('wizards.probe', probe);
+  ctx.command('wizards.snapshot', () => {
+    const base = probe() as Record<string, unknown>;
+    const t = top();
+    return {
+      ...base,
+      stack: stack.map((w) => ({ cls: clsOf(w), module: `pymol.wizard.${w.name}` })),
+      panel: [],
+      prompt: t ? t.prompt : [],
+      eventMask: 0,
+      methods: [],
+      errors: [],
+      promptMode: t ? 2 : 0,
+    };
+  });
+  ctx.command('wizards.catalog', () => ({ wizards: [], menubar: [], aliases: { distance: 'measurement' } }));
+  ctx.command('wizards.launch', (args) => {
+    const name = args[0] == null ? '' : String(args[0]);
+    if (name && name.toLowerCase() !== 'none') stack.push(makeWizard(name));
+    return probe();
+  });
+  ctx.command('wizards.dismiss', (_args, kwargs) => {
+    if (kwargs.all) stack.length = 0;
+    else stack.pop();
+    return probe();
+  });
+  ctx.command('wizards.menu', () => ({ tag: '', items: [] }));
+  ctx.command('wizards.event', () => probe());
+  ctx.command('wizards.exec_code', () => null);
 }

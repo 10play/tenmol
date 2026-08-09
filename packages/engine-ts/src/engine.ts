@@ -529,6 +529,20 @@ export class Engine {
     h('get_movie_locked', () => 0);
     h('get_movie_length', () => 0);
     h('get_movie_playing', () => 0);
+    // The web movie panel's aggregate poll. Mirrors the shape its fallback
+    // builds from the individual getters (movie/movieSource.ts).
+    h('get_movie_status', () => ({
+      frame: 1,
+      state: 1,
+      nframes: 0,
+      length: 0,
+      playing: false,
+      locked: false,
+      rocking: false,
+      fps: null,
+      sceneCurrent: null,
+      settings: {},
+    }));
     h('get_object_list', () => ex.getNames('objects'));
     h('get_names_of_type', () => []);
     h('get_type', () => 'object:molecule');
@@ -599,6 +613,14 @@ export class Engine {
     h('_engine.atom_report', (args) => this.atomReport(str(args[0], 'all') || 'all'));
 
     h('get_model', (args) => this.getModel(str(args[0], 'all') || 'all'));
+    // `cmd.do(line)` — run a command line through the console. Mirrors the
+    // Backend `do()` method for callers that reach it via `call('cmd.do', ...)`
+    // (the movie panel bootstrap, macros). Errors are echoed to feedback, not
+    // thrown, exactly like the console.
+    h('do', (args) => {
+      this.do(str(args[0], ''));
+      return null;
+    });
 
     // Subsystems in their own modules register their `cmd.*` handlers here.
     const ctx: RegistrarCtx = {

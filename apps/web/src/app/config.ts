@@ -47,7 +47,9 @@ const REMOTE_SUBDOMAINS = new Set(['pymol', 'bridge', 'remote']);
  *   2. `VITE_TENMOL_BACKEND` — build/dev-time default.
  *   3. The subdomain of `window.location.hostname` — the production switch: two
  *      subdomains, two engines (`ts.example` -> local, `pymol.example` -> remote).
- *   4. `'remote'` — the default that preserves today's behaviour.
+ *   4. `'local'` — the default: the fully in-browser TypeScript engine, so the
+ *      app renders with no bridge. Use `?backend=remote` (or a remote subdomain)
+ *      for the real-PyMOL bridge.
  */
 export function resolveBackendKind(): BackendKind {
   const fromQuery = readBackendFromLocation();
@@ -61,7 +63,7 @@ export function resolveBackendKind(): BackendKind {
     if (LOCAL_SUBDOMAINS.has(label)) return 'local';
     if (REMOTE_SUBDOMAINS.has(label)) return 'remote';
   }
-  return 'remote';
+  return 'local';
 }
 
 function readBackendFromLocation(): BackendKind | null {

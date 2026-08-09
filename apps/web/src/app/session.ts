@@ -83,6 +83,41 @@ export function getSession(): Session {
   return singleton;
 }
 
+/**
+ * Load a demo protein into the empty in-browser engine so the local backend
+ * shows something on first open. Fetches crambin (1CRN); if offline, falls back
+ * to a built-in fragment. Never clobbers an existing scene.
+ */
+async function loadLocalDemo(conn: Backend): Promise<void> {
+  try {
+    const names = await conn.call<string[]>('get_names', ['objects']);
+    if (Array.isArray(names) && names.length > 0) return; // user already has objects
+  } catch {
+    /* fall through and try to load */
+  }
+  try {
+    const res = await fetch('https://files.rcsb.org/download/1CRN.pdb');
+    if (!res.ok) throw new Error(`fetch ${res.status}`);
+    const pdb = await res.text();
+    await conn.call('read_pdbstr', [pdb, '1crn']);
+    await conn.call('dss', []);
+    await conn.call('hide', ['everything']);
+    await conn.call('show', ['cartoon']);
+    await conn.call('spectrum', ['count', 'rainbow', 'name CA']);
+    await conn.call('orient', []);
+    return;
+  } catch {
+    /* offline (no network): fall back to a built-in fragment so the scene isn't empty */
+  }
+  try {
+    await conn.call('fragment', ['trp']);
+    await conn.call('show', ['sticks']);
+    await conn.call('orient', []);
+  } catch {
+    /* nothing else we can do; leave the scene empty */
+  }
+}
+
 function createSession(initialConfig: BridgeConfig): Session {
   let config = initialConfig;
 
@@ -124,6 +159,7 @@ function createSession(initialConfig: BridgeConfig): Session {
 
   /* ---------------- transport -> stores ---------------- */
 
+  let demoLoaded = false;
   conn.on('connection:open', () => {
     // The bridge replays its whole feedback ring on `{t:'sub',topic:'feedback'}`
     // — including on the resubscribe `@tenmol/client` performs automatically
@@ -132,6 +168,12 @@ function createSession(initialConfig: BridgeConfig): Session {
     stores.connection.opened();
     objectsSource.invalidate();
     poller.kick();
+    // The in-browser engine starts empty; load a demo protein once so the
+    // client shows something out of the box (remote is left as the user left it).
+    if (config.backend === 'local' && !demoLoaded) {
+      demoLoaded = true;
+      void loadLocalDemo(conn);
+    }
   });
 
   conn.on('connection:close', ({ code, reason }) => {
