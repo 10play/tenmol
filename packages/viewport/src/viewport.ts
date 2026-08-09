@@ -285,22 +285,6 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     onError,
   });
 
-  // A source that says up front it will never rasterise (a null source, or a
-  // bridge with no GL context) must not leave the compositor waiting for a
-  // `PixelFrameHeader.reps` that is never coming: `currentFrame()` returns null
-  // until either a frame arrives or this is called, and a null frame means
-  // "assume the server draws everything", i.e. Mode G draws nothing. Without
-  // this, `?viewportModeP=off` — and every GL-free backend — is a black
-  // viewport with a green Mode-G badge. MEASURED: Mode G reported 0 frames and
-  // 0 draws with `_bridge.pull_geometry` answered ok, because every frame was
-  // dropped by `compositor.shouldDraw`.
-  const syncStreamAvailability = (): void => {
-    if (pixelSource.rasterizes === false || rawPixelSource.rasterizes === false) {
-      compositor.setStreamAvailable(false);
-    }
-  };
-  syncStreamAvailability();
-
   /* ---------------------------------------------------------- policy */
 
   const policy = createRenderPolicy({
@@ -317,6 +301,36 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       compositor.setPolicy(states);
     },
   });
+
+  // A source that says up front it will never rasterise (a null source, or a
+  // bridge with no GL context) must not leave the compositor waiting for a
+  // `PixelFrameHeader.reps` that is never coming: `currentFrame()` returns null
+  // until either a frame arrives or this is called, and a null frame means
+  // "assume the server draws everything", i.e. Mode G draws nothing. Without
+  // this, `?viewportModeP=off` — and every GL-free backend — is a black
+  // viewport with a green Mode-G badge. MEASURED: Mode G reported 0 frames and
+  // 0 draws with `_bridge.pull_geometry` answered ok, because every frame was
+  // dropped by `compositor.shouldDraw`.
+  let modeGOwnsScene = false;
+  const syncStreamAvailability = (): void => {
+    if (pixelSource.rasterizes !== false && rawPixelSource.rasterizes !== false) return;
+    compositor.setStreamAvailable(false);
+    // The bridge rasterises NOTHING (a `--no-gl` backend): Mode G is the only
+    // path to a picture, so hand it the whole scene. This runs the instant
+    // `rasterizing` flips false — BEFORE any geometry is pulled — so the frames
+    // the compositor now requests are drawn, not dropped, and the draw watchdog
+    // never degrades a rep that was about to appear. `accessor` is trusted here:
+    // a GL-free build that also lacked the accessor could draw nothing at all,
+    // and each rep still degrades honestly with `no-accessor` if a pull says so.
+    // On a normal GL backend this never runs, so the faithful Mode-P input,
+    // picking and per-rep-toggle behaviour is left exactly as it was.
+    if (!modeGOwnsScene && webgl && renderer.available) {
+      modeGOwnsScene = true;
+      policy.setCaps({ accessor: true });
+      policy.setDefault('geometry');
+    }
+  };
+  syncStreamAvailability();
 
   /* ------------------------------------------------------------ view */
 
