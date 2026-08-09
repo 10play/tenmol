@@ -49,6 +49,7 @@ import {
 } from './butmode';
 import { MODE_NAME_DICT, type ModeName } from './modes';
 import { isModeName, tableForMode } from './mouseConfig';
+import { turnView, type ViewMatrix } from '../camera';
 
 /** Degrees of rotation per pixel dragged. PyMOL's own trackball is ~0.5. */
 const DEG_PER_PX = 0.5;
@@ -111,6 +112,15 @@ export interface CameraDriverOptions {
   onBand?: (box: BandBox | null) => void;
   /** `cmd.get_view()`, for the slab arithmetic the wheel actions need. */
   view?: () => readonly number[] | null;
+  /**
+   * Optimistic local view sink. When set, a rotation drag applies the same
+   * `cmd.turn` to the view matrix client-side and pushes it here immediately,
+   * so the picture updates at the display's frame rate instead of waiting a
+   * `cmd.turn` + `get_view` round trip per sample — which on a remote GL-free
+   * bridge caps a drag at ~1 fps/RTT (measured ~2 fps). `cmd.turn` is still
+   * sent and `get_view` still reconciles, so the server stays authoritative.
+   */
+  onView?: (view: ViewMatrix) => void;
 }
 
 /** One drag sample: the motion since the last, plus button and modifiers. */
@@ -299,6 +309,20 @@ export function createCameraDriver(options: CameraDriverOptions): CameraDriver {
     void options.call(fn, args).catch(fail);
   };
 
+  /**
+   * Mirror a rotation drag onto the local view matrix so it renders now, not a
+   * round trip later. Same math and same axes as the `cmd.turn` calls it sits
+   * beside; `get_view` still corrects any drift once the drag pauses.
+   */
+  const turnLocally = (turns: readonly (readonly ['x' | 'y' | 'z', number])[]): void => {
+    if (options.onView === undefined) return;
+    const current = options.view?.();
+    if (current == null) return;
+    let next = current as ViewMatrix;
+    for (const [axis, deg] of turns) next = turnView(next, axis, deg);
+    options.onView(next);
+  };
+
   async function readMode(): Promise<void> {
     const [name, selMode, names] = await Promise.all([
       options.call('cmd.get_setting_text', ['button_mode_name']),
@@ -408,12 +432,18 @@ export function createCameraDriver(options: CameraDriverOptions): CameraDriver {
         // feel like one.
         if (dx !== 0) run('cmd.turn', ['y', dx * degPerPx], 'turns');
         if (dy !== 0) run('cmd.turn', ['x', dy * degPerPx], 'turns');
+        turnLocally([
+          ...(dx !== 0 ? ([['y', dx * degPerPx]] as const) : []),
+          ...(dy !== 0 ? ([['x', dy * degPerPx]] as const) : []),
+        ]);
         return;
       case ACT['rotz']:
         if (dx !== 0) run('cmd.turn', ['z', dx * degPerPx], 'turns');
+        turnLocally(dx !== 0 ? [['z', dx * degPerPx]] : []);
         return;
       case ACT['irtz']:
         if (dx !== 0) run('cmd.turn', ['z', -dx * degPerPx], 'turns');
+        turnLocally(dx !== 0 ? [['z', -dx * degPerPx]] : []);
         return;
       case ACT['move']:
         // Screen right is +x. Screen DOWN is -y in PyMOL's frame, so dy is

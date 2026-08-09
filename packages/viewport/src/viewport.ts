@@ -115,6 +115,10 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   let view: ViewMatrix | null = null;
   let viewInFlight = false;
   let viewWanted = false;
+  // Bumped whenever the client advances the view locally (optimistic rotation).
+  // A `get_view` reply that was requested BEFORE the last local move is stale
+  // and must not clobber the newer client view, or a remote drag rubber-bands.
+  let localViewEpoch = 0;
   let lastInputAt = 0;
   let dirty = true;
   let destroyed = false;
@@ -370,9 +374,13 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       return;
     }
     viewInFlight = true;
+    const requestedAtEpoch = localViewEpoch;
     void transport
       .call('get_view')
       .then((result) => {
+        // Drop a reply the client has already moved past: the optimistic view
+        // is newer and correct, and this stale server sample would snap it back.
+        if (localViewEpoch !== requestedAtEpoch) return;
         view = viewFromResult(result);
         renderer.setView(view);
         dirty = true;
@@ -420,6 +428,16 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     call: (fn, args = []) => transport.call(fn, [...args]),
     onError,
     view: () => view,
+    // Optimistic rotation: render the drag now instead of a round trip later.
+    // Marks the local view newer than any in-flight `get_view` (see the epoch
+    // guard in `refreshView`), so the authoritative reply reconciles on the
+    // next idle sample rather than snapping the picture back mid-drag.
+    onView: (next) => {
+      view = next;
+      localViewEpoch++;
+      renderer.setView(next);
+      dirty = true;
+    },
     /**
      * The object under the press, for the object and view actions — PyMOL
      * takes the same thing from `LastPicked` (`SceneMouse.cpp:1512`).

@@ -21,6 +21,7 @@ import {
   modelViewMatrix,
   pinchZoom,
   projectionMatrix,
+  turnView,
   viewChanged,
   viewFromResult,
   type ViewMatrix,
@@ -67,6 +68,31 @@ describe('camera', () => {
     assert.throws(() => viewFromResult('nope'), TypeError);
     assert.throws(() => viewFromResult([1, 2, 3]), RangeError);
     assert.throws(() => viewFromResult([...VIEW_18.slice(0, 17), Number.NaN]), TypeError);
+  });
+
+  test('turnView applies cmd.turn locally: R · Raxis(-deg), leaving the rest', () => {
+    // Identity rotation, non-trivial translation/clip/origin.
+    const identityRot = [
+      1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -100, 5, 6, 7, 40, 200, -20,
+    ] as unknown as ViewMatrix;
+    const y30 = turnView(identityRot, 'y', 30);
+    // Verified byte-for-byte against a live bridge: cmd.turn('y',30) on identity
+    // is Ry(-30).
+    const expect = [0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254];
+    for (let i = 0; i < 9; i++) assert.ok(Math.abs((y30[i] as number) - expect[i]!) < 1e-6);
+    // Everything past the 3x3 is untouched, exactly as cmd.turn leaves it.
+    for (let i = 9; i < 18; i++) assert.equal(y30[i], identityRot[i]);
+  });
+
+  test('turnView composes and is orthonormal (a full x+y drag stays a rotation)', () => {
+    const base = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -100, 5, 6, 7, 40, 200, -20] as unknown as ViewMatrix;
+    const composed = turnView(turnView(base, 'y', 8), 'x', 5);
+    // Rows stay unit length and mutually orthogonal — no shear crept in.
+    const row = (m: ViewMatrix, r: number) => [m[r * 3] as number, m[r * 3 + 1] as number, m[r * 3 + 2] as number];
+    const dot = (a: number[], b: number[]) => a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
+    for (let r = 0; r < 3; r++) assert.ok(Math.abs(dot(row(composed, r), row(composed, r)) - 1) < 1e-6);
+    assert.ok(Math.abs(dot(row(composed, 0), row(composed, 1))) < 1e-6);
+    assert.ok(Math.abs(dot(row(composed, 0), row(composed, 2))) < 1e-6);
   });
 
   test('field of view: |view[17]| > 1 is degrees, otherwise the default', () => {
