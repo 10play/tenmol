@@ -28,6 +28,13 @@ on:
   push:
     branches: [master, web-client, "wp-*"]
   pull_request:
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "scripts/**"
+      - "tools/**"
+      - "docs/**"
+      - ".github/workflows/webclient-ci.yml"
   workflow_dispatch:
 
 # `github.event_name` is in the key on purpose: without it the push run
