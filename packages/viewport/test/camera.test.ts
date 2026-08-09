@@ -84,6 +84,18 @@ describe('camera', () => {
     for (let i = 9; i < 18; i++) assert.equal(y30[i], identityRot[i]);
   });
 
+  test('turnView pins the x and z axes to exact values, like y', () => {
+    const id = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -100, 0, 0, 0, 40, 200, -20] as unknown as ViewMatrix;
+    const c = Math.cos(Math.PI / 6); // cos 30°
+    const s = Math.sin(Math.PI / 6); // sin 30°
+    // cmd.turn(axis, 30) = R · Raxis(-30); on identity that IS Raxis(-30).
+    const near = (m: ViewMatrix, want: number[]) => {
+      for (let i = 0; i < 9; i++) assert.ok(Math.abs((m[i] as number) - want[i]!) < 1e-6);
+    };
+    near(turnView(id, 'x', 30), [1, 0, 0, 0, c, s, 0, -s, c]); // Rx(-30)
+    near(turnView(id, 'z', 30), [c, s, 0, -s, c, 0, 0, 0, 1]); // Rz(-30)
+  });
+
   test('turnView composes and is orthonormal (a full x+y drag stays a rotation)', () => {
     const base = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -100, 5, 6, 7, 40, 200, -20] as unknown as ViewMatrix;
     const composed = turnView(turnView(base, 'y', 8), 'x', 5);

@@ -56,6 +56,22 @@ describe('camera driver', () => {
     expect([...seen[0]!]).toEqual([...expected]);
   });
 
+  it('mirrors a z-axis rotation (irtz) onto the local view too', () => {
+    const seen: ViewMatrix[] = [];
+    // `three_button_maestro` is the mode that actually binds a drag to a Z
+    // rotation: middle + ctrl -> `irtz` (inverted rotate about Z).
+    const { d, calls } = driver({
+      mode: () => 'three_button_maestro',
+      view: () => VIEW as unknown as ViewMatrix,
+      onView: (v) => seen.push(v),
+    });
+    d.drag({ dx: 8, dy: 0, button: 1, mod: 2 });
+    // irtz inverts the angle, and the local turn must use the SAME sign.
+    expect(calls).toContainEqual({ fn: 'cmd.turn', args: ['z', -8] });
+    expect(seen).toHaveLength(1);
+    expect([...seen[0]!]).toEqual([...turnView(VIEW as unknown as ViewMatrix, 'z', -8)]);
+  });
+
   it('does not touch the local view when there is no onView sink or no view', () => {
     // No onView: nothing to mirror to, and no throw.
     const a = driver({ view: () => VIEW as unknown as ViewMatrix });
