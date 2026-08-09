@@ -854,6 +854,40 @@ export const tests = [
         'the camera did not move',
       );
 
+      // Pinch-zoom must ALSO work and stick, on the same GL-free path. The
+      // browser delivers a trackpad pinch as `wheel` with `ctrlKey` set; the
+      // viewport applies it optimistically and round-trips `set_view`, and the
+      // epoch guard must keep an in-flight `get_view` from snapping it back.
+      // This exercises the `pinch.update -> localView.advance()` wiring end to
+      // end (regression: pinch used to skip the epoch bump).
+      const zoomBefore = Number(await ask(page, 'round(cmd.get_view()[11], 3)'));
+      for (let k = 0; k < 8; k++) {
+        // The input controller listens for `wheel` on the GL canvas; dispatch to
+        // every canvas in the host so the right one gets it regardless of order.
+        await page.evaluate(([x, y]) => {
+          const host = document.querySelector('[data-tenmol-viewport]') ?? document;
+          for (const el of host.querySelectorAll('canvas')) {
+            el.dispatchEvent(
+              new window.WheelEvent('wheel', {
+                deltaY: -40,
+                ctrlKey: true,
+                clientX: x,
+                clientY: y,
+                bubbles: true,
+                cancelable: true,
+              }),
+            );
+          }
+        }, [cx, cy]);
+        await page.waitForTimeout(60);
+      }
+      await page.waitForTimeout(1600);
+      const zoomAfter = Number(await ask(page, 'round(cmd.get_view()[11], 3)'));
+      assert(
+        Number.isFinite(zoomBefore) && Number.isFinite(zoomAfter) && zoomAfter !== zoomBefore,
+        `pinch-zoom did not change the camera distance (${zoomBefore} -> ${zoomAfter})`,
+      );
+
       const after = await (await fetch(stack.healthz)).json();
       assert(after.draws === 0, `the server drew ${after.draws} times`);
       await page.close();
