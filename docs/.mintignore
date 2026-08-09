@@ -8,3 +8,6 @@
 feature-parity.md
 code-ownership.md
 README.md
+# A GitHub-facing engineering inventory (links to source files, not site pages),
+# so Mintlify must neither render nor broken-link-check it.
+UI-MODERNIZATION-MAP.md
