@@ -193,7 +193,7 @@ def str2bool(v: str) -> bool:
 class options:
     osx_frameworks = True
     jobs = int(os.getenv("JOBS", 0))
-    libxml = False
+    libxml = True
     glut = False
     use_msgpackc = "guess"
     testing = False
@@ -395,7 +395,7 @@ class build_ext_pymol(build_ext):
         # example of build args
         build_args = ["--config", config]
         if not WIN:  # Win /MP flag on compilation level
-            cpu_count = options.jobs or os.cpu_count() or 1
+            cpu_count = os.cpu_count() or 1
             build_args += [f"-j{cpu_count}"]
 
         os.chdir(str(build_temp))

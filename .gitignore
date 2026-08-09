@@ -87,3 +87,8 @@ packages/engine/testing/timings.tab
 .claude/settings.local.json
 .claude/.state/
 .claude/STOP
+
+# --- local browser-capture debug artifacts + scratch screenshots (never commit) -
+/.playwright-mcp/
+/*.png
+apps/web/.env

@@ -1,2 +1,0 @@
-[      54ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://100.71.244.15:3005/node_modules/.vite/deps/react-dom_client.js?v=8f0d52c6:20102
-[     456ms] [WARNING] [viewport] this bridge has no GL context; Mode P is unavailable. Use Mode G (_bridge.pull_geometry) or cmd.ray. @ http://100.71.244.15:3005/src/features/viewport/ViewportPanel.tsx:77
