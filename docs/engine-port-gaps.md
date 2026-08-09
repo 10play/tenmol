@@ -12,8 +12,20 @@ The port now registers the **entire public `cmd.*` surface** (~346 verbs): every
 verb resolves to a handler — a real implementation where the browser allows it,
 or a documented, side-effect-free no-op for genuinely environment-bound verbs
 (file/network I/O, ray-to-disk). `NotPorted` now fires **only for unknown
-symbols**. **11 of 21 representations render client-side**: lines, sticks,
-spheres, nonbonded, nb_spheres, **cartoon, ribbon, surface, mesh, dots, dashes**.
+symbols**. **15 of 21 representations render client-side**: lines, sticks,
+spheres, nonbonded, nb_spheres, **cartoon, ribbon, surface, mesh, dots, dashes,
+extent, cell, ellipsoids** (ANISOU with a B-factor fallback), and **labels**
+(a camera-projected DOM text overlay in the viewport).
+
+The remaining 6 rep slots are specialised or inapplicable, not core structure:
+- **angles / dihedrals** — effectively drawn already: the `distance`/`angle`/
+  `dihedral` commands create measurement objects rendered as dashes.
+- **callback** — Python draw callbacks; **not applicable** to a JS engine.
+- **cgo** — user-drawn CGO; no CGO-creation command is in the ported scope.
+- **volume / slice** — volumetric electron-density rendering, a separate WebGL2
+  3-D-texture raymarching subsystem (the protocol excludes volume from geometry
+  frames; the map grid data exists via `get_volume_field`, but the renderer and
+  its data channel are a distinct graphics workstream).
 
 **Approximate / simplified (work, but not byte-parity — none are gated):**
 - **surface/mesh** — solvent-*accessible* surface (probe not rolled), not the
