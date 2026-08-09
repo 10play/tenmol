@@ -18,6 +18,20 @@ export interface Extent {
   center: [number, number, number];
 }
 
+/**
+ * Crystallographic unit-cell parameters (from the PDB `CRYST1` record). Lengths
+ * `a,b,c` are in Ångström, angles `alpha,beta,gamma` in degrees — the same six
+ * numbers PyMOL stores in `CCrystal` (`packages/engine/layer2/Crystal.h`).
+ */
+export interface CrystalCell {
+  a: number;
+  b: number;
+  c: number;
+  alpha: number;
+  beta: number;
+  gamma: number;
+}
+
 export class ObjectMolecule {
   readonly kind = 'object:molecule' as const;
   /** Atom table, shared across states, in load order. */
@@ -28,6 +42,13 @@ export class ObjectMolecule {
   readonly bonds: Array<[number, number]> = [];
   /** Whether the object is enabled (shown) in the executive. */
   enabled = true;
+  /**
+   * Unit-cell parameters from `CRYST1`, or `undefined` when the file carried no
+   * crystal record. Read by the symmetry commands (`get_symmetry`, `symexp`).
+   */
+  cell?: CrystalCell;
+  /** Space-group symbol from `CRYST1` (e.g. `'P 21 21 21'`), or `undefined`. */
+  spacegroup?: string;
 
   constructor(readonly name: string) {}
 

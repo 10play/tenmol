@@ -89,6 +89,23 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
 
   for (const line of lines) {
     const rec = col(line, 1, 6);
+    if (rec === 'CRYST1') {
+      // CRYST1: a(7-15) b(16-24) c(25-33) alpha(34-40) beta(41-47) gamma(48-54)
+      // sGroup(56-66) z(67-70). Store the cell only when the lengths parse; a
+      // malformed/blank CRYST1 must leave the molecule unit-cell-free.
+      const a = parseFloat(col(line, 7, 15));
+      const b = parseFloat(col(line, 16, 24));
+      const c = parseFloat(col(line, 25, 33));
+      const alpha = parseFloat(col(line, 34, 40));
+      const beta = parseFloat(col(line, 41, 47));
+      const gamma = parseFloat(col(line, 48, 54));
+      if ([a, b, c, alpha, beta, gamma].every((v) => Number.isFinite(v))) {
+        mol.cell = { a, b, c, alpha, beta, gamma };
+        const sg = col(line, 56, 66).trim();
+        mol.spacegroup = sg || 'P 1';
+      }
+      continue;
+    }
     if (rec === 'MODEL ') {
       if (inModel) flushState();
       inModel = true;
