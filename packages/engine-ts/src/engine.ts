@@ -636,6 +636,7 @@ export class Engine {
     // Subsystems in their own modules register their `cmd.*` handlers here.
     const ctx: RegistrarCtx = {
       command: (name, fn) => void this.handlers.set(name, fn),
+      call: (name, args = [], kwargs = {}) => this.call(name, args, kwargs),
       executive: ex,
       publish: () => this.publish(),
       emitView: () => this.emitView(),

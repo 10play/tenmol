@@ -30,6 +30,11 @@ import { registerMisc } from './misc';
 import { registerSculpt } from './sculpt';
 import { registerExtras } from './extras';
 import { registerDashes } from './dashes';
+import { registerPreset } from './preset';
+import { registerUtil2 } from './util2';
+import { registerMovieNs } from './movie3';
+import { registerGuiNs } from './guins';
+import { registerTopics } from './topics';
 
 /** Every subsystem registrar, applied in order to the engine's context. */
 export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
@@ -57,4 +62,11 @@ export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
   registerSculpt,
   registerExtras,
   registerDashes,
+  // Namespace + topic ports (registered last so a real handler overrides any
+  // earlier documented no-op of the same name).
+  registerPreset,
+  registerUtil2,
+  registerMovieNs,
+  registerGuiNs,
+  registerTopics,
 ];
