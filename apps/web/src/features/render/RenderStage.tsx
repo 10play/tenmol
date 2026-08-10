@@ -7,7 +7,13 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { createViewport, Rep, type LabelPoint, type ViewportHandle } from '@tenmol/viewport';
+import {
+  createStreamPixelSource,
+  createViewport,
+  Rep,
+  type LabelPoint,
+  type ViewportHandle,
+} from '@tenmol/viewport';
 import { sceneById, type Scene } from '@tenmol/visual';
 
 import { useSession, type Session } from '../../app';
@@ -33,34 +39,42 @@ function setReady(v: RenderReady): void {
   (window as unknown as { __tenmolRenderReady?: RenderReady }).__tenmolRenderReady = v;
 }
 
-/** Resolve once the geometry stream has quiesced (or after a hard timeout). */
-function settle(viewport: ViewportHandle): Promise<void> {
+/**
+ * Resolve once the render has quiesced. In local mode that means the Mode-G
+ * geometry stream stopped arriving with real geometry present; in remote mode it
+ * means PyMOL's Mode-P pixel stream settled (its lossless PNG "still" has landed).
+ * A long hard cap guards a genuinely stuck/empty scene.
+ */
+function settle(viewport: ViewportHandle, remote: boolean): Promise<void> {
   return new Promise((resolve) => {
     let last = -1;
     let stable = 0;
     let ticks = 0;
     const check = (): void => {
       const s = viewport.stats;
-      const frames = s.geometryFrames ?? 0;
+      const frames = remote ? (s.pixelFrames ?? 0) : (s.geometryFrames ?? 0);
       if (frames === last) stable += 1;
       else {
         stable = 0;
         last = frames;
       }
       ticks += 1;
-      const hasGeometry = (s.geometryTriangles ?? 0) > 0 || (s.geometryInstances ?? 0) > 0;
-      // Settle = geometry has ARRIVED and the frame count has been stable for a
-      // beat. The engine can be slow to build/push (the perf problem this suite
-      // exists to fix), so wait for real geometry rather than a short timeout.
-      // The long hard cap only guards a genuinely stuck/empty scene.
-      if ((stable >= 12 && hasGeometry) || ticks > 1200) resolve();
+      const has = remote
+        ? (s.pixelFrames ?? 0) > 0
+        : (s.geometryTriangles ?? 0) > 0 || (s.geometryInstances ?? 0) > 0;
+      if ((stable >= 12 && has) || ticks > 1200) resolve();
       else requestAnimationFrame(check);
     };
     requestAnimationFrame(check);
   });
 }
 
-async function runScene(session: Session, viewport: ViewportHandle, scene: Scene): Promise<void> {
+async function runScene(
+  session: Session,
+  viewport: ViewportHandle,
+  scene: Scene,
+  remote: boolean,
+): Promise<void> {
   const conn = session.conn;
   const obj = scene.obj ?? scene.pdb.replace(/\.pdb$/, '');
   const pdb = await (await fetch(`/visual/${scene.pdb}`)).text();
@@ -69,21 +83,35 @@ async function runScene(session: Session, viewport: ViewportHandle, scene: Scene
   for (const [method, ...args] of scene.ops) await conn.call(method, args);
   for (const [name, value] of scene.settings ?? []) await conn.call('set', [name, value]);
   await conn.call('bg_color', [scene.bg]);
-  if (scene.view && scene.view.length === 18) await conn.call('set_view', [scene.view]);
+  // Frame with the EXACT camera the PyMOL reference used (views.json, written by
+  // the reference generator), so the TS render lines up pixel-for-pixel. Fall
+  // back to orient+zoom when no committed view exists yet (dev / new scene).
+  let view = scene.view;
+  if (!view || view.length !== 18) {
+    try {
+      const views = (await (await fetch('/visual/views.json')).json()) as Record<string, number[]>;
+      const v = views[scene.id];
+      if (Array.isArray(v) && v.length === 18) view = v;
+    } catch {
+      /* no committed views yet */
+    }
+  }
+  if (view && view.length === 18) await conn.call('set_view', [view]);
   else {
     await conn.call('orient', []);
     await conn.call('zoom', []);
   }
-  // Mirror the object into the viewport and pull every rep it might draw.
+  // Local (Mode-G): mirror the object + pull every rep the scene might draw.
+  // Remote (Mode-P): PyMOL rasterises server-side, so this is a harmless no-op.
   viewport.objects.clear();
   viewport.objects.add(obj);
-  for (const rep of RENDER_REPS) viewport.requestGeometry(obj, rep, -1);
-  if (scene.labels) {
+  if (!remote) for (const rep of RENDER_REPS) viewport.requestGeometry(obj, rep, -1);
+  if (scene.labels && !remote) {
     const labels = await conn.call('get_labels', ['all']);
     if (Array.isArray(labels)) viewport.setLabels(labels as unknown as LabelPoint[]);
   }
   viewport.refreshView();
-  await settle(viewport);
+  await settle(viewport, remote);
 }
 
 export function RenderStage(): React.JSX.Element {
@@ -101,11 +129,17 @@ export function RenderStage(): React.JSX.Element {
     host.style.height = `${height}px`;
 
     const transport = createSessionTransport(session);
+    // Remote backend: capture PyMOL's own Mode-P render (real-time GL) as the
+    // reference. Local backend: our Mode-G three.js render. Same harness, same
+    // scene, same size/camera -> directly comparable.
+    const remote = session.config.backend === 'remote';
     const viewport = createViewport({
       container: host,
       transport,
-      pixelSource: NULL_PIXEL_SOURCE,
-      policy: { default: 'geometry' as const, perRep: [] },
+      pixelSource: remote ? createStreamPixelSource({ transport, onUnavailable: () => {} }) : NULL_PIXEL_SOURCE,
+      policy: remote
+        ? { default: 'pixel' as const, perRep: [] }
+        : { default: 'geometry' as const, perRep: [] },
       maxDpr: dpr,
       onError: (error) => console.warn('[render]', error.message),
     });
@@ -116,7 +150,7 @@ export function RenderStage(): React.JSX.Element {
     if (!scene) {
       setReady({ ok: false, err: `unknown scene '${id}'`, scene: id, stats: viewport.stats });
     } else {
-      runScene(session, viewport, scene)
+      runScene(session, viewport, scene, remote)
         .then(() => setReady({ ok: true, err: null, scene: id, stats: viewport.stats }))
         .catch((e: unknown) =>
           setReady({ ok: false, err: e instanceof Error ? e.message : String(e), scene: id, stats: viewport.stats }),
