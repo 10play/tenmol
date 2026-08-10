@@ -2,264 +2,111 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
-  issue_comment:
-    types: [created]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
 
 jobs:
-  # ── Auto-review every PR ──────────────────────────────────────────────────
-  auto-review:
-    name: Auto Review PR
-    if: github.event_name == 'pull_request'
+  claude-review:
+    name: claude-review
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      issues: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Load review rules
+      - name: Review
+        id: review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          use_sticky_comment: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Review this pull request. Read CLAUDE.md first — it holds the
+            repository's conventions, and a change that violates them is a
+            finding.
+
+            Classify every finding as exactly one of:
+
+            **blocking** — the PR must not merge as-is:
+              - Correctness bugs, unhandled errors, race conditions
+              - Security issues: injection, secret leakage, unsafe input handling
+              - Type unsoundness: `any`, non-null `!` assertions, or `@ts-ignore`
+                used to silence a real error
+              - A new or changed export that is not documented in an `.mdx` page
+                under `apps/docs`, or a docs page that was not added to
+                `navigation` in `apps/docs/docs.json`
+              - Docs that contradict the code they describe
+              - A new package with no `typecheck` script or no `tsconfig.json`
+                extending `tsconfig.base.json`
+              - Dependency placement that breaks the workspace rules in
+                CLAUDE.md (runtime deps at the root, missing `workspace:`
+                protocol, npm/yarn lockfiles)
+
+            **suggestion** — worth saying, must not block: naming, style,
+            structure preferences, optional refactors, praise.
+
+            Be strict about the documentation rule: this repository requires
+            that every exported symbol is documented in Mintlify. Be
+            conservative about everything else — do not invent problems, and do
+            not report a finding you have not verified by reading the code. If
+            the PR is clean, return an empty `findings` array.
+
+            Leave inline comments for specific issues and prefix each one with
+            its severity. Then return the structured summary.
+
+            Budget your turns: returning the structured summary is the one
+            mandatory step. On a large diff, review breadth-first, stop
+            commenting before you run low on turns, and always end by
+            returning the structured summary with everything found so far.
+          claude_args: |
+            --max-turns 100
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"
+            --json-schema '{"type":"object","additionalProperties":false,"required":["summary","findings"],"properties":{"summary":{"type":"string","description":"One-paragraph verdict on the PR"},"findings":{"type":"array","description":"Every issue found; empty if the PR is clean","items":{"type":"object","additionalProperties":false,"required":["severity","file","description"],"properties":{"severity":{"type":"string","enum":["blocking","suggestion"]},"file":{"type":"string"},"description":{"type":"string"}}}}}}'
+
+      - name: Enforce review verdict
+        env:
+          VERDICT: ${{ steps.review.outputs.structured_output }}
         run: |
-          rules_dir=".github/review-rules"
-          if [ -d "$rules_dir" ] && [ "$(ls "$rules_dir"/*.md 2>/dev/null)" ]; then
-            echo "# Review Rules" > /tmp/review-rules.md
-            echo "" >> /tmp/review-rules.md
-            echo "The following rules MUST be enforced in every review." >> /tmp/review-rules.md
-            echo "Flag violations using the severity notation defined in each rule." >> /tmp/review-rules.md
-            echo "" >> /tmp/review-rules.md
-            for f in "$rules_dir"/*.md; do
-              echo "---" >> /tmp/review-rules.md
-              cat "$f" >> /tmp/review-rules.md
-              echo "" >> /tmp/review-rules.md
-            done
-            echo "Loaded $(ls "$rules_dir"/*.md | wc -l) review rule(s)"
-          else
-            echo "(no review rules found)" > /tmp/review-rules.md
-            echo "No review rules found in $rules_dir"
+          if [ -z "$VERDICT" ]; then
+            echo "::error::The review did not produce a structured verdict, so the PR could not be assessed."
+            exit 1
           fi
 
-      - name: Get PR metadata
-        id: meta
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            fs.writeFileSync('/tmp/pr-title.txt', context.payload.pull_request.title);
-            core.setOutput('number', context.issue.number);
-            core.setOutput('base', context.payload.pull_request.base.ref);
+          echo "$VERDICT" | jq -r '.summary'
+          echo
 
-      - name: Get PR diff
-        run: |
-          git fetch origin ${{ steps.meta.outputs.base }}
-          git diff origin/${{ steps.meta.outputs.base }}...HEAD \
-            -- ':!package-lock.json' ':!yarn.lock' ':!bun.lockb' \
-               ':!*.min.js' ':!*.min.css' ':!pnpm-lock.yaml' \
-            | head -c 60000 > /tmp/pr-diff.txt
-          echo "Diff: $(wc -c < /tmp/pr-diff.txt) bytes"
+          # Newlines must be %0A-escaped or GitHub truncates the annotation.
+          echo "$VERDICT" | jq -r '
+            .findings[]
+            | "::\(if .severity == "blocking" then "error" else "notice" end) file=\(.file)::[\(.severity)] \(.description | gsub("\n"; "%0A"))"
+          '
 
-      - name: Install Claude CLI
-        run: npm install -g @anthropic-ai/claude-code
+          blocking=$(echo "$VERDICT" | jq '[.findings[] | select(.severity == "blocking")] | length')
 
-      - name: Run Claude review
-        env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
-        run: |
-          python3 - << 'PYEOF'
-          import subprocess, sys, os
+          {
+            echo "## Claude code review"
+            echo
+            echo "$VERDICT" | jq -r '.summary'
+            echo
+            echo "| Severity | File | Finding |"
+            echo "| --- | --- | --- |"
+            echo "$VERDICT" | jq -r '.findings[] | "| \(.severity) | `\(.file)` | \(.description | gsub("\n"; " ")) |"'
+          } >> "$GITHUB_STEP_SUMMARY"
 
-          pr_title   = open('/tmp/pr-title.txt').read().strip()
-          diff       = open('/tmp/pr-diff.txt').read().strip() or '(empty diff)'
-          rules      = open('/tmp/review-rules.md').read().strip()
-
-          prompt = (
-              "You are reviewing a pull request for the tenmol repo — "
-              "a React / TypeScript frontend with a Python + PyMOL WebSocket backend.\n\n"
-              f"{rules}\n\n"
-              "---\n\n"
-              f"PR: {pr_title}\n\nDiff:\n{diff}\n\n"
-              "Produce a structured review that checks compliance with every rule above:\n\n"
-              "## Summary\nOne paragraph describing what the PR does.\n\n"
-              "## Rule Violations\n"
-              "List any rule violations found, referencing the rule name.\n"
-              "- 🔴 Critical (bugs, security, data loss, undocumented PyMOL divergence)\n"
-              "- 🟡 Major (logic errors, missing tests, missing e2e coverage)\n"
-              "- 🔵 Minor (style, naming, small improvements)\n"
-              "Omit any severity with no issues.\n\n"
-              "## Other Issues\n"
-              "Non-rule issues (optional).\n\n"
-              "## Suggestions\nOptional improvements (not blocking).\n\n"
-              "## Verdict\n"
-              "One of: ✅ LGTM | ⚠️ Minor issues — merge after addressing | 🔴 Needs changes\n\n"
-              "Be concise and actionable."
-          )
-
-          # This review is ADVISORY: it only posts a comment, and the step
-          # ends in sys.exit(0) precisely so a review problem never red-flags
-          # the PR. A bare `timeout=` breaks that contract -- subprocess.run
-          # raises TimeoutExpired, which propagates and fails the step (this is
-          # exactly what happened: `claude -p` on a large diff took >300 s and
-          # the job died before the sys.exit(0) below). Catch it so a slow
-          # review degrades to a notice instead of a red build, and give a real
-          # review more room (600 s) before we give up on it.
-          try:
-              result = subprocess.run(
-                  ['claude', '-p', prompt],
-                  capture_output=True, text=True, timeout=600
-              )
-              output = (result.stdout or result.stderr or '(no output)').strip()
-          except subprocess.TimeoutExpired:
-              print("claude review timed out; posting a graceful notice", file=sys.stderr)
-              output = (
-                  "_Claude did not finish reviewing within the time budget "
-                  "(the diff may be large). This advisory check is non-blocking; "
-                  "comment `@claude` to request a review._"
-              )
-          open('/tmp/review-output.txt', 'w').write(output)
-          print(f"Claude returned {len(output)} chars")
-          sys.exit(0)
-          PYEOF
-
-      - name: Post review comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const review = fs.readFileSync('/tmp/review-output.txt', 'utf8');
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `## 🤖 Claude Code Review\n\n${review}\n\n---\n_Comment \`@claude <question>\` to ask a follow-up._`
-            });
-
-  # ── Respond to @claude comments on PRs ───────────────────────────────────
-  respond-to-claude:
-    name: Respond to @claude
-    if: |
-      github.event_name == 'issue_comment' &&
-      github.event.issue.pull_request != null &&
-      contains(github.event.comment.body, '@claude')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      issues: write
-    steps:
-      - name: Save comment and get PR info
-        id: info
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            fs.writeFileSync('/tmp/user-comment.txt', context.payload.comment.body);
-
-            const pr = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number
-            });
-            fs.writeFileSync('/tmp/pr-title.txt', pr.data.title);
-            core.setOutput('base', pr.data.base.ref);
-            core.setOutput('head', pr.data.head.ref);
-
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              per_page: 10
-            });
-            const log = comments.data.slice(-10)
-              .map(c => `[${c.user.login}]: ${c.body}`)
-              .join('\n\n---\n\n');
-            fs.writeFileSync('/tmp/comments.txt', log);
-
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Load review rules
-        run: |
-          rules_dir=".github/review-rules"
-          if [ -d "$rules_dir" ] && [ "$(ls "$rules_dir"/*.md 2>/dev/null)" ]; then
-            echo "# Review Rules" > /tmp/review-rules.md
-            echo "" >> /tmp/review-rules.md
-            for f in "$rules_dir"/*.md; do
-              echo "---" >> /tmp/review-rules.md
-              cat "$f" >> /tmp/review-rules.md
-              echo "" >> /tmp/review-rules.md
-            done
-          else
-            echo "(no review rules)" > /tmp/review-rules.md
+          if [ "$blocking" -gt 0 ]; then
+            echo "::error::$blocking blocking issue(s) found — see the review comments."
+            exit 1
           fi
 
-      - name: Get PR diff
-        run: |
-          git fetch origin ${{ steps.info.outputs.base }} ${{ steps.info.outputs.head }}
-          git diff origin/${{ steps.info.outputs.base }}...origin/${{ steps.info.outputs.head }} \
-            -- ':!package-lock.json' ':!yarn.lock' ':!bun.lockb' \
-               ':!*.min.js' ':!*.min.css' ':!pnpm-lock.yaml' \
-            | head -c 40000 > /tmp/pr-diff.txt
-
-      - name: Install Claude CLI
-        run: npm install -g @anthropic-ai/claude-code
-
-      - name: Run Claude response
-        env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
-        run: |
-          python3 - << 'PYEOF'
-          import subprocess, sys
-
-          pr_title  = open('/tmp/pr-title.txt').read().strip()
-          raw       = open('/tmp/user-comment.txt').read()
-          question  = raw.replace('@claude', '').strip()
-          diff      = open('/tmp/pr-diff.txt').read().strip() or '(empty diff)'
-          comments  = open('/tmp/comments.txt').read().strip()
-          rules     = open('/tmp/review-rules.md').read().strip()
-
-          prompt = (
-              "You are a code review assistant for the tenmol repo "
-              "(React / TypeScript frontend, Python/PyMOL WebSocket backend).\n\n"
-              f"{rules}\n\n"
-              "---\n\n"
-              f"PR: {pr_title}\n\nDiff (truncated):\n{diff}\n\n"
-              f"Recent PR comments:\n{comments}\n\n"
-              f"Question: {question}\n\n"
-              "Answer concisely and helpfully, keeping the review rules in mind. "
-              "Reference specific code when relevant."
-          )
-
-          # Same contract as the auto-review step: advisory, must never fail
-          # the check. Catch TimeoutExpired so a slow answer degrades to a
-          # notice rather than propagating and failing the job.
-          try:
-              result = subprocess.run(
-                  ['claude', '-p', prompt],
-                  capture_output=True, text=True, timeout=600
-              )
-              output = (result.stdout or result.stderr or '(no output)').strip()
-          except subprocess.TimeoutExpired:
-              print("claude response timed out; posting a graceful notice", file=sys.stderr)
-              output = (
-                  "I didn't finish answering within the time budget "
-                  "(the diff or question may be large). Try narrowing the question."
-              )
-          open('/tmp/response-output.txt', 'w').write(output)
-          sys.exit(0)
-          PYEOF
-
-      - name: Post response
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const response = fs.readFileSync('/tmp/response-output.txt', 'utf8');
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `🤖 **Claude:** ${response}`
-            });
+          echo "No blocking issues."
