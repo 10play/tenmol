@@ -20,7 +20,18 @@
  * clicking Stop while rocking must stop the rock too.
  */
 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Square,
+} from 'lucide-react';
+
 import type { MovieStatus } from '@tenmol/protocol/topics/movie';
+import { Button } from '../../ui';
 import { transport, type MovieAction } from './movieSource';
 
 interface Props {
@@ -84,61 +95,80 @@ export function TransportBar({ status, run, onLog }: Props) {
 
   return (
     <div className="mvctl" role="toolbar" aria-label="movie transport">
-      <button
+      <Button
+        variant="bare"
         type="button"
+        icon={SkipBack}
+        iconOnly
         className="mvctl__btn"
         title="rewind — cmd.rewind()"
         data-testid="mv-rewind"
         onClick={() => void run(transport.rewind())}
       >
         |&lt;
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="bare"
         type="button"
+        icon={ChevronLeft}
+        iconOnly
         className="mvctl__btn"
         title="back one frame — cmd.backward()"
         data-testid="mv-back"
         onClick={() => void run(transport.backward())}
       >
         &lt;
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="bare"
         type="button"
+        icon={Square}
+        iconOnly
         className="mvctl__btn"
         title="stop — also clears sculpting and rock"
         data-testid="mv-stop"
         onClick={() => void onStop()}
       >
         []
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="bare"
         type="button"
+        icon={playing ? Pause : Play}
+        iconOnly
         className={`mvctl__btn${playing ? ' is-on' : ''}`}
         title={playing ? 'stop — cmd.mstop()' : 'play — cmd.mplay() (Ctrl rewinds first)'}
         data-testid="mv-play"
         onClick={(event) => void onPlay(event)}
       >
         {playing ? '||' : '>'}
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="bare"
         type="button"
+        icon={ChevronRight}
+        iconOnly
         className="mvctl__btn"
         title="forward one frame — cmd.forward()"
         data-testid="mv-forward"
         onClick={() => void run(transport.forward())}
       >
         &gt;
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="bare"
         type="button"
+        icon={SkipForward}
+        iconOnly
         className="mvctl__btn"
         title="ending — cmd.ending() (Ctrl = middle)"
         data-testid="mv-ending"
         onClick={(event) => void onEnding(event)}
       >
         &gt;|
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="bare"
         type="button"
         className={`mvctl__btn${seqView ? ' is-on' : ''}`}
         title="sequence viewer — cmd.set('seq_view', ...)"
@@ -146,8 +176,9 @@ export function TransportBar({ status, run, onLog }: Props) {
         onClick={() => void run(transport.seqView(!seqView))}
       >
         seq
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="bare"
         type="button"
         className={`mvctl__btn${rocking ? ' is-on' : ''}`}
         title="rock — cmd.rock(1) restarts the sweep timer"
@@ -155,8 +186,9 @@ export function TransportBar({ status, run, onLog }: Props) {
         onClick={() => void run(transport.rock(rocking ? 0 : 1))}
       >
         rock
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="bare"
         type="button"
         className="mvctl__btn"
         title="full screen — the browser Fullscreen API (cmd.full_screen needs a window)"
@@ -164,7 +196,7 @@ export function TransportBar({ status, run, onLog }: Props) {
         onClick={() => void onFullScreen()}
       >
         full
-      </button>
+      </Button>
     </div>
   );
 }

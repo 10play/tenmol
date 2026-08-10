@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { Button, IconButton, TextInput } from '../../ui';
 import { DEFAULT_TEXT_DIALOG_WIDTH } from '../volume/ramp';
 import './dialogs.css';
 
@@ -32,17 +33,19 @@ export function TextDialog({
   const [copied, setCopied] = useState(false);
   return (
     <div className="dlgmodal" role="dialog" aria-label={title} data-textdialog="">
-      <div className="dlgmodal__box" style={{ width: DEFAULT_TEXT_DIALOG_WIDTH }}>
-        <div className="dlgmodal__title">
+      <div
+        className="dlgmodal__box modern:bg-pm-panel modern:text-pm-text modern:border-line"
+        style={{ width: DEFAULT_TEXT_DIALOG_WIDTH }}
+      >
+        <div className="dlgmodal__title modern:text-pm-text-bright">
           {title}
-          <button type="button" className="dlgwin__btn" onClick={onClose} title="close">
+          <IconButton className="dlgwin__btn" onClick={onClose} title="close">
             ×
-          </button>
+          </IconButton>
         </div>
-        <pre className="dlgmodal__pre">{text}</pre>
+        <pre className="dlgmodal__pre modern:bg-pm-panel-alt modern:text-pm-text modern:border-line">{text}</pre>
         <div className="dlgmodal__row">
-          <button
-            type="button"
+          <Button
             onClick={() => {
               void navigator.clipboard?.writeText(text).then(
                 () => setCopied(true),
@@ -51,12 +54,10 @@ export function TextDialog({
             }}
           >
             Copy
-          </button>
-          {copied && <span className="dlgmodal__note">copied</span>}
+          </Button>
+          {copied && <span className="dlgmodal__note modern:text-pm-text-dim">copied</span>}
           <span className="dlgmodal__spacer" />
-          <button type="button" onClick={onClose}>
-            Close
-          </button>
+          <Button onClick={onClose}>Close</Button>
         </div>
       </div>
     </div>
@@ -99,9 +100,9 @@ export function NumberPrompt({
 
   return (
     <div className="dlgmodal" role="dialog" aria-label={spec.title} data-numberprompt="">
-      <div className="dlgmodal__box dlgmodal__box--narrow">
-        <div className="dlgmodal__title">{spec.title}</div>
-        <input
+      <div className="dlgmodal__box dlgmodal__box--narrow modern:bg-pm-panel modern:text-pm-text modern:border-line">
+        <div className="dlgmodal__title modern:text-pm-text-bright">{spec.title}</div>
+        <TextInput
           ref={ref}
           className="dlgmodal__input"
           value={text}
@@ -112,17 +113,15 @@ export function NumberPrompt({
             if (e.key === 'Escape') onDone(null);
           }}
         />
-        <div className="dlgmodal__hint">
+        <div className="dlgmodal__hint modern:text-pm-text-dim">
           {spec.min.toPrecision(6)} … {spec.max.toPrecision(6)}
         </div>
         <div className="dlgmodal__row">
           <span className="dlgmodal__spacer" />
-          <button type="button" onClick={() => onDone(null)}>
-            Cancel
-          </button>
-          <button type="button" data-accept="" onClick={accept}>
+          <Button onClick={() => onDone(null)}>Cancel</Button>
+          <Button data-accept="" onClick={accept}>
             OK
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -144,20 +143,20 @@ export function ConfirmPrompt({
 }) {
   return (
     <div className="dlgmodal" role="dialog" aria-label={title} data-confirmprompt="">
-      <div className="dlgmodal__box dlgmodal__box--narrow">
-        <div className="dlgmodal__title">{title}</div>
+      <div className="dlgmodal__box dlgmodal__box--narrow modern:bg-pm-panel modern:text-pm-text modern:border-line">
+        <div className="dlgmodal__title modern:text-pm-text-bright">{title}</div>
         <div className="dlgmodal__message">{message}</div>
         <div className="dlgmodal__row">
           <span className="dlgmodal__spacer" />
-          <button type="button" data-answer="yes" onClick={() => onDone('yes')}>
+          <Button data-answer="yes" onClick={() => onDone('yes')}>
             Yes
-          </button>
-          <button type="button" data-answer="no" onClick={() => onDone('no')}>
+          </Button>
+          <Button data-answer="no" onClick={() => onDone('no')}>
             No
-          </button>
-          <button type="button" data-answer="cancel" onClick={() => onDone('cancel')}>
+          </Button>
+          <Button data-answer="cancel" onClick={() => onDone('cancel')}>
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     </div>

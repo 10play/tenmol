@@ -424,7 +424,7 @@ export function MtzDialog({
     >
       <div className="fdlg__path">{filename}</div>
       <Unavailable message={info.unavailable} />
-      {info.error && <div className="fdlg__error">{info.error}</div>}
+      {info.error && <div className="fdlg__error modern:text-danger">{info.error}</div>}
       <Field label="Prefix">
         <input value={prefix} onChange={(e) => setPrefix(e.target.value)} />
       </Field>
@@ -589,7 +589,7 @@ export function MapGenerateDialog({
     >
       <div className="fdlg__path">{filename}</div>
       {info.supported === false && <Unavailable message={info.buildNote} />}
-      {info.error && <div className="fdlg__error">{info.error}</div>}
+      {info.error && <div className="fdlg__error modern:text-danger">{info.error}</div>}
 
       <Field label="Amplitudes">
         <select value={amplitudes} onChange={(e) => setAmplitudes(e.target.value)}>

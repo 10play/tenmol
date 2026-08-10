@@ -110,11 +110,15 @@ export function FetchDialog({
         </>
       }
     >
-      <div className="fdlg__banner">
+      <div className="fdlg__banner modern:rounded modern:bg-accent-soft modern:text-pm-text">
         Downloading will save the files in the directory{' '}
         <code>{info.fetchPath}</code> (setting <code>fetch_path</code>
         {info.fetchPathWritable ? '' : ' — NOT WRITABLE'}).{' '}
-        <button type="button" className="fdlg__link" onClick={onBrowseFetchPath}>
+        <button
+          type="button"
+          className="fdlg__link modern:text-pm-accent"
+          onClick={onBrowseFetchPath}
+        >
           change…
         </button>
       </div>

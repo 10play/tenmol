@@ -283,9 +283,9 @@ export function CommandLine() {
   };
 
   return (
-    <div className="cmdline">
+    <div className="cmdline modern:h-[34px] modern:gap-2 modern:px-3 modern:border-t modern:border-line modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]">
       <label
-        className={`cmdline__label${offline ? ' cmdline__label--offline' : ''}`}
+        className={`cmdline__label${offline ? ' cmdline__label--offline' : ''} modern:font-semibold modern:text-pm-text-dim`}
         htmlFor="command_line"
         title={offline ? 'not connected — commands will not execute' : 'cmd.do'}
       >
@@ -294,7 +294,7 @@ export function CommandLine() {
       <input
         id="command_line"
         ref={inputRef}
-        className="cmdline__input"
+        className="cmdline__input modern:h-6 modern:px-2.5 modern:rounded-[6px] modern:border modern:border-line modern:font-mono modern:text-[var(--sh-console-text)] modern:bg-[var(--sh-console-bg)] modern:[caret-color:var(--pm-accent)]"
         type="text"
         spellCheck={false}
         autoComplete="off"

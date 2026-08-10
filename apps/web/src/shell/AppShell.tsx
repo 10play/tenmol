@@ -60,7 +60,11 @@ import {
   type GutterState,
   type ShellSettings,
 } from './orthoPanel';
-import { panelsStore, togglePanel } from './panelHooks';
+import { panelsStore } from './panelHooks';
+import { X } from 'lucide-react';
+import { Button, IconButton, ThemeToggle } from '../ui';
+import { useTheme } from '../ui/theme';
+import { LauncherButtons } from './OverlayLauncher';
 import { SESSION_FILE_INDEX, getSettingsTap } from './settingsTap';
 import {
   dockModifier,
@@ -73,7 +77,8 @@ import {
   toggleVisible,
   type ExtGuiDockState,
 } from './extGuiDock';
-import './shell.css';
+// shell.css is imported into the `legacy` cascade layer via styles/legacy.css
+// (see main.tsx), so the modern theme's Tailwind utilities can win over it.
 
 /** How often the shell re-reads the three PyMOL values it mirrors. */
 const SHELL_POLL_MS = 1000;
@@ -177,7 +182,9 @@ export function AppShell() {
         const root = rootRef.current;
         if (!root) return;
         const box = root.getBoundingClientRect();
-        ui.set({ consoleHeight: Math.min(700, Math.max(60, Math.round(box.bottom - e.clientY - 18))) });
+        ui.set({
+          consoleHeight: Math.min(700, Math.max(60, Math.round(box.bottom - e.clientY - 18))),
+        });
       },
       [ui],
     ),
@@ -185,7 +192,11 @@ export function AppShell() {
 
   const extGui = dock.visible ? (
     <div
-      className={`extgui extgui--${dockModifier(dock)}${isSideDock(dock) ? ' extgui--side' : ''}`}
+      className={`extgui extgui--${dockModifier(dock)}${isSideDock(dock) ? ' extgui--side' : ''}${
+        dock.floating
+          ? ' modern:rounded-[8px] modern:border modern:border-line-strong modern:shadow-[var(--sh-pop)] modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]'
+          : ' modern:border-0 modern:rounded-none modern:shadow-none'
+      }`}
       data-dock={dockModifier(dock)}
       data-testid="extgui"
       // Only the BOTTOM dock has a user-dragged size; the side and floating
@@ -213,7 +224,7 @@ export function AppShell() {
     <div className="shell" ref={rootRef}>
       <ShellHeader dock={dock} onDock={setDock} />
 
-      <div className="shell__main">
+      <div className="shell__main modern:bg-pm-bg">
         {docked && dock.area === 'left' && extGui}
 
         <div className="shell__viewport">
@@ -233,7 +244,11 @@ export function AppShell() {
               data-testid="gutter"
               title={`internal_gui_width — drag to resize, double-click to collapse to ${ORTHO.controlMinWidth} px`}
             />
-            <div className="internal-gui" ref={columnRef} style={{ width: panelWidth }}>
+            <div
+              className="internal-gui modern:border-l-0 modern:bg-pm-panel"
+              ref={columnRef}
+              style={{ width: panelWidth }}
+            >
               {slotsForRegion('internal-gui').map((slot) => (
                 <FeatureSlot key={slot.id} id={slot.id} />
               ))}
@@ -282,36 +297,33 @@ function ExtGuiTitleBar({
   onChange: (next: (state: ExtGuiDockState) => ExtGuiDockState) => void;
 }) {
   return (
-    <div className="extgui__titlebar" data-testid="extgui-titlebar">
+    <div
+      className="extgui__titlebar modern:border-b modern:border-line modern:bg-pm-panel-alt"
+      data-testid="extgui-titlebar"
+    >
       <span className="extgui__title">External GUI</span>
       <span className="extgui__spacer" />
       {(['bottom', 'left', 'right'] as const).map((area) => (
-        <button
+        <Button
           key={area}
-          type="button"
-          className={`extgui__btn${!dock.floating && dock.area === area ? ' is-on' : ''}`}
+          variant="extgui"
+          className={!dock.floating && dock.area === area ? 'is-on' : undefined}
           onClick={() => onChange((state) => setArea(state, area))}
           title={`dock ${area}`}
         >
           {area[0]?.toUpperCase()}
-        </button>
+        </Button>
       ))}
-      <button
-        type="button"
-        className="extgui__btn"
+      <Button
+        variant="extgui"
         onClick={() => onChange((state) => toggleDockable(state))}
         title="Toggle dockable [Ctrl+E]"
       >
         {dock.floating ? 'dock' : 'float'}
-      </button>
-      <button
-        type="button"
-        className="extgui__btn"
-        onClick={() => onChange(toggleVisible)}
-        title="Visible"
-      >
+      </Button>
+      <IconButton variant="extgui" icon={X} onClick={() => onChange(toggleVisible)} title="Visible">
         ×
-      </button>
+      </IconButton>
     </div>
   );
 }
@@ -338,30 +350,32 @@ function ShellHeader({
   const echoActions = useStore(ui, (s) => s.echoActions);
 
   const extGuiButton = (
-    <button
-      type="button"
-      className="menubar__item"
+    <Button
+      variant="menubar"
       data-testid="extgui-visible"
       title="Display > External GUI > Visible"
       onClick={() => onDock(toggleVisible)}
     >
       {dock.visible ? '✓' : ' '} ext gui
-    </button>
+    </Button>
   );
 
   if (isInstalled('menubar')) {
     return (
-      <div className="menubar">
+      <div className="menubar modern:h-6 modern:items-center modern:gap-0.5 modern:px-2 modern:border-b modern:border-line">
         <FeatureSlot id="menubar" />
         <span className="menubar__spacer" />
         {extGuiButton}
+        <ThemeToggle />
       </div>
     );
   }
 
   return (
-    <div className="menubar">
-      <span className="menubar__title">tenmol</span>
+    <div className="menubar modern:h-6 modern:items-center modern:gap-0.5 modern:px-2 modern:border-b modern:border-line">
+      <span className="menubar__title modern:text-[13px] modern:font-bold modern:tracking-[-0.01em] modern:normal-case modern:text-pm-text-bright">
+        tenmol
+      </span>
       <span className="shell-chrome__note" title="WP-14 owns apps/web/src/features/menubar/**">
         menu bar not installed
       </span>
@@ -372,22 +386,21 @@ function ShellHeader({
         </span>
       )}
       {extGuiButton}
-      <button
-        type="button"
-        className="menubar__item"
+      <Button
+        variant="menubar"
         title="the right-hand block column. CLIENT-SIDE ONLY: setting internal_gui must stay 0 in PyMOL or the scene rectangle shrinks under the canvas"
         onClick={() => ui.set({ internalGui: !internalGui })}
       >
         {internalGui ? '✓' : ' '} internal_gui
-      </button>
-      <button
-        type="button"
-        className="menubar__item"
+      </Button>
+      <Button
+        variant="menubar"
         title="echo the command line equivalent of every button press into the console"
         onClick={() => ui.set({ echoActions: !echoActions })}
       >
         {echoActions ? '✓' : ' '} echo actions
-      </button>
+      </Button>
+      <ThemeToggle />
     </div>
   );
 }
@@ -536,10 +549,7 @@ function useWindowTitle(session: Session): void {
  * a computed one is not (vitest stubs CSS imports; jsdom implements no computed
  * `order`). See `INTERNAL_GUI_ORDER`.
  */
-function useOrthoStackOrder(
-  ref: React.RefObject<HTMLDivElement | null>,
-  enabled: boolean,
-): void {
+function useOrthoStackOrder(ref: React.RefObject<HTMLDivElement | null>, enabled: boolean): void {
   useEffect(() => {
     const column = ref.current;
     if (!enabled || !column) return undefined;
@@ -606,34 +616,28 @@ function OverlayLayer() {
   // children (`shell/panelHooks.ts`).
   const open = useStore(panelsStore(), (state) => state.open);
   const slots = slotsForRegion('overlay').filter((slot) => isInstalled(slot.id));
+  // The modern theme hosts the launcher INSIDE the status bar (see StatusBar);
+  // classic keeps its flush corner bar here. Either way the OPEN panels are
+  // rendered below.
+  const modern = useTheme() === 'shadcn';
   if (slots.length === 0) return null;
-
-  const toggle = (id: string) => togglePanel(id);
 
   return (
     <>
-      <div className="overlay-launcher" role="toolbar" aria-label="panels">
-        {slots.map((slot) => (
-          <button
-            key={slot.id}
-            type="button"
-            className={`overlay-launcher__btn${open.includes(slot.id) ? ' is-on' : ''}`}
-            aria-pressed={open.includes(slot.id)}
-            onClick={() => toggle(slot.id)}
-          >
-            {slot.title}
-          </button>
-        ))}
-      </div>
+      {!modern && (
+        <div className="overlay-launcher" role="toolbar" aria-label="panels">
+          <LauncherButtons iconOnly />
+        </div>
+      )}
       {/*
-        * Rendered WITHOUT a wrapper. These panels bring their own positioning —
-        * `features/settings` is `position: absolute; right: 8px`, anchored to
-        * the app root. Wrapping each in a `position: relative` box made that box
-        * their containing block; it then collapsed to zero size (its only child
-        * was absolutely positioned) and threw the panel's own controls to
-        * x = -134, off screen left. The launcher decides WHETHER a panel
-        * renders; the panel decides WHERE.
-        */}
+       * Rendered WITHOUT a wrapper. These panels bring their own positioning —
+       * `features/settings` is `position: absolute; right: 8px`, anchored to
+       * the app root. Wrapping each in a `position: relative` box made that box
+       * their containing block; it then collapsed to zero size (its only child
+       * was absolutely positioned) and threw the panel's own controls to
+       * x = -134, off screen left. The launcher decides WHETHER a panel
+       * renders; the panel decides WHERE.
+       */}
       {slots
         .filter((slot) => open.includes(slot.id))
         .map((slot) => (

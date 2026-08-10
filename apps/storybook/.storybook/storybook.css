@@ -1,0 +1,19 @@
+/*
+ * The exact CSS pipeline apps/web/src/main.tsx loads, re-pointed for Storybook.
+ *
+ *   legacy.css  → the pixel-exact classic PyMOL look, in the low `legacy` layer
+ *   tailwind.css → Tailwind tokens + on-demand utilities + the `--pm-*` bridge
+ *   shadcn.css  → the modern theme, inert until `[data-ui-theme='shadcn']`
+ *
+ * The `@source` globs are the one addition: the components live OUTSIDE this
+ * package, so Tailwind's auto content-detection (which scans this package's
+ * root) would miss the modern utility classes baked into apps/web/src/ui/*.
+ * Naming both the web source and the stories makes every class that either uses
+ * get generated.
+ */
+@import '../../web/src/styles/legacy.css';
+@import '../../web/src/styles/tailwind.css';
+@import '../../web/src/styles/shadcn.css';
+
+@source '../../web/src/**/*.{ts,tsx}';
+@source '../stories/**/*.{ts,tsx}';

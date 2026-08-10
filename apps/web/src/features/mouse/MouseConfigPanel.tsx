@@ -27,6 +27,7 @@ import {
 } from './tables';
 import { useSession } from '../../app';
 import { useMouseMode } from './useMouseMode';
+import { Select } from '../../ui';
 import './mouse.css';
 
 /** Column order: the ten `button_code` names (`controlling.py:30-41`). */
@@ -96,17 +97,17 @@ export function MouseConfigPanel() {
   };
 
   return (
-    <div className="mousecfg">
+    <div className="mousecfg modern:bg-pm-panel modern:text-pm-text">
       <div className="mousecfg__head">
         <span>
           Mouse configuration — {mode.loaded ? mode.displayName : '…'} (
           {mode.mode ?? 'unknown mode'})
         </span>
         <span className="mousecfg__note">
-          {Object.keys(BUTTON_CODE).length} buttons x {Object.keys(BUT_MOD_CODE).length}{' '}
-          modifiers = 80 slots. Every change is a <code>cmd.button</code> call. PyMOL exposes no
-          reader for the table, so these cells show what the current mouse mode wrote plus your
-          edits in this session.
+          {Object.keys(BUTTON_CODE).length} buttons x {Object.keys(BUT_MOD_CODE).length} modifiers =
+          80 slots. Every change is a <code>cmd.button</code> call. PyMOL exposes no reader for the
+          table, so these cells show what the current mouse mode wrote plus your edits in this
+          session.
         </span>
       </div>
       <table className="mousecfg__table">
@@ -114,7 +115,7 @@ export function MouseConfigPanel() {
           <tr>
             <th />
             {BUTTONS.map((button) => (
-              <th key={button.name} title={button.name}>
+              <th key={button.name} title={button.name} className="modern:text-pm-text-dim">
                 {button.label}
               </th>
             ))}
@@ -123,7 +124,7 @@ export function MouseConfigPanel() {
         <tbody>
           {MODIFIERS.map((modifier) => (
             <tr key={modifier.name}>
-              <th scope="row" title={modifier.name}>
+              <th scope="row" title={modifier.name} className="modern:text-pm-text-dim">
                 {modifier.label}
               </th>
               {BUTTONS.map((button) => {
@@ -132,7 +133,7 @@ export function MouseConfigPanel() {
                 const cellId = `${button.name}/${modifier.name}`;
                 return (
                   <td key={button.name}>
-                    <select
+                    <Select
                       className="mousecfg__select"
                       data-testid={`cell-${cellId}`}
                       value={name}
@@ -150,7 +151,7 @@ export function MouseConfigPanel() {
                           {ACTION_LABEL[BUT_ACT_CODE[option] as number]?.trim()} · {option}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </td>
                 );
               })}

@@ -384,7 +384,7 @@ export function ObjectPanel() {
 
   return (
     <div className="objpanel">
-      <div className="objpanel__head">
+      <div className="objpanel__head modern:border-b modern:border-line modern:px-2.5 modern:py-2">
         <span className="objpanel__head-title">Objects</span>
         <span className="objpanel__head-note" title={`row source: ${feed}`}>
           {feed === 'panel' ? 'panel' : feed === 'topic' ? 'pushed' : 'polled'}
@@ -455,7 +455,12 @@ export function ObjectPanel() {
 
             <button
               type="button"
-              className="objrow__name"
+              className={
+                'objrow__name modern:rounded-[6px] modern:border modern:text-[11px] modern:hover:bg-btn-hover' +
+                (row.enabled
+                  ? ' modern:border-[color-mix(in_srgb,var(--pm-accent)_40%,transparent)] modern:bg-accent-soft modern:text-pm-text-bright'
+                  : ' modern:border-btn-border modern:bg-btn modern:text-pm-text')
+              }
               style={{
                 ...(row.nest > 0 ? { marginLeft: row.nest * 8 } : null),
                 ...(nameColor ? { color: cssColor(nameColor) } : null),
@@ -488,7 +493,7 @@ export function ObjectPanel() {
                     type="button"
                     key={op}
                     className={
-                      `objrow__op objrow__op--${op.toLowerCase()}` +
+                      `objrow__op objrow__op--${op.toLowerCase()} modern:rounded-[5px] modern:border-0 modern:[filter:saturate(0.95)]` +
                       (target === null ? ' is-inert' : '') +
                       (op === MOTION_OP ? ` is-spec-${spec}` : '')
                     }

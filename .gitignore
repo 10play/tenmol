@@ -94,10 +94,16 @@ apps/web/e2e/output/
 # per-worktree env file. All were swept in once by a `git add -A`; keep them out.
 .pnpm-store/
 .playwright-mcp/
+/.playwright-mcp/
 .env
+apps/web/.env
 # Stray debug screenshots at the repo ROOT only (leading slash = root-anchored,
 # does not cross into subdirs). All real PNGs live under docs/apps/packages/tools.
 /*.png
 
 # generated visual-parity viewer (regenerate: node apps/web/e2e/gallery.mjs)
 apps/web/public/gallery.html
+# Storybook static build output
+apps/storybook/storybook-static/
+# Storybook static served through the app dev server (not committed)
+apps/web/public/storybook/

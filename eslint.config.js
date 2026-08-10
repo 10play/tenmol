@@ -13,6 +13,9 @@ import globals from 'globals';
 const IGNORES = [
   '**/node_modules/**',
   '**/dist/**',
+  '**/storybook-static/**',
+  // Local-only static Storybook served through the app dev server (gitignored).
+  'apps/web/public/storybook/**',
   '**/.turbo/**',
   '**/generated/**',
   '**/*.d.ts',

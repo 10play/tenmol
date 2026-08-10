@@ -77,7 +77,7 @@ export function FeedbackLog() {
 
   return (
     <div
-      className="feedback"
+      className="feedback modern:px-3 modern:py-2 modern:leading-[1.55] modern:font-mono modern:text-[var(--sh-console-text)] modern:bg-[var(--sh-console-bg)]"
       ref={ref}
       style={{ fontSize }}
       onScroll={(e) => {

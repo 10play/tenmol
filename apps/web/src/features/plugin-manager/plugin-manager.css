@@ -1,316 +1,318 @@
-/*
+@layer legacy {
+  /*
  * Plugin Manager (read-only). Uses the shared panel tokens from
  * src/styles/global.css so it reads as part of the same tool rather than a
  * bolted-on dialog.
  */
 
-.plugmgr {
-  display: flex;
-  flex-direction: column;
-  min-width: 520px;
-  max-height: 70vh;
-  font-size: 11px;
-  color: var(--pm-text);
-}
+  .plugmgr {
+    display: flex;
+    flex-direction: column;
+    min-width: 520px;
+    max-height: 70vh;
+    font-size: 11px;
+    color: var(--pm-text);
+  }
 
-.plugmgr__tabs {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px 4px;
-  background: var(--pm-panel-alt);
-  border-bottom: 1px solid var(--pm-edge);
-}
+  .plugmgr__tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px 4px;
+    background: var(--pm-panel-alt);
+    border-bottom: 1px solid var(--pm-edge);
+  }
 
-.plugmgr__spacer {
-  flex: 1;
-}
+  .plugmgr__spacer {
+    flex: 1;
+  }
 
-.plugmgr__tab,
-.plugmgr__btn {
-  padding: 2px 8px;
-  background: var(--pm-btn-enabled);
-  border: 1px solid var(--pm-edge);
-  color: var(--pm-text-dim);
-  font: inherit;
-  cursor: pointer;
-}
+  .plugmgr__tab,
+  .plugmgr__btn {
+    padding: 2px 8px;
+    background: var(--pm-btn-enabled);
+    border: 1px solid var(--pm-edge);
+    color: var(--pm-text-dim);
+    font: inherit;
+    cursor: pointer;
+  }
 
-.plugmgr__tab.is-on {
-  background: var(--pm-btn-pressed);
-  color: var(--pm-text);
-}
+  .plugmgr__tab.is-on {
+    background: var(--pm-btn-pressed);
+    color: var(--pm-text);
+  }
 
-.plugmgr__btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
+  .plugmgr__btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
 
-.plugmgr__body {
-  overflow: auto;
-  padding: 6px 8px;
-}
+  .plugmgr__body {
+    overflow: auto;
+    padding: 6px 8px;
+  }
 
-.plugmgr__error {
-  padding: 4px 8px;
-  background: var(--pm-panel-alt);
-  color: var(--pm-caption);
-}
+  .plugmgr__error {
+    padding: 4px 8px;
+    background: var(--pm-panel-alt);
+    color: var(--pm-caption);
+  }
 
-.plugmgr__table {
-  width: 100%;
-  border-collapse: collapse;
-}
+  .plugmgr__table {
+    width: 100%;
+    border-collapse: collapse;
+  }
 
-.plugmgr__table th {
-  text-align: left;
-  font-weight: normal;
-  color: var(--pm-text-dim);
-  border-bottom: 1px solid var(--pm-edge);
-  padding: 2px 4px;
-}
+  .plugmgr__table th {
+    text-align: left;
+    font-weight: normal;
+    color: var(--pm-text-dim);
+    border-bottom: 1px solid var(--pm-edge);
+    padding: 2px 4px;
+  }
 
-.plugmgr__table td {
-  padding: 2px 4px;
-  vertical-align: top;
-}
+  .plugmgr__table td {
+    padding: 2px 4px;
+    vertical-align: top;
+  }
 
-.plugmgr__name {
-  white-space: nowrap;
-}
+  .plugmgr__name {
+    white-space: nowrap;
+  }
 
-/* The autoload checkbox column: as narrow as its header. */
-.plugmgr__enabled {
-  width: 1%;
-  white-space: nowrap;
-  text-align: center;
-}
+  /* The autoload checkbox column: as narrow as its header. */
+  .plugmgr__enabled {
+    width: 1%;
+    white-space: nowrap;
+    text-align: center;
+  }
 
-.plugmgr__enabled input {
-  margin: 0;
-  vertical-align: middle;
-}
+  .plugmgr__enabled input {
+    margin: 0;
+    vertical-align: middle;
+  }
 
-/* Paths are long and the interesting end is the right-hand one. */
-.plugmgr__path {
-  font-family: var(--pm-font-mono);
-  color: var(--pm-text-dim);
-  direction: rtl;
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 380px;
-}
+  /* Paths are long and the interesting end is the right-hand one. */
+  .plugmgr__path {
+    font-family: var(--pm-font-mono);
+    color: var(--pm-text-dim);
+    direction: rtl;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 380px;
+  }
 
-.plugmgr__empty {
-  padding: 8px 4px;
-  color: var(--pm-text-dim);
-  font-style: italic;
-}
+  .plugmgr__empty {
+    padding: 8px 4px;
+    color: var(--pm-text-dim);
+    font-style: italic;
+  }
 
-.plugmgr__prefs {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 2px 12px;
-  margin: 0 0 8px;
-}
+  .plugmgr__prefs {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 2px 12px;
+    margin: 0 0 8px;
+  }
 
-.plugmgr__prefs dt {
-  font-family: var(--pm-font-mono);
-  color: var(--pm-text-dim);
-}
+  .plugmgr__prefs dt {
+    font-family: var(--pm-font-mono);
+    color: var(--pm-text-dim);
+  }
 
-.plugmgr__prefs dd {
-  margin: 0;
-  font-family: var(--pm-font-mono);
-}
+  .plugmgr__prefs dd {
+    margin: 0;
+    font-family: var(--pm-font-mono);
+  }
 
-.plugmgr__paths {
-  margin: 0 0 8px;
-  padding-left: 20px;
-}
+  .plugmgr__paths {
+    margin: 0 0 8px;
+    padding-left: 20px;
+  }
 
-.plugmgr__note {
-  margin: 8px 0 0;
-  padding-top: 6px;
-  border-top: 1px solid var(--pm-edge);
-  color: var(--pm-text-dim);
-  line-height: 1.45;
-}
+  .plugmgr__note {
+    margin: 8px 0 0;
+    padding-top: 6px;
+    border-top: 1px solid var(--pm-edge);
+    color: var(--pm-text-dim);
+    line-height: 1.45;
+  }
 
-.plugmgr__note code {
-  font-family: var(--pm-font-mono);
-}
+  .plugmgr__note code {
+    font-family: var(--pm-font-mono);
+  }
 
-/* ---------------------------------------------------------------- writes */
+  /* ---------------------------------------------------------------- writes */
 
-/*
+  /*
  * Wave 8: the Settings and Startup Paths tabs became editable, and every edit
  * lands in ~/.pymolpluginsrc.py. The confirmation is a band rather than a
  * modal because it has to be readable AT THE SAME TIME as the control that
  * staged it -- the whole point is "this is what that click will do".
  */
-.plugmgr__prefrow {
-  display: contents;
-}
+  .plugmgr__prefrow {
+    display: contents;
+  }
 
-.plugmgr__prefs dt label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-}
+  .plugmgr__prefs dt label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
 
-.plugmgr__confirm {
-  margin: 6px 0;
-  padding: 6px 8px;
-  background: var(--pm-panel-alt);
-  border: 1px solid var(--pm-edge);
-}
+  .plugmgr__confirm {
+    margin: 6px 0;
+    padding: 6px 8px;
+    background: var(--pm-panel-alt);
+    border: 1px solid var(--pm-edge);
+  }
 
-.plugmgr__confirmtext {
-  margin: 0 0 6px;
-  line-height: 1.45;
-}
+  .plugmgr__confirmtext {
+    margin: 0 0 6px;
+    line-height: 1.45;
+  }
 
-.plugmgr__confirmrow {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-}
+  .plugmgr__confirmrow {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
 
-.plugmgr__confirmrow button,
-.plugmgr__addrow button {
-  padding: 2px 8px;
-  background: var(--pm-btn-enabled);
-  border: 1px solid var(--pm-edge);
-  color: var(--pm-text);
-  font: inherit;
-  cursor: pointer;
-}
+  .plugmgr__confirmrow button,
+  .plugmgr__addrow button {
+    padding: 2px 8px;
+    background: var(--pm-btn-enabled);
+    border: 1px solid var(--pm-edge);
+    color: var(--pm-text);
+    font: inherit;
+    cursor: pointer;
+  }
 
-.plugmgr__confirmrow button:disabled,
-.plugmgr__addrow button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
+  .plugmgr__confirmrow button:disabled,
+  .plugmgr__addrow button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
 
-.plugmgr__paths li {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
+  .plugmgr__paths li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
 
-.plugmgr__pathtext {
-  flex: 1;
-  direction: rtl;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+  .plugmgr__pathtext {
+    flex: 1;
+    direction: rtl;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-.plugmgr__paths li button {
-  flex: none;
-  padding: 0 5px;
-  background: var(--pm-btn-enabled);
-  border: 1px solid var(--pm-edge);
-  color: var(--pm-text-dim);
-  font: inherit;
-  cursor: pointer;
-}
+  .plugmgr__paths li button {
+    flex: none;
+    padding: 0 5px;
+    background: var(--pm-btn-enabled);
+    border: 1px solid var(--pm-edge);
+    color: var(--pm-text-dim);
+    font: inherit;
+    cursor: pointer;
+  }
 
-.plugmgr__paths li button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
+  .plugmgr__paths li button:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
 
-.plugmgr__paths--fixed li {
-  opacity: 0.75;
-}
+  .plugmgr__paths--fixed li {
+    opacity: 0.75;
+  }
 
-.plugmgr__addrow {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 6px;
-}
+  .plugmgr__addrow {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
 
-.plugmgr__addrow input {
-  flex: 1;
-  font: inherit;
-  font-family: var(--pm-font-mono);
-  padding: 2px 4px;
-  background: var(--pm-input, var(--pm-panel));
-  border: 1px solid var(--pm-edge);
-  color: var(--pm-text);
-}
+  .plugmgr__addrow input {
+    flex: 1;
+    font: inherit;
+    font-family: var(--pm-font-mono);
+    padding: 2px 4px;
+    background: var(--pm-input, var(--pm-panel));
+    border: 1px solid var(--pm-edge);
+    color: var(--pm-text);
+  }
 
-/* --- Legacy Plugins (inventory row 76, option (b)) --------------------- */
+  /* --- Legacy Plugins (inventory row 76, option (b)) --------------------- */
 
-.plugmgr__legacyhead {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  /*
+  .plugmgr__legacyhead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /*
    * `flex: 0 0 auto`: this row computes its own height inside a flex column,
    * and without it `flex-shrink` collapses it while `overflow: hidden` keeps
    * clipping children that still report a full box — invisible AND
    * click-swallowing. That shape shipped once and broke an e2e spec.
    */
-  flex: 0 0 auto;
-  font-size: 11px;
-  color: var(--fg-dim, #9aa);
-  margin-bottom: 4px;
-}
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: var(--fg-dim, #9aa);
+    margin-bottom: 4px;
+  }
 
-.plugmgr__legacy {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  flex: 0 0 auto;
-}
+  .plugmgr__legacy {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 0 0 auto;
+  }
 
-.plugmgr__legacyrow {
-  padding: 1px 0;
-}
+  .plugmgr__legacyrow {
+    padding: 1px 0;
+  }
 
-.plugmgr__legacymenu {
-  font-weight: 600;
-  font-size: 11px;
-  color: var(--fg, #cdd);
-}
+  .plugmgr__legacymenu {
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--fg, #cdd);
+  }
 
-.plugmgr__legacyleaf {
-  background: none;
-  border: none;
-  padding: 2px 4px;
-  font: inherit;
-  font-size: 11px;
-  color: var(--accent, #6bf);
-  cursor: pointer;
-  text-align: left;
-}
+  .plugmgr__legacyleaf {
+    background: none;
+    border: none;
+    padding: 2px 4px;
+    font: inherit;
+    font-size: 11px;
+    color: var(--accent, #6bf);
+    cursor: pointer;
+    text-align: left;
+  }
 
-.plugmgr__legacyleaf:hover {
-  background: var(--bg-hover, #223);
-}
+  .plugmgr__legacyleaf:hover {
+    background: var(--bg-hover, #223);
+  }
 
-.plugmgr__legacysep {
-  border: none;
-  border-top: 1px solid var(--border, #333);
-  margin: 3px 0;
-}
+  .plugmgr__legacysep {
+    border: none;
+    border-top: 1px solid var(--border, #333);
+    margin: 3px 0;
+  }
 
-.plugmgr__legacyresult {
-  flex: 0 0 auto;
-  margin: 6px 0;
-  padding: 4px 6px;
-  font-size: 11px;
-  border-radius: 2px;
-  background: var(--bg-sunken, #1b1f23);
-  color: var(--fg-dim, #9aa);
-}
+  .plugmgr__legacyresult {
+    flex: 0 0 auto;
+    margin: 6px 0;
+    padding: 4px 6px;
+    font-size: 11px;
+    border-radius: 2px;
+    background: var(--bg-sunken, #1b1f23);
+    color: var(--fg-dim, #9aa);
+  }
 
-.plugmgr__legacyresult.is-error {
-  color: var(--error, #e06c75);
+  .plugmgr__legacyresult.is-error {
+    color: var(--error, #e06c75);
+  }
 }

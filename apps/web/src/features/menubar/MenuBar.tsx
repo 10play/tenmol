@@ -549,7 +549,12 @@ export function MenuBar() {
             <div className="menubar__item-wrap" key={menu.label}>
               <button
                 type="button"
-                className={'menubar__item' + (open === index ? ' is-open' : '')}
+                className={
+                  'menubar__item modern:rounded-[6px] modern:border modern:border-transparent modern:bg-transparent modern:px-2.5 modern:py-1 modern:text-[12px] modern:font-medium modern:text-pm-text-dim modern:hover:bg-btn-hover modern:hover:text-pm-text-bright' +
+                  (open === index
+                    ? ' is-open modern:bg-accent-soft modern:text-pm-text-bright'
+                    : '')
+                }
                 aria-haspopup="menu"
                 aria-expanded={open === index}
                 onClick={() => setOpen(open === index ? null : index)}

@@ -14,6 +14,7 @@
 
 import { useState } from 'react';
 
+import { Button, Checkbox, TextInput } from '../../ui';
 import { LegacyPlugins } from './LegacyPlugins';
 import { usePluginRegistry } from './usePluginRegistry';
 import {
@@ -72,12 +73,12 @@ function Confirm({
       </p>
       <div className="plugmgr__confirmrow">
         {extra}
-        <button type="button" data-plugin-apply="" disabled={busy} onClick={onApply}>
+        <Button data-plugin-apply="" disabled={busy} onClick={onApply}>
           {busy ? 'writing…' : toDisk ? 'Apply and save' : 'Apply (session only)'}
-        </button>
-        <button type="button" data-plugin-cancel="" disabled={busy} onClick={onCancel}>
+        </Button>
+        <Button data-plugin-cancel="" disabled={busy} onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -112,24 +113,23 @@ export function PluginManager() {
     (draft.length !== reg.paths.user.length || draft.some((p, i) => p !== reg.paths.user[i]));
 
   return (
-    <div className="plugmgr">
-      <div className="plugmgr__tabs" role="tablist">
+    <div className="plugmgr modern:bg-pm-panel modern:text-pm-text">
+      <div className="plugmgr__tabs modern:bg-pm-panel-alt modern:border-b modern:border-line" role="tablist">
         {TABS.map((t) => (
-          <button
+          <Button
             key={t.id}
-            type="button"
             role="tab"
             aria-selected={tab === t.id}
-            className={`plugmgr__tab${tab === t.id ? ' is-on' : ''}`}
+            className={`plugmgr__tab${tab === t.id ? ' is-on modern:bg-pm-accent modern:text-accent-text modern:border-transparent' : ''}`}
             onClick={() => setTab(t.id)}
           >
             {t.label}
-          </button>
+          </Button>
         ))}
         <span className="plugmgr__spacer" />
-        <button type="button" className="plugmgr__btn" onClick={reg.refresh} disabled={reg.loading}>
+        <Button className="plugmgr__btn" onClick={reg.refresh} disabled={reg.loading}>
           {reg.loading ? 'scanning…' : 'rescan'}
-        </button>
+        </Button>
       </div>
 
       {reg.error !== null && <div className="plugmgr__error">plugin scan failed: {reg.error}</div>}
@@ -139,17 +139,16 @@ export function PluginManager() {
           <table className="plugmgr__table">
             <thead>
               <tr>
-                <th className="plugmgr__enabled">Enabled</th>
-                <th>Plugin</th>
-                <th>File</th>
+                <th className="plugmgr__enabled modern:text-pm-text-dim modern:border-line">Enabled</th>
+                <th className="modern:text-pm-text-dim modern:border-line">Plugin</th>
+                <th className="modern:text-pm-text-dim modern:border-line">File</th>
               </tr>
             </thead>
             <tbody>
               {reg.plugins.map((p) => (
                 <tr key={p.filename}>
                   <td className="plugmgr__enabled">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={p.autoload}
                       disabled={reg.loading || reg.saving !== null}
                       aria-label={`load ${p.name} at startup`}
@@ -195,8 +194,8 @@ export function PluginManager() {
             <code>pymol._ext_gui</code> and records the menu instead of building a Tk one.{' '}
             <code>addmenuitemqt</code> still raises <code>QtNotAvailableError</code>: that call
             asserts the plugin opens a PyQt window, which would open on the server, not in this
-            browser. PyMOL&rsquo;s own bundled plugins are replaced by native panels (APBS,
-            lighting settings) instead of being ported.
+            browser. PyMOL&rsquo;s own bundled plugins are replaced by native panels (APBS, lighting
+            settings) instead of being ported.
           </p>
         </div>
       )}
@@ -210,8 +209,7 @@ export function PluginManager() {
               <div key={key} className="plugmgr__prefrow">
                 <dt>
                   <label>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       data-plugin-pref={key}
                       checked={reg.preferences[key]}
                       disabled={reg.loading || reg.saving !== null}
@@ -269,32 +267,29 @@ export function PluginManager() {
             {userPaths.map((p, index) => (
               <li key={p} className="plugmgr__path" title={p}>
                 <span className="plugmgr__pathtext">{p}</span>
-                <button
-                  type="button"
+                <Button
                   data-plugin-path-up={index}
                   aria-label={`move ${p} up`}
                   disabled={index === 0}
                   onClick={() => setDraft(movePath(userPaths, index, -1))}
                 >
                   ↑
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
                   data-plugin-path-down={index}
                   aria-label={`move ${p} down`}
                   disabled={index === userPaths.length - 1}
                   onClick={() => setDraft(movePath(userPaths, index, 1))}
                 >
                   ↓
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
                   data-plugin-path-remove={index}
                   aria-label={`remove ${p}`}
                   onClick={() => setDraft(removePath(userPaths, index))}
                 >
                   ✕
-                </button>
+                </Button>
               </li>
             ))}
             {userPaths.length === 0 && (
@@ -305,7 +300,7 @@ export function PluginManager() {
           </ol>
 
           <div className="plugmgr__addrow">
-            <input
+            <TextInput
               type="text"
               data-plugin-path-input=""
               aria-label="startup directory to add"
@@ -313,8 +308,7 @@ export function PluginManager() {
               value={candidate}
               onChange={(e) => setCandidate(e.target.value)}
             />
-            <button
-              type="button"
+            <Button
               data-plugin-path-add=""
               disabled={candidate.trim() === '' || userPaths.includes(candidate.trim())}
               onClick={() => {
@@ -323,7 +317,7 @@ export function PluginManager() {
               }}
             >
               Add
-            </button>
+            </Button>
           </div>
 
           {dirty && (
@@ -340,8 +334,7 @@ export function PluginManager() {
               onCancel={() => setDraft(null)}
               extra={
                 reg.preferences.instantsave ? (
-                  <button
-                    type="button"
+                  <Button
                     data-plugin-apply-session=""
                     disabled={reg.saving !== null}
                     onClick={() => {
@@ -352,7 +345,7 @@ export function PluginManager() {
                     }}
                   >
                     Apply (session only)
-                  </button>
+                  </Button>
                 ) : null
               }
             />
