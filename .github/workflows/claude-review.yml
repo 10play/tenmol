@@ -96,11 +96,27 @@ jobs:
               "Be concise and actionable."
           )
 
-          result = subprocess.run(
-              ['claude', '-p', prompt],
-              capture_output=True, text=True, timeout=300
-          )
-          output = (result.stdout or result.stderr or '(no output)').strip()
+          # This review is ADVISORY: it only posts a comment, and the step
+          # ends in sys.exit(0) precisely so a review problem never red-flags
+          # the PR. A bare `timeout=` breaks that contract -- subprocess.run
+          # raises TimeoutExpired, which propagates and fails the step (this is
+          # exactly what happened: `claude -p` on a large diff took >300 s and
+          # the job died before the sys.exit(0) below). Catch it so a slow
+          # review degrades to a notice instead of a red build, and give a real
+          # review more room (600 s) before we give up on it.
+          try:
+              result = subprocess.run(
+                  ['claude', '-p', prompt],
+                  capture_output=True, text=True, timeout=600
+              )
+              output = (result.stdout or result.stderr or '(no output)').strip()
+          except subprocess.TimeoutExpired:
+              print("claude review timed out; posting a graceful notice", file=sys.stderr)
+              output = (
+                  "_Claude did not finish reviewing within the time budget "
+                  "(the diff may be large). This advisory check is non-blocking; "
+                  "comment `@claude` to request a review._"
+              )
           open('/tmp/review-output.txt', 'w').write(output)
           print(f"Claude returned {len(output)} chars")
           sys.exit(0)
@@ -216,11 +232,21 @@ jobs:
               "Reference specific code when relevant."
           )
 
-          result = subprocess.run(
-              ['claude', '-p', prompt],
-              capture_output=True, text=True, timeout=300
-          )
-          output = (result.stdout or result.stderr or '(no output)').strip()
+          # Same contract as the auto-review step: advisory, must never fail
+          # the check. Catch TimeoutExpired so a slow answer degrades to a
+          # notice rather than propagating and failing the job.
+          try:
+              result = subprocess.run(
+                  ['claude', '-p', prompt],
+                  capture_output=True, text=True, timeout=600
+              )
+              output = (result.stdout or result.stderr or '(no output)').strip()
+          except subprocess.TimeoutExpired:
+              print("claude response timed out; posting a graceful notice", file=sys.stderr)
+              output = (
+                  "I didn't finish answering within the time budget "
+                  "(the diff or question may be large). Try narrowing the question."
+              )
           open('/tmp/response-output.txt', 'w').write(output)
           sys.exit(0)
           PYEOF

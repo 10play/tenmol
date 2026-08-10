@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { turnView, type ViewMatrix } from '../camera';
 import { createCameraDriver, type CameraCall } from './camera';
 
 /** `cmd.get_view()` at rest: front 40, back 100. */
@@ -35,6 +36,54 @@ describe('camera driver', () => {
     calls.length = 0;
     d.drag({ dx: 0, dy: 10, button: 0, mod: 0 });
     expect(calls).toEqual([{ fn: 'cmd.turn', args: ['x', 10] }]);
+  });
+
+  it('mirrors a rotate onto the local view via onView (optimistic rotation)', () => {
+    const seen: ViewMatrix[] = [];
+    const { d, calls } = driver({
+      view: () => VIEW as unknown as ViewMatrix,
+      onView: (v) => seen.push(v),
+    });
+    // A rota drag turns y by dx and x by dy; onView must get BOTH composed, in
+    // the same order as the cmd.turn calls, so it matches the server.
+    d.drag({ dx: 6, dy: 4, button: 0, mod: 0 });
+    expect(calls).toEqual([
+      { fn: 'cmd.turn', args: ['y', 6] },
+      { fn: 'cmd.turn', args: ['x', 4] },
+    ]);
+    expect(seen).toHaveLength(1);
+    const expected = turnView(turnView(VIEW as unknown as ViewMatrix, 'y', 6), 'x', 4);
+    expect([...seen[0]!]).toEqual([...expected]);
+  });
+
+  it('mirrors a z-axis rotation (irtz) onto the local view too', () => {
+    const seen: ViewMatrix[] = [];
+    // `three_button_maestro` is the mode that actually binds a drag to a Z
+    // rotation: middle + ctrl -> `irtz` (inverted rotate about Z).
+    const { d, calls } = driver({
+      mode: () => 'three_button_maestro',
+      view: () => VIEW as unknown as ViewMatrix,
+      onView: (v) => seen.push(v),
+    });
+    d.drag({ dx: 8, dy: 0, button: 1, mod: 2 });
+    // irtz inverts the angle, and the local turn must use the SAME sign.
+    expect(calls).toContainEqual({ fn: 'cmd.turn', args: ['z', -8] });
+    expect(seen).toHaveLength(1);
+    expect([...seen[0]!]).toEqual([...turnView(VIEW as unknown as ViewMatrix, 'z', -8)]);
+  });
+
+  it('does not touch the local view when there is no onView sink or no view', () => {
+    // No onView: nothing to mirror to, and no throw.
+    const a = driver({ view: () => VIEW as unknown as ViewMatrix });
+    expect(() => a.d.drag({ dx: 5, dy: 0, button: 0, mod: 0 })).not.toThrow();
+    // onView present but view() is null (not read back yet): skip, don't crash.
+    const seen: ViewMatrix[] = [];
+    const b = driver({ view: () => null, onView: (v) => seen.push(v) });
+    b.d.drag({ dx: 5, dy: 0, button: 0, mod: 0 });
+    expect(seen).toHaveLength(0);
+    // The RPC still went out on both — the server stays authoritative.
+    expect(a.calls.some((c) => c.fn === 'cmd.turn')).toBe(true);
+    expect(b.calls.some((c) => c.fn === 'cmd.turn')).toBe(true);
   });
 
   it('translates on the middle button', () => {

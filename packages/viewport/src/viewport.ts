@@ -30,6 +30,12 @@ import type {
 import { repName } from '@tenmol/protocol';
 
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
+import {
+  createLocalViewTracker,
+  handOffSceneToModeG,
+  serverRasterisesNothing,
+  shouldHandOffToModeG,
+} from './viewSync';
 import { createCompositor } from './compositor';
 import { createCameraDriver, type BandBox, type CameraCounters } from './input/camera';
 import { createPickIndex, dispatchViewportPick } from './picking';
@@ -115,6 +121,11 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   let view: ViewMatrix | null = null;
   let viewInFlight = false;
   let viewWanted = false;
+  // Advanced whenever the client moves the view locally (optimistic rotation OR
+  // pinch-zoom). A `get_view` reply requested BEFORE the last local move is
+  // stale and must not clobber the newer client view, or the camera rubber-bands
+  // on a remote link. EVERY local view change must go through `localView.advance`.
+  const localView = createLocalViewTracker();
   let lastInputAt = 0;
   let dirty = true;
   let destroyed = false;
@@ -139,9 +150,11 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       transport,
       onUnavailable: (error) => {
         // No pixel producer at all. That is the GL-free backend, not a broken
-        // one: tell the compositor the server rasterises nothing, or Mode G
-        // waits forever for a `reps` header that will never arrive.
-        compositor.setStreamAvailable(false);
+        // one: route through `syncStreamAvailability` (NOT a bare
+        // `setStreamAvailable(false)`) so the same Mode-G scene hand-off a
+        // caller-supplied source gets also runs on the built-in default source,
+        // or Mode G waits forever for a `reps` header that will never arrive.
+        syncStreamAvailability();
         onError(new Error(`Mode P stream unavailable: ${error.message}`));
       },
     });
@@ -285,22 +298,6 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     onError,
   });
 
-  // A source that says up front it will never rasterise (a null source, or a
-  // bridge with no GL context) must not leave the compositor waiting for a
-  // `PixelFrameHeader.reps` that is never coming: `currentFrame()` returns null
-  // until either a frame arrives or this is called, and a null frame means
-  // "assume the server draws everything", i.e. Mode G draws nothing. Without
-  // this, `?viewportModeP=off` — and every GL-free backend — is a black
-  // viewport with a green Mode-G badge. MEASURED: Mode G reported 0 frames and
-  // 0 draws with `_bridge.pull_geometry` answered ok, because every frame was
-  // dropped by `compositor.shouldDraw`.
-  const syncStreamAvailability = (): void => {
-    if (pixelSource.rasterizes === false || rawPixelSource.rasterizes === false) {
-      compositor.setStreamAvailable(false);
-    }
-  };
-  syncStreamAvailability();
-
   /* ---------------------------------------------------------- policy */
 
   const policy = createRenderPolicy({
@@ -317,6 +314,35 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       compositor.setPolicy(states);
     },
   });
+
+  // A source that says up front it will never rasterise (a null source, or a
+  // bridge with no GL context) must not leave the compositor waiting for a
+  // `PixelFrameHeader.reps` that is never coming: `currentFrame()` returns null
+  // until either a frame arrives or this is called, and a null frame means
+  // "assume the server draws everything", i.e. Mode G draws nothing. Without
+  // this, `?viewportModeP=off` — and every GL-free backend — is a black
+  // viewport with a green Mode-G badge. MEASURED: Mode G reported 0 frames and
+  // 0 draws with `_bridge.pull_geometry` answered ok, because every frame was
+  // dropped by `compositor.shouldDraw`.
+  let modeGOwnsScene = false;
+  const syncStreamAvailability = (): void => {
+    if (!serverRasterisesNothing(pixelSource.rasterizes, rawPixelSource.rasterizes)) return;
+    compositor.setStreamAvailable(false);
+    // The bridge rasterises NOTHING (a `--no-gl` backend): Mode G is the only
+    // path to a picture, so hand it the whole scene. This runs the instant
+    // `rasterizing` flips false — BEFORE any geometry is pulled — so the frames
+    // the compositor now requests are drawn, not dropped, and the draw watchdog
+    // never degrades a rep that was about to appear. `accessor` is trusted here:
+    // a GL-free build that also lacked the accessor could draw nothing at all,
+    // and each rep still degrades honestly with `no-accessor` if a pull says so.
+    // On a normal GL backend this never runs, so the faithful Mode-P input,
+    // picking and per-rep-toggle behaviour is left exactly as it was.
+    if (shouldHandOffToModeG(webgl && renderer.available, modeGOwnsScene)) {
+      modeGOwnsScene = true;
+      handOffSceneToModeG(policy);
+    }
+  };
+  syncStreamAvailability();
 
   /* ------------------------------------------------------------ view */
 
@@ -356,9 +382,13 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
       return;
     }
     viewInFlight = true;
+    const requestedAtEpoch = localView.epoch;
     void transport
       .call('get_view')
       .then((result) => {
+        // Drop a reply the client has already moved past: the optimistic view
+        // is newer and correct, and this stale server sample would snap it back.
+        if (!localView.accepts(requestedAtEpoch)) return;
         view = viewFromResult(result);
         renderer.setView(view);
         dirty = true;
@@ -406,6 +436,19 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     call: (fn, args = []) => transport.call(fn, [...args]),
     onError,
     view: () => view,
+    // tenmol-only: optimistic rotation. PyMOL is the source of truth for the
+    // view, but on a GL-free bridge waiting for `cmd.turn`+`get_view` per drag
+    // sample caps rotation at ~1 fps/RTT. We render the turn locally NOW and let
+    // `get_view` reconcile once the drag pauses — a transient, self-correcting
+    // divergence, and only on the GL-free path (the driver is consulted solely
+    // when `compositor.state.rasterizing === false`). The epoch guard in
+    // `refreshView` keeps a stale reply from snapping the picture back mid-drag.
+    onView: (next) => {
+      view = next;
+      localView.advance();
+      renderer.setView(next);
+      dirty = true;
+    },
     /**
      * The object under the press, for the object and view actions — PyMOL
      * takes the same thing from `LastPicked` (`SceneMouse.cpp:1512`).
@@ -493,6 +536,10 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
         if (view === null || pinchStartZ === null) return;
         const next = pinchZoom(view, pinchStartZ, totalScaleFactor);
         view = next;
+        // Same epoch invariant as optimistic rotation: a `get_view` reply in
+        // flight when this pinch lands is now stale and must be rejected, or it
+        // snaps the zoom back mid-gesture.
+        localView.advance();
         renderer.setView(next);
         dirty = true;
         // The backend stays authoritative: we round-trip through set_view
@@ -802,6 +849,10 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     /** `rasterizing` as the drag gate saw it, most recent last. */
     get cameraGate(): readonly boolean[] {
       return gateSamples.slice(-16);
+    },
+    /** The optimistic-view epoch; advanced by rotation AND pinch-zoom. */
+    get viewEpoch(): number {
+      return localView.epoch;
     },
     /** Client-side pick counters. Zero unless the backend cannot pick. */
     get localPick(): LocalPickStats {
