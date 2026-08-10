@@ -47,17 +47,30 @@ const CHROME_ARGS = [
   '--enable-unsafe-swiftshader',
 ];
 
-/** Newest cached chrome-headless-shell, or null. */
+/** Newest cached chrome-headless-shell across the known Playwright caches, or null. */
 export function findChrome() {
-  const cache = join(homedir(), 'Library/Caches/ms-playwright');
-  if (!existsSync(cache)) return null;
-  const builds = readdirSync(cache)
-    .filter((d) => d.startsWith('chromium_headless_shell-'))
-    .map((d) => ({ d, n: Number(d.split('-')[1]) || 0 }))
-    .sort((a, b) => b.n - a.n);
-  for (const { d } of builds) {
-    const exe = join(cache, d, 'chrome-headless-shell-mac-arm64', 'chrome-headless-shell');
-    if (existsSync(exe)) return exe;
+  const caches = [
+    process.env.PLAYWRIGHT_BROWSERS_PATH, // explicit override (CI/sandbox)
+    join(homedir(), 'Library/Caches/ms-playwright'), // macOS
+    join(homedir(), '.cache/ms-playwright'), // Linux
+  ].filter(Boolean);
+  const layouts = [
+    'chrome-headless-shell-mac-arm64/chrome-headless-shell',
+    'chrome-headless-shell-mac-x64/chrome-headless-shell',
+    'chrome-headless-shell-linux64/chrome-headless-shell',
+  ];
+  for (const cache of caches) {
+    if (!existsSync(cache)) continue;
+    const builds = readdirSync(cache)
+      .filter((d) => d.startsWith('chromium_headless_shell-'))
+      .map((d) => ({ d, n: Number(d.split('-')[1]) || 0 }))
+      .sort((a, b) => b.n - a.n);
+    for (const { d } of builds) {
+      for (const rel of layouts) {
+        const exe = join(cache, d, rel);
+        if (existsSync(exe)) return exe;
+      }
+    }
   }
   return null;
 }
@@ -196,6 +209,65 @@ export async function startStack({ quiet = true, noGl = false } = {}) {
       browser,
       url: `http://127.0.0.1:${vitePort}/`,
       healthz: `http://127.0.0.1:${bridgePort}/healthz`,
+      async close() {
+        try {
+          await browser.close();
+        } catch {
+          /* already closed */
+        }
+        kill();
+      },
+    };
+  } catch (e) {
+    kill();
+    throw e;
+  }
+}
+
+/**
+ * Boot vite + a headless browser WITHOUT a PyMOL bridge. The in-browser engine
+ * (`?backend=local`) needs no bridge, so the visual/perf suites run on plain
+ * ubuntu with swiftshader WebGL. Always pair with `stack.close()` in a finally.
+ */
+export async function startWebOnly({ quiet = true } = {}) {
+  const procs = [];
+  const kill = () => {
+    for (const p of procs) {
+      try {
+        p.kill('SIGTERM');
+      } catch {
+        /* already gone */
+      }
+    }
+  };
+  try {
+    const vitePort = await freePort();
+    const viteBin = [
+      join(REPO, 'apps/web/node_modules/.bin/vite'),
+      join(REPO, 'node_modules/.bin/vite'),
+    ].find((p) => existsSync(p));
+    if (!viteBin) throw new Error('vite binary not found; run `pnpm install`');
+    const vite = spawn(viteBin, ['--port', String(vitePort), '--strictPort'], {
+      cwd: join(REPO, 'apps/web'),
+      stdio: quiet ? 'ignore' : 'inherit',
+      env: { ...process.env },
+    });
+    procs.push(vite);
+    const viteSpawn = watchSpawn(vite, 'vite');
+    await Promise.race([waitFor('vite', () => httpOk(`http://127.0.0.1:${vitePort}/`)), viteSpawn]);
+
+    const exe = findChrome();
+    if (!exe) {
+      throw new Error(
+        'no cached chrome-headless-shell found. Run `npx playwright install chromium-headless-shell`.',
+      );
+    }
+    const { chromium } = await import(join(REPO, 'node_modules/playwright-core/index.mjs'));
+    const browser = await chromium.launch({ headless: true, executablePath: exe, args: CHROME_ARGS });
+    return {
+      vitePort,
+      browser,
+      url: `http://127.0.0.1:${vitePort}/`,
       async close() {
         try {
           await browser.close();

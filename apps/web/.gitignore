@@ -2,3 +2,4 @@ node_modules/
 dist/
 *.tsbuildinfo
 .vite/
+apps/web/e2e/output/

@@ -164,7 +164,7 @@ export function RenderStage(): React.JSX.Element {
     // The viewport is created once and owns its lifetime; no deps by design.
   }, []);
 
-  return <div ref={hostRef} style={{ position: 'absolute', inset: 0, background: '#000' }} />;
+  return <div ref={hostRef} data-render-stage="" style={{ position: 'absolute', top: 0, left: 0, background: '#000' }} />;
 }
 
 export { isRenderMode };

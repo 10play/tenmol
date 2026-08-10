@@ -87,3 +87,4 @@ packages/engine/testing/timings.tab
 .claude/settings.local.json
 .claude/.state/
 .claude/STOP
+apps/web/e2e/output/

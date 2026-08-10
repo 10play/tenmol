@@ -71,7 +71,6 @@ export async function generateRefs(b: Backend, only?: Set<string>): Promise<Reco
     const { png, view } = await renderScene(b, scene);
     writeFileSync(resolve(REFS_DIR, `${scene.id}.png`), png);
     views[scene.id] = view;
-    // eslint-disable-next-line no-console
     console.log(`ref ${scene.id}: ${png.length} bytes`);
   }
   mkdirSync(dirname(VIEWS_JSON), { recursive: true });
