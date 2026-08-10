@@ -1,0 +1,32 @@
+{
+  "name": "@tenmol/storybook",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Storybook workbench for the tenmol UI primitive layer — every base component and composed bundle, in the classic and modern (shadcn) themes.",
+  "scripts": {
+    "storybook": "storybook dev -p 6011 --no-open",
+    "build": "storybook build -o storybook-static",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tenmol/stores": "workspace:*",
+    "@tenmol/web": "workspace:*",
+    "lucide-react": "^1.28.0",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@storybook/addon-docs": "^9.0.0",
+    "@storybook/react-vite": "^9.0.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "storybook": "^9.0.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

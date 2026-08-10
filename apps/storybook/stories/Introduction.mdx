@@ -1,0 +1,43 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# tenmol UI workbench
+
+A Storybook for the tenmol web client's **UI primitive layer** — the swappable
+design-system boundary in `apps/web/src/ui`. Every base component and every
+composed bundle renders here so the look can be iterated in isolation, away from
+a live PyMOL bridge.
+
+## Two axes, one toolbar
+
+The whole point of the primitive layer is that the look is replaceable at
+runtime. The toolbar (top of the canvas) drives the same two axes the app
+exposes:
+
+- **Theme** — `Classic — PyMOL` ⇄ `Modern — shadcn`. The pixel-exact classic
+  desktop look, or the modern reskin. Same DOM either way; only the paint moves.
+- **Appearance** — `Dark` ⇄ `Light`. Only meaningful in the modern theme, which
+  redefines its design tokens for light mode. Classic ignores it.
+
+Flip either control and **every story re-renders in that combination** — that is
+how each state is reviewed across looks, so stories are written once, not per
+theme.
+
+## How it is organised
+
+- **Primitives** — the base atoms: `Button` / `IconButton` / `ToggleButton`,
+  `Panel` / `PanelHeader` / `Toolbar`, `TextInput` / `TextArea`, the native form
+  controls (`Select`, `Checkbox`, `Switch`, `Slider`), `Badge`, `ProgressBar`,
+  and the Radix-backed `DropdownMenu`, `Dialog`, `Tooltip`, plus the live
+  `ThemeToggle`.
+- **Bundles** — components composed together: real feature surfaces (the quick
+  buttons, the status bar) and composed showcases (object-row ops, a menu bar, a
+  settings form, an overlay panel, a dialog form, the toolbar rows).
+
+## Why the stories render without a bridge
+
+A global decorator supplies the app's real `ThemeProvider` plus a **stub
+Session** (real stores from `@tenmol/stores`, inert command surface), so feature
+bundles that call `useSession()` render exactly as in the app — but no click ever
+reaches a socket.

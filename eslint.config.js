@@ -13,6 +13,7 @@ import globals from 'globals';
 const IGNORES = [
   '**/node_modules/**',
   '**/dist/**',
+  '**/storybook-static/**',
   '**/.turbo/**',
   '**/generated/**',
   '**/*.d.ts',

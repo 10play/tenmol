@@ -92,3 +92,6 @@ packages/engine/testing/timings.tab
 /.playwright-mcp/
 /*.png
 apps/web/.env
+
+# Storybook static build output
+apps/storybook/storybook-static/
