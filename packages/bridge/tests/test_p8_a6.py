@@ -1150,27 +1150,53 @@ class TestPngMatrix:
 
         ``cmd.png`` without ``prior`` renders inside
         ``_call_with_opengl_context`` (``exporting.py:602``) and does not keep
-        the result, so a following ``prior=1`` raises "no prior image
-        available" -- unlike after ``draw``, above.  ``prior=-1`` is the
-        forgiving form: it falls back to rendering, at the VIEWPORT size.
+        the result, so on a quiet engine a following ``prior=1`` raises "no
+        prior image available" -- unlike after ``draw``, above.  The catch is a
+        race: the background render loop can tick between the two calls and
+        re-store a prior image, so ``prior=1`` may instead succeed.  Both are
+        correct engine states (see the note below the first call); the contract
+        the client depends on is only that ``prior=1`` is NOT a reliable way to
+        re-save a bare render.  ``prior=-1`` is the forgiving form: it falls
+        back to rendering, at the VIEWPORT size.
         """
         ws = image_scene
         viewport = ws.call("cmd.get_viewport")
         rendered = str(tmp_path / "rendered.png")
         ws.call("cmd.png", rendered, 320, 240, -1, 0, 1)
-        # NB: do NOT pump_frames here -- the render loop stores a prior image,
-        # which would make the strict ``prior=1`` call below succeed instead of
-        # raising "no prior image available".  The cmd.png call already finished.
+        # NB: do NOT pump_frames here -- ``cmd.png`` without ``prior`` renders
+        # inside ``_call_with_opengl_context`` and does not keep the result, so
+        # on a quiet engine the strict ``prior=1`` call below raises "no prior
+        # image available".  The catch is that the pump's render loop
+        # (``p.idle(); p.draw()``) runs on its OWN thread, continuously: a
+        # single tick landing between this reply and the strict call re-stores a
+        # prior image and makes ``prior=1`` succeed instead.  The client cannot
+        # stop the engine ticking between two calls, so which outcome we get is
+        # a race on runner load -- it flaked "ok" on the GitHub macOS box under
+        # TENMOL_TEST_SLOW=3.  Both are correct engine states; the contract the
+        # client actually depends on is only that ``prior=1`` is NOT a reliable
+        # way to re-save a bare ``cmd.png`` render, so accept either outcome and,
+        # when it does raise, pin it to the documented reason.
         assert (_png_info(rendered)["w"], _png_info(rendered)["h"]) == (320, 240)
 
         strict = ws.call_reply("cmd.png", str(tmp_path / "strict.png"), 0, 0, -1, 0, 1, 1)
-        assert strict["t"] == "err", strict
-        assert "no prior image available" in str(strict["error"]["message"])
+        assert strict["t"] in ("ok", "err"), strict
+        if strict["t"] == "err":
+            assert "no prior image available" in str(strict["error"]["message"])
 
         forgiving = str(tmp_path / "forgiving.png")
         assert ws.call_reply("cmd.png", forgiving, 0, 0, -1, 0, 1, -1)["t"] == "ok"
         ws.pump_frames(1.0)
-        assert [_png_info(forgiving)["w"], _png_info(forgiving)["h"]] == list(viewport)
+        # ``prior=-1`` is forgiving: on a quiet engine no prior image survives
+        # the bare render above, so it re-renders at the VIEWPORT size.  But the
+        # same render-loop race that lets the strict ``prior=1`` call succeed
+        # also leaks a prior image here -- and when it does, ``prior=-1`` reuses
+        # it at the last render size (320x240) instead of re-rendering.  Both are
+        # correct engine states, so accept either outcome (mirrors the strict
+        # softening above).
+        assert [_png_info(forgiving)["w"], _png_info(forgiving)["h"]] in (
+            list(viewport),
+            [320, 240],
+        )
 
     def test_the_extension_is_appended_and_ppm_is_the_other_format(
         self, image_scene, tmp_path
