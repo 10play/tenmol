@@ -28,6 +28,10 @@ const config: StorybookConfig = {
     // `.storybook/storybook.css` point it at the web component source + the
     // stories so every modern utility class actually gets generated here.
     viteConfig.plugins = [...(viteConfig.plugins ?? []), tailwindcss()];
+    // Allow a static build to be mounted under a sub-path (e.g. served through
+    // the app's dev server at `/storybook/`): `STORYBOOK_BASE=/storybook/`.
+    const base = process.env['STORYBOOK_BASE'];
+    if (base) viteConfig.base = base;
     // Normalise whatever alias shape Storybook set (object or array) to the
     // array form so a string entry (prefix match, for `@web/*`) can sit beside
     // a regex entry (exact match, for `@tenmol/viewport`).

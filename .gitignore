@@ -95,3 +95,6 @@ apps/web/.env
 
 # Storybook static build output
 apps/storybook/storybook-static/
+
+# Storybook static served through the app dev server (not committed)
+apps/web/public/storybook/
