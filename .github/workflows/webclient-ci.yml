@@ -148,6 +148,15 @@ jobs:
           node scripts/parity.mjs
           node scripts/parity.mjs --min 362
 
+      # ---- gate: command/rep coverage scoreboard --------------------------
+      #
+      # The backlog burndown (docs/parity-dashboard.md): real vs. total PyMOL
+      # cmd symbols, and reps built. The measurement + ratchet floors live in
+      # packages/engine-ts/test/coverage.test.ts, so `pnpm test:ci` above
+      # already enforces them; this step prints the scoreboard for visibility.
+      - name: coverage scoreboard
+        run: node scripts/coverage.mjs
+
       # ---- gate: engine parity (differential equivalence) -----------------
       #
       # Proves the TypeScript engine (@tenmol/engine-ts) is identical to real

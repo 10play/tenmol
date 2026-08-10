@@ -151,6 +151,15 @@ export class Engine {
     }
   }
 
+  /**
+   * The names of every registered `cmd.*` handler. Powers the command-coverage
+   * KPI (`scripts/coverage.mjs`) — a burndown of ported vs. total PyMOL symbols.
+   * Order is registration order; callers that need a set should build their own.
+   */
+  commandNames(): string[] {
+    return [...this.handlers.keys()];
+  }
+
   /* -------------------------------- do -------------------------------- */
 
   /**
