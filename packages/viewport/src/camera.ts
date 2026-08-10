@@ -186,6 +186,42 @@ export function pinchZoom(view: ViewMatrix, startZ: number, totalScaleFactor: nu
 }
 
 /**
+ * tenmol-only: apply `cmd.turn(axis, degrees)` to a view matrix locally, so a
+ * GL-free client can render a rotation WITHOUT the `cmd.turn` + `get_view` round
+ * trip that otherwise caps a remote drag at one frame per RTT (measured ~2 fps).
+ * PyMOL stays authoritative — this only advances the client between the turns it
+ * has already sent, and `get_view` reconciles the moment the drag pauses.
+ *
+ * The relationship is `R' = R · Raxis(-degrees)`, verified byte-for-byte against
+ * a live bridge for x, y, z and composed drags (`cmd.turn('y',θ)` on identity
+ * yields `Ry(-θ)`; on a non-trivial `R` it post-multiplies). Only the 3×3
+ * rotation submatrix (`view[0..8]`) changes; translation, clipping and the
+ * origin are untouched, exactly as `cmd.turn` leaves them. `get_view` remains
+ * authoritative and reconciles the moment the drag pauses.
+ */
+export function turnView(view: ViewMatrix, axis: 'x' | 'y' | 'z', degrees: number): ViewMatrix {
+  const t = (-degrees * Math.PI) / 180;
+  const c = Math.cos(t);
+  const s = Math.sin(t);
+  // Row-major rotation about the eye-space axis, matching PyMOL's convention.
+  const rot =
+    axis === 'x'
+      ? [1, 0, 0, 0, c, -s, 0, s, c]
+      : axis === 'y'
+        ? [c, 0, s, 0, 1, 0, -s, 0, c]
+        : [c, -s, 0, s, c, 0, 0, 0, 1];
+  const next = view.slice() as unknown as number[];
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      let sum = 0;
+      for (let k = 0; k < 3; k++) sum += (view[i * 3 + k] as number) * rot[k * 3 + j]!;
+      next[i * 3 + j] = sum;
+    }
+  }
+  return next as unknown as ViewMatrix;
+}
+
+/**
  * True when two views differ enough to be worth a redraw.
  *
  * NOT A SETTLE DETECTOR. `false` here means "these two samples are equal", and

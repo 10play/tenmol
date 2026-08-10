@@ -337,6 +337,13 @@ export function withFallback(
 
   const swap = (): void => {
     if (switched || sink === null) return;
+    // A GL-free primary is not a stalled stream — it is a bridge that rasterises
+    // NOTHING. The fallback drives `cmd.png`, which needs the very context that
+    // is missing, so switching gains nothing; worse, its header-less frames go
+    // through `observeFrame` and reset the compositor to `rasterizing: true`,
+    // which re-suppresses Mode G and disables the GL-free camera. Stay on the
+    // (silent) primary and let Mode G own the whole scene.
+    if (primary.rasterizes === false) return;
     switched = true;
     primary.stop();
     active = fallback;
@@ -361,6 +368,20 @@ export function withFallback(
   return {
     get name(): string {
       return `${active.name}${switched ? ' (fallback)' : ''}`;
+    },
+    /**
+     * A GL-free PRIMARY means the bridge rasterises NOTHING — and the fallback
+     * cannot save it, because the shipping fallback drives `cmd.png`, which
+     * needs the very context that is missing. Reporting the fallback's optimism
+     * here is exactly what left a `--no-gl` bridge showing a frozen image: the
+     * viewport's `syncStreamAvailability` never saw `rasterizes === false`, so
+     * the compositor kept `rasterizing: true`, dropped every Mode-G frame and
+     * bypassed the GL-free camera. Surface the primary's verdict instead; only
+     * defer to the active source when the primary has NOT declared itself dead.
+     */
+    get rasterizes(): boolean {
+      if (primary.rasterizes === false) return false;
+      return (switched ? fallback.rasterizes : primary.rasterizes) ?? true;
     },
     start(next: PixelSink): void {
       sink = wrapSink(next);

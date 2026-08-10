@@ -325,6 +325,12 @@ export interface ViewportHandle {
   readonly selectionBand: BandBox | null;
   /** `rasterizing` as the drag gate saw it, most recent last. */
   readonly cameraGate: readonly boolean[];
+  /**
+   * The optimistic-view epoch: incremented by EVERY local view change (rotation
+   * and pinch-zoom). Exposed so a test can assert both wiring points advance it,
+   * and a stale `get_view` reply (requested at an older epoch) is rejected.
+   */
+  readonly viewEpoch: number;
   /** Client-side pick counters. Zero unless the backend cannot pick for itself. */
   readonly localPick: LocalPickStats;
   readonly inputStats: {
