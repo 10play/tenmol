@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* global window, performance */
+/* global window, requestAnimationFrame */
 /**
  * Performance harness for the in-browser TS renderer.
  *

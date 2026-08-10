@@ -79,6 +79,15 @@ function asPayload(frame: PixelFramePayload | PixelFrame): PixelFramePayload {
   };
 }
 
+/** Two view matrices equal within a tight epsilon — the F3 idle-poll gate. */
+function viewsEqual(a: ViewMatrix, b: ViewMatrix): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (Math.abs((a[i] ?? 0) - (b[i] ?? 0)) > 1e-6) return false;
+  }
+  return true;
+}
+
 /** Create the viewport: mounts the render surface and drives both render modes. */
 export function createViewport(options: ViewportOptions): ViewportHandle {
   const { container, transport } = options;
@@ -392,9 +401,18 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
         // Drop a reply the client has already moved past: the optimistic view
         // is newer and correct, and this stale server sample would snap it back.
         if (!localView.accepts(requestedAtEpoch)) return;
-        view = viewFromResult(result);
-        renderer.setView(view);
-        dirty = true;
+        const next = viewFromResult(result);
+        // The 4 Hz keep-alive poll re-reads an UNCHANGED camera almost every
+        // time (idle scene). Repainting the whole Mode-G scene on each such
+        // reply burned 4 full renders/sec for nothing; only dirty when the
+        // camera actually moved (F3). renderer.setView is idempotent, so it is
+        // safe to skip when equal.
+        const changed = view === null || !viewsEqual(view, next);
+        view = next;
+        if (changed) {
+          renderer.setView(view);
+          dirty = true;
+        }
       })
       .catch((cause: unknown) => {
         // A closed socket is a normal state for a desktop app, not an error.

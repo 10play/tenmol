@@ -49,6 +49,13 @@ export class Executive {
   /** name -> stable atom identities (see selector `atomKey`). */
   private readonly selections = new Map<string, Set<string>>();
   private readonly settings = new Map<string, number | string>(Object.entries(DEFAULT_SETTINGS));
+  /**
+   * Bumped on every `set()`. The engine's geometry memoization (F1) folds this
+   * into each rep's content hash so a settings change (e.g. `sphere_scale`,
+   * `stick_radius`) invalidates the cached frames without the engine needing to
+   * know which setting feeds which rep.
+   */
+  private settingsVersion = 0;
   readonly view = new ViewState();
 
   /* ----------------------------- context ----------------------------- */
@@ -207,6 +214,12 @@ export class Executive {
 
   set(name: string, value: number | string | boolean): void {
     this.settings.set(name, typeof value === 'boolean' ? (value ? 1 : 0) : value);
+    this.settingsVersion++;
+  }
+
+  /** Monotonic counter bumped on every `set()`; see {@link settingsVersion}. */
+  getSettingsVersion(): number {
+    return this.settingsVersion;
   }
 
   getSetting(name: string): number | string | undefined {

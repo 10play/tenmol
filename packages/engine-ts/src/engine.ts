@@ -27,6 +27,8 @@ import {
   type ObjectRow,
 } from '@tenmol/protocol';
 import { Executive } from './exec/executive';
+import { repBit } from './model/atom';
+import type { ObjectMolecule } from './model/molecule';
 import { getColorIndex, getColorTuple } from './exec/color';
 import { parsePdb } from './model/pdb';
 import { buildFragment } from './model/fragments';
@@ -752,6 +754,16 @@ export class Engine {
   /** object/rep/state keys that currently have geometry on the client. */
   private liveKeys = new Set<string>();
 
+  /**
+   * F1 — per-rep geometry memoization. Keyed by `geometryKey(object,state,rep)`,
+   * holds the content hash of the inputs the frame was last built from and its
+   * byte size. On the push path (`emitGeometry`) a rep whose hash is unchanged
+   * is NOT rebuilt or re-emitted — the client already holds that exact frame —
+   * turning `show cartoon` (which changes only the cartoon vis bit) from a
+   * rebuild of EVERY rep, surface included, into a rebuild of just the cartoon.
+   */
+  private frameCache = new Map<string, { hash: number; bytes: number }>();
+
   private emitGeometry(): void {
     const liveNow = new Set<string>();
     for (const mol of this.executive.moleculesInOrder()) {
@@ -787,6 +799,8 @@ export class Engine {
 
   /** Emit an empty geometry frame for one key, dropping it on the client. */
   private emitTombstone(object: string, rep: number, state: number): void {
+    // Forget the memoized frame so a later re-show rebuilds from scratch.
+    this.frameCache.delete(geometryKey({ object, state, rep }));
     const header: CgoDrawArraysHeader = {
       v: 1,
       kind: 'cgo-draw-arrays',
@@ -826,27 +840,76 @@ export class Engine {
     // Reps this engine cannot render yet are simply "nothing to draw" — never a
     // Mode-P fallback, because the local engine has no pixel stream.
     if (!isRenderableRep(rep)) return result('not-built');
-    const bytes = this.emitRepFrame(object, rep, state);
+    const bytes = this.emitRepFrame(object, rep, state, true);
     return bytes > 0 ? result('updated', bytes) : result('empty');
   }
 
-  /** Build and push the frame for one object/rep/state; returns bytes, or 0. */
-  private emitRepFrame(object: string, rep: number, state: number): number {
+  /**
+   * Build and push the frame for one object/rep/state; returns bytes, or 0.
+   *
+   * On the push path (`force=false`) an unchanged rep — same content hash as the
+   * last build — is skipped entirely: not rebuilt, not re-emitted, since the
+   * client still holds that frame. The pull path (`_bridge.pull_geometry`) sets
+   * `force=true`: its caller is asking for the frame NOW and must receive one.
+   */
+  private emitRepFrame(object: string, rep: number, state: number, force = false): number {
     const mol = this.executive.molecule(object);
     if (!mol || !mol.enabled) return 0;
     const builder = REP_BUILDERS[rep];
     if (!builder) return 0;
+    const key = geometryKey({ object, state, rep });
+    const hash = this.repInputHash(mol, rep, state);
+    const cached = this.frameCache.get(key);
+    if (!force && cached && cached.hash === hash) return cached.bytes;
     const buf = builder({
       mol,
       state,
       seq: this.seq,
       getSettingFloat: (name) => this.executive.getSettingFloat(name),
     });
-    if (!buf) return 0;
+    if (!buf) {
+      this.frameCache.set(key, { hash, bytes: 0 });
+      return 0;
+    }
     this.seq++;
     const frame = decodeBinaryFrame(buf);
     this.emitter.emit('binary:frame', frame);
     if (isGeometryFrame(frame)) this.emitter.emit('geometry:frame', frame);
+    this.frameCache.set(key, { hash, bytes: buf.byteLength });
     return buf.byteLength;
+  }
+
+  /**
+   * A cheap 32-bit content hash of everything a rep's built frame depends on:
+   * atom count, the global settings version, per-atom colour, this rep's own
+   * visibility bit and secondary-structure code, and the state's raw coordinate
+   * bytes. Folding only the rep's OWN vis bit (not the whole `visRep`) is what
+   * lets toggling one rep skip rebuilding the others. O(atoms) — trivially
+   * cheaper than any builder (surface is O(verts x atoms)).
+   */
+  private repInputHash(mol: ObjectMolecule, rep: number, state: number): number {
+    const bit = repBit(rep);
+    const atoms = mol.atoms;
+    const n = atoms.length;
+    let h = 2166136261;
+    const mix = (x: number): void => {
+      h = Math.imul(h ^ (x >>> 0), 16777619) >>> 0;
+    };
+    mix(n);
+    mix(this.executive.getSettingsVersion());
+    mix(rep);
+    for (let i = 0; i < n; i++) {
+      const a = atoms[i];
+      if (!a) continue;
+      mix((a.visRep & bit) !== 0 ? 1 : 0);
+      mix(a.color);
+      mix(a.ss.length > 0 ? a.ss.charCodeAt(0) : 0);
+    }
+    const coords = mol.states[state - 1];
+    if (coords) {
+      const u = new Uint32Array(coords.buffer, coords.byteOffset, coords.length);
+      for (let i = 0; i < u.length; i++) mix(u[i] ?? 0);
+    }
+    return h >>> 0;
   }
 }

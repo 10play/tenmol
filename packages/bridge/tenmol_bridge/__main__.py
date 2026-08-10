@@ -202,6 +202,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         token_path=args.token_file,
         force_no_pymol=args.no_pymol,
         require_gl=not args.no_gl,
+        require_loopback_peer=not args.allow_remote,
         log_level=args.log_level,
     )
 

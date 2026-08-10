@@ -202,6 +202,50 @@ describe('sticks (cylinder) geometry', () => {
   });
 });
 
+describe('geometry memoization (F1)', () => {
+  it('re-emits only the rep whose inputs changed', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.call('read_pdbstr', [SMALL_PDB, 'm']);
+    await backend.call('show_as', ['spheres', 'all']);
+
+    // Turning ANOTHER rep on triggers a full publish, but only sticks — whose
+    // vis bit changed — must rebuild; the unchanged spheres frame is cached and
+    // must NOT be re-emitted.
+    const frames: { header: { rep: number } }[] = [];
+    backend.on('geometry:frame', (f) => frames.push(f as never));
+    await backend.call('show', ['sticks', 'all']);
+
+    const reps = new Set(frames.map((f) => f.header.rep));
+    expect(reps.has(Rep.Cyl)).toBe(true); // the changed rep rebuilt + emitted
+    expect(reps.has(Rep.Sphere)).toBe(false); // the unchanged rep skipped
+  });
+
+  it('a redundant publish that changes nothing re-emits nothing', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.call('read_pdbstr', [SMALL_PDB, 'm']);
+    await backend.call('show_as', ['spheres', 'all']);
+
+    const frames: unknown[] = [];
+    backend.on('geometry:frame', (f) => frames.push(f));
+    await backend.call('show', ['spheres', 'all']); // already shown: a no-op
+    expect(frames).toHaveLength(0);
+  });
+
+  it('re-emits after a colour change (colour feeds the hash)', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.call('read_pdbstr', [SMALL_PDB, 'm']);
+    await backend.call('show_as', ['spheres', 'all']);
+
+    const frames: { header: { rep: number } }[] = [];
+    backend.on('geometry:frame', (f) => frames.push(f as never));
+    await backend.call('color', ['red', 'all']);
+    expect(frames.some((f) => f.header.rep === Rep.Sphere)).toBe(true);
+  });
+});
+
 describe('nonbonded / nb_spheres geometry (unbonded atoms only)', () => {
   // Two atoms 16 A apart: definitely no bond, so both are "nonbonded".
   const isolated = makePdb([
