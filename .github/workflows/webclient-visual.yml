@@ -2,8 +2,11 @@
 #
 # Runs bridge-free on ubuntu: the `?backend=local` engine needs no PyMOL, and the
 # render-only harness paints with swiftshader WebGL in headless Chromium. Gates
-# the TS-vs-golden self-regression (strict); the TS-vs-PyMOL similarity % and the
-# perf frame-times are reported as informational (GPU-less CI perf is noisy).
+# the TS-vs-golden self-regression (strict) AND a floor on the MEAN TS-vs-PyMOL
+# similarity (so a golden reseeded broadly further from PyMOL fails). Per-scene
+# PyMOL similarity and the perf frame-times stay informational (GPU-less CI is
+# noisy). The engine's exact PyMOL equivalence is gated separately by the live
+# differential in webclient-e2e.yml.
 name: webclient-visual
 
 on:

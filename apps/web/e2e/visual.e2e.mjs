@@ -8,11 +8,17 @@
  * For each committed reference (docs/screenshots/visual/refs/<id>.png), it opens
  * the render-only harness on `?backend=local` (our three.js render), screenshots
  * the canvas, and produces TWO comparisons:
- *   (a) TS-vs-PyMOL  — similarity % against the PyMOL reference. INFORMATIONAL:
- *       PyMOL's ray render is the aspirational target; we drive this up with
- *       quality fixes, we do not gate on it.
+ *   (a) TS-vs-PyMOL  — similarity % against the PyMOL reference. Per scene this
+ *       is INFORMATIONAL, but the MEAN across all scenes is gated by a floor
+ *       (MEAN_PYMOL_FLOOR) so a golden reseeded to something broadly further
+ *       from PyMOL turns the build red. See the `tenmol-only:` note at the gate.
  *   (b) TS-vs-golden — against docs/screenshots/visual/golden/<id>.png. STRICT:
  *       our own render must not change unexpectedly. `--update` rewrites goldens.
+ *
+ * NOTE: this suite is the RENDERER (Mode-G pixels) gate. The ENGINE's exact
+ * equivalence to real PyMOL (command observables — counts, colours, coords,
+ * selections) is a separate, strict gate: the live differential in
+ * tools/parity/test/live.test.ts, run against a real bridge in webclient-e2e.yml.
  *
  * Actual + diff PNGs are written to apps/web/e2e/output/visual/ (gitignored).
  * Runs bridge-free on ubuntu with swiftshader WebGL.
@@ -37,6 +43,17 @@ const filter = filterAt >= 0 ? argv[filterAt + 1] : null;
 
 /** A golden may drift this fraction of pixels before it is a regression. */
 const GOLDEN_MAX_DIFF_RATIO = 0.02;
+
+// tenmol-only: we do NOT gate per-scene TS-vs-PyMOL similarity. Two reasons:
+// PyMOL's reference is a RAY render and our real-time WebGL target cannot match
+// it pixel-for-pixel (no ray shadows / SES / AO — see docs/engine-backlog.md §4),
+// and GPU-less CI (swiftshader) makes a single scene's % noisy. Instead we gate
+// the MEAN across all scenes against a floor: stable over 22 scenes, yet it still
+// fails the build if a golden is reseeded to something broadly further from PyMOL
+// (the "renderer silently drifts away from PyMOL" case). Bump it consciously, as
+// with the parity scoreboard's `--min`, when a change legitimately moves the mean.
+// The engine's EXACT PyMOL equivalence is gated elsewhere (the live differential).
+const MEAN_PYMOL_FLOOR = Number(process.env.TENMOL_VISUAL_PYMOL_FLOOR ?? 85);
 
 mkdirSync(GOLDEN, { recursive: true });
 mkdirSync(OUT, { recursive: true });
@@ -146,4 +163,16 @@ const report = {
 };
 writeFileSync(join(OUT, 'report.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(`\nvisual: mean PyMOL similarity ${report.meanPymolSimilarityPct}%  ·  ${scenes.length - failed}/${scenes.length} golden gates passed`);
-process.exit(failed ? 1 : 0);
+
+// The mean-PyMOL floor (see MEAN_PYMOL_FLOOR). A drift AWAY from PyMOL that the
+// self-regression gate can't see (because the golden moved with it) fails here.
+// Only meaningful over the FULL corpus — a `-t` subset's mean isn't the real
+// mean, so skip the floor when filtering (CI always runs unfiltered).
+const belowFloor = !filter && report.meanPymolSimilarityPct < MEAN_PYMOL_FLOOR;
+if (belowFloor) {
+  console.error(
+    `\nvisual: FAIL — mean PyMOL similarity ${report.meanPymolSimilarityPct}% is below the floor ${MEAN_PYMOL_FLOOR}%. ` +
+      `The renderer drifted away from PyMOL; fix it, or bump MEAN_PYMOL_FLOOR consciously if the move is intended.`,
+  );
+}
+process.exit(failed || belowFloor ? 1 : 0);

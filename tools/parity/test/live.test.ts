@@ -8,7 +8,9 @@ import { runCorpus, runLocalCorpus, diffCorpus } from '../src/index';
  * divergence — so a golden fixture can never silently drift away from PyMOL.
  *
  * Skipped unless `TENMOL_PARITY_REMOTE=<ws url>` is set, because it needs a
- * running bridge. That env is set in the bridge-enabled CI job. When
+ * running bridge. That env is set by the "engine parity -- live differential"
+ * step in `.github/workflows/webclient-e2e.yml` — the one CI job with a PyMOL
+ * bridge — which boots a bridge and gates on this test. When
  * `TENMOL_PARITY_REGEN=1` is also set, the remote run is written back to
  * `fixtures/golden.json`, making real PyMOL the authority for the fast gate.
  */
