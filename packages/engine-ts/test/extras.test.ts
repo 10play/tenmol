@@ -1,0 +1,234 @@
+import { describe, it, expect } from 'vitest';
+
+import { Executive } from '../src/exec/executive';
+import { parsePdb } from '../src/model/pdb';
+import { registerExtras } from '../src/cmd/extras';
+import type { CommandHandler } from '../src/cmd/registrar';
+
+/* ------------------------------------------------------------------------ */
+/* A tiny two-residue peptide (with a CA per residue) plus a HETATM MSE      */
+/* residue carrying a selenium (SE), spread across TWO models (states) so    */
+/* state ops have something to chew on.                                      */
+/* ------------------------------------------------------------------------ */
+
+const PDB = [
+  'MODEL        1',
+  'ATOM      1  N   ALA A   1       0.000   0.000   0.000  1.00 10.00           N',
+  'ATOM      2  CA  ALA A   1       1.500   0.000   0.000  1.00 11.00           C',
+  'ATOM      3  C   ALA A   1       2.000   1.400   0.000  1.00 12.00           C',
+  'ATOM      4  N   GLY A   2       3.300   1.400   0.000  1.00 20.00           N',
+  'ATOM      5  CA  GLY A   2       4.000   2.600   0.000  1.00 21.00           C',
+  'HETATM    6  SE  MSE B   1      10.000  10.000  10.000  1.00 30.00          Se',
+  'HETATM    7  CA  MSE B   1      11.000  10.000  10.000  1.00 31.00           C',
+  'ENDMDL',
+  'MODEL        2',
+  'ATOM      1  N   ALA A   1       0.500   0.000   0.000  1.00 10.00           N',
+  'ATOM      2  CA  ALA A   1       2.000   0.000   0.000  1.00 11.00           C',
+  'ATOM      3  C   ALA A   1       2.500   1.400   0.000  1.00 12.00           C',
+  'ATOM      4  N   GLY A   2       3.800   1.400   0.000  1.00 20.00           N',
+  'ATOM      5  CA  GLY A   2       4.500   2.600   0.000  1.00 21.00           C',
+  'HETATM    6  SE  MSE B   1      10.500  10.000  10.000  1.00 30.00          Se',
+  'HETATM    7  CA  MSE B   1      11.500  10.000  10.000  1.00 31.00           C',
+  'ENDMDL',
+  'END',
+].join('\n');
+
+/** Fresh executive + wired-up extras handlers, per the isolated harness. */
+function setup() {
+  const ex = new Executive();
+  ex.addMolecule(parsePdb(PDB, 'm'));
+  const handlers = new Map<string, CommandHandler>();
+  let publishes = 0;
+  let viewEmits = 0;
+  const ctx = {
+    command: (n: string, f: CommandHandler) => handlers.set(n, f),
+    executive: ex,
+    publish() {
+      publishes++;
+    },
+    emitView() {
+      viewEmits++;
+    },
+    str: (v: unknown, d = '') => (v == null ? d : String(v)),
+  };
+  registerExtras(ctx);
+  const call = (name: string, args: unknown[] = [], kwargs: Record<string, unknown> = {}) =>
+    handlers.get(name)!(args, kwargs);
+  return { ex, handlers, call, stats: () => ({ publishes, viewEmits }) };
+}
+
+describe('extras — residual command sweep', () => {
+  it('registers a handler for every claimed verb (no gaps, callable)', () => {
+    const { handlers } = setup();
+    const claimed = [
+      // real
+      'alphatoall', 'mse2met', 'mask', 'unmask', 'get_mask', 'delete_states',
+      'split_states', 'join_states', 'copy_to', 'extract', 'overlap',
+      'intra_rms', 'intra_rms_cur', 'look_at', 'middle', 'refresh',
+      'transparency', 'stereo', 'edit_mode',
+      // no-ops (representative sample across every batch)
+      'load', 'save', 'fetch', 'png', 'ray', 'draw', 'log', 'edit', 'unpick',
+      'fab', 'fnab', 'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
+      'alias', 'assign_stereo', 'alignto', 'extra_fit', 'cealign', 'usalign',
+      'get_mtl_obj', 'get_povray', 'povray', 'remove_picked', 'pair_fit',
+    ];
+    for (const name of claimed) {
+      expect(handlers.has(name), `missing handler: ${name}`).toBe(true);
+    }
+    // > 60 verbs registered overall.
+    expect(handlers.size).toBeGreaterThan(60);
+  });
+
+  /* --------------------------- REAL behaviours --------------------------- */
+
+  it('mask / unmask / get_mask toggle the per-atom masked flag', () => {
+    const { call } = setup();
+    expect(call('get_mask', ['all'])).toBe(0);
+    const n = call('mask', ['all']);
+    expect(n).toBe(7);
+    expect(call('get_mask', ['all'])).toBe(7);
+    // Unmask only chain A; chain B (2 atoms) stays masked.
+    call('unmask', ['chain A']);
+    expect(call('get_mask', ['all'])).toBe(2);
+    expect(call('get_mask', ['chain A'])).toBe(0);
+  });
+
+  it('alphatoall copies the CA b-factor to every atom of the residue', () => {
+    const { ex, call } = setup();
+    const changed = call('alphatoall', ['all', 'b']);
+    expect(typeof changed).toBe('number');
+    const mol = ex.molecule('m')!;
+    // ALA residue: N(10) and C(12) should now match CA's 11.
+    const ala = mol.atoms.filter((a) => a.resn === 'ALA');
+    for (const a of ala) expect(a.b).toBe(11);
+  });
+
+  it('mse2met renames MSE→MET and converts SE→SD/sulfur', () => {
+    const { ex, call } = setup();
+    const changed = call('mse2met', ['all']);
+    expect(changed).toBe(2);
+    const mol = ex.molecule('m')!;
+    const mse = mol.atoms.filter((a) => a.resi === '1' && a.chain === 'B');
+    expect(mse.length).toBe(2);
+    for (const a of mse) expect(a.resn).toBe('MET');
+    const se = mse.find((a) => a.name === 'SD');
+    expect(se).toBeTruthy();
+    expect(se!.elem).toBe('S');
+  });
+
+  it('delete_states removes matching states from an object', () => {
+    const { ex, call } = setup();
+    expect(ex.molecule('m')!.nstate).toBe(2);
+    const removed = call('delete_states', ['m', '2']);
+    expect(removed).toBe(1);
+    expect(ex.molecule('m')!.nstate).toBe(1);
+  });
+
+  it('split_states makes one single-state object per state', () => {
+    const { ex, call } = setup();
+    const created = call('split_states', ['m']) as string[];
+    expect(Array.isArray(created)).toBe(true);
+    expect(created.length).toBe(2);
+    for (const name of created) {
+      const mol = ex.molecule(name)!;
+      expect(mol).toBeTruthy();
+      expect(mol.nstate).toBe(1);
+      expect(mol.natom).toBe(7);
+    }
+  });
+
+  it('join_states builds a multi-state object from single-state objects', () => {
+    const { ex, call } = setup();
+    // Two single-state copies to fold back together.
+    const created = call('split_states', ['m']) as string[];
+    const sel = created.join(' or ');
+    const nstate = call('join_states', ['joined', sel]);
+    expect(nstate).toBe(2);
+    expect(ex.molecule('joined')!.nstate).toBe(2);
+  });
+
+  it('copy_to copies a selection into a fresh object without touching source', () => {
+    const { ex, call } = setup();
+    const n = call('copy_to', ['justCA', 'name CA']);
+    expect(n).toBe(3); // three CA atoms (ALA, GLY, MSE)
+    expect(ex.molecule('justCA')!.natom).toBe(3);
+    expect(ex.molecule('m')!.natom).toBe(7); // source unchanged
+  });
+
+  it('extract creates a new object AND removes the atoms from the source', () => {
+    const { ex, call } = setup();
+    const n = call('extract', ['chainB', 'chain B']);
+    expect(n).toBe(2);
+    expect(ex.molecule('chainB')!.natom).toBe(2);
+    expect(ex.molecule('m')!.natom).toBe(5); // chain B removed from source
+    expect(ex.countAtoms('chain B and m')).toBe(0);
+  });
+
+  it('overlap returns a non-negative clash total (>0 for a self-overlap)', () => {
+    const { call } = setup();
+    const total = call('overlap', ['chain A', 'chain A']);
+    expect(typeof total).toBe('number');
+    expect(total as number).toBeGreaterThan(0);
+    // Chain A vs the far-away chain B: no clash.
+    const none = call('overlap', ['chain A', 'chain B']);
+    expect(none).toBe(0);
+  });
+
+  it('intra_rms reports a per-state list with a -1.0 reference', () => {
+    const { call } = setup();
+    const rms = call('intra_rms', ['all']) as number[];
+    expect(Array.isArray(rms)).toBe(true);
+    expect(rms.length).toBe(2);
+    expect(rms[0]).toBe(-1.0);
+    expect(rms[1]).toBeGreaterThan(0); // models differ by +0.5 in x
+  });
+
+  it('look_at and middle move the rotation origin (via emitView)', () => {
+    const { ex, call, stats } = setup();
+    call('look_at', [1, 2, 3]);
+    let view = ex.view.get();
+    expect([view[12], view[13], view[14]]).toEqual([1, 2, 3]);
+    call('middle');
+    view = ex.view.get();
+    // Middle recenters somewhere finite (the spread of all atoms).
+    expect(Number.isFinite(view[12]!)).toBe(true);
+    expect(stats().viewEmits).toBeGreaterThanOrEqual(2);
+  });
+
+  it('transparency / stereo / edit_mode land as observable settings', () => {
+    const { ex, call } = setup();
+    call('transparency', [0.4]);
+    expect(ex.getSettingFloat('transparency')).toBeCloseTo(0.4);
+    call('stereo', ['on']);
+    expect(ex.getSettingFloat('stereo')).toBe(1);
+    call('edit_mode', [0]);
+    expect(ex.getSettingFloat('edit_mode')).toBe(0);
+  });
+
+  it('refresh triggers a publish and returns null', () => {
+    const { call, stats } = setup();
+    const before = stats().publishes;
+    expect(call('refresh')).toBeNull();
+    expect(stats().publishes).toBe(before + 1);
+  });
+
+  /* --------------------------- DOCUMENTED NO-OPS ------------------------- */
+
+  it('environment-bound verbs are safe no-ops with the right shape', () => {
+    const { ex, call } = setup();
+    const before = ex.molecule('m')!.natom;
+    // null-returning
+    for (const v of ['load', 'save', 'fetch', 'png', 'ray', 'quit', 'cache', 'cls', 'log']) {
+      expect(call(v), `${v} should return null`).toBeNull();
+    }
+    // shaped returns
+    expect(call('alignto', ['ref'])).toEqual([]);
+    expect(call('cealign', ['a', 'b'])).toEqual({});
+    expect(call('get_povray')).toEqual(['', '']);
+    expect(call('get_mtl_obj')).toBe('');
+    expect(call('pair_fit')).toBe(0);
+    expect(call('remove_picked')).toBe(0);
+    // no side effects on the model
+    expect(ex.molecule('m')!.natom).toBe(before);
+  });
+});

@@ -70,9 +70,14 @@ ${LIGHTING_GLSL}
 void main() {
   vec4 color = v_color;
   if (u_hasNormal) {
-    // Two-sided: PyMOL's surfaces and cartoons are closed but a clipped
-    // interior shows back faces, which must still be lit.
-    vec3 n = gl_FrontFacing ? v_normal : -v_normal;
+    // Two-sided lighting in VIEW space: light the side that faces the camera
+    // (normal.z toward the eye), independent of triangle winding. Winding —
+    // hence gl_FrontFacing — is not reliable for the marching-cubes surface or
+    // the extruded cartoon, and keying the flip on it left front faces lit by a
+    // back-facing normal, i.e. black. This matches how the sphere/cylinder
+    // impostors face their normals at the camera.
+    vec3 n = normalize(v_normal);
+    if (n.z < 0.0) n = -n;
     color = ApplyLighting(color, n);
     color.rgb *= v_ao;
   }

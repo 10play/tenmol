@@ -255,6 +255,34 @@ found and re-applied by hand after an upstream merge.
 Nothing else under `packages/engine/` is edited, and `packages/engine/` is self-contained: its
 `setup.py` uses paths relative to itself and builds without knowing this repo exists.
 
+## 10b. Two backends behind one interface
+
+The description above is the **remote** backend: drive the real C++/Python engine over the wire.
+There is now a **second** backend — a TypeScript port of the engine that runs *in the browser* — and
+the app chooses between them abstractly.
+
+The seam is `@tenmol/backend`'s `Backend` interface (`packages/backend/src/backend.ts`): the exact
+surface the app used from the socket client — `call`, `do`, `sub`/`unsub`, events, input, lifecycle.
+Two implementations satisfy it:
+
+| Backend | Package | Engine |
+| --- | --- | --- |
+| `RemoteBackend` | `@tenmol/client` (`createRemoteBackend`) | real PyMOL over `ws://…` (`PymolConnection`) |
+| `LocalBackend` | `@tenmol/engine-ts` (`createLocalBackend`) | the TypeScript port, in-process |
+
+`createCmd()` needs only `call`+`do`, so the whole `cmd` façade — and `@tenmol/stores`,
+`@tenmol/viewport` and every feature — is backend-agnostic. `apps/web/src/app/session.ts` is the one
+place that constructs a backend, from `config.backend` (`apps/web/src/app/config.ts`
+`resolveBackendKind`): the **subdomain** the page is served on picks the engine (a `ts.`/`engine.`
+host → local, a `pymol.`/`bridge.` host → remote), overridable with `?backend=` or
+`VITE_TENMOL_BACKEND` for dev/CI/the parity harness.
+
+The TypeScript engine emits the identical `@tenmol/protocol` topic payloads and Mode-G binary frames,
+so the existing three.js renderer draws its geometry unchanged (the viewport defaults to Mode G for
+the local backend, since it has no offscreen GL to rasterise Mode P). Its 1-to-1 parity with real
+PyMOL over the ported command slice is proven by the differential suite in `tools/parity` — see
+`docs/engine-port.md`.
+
 ## 11. The client
 
 ```

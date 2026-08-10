@@ -30,41 +30,22 @@ import {
   type InputReshapeMessage,
   type Json,
   type Topic,
-  type WireError,
 } from '@tenmol/protocol';
+
+import type { Backend, BackendConnectionState } from '@tenmol/backend';
+import { PymolError, DisconnectedError, RequestTimeoutError } from '@tenmol/backend';
 
 import { TypedEmitter, type ClientEvents, type Listener, type Unsubscribe } from './events';
 
 /* ------------------------------------------------------------------ *
  * Errors
- * ------------------------------------------------------------------ */
-
-/** A PyMOL-side failure: the server answered `{t:'err'}`. */
-export class PymolError extends Error {
-  override name = 'PymolError';
-  /** Python exception class name, or a bridge rejection like 'NotAllowed'. */
-  readonly type: string;
-  readonly traceback: string;
-  /** The `fn`/`cmd` that failed, for context in logs. */
-  readonly request: string | undefined;
-
-  constructor(error: WireError, request?: string) {
-    super(error.message || error.type);
-    this.type = error.type;
-    this.traceback = error.traceback;
-    this.request = request;
-  }
-}
-
-/** The socket went away (or was never up) before a reply arrived. */
-export class DisconnectedError extends Error {
-  override name = 'DisconnectedError';
-}
-
-/** No reply within `requestTimeoutMs`. */
-export class RequestTimeoutError extends Error {
-  override name = 'RequestTimeoutError';
-}
+ * ------------------------------------------------------------------ *
+ *
+ * The three error classes now live in `@tenmol/backend` so both backends reject
+ * with the same types. Re-exported here so `import { PymolError } from
+ * '@tenmol/client'` (and from './connection') keeps working unchanged.
+ */
+export { PymolError, DisconnectedError, RequestTimeoutError } from '@tenmol/backend';
 
 /* ------------------------------------------------------------------ *
  * Socket abstraction (browser WebSocket, `ws` in tests, mocks)
@@ -93,8 +74,8 @@ export const SocketReadyState = {
   Closed: 3,
 } as const;
 
-/** Lifecycle phase of a PymolConnection. */
-export type ConnectionState = 'idle' | 'connecting' | 'open' | 'reconnecting' | 'closed';
+/** Lifecycle phase of a PymolConnection; alias of the shared backend union. */
+export type ConnectionState = BackendConnectionState;
 
 /** Exponential-backoff tuning for automatic reconnection. */
 export interface ReconnectOptions {
@@ -149,7 +130,7 @@ const DEFAULT_RECONNECT: Required<ReconnectOptions> = {
  * ------------------------------------------------------------------ */
 
 /** A resilient WebSocket client to the PyMOL bridge: request/reply, topic subscriptions, and automatic reconnection. */
-export class PymolConnection {
+export class PymolConnection implements Backend {
   readonly url: string;
 
   private readonly emitter = new TypedEmitter<ClientEvents>();

@@ -1,0 +1,24 @@
+{
+  "name": "@tenmol/parity",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Differential equivalence suite: proves the TypeScript engine (@tenmol/engine-ts) and real PyMOL (over @tenmol/client) produce identical observables for the same command scripts.",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tenmol/backend": "workspace:*",
+    "@tenmol/client": "workspace:*",
+    "@tenmol/engine-ts": "workspace:*",
+    "@tenmol/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "ws": "^8.18.0",
+    "@types/ws": "^8.5.12"
+  }
+}

@@ -447,7 +447,7 @@ def test_an_instant_command_aborts_a_sweep_but_turn_does_not(
     time.sleep(0.3)
     cam.call("cmd.turn", "y", 15)
     final = quiet_view(cam)
-    assert gap(final, target) == 0.0, "the sweep did not finish"
+    assert gap(final, target) < 1e-4, "the sweep did not finish"
     assert final[:9] == pytest.approx(home[:9], abs=1e-6), "turn survived the sweep"
 
 

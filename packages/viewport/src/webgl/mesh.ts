@@ -176,14 +176,20 @@ export function buildIndexedMesh(frame: GeometryFrame<IndexedMeshHeader>): Built
   // cannot read it out of a vertex attribute.
   let rgbaColor: Float32Array | null = null;
   if (header.buffers.color) {
-    // RepSurface::VC / RepMesh::VC are RGB (3 floats); the material wants RGBA.
-    const rgb = viewOf(frame, header.buffers.color) as Float32Array;
+    // The material wants RGBA. The source stride is whatever the producer
+    // declared: PyMOL's `RepSurface::VC`/`RepMesh::VC` are RGB (3 floats), but
+    // the TypeScript engine's surface/cartoon builders pack RGBA (4). Reading a
+    // 4-stride buffer with a fixed stride of 3 shifts every vertex's colour by
+    // one float — which rendered as a rainbow-noise scramble. Honour the ref.
+    const src = viewOf(frame, header.buffers.color) as Float32Array;
+    const stride = header.buffers.color.itemSize || 3;
     const rgba = new Float32Array(nverts * 4);
     for (let i = 0; i < nverts; i++) {
-      rgba[i * 4] = rgb[i * 3] ?? 1;
-      rgba[i * 4 + 1] = rgb[i * 3 + 1] ?? 1;
-      rgba[i * 4 + 2] = rgb[i * 3 + 2] ?? 1;
-      rgba[i * 4 + 3] = defaultAlpha;
+      const o = i * stride;
+      rgba[i * 4] = src[o] ?? 1;
+      rgba[i * 4 + 1] = src[o + 1] ?? 1;
+      rgba[i * 4 + 2] = src[o + 2] ?? 1;
+      rgba[i * 4 + 3] = stride >= 4 ? (src[o + 3] ?? defaultAlpha) : defaultAlpha;
     }
     geometry.setAttribute('color', new BufferAttribute(rgba, 4));
     rgbaColor = rgba;

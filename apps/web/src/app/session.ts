@@ -13,7 +13,8 @@
  * first import and never torn down by a component unmounting.
  */
 
-import { PymolConnection } from '@tenmol/client';
+import { createRemoteBackend, type Backend } from '@tenmol/client';
+import { createLocalBackend } from '@tenmol/engine-ts';
 import {
   createConnectionStore,
   createFeedbackStore,
@@ -49,7 +50,8 @@ export interface SessionStores {
 /** The one socket, stores, and command surface features share via `useSession()`. */
 export interface Session {
   config: BridgeConfig;
-  conn: PymolConnection;
+  /** The active engine, behind the abstract `Backend` interface. */
+  conn: Backend;
   stores: SessionStores;
   objectsSource: ObjectsSource;
   poller: Poller;
@@ -81,6 +83,41 @@ export function getSession(): Session {
   return singleton;
 }
 
+/**
+ * Load a demo protein into the empty in-browser engine so the local backend
+ * shows something on first open. Fetches crambin (1CRN); if offline, falls back
+ * to a built-in fragment. Never clobbers an existing scene.
+ */
+async function loadLocalDemo(conn: Backend): Promise<void> {
+  try {
+    const names = await conn.call<string[]>('get_names', ['objects']);
+    if (Array.isArray(names) && names.length > 0) return; // user already has objects
+  } catch {
+    /* fall through and try to load */
+  }
+  try {
+    const res = await fetch('https://files.rcsb.org/download/1CRN.pdb');
+    if (!res.ok) throw new Error(`fetch ${res.status}`);
+    const pdb = await res.text();
+    await conn.call('read_pdbstr', [pdb, '1crn']);
+    await conn.call('dss', []);
+    await conn.call('hide', ['everything']);
+    await conn.call('show', ['cartoon']);
+    await conn.call('spectrum', ['count', 'rainbow', 'name CA']);
+    await conn.call('orient', []);
+    return;
+  } catch {
+    /* offline (no network): fall back to a built-in fragment so the scene isn't empty */
+  }
+  try {
+    await conn.call('fragment', ['trp']);
+    await conn.call('show', ['sticks']);
+    await conn.call('orient', []);
+  } catch {
+    /* nothing else we can do; leave the scene empty */
+  }
+}
+
 function createSession(initialConfig: BridgeConfig): Session {
   let config = initialConfig;
 
@@ -91,14 +128,20 @@ function createSession(initialConfig: BridgeConfig): Session {
     ui: createUiStore(),
   };
 
-  const conn = new PymolConnection({
-    url: config.url,
-    autoReconnect: true,
-    // PyMOL calls can legitimately take minutes (`ray`, `mpng`), so there is no
-    // request timeout. A dead socket rejects everything pending anyway.
-    requestTimeoutMs: 0,
-    reconnect: { initialDelayMs: 300, maxDelayMs: 5000, factor: 1.8, jitter: 0.2 },
-  });
+  // THE ABSTRACT SWITCH. `config.backend` (subdomain / env / `?backend=`) picks
+  // the engine; from here down nothing in this file — or in the stores, viewport
+  // or features — knows or cares which one it got. That is the whole point.
+  const conn: Backend =
+    config.backend === 'local'
+      ? createLocalBackend({ url: config.displayUrl })
+      : createRemoteBackend({
+          url: config.url,
+          autoReconnect: true,
+          // PyMOL calls can legitimately take minutes (`ray`, `mpng`), so there
+          // is no request timeout. A dead socket rejects everything pending.
+          requestTimeoutMs: 0,
+          reconnect: { initialDelayMs: 300, maxDelayMs: 5000, factor: 1.8, jitter: 0.2 },
+        });
 
   const objectsSource = createObjectsSource({
     call: (fn, args, kwargs) => conn.call(fn, args ?? [], kwargs ?? {}),
@@ -116,6 +159,7 @@ function createSession(initialConfig: BridgeConfig): Session {
 
   /* ---------------- transport -> stores ---------------- */
 
+  let demoLoaded = false;
   conn.on('connection:open', () => {
     // The bridge replays its whole feedback ring on `{t:'sub',topic:'feedback'}`
     // — including on the resubscribe `@tenmol/client` performs automatically
@@ -124,6 +168,17 @@ function createSession(initialConfig: BridgeConfig): Session {
     stores.connection.opened();
     objectsSource.invalidate();
     poller.kick();
+    // The in-browser engine starts empty; load a demo protein once so the
+    // client shows something out of the box (remote is left as the user left it).
+    // Skip in the render-only harness (`?render=1`) — it loads its own scene and
+    // the demo would race/clobber it.
+    const inRenderMode =
+      typeof location !== 'undefined' &&
+      new URLSearchParams(location.search).get('render') === '1';
+    if (config.backend === 'local' && !demoLoaded && !inRenderMode) {
+      demoLoaded = true;
+      void loadLocalDemo(conn);
+    }
   });
 
   conn.on('connection:close', ({ code, reason }) => {
@@ -154,7 +209,7 @@ function createSession(initialConfig: BridgeConfig): Session {
     stores.connection.setHello(hello);
     const engine = (hello as { state?: string }).state ?? 'running';
     stores.feedback.appendClient(
-      `-- connected to PyMOL ${hello.pymolVersion} (protocol v${hello.protocolVersion}, engine ${engine}) --`,
+      `-- connected to tenmol ${hello.pymolVersion} (protocol v${hello.protocolVersion}, engine ${engine}) --`,
     );
     if (engine !== 'running') {
       stores.feedback.appendClient(
@@ -208,7 +263,7 @@ function createSession(initialConfig: BridgeConfig): Session {
     if (!conn.isOpen) {
       // Offline: nothing will echo it back, so echo it here (and only here —
       // double echo was a real bug, plan §6 WP-11).
-      stores.feedback.appendClient(`PyMOL>${line}`, 'prompt');
+      stores.feedback.appendClient(`tenmol>${line}`, 'prompt');
       stores.feedback.appendClient(' not connected to a bridge; command not executed', 'error');
       return;
     }

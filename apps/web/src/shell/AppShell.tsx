@@ -374,7 +374,7 @@ function ShellHeader({
   return (
     <div className="menubar modern:h-6 modern:items-center modern:gap-0.5 modern:px-2 modern:border-b modern:border-line">
       <span className="menubar__title modern:text-[13px] modern:font-bold modern:tracking-[-0.01em] modern:normal-case modern:text-pm-text-bright">
-        PyMOL
+        tenmol
       </span>
       <span className="shell-chrome__note" title="WP-14 owns apps/web/src/features/menubar/**">
         menu bar not installed

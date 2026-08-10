@@ -23,6 +23,55 @@ import { DEFAULT_WS_URL } from '@tenmol/protocol';
 
 const TOKEN_KEY = 'tenmol.token';
 
+/**
+ * Which engine backs this page.
+ *
+ *   'remote' — the WebSocket bridge to the real PyMOL C++/Python engine.
+ *   'local'  — the in-browser TypeScript engine (`@tenmol/engine-ts`).
+ *
+ * Both satisfy `@tenmol/backend`'s `Backend`, so the rest of the app is
+ * identical either way — the choice is made once, here.
+ */
+export type BackendKind = 'remote' | 'local';
+
+/** Subdomains that select the local TS engine vs. the remote PyMOL bridge. */
+const LOCAL_SUBDOMAINS = new Set(['ts', 'engine', 'local', 'wasm']);
+const REMOTE_SUBDOMAINS = new Set(['pymol', 'bridge', 'remote']);
+
+/**
+ * Resolve the backend for this page.
+ *
+ * Priority (highest first):
+ *   1. `?backend=local|remote` — for dev, CI and the headless parity harness,
+ *      which cannot rely on DNS subdomains.
+ *   2. `VITE_TENMOL_BACKEND` — build/dev-time default.
+ *   3. The subdomain of `window.location.hostname` — the production switch: two
+ *      subdomains, two engines (`ts.example` -> local, `pymol.example` -> remote).
+ *   4. `'local'` — the default: the fully in-browser TypeScript engine, so the
+ *      app renders with no bridge. Use `?backend=remote` (or a remote subdomain)
+ *      for the real-PyMOL bridge.
+ */
+export function resolveBackendKind(): BackendKind {
+  const fromQuery = readBackendFromLocation();
+  if (fromQuery) return fromQuery;
+
+  const env = (import.meta.env as Record<string, string | undefined>)['VITE_TENMOL_BACKEND'];
+  if (env === 'local' || env === 'remote') return env;
+
+  if (typeof window !== 'undefined') {
+    const label = window.location.hostname.split('.')[0]?.toLowerCase() ?? '';
+    if (LOCAL_SUBDOMAINS.has(label)) return 'local';
+    if (REMOTE_SUBDOMAINS.has(label)) return 'remote';
+  }
+  return 'local';
+}
+
+function readBackendFromLocation(): BackendKind | null {
+  if (typeof window === 'undefined') return null;
+  const value = new URLSearchParams(window.location.search).get('backend');
+  return value === 'local' || value === 'remote' ? value : null;
+}
+
 /** Resolved bridge endpoint and the token used to reach it. */
 export interface BridgeConfig {
   /** Full ws:// URL including the token query parameter, if any. */
@@ -34,6 +83,8 @@ export interface BridgeConfig {
   token: string | null;
   /** Where the token came from, for the connection panel. */
   tokenSource: 'url' | 'storage' | 'env' | 'none';
+  /** Which engine backs this page (subdomain / env / `?backend=`). */
+  backend: BackendKind;
 }
 
 /** Resolve the bridge config, taking the token from URL, storage or env. */
@@ -52,7 +103,7 @@ export function resolveBridgeConfig(): BridgeConfig {
         ? 'env'
         : 'none';
 
-  return { ...buildUrls(base, token), token, tokenSource };
+  return { ...buildUrls(base, token), token, tokenSource, backend: resolveBackendKind() };
 }
 
 /** Rebuild the config with a different token (the connection panel's input). */
@@ -62,6 +113,7 @@ export function withToken(config: BridgeConfig, token: string | null): BridgeCon
     ...buildUrls(config.displayUrl, token),
     token,
     tokenSource: token ? 'storage' : 'none',
+    backend: config.backend,
   };
 }
 

@@ -186,6 +186,41 @@ jobs:
           print("GL available: **%s**" % bool(gl.get("available")))
           PY
 
+      # ---- gate: engine parity LIVE differential (TS engine vs REAL PyMOL) ----
+      #
+      # THE load-bearing parity gate. tools/parity/test/live.test.ts self-skips
+      # unless TENMOL_PARITY_REMOTE points at a running bridge, and THIS is the
+      # only job with PyMOL -- so this is where the live diff actually runs
+      # (webclient-ci.yml's `parity-engine.mjs` covers only the offline fixture/
+      # generative/contract tiers). It boots its OWN short-lived bridge on a
+      # dedicated port (torn down before the e2e stack boots its own), waits for
+      # /healthz, then runs the full engine-parity suite -- now including the
+      # live tier -- against real PyMOL. A Node `ws` client sends no Origin
+      # header, which the bridge allow-list permits (config.py:197), so no origin
+      # wiring is needed. Any TS-engine vs real-PyMOL divergence fails the build.
+      - name: engine parity -- live differential (TS engine vs real PyMOL)
+        env:
+          TENMOL_PARITY_REMOTE: ws://127.0.0.1:8791/ws
+        run: |
+          set -uo pipefail
+          bash scripts/dev-bridge.sh --port 8791 > bridge-parity.log 2>&1 &
+          ok=""
+          for _ in $(seq 1 90); do
+            sleep 1
+            if curl -sf --max-time 2 http://127.0.0.1:8791/healthz -o /dev/null; then ok=1; break; fi
+          done
+          if [ -z "$ok" ]; then
+            echo "::error::the parity bridge never answered /healthz -- see bridge-parity.log"
+            tail -n 40 bridge-parity.log || true
+            pkill -f "tenmol_bridge --port 8791" || true
+            exit 1
+          fi
+          node scripts/parity-engine.mjs --remote ws://127.0.0.1:8791/ws
+          status=$?
+          # Always reap the bridge, then surface the parity result verbatim.
+          pkill -f "tenmol_bridge --port 8791" || true
+          exit "$status"
+
       # The gate that is platform-independent: Mode G renders in the browser and
       # the server never draws. Runs first so that "the app is broken" and "this
       # runner has no GL" are separated before the big run muddles them.
