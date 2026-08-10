@@ -183,7 +183,20 @@ export async function startStack({ quiet = true, noGl = false } = {}) {
         stdio: quiet ? 'ignore' : 'inherit',
         // The supported override (`app/config.ts:39`). The app has no
         // `?bridge=` query param, so a random port must arrive this way.
-        env: { ...process.env, VITE_TENMOL_WS_URL: `ws://127.0.0.1:${bridgePort}/ws` },
+        //
+        // VITE_TENMOL_BACKEND=remote is REQUIRED: the app defaults to the local
+        // in-browser engine (`resolveBackendKind()` returns 'local'), but this
+        // whole suite drives the real-PyMOL bridge it boots above. Without this,
+        // every spec silently runs the local engine and never touches the
+        // bridge — which is how the GL-free camera specs read an unmoving
+        // `get_view` ("the camera did not move"). Specs that want the local
+        // engine (the backend-switch spec) still pass `?backend=local`, which
+        // wins over this env (`readBackendFromLocation` is checked first).
+        env: {
+          ...process.env,
+          VITE_TENMOL_WS_URL: `ws://127.0.0.1:${bridgePort}/ws`,
+          VITE_TENMOL_BACKEND: 'remote',
+        },
       },
     );
     procs.push(vite);
@@ -241,6 +254,15 @@ export async function startWebOnly({ quiet = true } = {}) {
     }
   };
   try {
+    // Resolve the browser FIRST: if there is no cached shell we cannot run
+    // anything, so fail before spawning vite (nothing to clean up) — and this
+    // makes the error path unit-testable without booting a real stack.
+    const exe = findChrome();
+    if (!exe) {
+      throw new Error(
+        'no cached chrome-headless-shell found. Run `npx playwright install chromium-headless-shell`.',
+      );
+    }
     const vitePort = await freePort();
     const viteBin = [
       join(REPO, 'apps/web/node_modules/.bin/vite'),
@@ -256,12 +278,6 @@ export async function startWebOnly({ quiet = true } = {}) {
     const viteSpawn = watchSpawn(vite, 'vite');
     await Promise.race([waitFor('vite', () => httpOk(`http://127.0.0.1:${vitePort}/`)), viteSpawn]);
 
-    const exe = findChrome();
-    if (!exe) {
-      throw new Error(
-        'no cached chrome-headless-shell found. Run `npx playwright install chromium-headless-shell`.',
-      );
-    }
     const { chromium } = await import(join(REPO, 'node_modules/playwright-core/index.mjs'));
     const browser = await chromium.launch({ headless: true, executablePath: exe, args: CHROME_ARGS });
     return {
