@@ -194,12 +194,12 @@ describe('main window shell (row 53)', () => {
     // Qt: setting_callbacks[440] -> setWindowTitle("PyMOL (" + basename + ")").
     // MEASURED: 440 IS session_file and cmd.save(*.pse) writes the absolute
     // path into it (packages/bridge/tests/test_wf_shell.py).
-    expect(document.title).toBe('PyMOL');
+    expect(document.title).toBe('tenmol');
     expect(calls.some((c) => c.fn === 'cmd.get' && c.args[0] === 'session_file')).toBe(true);
 
     sessionFile = '/tmp/wf/demo.pse';
-    await waitFor(() => document.title === 'PyMOL (demo.pse)');
-    expect(document.title).toBe('PyMOL (demo.pse)');
+    await waitFor(() => document.title === 'tenmol (demo.pse)');
+    expect(document.title).toBe('tenmol (demo.pse)');
   }, 10_000);
 });
 

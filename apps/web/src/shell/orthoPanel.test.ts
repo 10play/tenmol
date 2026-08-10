@@ -265,11 +265,11 @@ describe('row 53 arithmetic', () => {
   });
 
   it('builds the window title from setting 440 the way Qt does', () => {
-    expect(windowTitle('/tmp/wf_shell_title.pse')).toBe('PyMOL (wf_shell_title.pse)');
-    expect(windowTitle('C:\\work\\x.pse')).toBe('PyMOL (x.pse)');
+    expect(windowTitle('/tmp/wf_shell_title.pse')).toBe('tenmol (wf_shell_title.pse)');
+    expect(windowTitle('C:\\work\\x.pse')).toBe('tenmol (x.pse)');
     // Qt only ever sets the title from a CHANGE callback, so an empty
     // session_file never produces "PyMOL ()".
-    expect(windowTitle('')).toBe('PyMOL');
-    expect(windowTitle(null)).toBe('PyMOL');
+    expect(windowTitle('')).toBe('tenmol');
+    expect(windowTitle(null)).toBe('tenmol');
   });
 });

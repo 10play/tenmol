@@ -30,6 +30,7 @@ import type {
 import { repName } from '@tenmol/protocol';
 
 import { pinchZoom, viewFromResult, type ViewMatrix } from './camera';
+import { createLabelOverlay, type LabelPoint } from './labels';
 import {
   createLocalViewTracker,
   handOffSceneToModeG,
@@ -78,12 +79,23 @@ function asPayload(frame: PixelFramePayload | PixelFrame): PixelFramePayload {
   };
 }
 
+/** Two view matrices equal within a tight epsilon — the F3 idle-poll gate. */
+function viewsEqual(a: ViewMatrix, b: ViewMatrix): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (Math.abs((a[i] ?? 0) - (b[i] ?? 0)) > 1e-6) return false;
+  }
+  return true;
+}
+
 /** Create the viewport: mounts the render surface and drives both render modes. */
 export function createViewport(options: ViewportOptions): ViewportHandle {
   const { container, transport } = options;
   const onError = options.onError ?? ((error: Error) => console.warn('[tenmol/viewport]', error));
 
   const surface = createSurface(container);
+  const labelOverlay = createLabelOverlay(surface.overlay);
+  let labelsNeedUpdate = false;
   const webgl = isWebGL2Available();
 
   /** Objects Mode G may ask for. Fed by the app from the `objects` topic. */
@@ -389,9 +401,18 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
         // Drop a reply the client has already moved past: the optimistic view
         // is newer and correct, and this stale server sample would snap it back.
         if (!localView.accepts(requestedAtEpoch)) return;
-        view = viewFromResult(result);
-        renderer.setView(view);
-        dirty = true;
+        const next = viewFromResult(result);
+        // The 4 Hz keep-alive poll re-reads an UNCHANGED camera almost every
+        // time (idle scene). Repainting the whole Mode-G scene on each such
+        // reply burned 4 full renders/sec for nothing; only dirty when the
+        // camera actually moved (F3). renderer.setView is idempotent, so it is
+        // safe to skip when equal.
+        const changed = view === null || !viewsEqual(view, next);
+        view = next;
+        if (changed) {
+          renderer.setView(view);
+          dirty = true;
+        }
       })
       .catch((cause: unknown) => {
         // A closed socket is a normal state for a desktop app, not an error.
@@ -688,10 +709,17 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
   const loop = (): void => {
     if (destroyed) return;
     raf = requestAnimationFrame(loop);
+    const cameraChanged = dirty;
     if (dirty && renderer.available) {
       renderer.render();
       dirty = false;
     }
+    // Reproject text labels whenever the camera moved or the label set changed
+    // (they are locked to model-space atom positions).
+    if (labelOverlay.count > 0 && (cameraChanged || labelsNeedUpdate)) {
+      labelOverlay.render(view, sceneRect());
+    }
+    labelsNeedUpdate = false;
     stats.pixelFrames = presenter.stats.frames;
     stats.pixelFramesDropped = presenter.stats.dropped;
     stats.fps = presenter.stats.fps;
@@ -766,6 +794,10 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     stats,
     canvases: { pixel: surface.pixelCanvas, gl: surface.glCanvas },
     objects,
+    setLabels(labels: readonly LabelPoint[]): void {
+      labelOverlay.set(labels);
+      labelsNeedUpdate = true;
+    },
     setRepMode(rep: RepId, mode: RenderMode): RepRenderState {
       const state = policy.setRep(rep, mode);
       // `caps.accessor` starts false and is only flipped true when a geometry
@@ -870,6 +902,7 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     },
     destroy(): void {
       destroyed = true;
+      labelOverlay.destroy();
       if (raf !== null && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(raf);
       pause.destroy();
       clearInterval(viewPoll);

@@ -34,6 +34,7 @@ import type {
 } from '@tenmol/protocol';
 
 import type { BandBox, CameraCounters } from './input/camera';
+import type { LabelPoint } from './labels';
 
 /* ------------------------------------------------------------------ *
  * Transport
@@ -291,6 +292,11 @@ export interface ViewportHandle {
    * `objects` topic; the viewport never invents names.
    */
   readonly objects: Set<string>;
+  /**
+   * Replace the text labels drawn over the scene. Each carries a model-space
+   * position and text; the viewport reprojects them with the camera each frame.
+   */
+  setLabels(labels: readonly LabelPoint[]): void;
   /** Request a mode for one rep. Falls back automatically; returns the truth. */
   setRepMode(rep: RepId, mode: RenderMode): RepRenderState;
   setPolicy(policy: RenderModePolicy): void;

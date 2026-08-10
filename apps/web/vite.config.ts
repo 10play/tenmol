@@ -111,6 +111,11 @@ export default defineConfig(({ command }) => ({
       // apps/web/package.json is owned by another work package -- remove this
       // alias once `"@tenmol/viewport": "workspace:*"` is listed there.
       '@tenmol/viewport': resolve(repoRoot, 'packages/viewport/src/index.ts'),
+      // The TypeScript engine + the Backend interface are consumed as SOURCE too,
+      // so aliasing them here keeps Vite from pre-bundling a stale copy into
+      // .vite/deps (which served old engine code across reloads).
+      '@tenmol/engine-ts': resolve(repoRoot, 'packages/engine-ts/src/index.ts'),
+      '@tenmol/backend': resolve(repoRoot, 'packages/backend/src/index.ts'),
     },
   },
   server: {

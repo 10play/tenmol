@@ -17,6 +17,7 @@
 export { createViewport } from './viewport';
 export { createSurface, type ViewportSurface } from './surface';
 export { createResizeNegotiator, type ResizeNegotiator, type SizeState } from './resize';
+export { createLabelOverlay, type LabelOverlay, type LabelPoint } from './labels';
 export {
   DEFAULT_POLICY,
   createRenderPolicy,

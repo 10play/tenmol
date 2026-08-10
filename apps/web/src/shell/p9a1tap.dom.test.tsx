@@ -201,7 +201,7 @@ beforeEach(() => {
   bridge = makeBridge();
   titlePolls = 0;
   sessionFile = '';
-  document.title = 'PyMOL';
+  document.title = 'tenmol';
   session = makeSession();
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -212,7 +212,7 @@ afterEach(() => {
   act(() => root.unmount());
   container.remove();
   resetSettingsTap(session);
-  document.title = 'PyMOL';
+  document.title = 'tenmol';
 });
 
 describe('the shell-owned settings tap (row 57)', () => {
@@ -314,17 +314,17 @@ describe('document.title <- setting 440 (row 57)', () => {
     // Nobody typed anything in the browser: this is `cmd.save` on the server,
     // or a `.pse` load, or another client.
     bridge.change(SESSION_FILE_INDEX, '/tmp/wave9/alanine.pse');
-    await waitFor(() => document.title === 'PyMOL (alanine.pse)');
+    await waitFor(() => document.title === 'tenmol (alanine.pse)');
 
     // The 1 Hz `cmd.get('session_file')` this row named is over: two whole
     // seconds of the shell's interval fire and issue nothing.
     await idle(2200);
     expect(titlePolls).toBe(pollsWhenLive);
-    expect(document.title).toBe('PyMOL (alanine.pse)');
+    expect(document.title).toBe('tenmol (alanine.pse)');
 
     // …and it keeps following, including back to the bare title.
     bridge.change(SESSION_FILE_INDEX, '');
-    await waitFor(() => document.title === 'PyMOL');
+    await waitFor(() => document.title === 'tenmol');
     expect(titlePolls).toBe(pollsWhenLive);
   });
 
@@ -334,14 +334,14 @@ describe('document.title <- setting 440 (row 57)', () => {
     bridge.values.set(SESSION_FILE_INDEX, '/data/loaded.pse');
     // A session load: `full`, the batch the store is told never to diff.
     bridge.log.push({ indices: [6, 23], full: true });
-    await waitFor(() => document.title === 'PyMOL (loaded.pse)');
+    await waitFor(() => document.title === 'tenmol (loaded.pse)');
   });
 
   it('degrades to the 1 Hz poll when the settings module will not install', async () => {
     bridge.refuseInstall = true;
     sessionFile = '/tmp/polled.pse';
     await mount();
-    await waitFor(() => document.title === 'PyMOL (polled.pse)');
+    await waitFor(() => document.title === 'tenmol (polled.pse)');
     expect(getSettingsTap(session).live).toBe(false);
     expect(titlePolls).toBeGreaterThan(0);
     // Still polling, because that is the only channel left.

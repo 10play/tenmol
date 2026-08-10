@@ -1565,4 +1565,85 @@ export const tests = [
       }
     },
   },
+  {
+    /**
+     * THE BACKEND SWITCH — the flow this PR is named for. `?backend=` selects the
+     * real-PyMOL bridge (`remote`) or the in-browser TypeScript engine (`local`).
+     * This proves the switch itself: the SAME structure, loaded and manipulated
+     * the same way, yields the SAME observables on both backends — connect,
+     * load, select, count, colour. (Engine-level EXACTNESS over a large corpus is
+     * the separate live differential in tools/parity; this is the app-level
+     * wiring check that the switch routes to a working backend either way.)
+     *
+     * `load` is a bridge-only path (a no-op on the local engine — see
+     * docs/engine-backlog.md §1), so both sides use `read_pdbstr` of the
+     * app-served pept.pdb, which is the supported cross-backend load slice.
+     * Observables (atom counts, get_names, a selection count) are exactly the
+     * ones the differential suite gates, so a divergence here is a real defect.
+     */
+    name: 'the backend switch: local and remote agree on connect/load/select/colour',
+    async fn({ stack, assert }) {
+      const observe = async (backend) => {
+        const page = await openApp(stack, { query: `?backend=${backend}` });
+        try {
+          await page.waitForFunction(() => !!(window.__tenmol && window.__tenmol.conn), null, {
+            timeout: 30_000,
+          });
+          // Poll a trivial call until the backend answers (the remote socket
+          // races first paint; the local engine is ready immediately).
+          let ready = false;
+          for (let i = 0; i < 60 && !ready; i++) {
+            ready = await page.evaluate(async () => {
+              try {
+                await window.__tenmol.conn.call('get_names', []);
+                return true;
+              } catch {
+                return false;
+              }
+            });
+            if (!ready) await page.waitForTimeout(500);
+          }
+          assert(ready, `${backend}: backend never answered a command`);
+          // Let the auto-loaded demo settle so our `delete all` starts clean.
+          await page.waitForTimeout(2500 * SCALE);
+          return await page.evaluate(async () => {
+            const conn = window.__tenmol.conn;
+            await conn.call('delete', ['all']);
+            const pdb = await (await fetch('/visual/pept.pdb')).text();
+            await conn.call('read_pdbstr', [pdb, 'm']);
+            const names = await conn.call('get_names', []); // before any selection
+            const total = await conn.call('count_atoms', ['all']);
+            const ca = await conn.call('count_atoms', ['name CA']);
+            await conn.call('select', ['sele', 'name CA']);
+            const selected = await conn.call('count_atoms', ['sele']);
+            await conn.call('color', ['red', 'all']); // must not throw on either backend
+            const out = { total, ca, selected, names };
+            await conn.call('delete', ['all']); // leave the shared bridge clean
+            return out;
+          });
+        } finally {
+          await page.close();
+        }
+      };
+
+      const remote = await observe('remote');
+      const local = await observe('local');
+
+      assert(remote.total > 0, `remote loaded no atoms (${remote.total})`);
+      assert(remote.ca > 0, `remote found no CA atoms (${remote.ca})`);
+      assert(
+        local.total === remote.total,
+        `atom count diverged: remote ${remote.total} vs local ${local.total}`,
+      );
+      assert(local.ca === remote.ca, `CA count diverged: remote ${remote.ca} vs local ${local.ca}`);
+      assert(
+        local.selected === remote.selected && local.selected === local.ca,
+        `selection count diverged: remote ${remote.selected} vs local ${local.selected} (CA ${local.ca})`,
+      );
+      assert(
+        JSON.stringify(local.names) === JSON.stringify(remote.names),
+        `object names diverged: remote ${JSON.stringify(remote.names)} vs local ${JSON.stringify(local.names)}`,
+      );
+    },
+  },
 ];

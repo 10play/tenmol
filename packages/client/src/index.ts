@@ -52,8 +52,13 @@ export {
 // Re-export the protocol so apps need a single dependency for wire types.
 export * from '@tenmol/protocol';
 
+// The Backend abstraction, re-exported so consumers get the interface and both
+// error/emitter types from a single dependency.
+export type { Backend, BackendConnectionState, CmdBackend } from '@tenmol/backend';
+
 import { PymolConnection, type PymolConnectionOptions } from './connection';
 import { createCmd, type Cmd } from './cmd';
+import type { Backend } from '@tenmol/backend';
 
 /** A connection paired with its `cmd` facade. */
 export interface PymolClient {
@@ -65,6 +70,17 @@ export interface PymolClient {
 export function createClient(options: PymolConnectionOptions = {}): PymolClient {
   const conn = new PymolConnection(options);
   return { conn, cmd: createCmd(conn) };
+}
+
+/**
+ * The REMOTE backend: a `PymolConnection` typed as a {@link Backend}.
+ *
+ * This is the WebSocket-to-real-PyMOL half of the abstract switch. The app
+ * chooses between this and `@tenmol/engine-ts`'s `createLocalBackend()` purely
+ * by the `Backend` interface — see `apps/web/src/app/session.ts`.
+ */
+export function createRemoteBackend(options: PymolConnectionOptions = {}): Backend {
+  return new PymolConnection(options);
 }
 
 /** Create a client and wait for the socket to open. */

@@ -1,0 +1,677 @@
+{
+  "load": {
+    "counts": {
+      "all": 9,
+      "none": 0,
+      "name CA": 2,
+      "name CB": 1,
+      "name C": 2,
+      "name N": 2,
+      "name O": 2,
+      "name CA+CB": 3,
+      "name N+CA+C+O": 8,
+      "elem C": 5,
+      "elem N": 2,
+      "elem O": 2,
+      "chain A": 5,
+      "chain B": 4,
+      "resn ALA": 5,
+      "resn GLY": 4,
+      "resi 1": 5,
+      "resi 2": 4,
+      "resi 1-2": 9,
+      "resi 1+2": 9,
+      "index 1": 1,
+      "index 1-5": 5,
+      "id 1": 1,
+      "id 6-9": 4,
+      "hetatm": 0,
+      "polymer": 9,
+      "solvent": 0,
+      "hydro": 0,
+      "backbone": 8,
+      "sidechain": 1,
+      "name C*": 5,
+      "name *A": 2,
+      "byres name CA": 9,
+      "byres name CB": 5,
+      "first all": 1,
+      "last all": 1,
+      "first chain B": 1,
+      "last chain A": 1,
+      "chain A and name CA": 1,
+      "chain A or chain B": 9,
+      "not chain A": 4,
+      "not name CA": 7,
+      "name C* and chain A": 3,
+      "all within 100 of name N": 9,
+      "all within 2 of name CA": 7,
+      "name N around 3": 6,
+      "name CA around 2": 5,
+      "chain A expand 2": 6,
+      "neighbor name CA": 5,
+      "bound_to name CA": 5,
+      "bymol chain A": 9,
+      "byobject name CA": 9,
+      "bychain resi 1": 5,
+      "b < 10": 9,
+      "b > 50": 0,
+      "q > 0.5": 9,
+      "q = 1": 9,
+      "bonded": 9,
+      "visible": 9,
+      "present": 9,
+      "metals": 0,
+      "not backbone": 1,
+      "/m//A/1/CA": 1,
+      "/m//A//": 5,
+      "/m////CA": 2
+    },
+    "names": [
+      "m"
+    ],
+    "chains": [
+      "A",
+      "B"
+    ]
+  },
+  "color_chains": {
+    "counts": {
+      "color cyan": 5,
+      "color red": 4,
+      "color green": 0
+    },
+    "names": [
+      "m"
+    ],
+    "colorTuples": {
+      "cyan": [
+        0,
+        1,
+        1
+      ],
+      "red": [
+        1,
+        0,
+        0
+      ],
+      "green": [
+        0,
+        1,
+        0
+      ],
+      "yellow": [
+        1,
+        1,
+        0
+      ],
+      "orange": [
+        1,
+        0.5,
+        0
+      ]
+    }
+  },
+  "color_override": {
+    "counts": {
+      "color marine": 4,
+      "color salmon": 2,
+      "color blue": 0
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "palette": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "colorTuples": {
+      "white": [
+        1,
+        1,
+        1
+      ],
+      "black": [
+        0,
+        0,
+        0
+      ],
+      "blue": [
+        0,
+        0,
+        1
+      ],
+      "green": [
+        0,
+        1,
+        0
+      ],
+      "red": [
+        1,
+        0,
+        0
+      ],
+      "cyan": [
+        0,
+        1,
+        1
+      ],
+      "yellow": [
+        1,
+        1,
+        0
+      ],
+      "magenta": [
+        1,
+        0,
+        1
+      ],
+      "orange": [
+        1,
+        0.5,
+        0
+      ],
+      "marine": [
+        0,
+        0.5,
+        1
+      ],
+      "purple": [
+        0.75,
+        0,
+        0.75
+      ],
+      "pink": [
+        1,
+        0.65,
+        0.85
+      ],
+      "salmon": [
+        1,
+        0.6,
+        0.6
+      ],
+      "limon": [
+        0.75,
+        1,
+        0.25
+      ],
+      "slate": [
+        0.5,
+        0.5,
+        1
+      ],
+      "violet": [
+        1,
+        0.5,
+        1
+      ],
+      "teal": [
+        0,
+        0.75,
+        0.75
+      ],
+      "forest": [
+        0.2,
+        0.6,
+        0.2
+      ],
+      "firebrick": [
+        0.698,
+        0.13,
+        0.13
+      ],
+      "deepblue": [
+        0.25,
+        0.25,
+        0.65
+      ],
+      "wheat": [
+        0.99,
+        0.82,
+        0.65
+      ]
+    }
+  },
+  "as_spheres": {
+    "counts": {
+      "rep spheres": 9,
+      "rep lines": 0
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "as_sticks": {
+    "counts": {
+      "rep sticks": 9,
+      "rep lines": 0
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "as_nonbonded": {
+    "counts": {
+      "rep nonbonded": 9,
+      "rep lines": 0
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "as_nb_spheres": {
+    "counts": {
+      "rep nb_spheres": 9,
+      "rep lines": 0
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "show_hide": {
+    "counts": {
+      "rep spheres": 2,
+      "rep lines": 5
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "hide_everything": {
+    "counts": {
+      "rep lines": 4,
+      "rep spheres": 4,
+      "rep sticks": 0
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "as_then_show": {
+    "counts": {
+      "rep spheres": 9,
+      "rep sticks": 5,
+      "rep lines": 0
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "console_color": {
+    "counts": {
+      "color yellow": 5
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "console_js": {
+    "counts": {
+      "color magenta": 2,
+      "name CA and color magenta": 2,
+      "chain B and color magenta": 1
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "select_named": {
+    "counts": {
+      "sub": 5,
+      "sub and name CA": 1,
+      "not sub": 4
+    },
+    "names": [
+      "m"
+    ]
+  },
+  "set_settings": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "settings": {
+      "sphere_scale": 2.5,
+      "stick_radius": 0.5,
+      "nb_spheres_size": 0.75,
+      "field_of_view": 45
+    }
+  },
+  "view_roundtrip": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "view": [
+      0.8660253882408142,
+      0,
+      -0.5,
+      0,
+      1,
+      0,
+      0.5,
+      0,
+      0.8660253882408142,
+      0,
+      0,
+      -30,
+      1,
+      2,
+      3,
+      10,
+      50,
+      -20
+    ]
+  },
+  "view_roundtrip2": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "view": [
+      0,
+      1,
+      0,
+      -1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      -35,
+      1,
+      2,
+      3,
+      15,
+      55,
+      -20
+    ]
+  },
+  "measurement": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "calls": {
+      "dist_N_CA": 1.458,
+      "angle_N_CA_C": 110.8914,
+      "dih_N_CA_C_O": 0,
+      "extent": [
+        [
+          0,
+          -0.77,
+          0
+        ],
+        [
+          6.1,
+          3.7,
+          1.2
+        ]
+      ],
+      "fasta": ">m_A\nA\n>m_B\nG\n"
+    }
+  },
+  "by_element": {
+    "counts": {
+      "color carbon": 5,
+      "color nitrogen": 2,
+      "color oxygen": 2
+    },
+    "names": [
+      "m"
+    ],
+    "colorTuples": {
+      "carbon": [
+        0.2,
+        1,
+        0.2
+      ],
+      "nitrogen": [
+        0.2,
+        0.2,
+        1
+      ],
+      "oxygen": [
+        1,
+        0.3,
+        0.3
+      ]
+    }
+  },
+  "set_color_custom": {
+    "counts": {
+      "color myslate": 2
+    },
+    "names": [
+      "m"
+    ],
+    "colorTuples": {
+      "myslate": [
+        0.1,
+        0.2,
+        0.3
+      ]
+    }
+  },
+  "center_ca": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "view": [
+      0.8660253882408142,
+      0,
+      -0.5,
+      0,
+      1,
+      0,
+      0.5,
+      0,
+      0.8660253882408142,
+      0,
+      0,
+      -30,
+      2.7290000915527344,
+      1.3949999809265137,
+      0,
+      10,
+      50,
+      -20
+    ]
+  },
+  "move_z": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "view": [
+      0.8660253882408142,
+      0,
+      -0.5,
+      0,
+      1,
+      0,
+      0.5,
+      0,
+      0.8660253882408142,
+      0,
+      0,
+      -25,
+      1,
+      2,
+      3,
+      5,
+      45,
+      -20
+    ]
+  },
+  "rotate_object": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "view": [
+      0.8660253882408142,
+      0,
+      -0.5,
+      0,
+      1,
+      0,
+      0.5,
+      0,
+      0.8660253882408142,
+      0,
+      0,
+      -30,
+      1,
+      2,
+      3,
+      10,
+      50,
+      -20
+    ],
+    "coords": {
+      "A/1/N": [
+        -2,
+        0,
+        4
+      ],
+      "A/1/CA": [
+        -2,
+        0,
+        2.542
+      ],
+      "A/1/C": [
+        -2,
+        1.42,
+        2
+      ],
+      "A/1/O": [
+        -2,
+        2.39,
+        2.75
+      ],
+      "A/1/CB": [
+        -0.8,
+        -0.77,
+        2
+      ],
+      "B/2/N": [
+        -2,
+        1.5,
+        0.67
+      ],
+      "B/2/CA": [
+        -2,
+        2.79,
+        0
+      ],
+      "B/2/C": [
+        -2,
+        2.66,
+        -1.5
+      ],
+      "B/2/O": [
+        -2,
+        3.7,
+        -2.1
+      ]
+    }
+  },
+  "translate_object": {
+    "counts": {
+      "all": 9
+    },
+    "names": [
+      "m"
+    ],
+    "view": [
+      0.8660253882408142,
+      0,
+      -0.5,
+      0,
+      1,
+      0,
+      0.5,
+      0,
+      0.8660253882408142,
+      0,
+      0,
+      -30,
+      1,
+      2,
+      3,
+      10,
+      50,
+      -20
+    ],
+    "coords": {
+      "A/1/N": [
+        -0.634,
+        2,
+        3.098
+      ],
+      "A/1/CA": [
+        0.824,
+        2,
+        3.098
+      ],
+      "A/1/C": [
+        1.366,
+        3.42,
+        3.098
+      ],
+      "A/1/O": [
+        0.616,
+        4.39,
+        3.098
+      ],
+      "A/1/CB": [
+        1.366,
+        1.23,
+        4.298
+      ],
+      "B/2/N": [
+        2.696,
+        3.5,
+        3.098
+      ],
+      "B/2/CA": [
+        3.366,
+        4.79,
+        3.098
+      ],
+      "B/2/C": [
+        4.866,
+        4.66,
+        3.098
+      ],
+      "B/2/O": [
+        5.466,
+        5.7,
+        3.098
+      ]
+    }
+  }
+}

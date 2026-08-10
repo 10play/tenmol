@@ -87,3 +87,14 @@ packages/engine/testing/timings.tab
 .claude/settings.local.json
 .claude/.state/
 .claude/STOP
+apps/web/e2e/output/
+
+# --- local, per-worktree, never commit -------------------------------------
+# pnpm content-addressable store, browser-MCP debug logs, and the tenx-generated
+# per-worktree env file. All were swept in once by a `git add -A`; keep them out.
+.pnpm-store/
+.playwright-mcp/
+.env
+# Stray debug screenshots at the repo ROOT only (leading slash = root-anchored,
+# does not cross into subdirs). All real PNGs live under docs/apps/packages/tools.
+/*.png

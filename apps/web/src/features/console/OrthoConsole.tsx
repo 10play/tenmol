@@ -140,7 +140,7 @@ export function OrthoConsole() {
       data-testid="ortho-console"
       tabIndex={0}
       role="textbox"
-      aria-label="PyMOL in-viewport command prompt"
+      aria-label="tenmol in-viewport command prompt"
       aria-multiline="true"
       style={{ paddingBottom: ORTHO_BOTTOM_MARGIN }}
       onKeyDown={onKeyDown}

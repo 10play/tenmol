@@ -1,0 +1,25 @@
+{
+  "name": "@tenmol/engine-ts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "An in-browser TypeScript port of the PyMOL engine, exposed as a Backend so the web app can run against it instead of the Python bridge. 1-to-1 parity with real PyMOL, proven by the differential suite in tools/parity.",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "cd ../.. && node node_modules/vitest/vitest.mjs run packages/engine-ts"
+  },
+  "dependencies": {
+    "@tenmol/backend": "workspace:*",
+    "@tenmol/protocol": "workspace:*"
+  },
+  "devDependencies": {}
+}

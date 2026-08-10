@@ -1,0 +1,295 @@
+import { describe, it, expect } from 'vitest';
+import { Executive } from '../src/exec/executive';
+import { parsePdb } from '../src/model/pdb';
+import { registerExporters } from '../src/cmd/exporters';
+
+/** Column-precise ATOM/HETATM record composer (1-based PDB columns). */
+function rec(o: {
+  het?: boolean;
+  serial: number;
+  name: string; // already column-aligned within cols 13-16
+  resn: string;
+  chain: string;
+  resi: number;
+  x: number;
+  y: number;
+  z: number;
+  occ?: number;
+  b?: number;
+  elem: string;
+}): string {
+  const p = (s: string, w: number) => (s.length >= w ? s : ' '.repeat(w - s.length) + s);
+  const pR = (s: string, w: number) => (s.length >= w ? s : s + ' '.repeat(w - s.length));
+  const f = (v: number) => p(v.toFixed(3), 8);
+  return (
+    (o.het ? 'HETATM' : 'ATOM  ') +
+    p(String(o.serial), 5) +
+    ' ' +
+    pR(o.name.slice(0, 4), 4) +
+    ' ' + // alt
+    p(o.resn, 3) +
+    ' ' +
+    o.chain.slice(0, 1) +
+    p(String(o.resi), 4) +
+    '    ' + // inscode + 3 spaces
+    f(o.x) +
+    f(o.y) +
+    f(o.z) +
+    p((o.occ ?? 1).toFixed(2), 6) +
+    p((o.b ?? 0).toFixed(2), 6) +
+    ' '.repeat(10) +
+    p(o.elem, 2)
+  );
+}
+
+/** ALA-GLY-SER peptide in chain A, plus a calcium ion and a water in chain B. */
+const PDB = [
+  rec({ serial: 1, name: ' N', resn: 'ALA', chain: 'A', resi: 1, x: 11.104, y: 6.134, z: 7.065, occ: 1, b: 20, elem: 'N' }),
+  rec({ serial: 2, name: ' CA', resn: 'ALA', chain: 'A', resi: 1, x: 12.56, y: 6.13, z: 7.075, occ: 1, b: 20, elem: 'C' }),
+  rec({ serial: 3, name: ' C', resn: 'ALA', chain: 'A', resi: 1, x: 13.0, y: 4.7, z: 7.1, occ: 1, b: 20, elem: 'C' }),
+  rec({ serial: 4, name: ' CA', resn: 'GLY', chain: 'A', resi: 2, x: 14.5, y: 4.5, z: 7.2, occ: 1, b: 20, elem: 'C' }),
+  rec({ serial: 5, name: ' N', resn: 'GLY', chain: 'A', resi: 2, x: 15.0, y: 5.5, z: 7.3, occ: 1, b: 20, elem: 'N' }),
+  rec({ serial: 6, name: ' CA', resn: 'SER', chain: 'A', resi: 3, x: 16.0, y: 4.0, z: 7.4, occ: 1, b: 20, elem: 'C' }),
+  rec({ het: true, serial: 7, name: 'CA', resn: 'CA', chain: 'B', resi: 1, x: 20.0, y: 20.0, z: 20.0, occ: 1, b: 30, elem: 'CA' }),
+  rec({ het: true, serial: 8, name: ' O', resn: 'HOH', chain: 'B', resi: 2, x: 25.0, y: 25.0, z: 25.0, occ: 1, b: 40, elem: 'O' }),
+  'END',
+].join('\n');
+
+function harness(ex: Executive) {
+  const handlers = new Map<string, (a: unknown[], k: Record<string, unknown>) => unknown>();
+  let published = 0;
+  const ctx = {
+    command: (n: string, f: (a: unknown[], k: Record<string, unknown>) => unknown) => handlers.set(n, f),
+    executive: ex,
+    publish() {
+      published++;
+    },
+    emitView() {},
+    str: (v: unknown, d = '') => (v == null ? d : String(v)),
+  };
+  registerExporters(ctx as never);
+  return {
+    call: (name: string, args: unknown[] = [], kwargs: Record<string, unknown> = {}) =>
+      handlers.get(name)!(args, kwargs),
+    get published() {
+      return published;
+    },
+  };
+}
+
+function newEx() {
+  const ex = new Executive();
+  ex.addMolecule(parsePdb(PDB, 'm'));
+  return ex;
+}
+
+/** A permissive mmCIF `_atom_site` reader: recovers atom count + coords. */
+function parseCif(text: string): { count: number; rows: Array<{ elem: string; x: number; y: number; z: number }> } {
+  const lines = text.split('\n');
+  const cols: string[] = [];
+  let inLoop = false;
+  const rows: Array<{ elem: string; x: number; y: number; z: number }> = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (line === 'loop_') {
+      inLoop = true;
+      continue;
+    }
+    if (inLoop && line.startsWith('_atom_site.')) {
+      cols.push(line.replace('_atom_site.', ''));
+      continue;
+    }
+    if (cols.length > 0 && (line.startsWith('ATOM') || line.startsWith('HETATM'))) {
+      const parts = line.split(/\s+/);
+      const get = (name: string) => parts[cols.indexOf(name)] ?? '';
+      rows.push({
+        elem: get('type_symbol'),
+        x: parseFloat(get('Cartn_x')),
+        y: parseFloat(get('Cartn_y')),
+        z: parseFloat(get('Cartn_z')),
+      });
+    }
+  }
+  return { count: rows.length, rows };
+}
+
+describe('get_cifstr', () => {
+  it('emits an _atom_site loop with the required tags', () => {
+    const h = harness(newEx());
+    const cif = h.call('get_cifstr', ['all']) as string;
+    expect(cif.startsWith('data_')).toBe(true);
+    for (const tag of [
+      'group_PDB', 'id', 'type_symbol', 'label_atom_id', 'label_comp_id',
+      'label_asym_id', 'label_seq_id', 'Cartn_x', 'Cartn_y', 'Cartn_z',
+      'occupancy', 'B_iso_or_equiv',
+    ]) {
+      expect(cif).toContain('_atom_site.' + tag);
+    }
+  });
+
+  it('round-trips atom count and coordinates', () => {
+    const ex = newEx();
+    const h = harness(ex);
+    const cif = h.call('get_cifstr', ['all']) as string;
+    const parsed = parseCif(cif);
+    const orig = ex.molecule('m')!;
+    expect(parsed.count).toBe(orig.natom); // 8 atoms
+    for (let i = 0; i < orig.natom; i++) {
+      const a = orig.coord(i, 1);
+      const r = parsed.rows[i]!;
+      expect(r.x).toBeCloseTo(a[0], 3);
+      expect(r.y).toBeCloseTo(a[1], 3);
+      expect(r.z).toBeCloseTo(a[2], 3);
+      expect(r.elem).toBe(orig.atoms[i]!.elem);
+    }
+  });
+
+  it('honours the selection', () => {
+    const h = harness(newEx());
+    const cif = h.call('get_cifstr', ['resn ALA']) as string;
+    expect(parseCif(cif).count).toBe(3);
+  });
+});
+
+describe('get_str', () => {
+  it("dispatches 'cif' to get_cifstr", () => {
+    const h = harness(newEx());
+    expect(h.call('get_str', ['cif', 'all'])).toBe(h.call('get_cifstr', ['all']));
+  });
+
+  it("produces an XYZ block with a correct count line and one row per atom", () => {
+    const ex = newEx();
+    const h = harness(ex);
+    const xyz = h.call('get_str', ['xyz', 'all']) as string;
+    const lines = xyz.split('\n');
+    expect(Number(lines[0])).toBe(8); // count line
+    // lines[1] is the comment; rows follow.
+    const rows = lines.slice(2).filter((l) => l.trim() !== '');
+    expect(rows.length).toBe(8);
+    // First atom row: element + three coordinates.
+    const first = rows[0]!.split(/\s+/);
+    expect(first[0]).toBe('N');
+    const orig = ex.molecule('m')!.coord(0, 1);
+    expect(parseFloat(first[1]!)).toBeCloseTo(orig[0], 3);
+    expect(parseFloat(first[2]!)).toBeCloseTo(orig[1], 3);
+    expect(parseFloat(first[3]!)).toBeCloseTo(orig[2], 3);
+  });
+
+  it('XYZ count matches a filtered selection', () => {
+    const h = harness(newEx());
+    const xyz = h.call('get_str', ['xyz', 'resn ALA']) as string;
+    expect(Number(xyz.split('\n')[0])).toBe(3);
+  });
+
+  it("still serves 'pdb' (this registrar shadows fileio's get_str)", () => {
+    const h = harness(newEx());
+    const pdb = h.call('get_str', ['pdb', 'all']) as string;
+    expect(parsePdb(pdb, 'x').natom).toBe(8);
+  });
+
+  it('rejects an unknown format', () => {
+    const h = harness(newEx());
+    expect(() => h.call('get_str', ['mol2', 'all'])).toThrow();
+  });
+});
+
+describe('get_bytes', () => {
+  it('returns the UTF-8 bytes of the get_str result', () => {
+    const h = harness(newEx());
+    const bytes = h.call('get_bytes', ['xyz', 'all']) as number[];
+    const str = h.call('get_str', ['xyz', 'all']) as string;
+    expect(Array.isArray(bytes)).toBe(true);
+    const decoded = new TextDecoder().decode(new Uint8Array(bytes));
+    expect(decoded).toBe(str);
+  });
+});
+
+describe('dump', () => {
+  it('writes x,y,z lines for the object coordinates', () => {
+    const ex = newEx();
+    const h = harness(ex);
+    const out = h.call('dump', ['ignored.txt', 'm']) as string;
+    const lines = out.split('\n').filter((l) => l.trim() !== '');
+    const mol = ex.molecule('m')!;
+    expect(lines.length).toBe(mol.natom);
+    const first = lines[0]!.split(',').map(Number);
+    const c0 = mol.coord(0, 1);
+    expect(first[0]).toBeCloseTo(c0[0], 3);
+    expect(first[1]).toBeCloseTo(c0[1], 3);
+    expect(first[2]).toBeCloseTo(c0[2], 3);
+  });
+});
+
+describe('multisave / multifilesave', () => {
+  it('concatenates one PDB block (END-terminated) per object', () => {
+    const ex = newEx();
+    ex.addMolecule(parsePdb([
+      rec({ serial: 1, name: ' CA', resn: 'ALA', chain: 'A', resi: 1, x: 0, y: 0, z: 0, elem: 'C' }),
+      'END',
+    ].join('\n'), 'lig'));
+    const h = harness(ex);
+    const out = h.call('multisave', ['out.pdb', 'all']) as string;
+    // Two objects -> two END records.
+    expect(out.split('\n').filter((l) => l === 'END').length).toBe(2);
+    // Each block parses back independently to the right atom counts.
+    const blocks = out.split('END\n').filter((b) => b.trim() !== '');
+    expect(blocks.length).toBe(2);
+    expect(parsePdb(blocks[0]! + 'END\n', 'a').natom).toBe(8);
+    expect(parsePdb(blocks[1]! + 'END\n', 'b').natom).toBe(1);
+    // multifilesave produces the same concatenation.
+    expect(h.call('multifilesave', ['out.pdb', 'all'])).toBe(out);
+  });
+});
+
+describe('get_session / set_session', () => {
+  it('restores object names and the camera view into a fresh executive', () => {
+    const src = newEx();
+    // Mutate the camera so the round-trip is observable.
+    src.view.turn('y', 30);
+    src.view.zoomToSphere([1, 2, 3], 5);
+    const srcView = src.view.get();
+
+    const session = harness(src).call('get_session', []);
+
+    // A fresh, empty executive.
+    const dst = new Executive();
+    const dh = harness(dst);
+    expect(dst.getNames('objects')).toEqual([]);
+
+    dh.call('set_session', [session]);
+
+    expect(dst.getNames('objects')).toEqual(['m']);
+    const restored = dst.view.get();
+    for (let i = 0; i < 18; i++) expect(restored[i]).toBeCloseTo(srcView[i]!, 5);
+  });
+
+  it('round-trips through a JSON string and restores coordinates', () => {
+    const src = newEx();
+    const session = harness(src).call('get_session', []);
+    const asString = JSON.stringify(session);
+
+    const dst = new Executive();
+    const dh = harness(dst);
+    dh.call('set_session', [asString]);
+
+    const orig = src.molecule('m')!;
+    const back = dst.molecule('m')!;
+    expect(back.natom).toBe(orig.natom);
+    for (let i = 0; i < orig.natom; i++) {
+      const a = orig.coord(i, 1);
+      const b = back.coord(i, 1);
+      for (let k = 0; k < 3; k++) expect(b[k]).toBeCloseTo(a[k]!, 3);
+      expect(back.atoms[i]!.elem).toBe(orig.atoms[i]!.elem);
+      expect(back.atoms[i]!.resn).toBe(orig.atoms[i]!.resn);
+    }
+  });
+
+  it('captures settings and restores them', () => {
+    const src = newEx();
+    src.set('sphere_scale', 2.5);
+    const session = harness(src).call('get_session', []);
+    const dst = new Executive();
+    harness(dst).call('set_session', [session]);
+    expect(dst.getSettingFloat('sphere_scale')).toBeCloseTo(2.5, 6);
+  });
+});

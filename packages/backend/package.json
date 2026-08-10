@@ -1,0 +1,26 @@
+{
+  "name": "@tenmol/backend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Backend abstraction: one interface the app talks to, satisfied by either the WebSocket PyMOL bridge (@tenmol/client) or the in-browser TypeScript engine (@tenmol/engine-ts)",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./backend": "./src/backend.ts",
+    "./events": "./src/events.ts",
+    "./errors": "./src/errors.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tenmol/protocol": "workspace:*"
+  },
+  "devDependencies": {}
+}

@@ -361,7 +361,7 @@ function ShellHeader({
 
   return (
     <div className="menubar">
-      <span className="menubar__title">PyMOL</span>
+      <span className="menubar__title">tenmol</span>
       <span className="shell-chrome__note" title="WP-14 owns apps/web/src/features/menubar/**">
         menu bar not installed
       </span>

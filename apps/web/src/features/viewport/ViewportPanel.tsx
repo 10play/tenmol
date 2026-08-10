@@ -24,6 +24,7 @@ import {
   type RepRenderState,
   type ViewportHandle,
   type ViewportStats,
+  type LabelPoint,
 } from '@tenmol/viewport';
 
 import { useSession, useShallowStore } from '../../app';
@@ -75,17 +76,25 @@ export function ViewportPanel(): React.JSX.Element {
     const pull = pullDisabled() ? null : createDevPullSource(transport);
     const fixtures = fixtureGeometrySource();
 
+      // The in-browser TypeScript engine (`?backend=local`) cannot rasterise —
+    // it has no offscreen GL — so it PUSHES Mode-G geometry frames instead.
+    // Default the viewport to Mode G and drop Mode P entirely, so the local
+    // engine's geometry is what paints.
+    const geometryFirst = session.config.backend === 'local';
+
     const viewport = createViewport({
       container: host,
       transport,
       // 1.5 s of no pixel frames and we drop to the pull source rather than
       // showing a black canvas.
-      pixelSource: modePDisabled()
-        ? NULL_PIXEL_SOURCE
-        : pull === null
-          ? stream
-          : withFallback(stream, pull, 1500),
+      pixelSource:
+        geometryFirst || modePDisabled()
+          ? NULL_PIXEL_SOURCE
+          : pull === null
+            ? stream
+            : withFallback(stream, pull, 1500),
       ...(fixtures === null ? {} : { geometrySource: fixtures }),
+      ...(geometryFirst ? { policy: { default: 'geometry' as const, perRep: [] } } : {}),
       maxDpr: 2,
       onError: (error) => console.warn('[viewport]', error.message),
     });
@@ -121,6 +130,33 @@ export function ViewportPanel(): React.JSX.Element {
     for (const name of objectNames) {
       for (const rep of geometryReps) viewport.requestGeometry(name, rep, -1);
     }
+  }, [objectNames]);
+
+  // Feed text labels to the viewport overlay. The local engine exposes
+  // `get_labels` (object, position, text); real PyMOL has no such call, so this
+  // is local-backend only. Poll on a modest interval (labels change only when a
+  // `label` command runs) so labels track coordinate edits too.
+  useEffect(() => {
+    if (session.config.backend !== 'local') return;
+    let cancelled = false;
+    const refresh = (): void => {
+      const viewport = viewportRef.current;
+      if (viewport === null) return;
+      void session.conn
+        .call('get_labels', ['all'])
+        .then((labels) => {
+          if (!cancelled && Array.isArray(labels)) {
+            viewport.setLabels(labels as unknown as LabelPoint[]);
+          }
+        })
+        .catch(() => {});
+    };
+    refresh();
+    const timer = setInterval(refresh, 500);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, [objectNames]);
 
   const setMode = useCallback((rep: number, mode: RenderMode) => {
