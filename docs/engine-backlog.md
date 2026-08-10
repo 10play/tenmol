@@ -82,16 +82,20 @@ get_chains_oppo, get_new_chain`
 Files: `packages/engine-ts/src/cmd/registrars.ts:35`, `engine.ts:128`,
 `cmd/builder.ts`, ref `packages/engine/modules/pymol/editor.py`.
 
-### All file readers + every save/export are fake no-ops — L
+### File readers — ✅ core formats real (Wave 3); export partial — L
 
-`load, loadall, load_embedded, load_model, load_mtz, load_png, load_traj, save,
-fetch, png, ray, draw` return placeholders and mutate nothing — only
-`read_pdbstr` actually works. So users cannot open CIF/mmCIF/MMTF/SDF/MOL2/XYZ,
-maps, or trajectories; cannot load-from-path, fetch-from-PDB, or drop real files;
-and cannot save/export structures, images, sessions, movies, or meshes
-(`get_pdbstr`, `get_session`, `multisave`, STL/OBJ/glTF/POV).
+`load` is real (`cmd/fileio.ts`): it parses structured **content** for PDB, CIF/
+mmCIF, MOL/SDF, MOL2 and XYZ — by an explicit `format` or by sniffing — and
+`read_cifstr`/`read_mol2str`/`read_xyzstr` join the existing `read_pdbstr`/
+`read_molstr`/`read_sdfstr`. `get_str` now serializes `pdb`/`fasta`/`xyz`.
 
-Files: `cmd/extras.ts:505`, ref `docs/engine-port-gaps.md:220`.
+> Still missing: reading from a **path/URL** or `fetch`-from-PDB (the sync
+> browser engine has no filesystem/async network — belongs to the web-app/worker
+> layer), MMTF/mmCIF maps + trajectories (`load_traj`, `load_mtz`), and session/
+> mesh export (`get_session`, `multisave`, STL/OBJ/glTF/POV). `save` (disk write)
+> stays a no-op — the web app downloads the `get_str` output instead.
+
+Files: `cmd/fileio.ts`, `model/{cif,mol2,xyz,bonding}.ts`, ref `docs/engine-port-gaps.md`.
 
 ### Large batch of documented no-op verbs (callable, do nothing) — L
 

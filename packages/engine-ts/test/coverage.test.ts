@@ -31,10 +31,11 @@ const PYMOL = join(REPO, 'packages', 'engine', 'modules', 'pymol');
  * Ratchet floors — a wave raises these; CI fails if a number drops below.
  * Wave 0 baseline: flat 263/390, namespaces 8/116, reps 13/21.
  * Wave 1 (command namespaces): flat 273/390, namespaces 77/116, reps 13/21.
+ * Wave 3 (file I/O): flat 274/390 (real `load`).
  * Bump these up as each backlog wave lands.
  */
 const FLOORS = {
-  flatReal: Number(process.env.TENMOL_COVERAGE_FLAT ?? 273),
+  flatReal: Number(process.env.TENMOL_COVERAGE_FLAT ?? 274),
   nsReal: Number(process.env.TENMOL_COVERAGE_NS ?? 77),
   reps: Number(process.env.TENMOL_COVERAGE_REPS ?? 13),
 };

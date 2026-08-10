@@ -26,7 +26,7 @@
  *   alias alignto alphatoall assign_stereo cache callout capture cealign cls
  *   copy_to decline delete_states drag draw edit edit_keys edit_mode extend
  *   extra_fit extract fab feedback fetch fnab focal_blur get_mtl_obj get_povray
- *   h_fix intra_rms intra_rms_cur join_states load load_embedded load_model
+ *   h_fix intra_rms intra_rms_cur join_states load_embedded load_model
  *   load_mtz load_png load_traj loadall log log_close log_open look_at map_set
  *   mask matrix_copy mcopy mdelete mdo meter_reset middle minsert mmove mse2met
  *   overlap pair_fit pbc_unwrap pbc_wrap pi_interactions png povray quit ray
@@ -82,9 +82,7 @@ function cloneMolecule(name: string, uas: UA[], ex: Executive): ObjectMolecule {
     mol.atoms.push({ ...ua.atom, id: k + 1 });
   });
   const srcNames = [...new Set(uas.map((u) => u.objName))];
-  const srcMols = srcNames
-    .map((n) => ex.molecule(n))
-    .filter((m): m is ObjectMolecule => m != null);
+  const srcMols = srcNames.map((n) => ex.molecule(n)).filter((m): m is ObjectMolecule => m != null);
   const maxNstate = Math.max(1, ...srcMols.map((m) => m.nstate));
   for (let s = 1; s <= maxNstate; s++) {
     const arr = new Float32Array(uas.length * 3);
@@ -503,25 +501,69 @@ export function registerExtras(ctx: RegistrarCtx): void {
   // Return null: disk/network/GUI/render side effects we cannot perform here.
   noop(
     [
-      // file & network I/O (need a filesystem / parser / network we lack here)
-      'load', 'loadall', 'load_embedded', 'load_model', 'load_mtz', 'load_png',
-      'load_traj', 'save', 'fetch', 'png', 'ray', 'draw',
+      // file & network I/O (need a filesystem / parser / network we lack here).
+      // `load` is real (cmd/fileio.ts) — it parses structured content by format.
+      'loadall',
+      'load_embedded',
+      'load_model',
+      'load_mtz',
+      'load_png',
+      'load_traj',
+      'save',
+      'fetch',
+      'png',
+      'ray',
+      'draw',
       // logging to disk
-      'log', 'log_close', 'log_open', 'resume',
+      'log',
+      'log_close',
+      'log_open',
+      'resume',
       // interaction / editor picking (no live picking model here)
-      'edit', 'edit_keys', 'drag', 'release', 'unpick',
+      'edit',
+      'edit_keys',
+      'drag',
+      'release',
+      'unpick',
       // builders needing a fragment library
-      'fab', 'fnab', 'h_fix',
+      'fab',
+      'fnab',
+      'h_fix',
       // movie frame-table edits (movie store lives in the engine)
-      'mcopy', 'mdelete', 'mmove', 'mdo', 'minsert', 'scene_order',
+      'mcopy',
+      'mdelete',
+      'mmove',
+      'mdo',
+      'minsert',
+      'scene_order',
       // maps / volumes / slices (need a map object model)
-      'map_set', 'slice_new', 'volume', 'volume_panel', 'spheroid', 'vdw_fit',
+      'map_set',
+      'slice_new',
+      'volume',
+      'volume_panel',
+      'spheroid',
+      'vdw_fit',
       // misc app / render controls with no state to observe
-      'cls', 'cache', 'callout', 'capture', 'quit', 'meter_reset', 'focal_blur',
-      'decline', 'feedback', 'extend', 'alias', 'matrix_copy',
+      'cls',
+      'cache',
+      'callout',
+      'capture',
+      'quit',
+      'meter_reset',
+      'focal_blur',
+      'decline',
+      'feedback',
+      'extend',
+      'alias',
+      'matrix_copy',
       // chemistry/typing we do not model
-      'assign_stereo', 'text_type', 'set_geometry', 'uniquify', 'unset_deep',
-      'pbc_wrap', 'pbc_unwrap',
+      'assign_stereo',
+      'text_type',
+      'set_geometry',
+      'uniquify',
+      'unset_deep',
+      'pbc_wrap',
+      'pbc_unwrap',
     ],
     null,
   );
