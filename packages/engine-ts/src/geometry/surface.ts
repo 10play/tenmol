@@ -22,7 +22,7 @@ const PLACEHOLDER: BufferRef = { byteOffset: 0, byteLength: 0, dtype: 'f32', ite
  */
 export const buildSurfaceFrame: RepBuilder = ({ mol, state, seq, getSettingFloat }) => {
   const probe = getSettingFloat('solvent_radius') || DEFAULT_PROBE;
-  const mesh = generateSurface(mol, state, repBit(Rep.Surface), { probe });
+  const mesh = generateSurface(mol, state, repBit(Rep.Surface), { probe, smooth: true });
   if (!mesh) return null;
 
   const verts = mesh.atoms.length;

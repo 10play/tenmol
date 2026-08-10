@@ -51,6 +51,12 @@ export interface SurfaceGenOptions {
   spacing?: number;
   /** Hard cap on total grid points; spacing coarsens until under it. Default 90³. */
   maxCells?: number;
+  /**
+   * Apply Taubin surface smoothing (default false). The filled `surface` rep
+   * turns it on for an SES-like smooth solid; the `mesh` wireframe leaves it off
+   * — smoothing visibly displaces the wire lines and reads worse, not better.
+   */
+  smooth?: boolean;
 }
 
 /** PyMOL `solvent_radius` default. */
@@ -298,14 +304,183 @@ export function generateSurface(
 
   if (atomsOut.length === 0 || indices.length === 0) return null;
 
+  const verts = atomsOut.length;
+  const pos = Float32Array.from(positions);
+  const idx = Uint32Array.from(indices);
+  let nrm: Float32Array = Float32Array.from(normals);
+  if (opts.smooth) {
+    // Marching cubes over a coarse grid leaves the surface visibly faceted and
+    // SAS-bumpy — a reason it reads unlike desktop PyMOL's smooth solvent-
+    // excluded surface. Taubin λ|μ smoothing (a low-pass that alternates a
+    // shrinking and an inflating Laplacian step) removes the grid faceting
+    // WITHOUT the volume loss plain Laplacian smoothing causes, so the
+    // silhouette stays put. Normals are then rebuilt from the smoothed
+    // triangles, oriented to agree with the analytic outward gradient (winding
+    // alone is ambiguous; the field gradient is unambiguously outward).
+    taubinSmooth(pos, idx, verts, 3);
+    nrm = recomputeNormals(pos, idx, verts, nrm);
+  }
+
   return {
-    positions: Float32Array.from(positions),
-    normals: Float32Array.from(normals),
+    positions: pos,
+    normals: nrm,
     colors: Float32Array.from(colors),
-    indices: Uint32Array.from(indices),
+    indices: idx,
     atoms: Int32Array.from(atomsOut),
     spacing,
   };
+}
+
+/**
+ * Build vertex → neighbour-vertex adjacency (unique) from a triangle index
+ * buffer, as flat CSR arrays so the smoothing loop touches no per-vertex Set.
+ */
+function buildAdjacency(idx: Uint32Array, verts: number): { off: Uint32Array; nbr: Uint32Array } {
+  const seen = new Set<number>();
+  const deg = new Uint32Array(verts);
+  // Count unique undirected neighbour pairs per vertex.
+  const addPair = (a: number, b: number): void => {
+    const key = a < b ? a * verts + b : b * verts + a;
+    if (seen.has(key)) return;
+    seen.add(key);
+    deg[a]!++;
+    deg[b]!++;
+  };
+  for (let t = 0; t < idx.length; t += 3) {
+    const a = idx[t]!;
+    const b = idx[t + 1]!;
+    const c = idx[t + 2]!;
+    addPair(a, b);
+    addPair(b, c);
+    addPair(c, a);
+  }
+  const off = new Uint32Array(verts + 1);
+  for (let v = 0; v < verts; v++) off[v + 1] = off[v]! + deg[v]!;
+  const nbr = new Uint32Array(off[verts]!);
+  const cursor = off.slice(0, verts);
+  seen.clear();
+  const emit = (a: number, b: number): void => {
+    const key = a < b ? a * verts + b : b * verts + a;
+    if (seen.has(key)) return;
+    seen.add(key);
+    nbr[cursor[a]!++] = b;
+    nbr[cursor[b]!++] = a;
+  };
+  for (let t = 0; t < idx.length; t += 3) {
+    const a = idx[t]!;
+    const b = idx[t + 1]!;
+    const c = idx[t + 2]!;
+    emit(a, b);
+    emit(b, c);
+    emit(c, a);
+  }
+  return { off, nbr };
+}
+
+/** One umbrella-Laplacian pass: move each vertex `factor` toward its neighbour centroid. */
+function laplacianStep(
+  pos: Float32Array,
+  off: Uint32Array,
+  nbr: Uint32Array,
+  verts: number,
+  factor: number,
+): void {
+  const out = new Float32Array(pos.length);
+  for (let v = 0; v < verts; v++) {
+    const s = off[v]!;
+    const e = off[v + 1]!;
+    const n = e - s;
+    const o = v * 3;
+    if (n === 0) {
+      out[o] = pos[o]!;
+      out[o + 1] = pos[o + 1]!;
+      out[o + 2] = pos[o + 2]!;
+      continue;
+    }
+    let cx = 0;
+    let cy = 0;
+    let cz = 0;
+    for (let k = s; k < e; k++) {
+      const w = nbr[k]! * 3;
+      cx += pos[w]!;
+      cy += pos[w + 1]!;
+      cz += pos[w + 2]!;
+    }
+    cx /= n;
+    cy /= n;
+    cz /= n;
+    out[o] = pos[o]! + factor * (cx - pos[o]!);
+    out[o + 1] = pos[o + 1]! + factor * (cy - pos[o + 1]!);
+    out[o + 2] = pos[o + 2]! + factor * (cz - pos[o + 2]!);
+  }
+  pos.set(out);
+}
+
+/** `iterations` Taubin λ|μ passes (near volume-preserving) applied in place. */
+function taubinSmooth(pos: Float32Array, idx: Uint32Array, verts: number, iterations: number): void {
+  const { off, nbr } = buildAdjacency(idx, verts);
+  const lambda = 0.5;
+  const mu = -0.53;
+  for (let i = 0; i < iterations; i++) {
+    laplacianStep(pos, off, nbr, verts, lambda);
+    laplacianStep(pos, off, nbr, verts, mu);
+  }
+}
+
+/**
+ * Area-weighted per-vertex normals from the (smoothed) triangle mesh, each
+ * flipped to agree with the outward reference normal for that vertex.
+ */
+function recomputeNormals(
+  pos: Float32Array,
+  idx: Uint32Array,
+  verts: number,
+  outward: Float32Array,
+): Float32Array {
+  const nrm = new Float32Array(verts * 3);
+  for (let t = 0; t < idx.length; t += 3) {
+    const ia = idx[t]! * 3;
+    const ib = idx[t + 1]! * 3;
+    const ic = idx[t + 2]! * 3;
+    const ux = pos[ib]! - pos[ia]!;
+    const uy = pos[ib + 1]! - pos[ia + 1]!;
+    const uz = pos[ib + 2]! - pos[ia + 2]!;
+    const vx = pos[ic]! - pos[ia]!;
+    const vy = pos[ic + 1]! - pos[ia + 1]!;
+    const vz = pos[ic + 2]! - pos[ia + 2]!;
+    // Cross product, magnitude ∝ 2*triangle area → area weighting for free.
+    const nx = uy * vz - uz * vy;
+    const ny = uz * vx - ux * vz;
+    const nz = ux * vy - uy * vx;
+    nrm[ia] = nrm[ia]! + nx;
+    nrm[ia + 1] = nrm[ia + 1]! + ny;
+    nrm[ia + 2] = nrm[ia + 2]! + nz;
+    nrm[ib] = nrm[ib]! + nx;
+    nrm[ib + 1] = nrm[ib + 1]! + ny;
+    nrm[ib + 2] = nrm[ib + 2]! + nz;
+    nrm[ic] = nrm[ic]! + nx;
+    nrm[ic + 1] = nrm[ic + 1]! + ny;
+    nrm[ic + 2] = nrm[ic + 2]! + nz;
+  }
+  for (let v = 0; v < verts; v++) {
+    const o = v * 3;
+    const l = Math.hypot(nrm[o]!, nrm[o + 1]!, nrm[o + 2]!);
+    if (l > 1e-12) {
+      // Flip to the outward reference so the normal points away from the solid.
+      const sign =
+        nrm[o]! * outward[o]! + nrm[o + 1]! * outward[o + 1]! + nrm[o + 2]! * outward[o + 2]! < 0
+          ? -1
+          : 1;
+      nrm[o] = (sign * nrm[o]!) / l;
+      nrm[o + 1] = (sign * nrm[o + 1]!) / l;
+      nrm[o + 2] = (sign * nrm[o + 2]!) / l;
+    } else {
+      nrm[o] = outward[o]!;
+      nrm[o + 1] = outward[o + 1]!;
+      nrm[o + 2] = outward[o + 2]!;
+    }
+  }
+  return nrm;
 }
 
 /** The visRep bit-mask covering both surface reps (surface OR mesh). */
