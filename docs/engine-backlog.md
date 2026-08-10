@@ -7,8 +7,8 @@ and performance/architecture levers.
 
 This is the *forward-looking* companion to two existing docs:
 
-- [`engine-port-gaps.md`](./engine-port-gaps.md) — narrative of known gaps.
-- [`feature-parity.md`](./feature-parity.md) — parity status.
+- `docs/engine-port-gaps.md` — narrative of known gaps.
+- `docs/feature-parity.md` — parity status.
 
 ## How this was produced
 
@@ -26,7 +26,7 @@ user-visible impact. Every claim was verified against the source, not inferred.
 - **Parity metric** — where a percentage is quoted, it is the TS render compared
   pixel-for-pixel (pixelmatch) against a **real-PyMOL reference PNG**. Current mean
   ≈ **89.4%** across 22 scenes; solid/line/cartoon reps sit at 90–99%, surfaces at
-  65–75%, mesh at 64.6% (worst). See [`packages/e2e`](./packages/e2e.md) /
+  65–75%, mesh at 64.6% (worst). See the `packages/e2e` docs page /
   `apps/web/e2e/visual.e2e.mjs`.
 
 ### Where recent work landed (context)
