@@ -122,7 +122,11 @@ export class Engine {
 
   /* ------------------------------- call ------------------------------- */
 
-  call(fn: string, args: readonly unknown[] = [], kwargs: Readonly<Record<string, unknown>> = {}): Json {
+  call(
+    fn: string,
+    args: readonly unknown[] = [],
+    kwargs: Readonly<Record<string, unknown>> = {},
+  ): Json {
     const name = fn.startsWith('cmd.') ? fn.slice(4) : fn;
     const handler = this.handlers.get(name);
     if (!handler) {
@@ -147,7 +151,10 @@ export class Engine {
         );
       }
       const message = err instanceof Error ? err.message : String(err);
-      throw new PymolError({ kind: 'CmdException', type: 'CmdException', message, traceback: '' }, fn);
+      throw new PymolError(
+        { kind: 'CmdException', type: 'CmdException', message, traceback: '' },
+        fn,
+      );
     }
   }
 
@@ -214,16 +221,50 @@ export class Engine {
 
   /** The `cmd` object exposed to console JavaScript: `cmd.<symbol>(...args)`. */
   private jsCmd(): Record<string, (...args: unknown[]) => unknown> {
+    return this.nsProxy('');
+  }
+
+  /**
+   * A namespace proxy for the JS console: `<ns>.<fn>(...args)` dispatches through
+   * the engine as `cmd.<ns>.<fn>`. With `ns === ''` it is the bare `cmd` object.
+   * Nested access (`cmd.util.cbag(...)`) works because each property is itself a
+   * namespace proxy until it is called.
+   */
+  private nsProxy(ns: string): Record<string, (...args: unknown[]) => unknown> {
     const call = (fn: string, args: unknown[]): unknown => this.call(fn, args);
-    return new Proxy(
-      {},
-      {
-        get(_t, prop: string | symbol) {
-          if (typeof prop !== 'string') return undefined;
-          return (...args: unknown[]) => call(prop, args);
-        },
+    const prefix = ns === '' ? '' : `${ns}.`;
+    return new Proxy(function () {} as unknown as Record<string, (...args: unknown[]) => unknown>, {
+      get: (_t, prop: string | symbol) => {
+        if (typeof prop !== 'string') return undefined;
+        const full = `${prefix}${prop}`;
+        // Callable AND further-navigable: `preset.pretty('all')` calls, while
+        // `cmd.util.cbag(...)` navigates one more level first.
+        const fn = (...args: unknown[]): unknown => call(full, args);
+        return new Proxy(fn, {
+          get: (_f, p: string | symbol) =>
+            typeof p === 'string' ? this.nsProxy(full)[p] : undefined,
+          apply: (_f, _this, args: unknown[]) => call(full, args),
+        });
       },
-    ) as Record<string, (...args: unknown[]) => unknown>;
+    }) as Record<string, (...args: unknown[]) => unknown>;
+  }
+
+  /**
+   * PyMOL module names a console script may reference bare (`editor.foo()`,
+   * `util.cbag()`), so they resolve through the engine — and an unported one
+   * (`editor.*`) throws a clean `NotPorted` rather than a JS `ReferenceError`.
+   * Union of the namespace prefixes actually registered plus `editor`, which is
+   * unported but the exact thing users reach for (`attach_amino_acid`).
+   */
+  private consoleNamespaces(): string[] {
+    const ns = new Set<string>(['editor']);
+    for (const name of this.handlers.keys()) {
+      const dot = name.indexOf('.');
+      if (dot > 0) ns.add(name.slice(0, dot));
+    }
+    // Never shadow the reserved console params.
+    for (const reserved of ['cmd', 'print', 'console']) ns.delete(reserved);
+    return [...ns];
   }
 
   /**
@@ -247,18 +288,24 @@ export class Engine {
       out.push(a.map(fmt).join(' '));
     };
     const consoleShim = { log, info: log, warn: log, error: log, debug: log };
-    const cmd = this.jsCmd();
+    // Scope exposed to the eval: `cmd`, `print`, `console`, and one proxy per
+    // PyMOL namespace so `editor.attach_amino_acid(...)` / `util.cbag(...)` route
+    // through the engine instead of throwing `ReferenceError: editor is not defined`.
+    const scope: Record<string, unknown> = { cmd: this.jsCmd(), print: log, console: consoleShim };
+    for (const ns of this.consoleNamespaces()) scope[ns] = this.nsProxy(ns);
+    const names = Object.keys(scope);
+    const values = names.map((n) => scope[n]);
     try {
       let value: unknown;
       try {
         // Expression form first, so `1+1` / `cmd.count_atoms("all")` show a value.
-        const fn = new Function('cmd', 'print', 'console', `return (\n${code}\n);`);
-        value = fn(cmd, log, consoleShim);
+        const fn = new Function(...names, `return (\n${code}\n);`);
+        value = fn(...values);
       } catch (e) {
         if (!(e instanceof SyntaxError)) throw e;
         // Statement form: `for (...) {...}`, `let x = ...`, multiple statements.
-        const fn = new Function('cmd', 'print', 'console', code);
-        value = fn(cmd, log, consoleShim);
+        const fn = new Function(...names, code);
+        value = fn(...values);
       }
       if (value !== undefined) out.push(fmt(value));
     } catch (err) {
@@ -329,7 +376,14 @@ export class Engine {
 
   /* ------------------------------ input ------------------------------- */
 
-  input(msg: { kind: string; x?: number; y?: number; state?: number; width?: number; height?: number }): Json {
+  input(msg: {
+    kind: string;
+    x?: number;
+    y?: number;
+    state?: number;
+    width?: number;
+    height?: number;
+  }): Json {
     switch (msg.kind) {
       case 'button':
         this.dragging = msg.state === 0;
@@ -455,7 +509,8 @@ export class Engine {
     h('set', (args) => {
       const name = str(args[0]);
       const raw = args[1];
-      const value = typeof raw === 'number' ? raw : Number.isNaN(Number(raw)) ? str(raw) : Number(raw);
+      const value =
+        typeof raw === 'number' ? raw : Number.isNaN(Number(raw)) ? str(raw) : Number(raw);
       ex.set(name, value);
       this.publish();
       return null;
@@ -545,7 +600,10 @@ export class Engine {
     h('get_frame', () => 1);
     h('get_state', () => 1);
     h('count_frames', () => 0);
-    h('count_states', (args) => ex.molecule(str(args[0]))?.nstate ?? ex.moleculesInOrder()[0]?.nstate ?? 1);
+    h(
+      'count_states',
+      (args) => ex.molecule(str(args[0]))?.nstate ?? ex.moleculesInOrder()[0]?.nstate ?? 1,
+    );
     h('count_discrete', () => 0);
     h('get_movie_locked', () => 0);
     h('get_movie_length', () => 0);
@@ -734,7 +792,14 @@ export class Engine {
     const atoms = this.executive.atomsMatching(sel).map((ua) => {
       const mol = this.executive.molecule(ua.objName)!;
       const [x, y, z] = mol.coord(ua.index, 1);
-      return { name: ua.atom.name, resn: ua.atom.resn, resi: ua.atom.resi, chain: ua.atom.chain, elem: ua.atom.elem, coord: [x, y, z] };
+      return {
+        name: ua.atom.name,
+        resn: ua.atom.resn,
+        resi: ua.atom.resi,
+        chain: ua.atom.chain,
+        elem: ua.atom.elem,
+        coord: [x, y, z],
+      };
     });
     return { atom: atoms } as unknown as Json;
   }
@@ -768,7 +833,10 @@ export class Engine {
 
   private emitView(): void {
     // The `view` topic payload; the client narrows/uses get_view directly too.
-    this.emitter.emit('view' as keyof BackendEvents & string, { view: this.executive.view.get() } as never);
+    this.emitter.emit(
+      'view' as keyof BackendEvents & string,
+      { view: this.executive.view.get() } as never,
+    );
   }
 
   /** object/rep/state keys that currently have geometry on the client. */

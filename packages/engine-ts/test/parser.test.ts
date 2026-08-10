@@ -82,4 +82,24 @@ describe('do() integration', () => {
     await b.do('@setup.pml');
     expect(seen.join('\n')).toMatch(/@script files are not supported/);
   });
+
+  it('an unported `editor.*` console call gives NotPorted, not "editor is not defined"', async () => {
+    const b = await boot();
+    const seen: string[] = [];
+    b.on('feedback', ({ lines }) => seen.push(...lines));
+    // Function-call form falls to the JS evaluator; `editor` must resolve to a
+    // namespace proxy that dispatches through the engine (the exact case that
+    // started the backlog: attach_amino_acid).
+    await b.do("editor.attach_amino_acid('ALA')");
+    const text = seen.join('\n');
+    expect(text).not.toMatch(/editor is not defined/);
+    expect(text).toMatch(/not ported by @tenmol\/engine-ts/);
+  });
+
+  it('a ported namespace call works from the bare console (util.cbag)', async () => {
+    const b = await boot();
+    await b.do("util.cbag('all')");
+    // cbag colours carbons green; at least it ran without a ReferenceError.
+    expect(await b.call('count_atoms', ['all'])).toBeGreaterThan(0);
+  });
 });
