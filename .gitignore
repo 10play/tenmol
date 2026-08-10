@@ -105,3 +105,6 @@ apps/web/.env
 apps/storybook/storybook-static/
 # Storybook static served through the app dev server (not committed)
 apps/web/public/storybook/
+
+# generated visual-parity viewer (regenerate: node apps/web/e2e/gallery.mjs)
+apps/web/public/gallery.html
