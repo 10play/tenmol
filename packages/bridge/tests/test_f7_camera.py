@@ -230,7 +230,7 @@ def test_no_camera_command_waits_for_the_camera(cam: WSClient) -> None:
 
 
 def test_an_animated_command_has_not_moved_the_camera_when_it_returns(
-    cam: WSClient, target: List[float]
+    cam: WSClient, target: List[float], gl_bridge
 ) -> None:
     """``ScenePrimeAnimation`` + ``SceneLoadAnimation`` put the camera BACK.
 
@@ -238,6 +238,12 @@ def test_an_animated_command_has_not_moved_the_camera_when_it_returns(
     ``SceneLoadAnimation`` ends with ``SceneFromViewElem(G, I->ani_elem, true)``
     (``packages/engine/layer1/Scene.cpp:420``) — key frame 0, i.e. exactly where the camera
     already was.  MEASURED gap at return: 0.0 for all three, to the last bit.
+
+    Gated on ``gl_bridge``: this asserts the sweep ADVANCES past key frame 0
+    (``gap(moved, home) > 1.0``), and ``SceneUpdateAnimation`` only runs from the
+    draw (docstring §4).  With no GL context ``Engine.tick`` skips ``p.draw()``,
+    the camera snaps back to key frame 0 and never moves, so the assertion is a
+    property of the missing GL, not the command — skip rather than fail.
     """
     for fn, args in (
         ("cmd.zoom", ("resi 20",)),
@@ -383,12 +389,17 @@ def test_two_equal_samples_is_not_settled(cam: WSClient, target: List[float]) ->
 
 
 def test_the_animated_endpoint_equals_the_instant_endpoint_exactly(
-    cam: WSClient, target: List[float]
+    cam: WSClient, target: List[float], gl_bridge
 ) -> None:
     """A sweep is not an approximation: the last key frame IS the target.
 
     MEASURED gap between ``zoom animate=0.3`` (settled) and ``zoom animate=0``:
     0.0 across all 18 floats.
+
+    Gated on ``gl_bridge``: the sweep only reaches its last key frame if the
+    draw runs ``SceneUpdateAnimation`` (docstring §4).  With no GL context the
+    camera stays snapped at key frame 0, so ``quiet_view`` settles far from the
+    target — a property of the missing GL, not the endpoint — skip rather than fail.
     """
     for duration in (0.1, 0.3):
         cam.call("cmd.reset")
