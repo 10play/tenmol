@@ -562,9 +562,10 @@ def test_star_lists_sorted_and_star_clear_empties(cam: WSClient, bridge) -> None
         cam, bridge, "ZWF_VIEWS", "sorted(pymol._view_dict)"
     )
 
+    before = len(bridge.feedback_lines())
     cam.call("cmd.view", "*")
     time.sleep(0.3)
-    tail = bridge.feedback_lines()[-6:]
+    tail = bridge.feedback_lines()[before:]
     assert any("view: stored views:" in line for line in tail), tail
     # `parsing.dump_str_list` lays the names out in columns, two leading spaces
     # and a trailing one -- this is the only listing the API offers.
