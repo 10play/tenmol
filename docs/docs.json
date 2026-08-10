@@ -13,7 +13,7 @@
     "groups": [
       {
         "group": "Overview",
-        "pages": ["index", "architecture", "build-and-tooling", "typescript-console"]
+        "pages": ["index", "architecture", "build-and-tooling", "typescript-console", "engine-backlog"]
       },
       {
         "group": "Packages",
