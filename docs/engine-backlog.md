@@ -31,6 +31,20 @@ user-visible impact. Every claim was verified against the source, not inferred.
 
 ### Where recent work landed (context)
 
+**Backlog-closure effort (Waves 0–2, rolling PR).** A KPI-driven push to close this
+list is underway; see `docs/parity-dashboard.md` for the live command/rep burndown.
+Landed so far — the §1 items they close are marked **✅ ported** inline below:
+
+- **Wave 0** — a committed command/rep coverage scoreboard + ratchet
+  (`packages/engine-ts/test/coverage.test.ts`, `pnpm coverage`). Baseline: 271/506
+  real command handlers.
+- **Wave 1** — the `preset.*` (20/21), `util.*` remainder (+22), `movie.*` (20/20),
+  and `gui.*` (7/7) namespaces, plus flat `check` / `fork` / `dist` / help verbs and
+  British-spelling colour aliases — composed via a new `ctx.call(...)` seam. Coverage
+  rose to **350/506 (69.2%)**.
+- **Wave 2** — the console parser now handles `key=value` kwargs, quoted
+  commas/`=`, and reports `@script` honestly.
+
 The visual/perf regression suite and three fixes already shipped and set the
 baseline the numbers above reflect:
 
@@ -94,42 +108,49 @@ Return-placeholder stubs that mislead scripts because they neither throw nor act
 
 Files: `cmd/extras.ts:505`.
 
-### `preset.*` namespace entirely unported — M
+### `preset.*` namespace — ✅ ported (Wave 1, 20/21) — M
 
-No preset handlers, so every one-click representation preset throws `NotPorted`.
+All one-click representation presets are ported in `cmd/preset.ts`, composing
+`show`/`hide`/`color`/`set`/`spectrum`/`util.*` via `ctx.call`. Some steps that
+depend on still-unported sub-verbs (`flag`, `set_bond`, the `extend` selector
+operator, the `licorice` rep alias) are skipped and will fill in as those land.
 
-> Missing: `simple, simple_no_solv, technical, pretty, pretty_solv, publication,
-> pub_solv, default, ligands, ligand_cartoon, ligand_sites (+_hq/_trans/
-> _trans_hq/_mesh/_dots), ball_and_stick, b_factor_putty, interface, classified`
+> Ported: `simple, simple_no_solv, technical, pretty, pretty_solv, pretty_no_solv,
+> publication, pub_solv, pub_no_solv, default, ligands, ligand_cartoon,
+> ligand_sites (+_hq/_trans/_trans_hq/_mesh/_dots), ball_and_stick, b_factor_putty,
+> interface, classified`
 
-Files: `registrars.ts:35`, ref `preset.py`.
+Files: `cmd/preset.ts`, `registrars.ts`, ref `preset.py`.
 
-### `util.*` only partially ported — M
+### `util.*` — ✅ largely ported (Wave 1, 30/45) — M
 
-Only the carbon / rainbow colorers are registered (`cbc, rainbow, cbag, cbac,
-cbay, cbas, cbap, cbaw`); every other `util.*` helper throws `NotPorted`.
+Beyond the carbon/rainbow colorers in `cmd/coloring.ts` (`cbc, rainbow, cbag,
+cbac, cbay, cbas, cbap, cbaw`), `cmd/util2.ts` now ports the coloring, analysis
+and labeling helpers: `cnc, color_carbon, cbss, ss, chainbow, cba, cbh, cbab,
+cbao, cbak, cbam, color_objs, color_deep, get_area, get_sasa, compute_mass,
+find_surface_residues, find_surface_atoms, phipsi, mass_align, label_chains,
+label_segments`.
 
-> Missing: `protein_vacuum_esp, protein_assign_charges_and_radii, color_by_area,
-> find_surface_residues/atoms, get_area, get_sasa(_relative), mass_align,
-> sum_formal/partial_charges, compute_mass, ss, cbss, cbam, cbab, cbao, cbak,
-> cnc, cba, cbh, color_carbon, color_objs, color_deep, chainbow, phipsi,
-> ray_shadows, b2vdw, ff_copy, colors, interchain_distances, ligand_zoom,
-> label_chains, label_segments, enable_all_shaders, modernize_rendering,
-> performance`
+> Still missing (need machinery the port lacks — charges, ESP maps, shader/render
+> settings): `protein_vacuum_esp, protein_assign_charges_and_radii, color_by_area,
+> get_sasa_relative, sum_formal/partial_charges, ray_shadows, b2vdw, ff_copy,
+> colors, interchain_distances, ligand_zoom, enable_all_shaders,
+> modernize_rendering, performance`
 
-Files: `cmd/coloring.ts:419`, ref `util.py`.
+Files: `cmd/util2.ts`, `cmd/coloring.ts`, ref `util.py`.
 
-### `movie.*` namespace entirely unported — M
+### `movie.*` namespace — ✅ ported (Wave 1, 20/20) — M
 
-Top-level movie verbs are ported (`curve_new, mview, mset, mplay`…) but the
-`movie.` prefix registers nothing, so the movie/scene GUI panel is dead
-(`cmd.movie.add_blank` / `add_scenes` throw `NotPorted`).
+`cmd/movie3.ts` ports the whole `movie.*` namespace, composing the top-level
+`mview`/`mset`/`mplay`/`mdo` verbs. The frame-table / camera-keyframe side effects
+are faithful; per-frame motion via `mdo` and file encoding (`produce`, `find_exe`)
+are in-engine no-ops (no ffmpeg / filesystem), noted in the module.
 
-> Missing: `produce, roll, tdroll, timed_roll, rock, nutate, screw, sweep, zoom,
+> Ported: `produce, roll, tdroll, timed_roll, rock, nutate, screw, sweep, zoom,
 > pause, load, add_blank, add_roll, add_rock, add_state_sweep, add_state_loop,
 > add_nutate, add_scenes, get_movie_fps, find_exe`
 
-Files: `cmd/movie2.ts`, ref `movie.py`, `_gui.py:236`.
+Files: `cmd/movie3.ts`, ref `movie.py`, `_gui.py:236`.
 
 ### Structure-based superposition non-functional — M
 
@@ -147,23 +168,29 @@ fragment/monomer library exists in the port.
 
 Files: `cmd/extras.ts:515`.
 
-### Top-level verbs that throw `NotPorted` — M
+### Top-level verbs that throw `NotPorted` — M · partly landed (Wave 1)
 
-Real console keywords that reject: `check` (structure/geometry check), `torsion`
-(interactive torsion edit), `fork` (should alias `spawn`), plus the help/topic
-verbs (`commands, examples, launching, editing, editing_ring, keyboard, movies,
-selections, faster, help_setting, diagnostics, embed, skip`). Python-language
-keywords and disabled vendored verbs (`slice_lock`, `rgbfunction`) are
-intentionally absent.
+`cmd/topics.ts` now ports `check` (a real atom/bond structure summary), `fork`
+(→`spawn`), `dist` (→`distance`), and the flat help verbs re-exported by `api.py`
+(`commands, show_help, help_setting, editing_ring`), plus British-spelling colour
+aliases (`colour, bg_colour, recolour, set_colour`).
 
-Files: ref `keywords.py`, `engine.ts:125`.
+> Still throwing: `torsion` (interactive torsion edit) and functional verbs left
+> for later waves (`map_generate, transform_object/selection, set_discrete,
+> auto_measure, copy_image, label2`, the colorection getters/setters, …). Python-
+> language keywords and disabled vendored verbs (`slice_lock`, `rgbfunction`) stay
+> intentionally absent.
 
-### `gui.*` namespace unported — S
+Files: `cmd/topics.ts`, ref `keywords.py`, `engine.ts`.
 
-`gui` is a declared cmd namespace the client type surface knows about, but no
-handler is registered.
+### `gui.*` namespace — ✅ ported (Wave 1, 7/7) — S
 
-Files: `packages/client/src/cmd.ts:286`, ref `gui.py`.
+`cmd/guins.ts` registers the whole `gui.*` namespace. The verbs are external-GUI
+window controls; the browser has no such window, so most are faithfully modelled
+as env-bound (`ext_show`/`ext_hide` track visibility intent; accessors return
+`null` exactly as PyMOL's `ImportError` branch does).
+
+Files: `cmd/guins.ts`, `packages/client/src/cmd.ts:286`, ref `gui.py`.
 
 ---
 
@@ -449,21 +476,24 @@ Files: `modeG/renderer.ts:159,245`, `webgl/quadlines.ts:174`.
 Meaningful in-code markers and half-wired features surfaced across the engine,
 bridge, and web app.
 
-### Console command-language parser only knows 13 verbs — M · suggested priority #1
+### Console command language — ✅ mostly resolved (Wave 2)
 
-The console recognizes 13 verbs; everything else is evaluated as JavaScript, so
-valid PyMOL lines (`scene new, store`; `spectrum count`; `dss`; `rotate x, 90`;
-`ray`; `label …`; `distance d, …`) hit `NotPorted` or fail as JS ("Unexpected
-token"). Fix: add registered verbs to `KNOWN_KEYWORDS` with a `runKeyword` case.
+`isCommandWord` accepts any registered handler and `runKeyword`'s default case
+dispatches it generically, so every ported verb (`scene new, store`; `spectrum
+count`; `dss`; `rotate x, 90`; `label …`; `distance d, …`) is already a console
+verb — the old "13 verbs" limit is gone. Remaining: verbs that are themselves
+still unported (`ray` → remote backend; `torsion`, etc.) naturally still report.
 
-Files: `docs/engine-port-gaps.md:181,247`.
+Files: `packages/engine-ts/src/engine.ts` (`runKeyword`), ref `docs/engine-port-gaps.md`.
 
-### `cmd.do` parser drops python-escape / `@script` / `=kwarg` syntaxes — L
+### `cmd.do` parser — ✅ kwargs + `@script` handled (Wave 2) — remaining: python-escape
 
-The minimal parser only handles `keyword arg1, arg2`; richer forms are rejected
-(reported, not silently dropped).
+`cmd/parser.ts` now splits `keyword arg1, arg2, key=value` into positional args +
+kwargs (quote-aware, so commas/`=` inside quotes are preserved), and `@file.pml`
+is reported honestly (no browser filesystem). Still out of scope: arbitrary
+python-escape expressions (those run as JavaScript via the `/expr` path).
 
-Files: `cmd/parser.ts:8`.
+Files: `cmd/parser.ts`.
 
 ### Menu tree is a hand-written truncated excerpt — L
 
