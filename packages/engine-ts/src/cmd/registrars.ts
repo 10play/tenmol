@@ -35,6 +35,8 @@ import { registerUtil2 } from './util2';
 import { registerMovieNs } from './movie3';
 import { registerGuiNs } from './guins';
 import { registerTopics } from './topics';
+import { registerXform } from './xform';
+import { registerMisc2 } from './misc2';
 
 /** Every subsystem registrar, applied in order to the engine's context. */
 export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
@@ -69,4 +71,6 @@ export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
   registerMovieNs,
   registerGuiNs,
   registerTopics,
+  registerXform,
+  registerMisc2,
 ];
