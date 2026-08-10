@@ -5,7 +5,7 @@ of PyMOL (`@tenmol/engine-ts` + `@tenmol/viewport`) does **not** do yet:
 unported commands, missing and degraded rendering, deliberately deferred work,
 and performance/architecture levers.
 
-This is the *forward-looking* companion to two existing docs:
+This is the _forward-looking_ companion to two existing docs:
 
 - `docs/engine-port-gaps.md` — narrative of known gaps.
 - `docs/feature-parity.md` — parity status.
@@ -60,7 +60,7 @@ baseline the numbers above reflect:
 
 ## 1. Not supported / not ported commands
 
-What a user hits as *"not ported by `@tenmol/engine-ts` yet"* (a `NotPorted`
+What a user hits as _"not ported by `@tenmol/engine-ts` yet"_ (a `NotPorted`
 throw) — or, worse, a call that silently does nothing. Grouped by namespace.
 
 ### `editor.*` namespace entirely unported — L · **reported bug**
@@ -73,11 +73,11 @@ impossible. Only the low-level topology half of `editor.py` (`add_bond`,
 `rebond`, `fix_chemistry`, `sort`) is ported in `cmd/builder.ts`.
 
 > Missing: `attach_amino_acid, attach_fragment, combine_fragment, build_peptide,
-> fab, fnab, fit_sugars, fit_DS_fragment, attach_nuc_acid, extend_nuc_acid,
-> attach_O5_phosphate, bond_single_stranded, bond_double_stranded, add2pO,
-> move_atom_in_res, move_new_res, rename_three_to_one, iterate_to_list,
-> check_dummy_oriention, check_DNA_base_pair, check_valid_attachment,
-> get_chains_oppo, get_new_chain`
+fab, fnab, fit_sugars, fit_DS_fragment, attach_nuc_acid, extend_nuc_acid,
+attach_O5_phosphate, bond_single_stranded, bond_double_stranded, add2pO,
+move_atom_in_res, move_new_res, rename_three_to_one, iterate_to_list,
+check_dummy_oriention, check_DNA_base_pair, check_valid_attachment,
+get_chains_oppo, get_new_chain`
 
 Files: `packages/engine-ts/src/cmd/registrars.ts:35`, `engine.ts:128`,
 `cmd/builder.ts`, ref `packages/engine/modules/pymol/editor.py`.
@@ -98,13 +98,13 @@ Files: `cmd/extras.ts:505`, ref `docs/engine-port-gaps.md:220`.
 Return-placeholder stubs that mislead scripts because they neither throw nor act:
 
 > logging (`log, log_open/close, resume`) · picking (`edit, edit_keys, drag,
-> release, unpick`) · movie edits (`mcopy, mdelete, mmove, mdo, minsert,
-> scene_order`) · maps/volumes (`map_set, slice_new, volume, volume_panel,
-> spheroid, vdw_fit`) · app/render (`cls, cache, callout, capture, quit,
-> meter_reset, focal_blur, decline, feedback, extend, alias, matrix_copy`) ·
+release, unpick`) · movie edits (`mcopy, mdelete, mmove, mdo, minsert,
+scene_order`) · maps/volumes (`map_set, slice_new, volume, volume_panel,
+spheroid, vdw_fit`) · app/render (`cls, cache, callout, capture, quit,
+meter_reset, focal_blur, decline, feedback, extend, alias, matrix_copy`) ·
 > chemistry/typing (`assign_stereo, text_type, set_geometry, uniquify,
-> unset_deep, pbc_wrap/unwrap`) · export (`get_mtl_obj, get_povray, povray,
-> remove_picked`)
+unset_deep, pbc_wrap/unwrap`) · export (`get_mtl_obj, get_povray, povray,
+remove_picked`)
 
 Files: `cmd/extras.ts:505`.
 
@@ -116,9 +116,9 @@ depend on still-unported sub-verbs (`flag`, `set_bond`, the `extend` selector
 operator, the `licorice` rep alias) are skipped and will fill in as those land.
 
 > Ported: `simple, simple_no_solv, technical, pretty, pretty_solv, pretty_no_solv,
-> publication, pub_solv, pub_no_solv, default, ligands, ligand_cartoon,
-> ligand_sites (+_hq/_trans/_trans_hq/_mesh/_dots), ball_and_stick, b_factor_putty,
-> interface, classified`
+publication, pub_solv, pub_no_solv, default, ligands, ligand_cartoon,
+ligand_sites (+_hq/_trans/_trans_hq/_mesh/_dots), ball_and_stick, b_factor_putty,
+interface, classified`
 
 Files: `cmd/preset.ts`, `registrars.ts`, ref `preset.py`.
 
@@ -133,9 +133,9 @@ label_segments`.
 
 > Still missing (need machinery the port lacks — charges, ESP maps, shader/render
 > settings): `protein_vacuum_esp, protein_assign_charges_and_radii, color_by_area,
-> get_sasa_relative, sum_formal/partial_charges, ray_shadows, b2vdw, ff_copy,
-> colors, interchain_distances, ligand_zoom, enable_all_shaders,
-> modernize_rendering, performance`
+get_sasa_relative, sum_formal/partial_charges, ray_shadows, b2vdw, ff_copy,
+colors, interchain_distances, ligand_zoom, enable_all_shaders,
+modernize_rendering, performance`
 
 Files: `cmd/util2.ts`, `cmd/coloring.ts`, ref `util.py`.
 
@@ -147,8 +147,8 @@ are faithful; per-frame motion via `mdo` and file encoding (`produce`, `find_exe
 are in-engine no-ops (no ffmpeg / filesystem), noted in the module.
 
 > Ported: `produce, roll, tdroll, timed_roll, rock, nutate, screw, sweep, zoom,
-> pause, load, add_blank, add_roll, add_rock, add_state_sweep, add_state_loop,
-> add_nutate, add_scenes, get_movie_fps, find_exe`
+pause, load, add_blank, add_roll, add_rock, add_state_sweep, add_state_loop,
+add_nutate, add_scenes, get_movie_fps, find_exe`
 
 Files: `cmd/movie3.ts`, ref `movie.py`, `_gui.py:236`.
 
@@ -177,7 +177,7 @@ aliases (`colour, bg_colour, recolour, set_colour`).
 
 > Still throwing: `torsion` (interactive torsion edit) and functional verbs left
 > for later waves (`map_generate, transform_object/selection, set_discrete,
-> auto_measure, copy_image, label2`, the colorection getters/setters, …). Python-
+auto_measure, copy_image, label2`, the colorection getters/setters, …). Python-
 > language keywords and disabled vendored verbs (`slice_lock`, `rgbfunction`) stay
 > intentionally absent.
 
@@ -239,7 +239,7 @@ surfaces 65–75%, mesh 64.6% (worst), everything else 90–99%.
 
 ### Surface is SAS, not the solvent-excluded surface (SES) — L · biggest surface gap
 
-The field `min(|p−c|−(vdw+probe))` marching-cubed at 0 is the solvent-*accessible*
+The field `min(|p−c|−(vdw+probe))` marching-cubed at 0 is the solvent-_accessible_
 surface; without probe rolling, re-entrant pockets and toroidal saddles fill in
 and the surface reads puffy/bubbly. The 90³ grid is coarsened (spacing ×1.3) on
 big molecules → visible faceting. This is the single largest cause of weak surface
@@ -341,7 +341,7 @@ ray-tracer.
 ### F4 per-vertex ambient occlusion — declined — M
 
 Desktop PyMOL's real-time GL path (the chosen parity target) ships AO **off** by
-default, so adding it would move the render *away* from the "looks like a fresh
+default, so adding it would move the render _away_ from the "looks like a fresh
 PyMOL install" target. The shader already consumes it; a spike measured it live on
 5,235 verts. Revisit only if the quality bar shifts to the ray-traced look.
 
@@ -349,7 +349,7 @@ Files: `plan:58`, `materials/vertex.ts:50`, `surface_gen.ts`.
 
 ### True SES surface generation — deferred (F5 residual) — L
 
-F5 only Taubin-smoothed the SAS mesh to *look* SES-like; real rolled-probe
+F5 only Taubin-smoothed the SAS mesh to _look_ SES-like; real rolled-probe
 re-entrant surfaces are a substantial two-pass algorithm (or an EDT inward
 offset) left as follow-up. Surface similarity plateaued ~71–75%. Same root cause
 as the §3 surface item.
@@ -368,7 +368,7 @@ Files: `docs/engine-port-gaps.md:124`, `plan:7`.
 
 A real-time WebGL renderer can't reproduce ray shadows/AO/SES pixel-for-pixel;
 only F4/F5 were scoped as quality fixes. This is the constant ceiling on the
-parity metric across *all* scenes — even strong sticks/cartoon top out ~95–98%
+parity metric across _all_ scenes — even strong sticks/cartoon top out ~95–98%
 partly because of the shadowless flat lighting.
 
 Files: `plan:13`, `lighting.ts:22`.
@@ -453,8 +453,9 @@ Files: `webgl/builder.ts:106,134`, `modeG/renderer.ts:332`.
 
 `new Matrix4().fromArray(mv).invert()` per call plus an `O(keys×materials)`
 `pushUniforms` walk (fog/ortho/bg) fired even on pure rotation, during active drag
-+ the 4 Hz poll. Hoist a reusable scratch `Matrix4` and gate the uniform fan-out
-on fog/ortho/bg actually changing.
+
+- the 4 Hz poll. Hoist a reusable scratch `Matrix4` and gate the uniform fan-out
+  on fog/ortho/bg actually changing.
 
 Files: `modeG/renderer.ts:276,282,289`.
 
