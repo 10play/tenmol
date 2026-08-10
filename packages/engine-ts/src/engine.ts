@@ -174,16 +174,24 @@ export class Engine {
   }
 
   do(line: string): void {
+    // `@file.pml` runs a script file — there is no filesystem in the browser, so
+    // report it honestly rather than mis-evaluating it as JavaScript.
+    if (line.trim().startsWith('@')) {
+      this.appendFeedback(`tenmol>${line}`);
+      this.appendFeedback(' @script files are not supported in the browser console');
+      return;
+    }
+
     const commands = splitCommands(line).map(parseCommand);
     const anyCommand = commands.some((c) => this.isCommandWord(c.keyword));
 
     // A line with a recognized PyMOL command runs the command language.
     if (anyCommand) {
       this.appendFeedback(`tenmol>${line}`);
-      for (const { keyword, args } of commands) {
+      for (const { keyword, args, kwargs } of commands) {
         if (!this.isCommandWord(keyword)) continue;
         try {
-          this.runKeyword(keyword, args);
+          this.runKeyword(keyword, args, kwargs);
         } catch (err) {
           this.appendFeedback(` ${err instanceof Error ? err.message : String(err)}`);
         }
@@ -259,47 +267,49 @@ export class Engine {
     for (const l of out) this.appendFeedback(l);
   }
 
-  private runKeyword(keyword: string, args: string[]): void {
+  private runKeyword(keyword: string, args: string[], kwargs: Record<string, string> = {}): void {
     // Map the console keyword to a ported handler with positional string args.
+    // `kwargs` (parsed `key=value` tokens) is threaded through so verbs that take
+    // keyword arguments (e.g. `spectrum expression=count`) receive them.
     switch (keyword) {
       case 'fragment':
-        this.call('fragment', [args[0] ?? '', args[1] ?? '']);
+        this.call('fragment', [args[0] ?? '', args[1] ?? ''], kwargs);
         return;
       case 'bg_color':
-        this.call('bg_color', [args[0] ?? 'black']);
+        this.call('bg_color', [args[0] ?? 'black'], kwargs);
         return;
       case 'reset':
-        this.call('reset', []);
+        this.call('reset', [], kwargs);
         return;
       case 'show':
-        this.call('show', [args[0] ?? 'lines', args[1] ?? 'all']);
+        this.call('show', [args[0] ?? 'lines', args[1] ?? 'all'], kwargs);
         return;
       case 'hide':
-        this.call('hide', [args[0] ?? 'everything', args[1] ?? 'all']);
+        this.call('hide', [args[0] ?? 'everything', args[1] ?? 'all'], kwargs);
         return;
       case 'as':
-        this.call('as', [args[0] ?? 'lines', args[1] ?? 'all']);
+        this.call('as', [args[0] ?? 'lines', args[1] ?? 'all'], kwargs);
         return;
       case 'color':
-        this.call('color', [args[0] ?? '', args[1] ?? 'all']);
+        this.call('color', [args[0] ?? '', args[1] ?? 'all'], kwargs);
         return;
       case 'select':
-        this.call('select', [args[0] ?? 'sele', args[1] ?? 'all']);
+        this.call('select', [args[0] ?? 'sele', args[1] ?? 'all'], kwargs);
         return;
       case 'delete':
-        this.call('delete', [args[0] ?? 'all']);
+        this.call('delete', [args[0] ?? 'all'], kwargs);
         return;
       case 'zoom':
-        this.call('zoom', [args[0] ?? 'all']);
+        this.call('zoom', [args[0] ?? 'all'], kwargs);
         return;
       case 'orient':
-        this.call('orient', [args[0] ?? 'all']);
+        this.call('orient', [args[0] ?? 'all'], kwargs);
         return;
       case 'turn':
-        this.call('turn', [args[0] ?? 'y', Number(args[1] ?? 0)]);
+        this.call('turn', [args[0] ?? 'y', Number(args[1] ?? 0)], kwargs);
         return;
       case 'set':
-        this.call('set', [args[0] ?? '', args[1] ?? '1', args[2] ?? '']);
+        this.call('set', [args[0] ?? '', args[1] ?? '1', args[2] ?? ''], kwargs);
         return;
       default:
         // Any other registered command: call it generically with the console's
@@ -307,7 +317,7 @@ export class Engine {
         // makes every ported `cmd` symbol a console verb — `scene`, `spectrum`,
         // `rotate`, `dss`, ... — without a bespoke case each.
         if (this.handlers.has(keyword)) {
-          this.call(keyword, args);
+          this.call(keyword, args, kwargs);
           return;
         }
         // A command-shaped word we do not implement: report it (PyMOL's own
