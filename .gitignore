@@ -95,3 +95,6 @@ apps/web/e2e/output/
 .pnpm-store/
 .playwright-mcp/
 .env
+# Stray debug screenshots at the repo ROOT only (leading slash = root-anchored,
+# does not cross into subdirs). All real PNGs live under docs/apps/packages/tools.
+/*.png
