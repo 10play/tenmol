@@ -850,6 +850,10 @@ export function createViewport(options: ViewportOptions): ViewportHandle {
     get cameraGate(): readonly boolean[] {
       return gateSamples.slice(-16);
     },
+    /** The optimistic-view epoch; advanced by rotation AND pinch-zoom. */
+    get viewEpoch(): number {
+      return localView.epoch;
+    },
     /** Client-side pick counters. Zero unless the backend cannot pick. */
     get localPick(): LocalPickStats {
       return { ...pickStats, index: { ...pickIndex.stats } };
