@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import { rgbToCss } from '@tenmol/protocol';
 import { useSession, useStore } from '../../app';
+import { Button, Select, TextInput } from '../../ui';
 import { COLOR_SPACES, UTIL_COLOR_SCHEMES } from './menuData';
 import { paletteIntegrity } from './palette';
 import { BandGrid } from './BandGrid';
@@ -44,8 +45,7 @@ export function ColorsPanel() {
 
   if (!open) {
     return (
-      <button
-        type="button"
+      <Button
         className="colors-launch"
         title="Colours — slot `colors`, WP-22"
         onClick={() => setOpen(true)}
@@ -61,15 +61,22 @@ export function ColorsPanel() {
             })}
           </span>
         )}
-      </button>
+      </Button>
     );
   }
 
   return (
-    <div className="colors" role="dialog" aria-label="Colours">
-      <div className="colors__title">
+    <div
+      className="colors modern:bg-pm-panel modern:text-pm-text"
+      role="dialog"
+      aria-label="Colours"
+    >
+      <div className="colors__title modern:bg-pm-panel-alt modern:border-b modern:border-line modern:text-pm-text-dim">
         <span>Colours</span>
-        <span className="colors__status" title="cmd.get_color_indices(all=1) + get_color_tuple">
+        <span
+          className="colors__status modern:text-pm-text-dim"
+          title="cmd.get_color_indices(all=1) + get_color_tuple"
+        >
           {palette.status === 'ready'
             ? `${palette.entries.length} slots / ${palette.named.length} named` +
               (integrity.custom > 0 ? ` (+${integrity.custom} set_color)` : '') +
@@ -82,44 +89,44 @@ export function ColorsPanel() {
                   ? 'idle'
                   : 'not connected'}
         </span>
-        <button
-          type="button"
+        <Button
           className="colors__reload"
           onClick={() => void refreshPalette(callOf(session), true)}
         >
           refetch
-        </button>
-        <button type="button" className="colors__close" onClick={() => setOpen(false)}>
+        </Button>
+        <Button className="colors__close" onClick={() => setOpen(false)}>
           ×
-        </button>
+        </Button>
       </div>
 
       {!integrity.ok && palette.status === 'ready' && (
-        <div className="colors__warn">
+        <div className="colors__warn modern:bg-accent-soft modern:text-pm-text">
           colour table does not match this PyMOL build: {integrity.problems.join('; ')}
         </div>
       )}
 
-      <div className="colors__sele">
+      <div className="colors__sele modern:border-b modern:border-line">
         <label>
           selection
-          <input value={sele} onChange={(e) => setSele(e.target.value)} spellCheck={false} />
+          <TextInput value={sele} onChange={(e) => setSele(e.target.value)} spellCheck={false} />
         </label>
-        <span className="colors__sele-note">every command below is applied to this selection</span>
+        <span className="colors__sele-note modern:text-pm-text-dim">
+          every command below is applied to this selection
+        </span>
       </div>
 
       <div className="colors__tabs" role="tablist">
         {TABS.map((id) => (
-          <button
+          <Button
             key={id}
-            type="button"
             role="tab"
             aria-selected={tab === id}
             className={'colors__tab' + (tab === id ? ' is-on' : '')}
             onClick={() => setTab(id)}
           >
             {id}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -154,13 +161,12 @@ function SpacePanel() {
       <div className="cspace__head">colour space</div>
       <label>
         gamma
-        <input value={gamma} onChange={(e) => setGamma(e.target.value)} size={6} />
+        <TextInput value={gamma} onChange={(e) => setGamma(e.target.value)} size={6} />
       </label>
       <div className="cspace__buttons">
         {COLOR_SPACES.map((space) => (
-          <button
+          <Button
             key={space.name}
-            type="button"
             title={space.help}
             onClick={() =>
               void act(
@@ -171,32 +177,31 @@ function SpacePanel() {
             }
           >
             {space.name}
-          </button>
+          </Button>
         ))}
       </div>
-      <p className="cspace__note">
+      <p className="cspace__note modern:text-pm-text-dim">
         Changing the space rewrites every colour&rsquo;s RGB through the LUT, so the whole palette
         is refetched afterwards — the client cannot keep a cached table across this.
       </p>
 
       <div className="cspace__head">element colour schemes</div>
       <div className="cspace__buttons">
-        <select value={scheme} onChange={(e) => setScheme(e.target.value)}>
+        <Select value={scheme} onChange={(e) => setScheme(e.target.value)}>
           {UTIL_COLOR_SCHEMES.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
           ))}
-        </select>
-        <button
-          type="button"
+        </Select>
+        <Button
           title="util.colors('jmol') redefines 6 element colours then recolors — util.py:1029-1040"
           onClick={() =>
             void act(`util.colors("${scheme}")`, (call) => call('util.colors', [scheme]), 'palette')
           }
         >
           apply
-        </button>
+        </Button>
       </div>
     </div>
   );

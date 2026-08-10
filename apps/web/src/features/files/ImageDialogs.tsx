@@ -46,7 +46,7 @@ export function PngDialog({
         </>
       }
     >
-      <div className="fdlg__banner">
+      <div className="fdlg__banner modern:rounded modern:bg-accent-soft modern:text-pm-text">
         New in PyMOL 2.0: To render a sized antialiased image, use the Draw/Ray panel in the
         upper right.
       </div>
@@ -283,7 +283,9 @@ export function MovieDialog({
       }
     >
       {info.frames === 0 && (
-        <div className="fdlg__banner">This session has no movie frames yet.</div>
+        <div className="fdlg__banner modern:rounded modern:bg-accent-soft modern:text-pm-text">
+          This session has no movie frames yet.
+        </div>
       )}
       {preselect !== 'png' && (
         <fieldset className="fdlg__group">
@@ -300,7 +302,9 @@ export function MovieDialog({
             </select>
           </Field>
           {encoder && !installed && (
-            <div className="fdlg__unavailable">Encoder &apos;{encoder}&apos; is not installed.</div>
+            <div className="fdlg__unavailable modern:rounded modern:bg-danger modern:text-accent-text">
+              Encoder &apos;{encoder}&apos; is not installed.
+            </div>
           )}
           <Field label="Quality">
             <input

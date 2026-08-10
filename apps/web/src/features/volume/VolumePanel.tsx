@@ -67,6 +67,7 @@ import {
   type PresetList,
 } from './service';
 import { subscribeVolumeRamp, unwatchVolume, watchVolume } from './menuBridge';
+import { Button, Checkbox, Select, TextInput } from '../../ui';
 import './volume.css';
 
 type Modal =
@@ -274,8 +275,8 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
   /* --------------------------------------------------------------- render */
 
   const footer = (
-    <div className="volpanel__buttons">
-      <button
+    <div className="volpanel__buttons modern:text-pm-text">
+      <Button
         type="button"
         data-volume-script=""
         onClick={() =>
@@ -287,8 +288,8 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
         }
       >
         Get colors as script
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         data-volume-reset=""
         onClick={() => {
@@ -298,18 +299,17 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
         }}
       >
         Reset Data Range
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         data-volume-help=""
         onClick={() => setModal({ kind: 'text', title: 'Volume panel help', text: VOLUME_HELP })}
       >
         Help
-      </button>
+      </Button>
       <span className="volpanel__spacer" />
       <label className="volpanel__check">
-        <input
-          type="checkbox"
+        <Checkbox
           data-volume-realtime=""
           checked={realTime}
           onChange={(e) => setRealTime(e.target.checked)}
@@ -321,11 +321,11 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
 
   return (
     <DialogWindow spec={spec} footer={footer}>
-      <div className="volpanel">
-        <div className="volpanel__head">
+      <div className="volpanel modern:bg-pm-panel modern:text-pm-text">
+        <div className="volpanel__head modern:text-pm-text-dim">
           <label className="volpanel__preset">
             preset
-            <select
+            <Select
               data-volume-preset=""
               defaultValue=""
               onChange={(e) => {
@@ -345,10 +345,10 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
                   {presets.extra.includes(ramp) ? `${ramp} *` : ramp}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <span
-            className="volpanel__presetsrc"
+            className="volpanel__presetsrc modern:text-pm-text-dim"
             data-volume-preset-source={presets.source}
             data-volume-preset-extra={presets.extra.length}
             title={
@@ -360,17 +360,17 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
           >
             {presets.source === 'constant' ? 'built-in list' : 'live'}
           </span>
-          <button type="button" data-volume-reload="" onClick={() => void reload()}>
+          <Button type="button" data-volume-reload="" onClick={() => void reload()}>
             Reload
-          </button>
+          </Button>
           {/*
-            * Whether the engine is reporting outside changes for this name, and
-            * how many it has reported. `_volume_windows_qt` is invisible in Qt
-            * and a panel that has silently stopped tracking looks identical to
-            * one that is up to date; this is that state, shown.
-            */}
+           * Whether the engine is reporting outside changes for this name, and
+           * how many it has reported. `_volume_windows_qt` is invisible in Qt
+           * and a panel that has silently stopped tracking looks identical to
+           * one that is up to date; this is that state, shown.
+           */}
           <span
-            className="volpanel__watch"
+            className="volpanel__watch modern:text-pm-text-dim"
             data-volume-watch={watched ? 'live' : 'off'}
             data-volume-remote={remoteReloads}
             title={
@@ -382,13 +382,13 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
             {watched ? `tracking${remoteReloads ? ` +${remoteReloads}` : ''}` : 'untracked'}
           </span>
           <span className="volpanel__spacer" />
-          <span className="volpanel__count" data-volume-count={points.length}>
+          <span className="volpanel__count modern:text-pm-text-dim" data-volume-count={points.length}>
             {points.length} stops
           </span>
         </div>
 
-        {error && <div className="volpanel__error">{error}</div>}
-        {!error && status && <div className="volpanel__status">{status}</div>}
+        {error && <div className="volpanel__error modern:text-danger">{error}</div>}
+        {!error && status && <div className="volpanel__status modern:text-pm-text-dim">{status}</div>}
 
         <VolumeCanvas
           view={view}
@@ -409,12 +409,12 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
         />
 
         {picker && (
-          <div className="volpanel__picker">
+          <div className="volpanel__picker modern:rounded-md modern:border modern:border-line modern:bg-pm-panel-alt modern:text-pm-text">
             <span>
               point {picker.request.point}
               {picker.request.triple ? ' (+neighbours)' : ''}
             </span>
-            <input
+            <TextInput
               type="color"
               data-volume-color=""
               autoFocus
@@ -433,7 +433,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
                 );
               }}
             />
-            <button
+            <Button
               type="button"
               data-volume-color-ok=""
               onClick={() => {
@@ -442,8 +442,8 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
               }}
             >
               OK
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               data-volume-color-cancel=""
               onClick={() => {
@@ -462,7 +462,7 @@ export function VolumePanel({ spec }: { spec: DialogWindowSpec }) {
               }}
             >
               Cancel
-            </button>
+            </Button>
           </div>
         )}
 

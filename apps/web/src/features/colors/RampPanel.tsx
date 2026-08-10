@@ -88,10 +88,10 @@ export function RampPanel({ palette }: { palette: PaletteState }) {
 
   return (
     <div className="cramp">
-      <div className="cramp__live">
+      <div className="cramp__live modern:bg-pm-panel-alt modern:border-line">
         <div className="cramp__head">live ramps ({palette.ramps.length})</div>
         {palette.ramps.length === 0 && (
-          <p className="cramp__empty">
+          <p className="cramp__empty modern:text-pm-text-dim">
             no <code>object:ramp</code> in the session — create one below (it needs a map object)
           </p>
         )}
@@ -126,16 +126,22 @@ export function RampPanel({ palette }: { palette: PaletteState }) {
         ))}
       </div>
 
-      <div className="cramp__editor">
+      <div className="cramp__editor modern:bg-pm-panel-alt modern:border-line">
         <div className="cramp__head">ramp_new</div>
         <div className="cramp__fields">
           <label>
             name
-            <input value={name} onChange={(e) => setName(e.target.value)} spellCheck={false} />
+            <input
+              className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              spellCheck={false}
+            />
           </label>
           <label>
             map object
             <input
+              className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
               value={map}
               onChange={(e) => setMap(e.target.value)}
               spellCheck={false}
@@ -144,7 +150,11 @@ export function RampPanel({ palette }: { palette: PaletteState }) {
           </label>
           <label>
             named spectrum
-            <select value={spectrum} onChange={(e) => setSpectrum(e.target.value)}>
+            <select
+              className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
+              value={spectrum}
+              onChange={(e) => setSpectrum(e.target.value)}
+            >
               <option value="">(use the stops)</option>
               {RAMP_SPECTRA.map((s) => (
                 <option key={s.name} value={s.name}>
@@ -161,6 +171,7 @@ export function RampPanel({ palette }: { palette: PaletteState }) {
           {stops.map((stop, i) => (
             <div className="cramp__stop" key={i}>
               <input
+                className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
                 aria-label={`stop ${i} value`}
                 value={stop.value}
                 onChange={(e) =>
@@ -168,6 +179,7 @@ export function RampPanel({ palette }: { palette: PaletteState }) {
                 }
               />
               <input
+                className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
                 aria-label={`stop ${i} colour`}
                 value={stop.color}
                 spellCheck={false}
@@ -199,16 +211,21 @@ export function RampPanel({ palette }: { palette: PaletteState }) {
         </div>
       </div>
 
-      <div className="cramp__volume">
+      <div className="cramp__volume modern:bg-pm-panel-alt modern:border-line">
         <div className="cramp__head">volume ramps</div>
-        <p className="cramp__note">
+        <p className="cramp__note modern:text-pm-text-dim">
           A different mechanism from <code>object:ramp</code>:{' '}
           <code>cmd.volume_color(name, preset)</code> over <code>colorramping.namedramps</code> (
           <code>colorramping.py:17-54</code>).
         </p>
         <label>
           volume object
-          <input value={volume} onChange={(e) => setVolume(e.target.value)} spellCheck={false} />
+          <input
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
+            value={volume}
+            onChange={(e) => setVolume(e.target.value)}
+            spellCheck={false}
+          />
         </label>
         <div className="cramp__presets">
           {VOLUME_RAMPS.map((preset) => (

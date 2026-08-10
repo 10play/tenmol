@@ -20,6 +20,7 @@ import { useMemo } from 'react';
 import type { SettingMeta } from '@tenmol/protocol';
 import { valueKey, type SettingsSource, type SettingsStore } from '@tenmol/stores/settings';
 import { useStore } from '../../app';
+import { Button, Slider, TextInput } from '../../ui';
 
 interface SliderSpec {
   /** Label as the plugin shows it (may carry a parenthetical). */
@@ -198,16 +199,16 @@ export function LightingPanel({
   return (
     <div className="lighting">
       <div className="lighting__presets">
-        <span className="lighting__presets-label">Presets:</span>
+        <span className="lighting__presets-label modern:text-pm-text-dim">Presets:</span>
         {LIGHTING_PRESETS.map((preset) => (
-          <button key={preset.name} type="button" onClick={() => apply(preset)}>
+          <Button key={preset.name} type="button" onClick={() => apply(preset)}>
             {preset.name}
-          </button>
+          </Button>
         ))}
       </div>
       {LIGHTING_SECTIONS.map((section) => (
-        <fieldset key={section.heading} className="lighting__section">
-          <legend>{section.heading}</legend>
+        <fieldset key={section.heading} className="lighting__section modern:border-line">
+          <legend className="modern:text-pm-text-dim">{section.heading}</legend>
           {section.sliders.map((slider) => {
             const meta = byName.get(slider.setting);
             const entry = meta ? entries[valueKey(meta.index)] : undefined;
@@ -215,9 +216,8 @@ export function LightingPanel({
             return (
               <div key={slider.label} className="lighting__row">
                 <label htmlFor={`light-${slider.setting}`}>{slider.label}</label>
-                <input
+                <Slider
                   id={`light-${slider.setting}`}
-                  type="range"
                   min={slider.min}
                   max={slider.max}
                   step={slider.step}
@@ -225,7 +225,7 @@ export function LightingPanel({
                   disabled={!meta}
                   onChange={(e) => meta && void source.write(meta, e.target.value)}
                 />
-                <input
+                <TextInput
                   className="lighting__num"
                   type="number"
                   step={slider.step}
@@ -241,8 +241,8 @@ export function LightingPanel({
       ))}
       <p className="lighting__note">
         Ranges come from the plugin that authored this panel, not from
-        <code> SettingInfo</code>: PyMOL declares no min/max for most of these and enforces none
-        of them. Values are written unclamped and read back.
+        <code> SettingInfo</code>: PyMOL declares no min/max for most of these and enforces none of
+        them. Values are written unclamped and read back.
       </p>
     </div>
   );

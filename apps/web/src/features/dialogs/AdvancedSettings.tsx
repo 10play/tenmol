@@ -28,6 +28,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SETTING_TYPE, type SettingTypeValue } from '@tenmol/protocol/topics/dialogs';
 import { useSession } from '../../app';
+import { Button, TextInput, Checkbox } from '../../ui';
 import { DialogWindow } from './DialogWindow';
 import type { DialogWindowSpec } from './store';
 import './dialogs.css';
@@ -67,7 +68,10 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
 
   const viewportHeight = spec.height;
   const first = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
-  const last = Math.min(rows.length, Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + OVERSCAN);
+  const last = Math.min(
+    rows.length,
+    Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + OVERSCAN,
+  );
   const visible = rows.slice(first, last);
 
   const fetchRow = useCallback(
@@ -123,15 +127,14 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
     <DialogWindow spec={spec}>
       <div className="advset" style={{ height: spec.height }}>
         <div className="advset__head">
-          <input
+          <TextInput
             className="advset__filter"
             data-advset-filter=""
             placeholder="filter settings…"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
-          <button
-            type="button"
+          <Button
             data-advset-refresh=""
             onClick={() => {
               setLoaded({});
@@ -139,16 +142,16 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
             }}
           >
             Refresh
-          </button>
-          <span className="advset__note" data-advset-count={rows.length}>
+          </Button>
+          <span className="advset__note modern:text-pm-text-dim" data-advset-count={rows.length}>
             {rows.length} / {names.length}
           </span>
         </div>
 
-        {error && <div className="advset__error">{error}</div>}
+        {error && <div className="advset__error modern:text-danger">{error}</div>}
 
         <div
-          className="advset__scroll"
+          className="advset__scroll modern:bg-pm-panel-alt modern:text-pm-text modern:border-line"
           ref={scrollRef}
           onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
         >
@@ -158,7 +161,7 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
               const top = (first + i) * ROW_HEIGHT;
               return (
                 <div
-                  className="advset__row"
+                  className="advset__row modern:border-line"
                   key={name}
                   style={{ top, height: ROW_HEIGHT }}
                   data-advset-row={name}
@@ -167,16 +170,15 @@ export function AdvancedSettings({ spec }: { spec: DialogWindowSpec }) {
                     {name}
                   </span>
                   {!row ? (
-                    <span className="advset__note">…</span>
+                    <span className="advset__note modern:text-pm-text-dim">…</span>
                   ) : row.type === SETTING_TYPE.Boolean ? (
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       data-advset-value={name}
                       checked={row.value !== '0' && row.value !== 'off' && row.value !== ''}
                       onChange={(e) => void applyEdit(name, e.target.checked ? '1' : '0')}
                     />
                   ) : (
-                    <input
+                    <TextInput
                       className="advset__value"
                       data-advset-value={name}
                       defaultValue={row.value}

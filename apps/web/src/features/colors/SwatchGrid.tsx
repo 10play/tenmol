@@ -120,7 +120,12 @@ export function SwatchGrid({ palette, sele }: SwatchGridProps) {
             type="button"
             role="tab"
             aria-selected={open === id}
-            className={'cmenu__tab' + (open === id ? ' is-open' : '')}
+            className={
+              'cmenu__tab modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright' +
+              (open === id
+                ? ' is-open modern:bg-pm-accent modern:text-accent-text modern:border-transparent'
+                : '')
+            }
             onClick={() => setOpen(open === id ? null : id)}
           >
             {label}
@@ -153,18 +158,26 @@ export function SwatchGrid({ palette, sele }: SwatchGridProps) {
       )}
 
       {negativeArmed && (
-        <div className="cmenu__armed">
+        <div className="cmenu__armed modern:bg-accent-soft modern:border-line modern:text-pm-text">
           next swatch writes <code>{negativeSettings(negativeRep).color}</code>
-          <button type="button" onClick={() => setNegativeArmed(false)}>
+          <button
+            type="button"
+            className="modern:border-line modern:text-pm-text-dim modern:hover:text-pm-text-bright"
+            onClick={() => setNegativeArmed(false)}
+          >
             cancel
           </button>
         </div>
       )}
 
       {repSetting && !negativeArmed && (
-        <div className="cmenu__armed">
+        <div className="cmenu__armed modern:bg-accent-soft modern:border-line modern:text-pm-text">
           next swatch writes <code>{repSetting}</code>
-          <button type="button" onClick={() => setRepSetting(null)}>
+          <button
+            type="button"
+            className="modern:border-line modern:text-pm-text-dim modern:hover:text-pm-text-bright"
+            onClick={() => setRepSetting(null)}
+          >
             cancel
           </button>
         </div>
@@ -235,7 +248,7 @@ function ByElement({ sele, palette }: { sele: string; palette: PaletteState }) {
   if (!current) return null;
 
   return (
-    <div className="cmenu__sub">
+    <div className="cmenu__sub modern:bg-pm-panel-alt">
       <div className="cmenu__sub-head">
         Atoms
         <span className="cmenu__pages">
@@ -299,7 +312,7 @@ function ByElement({ sele, palette }: { sele: string; palette: PaletteState }) {
       </div>
 
       <div className="cmenu__sub-head">Fixed-carbon shortcuts</div>
-      <p className="cmenu__note">
+      <p className="cmenu__note modern:text-pm-text-dim">
         <code>util.cbaX</code> — util.py:442-510. Same as the tiles above except they do{' '}
         <em>not</em> set the object colour (no <code>flags=1</code> pass), so they are their own
         entries rather than aliases.
@@ -350,7 +363,7 @@ function Negative({
   const s = negativeSettings(rep);
   const q = JSON.stringify(sele);
   return (
-    <div className="cmenu__sub">
+    <div className="cmenu__sub modern:bg-pm-panel-alt">
       <div className="cmenu__sub-head">
         Negative Color:
         <span className="cmenu__pages">
@@ -366,7 +379,7 @@ function Negative({
           ))}
         </span>
       </div>
-      <p className="cmenu__note">
+      <p className="cmenu__note modern:text-pm-text-dim">
         Only <code>object:mesh</code> and <code>object:surface</code> have this menu —{' '}
         <code>ExecutiveMenu</code> sends them to <code>mesh_color</code> instead of{' '}
         <code>mol_color</code> (Executive.cpp:15249-15256). Both entries are settings writes on{' '}
@@ -407,7 +420,7 @@ function ByChain({ sele, palette }: { sele: string; palette: PaletteState }) {
     ['chainbows', 'util.chainbow', [`(${sele})`]],
   ];
   return (
-    <div className="cmenu__sub">
+    <div className="cmenu__sub modern:bg-pm-panel-alt">
       <div className="cmenu__sub-head">By Chain:</div>
       {rows.map(([label, fn, args]) => (
         <button
@@ -473,7 +486,7 @@ function ByChain({ sele, palette }: { sele: string; palette: PaletteState }) {
 function BySs({ sele }: { sele: string }) {
   const act = useColorAction();
   return (
-    <div className="cmenu__sub">
+    <div className="cmenu__sub modern:bg-pm-panel-alt">
       <div className="cmenu__sub-head">By Secondary Structure:</div>
       {BY_SS_PRESETS.map((preset) => (
         <button
@@ -515,7 +528,7 @@ function ByRep({
 }) {
   const list = REP_SETTING_LISTS[mode] ?? [];
   return (
-    <div className="cmenu__sub">
+    <div className="cmenu__sub modern:bg-pm-panel-alt">
       <div className="cmenu__sub-head">
         By Representation:
         <span className="cmenu__pages">
@@ -531,7 +544,7 @@ function ByRep({
           ))}
         </span>
       </div>
-      <p className="cmenu__note">
+      <p className="cmenu__note modern:text-pm-text-dim">
         These write per-rep colour <em>settings</em> (<code>cmd.set</code>), not atom colours. Pick
         one, then click a swatch below.
       </p>
@@ -574,7 +587,7 @@ function SpectrumShortcuts({ sele }: { sele: string }) {
     ['area (solvent)', 'util.color_by_area', [sele, 'solvent'], {}],
   ];
   return (
-    <div className="cmenu__sub">
+    <div className="cmenu__sub modern:bg-pm-panel-alt">
       <div className="cmenu__sub-head">Spectrum:</div>
       {items.map(([label, fn, args, kwargs]) => (
         <button
@@ -607,7 +620,7 @@ function AutoColor({ sele }: { sele: string }) {
     ['one colour per object', 'util.color_objs', [`(${sele})`]],
   ];
   return (
-    <div className="cmenu__sub">
+    <div className="cmenu__sub modern:bg-pm-panel-alt">
       <div className="cmenu__sub-head">Auto</div>
       {items.map(([label, fn, args]) => (
         <button

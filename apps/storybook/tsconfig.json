@@ -1,0 +1,30 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+
+    "types": ["node", "vite/client"],
+
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@web/*": ["../web/src/*"],
+      "@tenmol/protocol": ["../../packages/protocol/src/index.ts"],
+      "@tenmol/protocol/*": ["../../packages/protocol/src/*"],
+      "@tenmol/client": ["../../packages/client/src/index.ts"],
+      "@tenmol/client/*": ["../../packages/client/src/*"],
+      "@tenmol/stores": ["../../packages/stores/src/index.ts"],
+      "@tenmol/stores/*": ["../../packages/stores/src/*"],
+      "@tenmol/viewport": ["../../packages/viewport/src/index.ts"],
+      "@tenmol/viewport/*": ["../../packages/viewport/src/*"]
+    }
+  },
+  "include": [".storybook", "stories"]
+}

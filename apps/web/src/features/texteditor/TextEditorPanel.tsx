@@ -38,6 +38,7 @@ import {
 } from './files';
 import { PYMOLRC_ARG } from './openEditor';
 import { editorTitle, highlight, isPymolrc, syntaxForFilename } from './syntax';
+import { Button, Select, TextInput } from '../../ui';
 import './texteditor.css';
 
 const MODE_LABEL: Record<SyntaxMode, string> = {
@@ -216,8 +217,8 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
   useEffect(() => {
     const wanted = spec.arg;
     let alive = true;
-    const probe = probeServerFiles(session, { alive: () => alive }).then(
-      (ok): FileAccess => (ok ? 'server' : 'browser'),
+    const probe = probeServerFiles(session, { alive: () => alive }).then((ok): FileAccess =>
+      ok ? 'server' : 'browser',
     );
     probeRef.current = probe;
     void (async () => {
@@ -325,20 +326,25 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
 
   return (
     <DialogWindow spec={{ ...spec, title: path ? editorTitle(path) : spec.title }}>
-      <div className="txted" onKeyDown={onKeyDown}>
-        <div className="txted__menu">
-          <span className="txted__menu-label">File</span>
-          <button type="button" data-txted-open="" onClick={() => guard(() => void doOpen())}>
-            Open <kbd>Ctrl+O</kbd>
-          </button>
-          <button type="button" data-txted-save="" onClick={() => void doSave()}>
-            Save <kbd>Ctrl+S</kbd>
-          </button>
-          <button type="button" data-txted-saveas="" onClick={() => void doSaveAs()}>
-            Save as … <kbd>Ctrl+Shift+S</kbd>
-          </button>
-          <span className="txted__sep" />
-          <span className="txted__menu-label">Syntax</span>
+      <div className="txted modern:bg-pm-panel modern:text-pm-text" onKeyDown={onKeyDown}>
+        <div className="txted__menu modern:border-b modern:border-line modern:pb-1">
+          <span className="txted__menu-label modern:text-pm-text-dim">File</span>
+          <Button
+            variant="bare"
+            type="button"
+            data-txted-open=""
+            onClick={() => guard(() => void doOpen())}
+          >
+            Open <kbd className="modern:border-line">Ctrl+O</kbd>
+          </Button>
+          <Button variant="bare" type="button" data-txted-save="" onClick={() => void doSave()}>
+            Save <kbd className="modern:border-line">Ctrl+S</kbd>
+          </Button>
+          <Button variant="bare" type="button" data-txted-saveas="" onClick={() => void doSaveAs()}>
+            Save as … <kbd className="modern:border-line">Ctrl+Shift+S</kbd>
+          </Button>
+          <span className="txted__sep modern:bg-line" />
+          <span className="txted__menu-label modern:text-pm-text-dim">Syntax</span>
           {SYNTAX_MODES.map((mode) => (
             <label key={mode} className="txted__radio">
               <input
@@ -351,10 +357,10 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
               {MODE_LABEL[mode]}
             </label>
           ))}
-          <span className="txted__sep" />
+          <span className="txted__sep modern:bg-line" />
           <label className="txted__radio" title="Select Font… (the Qt context-menu entry)">
             Font
-            <input
+            <TextInput
               type="number"
               data-txted-font=""
               min={8}
@@ -363,7 +369,8 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
               onChange={(e) => setFontSize(Math.min(24, Math.max(8, Number(e.target.value) || 12)))}
             />
           </label>
-          <button
+          <Button
+            variant="bare"
             type="button"
             data-txted-run=""
             disabled={!path || access !== 'server'}
@@ -371,7 +378,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
             onClick={() => void runScript(session, path).catch((e) => setError(messageOf(e)))}
           >
             Run
-          </button>
+          </Button>
         </div>
 
         <div className="txted__bar">
@@ -385,42 +392,50 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
           )}
           <span className="txted__spacer" />
           {/*
-            * `data-txted-access` is the machine-readable half: 'probing' is a
-            * real, transient value and anything watching this badge has to be
-            * able to tell it apart from a settled answer without matching on
-            * an ellipsis. The e2e spec waits on exactly this.
-            */}
-          <span className="txted__access" data-txted-access={access}>
+           * `data-txted-access` is the machine-readable half: 'probing' is a
+           * real, transient value and anything watching this badge has to be
+           * able to tell it apart from a settled answer without matching on
+           * an ellipsis. The e2e spec waits on exactly this.
+           */}
+          <span className="txted__access modern:text-pm-text-dim" data-txted-access={access}>
             {ACCESS_LABEL[access]}
           </span>
         </div>
 
-        {error && <div className="txted__error">{error}</div>}
-        {!error && status && <div className="txted__status">{status}</div>}
+        {error && <div className="txted__error modern:text-danger">{error}</div>}
+        {!error && status && (
+          <div className="txted__status modern:text-pm-text-dim">{status}</div>
+        )}
         {/*
-          * pymolrc is read ONCE, at startup (`invocation.get_user_config()` is
-          * consumed before the GUI exists), so editing it changes nothing in
-          * the running session. Qt does not say this and the inventory row
-          * asks for it: a file you edit and save, that visibly does nothing,
-          * reads as a broken editor.
-          */}
+         * pymolrc is read ONCE, at startup (`invocation.get_user_config()` is
+         * consumed before the GUI exists), so editing it changes nothing in
+         * the running session. Qt does not say this and the inventory row
+         * asks for it: a file you edit and save, that visibly does nothing,
+         * reads as a broken editor.
+         */}
         {isPymolrc(path) && (
-          <div className="txted__note" role="note">
-            pymolrc is read at startup — restart PyMOL to apply, or paste the
-            lines into the command line to try them now.
+          <div
+            className="txted__note modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-dim"
+            role="note"
+          >
+            pymolrc is read at startup — restart PyMOL to apply, or paste the lines into the command
+            line to try them now.
           </div>
         )}
         {/*
-          * `edit_pymolrc`'s `QInputDialog.getItem` (`TextEditor.py:161-165`):
-          * with two or more active rc files Qt ASKS which one. A modal before
-          * the window exists is the wrong shape here — the window is already
-          * open on the first file — so the same choice is a control inside it.
-          */}
+         * `edit_pymolrc`'s `QInputDialog.getItem` (`TextEditor.py:161-165`):
+         * with two or more active rc files Qt ASKS which one. A modal before
+         * the window exists is the wrong shape here — the window is already
+         * open on the first file — so the same choice is a control inside it.
+         */}
         {choices.length > 1 && (
-          <div className="txted__note" role="note">
+          <div
+            className="txted__note modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-dim"
+            role="note"
+          >
             <label>
               Active pymolrc files:{' '}
-              <select
+              <Select
                 data-txted-pymolrc=""
                 value={path}
                 onChange={(e) => {
@@ -437,7 +452,7 @@ export function TextEditorPanel({ spec }: { spec: DialogWindowSpec }) {
                     {file}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           </div>
         )}

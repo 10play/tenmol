@@ -1,4 +1,5 @@
-/*
+@layer legacy {
+  /*
  * The sequence viewer block. Metrics are PyMOL's own (`packages/engine/layer1/Seq.h:84-88`):
  * LineHeight 13, CharWidth 8, ScrollBarWidth 16, CharMargin 2.
  *
@@ -7,7 +8,7 @@
  * scene instead of reserving space (`packages/engine/layer1/Seq.cpp:282-289`).
  */
 
-/*
+  /*
  * z-index: PyMOL stacks the Seq block ABOVE the scene — `OrthoDoDraw` draws
  * blocks after the scene and the seq block owns its strip outright
  * (`packages/engine/layer1/Ortho.cpp:2404-2420`), so nothing in the viewport may sit over it.
@@ -18,103 +19,103 @@
  * caught by the WP-21 browser run, where `.seqcell` clicks timed out with
  * "viewport__hud-line intercepts pointer events".
  */
-.seqview {
-  position: absolute;
-  left: 0;
-  right: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  background: var(--pm-bg-viewport, #000);
-  border-bottom: 1px solid var(--pm-edge, #2a2f34);
-  font-family: var(--pm-font-mono, monospace);
-  font-size: 11px;
-  user-select: none;
-  max-height: 40%;
-}
+  .seqview {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    background: var(--pm-bg-viewport, #000);
+    border-bottom: 1px solid var(--pm-edge, #2a2f34);
+    font-family: var(--pm-font-mono, monospace);
+    font-size: 11px;
+    user-select: none;
+    max-height: 40%;
+  }
 
-.seqview--top {
-  top: 0;
-}
+  .seqview--top {
+    top: 0;
+  }
 
-.seqview--bottom {
-  bottom: 0;
-  top: auto;
-  border-bottom: none;
-  border-top: 1px solid var(--pm-edge, #2a2f34);
-}
+  .seqview--bottom {
+    bottom: 0;
+    top: auto;
+    border-bottom: none;
+    border-top: 1px solid var(--pm-edge, #2a2f34);
+  }
 
-.seqview--overlay {
-  background: rgb(0 0 0 / 62%);
-}
+  .seqview--overlay {
+    background: rgb(0 0 0 / 62%);
+  }
 
-.seqview__head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 15px;
-  padding: 0 6px;
-  color: var(--pm-text-dim, #7b8288);
-  font-size: 10px;
-  background: var(--pm-panel-alt, #16191c);
-  border-bottom: 1px solid var(--pm-edge, #2a2f34);
-}
+  .seqview__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 15px;
+    padding: 0 6px;
+    color: var(--pm-text-dim, #7b8288);
+    font-size: 10px;
+    background: var(--pm-panel-alt, #16191c);
+    border-bottom: 1px solid var(--pm-edge, #2a2f34);
+  }
 
-.seqview__spacer {
-  margin-left: auto;
-}
+  .seqview__spacer {
+    margin-left: auto;
+  }
 
-.seqview__alignment {
-  color: #7fb0e0;
-}
+  .seqview__alignment {
+    color: #7fb0e0;
+  }
 
-.seqview__error {
-  color: #ff6b6b;
-  max-width: 45%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+  .seqview__error {
+    color: #ff6b6b;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-.seqview__rows {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden auto;
-  padding: 2px 0;
-}
+  .seqview__rows {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden auto;
+    padding: 2px 0;
+  }
 
-.seqrow {
-  position: relative;
-  white-space: nowrap;
-}
+  .seqrow {
+    position: relative;
+    white-space: nowrap;
+  }
 
-.seqrow__labels {
-  position: relative;
-  color: var(--pm-text-dim, #7b8288);
-  font-size: 9px;
-  line-height: 13px;
-}
+  .seqrow__labels {
+    position: relative;
+    color: var(--pm-text-dim, #7b8288);
+    font-size: 9px;
+    line-height: 13px;
+  }
 
-.seqrow__num,
-.seqrow__crumb {
-  position: absolute;
-  top: 0;
-}
+  .seqrow__num,
+  .seqrow__crumb {
+    position: absolute;
+    top: 0;
+  }
 
-.seqrow__crumb {
-  color: #4d8ac9;
-}
+  .seqrow__crumb {
+    color: #4d8ac9;
+  }
 
-.seqrow__line {
-  display: flex;
-  align-items: center;
-  line-height: 13px;
-  /* Cells no longer shrink, so the row overflows; the viewer scrolls with its
+  .seqrow__line {
+    display: flex;
+    align-items: center;
+    line-height: 13px;
+    /* Cells no longer shrink, so the row overflows; the viewer scrolls with its
      own windowed scrollbar rather than a native one. Clip instead. */
-  overflow: hidden;
-}
+    overflow: hidden;
+  }
 
-/*
+  /*
  * ALIGNMENT MODE. The flex row above packs the cells edge to edge, which is
  * right when `offset` is contiguous and WRONG the moment an alignment opens
  * holes in a row (`packages/engine/layer3/Seeker.cpp:1583-1793` places every column at the
@@ -125,42 +126,42 @@
  * container is taken out of flow anyway, but the fill runs and the "…" more
  * marker are not, and a flex row would have laid them out in a line.
  */
-.seqrow__line--aligned {
-  display: block;
-  position: relative;
-}
+  .seqrow__line--aligned {
+    display: block;
+    position: relative;
+  }
 
-.seqrow__line--aligned .seqcell {
-  top: 0;
-}
+  .seqrow__line--aligned .seqcell {
+    top: 0;
+  }
 
-/*
+  /*
  * `row->fill` — `packages/engine/layer1/Seq.cpp:488-504` repeats `seq_view_fill_char` across
  * the run in `seq_view_fill_color`. NOT clickable: the C never hit-tests it
  * (`SeekerClick` resolves a COLUMN, and a fill entry is not one), so it must
  * not swallow the pointer from the cell a user is aiming at.
  */
-.seqfill {
-  position: absolute;
-  top: 0;
-  overflow: hidden;
-  white-space: pre;
-  pointer-events: none;
-  opacity: 0.7;
-}
+  .seqfill {
+    position: absolute;
+    top: 0;
+    overflow: hidden;
+    white-space: pre;
+    pointer-events: none;
+    opacity: 0.7;
+  }
 
-.seqrow__name {
-  padding-right: 6px;
-  color: var(--pm-text-dim, #7b8288);
-}
+  .seqrow__name {
+    padding-right: 6px;
+    color: var(--pm-text-dim, #7b8288);
+  }
 
-.seqcell {
-  display: inline-block;
-  overflow: hidden;
-  text-align: left;
-  cursor: pointer;
-  white-space: pre;
-  /*
+  .seqcell {
+    display: inline-block;
+    overflow: hidden;
+    text-align: left;
+    cursor: pointer;
+    white-space: pre;
+    /*
    * MUST NOT SHRINK. `.seqrow__line` is a flex row and every cell sets an
    * explicit `width: text.length * CHAR_WIDTH` inline (SequenceViewer.tsx:403).
    * Flex items shrink below their width by default, so 928 residues asking for
@@ -169,10 +170,10 @@
    * landed on a neighbour, which is what "seqcell intercepts pointer events"
    * meant. Measured 1px before this, 8px after.
    */
-  flex: 0 0 auto;
-}
+    flex: 0 0 auto;
+  }
 
-/*
+  /*
  * `col->inverse` is INVERTED VIDEO in the C (`packages/engine/layer1/Seq.cpp:465-482`). The
  * real swap is inline in `SequenceViewer.tsx`, from the colour the bridge sent
  * for that column; this is only the fallback for a column whose colour index is
@@ -181,50 +182,51 @@
  * sets to black, so every selected cell came out black-on-black (caught by
  * reading the WP-21 drag screenshot, not by any assertion).
  */
-.seqcell.is-selected {
-  background: #cfd8dc;
-  color: #000;
-}
+  .seqcell.is-selected {
+    background: #cfd8dc;
+    color: #000;
+  }
 
-.seqcell.is-spacer {
-  cursor: default;
-  opacity: 0.55;
-}
+  .seqcell.is-spacer {
+    cursor: default;
+    opacity: 0.55;
+  }
 
-.seqcell.is-locked {
-  cursor: not-allowed;
-}
+  .seqcell.is-locked {
+    cursor: not-allowed;
+  }
 
-.seqview__scroll {
-  position: relative;
-  height: 16px;
-  flex: none;
-  background: var(--pm-panel-alt, #16191c);
-  border-top: 1px solid var(--pm-edge, #2a2f34);
-  cursor: pointer;
-  overflow: hidden;
-}
+  .seqview__scroll {
+    position: relative;
+    height: 16px;
+    flex: none;
+    background: var(--pm-panel-alt, #16191c);
+    border-top: 1px solid var(--pm-edge, #2a2f34);
+    cursor: pointer;
+    overflow: hidden;
+  }
 
-.seqview__minimap {
-  position: relative;
-  height: 3px;
-  margin: 1px 0;
-}
+  .seqview__minimap {
+    position: relative;
+    height: 3px;
+    margin: 1px 0;
+  }
 
-.seqview__tick {
-  position: absolute;
-  top: 0;
-  height: 3px;
-  min-width: 1px;
-  background: #4d8ac9;
-}
+  .seqview__tick {
+    position: absolute;
+    top: 0;
+    height: 3px;
+    min-width: 1px;
+    background: #4d8ac9;
+  }
 
-.seqview__thumb {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  min-width: 8px;
-  background: rgb(255 255 255 / 14%);
-  border: 1px solid var(--pm-edge, #2a2f34);
-  pointer-events: none;
+  .seqview__thumb {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 8px;
+    background: rgb(255 255 255 / 14%);
+    border: 1px solid var(--pm-edge, #2a2f34);
+    pointer-events: none;
+  }
 }

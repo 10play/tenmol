@@ -1,0 +1,612 @@
+/*
+ * The modern theme — a clean, biotech-futuristic reskin.
+ *
+ * Two attributes drive it, both stamped by the ThemeProvider on <html>:
+ *   [data-ui-theme='shadcn']            -> the modern look is active
+ *   [data-appearance='dark'|'light']    -> which token set (dark is default)
+ *
+ * Everything is scoped to [data-ui-theme='shadcn'], so classic (the default) is
+ * pixel-exact and untouched. Component rules read ONLY tokens, so light mode is a
+ * values-only override of ~24 vars with zero duplicated component CSS.
+ *
+ * WHY CSS AND NOT TAILWIND UTILITIES ON EACH ELEMENT: the app ships PyMOL's own
+ * faithful, UNLAYERED stylesheet; only a higher-specificity unlayered rule can
+ * override it, which is what these `:root[data-ui-theme='shadcn'] …` selectors
+ * are (keyed off the '--pm-*' vars + shadcn 'data-slot' attributes). The genuinely
+ * new surfaces (Radix DropdownMenu/Dialog/Tooltip) are real Tailwind-utility
+ * shadcn components.
+ *
+ * LOAD-BEARING METRICS ARE PRESERVED: --pm-row-h 18, --pm-toggle-w 17,
+ * --pm-control-h 20, --pm-panel-head-h 17, internal_gui_width 220, the Executive
+ * floor. "Modern spacing" lives only in the chrome.
+ */
+
+/* ================================================================== */
+/* 1. TOKENS — dark (default) then light override.                     */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] {
+  /* app-wide '--pm-*' the whole codebase already reads */
+  --pm-bg: #0b0d12;
+  --pm-bg-viewport: #05070a;
+  --pm-panel: #12151c;
+  --pm-panel-alt: #171b24;
+  --pm-edge: #05070a;
+  --pm-line: rgba(148, 163, 184, 0.12);
+  --pm-text: #dfe4ee;
+  --pm-text-dim: #8b93a7;
+  --pm-text-bright: #f5f7fb;
+  --pm-accent: #6366f1;
+  --pm-caption: #3ecf8e;
+  --pm-mouse-mode: #ff7a85;
+  --pm-btn-enabled: #2a3040;
+  --pm-btn-disabled: #1a1f2b;
+  --pm-btn-cloaked: #232a38;
+  --pm-btn-pressed: #333c50;
+
+  --pm-font-ui:
+    'Space Grotesk Variable', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    system-ui, sans-serif;
+  --pm-font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* design tokens */
+  --sh-panel-frost: rgba(18, 21, 28, 0.72);
+  --sh-console-bg: #05070a;
+  /* The console/viewport stay dark in BOTH appearances, so their text must NOT
+     track --pm-text (which flips to dark in light mode → invisible). Pinned. */
+  --sh-console-text: #dfe4ee;
+  --sh-line-strong: rgba(148, 163, 184, 0.2);
+  --sh-accent-text: #ffffff;
+  --sh-accent-soft: rgba(99, 102, 241, 0.16);
+  --sh-danger: #f5455c;
+  --sh-btn-fill: rgba(148, 163, 184, 0.08);
+  --sh-btn-hover: rgba(148, 163, 184, 0.14);
+  --sh-btn-border: rgba(148, 163, 184, 0.14);
+  --sh-btn-border-strong: rgba(148, 163, 184, 0.2);
+  --sh-focus-ring: color-mix(in srgb, #6366f1 42%, transparent);
+  --sh-pop: 0 16px 48px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
+  --sh-blur: saturate(180%) blur(24px);
+  --sh-r: 8px;
+  --sh-r-sm: 6px;
+
+  color-scheme: dark;
+  font-family: var(--pm-font-ui);
+}
+
+:root[data-ui-theme='shadcn'][data-appearance='light'] {
+  --pm-bg: #f4f6fb;
+  --pm-panel: #ffffff;
+  --pm-panel-alt: #f1f4f9;
+  --pm-edge: #dfe4ec;
+  --pm-line: rgba(15, 23, 42, 0.1);
+  --pm-text: #2b3245;
+  --pm-text-dim: #6b7488;
+  --pm-text-bright: #0f1420;
+  --pm-accent: #5b57f0;
+  --pm-caption: #0f9d6b;
+  --pm-btn-enabled: #dfe4ee;
+  --pm-btn-disabled: #eef1f6;
+  --pm-btn-cloaked: #e6eaf1;
+  --pm-btn-pressed: #cfd6e4;
+
+  --sh-panel-frost: rgba(255, 255, 255, 0.8);
+  --sh-line-strong: rgba(15, 23, 42, 0.16);
+  --sh-accent-soft: rgba(91, 87, 240, 0.12);
+  --sh-danger: #e11d48;
+  --sh-btn-fill: rgba(15, 23, 42, 0.04);
+  --sh-btn-hover: rgba(15, 23, 42, 0.07);
+  --sh-btn-border: rgba(15, 23, 42, 0.1);
+  --sh-btn-border-strong: rgba(15, 23, 42, 0.16);
+  --sh-focus-ring: color-mix(in srgb, #5b57f0 34%, transparent);
+  --sh-pop: 0 12px 40px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.1);
+  --sh-blur: saturate(140%) blur(24px);
+
+  color-scheme: light;
+  /* The molecular SCENE stays on a dark stage (the viewport is always dark), but
+     the dock console follows the light theme so it matches its own header + the
+     rest of the chrome. Its text flips dark to stay readable on the light bg. */
+  --pm-bg-viewport: #05070a;
+  --sh-console-bg: #ffffff;
+  --sh-console-text: #2b3245;
+}
+
+/* ================================================================== */
+/* 2. FOCUS — outline only, never a container box-shadow ring.         */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] button:focus-visible,
+:root[data-ui-theme='shadcn'] [data-slot]:focus-visible,
+:root[data-ui-theme='shadcn'] input:focus-visible,
+:root[data-ui-theme='shadcn'] select:focus-visible,
+:root[data-ui-theme='shadcn'] textarea:focus-visible,
+:root[data-ui-theme='shadcn'] a:focus-visible {
+  outline: 2px solid var(--sh-focus-ring);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+/* Shells can never glow — accent appears only on atoms + on/selected controls. */
+:root[data-ui-theme='shadcn']
+  :where(.shell, .extgui, .internal-gui, .console, [data-slot='panel']):focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ================================================================== */
+/* 3. TYPOGRAPHY — sans chrome; mono only for terminal + aligned data. */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] .objrow__name,
+:root[data-ui-theme='shadcn'] .objrow__group,
+:root[data-ui-theme='shadcn'] .objrow__caption,
+:root[data-ui-theme='shadcn'] .objrow__op,
+:root[data-ui-theme='shadcn'] .butmode__title,
+:root[data-ui-theme='shadcn'] .butmode__selmode,
+:root[data-ui-theme='shadcn'] .butmode__mode,
+:root[data-ui-theme='shadcn'] .statusbar,
+:root[data-ui-theme='shadcn'] .menu,
+:root[data-ui-theme='shadcn'] .menu__mark,
+:root[data-ui-theme='shadcn'] .viewport__placeholder,
+:root[data-ui-theme='shadcn'] .quickbutton,
+:root[data-ui-theme='shadcn'] [class*='__head'],
+:root[data-ui-theme='shadcn'] [class*='__title'],
+:root[data-ui-theme='shadcn'] [class*='__label'],
+:root[data-ui-theme='shadcn'] [class*='__bar'] {
+  font-family: var(--pm-font-ui) !important;
+}
+/* Terminal + aligned data keep mono. */
+:root[data-ui-theme='shadcn'] .feedback,
+:root[data-ui-theme='shadcn'] .cmdline__input,
+:root[data-ui-theme='shadcn'] .butmode__grid,
+:root[data-ui-theme='shadcn'] .butmode__frame {
+  font-family: var(--pm-font-mono) !important;
+}
+
+/* Section headers -> muted uppercase tracked labels (never accent). */
+:root[data-ui-theme='shadcn'] [class*='__head'],
+:root[data-ui-theme='shadcn'] .console__bar-title,
+:root[data-ui-theme='shadcn'] .butmode__title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  font-size: 10px;
+  color: var(--pm-text-dim);
+  background: transparent;
+}
+
+/* ================================================================== */
+/* 4. BUTTON STATES — base appearance is Tailwind (see ui/Button.tsx). */
+/*    Only the shared on/off + destructive states live here, as token   */
+/*    rules that ride over the Tailwind base for elements that flag      */
+/*    state with a legacy class (movie `.mvctl__btn.is-on`, abort, …).   */
+/* ================================================================== */
+
+/* on / selected / toggled -> flat accent, NO glow. */
+:root[data-ui-theme='shadcn'] [data-slot='toggle-button'][data-state='on'],
+:root[data-ui-theme='shadcn'] .quickbutton.is-on,
+:root[data-ui-theme='shadcn'] .overlay-launcher__btn.is-on,
+:root[data-ui-theme='shadcn'] .extgui__btn.is-on,
+:root[data-ui-theme='shadcn'] .console__bar-btn.is-on,
+:root[data-ui-theme='shadcn'] .mvctl__btn.is-on {
+  background: var(--pm-accent);
+  border-color: transparent;
+  color: var(--sh-accent-text);
+}
+
+/* destructive */
+:root[data-ui-theme='shadcn'] .quickbutton--abort {
+  background: var(--sh-danger);
+  border-color: transparent;
+  color: #fff;
+}
+:root[data-ui-theme='shadcn'] .quickbutton--abort:hover {
+  background: color-mix(in srgb, var(--sh-danger) 88%, white);
+}
+
+/* ================================================================== */
+/* 5. MENU BAR + Radix menus + bespoke dropdowns.                      */
+/* ================================================================== */
+
+/* The frost lives on a ::before, NOT on `.menubar`/`.menu` themselves: a
+   `backdrop-filter` makes its element a CONTAINING BLOCK for `position: fixed`
+   descendants, and the cascading submenus (`.menu--sub`) are fixed so they can
+   escape the parent list's scroll clip (menubar.css). With the filter on the
+   element, a submenu resolved its inline viewport `left/top` against the frosted
+   ancestor instead of the viewport and opened hundreds of px off, over the
+   console. A pseudo-element is a sibling of the rows, never an ancestor of the
+   fixed list, so the frost stays and the flyouts land correctly. */
+/* `.menubar` surface (height/padding/gap/border) is Tailwind on the component
+   (shell/AppShell.tsx); only the frost ::before stays here. */
+:root[data-ui-theme='shadcn'] .menubar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
+}
+/* `.menubar__item` and `.menubar__title` are Tailwind on the component
+   (features/menubar/MenuBar.tsx, shell/AppShell.tsx). */
+
+/* bespoke menubar / pymol-menu dropdowns + their submenus.
+   Frost on a ::before (see the `.menubar` note): a dropdown or a submenu is the
+   fixed-positioning ANCESTOR of its own nested `.menu--sub`, so the filter must
+   not sit on the element itself or the child flyout mis-resolves its viewport
+   coordinates. */
+:root[data-ui-theme='shadcn'] .menu,
+:root[data-ui-theme='shadcn'] .menu--sub,
+:root[data-ui-theme='shadcn'] .popup-menu {
+  background: transparent;
+  border: 1px solid var(--sh-line-strong);
+  border-radius: var(--sh-r);
+  box-shadow: var(--sh-pop);
+  padding: 5px;
+}
+:root[data-ui-theme='shadcn'] .menu::before,
+:root[data-ui-theme='shadcn'] .menu--sub::before,
+:root[data-ui-theme='shadcn'] .popup-menu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
+}
+:root[data-ui-theme='shadcn'] .menu__row {
+  border-radius: var(--sh-r-sm);
+  height: 26px;
+  padding: 0 10px 0 8px;
+  font-size: 12.5px;
+  color: var(--pm-text);
+}
+:root[data-ui-theme='shadcn'] .menu__row:hover {
+  background: var(--pm-accent);
+  color: var(--sh-accent-text);
+}
+:root[data-ui-theme='shadcn'] .menu__row.is-disabled,
+:root[data-ui-theme='shadcn'] .menu__row.is-disabled:hover {
+  color: var(--pm-text-dim);
+  background: transparent;
+}
+:root[data-ui-theme='shadcn'] .menu__sep {
+  background: var(--pm-line);
+  margin: 5px 8px;
+}
+:root[data-ui-theme='shadcn'] .menu__arrow {
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .menu__row:hover .menu__arrow,
+:root[data-ui-theme='shadcn'] .menu__row:hover .menu__mark {
+  color: var(--sh-accent-text);
+}
+
+/* ================================================================== */
+/* 6. FORMS — inputs / selects / checkbox / slider.                    */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] [data-slot='input'],
+:root[data-ui-theme='shadcn'] [data-slot='textarea'],
+:root[data-ui-theme='shadcn'] [data-slot='select'] {
+  background: var(--sh-btn-fill);
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-sm);
+  color: var(--pm-text-bright);
+  padding: 5px 9px;
+  font-family: var(--pm-font-ui);
+}
+:root[data-ui-theme='shadcn'] [data-slot='select'] {
+  cursor: pointer;
+}
+:root[data-ui-theme='shadcn'] [data-slot='checkbox'],
+:root[data-ui-theme='shadcn'] [data-slot='switch'],
+:root[data-ui-theme='shadcn'] [data-slot='slider'] {
+  accent-color: var(--pm-accent);
+}
+
+/* ================================================================== */
+/* 7. CONSOLE + COMMAND LINE — one terminal, calm focus.               */
+/* ================================================================== */
+
+/* The console surfaces (`.console__bar`, `.feedback`, `.cmdline`,
+   `.cmdline__label`, `.cmdline__input` base) are Tailwind on the components
+   (features/console/*). Only the focus calm-down stays here — it must beat the
+   §2 unlayered focus-visible ring, which a utility class in `@layer utilities`
+   cannot. */
+:root[data-ui-theme='shadcn'] .cmdline__input:focus {
+  border-color: var(--pm-line);
+  box-shadow: none;
+  outline: none;
+}
+
+/* ================================================================== */
+/* 8. PANELS + DOCK — single-owner seams, flush docked, float floats.  */
+/* ================================================================== */
+
+/* Panel surfaces are Tailwind on the components: the shell dock/column/main in
+   shell/AppShell.tsx (docked ext-gui flush; floating ext-gui frosted), and the
+   `[data-slot='panel']` card treatment in ui/Panel.tsx. */
+
+/* ================================================================== */
+/* 9. OBJECT ROWS — calm accent tint, geometry preserved.             */
+/* ================================================================== */
+
+/* Object-row surfaces (`.objpanel__head`, `.objrow__name` incl. its enabled
+   tint, `.objrow__op`) are Tailwind on the component
+   (features/objects/ObjectPanel.tsx). */
+
+/* ================================================================== */
+/* 10. MOVIE TRANSPORT — one flat segmented control.                   */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] .mvctl {
+  gap: 3px;
+  padding: 0 2px;
+  height: auto;
+  align-items: center;
+}
+:root[data-ui-theme='shadcn'] .mvctl__btn {
+  height: 24px;
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-sm);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text-dim);
+  padding: 0;
+}
+:root[data-ui-theme='shadcn'] .mvctl__btn:hover {
+  background: var(--sh-btn-hover);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .mvctl__btn.is-on {
+  background: var(--pm-accent);
+  color: var(--sh-accent-text);
+  border-color: transparent;
+}
+
+/* ================================================================== */
+/* 11. OVERLAY LAUNCHER — inline in the status bar (see StatusBar).     */
+/* ================================================================== */
+
+/* Modern renders the launcher INSIDE the status bar (StatusBar hosts
+   `.statusbar__launcher`; the classic `.overlay-launcher` corner bar is not
+   rendered in this theme). So there is no floating container to style — just a
+   tidy inline row of small square icon buttons that live in the same strip as
+   the connection state, the placement classic has always had. */
+:root[data-ui-theme='shadcn'] .statusbar__launcher {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin: 0 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+:root[data-ui-theme='shadcn'] .statusbar__launcher::-webkit-scrollbar {
+  display: none;
+}
+:root[data-ui-theme='shadcn'] .overlay-launcher__btn {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+  border-radius: var(--sh-r-sm);
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .overlay-launcher__btn:hover {
+  background: var(--sh-btn-hover);
+  color: var(--pm-text-bright);
+}
+/* `.is-on` (open panel) → accent fill comes from §4. */
+
+/* ================================================================== */
+/* 12. STATUS BAR, SPLITTERS, SCROLLBARS, PROGRESS.                    */
+/* ================================================================== */
+
+/* The `.statusbar` surface + its progress fill are Tailwind on the component
+   (shell/StatusBar.tsx). */
+
+/* Single-owner seam: the splitter draws one centered hairline; accent only on hover. */
+:root[data-ui-theme='shadcn'] .splitter {
+  background: transparent;
+  position: relative;
+}
+:root[data-ui-theme='shadcn'] .splitter::after {
+  content: '';
+  position: absolute;
+  background: var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .splitter--v::after {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  top: 0;
+  bottom: 0;
+}
+:root[data-ui-theme='shadcn'] .splitter--h::after {
+  top: 50%;
+  transform: translateY(-50%);
+  height: 1px;
+  left: 0;
+  right: 0;
+}
+:root[data-ui-theme='shadcn'] .splitter--v:hover::after {
+  width: 2px;
+  background: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] .splitter--h:hover::after {
+  height: 2px;
+  background: var(--pm-accent);
+}
+
+:root[data-ui-theme='shadcn'] ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+:root[data-ui-theme='shadcn'] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+:root[data-ui-theme='shadcn'] ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--pm-text) 18%, transparent);
+  border: 3.5px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+:root[data-ui-theme='shadcn'] ::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--pm-text) 30%, transparent);
+  background-clip: padding-box;
+}
+
+:root[data-ui-theme='shadcn'] .progressbar {
+  border: 1px solid var(--pm-line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--sh-btn-fill);
+}
+:root[data-ui-theme='shadcn'] .progressbar__fill {
+  background: var(--pm-accent);
+}
+
+/* ================================================================== */
+/* 13. ICON BUTTONS — lucide icons in the modern theme.                */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] .ui-has-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+:root[data-ui-theme='shadcn'] .ui-btn-icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  opacity: 0.92;
+}
+/* icon-only controls collapse to a square */
+:root[data-ui-theme='shadcn'] .ui-has-icon:has(.ui-sr) {
+  gap: 0;
+}
+:root[data-ui-theme='shadcn'] .quickbutton.ui-has-icon:has(.ui-sr),
+:root[data-ui-theme='shadcn'] .extgui__btn.ui-has-icon:has(.ui-sr) {
+  min-width: 0;
+  padding: 0 9px;
+}
+.ui-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ================================================================== */
+/* 14. LIGHT-MODE FIXES — bespoke surfaces that hardcode a dark #hex   */
+/*     background but draw text with a token that FLIPS to dark in     */
+/*     light appearance (found by the panel-layout audit). Re-point    */
+/*     their surfaces at the flipping tokens so both appearances read. */
+/* ================================================================== */
+
+/* Console output: the pane bg is pinned dark, so a line that tracks --pm-text
+   went invisible in light. Pin it to the console text colour. */
+:root[data-ui-theme='shadcn'] .feedback__line--info {
+  color: var(--sh-console-text);
+}
+
+/* Object row context menu (RowMenu) + its submenu flyout hardcode dark #26292c
+   with rows in --pm-text → dark-on-dark in light. Token surfaces flip correctly. */
+:root[data-ui-theme='shadcn'] .rowmenu,
+:root[data-ui-theme='shadcn'] .rowmenu__panel {
+  background: var(--pm-panel);
+  border-color: var(--sh-line-strong);
+  color: var(--pm-text);
+}
+:root[data-ui-theme='shadcn'] .rowmenu__head {
+  background: var(--pm-panel-alt);
+  border-color: var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .rowmenu__row:hover {
+  background: var(--sh-accent-soft);
+  color: var(--pm-text-bright);
+}
+
+/* Wizard key/event editor inputs + buttons + list hovers hardcode dark fills. */
+:root[data-ui-theme='shadcn'] .wizkeys__input,
+:root[data-ui-theme='shadcn'] .wizevents__input {
+  background: var(--sh-btn-fill);
+  border-color: var(--sh-btn-border);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .wizevents__buttons button {
+  background: var(--sh-btn-fill);
+  border: 1px solid var(--sh-btn-border);
+  color: var(--pm-text);
+}
+:root[data-ui-theme='shadcn'] .wizlaunch__item:hover:not(:disabled),
+:root[data-ui-theme='shadcn'] .wizmenu__item:hover:not(:disabled) {
+  background: var(--sh-accent-soft);
+  color: var(--pm-text-bright);
+}
+
+/* Minor: a couple of hardcoded greys that read poorly on a light panel. */
+:root[data-ui-theme='shadcn'] .cbands__region em {
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__legacyleaf {
+  color: var(--pm-text);
+}
+
+/* The console log colours are tuned for a dark terminal; on the LIGHT console
+   the amber/red lines drop below readable contrast, so darken them there. */
+:root[data-ui-theme='shadcn'][data-appearance='light'] .feedback__line--warning {
+  color: #b26a00;
+}
+:root[data-ui-theme='shadcn'][data-appearance='light'] .feedback__line--error {
+  color: #d11d3b;
+}
+:root[data-ui-theme='shadcn'][data-appearance='light'] .feedback__line--prompt {
+  color: #c2410c;
+}
+
+/* ================================================================== */
+/* 15. LAYOUT FIXES found in review.                                    */
+/* ================================================================== */
+
+/* LOADING PLACEHOLDER must not distort layout. An overlay panel is lazy, and
+   its Suspense fallback (`.feature-loading`, shell/FeatureSlot.tsx) rendered as
+   an in-flow div at the app root — adding a row BELOW the status bar while the
+   chunk loaded. The panel it stands in for is `position: absolute`, so the
+   placeholder should float too: a transient frosted chip, out of flow. */
+:root[data-ui-theme='shadcn'] .feature-loading {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  z-index: 70;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
+  border: 1px solid var(--sh-line-strong);
+  box-shadow: var(--sh-pop);
+  color: var(--pm-text-dim);
+}
+
+/* SINGLE SCROLL in the internal-gui column. The movie + scenes panels are their
+   own scroll containers (sticky heads), but when the column itself has to scroll
+   (all the panels' min-heights exceed its height) you get a scrollbar inside a
+   scrollbar. In modern, let those two panels expand to their content and let the
+   COLUMN be the one scroll container. */
+:root[data-ui-theme='shadcn'] .mvpanel,
+:root[data-ui-theme='shadcn'] .scpanel {
+  flex: 0 0 auto;
+  overflow: visible;
+}

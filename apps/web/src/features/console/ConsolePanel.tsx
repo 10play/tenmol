@@ -64,7 +64,7 @@ export function ConsolePanel() {
           (`pymol_qt_gui.py:963-975`), and the in-viewport console draws in
           PyMOL's own bitmap font whatever this says. */}
       <div className="extgui__console" style={{ ['--pm-font-mono' as string]: font }}>
-        <div className="console__bar">
+        <div className="console__bar modern:h-7 modern:px-2.5 modern:border-b modern:border-line modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]">
           <span className="console__bar-title">Output</span>
           <span className="console__bar-count" title="ortho ring: 256 lines (packages/engine/layer1/Ortho.cpp:62)">
             {lineCount} lines · ortho {orthoLines}/256

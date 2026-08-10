@@ -62,7 +62,11 @@ export function ExportMoleculeDialog({
       wide
       footer={
         <>
-          <select className="fdlg__select" value={filter} onChange={(e) => setFilter(e.target.value)}>
+          <select
+            className="fdlg__select modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
             {info.filters.map((f) => (
               <option key={f}>{f}</option>
             ))}

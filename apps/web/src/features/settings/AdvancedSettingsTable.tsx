@@ -37,6 +37,7 @@ import {
   type SettingsStore,
 } from '@tenmol/stores/settings';
 import { useStore } from '../../app';
+import { Button, Checkbox, Select, TextInput } from '../../ui';
 import {
   atomSettingDelete,
   atomSettingWrite,
@@ -118,10 +119,7 @@ export function AdvancedSettingsTable({
   const [height, setHeight] = useState(420);
   const viewport = useRef<HTMLDivElement>(null);
 
-  const rows = useMemo(
-    () => filterSettings(catalogue?.settings ?? [], query),
-    [catalogue, query],
-  );
+  const rows = useMemo(() => filterSettings(catalogue?.settings ?? [], query), [catalogue, query]);
 
   useEffect(() => {
     const element = viewport.current;
@@ -162,7 +160,7 @@ export function AdvancedSettingsTable({
       <div className="setadv__bar">
         <label className="setadv__filter">
           Filter
-          <input
+          <TextInput
             type="text"
             value={query}
             spellCheck={false}
@@ -223,7 +221,7 @@ export function AdvancedSettingsTable({
             defaults + ranges: {catalogue.meta.defaultsSource} · {catalogue.meta.minMaxNote}
           </span>
         ) : (
-          <span className="setadv__warn">
+          <span className="setadv__warn modern:text-danger">
             defaults and ranges unavailable — {catalogue?.meta.defaultsNote}
           </span>
         )}
@@ -245,7 +243,7 @@ function ScopeSelector({
     <span className="setadv__scope">
       <label>
         Scope
-        <select
+        <Select
           value={value.scope}
           onChange={(e) => onChange({ ...value, scope: e.target.value as SettingScope })}
         >
@@ -254,25 +252,28 @@ function ScopeSelector({
               {name}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       {value.scope !== 'global' && !isSelectionScope(value.scope) && (
         <label>
           Object
-          <select value={value.object} onChange={(e) => onChange({ ...value, object: e.target.value })}>
+          <Select
+            value={value.object}
+            onChange={(e) => onChange({ ...value, object: e.target.value })}
+          >
             <option value="">(pick)</option>
             {objects.map((name) => (
               <option key={name} value={name}>
                 {name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       )}
       {isSelectionScope(value.scope) && (
         <label>
           Selection
-          <input
+          <TextInput
             type="text"
             spellCheck={false}
             className="setadv__sel"
@@ -285,7 +286,7 @@ function ScopeSelector({
       {(value.scope === 'object-state' || value.scope === 'atom-state') && (
         <label>
           State
-          <input
+          <TextInput
             type="number"
             min={1}
             value={value.state || 1}
@@ -323,7 +324,9 @@ function Row({
   const object = selectionScope || scope.scope === 'global' ? '' : scope.object;
   const state = scope.scope === 'object-state' ? scope.state : 0;
   const hint = rangeHint(meta, scope.scope);
-  const noTarget = selectionScope ? scope.selection.trim() === '' : scope.scope !== 'global' && !object;
+  const noTarget = selectionScope
+    ? scope.selection.trim() === ''
+    : scope.scope !== 'global' && !object;
 
   const fail = (e: unknown) =>
     store.noteRejected(meta.index, e instanceof Error ? e.message : String(e));
@@ -388,7 +391,7 @@ function Row({
 
   return (
     <div
-      className={`setadv__row${writable ? '' : ' is-locked'}`}
+      className={`setadv__row modern:border-line${writable ? '' : ' is-locked'}`}
       style={{ height: ROW_HEIGHT }}
       data-index={meta.index}
       data-name={meta.name}
@@ -398,7 +401,7 @@ function Row({
         {meta.name}
         {isSessionBlacklisted(meta) && (
           <em
-            className="setadv__nopse"
+            className="setadv__nopse modern:text-pm-text-dim"
             title={
               meta.level === 'unused'
                 ? 'unused level — never written to a .pse (Setting.cpp:628-631)'
@@ -420,15 +423,18 @@ function Row({
           onCommit={commit}
         />
       </span>
-      <span className="setadv__c-level" title={`writable at: ${scopesForLevel(meta.level).join(', ')}`}>
+      <span
+        className="setadv__c-level"
+        title={`writable at: ${scopesForLevel(meta.level).join(', ')}`}
+      >
         {meta.level}
       </span>
       <span className="setadv__c-default">
         {meta.default === undefined ? '—' : String(meta.default)}
-        {hint ? <em className="setadv__hint"> {hint}</em> : null}
+        {hint ? <em className="setadv__hint modern:text-pm-text-dim"> {hint}</em> : null}
       </span>
       <span className="setadv__c-reset">
-        <button
+        <Button
           type="button"
           title={
             scope.scope === 'bond'
@@ -437,13 +443,15 @@ function Row({
                 ? "cmd.alter_state … del s['name'] — cmd.unset cannot reach this level"
                 : 'cmd.unset — restores the DEFAULT (PyMOL 2.5+)'
           }
-          disabled={!writable || noTarget || (!selectionScope && isDefaultValue(meta, entry?.value))}
+          disabled={
+            !writable || noTarget || (!selectionScope && isDefaultValue(meta, entry?.value))
+          }
           onClick={reset}
         >
           ⟲
-        </button>
+        </Button>
       </span>
-      {error ? <span className="setadv__error">{error}</span> : null}
+      {error ? <span className="setadv__error modern:text-danger">{error}</span> : null}
     </div>
   );
 }
@@ -488,7 +496,7 @@ function ReinitializeStrip({
         Reinitialize
       </span>
       {REINITIALIZE_MENU.map((entry) => (
-        <button
+        <Button
           key={entry.what}
           type="button"
           title={`cmd.reinitialize("${entry.what}") — ${entry.help}`}
@@ -500,7 +508,7 @@ function ReinitializeStrip({
           }}
         >
           {armed === entry.what ? `${entry.label}?` : entry.label}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -525,7 +533,7 @@ function AtomStateStrip({ note, scope }: { note: string; scope: ScopeSelection }
         (scope.selection.trim() === ''
           ? 'type a selection, then write a value — atom-state goes through cmd.alter_state'
           : `state ${scope.state || 1} of ${scope.selection}: write a value to see what alter_state answered`)}
-      <em className="setadv__hint">
+      <em className="setadv__hint modern:text-pm-text-dim">
         {' '}
         · atom-state overrides cannot be listed back: the scope RPC uses cmd.iterate, not
         cmd.iterate_state
@@ -609,9 +617,9 @@ function OverridesView({
             total === 0
               ? `no per-atom overrides on ${selection}`
               : `${reply.atoms.length} atoms carry ${total} overrides: ` +
-                [...new Set(reply.atoms.flatMap((a) => a.settings))]
-                  .map((i) => byIndex.get(i)?.name ?? i)
-                  .join(', '),
+                  [...new Set(reply.atoms.flatMap((a) => a.settings))]
+                    .map((i) => byIndex.get(i)?.name ?? i)
+                    .join(', '),
           );
         }
       } catch (e) {
@@ -649,8 +657,7 @@ function ValueEditor({
 
   if (meta.kind === 'boolean' && !writeOnly) {
     return (
-      <input
-        type="checkbox"
+      <Checkbox
         aria-label={meta.name}
         disabled={disabled}
         checked={Number(entry?.value ?? 0) !== 0}
@@ -660,7 +667,7 @@ function ValueEditor({
   }
 
   return (
-    <input
+    <TextInput
       type="text"
       aria-label={meta.name}
       spellCheck={false}

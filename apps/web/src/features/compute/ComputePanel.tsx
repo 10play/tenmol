@@ -27,7 +27,12 @@ import {
   type Metric,
   type MetricParam,
 } from './metrics';
-import { COMPUTE_BOOTSTRAP, COMPUTE_NS, type SasaRelativeResult } from '@tenmol/protocol/topics/compute';
+import {
+  COMPUTE_BOOTSTRAP,
+  COMPUTE_NS,
+  type SasaRelativeResult,
+} from '@tenmol/protocol/topics/compute';
+import { Button, Checkbox, TextInput } from '../../ui';
 import './compute.css';
 
 type Row = {
@@ -76,10 +81,7 @@ interface FeedbackLine {
  *
  * Exported because the filter, not the rendering, is the part worth pinning.
  */
-export function diagnosticsSince(
-  lines: readonly FeedbackLine[],
-  mark: number,
-): readonly string[] {
+export function diagnosticsSince(lines: readonly FeedbackLine[], mark: number): readonly string[] {
   const out: string[] = [];
   for (const line of lines) {
     if (line.seq < mark) continue;
@@ -215,12 +217,14 @@ export function ComputePanel() {
   );
 
   return (
-    <div className="compute">
-      <div className="compute__title">Compute</div>
+    <div className="compute modern:bg-pm-panel modern:text-pm-text">
+      <div className="compute__title modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line">
+        Compute
+      </div>
 
       <div className="compute__sel">
         <label htmlFor="cp-sel">Selection</label>
-        <input
+        <TextInput
           id="cp-sel"
           type="text"
           value={selection}
@@ -238,7 +242,8 @@ export function ComputePanel() {
             return (
               <tr key={m.id} className={off ? 'is-off' : undefined}>
                 <td>
-                  <button
+                  <Button
+                    variant="bare"
                     type="button"
                     className={`compute__btn${m.kind === 'destructive' ? ' is-danger' : ''}`}
                     disabled={off || busy !== null}
@@ -246,7 +251,7 @@ export function ComputePanel() {
                     onClick={() => press(m)}
                   >
                     {busy === m.id ? '…' : m.label}
-                  </button>
+                  </Button>
                   {m.note !== undefined && <div className="compute__note-inline">{m.note}</div>}
                   {extra.length > 0 && (
                     <div className="compute__args">
@@ -272,8 +277,12 @@ export function ComputePanel() {
                   )}
                   {row?.table && <SasaTable result={row.table} />}
                   {row?.diagnostics && row.diagnostics.length > 0 && (
-                    <details className="compute__diag" data-diagnostics={m.id} open>
-                      <summary>
+                    <details
+                      className="compute__diag modern:text-pm-text-dim"
+                      data-diagnostics={m.id}
+                      open
+                    >
+                      <summary className="modern:text-pm-text-dim">
                         what PyMOL reported ({row.diagnostics.length}{' '}
                         {row.diagnostics.length === 1 ? 'line' : 'lines'})
                       </summary>
@@ -288,13 +297,23 @@ export function ComputePanel() {
       </table>
 
       {confirming !== null && (
-        <div className="compute__confirm" role="alertdialog" aria-label="confirm destructive action">
+        <div
+          className="compute__confirm"
+          role="alertdialog"
+          aria-label="confirm destructive action"
+        >
           <p className="compute__warn">{confirming.warning}</p>
           <div className="compute__confirm-actions">
-            <button type="button" className="compute__btn" onClick={() => setConfirming(null)}>
+            <Button
+              variant="bare"
+              type="button"
+              className="compute__btn"
+              onClick={() => setConfirming(null)}
+            >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="bare"
               type="button"
               className="compute__btn is-danger"
               onClick={() => void execute(confirming)}
@@ -307,7 +326,7 @@ export function ComputePanel() {
                * warning nobody reads.
                */}
               {confirming.kind === 'destructive' ? 'Modify structure and run' : 'Overwrite and run'}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -336,10 +355,9 @@ function ParamField({
   const id = `cp-${metricId}-${param.name}`;
   if (param.kind === 'bool') {
     return (
-      <label className="compute__arg" htmlFor={id}>
-        <input
+      <label className="compute__arg modern:text-pm-text-dim" htmlFor={id}>
+        <Checkbox
           id={id}
-          type="checkbox"
           checked={value === undefined ? param.default : Boolean(value)}
           onChange={(e) => onChange(metricId, param.name, e.target.checked)}
         />
@@ -348,9 +366,9 @@ function ParamField({
     );
   }
   return (
-    <label className="compute__arg" htmlFor={id}>
+    <label className="compute__arg modern:text-pm-text-dim" htmlFor={id}>
       {param.label}
-      <input
+      <TextInput
         id={id}
         type={param.kind === 'number' ? 'number' : 'text'}
         spellCheck={false}
@@ -378,10 +396,11 @@ function ParamField({
 function SasaTable({ result }: { result: SasaRelativeResult }) {
   const session = useSession();
   const records = result.records ?? [];
-  if (records.length === 0) return <div className="compute__empty">no residues</div>;
+  if (records.length === 0)
+    return <div className="compute__empty modern:text-pm-text-dim">no residues</div>;
   return (
     <div className="compute__sasa">
-      <div className="compute__sasa-head">
+      <div className="compute__sasa-head modern:text-pm-text-dim">
         {records.length} residues, value written to “{result.var}”
         {result.unnormalised > 0 && (
           <span className="compute__warn-inline">
@@ -393,16 +412,20 @@ function SasaTable({ result }: { result: SasaRelativeResult }) {
       <ul className="compute__sasa-list">
         {records.map((r) => (
           <li key={r.sele} className={r.normalised ? undefined : 'is-raw'}>
-            <button
+            <Button
+              variant="bare"
               type="button"
               className="compute__sasa-sele"
               title={`select ${r.sele}`}
               onClick={() => void session.run(`select sele, ${r.sele}`)}
             >
               {r.chain || '-'}/{r.resi} {r.resn}
-            </button>
-            <span className="compute__sasa-bar" aria-hidden="true">
-              <span style={{ width: `${Math.max(0, Math.min(1, r.value)) * 100}%` }} />
+            </Button>
+            <span className="compute__sasa-bar modern:bg-accent-soft" aria-hidden="true">
+              <span
+                className="modern:bg-pm-accent"
+                style={{ width: `${Math.max(0, Math.min(1, r.value)) * 100}%` }}
+              />
             </span>
             <span className="compute__sasa-num">
               {r.normalised ? `${(r.value * 100).toFixed(0)}%` : r.value.toFixed(1)}

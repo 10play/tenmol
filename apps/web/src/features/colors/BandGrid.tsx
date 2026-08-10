@@ -65,7 +65,12 @@ export function BandGrid({ palette, sele }: BandGridProps) {
             type="button"
             role="tab"
             aria-selected={r.id === region.id}
-            className={'cbands__region' + (r.id === region.id ? ' is-on' : '')}
+            className={
+              'cbands__region modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover' +
+              (r.id === region.id
+                ? ' is-on modern:bg-pm-accent modern:text-accent-text modern:border-transparent'
+                : '')
+            }
             title={`${r.note} — slots ${r.first}..${r.first + r.count - 1}`}
             onClick={() => {
               setRegionId(r.id);
@@ -84,7 +89,12 @@ export function BandGrid({ palette, sele }: BandGridProps) {
         </span>
         {pages > 1 && (
           <span className="cbands__pages">
-            <button type="button" disabled={clamped === 0} onClick={() => setPage(clamped - 1)}>
+            <button
+              type="button"
+              className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:hover:bg-btn-hover"
+              disabled={clamped === 0}
+              onClick={() => setPage(clamped - 1)}
+            >
               ‹
             </button>
             <span data-testid="cbands-page">
@@ -92,6 +102,7 @@ export function BandGrid({ palette, sele }: BandGridProps) {
             </span>
             <button
               type="button"
+              className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:hover:bg-btn-hover"
               disabled={clamped >= pages - 1}
               onClick={() => setPage(clamped + 1)}
             >
@@ -102,6 +113,7 @@ export function BandGrid({ palette, sele }: BandGridProps) {
         <label className="cbands__jump">
           slot
           <input
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
             value={jump}
             size={5}
             spellCheck={false}
@@ -112,7 +124,9 @@ export function BandGrid({ palette, sele }: BandGridProps) {
             }}
           />
         </label>
-        {palette.status !== 'ready' && <span className="cbands__note">palette not loaded</span>}
+        {palette.status !== 'ready' && (
+          <span className="cbands__note modern:text-pm-text-dim">palette not loaded</span>
+        )}
       </div>
 
       <div className="cbands__tiles">

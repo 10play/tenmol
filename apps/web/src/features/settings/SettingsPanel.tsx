@@ -141,14 +141,30 @@ export function SettingsPanel() {
 
   return (
     <>
-      <div className="setlaunch" role="group" aria-label="Settings">
-        <button type="button" onClick={() => setOpen(open === 'menu' ? null : 'menu')}>
+      <div
+        className="setlaunch modern:rounded-md modern:border modern:border-line-strong modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)] modern:shadow-[var(--sh-pop)] modern:px-1 modern:py-0.5"
+        role="group"
+        aria-label="Settings"
+      >
+        <button
+          type="button"
+          className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+          onClick={() => setOpen(open === 'menu' ? null : 'menu')}
+        >
           Setting
         </button>
-        <button type="button" onClick={() => setOpen(open === 'table' ? null : 'table')}>
+        <button
+          type="button"
+          className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+          onClick={() => setOpen(open === 'table' ? null : 'table')}
+        >
           Edit All…
         </button>
-        <button type="button" onClick={() => setOpen(open === 'lighting' ? null : 'lighting')}>
+        <button
+          type="button"
+          className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+          onClick={() => setOpen(open === 'lighting' ? null : 'lighting')}
+        >
           Lighting
         </button>
         <span className={`setlaunch__state setlaunch__state--${phase}`} title={error ?? ''}>
@@ -157,8 +173,11 @@ export function SettingsPanel() {
       </div>
 
       {open && (
-        <div className="setwin" data-window={open}>
-          <div className="setwin__title">
+        <div
+          className="setwin modern:bg-pm-panel modern:text-pm-text modern:border-line"
+          data-window={open}
+        >
+          <div className="setwin__title modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line">
             <span>
               {open === 'menu'
                 ? which
@@ -166,13 +185,18 @@ export function SettingsPanel() {
                   ? 'PyMOL Advanced Settings'
                   : 'Lighting Settings'}
             </span>
-            <button type="button" aria-label="Close" onClick={() => setOpen(null)}>
+            <button
+              type="button"
+              aria-label="Close"
+              className="modern:text-pm-text-dim modern:hover:text-pm-text-bright"
+              onClick={() => setOpen(null)}
+            >
               ×
             </button>
           </div>
           <div className="setwin__body">
             {phase !== 'ready' ? (
-              <p className="setwin__status">
+              <p className="setwin__status modern:text-pm-text-dim">
                 {phase === 'error'
                   ? `settings service unavailable: ${error ?? 'unknown error'}`
                   : 'loading the setting catalogue…'}
@@ -186,21 +210,29 @@ export function SettingsPanel() {
                   * `get_menudata` is that nothing about them is special-cased
                   * per menu — so the picker changes the DATA, not the code.
                   */}
-                <div className="setmenu__tabs" role="tablist" aria-label="menu">
+                <div
+                  className="setmenu__tabs modern:border-line"
+                  role="tablist"
+                  aria-label="menu"
+                >
                   {PANEL_MENUS.map((name) => (
                     <button
                       key={name}
                       type="button"
                       role="tab"
                       aria-selected={which === name}
-                      className={`setmenu__tab${which === name ? ' is-on' : ''}`}
+                      className={`setmenu__tab modern:rounded modern:transition-colors${
+                        which === name
+                          ? ' is-on modern:bg-pm-accent modern:text-accent-text modern:border-transparent'
+                          : ' modern:text-pm-text-dim modern:hover:text-pm-text-bright'
+                      }`}
                       onClick={() => setWhich(name)}
                     >
                       {name}
                     </button>
                   ))}
                   <span
-                    className="setmenu__source"
+                    className="setmenu__source modern:text-pm-text-dim"
                     title={`${MENUDATA_SOURCE} — harvested by packages/bridge/tenmol_bridge/panels/menus.py`}
                   >
                     get_menudata

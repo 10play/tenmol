@@ -42,29 +42,42 @@ export function MovieEditors({ panel, frame, state, objects, run }: Props) {
 
   return (
     <div className="mvedit">
-      <section className="mvedit__block">
+      <section className="mvedit__block modern:rounded-md">
         <header className="mvedit__head">movie program — mset / madd</header>
         <div className="mvedit__row">
           <input
-            className="mvedit__input"
+            className="mvedit__input modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
             value={spec}
             spellCheck={false}
             onChange={(event) => setSpec(event.target.value)}
             aria-label="mset specification"
           />
-          <button type="button" onClick={() => void run(program.mset(spec))}>
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(program.mset(spec))}
+          >
             mset
           </button>
-          <button type="button" onClick={() => void run(program.madd(spec))}>
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(program.madd(spec))}
+          >
             madd
           </button>
-          <button type="button" onClick={() => void run(program.purge())} title="cmd.mset()">
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(program.purge())}
+            title="cmd.mset()"
+          >
             purge
           </button>
         </div>
         <div className="mvedit__preview">
           {preview.error ? (
-            <span className="mvedit__error">{preview.error}</span>
+            <span className="mvedit__error modern:text-danger">{preview.error}</span>
           ) : (
             <>
               <span>
@@ -79,38 +92,59 @@ export function MovieEditors({ panel, frame, state, objects, run }: Props) {
         </div>
       </section>
 
-      <section className="mvedit__block">
+      <section className="mvedit__block modern:rounded-md">
         <header className="mvedit__head">frame {frame} command — mdo / mappend</header>
         <div className="mvedit__row">
           <input
-            className="mvedit__input"
+            className="mvedit__input modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
             value={command}
             spellCheck={false}
             placeholder="turn x, 5"
             onChange={(event) => setCommand(event.target.value)}
             aria-label="frame command"
           />
-          <button type="button" onClick={() => void run(program.mdo(frame, command))}>
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(program.mdo(frame, command))}
+          >
             mdo
           </button>
-          <button type="button" onClick={() => void run(program.mappend(frame, command))}>
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(program.mappend(frame, command))}
+          >
             mappend
           </button>
-          <button type="button" onClick={() => void run(program.mdump())} title="prints to console">
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(program.mdump())}
+            title="prints to console"
+          >
             mdump
           </button>
-          <button type="button" onClick={() => void run(program.mclear())}>
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(program.mclear())}
+          >
             mclear
           </button>
         </div>
       </section>
 
-      <section className="mvedit__block">
+      <section className="mvedit__block modern:rounded-md">
         <header className="mvedit__head">key frames — mview</header>
         <div className="mvedit__row">
           <label className="mvedit__label">
             object
-            <select value={object} onChange={(event) => setObject(event.target.value)}>
+            <select
+              className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
+              value={object}
+              onChange={(event) => setObject(event.target.value)}
+            >
               <option value="">(camera)</option>
               {objects.map((name) => (
                 <option key={name} value={name}>
@@ -125,6 +159,7 @@ export function MovieEditors({ panel, frame, state, objects, run }: Props) {
             <button
               key={action}
               type="button"
+              className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
               title={`cmd.mview('${action}', first=${frame}${object ? `, object='${object}'` : ''})`}
               onClick={() =>
                 void run(
@@ -143,14 +178,14 @@ export function MovieEditors({ panel, frame, state, objects, run }: Props) {
         </div>
       </section>
 
-      <section className="mvedit__block">
+      <section className="mvedit__block modern:rounded-md">
         <header className="mvedit__head">key-frame range — mmove / mcopy / minsert / mdelete</header>
         <div className="mvedit__row">
           <label className="mvedit__label">
             target
             <input
               type="number"
-              className="mvedit__num"
+              className="mvedit__num modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
               value={target}
               onChange={(event) => setTarget(Number(event.target.value))}
             />
@@ -159,25 +194,41 @@ export function MovieEditors({ panel, frame, state, objects, run }: Props) {
             count
             <input
               type="number"
-              className="mvedit__num"
+              className="mvedit__num modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text-bright"
               value={count}
               onChange={(event) => setCount(Number(event.target.value))}
             />
           </label>
-          <button type="button" onClick={() => void run(range.mmove(target, frame, count, object))}>
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(range.mmove(target, frame, count, object))}
+          >
             mmove
           </button>
-          <button type="button" onClick={() => void run(range.mcopy(target, frame, count, object))}>
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(range.mcopy(target, frame, count, object))}
+          >
             mcopy
           </button>
-          <button type="button" onClick={() => void run(range.minsert(count, frame, object))}>
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(range.minsert(count, frame, object))}
+          >
             minsert
           </button>
-          <button type="button" onClick={() => void run(range.mdelete(count, frame, object))}>
+          <button
+            type="button"
+            className="modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            onClick={() => void run(range.mdelete(count, frame, object))}
+          >
             mdelete
           </button>
         </div>
-        <p className="mvedit__note">
+        <p className="mvedit__note modern:text-pm-text-dim">
           0 means &ldquo;current frame&rdquo; and a negative counts back from the end
           (moving.py:493) — the numbers go over the wire untouched.
         </p>

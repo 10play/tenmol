@@ -1,0 +1,60 @@
+/*
+ * Tailwind v4 — imported WITHOUT Preflight.
+ *
+ * `global.css` owns the reset and the pixel-exact PyMOL base, and Preflight would
+ * fight it. So we import only the `theme` (tokens) and `utilities` layers.
+ *
+ * The classic PyMOL stylesheets live in the low `legacy` cascade layer (see
+ * styles/legacy.css), declared first here so Tailwind's `utilities` layer wins.
+ * That is what lets the modern theme be styled with plain Tailwind utility
+ * classes that override the classic CSS — no specificity war.
+ */
+@layer legacy, theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/*
+ * The `modern:` variant — a utility prefixed with it applies ONLY under the
+ * modern theme (a descendant of `[data-ui-theme='shadcn']`). So a component can
+ * carry `modern:bg-pm-panel modern:text-pm-text` unconditionally: the classes are
+ * inert in classic (leaving the pixel-exact legacy look) and active in modern.
+ * No `useTheme()` gating needed, and every class-name test still passes because
+ * the BEM classes are untouched.
+ */
+@custom-variant modern (&:where([data-ui-theme='shadcn'] *));
+
+/*
+ * Bridge Tailwind's token space onto the PyMOL/`--sh-*` source variables (see
+ * styles/shadcn.css), so colour + typography have ONE source that auto-switches
+ * between dark and light. `bg-pm-panel`, `text-pm-text-dim`, `border-line`,
+ * `bg-btn`, `bg-accent-soft`, `font-mono`, … all resolve to those values.
+ */
+@theme {
+  --color-pm-bg: var(--pm-bg);
+  --color-pm-bg-viewport: var(--pm-bg-viewport);
+  --color-pm-panel: var(--pm-panel);
+  --color-pm-panel-alt: var(--pm-panel-alt);
+  --color-pm-edge: var(--pm-edge);
+  --color-line: var(--pm-line);
+  --color-line-strong: var(--sh-line-strong);
+  --color-pm-text: var(--pm-text);
+  --color-pm-text-dim: var(--pm-text-dim);
+  --color-pm-text-bright: var(--pm-text-bright);
+  --color-pm-accent: var(--pm-accent);
+  --color-accent-text: var(--sh-accent-text);
+  --color-accent-soft: var(--sh-accent-soft);
+  --color-pm-caption: var(--pm-caption);
+  --color-pm-mouse-mode: var(--pm-mouse-mode);
+  --color-danger: var(--sh-danger);
+  --color-panel-frost: var(--sh-panel-frost);
+  --color-btn: var(--sh-btn-fill);
+  --color-btn-hover: var(--sh-btn-hover);
+  --color-btn-border: var(--sh-btn-border);
+  --color-btn-border-strong: var(--sh-btn-border-strong);
+
+  --font-mono: var(--pm-font-mono);
+  --font-sans: var(--pm-font-ui);
+
+  --radius-pm: 6px;
+}

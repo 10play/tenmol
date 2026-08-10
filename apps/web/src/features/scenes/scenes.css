@@ -1,9 +1,10 @@
-/*
+@layer legacy {
+  /*
  * Scene bin. Button colours follow SceneDrawButtons (packages/engine/layer1/Scene.cpp:2885):
  * pressed 0.7, current scene 0.5, others 0.25 grey.
  */
 
-/*
+  /*
  * THE ONE BLOCK IN THIS COLUMN PyMOL RESERVES NOTHING FOR.
  *
  * `SceneDrawButtons` (`packages/engine/layer1/Scene.cpp:2885-2905`) draws the scene bin into
@@ -26,102 +27,102 @@
  * floor is the head plus one `internal_gui_control_size` row (18) — the single
  * row `SceneDrawButtons` clamps `n_disp` to when there is no room for more.
  */
-.scpanel {
-  display: flex;
-  flex-direction: column;
-  flex: 0 1 auto;
-  min-height: calc(var(--pm-panel-head-h) + var(--pm-row-h));
-  overflow-y: auto;
-  overflow-x: hidden;
-  border-top: 1px solid var(--pm-edge);
-  font-family: var(--pm-font-mono);
-  font-size: 10px;
-  color: var(--pm-text);
-}
+  .scpanel {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    min-height: calc(var(--pm-panel-head-h) + var(--pm-row-h));
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-top: 1px solid var(--pm-edge);
+    font-family: var(--pm-font-mono);
+    font-size: 10px;
+    color: var(--pm-text);
+  }
 
-/* Sticky because `.scpanel` now scrolls: the four buttons in the head are the
+  /* Sticky because `.scpanel` now scrolls: the four buttons in the head are the
    panel's only controls and must not scroll away from a squeezed panel. */
-.scpanel__head {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 4px;
-  height: var(--pm-panel-head-h);
-  padding: 0 5px;
-  background: var(--pm-panel-alt);
-  border-bottom: 1px solid var(--pm-edge);
-  color: var(--pm-text-dim);
-  user-select: none;
-}
+  .scpanel__head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 4px;
+    height: var(--pm-panel-head-h);
+    padding: 0 5px;
+    background: var(--pm-panel-alt);
+    border-bottom: 1px solid var(--pm-edge);
+    color: var(--pm-text-dim);
+    user-select: none;
+  }
 
-.scpanel__title {
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
+  .scpanel__title {
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
 
-.scpanel__spacer {
-  margin-left: auto;
-}
+  .scpanel__spacer {
+    margin-left: auto;
+  }
 
-.scpanel__btn {
-  border: 0;
-  background: var(--pm-control-idle);
-  color: var(--pm-text-bright);
-  font-family: inherit;
-  font-size: 9px;
-  padding: 1px 5px;
-  cursor: pointer;
-}
+  .scpanel__btn {
+    border: 0;
+    background: var(--pm-control-idle);
+    color: var(--pm-text-bright);
+    font-family: inherit;
+    font-size: 9px;
+    padding: 1px 5px;
+    cursor: pointer;
+  }
 
-.scpanel__btn:hover {
-  background: #5d6165;
-}
+  .scpanel__btn:hover {
+    background: #5d6165;
+  }
 
-/* --- the in-viewport buttons overlay ---------------------------------- */
+  /* --- the in-viewport buttons overlay ---------------------------------- */
 
-/* Chrome, like every child of `.scpanel` except the table: it never shrinks,
+  /* Chrome, like every child of `.scpanel` except the table: it never shrinks,
    and `.scpanel` scrolls instead. */
-.scbar {
-  display: flex;
-  flex: 0 0 auto;
-  flex-wrap: wrap;
-  gap: 1px;
-  padding: 2px 5px;
-  background: #101113;
-}
+  .scbar {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 1px;
+    padding: 2px 5px;
+    background: #101113;
+  }
 
-.scbar__empty {
-  color: #5b6167;
-  font-size: 9px;
-}
+  .scbar__empty {
+    color: #5b6167;
+    font-size: 9px;
+  }
 
-.scbar__btn {
-  border: 0;
-  padding: 1px 6px;
-  background: rgb(64 64 64);
-  color: var(--pm-text-bright);
-  font-family: inherit;
-  font-size: 9px;
-  cursor: pointer;
-}
+  .scbar__btn {
+    border: 0;
+    padding: 1px 6px;
+    background: rgb(64 64 64);
+    color: var(--pm-text-bright);
+    font-family: inherit;
+    font-size: 9px;
+    cursor: pointer;
+  }
 
-.scbar__btn.is-current {
-  background: rgb(128 128 128);
-  color: #0e0f11;
-}
+  .scbar__btn.is-current {
+    background: rgb(128 128 128);
+    color: #0e0f11;
+  }
 
-.scbar__btn:active,
-.scbar__btn.is-dragging {
-  background: rgb(179 179 179);
-  color: #0e0f11;
-}
+  .scbar__btn:active,
+  .scbar__btn.is-dragging {
+    background: rgb(179 179 179);
+    color: #0e0f11;
+  }
 
-/* --- the Scene Panel table -------------------------------------------- */
+  /* --- the Scene Panel table -------------------------------------------- */
 
-/*
+  /*
  * `flex: 1` expanded to `1 1 0%`, and this table was starved by exactly the
  * mechanism that starved the object list one level up: MEASURED in Chromium
  * with three scenes stored, `.scpanel__rows` was 70 px against a scrollHeight
@@ -130,359 +131,360 @@
  * table size itself and lets `.scpanel` do the scrolling for the whole panel,
  * so there is one scrollbar rather than a nested pair.
  */
-.scpanel__rows {
-  flex: 1 0 auto;
-  min-height: 0;
-  overflow: auto;
-}
+  .scpanel__rows {
+    flex: 1 0 auto;
+    min-height: 0;
+    overflow: auto;
+  }
 
-.scrow {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 3px 5px;
-  border-bottom: 1px solid var(--pm-edge);
-}
+  .scrow {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 3px 5px;
+    border-bottom: 1px solid var(--pm-edge);
+  }
 
-.scrow.is-current {
-  background: #22252b;
-}
+  .scrow.is-current {
+    background: #22252b;
+  }
 
-.scrow.is-selected {
-  outline: 1px solid var(--pm-accent);
-  outline-offset: -1px;
-}
+  .scrow.is-selected {
+    outline: 1px solid var(--pm-accent);
+    outline-offset: -1px;
+  }
 
-.scrow__handle {
-  border: 0;
-  background: transparent;
-  color: #5b6167;
-  cursor: grab;
-  padding: 0 2px;
-  font-size: 10px;
-}
+  .scrow__handle {
+    border: 0;
+    background: transparent;
+    color: #5b6167;
+    cursor: grab;
+    padding: 0 2px;
+    font-size: 10px;
+  }
 
-.scrow__thumb {
-  width: 74px;
-  height: 42px;
-  flex: 0 0 74px;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
+  .scrow__thumb {
+    width: 74px;
+    height: 42px;
+    flex: 0 0 74px;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
 
-.scrow__thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+  .scrow__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-.scrow__nothumb {
-  color: #3b4045;
-  font-size: 8px;
-}
+  .scrow__nothumb {
+    color: #3b4045;
+    font-size: 8px;
+  }
 
-.scrow__body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+  .scrow__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
 
-.scrow__name {
-  border: 0;
-  background: transparent;
-  color: var(--pm-text-bright);
-  font-family: inherit;
-  font-size: 10px;
-  text-align: left;
-  padding: 0;
-  cursor: pointer;
-}
+  .scrow__name {
+    border: 0;
+    background: transparent;
+    color: var(--pm-text-bright);
+    font-family: inherit;
+    font-size: 10px;
+    text-align: left;
+    padding: 0;
+    cursor: pointer;
+  }
 
-.scrow__rename,
-.scrow__message {
-  background: #101113;
-  border: 1px solid var(--pm-line);
-  color: var(--pm-text);
-  font-family: inherit;
-  font-size: 9px;
-  padding: 1px 3px;
-  width: 100%;
-}
+  .scrow__rename,
+  .scrow__message {
+    background: #101113;
+    border: 1px solid var(--pm-line);
+    color: var(--pm-text);
+    font-family: inherit;
+    font-size: 9px;
+    padding: 1px 3px;
+    width: 100%;
+  }
 
-.scrow__stores {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-}
+  .scrow__stores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
 
-.scrow__store {
-  background: #262a30;
-  color: var(--pm-text-dim);
-  font-size: 8px;
-  padding: 0 3px;
-}
+  .scrow__store {
+    background: #262a30;
+    color: var(--pm-text-dim);
+    font-size: 8px;
+    padding: 0 3px;
+  }
 
-.scrow__ops {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+  .scrow__ops {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
 
-.scrow__ops button,
-.scmenu button,
-.scpopup button {
-  border: 1px solid var(--pm-line);
-  background: var(--pm-panel-alt);
-  color: var(--pm-text);
-  font-family: inherit;
-  font-size: 9px;
-  padding: 1px 4px;
-  cursor: pointer;
-}
+  .scrow__ops button,
+  .scmenu button,
+  .scpopup button {
+    border: 1px solid var(--pm-line);
+    background: var(--pm-panel-alt);
+    color: var(--pm-text);
+    font-family: inherit;
+    font-size: 9px;
+    padding: 1px 4px;
+    cursor: pointer;
+  }
 
-.scmenu button.is-on,
-.scmenu button.has-scene {
-  background: var(--pm-accent);
-  color: #0e0f11;
-}
+  .scmenu button.is-on,
+  .scmenu button.has-scene {
+    background: var(--pm-accent);
+    color: #0e0f11;
+  }
 
-/* --- menu ------------------------------------------------------------- */
+  /* --- menu ------------------------------------------------------------- */
 
-.scmenu {
-  flex: 0 0 auto;
-  border-top: 1px solid var(--pm-edge);
-  padding: 3px 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+  .scmenu {
+    flex: 0 0 auto;
+    border-top: 1px solid var(--pm-edge);
+    padding: 3px 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
 
-.scmenu__row,
-.scmenu__sub {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  align-items: center;
-}
+  .scmenu__row,
+  .scmenu__sub {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    align-items: center;
+  }
 
-.scmenu__sub {
-  padding-left: 8px;
-  border-left: 1px solid var(--pm-line);
-}
+  .scmenu__sub {
+    padding-left: 8px;
+    border-left: 1px solid var(--pm-line);
+  }
 
-.scmenu__sub--keys button {
-  min-width: 26px;
-}
+  .scmenu__sub--keys button {
+    min-width: 26px;
+  }
 
-.scmenu__current {
-  margin-left: auto;
-  color: var(--pm-text-dim);
-  font-size: 9px;
-}
+  .scmenu__current {
+    margin-left: auto;
+    color: var(--pm-text-dim);
+    font-size: 9px;
+  }
 
-/* --- popup ------------------------------------------------------------ */
+  /* --- popup ------------------------------------------------------------ */
 
-.scpopup__scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-}
+  .scpopup__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+  }
 
-.scpopup {
-  position: absolute;
-  min-width: 130px;
-  background: var(--pm-panel);
-  border: 1px solid var(--pm-line);
-  box-shadow: 0 6px 22px rgb(0 0 0 / 60%);
-  padding: 2px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
+  .scpopup {
+    position: absolute;
+    min-width: 130px;
+    background: var(--pm-panel);
+    border: 1px solid var(--pm-line);
+    box-shadow: 0 6px 22px rgb(0 0 0 / 60%);
+    padding: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
 
-.scpopup__head {
-  padding: 2px 4px;
-  color: var(--pm-text-dim);
-  font-size: 9px;
-  text-transform: uppercase;
-}
+  .scpopup__head {
+    padding: 2px 4px;
+    color: var(--pm-text-dim);
+    font-size: 9px;
+    text-transform: uppercase;
+  }
 
-/* Inline rename validation — upstream prints to the console and reverts the
+  /* Inline rename validation — upstream prints to the console and reverts the
    cell with no visible reason (`scene_bin_gui.py:360-377`). */
 
-.scrow__renamewrap {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 2px;
-}
+  .scrow__renamewrap {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+  }
 
-.scrow__rename.is-invalid {
-  outline: 1px solid var(--error, #d9534f);
-}
+  .scrow__rename.is-invalid {
+    outline: 1px solid var(--error, #d9534f);
+  }
 
-.scrow__renameerr {
-  font-size: 10px;
-  color: var(--error, #d9534f);
-}
+  .scrow__renameerr {
+    font-size: 10px;
+    color: var(--error, #d9534f);
+  }
 
-.scpanel__hint {
-  flex: 0 0 auto;
-  margin: 2px 4px;
-  font-size: 10px;
-  color: var(--fg-dim, #9aa);
-}
+  .scpanel__hint {
+    flex: 0 0 auto;
+    margin: 2px 4px;
+    font-size: 10px;
+    color: var(--fg-dim, #9aa);
+  }
 
-/* Drag-to-reorder feedback. The handle used to be a click that moved one row
+  /* Drag-to-reorder feedback. The handle used to be a click that moved one row
    per press; `is-dropzone` marks where the release will land. */
 
-.scrow__handle.is-dragging {
-  cursor: grabbing;
-  opacity: 0.6;
-}
+  .scrow__handle.is-dragging {
+    cursor: grabbing;
+    opacity: 0.6;
+  }
 
-.scrow.is-dropzone {
-  outline: 1px dashed var(--accent, #6bf);
-}
+  .scrow.is-dropzone {
+    outline: 1px dashed var(--accent, #6bf);
+  }
 
-/* --- named camera views (`cmd.view`, 00:336) -----------------------------
+  /* --- named camera views (`cmd.view`, 00:336) -----------------------------
 
    Visually subordinate to the scene bin on purpose: a view is eighteen floats
    in a Python dict, not a scene, and the panel should not imply it carries
    colours, reps or a thumbnail. */
 
-.vwlist {
-  flex: 0 0 auto;
-  border-top: 1px solid var(--pm-line);
-  padding: 2px 0;
-}
+  .vwlist {
+    flex: 0 0 auto;
+    border-top: 1px solid var(--pm-line);
+    padding: 2px 0;
+  }
 
-.vwlist__head {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 4px;
-}
+  .vwlist__head {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 4px;
+  }
 
-.vwlist__title {
-  font-size: 10px;
-  text-transform: uppercase;
-  color: var(--pm-text-dim);
-}
+  .vwlist__title {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--pm-text-dim);
+  }
 
-.vwlist__name {
-  width: 84px;
-  font: inherit;
-  font-size: 11px;
-  background: var(--pm-bg, #111);
-  color: inherit;
-  border: 1px solid var(--pm-line);
-  padding: 1px 3px;
-}
+  .vwlist__name {
+    width: 84px;
+    font: inherit;
+    font-size: 11px;
+    background: var(--pm-bg, #111);
+    color: inherit;
+    border: 1px solid var(--pm-line);
+    padding: 1px 3px;
+  }
 
-.vwlist__name.is-invalid {
-  outline: 1px solid var(--error, #d9534f);
-}
+  .vwlist__name.is-invalid {
+    outline: 1px solid var(--error, #d9534f);
+  }
 
-.vwlist__err {
-  margin: 1px 4px;
-  font-size: 10px;
-  color: var(--error, #d9534f);
-}
+  .vwlist__err {
+    margin: 1px 4px;
+    font-size: 10px;
+    color: var(--error, #d9534f);
+  }
 
-.vwlist__rows {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  padding: 2px 4px 4px;
-}
+  .vwlist__rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 2px 4px 4px;
+  }
 
-.vwrow {
-  display: inline-flex;
-  border: 1px solid var(--pm-line);
-}
+  .vwrow {
+    display: inline-flex;
+    border: 1px solid var(--pm-line);
+  }
 
-.vwrow__name,
-.vwrow__del {
-  font: inherit;
-  font-size: 11px;
-  background: transparent;
-  color: inherit;
-  border: 0;
-  padding: 1px 5px;
-  cursor: pointer;
-}
+  .vwrow__name,
+  .vwrow__del {
+    font: inherit;
+    font-size: 11px;
+    background: transparent;
+    color: inherit;
+    border: 0;
+    padding: 1px 5px;
+    cursor: pointer;
+  }
 
-.vwrow__del {
-  border-left: 1px solid var(--pm-line);
-  color: var(--pm-text-dim);
-}
+  .vwrow__del {
+    border-left: 1px solid var(--pm-line);
+    color: var(--pm-text-dim);
+  }
 
-.vwrow__name:hover,
-.vwrow__del:hover {
-  background: var(--pm-hover, #2a2a2a);
-}
+  .vwrow__name:hover,
+  .vwrow__del:hover {
+    background: var(--pm-hover, #2a2a2a);
+  }
 
-/* The Scene menu's `Buttons` check item (`_gui.py:801`). */
-.scmenu__check {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: var(--fg-dim, #9aa3ad);
-  white-space: nowrap;
-}
+  /* The Scene menu's `Buttons` check item (`_gui.py:801`). */
+  .scmenu__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--fg-dim, #9aa3ad);
+    white-space: nowrap;
+  }
 
-/* --- the ported button geometry (`sceneButtonGeometry.ts`) --------------- *
+  /* --- the ported button geometry (`sceneButtonGeometry.ts`) --------------- *
  *
  * `.scbar--laid` is the strip once the engine has told us the block it lays
  * out in: buttons are positioned and sized by `SceneDrawButtons`' arithmetic
  * (8-dip cells, `internal_gui_control_size` rows) instead of by flex, so the
  * strip is as wide as PyMOL would draw it and cuts names in the same place.
  */
-.scbar--laid {
-  position: relative;
-  display: block;
-  padding: 0;
-  overflow: hidden;
-  /* `.scpanel` is a flex COLUMN, so the inline `height` the component computes
+  .scbar--laid {
+    position: relative;
+    display: block;
+    padding: 0;
+    overflow: hidden;
+    /* `.scpanel` is a flex COLUMN, so the inline `height` the component computes
      is only a flex-basis: the default `flex-shrink: 1` squashed this strip to
      nothing whenever the panel was short, and `overflow: hidden` then clipped
      away buttons that still reported a full bounding box. Result: the scene
      buttons were invisible and every click on one was silently taken by
      whatever the strip had collapsed on top of. */
-  flex: 0 0 auto;
-}
+    flex: 0 0 auto;
+  }
 
-.scbar--laid .scbar__btn {
-  padding: 0 3px;
-  line-height: 1;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-}
+  .scbar--laid .scbar__btn {
+    padding: 0 3px;
+    line-height: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+  }
 
-.scbar__btn.is-truncated {
-  /* PyMOL simply stops drawing characters; the cue that it did is ours. */
-  border-right: 1px dotted #8a8f95;
-}
+  .scbar__btn.is-truncated {
+    /* PyMOL simply stops drawing characters; the cue that it did is ours. */
+    border-right: 1px dotted #8a8f95;
+  }
 
-.scbar__scroll {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 1px;
-  background: #17181b;
-}
+  .scbar__scroll {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 1px;
+    background: #17181b;
+  }
 
-.scbar__thumb {
-  position: absolute;
-  left: 1px;
-  right: 1px;
-  min-height: 4px;
-  background: rgb(128 128 128);
+  .scbar__thumb {
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    min-height: 4px;
+    background: rgb(128 128 128);
+  }
 }

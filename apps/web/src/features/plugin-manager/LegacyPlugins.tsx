@@ -18,6 +18,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { Button } from '../../ui';
 import { useSession } from '../../app';
 import {
   ensureRegistry,
@@ -70,13 +71,13 @@ export function LegacyPlugins() {
 
   return (
     <div className="plugmgr__body">
-      <div className="plugmgr__legacyhead">
+      <div className="plugmgr__legacyhead modern:text-pm-text-dim">
         <span data-legacy-count="">
           {loading ? 'reading the registry…' : `${leaves} menu item${leaves === 1 ? '' : 's'}`}
         </span>
-        <button type="button" className="plugmgr__btn" onClick={() => void refresh()}>
+        <Button className="plugmgr__btn" onClick={() => void refresh()}>
           reread
-        </button>
+        </Button>
       </div>
 
       {error !== null && (
@@ -93,19 +94,18 @@ export function LegacyPlugins() {
             style={row.depth > 0 ? { paddingLeft: row.depth * 14 } : undefined}
           >
             {row.kind === 'separator' ? (
-              <hr className="plugmgr__legacysep" />
+              <hr className="plugmgr__legacysep modern:border-line" />
             ) : row.clickable ? (
-              <button
-                type="button"
+              <Button
                 className="plugmgr__legacyleaf"
                 data-legacy-leaf={`${row.menuKey}:${row.index}`}
                 title={`${row.menuKey} → ${row.label}`}
                 onClick={() => void click(row.menuKey, row.index, row.label)}
               >
                 {row.label}
-              </button>
+              </Button>
             ) : (
-              <span className="plugmgr__legacymenu">{row.label}</span>
+              <span className="plugmgr__legacymenu modern:text-pm-text-bright">{row.label}</span>
             )}
           </li>
         ))}
@@ -118,7 +118,7 @@ export function LegacyPlugins() {
 
       {last !== null && (
         <div
-          className={`plugmgr__legacyresult${last.ok ? '' : ' is-error'}`}
+          className={`plugmgr__legacyresult modern:rounded-md modern:border modern:border-line modern:bg-pm-panel-alt${last.ok ? ' modern:text-pm-text-dim' : ' is-error modern:text-danger'}`}
           data-legacy-result=""
           role="status"
         >
@@ -135,10 +135,10 @@ export function LegacyPlugins() {
 
       <p className="plugmgr__note">
         This is the registry <code>pymol.plugins.addmenuitem</code> writes into. The bridge stands
-        in as <code>pymol._ext_gui</code> and drives PyMOL&rsquo;s own{' '}
-        <code>PmwMenuBar</code> over a recording menu dict, so the semantics are upstream&rsquo;s:
-        a <code>|</code> in the label makes a submenu, a bare <code>-</code> makes a separator, and
-        re-registering an existing submenu is a no-op.
+        in as <code>pymol._ext_gui</code> and drives PyMOL&rsquo;s own <code>PmwMenuBar</code> over
+        a recording menu dict, so the semantics are upstream&rsquo;s: a <code>|</code> in the label
+        makes a submenu, a bare <code>-</code> makes a separator, and re-registering an existing
+        submenu is a no-op.
       </p>
       <p className="plugmgr__note">
         <code>plugins.addmenuitemqt</code> is refused (<code>HAVE_QT</code> stays false). A plugin

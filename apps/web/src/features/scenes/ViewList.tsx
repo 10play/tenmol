@@ -12,6 +12,7 @@
  */
 
 import { useState } from 'react';
+import { Button, TextInput } from '../../ui';
 import { useViews } from './useViews';
 import { viewActions, viewNameProblem } from './viewActions';
 
@@ -38,7 +39,7 @@ export function ViewList() {
         <span className="vwlist__title">Views</span>
         <span className="scpanel__count">{names.length}</span>
         <span className="scpanel__spacer" />
-        <input
+        <TextInput
           className={`vwlist__name${problem ? ' is-invalid' : ''}`}
           value={draft}
           placeholder="name"
@@ -53,30 +54,27 @@ export function ViewList() {
             if (event.key === 'Enter') store();
           }}
         />
-        <button
-          type="button"
+        <Button
           className="scpanel__btn"
           title='cmd.view(name, "store") — overwrites, because "update" is dead code'
           onClick={store}
         >
           store
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           className="scpanel__btn"
           title='cmd.view("*", "clear")'
           onClick={() => void run(viewActions.clearAll())}
         >
           clear all
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           className="scpanel__btn"
           title="re-read the view list"
           onClick={() => void refresh()}
         >
           ↻
-        </button>
+        </Button>
       </div>
 
       {problem !== null && (
@@ -91,11 +89,12 @@ export function ViewList() {
       )}
 
       <div className="vwlist__rows" role="list">
-        {names.length === 0 && <span className="scbar__empty">no views</span>}
+        {names.length === 0 && (
+          <span className="scbar__empty modern:text-pm-text-dim">no views</span>
+        )}
         {names.map((name) => (
           <span className="vwrow" key={name} role="listitem">
-            <button
-              type="button"
+            <Button
               className="vwrow__name"
               title={`cmd.view("${name}", "recall") — ctrl-click for no animation`}
               onClick={(event) =>
@@ -107,16 +106,15 @@ export function ViewList() {
               }
             >
               {name}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className="vwrow__del"
               aria-label={`delete view ${name}`}
               title={`cmd.view("${name}", "clear")`}
               onClick={() => void run(viewActions.clear(name))}
             >
               ×
-            </button>
+            </Button>
           </span>
         ))}
       </div>

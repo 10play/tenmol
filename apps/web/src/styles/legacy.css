@@ -1,0 +1,22 @@
+/*
+ * The "legacy" cascade layer — all of PyMOL's faithful classic styling.
+ *
+ * THE KEY TO A TAILWIND-FIRST MODERN THEME. CSS says unlayered rules always beat
+ * layered ones, and the classic stylesheets are unlayered, so Tailwind utilities
+ * (which live in `@layer utilities`) could never override them. By importing the
+ * classic CSS into this low `legacy` layer, the modern theme can style components
+ * with plain Tailwind utility classes and WIN — no per-element overrides, no
+ * specificity war.
+ *
+ * Classic is unaffected: its elements carry NO Tailwind utilities (those are
+ * added only under the modern theme), so within this layer every original rule
+ * applies exactly as before, in the same order. The whole classic look is one
+ * self-contained layer.
+ *
+ * The layer order is declared here (legacy first = lowest priority); Tailwind's
+ * own `theme / base / components / utilities` layers follow and therefore win.
+ */
+@layer legacy, theme, base, components, utilities;
+
+@import './global.css' layer(legacy);
+@import '../shell/shell.css' layer(legacy);
