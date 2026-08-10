@@ -1158,14 +1158,25 @@ class TestPngMatrix:
         viewport = ws.call("cmd.get_viewport")
         rendered = str(tmp_path / "rendered.png")
         ws.call("cmd.png", rendered, 320, 240, -1, 0, 1)
-        # NB: do NOT pump_frames here -- the render loop stores a prior image,
-        # which would make the strict ``prior=1`` call below succeed instead of
-        # raising "no prior image available".  The cmd.png call already finished.
+        # NB: do NOT pump_frames here -- ``cmd.png`` without ``prior`` renders
+        # inside ``_call_with_opengl_context`` and does not keep the result, so
+        # on a quiet engine the strict ``prior=1`` call below raises "no prior
+        # image available".  The catch is that the pump's render loop
+        # (``p.idle(); p.draw()``) runs on its OWN thread, continuously: a
+        # single tick landing between this reply and the strict call re-stores a
+        # prior image and makes ``prior=1`` succeed instead.  The client cannot
+        # stop the engine ticking between two calls, so which outcome we get is
+        # a race on runner load -- it flaked "ok" on the GitHub macOS box under
+        # TENMOL_TEST_SLOW=3.  Both are correct engine states; the contract the
+        # client actually depends on is only that ``prior=1`` is NOT a reliable
+        # way to re-save a bare ``cmd.png`` render, so accept either outcome and,
+        # when it does raise, pin it to the documented reason.
         assert (_png_info(rendered)["w"], _png_info(rendered)["h"]) == (320, 240)
 
         strict = ws.call_reply("cmd.png", str(tmp_path / "strict.png"), 0, 0, -1, 0, 1, 1)
-        assert strict["t"] == "err", strict
-        assert "no prior image available" in str(strict["error"]["message"])
+        assert strict["t"] in ("ok", "err"), strict
+        if strict["t"] == "err":
+            assert "no prior image available" in str(strict["error"]["message"])
 
         forgiving = str(tmp_path / "forgiving.png")
         assert ws.call_reply("cmd.png", forgiving, 0, 0, -1, 0, 1, -1)["t"] == "ok"
