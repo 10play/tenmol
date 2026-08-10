@@ -1,0 +1,47 @@
+# Visual + performance regression for the in-browser TS renderer.
+#
+# Runs bridge-free on ubuntu: the `?backend=local` engine needs no PyMOL, and the
+# render-only harness paints with swiftshader WebGL in headless Chromium. Gates
+# the TS-vs-golden self-regression (strict); the TS-vs-PyMOL similarity % and the
+# perf frame-times are reported as informational (GPU-less CI perf is noisy).
+name: webclient-visual
+
+on:
+  push:
+    branches: [master, web-client, "wp-*"]
+  pull_request:
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  visual:
+    name: visual + perf (TS renderer, no bridge)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # The bridge-free suite needs only the headless-shell (software WebGL).
+      - name: install chromium-headless-shell
+        run: node node_modules/playwright-core/cli.js install chromium-headless-shell
+
+      - name: visual regression (TS vs committed goldens; PyMOL similarity report)
+        run: node apps/web/e2e/visual.e2e.mjs
+
+      - name: performance report (informational)
+        run: node apps/web/e2e/perf.e2e.mjs || true
+
+      - name: upload render diffs + perf report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-output
+          path: apps/web/e2e/output/
+          retention-days: 14

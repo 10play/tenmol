@@ -32,6 +32,8 @@ interface RenderReady {
   ok: boolean;
   err: string | null;
   scene: string;
+  /** ms from scene start to render-settled — the geometry build + first paint cost. */
+  buildMs: number;
   stats: unknown;
 }
 
@@ -147,13 +149,22 @@ export function RenderStage(): React.JSX.Element {
 
     const id = renderSceneId();
     const scene = sceneById(id);
+    const t0 = performance.now();
     if (!scene) {
-      setReady({ ok: false, err: `unknown scene '${id}'`, scene: id, stats: viewport.stats });
+      setReady({ ok: false, err: `unknown scene '${id}'`, scene: id, buildMs: 0, stats: viewport.stats });
     } else {
       runScene(session, viewport, scene, remote)
-        .then(() => setReady({ ok: true, err: null, scene: id, stats: viewport.stats }))
+        .then(() =>
+          setReady({ ok: true, err: null, scene: id, buildMs: performance.now() - t0, stats: viewport.stats }),
+        )
         .catch((e: unknown) =>
-          setReady({ ok: false, err: e instanceof Error ? e.message : String(e), scene: id, stats: viewport.stats }),
+          setReady({
+            ok: false,
+            err: e instanceof Error ? e.message : String(e),
+            scene: id,
+            buildMs: performance.now() - t0,
+            stats: viewport.stats,
+          }),
         );
     }
 
