@@ -421,7 +421,14 @@ jobs:
             -k 'not benchmark' \
             --junitxml="$RUNNER_TEMP/pytest-bridge-1.xml"
 
+      # `if: success() || failure()` so a failure in part 1 does not skip part
+      # 2: the single-invocation suite this replaced let every file run and
+      # report regardless of earlier failures (pytest continues past a failing
+      # test), and the split must preserve that -- otherwise one failing
+      # protocol test hides the pass/fail status of the entire second half.
+      # (`|| failure()` still skips part 2 on cancellation, unlike `always()`.)
       - name: bridge pytest suite (part 2 - workflow)
+        if: success() || failure()
         run: |
           set -euo pipefail
           test -d packages/bridge/tests || {

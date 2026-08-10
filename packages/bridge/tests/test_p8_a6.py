@@ -1150,9 +1150,14 @@ class TestPngMatrix:
 
         ``cmd.png`` without ``prior`` renders inside
         ``_call_with_opengl_context`` (``exporting.py:602``) and does not keep
-        the result, so a following ``prior=1`` raises "no prior image
-        available" -- unlike after ``draw``, above.  ``prior=-1`` is the
-        forgiving form: it falls back to rendering, at the VIEWPORT size.
+        the result, so on a quiet engine a following ``prior=1`` raises "no
+        prior image available" -- unlike after ``draw``, above.  The catch is a
+        race: the background render loop can tick between the two calls and
+        re-store a prior image, so ``prior=1`` may instead succeed.  Both are
+        correct engine states (see the note below the first call); the contract
+        the client depends on is only that ``prior=1`` is NOT a reliable way to
+        re-save a bare render.  ``prior=-1`` is the forgiving form: it falls
+        back to rendering, at the VIEWPORT size.
         """
         ws = image_scene
         viewport = ws.call("cmd.get_viewport")
