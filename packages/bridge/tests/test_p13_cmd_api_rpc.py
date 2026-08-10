@@ -59,9 +59,12 @@ def loaded(ws: WSClient):
 
 
 def feedback_line(bridge, tag: str) -> str:
-    lines = bridge.wait_for_feedback(tag, timeout=8.0)
+    from conftest import slow_factor
+    def _is_result(line: str) -> bool:
+        return tag in line and "print(" not in line and "def " not in line
+    lines = bridge.wait_for_feedback(tag, timeout=8.0 * slow_factor(), where=_is_result)
     for line in lines:
-        if tag in line and "print(" not in line and "def " not in line:
+        if _is_result(line):
             return line
     raise AssertionError("no %s line in %r" % (tag, lines[-6:]))
 

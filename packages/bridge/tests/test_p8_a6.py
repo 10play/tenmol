@@ -1158,7 +1158,9 @@ class TestPngMatrix:
         viewport = ws.call("cmd.get_viewport")
         rendered = str(tmp_path / "rendered.png")
         ws.call("cmd.png", rendered, 320, 240, -1, 0, 1)
-        ws.pump_frames(1.0)
+        # NB: do NOT pump_frames here -- the render loop stores a prior image,
+        # which would make the strict ``prior=1`` call below succeed instead of
+        # raising "no prior image available".  The cmd.png call already finished.
         assert (_png_info(rendered)["w"], _png_info(rendered)["h"]) == (320, 240)
 
         strict = ws.call_reply("cmd.png", str(tmp_path / "strict.png"), 0, 0, -1, 0, 1, 1)
