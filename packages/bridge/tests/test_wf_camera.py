@@ -564,8 +564,15 @@ def test_star_lists_sorted_and_star_clear_empties(cam: WSClient, bridge) -> None
 
     before = len(bridge.feedback_lines())
     cam.call("cmd.view", "*")
-    time.sleep(0.3)
-    tail = bridge.feedback_lines()[before:]
+    # Use a polling loop instead of a fixed sleep — feedback lines are produced
+    # asynchronously and 0.3 s is not always enough on a loaded CI runner.
+    deadline = time.monotonic() + 5.0
+    tail: list[str] = []
+    while time.monotonic() < deadline:
+        tail = bridge.feedback_lines()[before:]
+        if any("view: stored views:" in line for line in tail):
+            break
+        time.sleep(0.05)
     assert any("view: stored views:" in line for line in tail), tail
     # `parsing.dump_str_list` lays the names out in columns, two leading spaces
     # and a trailing one -- this is the only listing the API offers.
