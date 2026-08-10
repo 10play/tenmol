@@ -24,6 +24,11 @@ interface Rect {
   height: number;
 }
 
+/**
+ * A DOM overlay that draws atom labels as absolutely-positioned `<span>`s over
+ * the WebGL canvas, reprojected to screen space for the current camera. Owns its
+ * span pool and is driven by the viewport's render loop.
+ */
 export interface LabelOverlay {
   /** Replace the label set. */
   set(labels: readonly LabelPoint[]): void;
@@ -39,6 +44,7 @@ const SPAN_CSS =
   'color:#fff;font:11px ui-monospace,Menlo,monospace;white-space:nowrap;' +
   'text-shadow:0 0 3px #000,0 0 3px #000,0 0 3px #000;pointer-events:none;user-select:none;';
 
+/** Create a {@link LabelOverlay} that appends its label spans to `overlay`. */
 export function createLabelOverlay(overlay: HTMLElement): LabelOverlay {
   const doc = overlay.ownerDocument;
   const spans: HTMLSpanElement[] = [];

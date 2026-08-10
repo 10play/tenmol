@@ -116,6 +116,11 @@ async function runScene(
   await settle(viewport, remote);
 }
 
+/**
+ * The render-only harness component: mounts one WebGL viewport (no UI), runs the
+ * corpus scene named by the query string, and signals `window.__tenmolRenderReady`
+ * when the render has settled. Lazy-loaded by {@link App} on `?render=1`.
+ */
 export function RenderStage(): React.JSX.Element {
   const session = useSession();
   const hostRef = useRef<HTMLDivElement>(null);
