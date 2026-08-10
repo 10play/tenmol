@@ -1,0 +1,87 @@
+# Publish the modern web UI to GitHub Pages.
+#
+# Pages is static hosting: there is no PyMOL bridge to connect to. That is fine
+# here because the app ships a second, fully in-browser engine -- the TypeScript
+# port in packages/engine-ts (`LocalBackend`). `resolveBackendKind()` in
+# apps/web/src/app/config.ts already defaults to 'local', and this build pins
+# VITE_TENMOL_BACKEND=local so the deployed site never tries to reach a bridge.
+# The result is a live, self-contained tenmol running the TS engine backend.
+#
+# The site is served from a project sub-path (https://<org>.github.io/tenmol/),
+# so the build sets VITE_BASE_PATH=/tenmol/ to emit sub-path-relative asset URLs.
+#
+# One-time setup: repo Settings -> Pages -> Build and deployment -> Source:
+# "GitHub Actions". No secrets required.
+name: pages
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+# Allow the deploy job to publish to Pages via OIDC.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One live deployment at a time; don't cancel an in-flight publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  build:
+    name: build the web app
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      # No `version:` input: package.json's "packageManager" field is the
+      # single source of truth and pnpm/action-setup@v4 reads it.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (local TS engine, /tenmol/ base path)
+        run: pnpm --filter @tenmol/web build
+        env:
+          VITE_BASE_PATH: /tenmol/
+          VITE_TENMOL_BACKEND: local
+
+      # Serve index.html for unknown paths too, so a deep link or refresh does
+      # not 404 on the static host.
+      - name: SPA fallback
+        run: cp apps/web/dist/index.html apps/web/dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    name: deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
