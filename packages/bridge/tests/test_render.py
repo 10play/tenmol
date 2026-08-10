@@ -636,7 +636,18 @@ def test_motion_uses_jpeg_and_settling_upgrades_to_lossless_png(render, gl_bridg
             gl_bridge.pump.call(lambda e: e.cmd.turn("y", 2), timeout=30)
             if len(sink.frames) > start:
                 render.stream.ack(sink, sink.headers()[-1]["frameId"])
-        settle(gl_bridge, 0.1)
+        # The 0.1 s floor here is exactly settle_ms — on a slow software-GL runner
+        # a single dirty tick can take >100 ms, so the motion frame might not land
+        # in sink before the settle still fires.  Also, a render failure in a prior
+        # test sets a 1 s error-backoff that makes the 100 ms window completely dark.
+        # Poll with a deadline scaled by TENMOL_TEST_SLOW (3× on CI) so the wait
+        # is proportional to the runner's speed.
+        _slow = max(1.0, float(os.environ.get("TENMOL_TEST_SLOW", "1")))
+        _motion_deadline = time.monotonic() + _slow * 1.5
+        while time.monotonic() < _motion_deadline:
+            if any(not h["lossless"] for h in sink.headers()[start:]):
+                break
+            gl_bridge.pump.pump_for(0.05)
         moving = [h for h in sink.headers()[start:] if not h["lossless"]]
         assert moving, "no lossy frame during motion"
         assert all(h["encoding"] == "jpeg" for h in moving)
