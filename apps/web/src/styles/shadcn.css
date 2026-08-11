@@ -259,12 +259,20 @@
 :root[data-ui-theme='shadcn'] .menubar {
   background: transparent;
   position: relative;
+  /* Float the bar as a rounded card on the gradient stage (see §16). */
+  height: 38px;
+  margin: 10px 10px 0;
+  border: 1px solid var(--sh-line-strong);
+  border-radius: var(--sh-r-panel);
+  box-shadow: var(--sh-shadow-card);
+  padding: 0 8px;
 }
 :root[data-ui-theme='shadcn'] .menubar::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
+  border-radius: inherit;
   background: var(--sh-panel-frost);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
@@ -720,4 +728,67 @@
 :root[data-ui-theme='shadcn'] .scpanel {
   flex: 0 0 auto;
   overflow: visible;
+}
+
+/* ================================================================== */
+/* 16. MODERN SHELL — floating cards on the gradient stage.            */
+/*                                                                     */
+/* The classic layout is PyMOL's flush Ortho geometry; the modern      */
+/* theme lifts each region into a rounded, shadowed card with the      */
+/* --sh-app-bg stage showing between them (the design the app is tuned */
+/* for). These are PURELY COSMETIC insets: the 3-D viewport maps        */
+/* pointer coords from its own bounding rect and the shell keeps        */
+/* PyMOL's internal_gui at 0, so the scene rectangle is unaffected —    */
+/* nothing here changes what the engine is told, only where the DOM     */
+/* boxes sit. Classic (no data-ui-theme) is untouched.                  */
+/* ================================================================== */
+
+/* Reveal the stage: the row that holds the viewport + column must not
+   paint a flat fill over the .shell gradient (it carries the legacy
+   `--pm-bg-viewport` and, in modern, a `bg-pm-bg` utility — both cleared
+   here), and it insets its children so the gradient shows around them. */
+:root[data-ui-theme='shadcn'] .shell__main {
+  background: transparent;
+  padding: 10px;
+  gap: 10px;
+}
+
+/* The 3-D canvas floats as a rounded card (its dark fill + overflow:hidden
+   come from shell.css; we only round + lift it). */
+:root[data-ui-theme='shadcn'] .shell__viewport {
+  border-radius: var(--sh-r-panel);
+  box-shadow: var(--sh-shadow-card);
+}
+
+/* The right internal-gui column floats as a card. It keeps its own
+   overflow-y:auto (rounded corners clip the scroll content); the legacy
+   left border is dropped in favour of a full hairline. */
+:root[data-ui-theme='shadcn'] .internal-gui {
+  border: 1px solid var(--sh-line-strong);
+  border-left: 1px solid var(--sh-line-strong);
+  border-radius: var(--sh-r-panel);
+  box-shadow: var(--sh-shadow-card);
+}
+
+/* The docked console (bottom/side) floats above the status bar. AppShell
+   pins it flush when docked (`rounded-none/border-0/shadow-none`); this
+   unlayered rule overrides those utilities to give it the card treatment.
+   The floating form already gets its own card in AppShell. */
+:root[data-ui-theme='shadcn'] .extgui:not(.extgui--float) {
+  margin: 0 10px 8px;
+  border: 1px solid var(--sh-line-strong);
+  border-radius: var(--sh-r-panel);
+  box-shadow: var(--sh-shadow-card);
+  overflow: hidden;
+}
+
+/* Between two floating cards the gutter's centered hairline reads as clutter;
+   the gap itself is the seam. Show the accent line only while resizing/hover. */
+:root[data-ui-theme='shadcn'] .splitter--v::after,
+:root[data-ui-theme='shadcn'] .splitter--h::after {
+  opacity: 0;
+}
+:root[data-ui-theme='shadcn'] .splitter--v:hover::after,
+:root[data-ui-theme='shadcn'] .splitter--h:hover::after {
+  opacity: 1;
 }

@@ -73,12 +73,19 @@ function persist(key: string, value: string): void {
   }
 }
 
-/** URL param > localStorage > 'classic'. */
+/**
+ * URL param > localStorage > 'shadcn'.
+ *
+ * The app now BOOTS in the modern theme — it is the product look. Classic stays
+ * one toolbar click (or `?theme=classic`) away, and remains the NO-PROVIDER
+ * context default below so the ~140 class-name-pinned tests keep exercising the
+ * pixel-exact PyMOL passthrough DOM. Only the running app's resolved default moves.
+ */
 function readInitialTheme(): UiTheme {
   const p = param('theme');
   if (isTheme(p)) return p;
   const s = stored(THEME_KEY);
-  return isTheme(s) ? s : 'classic';
+  return isTheme(s) ? s : 'shadcn';
 }
 
 /** URL param > localStorage > prefers-color-scheme > 'dark'. */
