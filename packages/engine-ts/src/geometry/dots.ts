@@ -139,11 +139,12 @@ export const buildDotsFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
   }
 
   // Sample every flagged atom's sphere; keep only points outside every OTHER
-  // atom's sphere (the exposed molecular dot surface). `CULL_BIAS` widens each
-  // neighbour's cull radius by ~sqrt(1.2)≈0.55 Å², trimming the dots that pile up
-  // deep in the crevices where two atoms nearly touch (those seam dots are
-  // shaded near-black at grazing angles and only muddy the speckle) — this tracks
-  // real PyMOL's cleaner surface far more closely than a raw vdw cull does.
+  // atom's sphere (the exposed molecular dot surface). `CULL_BIAS` is added to the
+  // neighbour's squared radius in the buried test (`d² < rⱼ² + CULL_BIAS`), so the
+  // effective cull radius grows from rⱼ to √(rⱼ²+1.2) — about +0.2 Å at a typical
+  // rⱼ≈3 Å. That trims the dots that pile up deep in the crevices where two atoms
+  // nearly touch (those seam dots shade near-black at grazing angles and only muddy
+  // the speckle) — tracking real PyMOL's cleaner surface better than a raw vdw cull.
   const CULL_BIAS = 1.2;
   const verts: number[] = [];
   const atomIds: number[] = [];

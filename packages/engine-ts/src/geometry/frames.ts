@@ -27,8 +27,9 @@ import { repBit } from '../model/atom';
 import type { ObjectMolecule } from '../model/molecule';
 import { rgbForIndex } from '../exec/color';
 
-/** PyMOL `stick_h_scale` default: bonds to hydrogen draw at 0.4x stick_radius. */
-const STICK_H_SCALE = 0.3;
+/** PyMOL `stick_h_scale` default (`SettingInfo.h:705`): bonds to hydrogen draw at
+ * 0.4x stick_radius. */
+const STICK_H_SCALE = 0.4;
 
 /**
  * True when an atom is hydrogen (or deuterium).

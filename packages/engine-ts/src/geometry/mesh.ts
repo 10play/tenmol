@@ -27,17 +27,13 @@ const PLACEHOLDER: BufferRef = { byteOffset: 0, byteLength: 0, dtype: 'f32', ite
  */
 export const buildMeshFrame: RepBuilder = ({ mol, state, seq, getSettingFloat }) => {
   const probe = getSettingFloat('solvent_radius') || DEFAULT_PROBE;
-  // PyMOL's `mesh` is a clean, coarse wireframe over a SMOOTHED solvent-excluded
-  // surface. Our default (fine spacing, no smoothing) yields a dense triangular
-  // noise that reads nothing like it. Coarsen the marching-cubes grid so the
-  // line density matches PyMOL, and run the same Taubin smoothing the filled
-  // `surface` rep uses so the wire follows a smooth blob instead of grid facets.
-  // PyMOL's `mesh` is a FINE net, not a coarse one — many small quads follow a
-  // smooth solvent-excluded blob. A very coarse grid (spacing 3.0) reads as a
-  // sparse polygon cage nothing like it. Use a moderately fine grid so the line
-  // DENSITY matches, and run the SAME field-blur + Taubin smoothing the filled
-  // `surface` rep uses so the wire follows the fused blob (not separated per-atom
-  // bumps). Longest-edge (diagonal) dropping below then leaves PyMOL's tidy net.
+  // PyMOL's `mesh` is a FINE net over a SMOOTHED solvent-excluded blob — many
+  // small quads, not a sparse polygon cage. A very coarse grid (spacing ~3.0)
+  // reads as that cage; a raw fine grid with no smoothing reads as dense triangular
+  // noise. Use a moderately fine grid so the line DENSITY matches PyMOL, and run
+  // the SAME field-blur + Taubin smoothing the filled `surface` rep uses so the
+  // wire follows the fused blob (not separated per-atom bumps). Dropping each
+  // triangle's longest edge (the diagonal) below then leaves PyMOL's tidy net.
   let surf = generateSurface(mol, state, repBit(Rep.Mesh), {
     probe,
     spacing: 2.2,
