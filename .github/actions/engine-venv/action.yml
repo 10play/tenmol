@@ -61,11 +61,21 @@ runs:
         echo "python-bin=$(command -v python)" >> "$GITHUB_OUTPUT"
         echo "python $full at $(command -v python)"
 
+    - name: cache homebrew downloads
+      uses: actions/cache@v4
+      with:
+        path: ~/Library/Caches/Homebrew
+        key: brew-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-epoch }}-cmake-libpng-freetype-glew-glm-netcdf-msgpack-cxx-libxml2
+        restore-keys: |
+          brew-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-epoch }}-
+
     # The set scripts/bootstrap.sh requires; it dies listing anything missing.
     # catch2 is deliberately absent: only --testing=true needs it, and brew
     # ships v3 while layerCTest wants v2.
     - name: native deps (Homebrew)
       shell: bash
+      env:
+        HOMEBREW_NO_AUTO_UPDATE: "1"
       run: |
         brew install cmake libpng freetype glew glm netcdf msgpack-cxx libxml2
         brew list --versions cmake libpng freetype glew glm netcdf msgpack-cxx libxml2

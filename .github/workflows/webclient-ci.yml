@@ -58,17 +58,11 @@ jobs:
   # whose failure is ignored is decoration.
   # -------------------------------------------------------------------------
   static:
-    name: lint / typecheck / build / unit / linters
+    name: lint / typecheck / build / unit / engine-parity
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v6
-        with:
-          # scripts/ownership.mjs --base needs a merge-base with the target
-          # branch, and the default shallow checkout has neither the base ref
-          # nor common history. fetch-depth: 0 makes actions/checkout use the
-          # all-branches refspec.
-          fetch-depth: 0
 
       # No `version:` input: package.json's "packageManager" field is the
       # single source of truth and pnpm/action-setup@v4 reads it. Two pinned
@@ -134,6 +128,52 @@ jobs:
       # files. See scripts/test-floor.mjs.
       - run: pnpm test:ci
 
+      # ---- gate: engine parity (differential equivalence) -----------------
+      #
+      # Proves the TypeScript engine (@tenmol/engine-ts) is identical to real
+      # PyMOL over the ported command slice. This Linux job needs no PyMOL, so it
+      # runs only the OFFLINE tiers -- fixture, generative and contract. The LIVE
+      # diff against a real bridge (tools/parity/test/live.test.ts) self-skips
+      # here because TENMOL_PARITY_REMOTE is unset; it runs in the ONE job with a
+      # PyMOL bridge -- webclient-e2e.yml's "engine parity -- live differential"
+      # step, which sets TENMOL_PARITY_REMOTE and gates on the result.
+      # See docs/engine-port.md.
+      - name: engine parity (differential)
+        run: node scripts/parity-engine.mjs
+
+  # -------------------------------------------------------------------------
+  # Repo linters, split out of `static` to run in parallel.
+  #
+  # Every step here reads source files and docs -- none of them consume the
+  # compiled JS that `static` produces (build/test:ci), so they do not need to
+  # wait for lint/typecheck/build/tests. Running them as their own job shortens
+  # the critical path without dropping or weakening any gate.
+  # -------------------------------------------------------------------------
+  linters:
+    name: repo linters
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # scripts/ownership.mjs --base needs a merge-base with the target
+          # branch, and the default shallow checkout has neither the base ref
+          # nor common history. fetch-depth: 0 makes actions/checkout use the
+          # all-branches refspec.
+          fetch-depth: 0
+
+      # No `version:` input: package.json's "packageManager" field is the
+      # single source of truth and pnpm/action-setup@v4 reads it. Two pinned
+      # versions drift.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
       # ---- gate: parity scoreboard ----------------------------------------
       #
       # `node scripts/parity.mjs` on its own ALWAYS exits 0 -- it only prints.
@@ -152,23 +192,10 @@ jobs:
       #
       # The backlog burndown (docs/parity-dashboard.md): real vs. total PyMOL
       # cmd symbols, and reps built. The measurement + ratchet floors live in
-      # packages/engine-ts/test/coverage.test.ts, so `pnpm test:ci` above
-      # already enforces them; this step prints the scoreboard for visibility.
+      # packages/engine-ts/test/coverage.test.ts, so `pnpm test:ci` already
+      # enforces them; this step prints the scoreboard for visibility.
       - name: coverage scoreboard
         run: node scripts/coverage.mjs
-
-      # ---- gate: engine parity (differential equivalence) -----------------
-      #
-      # Proves the TypeScript engine (@tenmol/engine-ts) is identical to real
-      # PyMOL over the ported command slice. This Linux job needs no PyMOL, so it
-      # runs only the OFFLINE tiers -- fixture, generative and contract. The LIVE
-      # diff against a real bridge (tools/parity/test/live.test.ts) self-skips
-      # here because TENMOL_PARITY_REMOTE is unset; it runs in the ONE job with a
-      # PyMOL bridge -- webclient-e2e.yml's "engine parity -- live differential"
-      # step, which sets TENMOL_PARITY_REMOTE and gates on the result.
-      # See docs/engine-port.md.
-      - name: engine parity (differential)
-        run: node scripts/parity-engine.mjs
 
       # ---- gate: drain lint -----------------------------------------------
       #
@@ -270,7 +297,7 @@ jobs:
   # packages/bridge/.venv and the bridge's pytest suite runs against it.
   # -------------------------------------------------------------------------
   bootstrap-macos:
-    name: bootstrap + bridge (macOS)
+    name: bootstrap (macOS)
     runs-on: macos-15
     timeout-minutes: 60
     steps:
@@ -374,6 +401,80 @@ jobs:
         continue-on-error: true
         run: node scripts/doctor.mjs
 
+  # -------------------------------------------------------------------------
+  # Bridge pytest, part 1 of 2 -- the heavy protocol tests (test_p*.py).
+  #
+  # Split into its own job so the two pytest shards run on SEPARATE macOS
+  # runners simultaneously instead of back-to-back on one. PyMOL is a process
+  # singleton so the shards can never share a process, but they can share the
+  # engine-venv cache that `bootstrap-macos` populated (the Actions cache is
+  # shared across jobs in a run), so this job restores the built venv instead
+  # of rebuilding it. mmtf-cpp headers are compile-only, so they are omitted.
+  # -------------------------------------------------------------------------
+  macos-pytest-1:
+    name: bridge tests -- protocol (macOS)
+    needs: bootstrap-macos
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: resolve build identity
+        id: ident
+        run: |
+          set -euo pipefail
+          full="$(python -c 'import sys;print("%d.%d.%d" % sys.version_info[:3])')"
+          echo "python=$full" >> "$GITHUB_OUTPUT"
+          echo "python-bin=$(command -v python)" >> "$GITHUB_OUTPUT"
+          echo "python $full at $(command -v python)"
+
+      - name: cache homebrew downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: brew-${{ runner.os }}-${{ runner.arch }}-${{ env.CACHE_EPOCH }}-cmake-libpng-freetype-glew-glm-netcdf-msgpack-cxx-libxml2
+          restore-keys: |
+            brew-${{ runner.os }}-${{ runner.arch }}-${{ env.CACHE_EPOCH }}-
+
+      # The set scripts/bootstrap.sh requires; it dies listing anything missing.
+      # catch2 is deliberately absent: only --testing=true needs it, and brew
+      # ships v3 while layerCTest wants v2.
+      - name: native deps (Homebrew)
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: |
+          brew install cmake libpng freetype glew glm netcdf msgpack-cxx libxml2
+          brew list --versions cmake libpng freetype glew glm netcdf msgpack-cxx libxml2
+
+      # Restore-only: the venv was built and saved by bootstrap-macos in this
+      # same run. The key here MUST match that job's save key exactly (via the
+      # engine-venv action) or the restore misses. fail-on-cache-miss makes a
+      # miss a hard error rather than a silent "no venv, tests error out".
+      - name: restore built engine (packages/bridge/.venv)
+        uses: actions/cache/restore@v4
+        with:
+          path: packages/bridge/.venv
+          key: >-
+            engine-venv-${{ runner.os }}-${{ runner.arch }}-${{ env.CACHE_EPOCH }}-py${{ steps.ident.outputs.python }}-${{
+            hashFiles('packages/engine/setup.py',
+            'packages/engine/pyproject.toml',
+            'packages/engine/CMakeLists.txt',
+            'packages/engine/create_shadertext.py',
+            'packages/engine/_custom_build/**',
+            'packages/engine/layer*/**',
+            'packages/engine/ov/**',
+            'packages/engine/include/**',
+            'packages/engine/contrib/**',
+            'packages/engine/modules/**',
+            'packages/engine/data/**',
+            'packages/bridge/pyproject.toml',
+            'scripts/bootstrap.sh') }}
+          fail-on-cache-miss: true
+
       # ---- gate: the bridge suite ------------------------------------------
       #
       # The same run as locally
@@ -430,14 +531,96 @@ jobs:
             -k 'not benchmark' \
             --junitxml="$RUNNER_TEMP/pytest-bridge-1.xml"
 
-      # `if: success() || failure()` so a failure in part 1 does not skip part
-      # 2: the single-invocation suite this replaced let every file run and
-      # report regardless of earlier failures (pytest continues past a failing
-      # test), and the split must preserve that -- otherwise one failing
-      # protocol test hides the pass/fail status of the entire second half.
-      # (`|| failure()` still skips part 2 on cancellation, unlike `always()`.)
+      - name: upload bridge pytest report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-bridge-1-${{ github.run_id }}
+          path: ${{ runner.temp }}/pytest-bridge-1.xml
+          if-no-files-found: warn
+
+  # -------------------------------------------------------------------------
+  # Bridge pytest, part 2 of 2 -- everything else (test_[^p]*.py), plus the
+  # /healthz acceptance probe.
+  #
+  # Runs on its own macOS runner in parallel with macos-pytest-1, restoring the
+  # same built venv from the shared Actions cache that bootstrap-macos saved.
+  # This is the only pytest step in the job, so it needs no
+  # `if: success() || failure()` -- there is no earlier pytest whose failure
+  # could skip it.
+  # -------------------------------------------------------------------------
+  macos-pytest-2:
+    name: bridge tests -- workflow + healthz (macOS)
+    needs: bootstrap-macos
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: resolve build identity
+        id: ident
+        run: |
+          set -euo pipefail
+          full="$(python -c 'import sys;print("%d.%d.%d" % sys.version_info[:3])')"
+          echo "python=$full" >> "$GITHUB_OUTPUT"
+          echo "python-bin=$(command -v python)" >> "$GITHUB_OUTPUT"
+          echo "python $full at $(command -v python)"
+
+      - name: cache homebrew downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: brew-${{ runner.os }}-${{ runner.arch }}-${{ env.CACHE_EPOCH }}-cmake-libpng-freetype-glew-glm-netcdf-msgpack-cxx-libxml2
+          restore-keys: |
+            brew-${{ runner.os }}-${{ runner.arch }}-${{ env.CACHE_EPOCH }}-
+
+      # The set scripts/bootstrap.sh requires; it dies listing anything missing.
+      # catch2 is deliberately absent: only --testing=true needs it, and brew
+      # ships v3 while layerCTest wants v2.
+      - name: native deps (Homebrew)
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: |
+          brew install cmake libpng freetype glew glm netcdf msgpack-cxx libxml2
+          brew list --versions cmake libpng freetype glew glm netcdf msgpack-cxx libxml2
+
+      # Restore-only: the venv was built and saved by bootstrap-macos in this
+      # same run. The key here MUST match that job's save key exactly (via the
+      # engine-venv action) or the restore misses. fail-on-cache-miss makes a
+      # miss a hard error rather than a silent "no venv, tests error out".
+      - name: restore built engine (packages/bridge/.venv)
+        uses: actions/cache/restore@v4
+        with:
+          path: packages/bridge/.venv
+          key: >-
+            engine-venv-${{ runner.os }}-${{ runner.arch }}-${{ env.CACHE_EPOCH }}-py${{ steps.ident.outputs.python }}-${{
+            hashFiles('packages/engine/setup.py',
+            'packages/engine/pyproject.toml',
+            'packages/engine/CMakeLists.txt',
+            'packages/engine/create_shadertext.py',
+            'packages/engine/_custom_build/**',
+            'packages/engine/layer*/**',
+            'packages/engine/ov/**',
+            'packages/engine/include/**',
+            'packages/engine/contrib/**',
+            'packages/engine/modules/**',
+            'packages/engine/data/**',
+            'packages/bridge/pyproject.toml',
+            'scripts/bootstrap.sh') }}
+          fail-on-cache-miss: true
+
+      # ---- gate: the bridge suite (part 2 - workflow) ----------------------
+      #
+      # Everything the protocol shard (macos-pytest-1) does not run:
+      # test_[^p]*.py. See macos-pytest-1 for the full rationale on the split,
+      # the scope="session" PyMOL singleton, and the TENMOL_TEST_SLOW / -k /
+      # -s knobs -- all identical here. This is the ONLY pytest step in this
+      # job, so it needs no `if: success() || failure()`.
       - name: bridge pytest suite (part 2 - workflow)
-        if: success() || failure()
         run: |
           set -euo pipefail
           test -d packages/bridge/tests || {
@@ -453,8 +636,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-bridge-${{ github.run_id }}
-          path: ${{ runner.temp }}/pytest-bridge-*.xml
+          name: pytest-bridge-2-${{ github.run_id }}
+          path: ${{ runner.temp }}/pytest-bridge-2.xml
           if-no-files-found: warn
 
       # Same caveat as `doctor`: with no window server the pump can come up
