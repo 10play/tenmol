@@ -269,6 +269,65 @@ export function registerEditing(ctx: RegistrarCtx): void {
     return null;
   });
 
+  /* ------------------------------- torsion ------------------------------- */
+  // torsion(angle) — rotate the fragment on the pk2 side of the currently picked
+  // bond (pk1–pk2) about that bond axis by `angle` degrees (editing.py:1135).
+  ctx.command('torsion', (args, kwargs): Json => {
+    const angle = (Number(pick(args, kwargs, 0, 'angle') ?? 0) || 0) * (Math.PI / 180);
+    const p1u = ex.atomsMatching('pk1');
+    const p2u = ex.atomsMatching('pk2');
+    if (p1u.length === 0 || p2u.length === 0) return null;
+    const a1 = p1u[0]!;
+    const a2 = p2u[0]!;
+    if (a1.objName !== a2.objName) return null;
+    const mol = ex.molecule(a1.objName);
+    if (!mol) return null;
+    const i1 = a1.index;
+    const i2 = a2.index;
+
+    // Adjacency, then the pk2-side fragment: reachable from i2 without crossing
+    // the i1–i2 bond or ever entering i1.
+    const adj: number[][] = Array.from({ length: mol.natom }, () => []);
+    for (const [a, b] of mol.bonds) {
+      adj[a]!.push(b);
+      adj[b]!.push(a);
+    }
+    const frag = new Set<number>([i2]);
+    const stack = [i2];
+    while (stack.length > 0) {
+      const x = stack.pop()!;
+      for (const y of adj[x] ?? []) {
+        if (y === i1) continue; // never cross onto the pk1 side
+        if (!frag.has(y)) {
+          frag.add(y);
+          stack.push(y);
+        }
+      }
+    }
+    frag.delete(i2); // on the rotation axis — unaffected
+
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    for (const set of mol.states) {
+      if (!set) continue;
+      const ox = set[i1 * 3]!, oy = set[i1 * 3 + 1]!, oz = set[i1 * 3 + 2]!;
+      let ux = set[i2 * 3]! - ox, uy = set[i2 * 3 + 1]! - oy, uz = set[i2 * 3 + 2]! - oz;
+      const len = Math.hypot(ux, uy, uz) || 1;
+      ux /= len; uy /= len; uz /= len;
+      for (const k of frag) {
+        const px = set[k * 3]! - ox, py = set[k * 3 + 1]! - oy, pz = set[k * 3 + 2]! - oz;
+        // Rodrigues rotation of (p-o) about unit axis u by `angle`.
+        const dotp = ux * px + uy * py + uz * pz;
+        const cx = uy * pz - uz * py, cy = uz * px - ux * pz, cz = ux * py - uy * px;
+        set[k * 3] = ox + px * cos + cx * sin + ux * dotp * (1 - cos);
+        set[k * 3 + 1] = oy + py * cos + cy * sin + uy * dotp * (1 - cos);
+        set[k * 3 + 2] = oz + pz * cos + cz * sin + uz * dotp * (1 - cos);
+      }
+    }
+    ctx.publish();
+    return null;
+  });
+
   /* ----------------------------- group / ungroup ------------------------- */
   // group(name, members='', action='auto') — create/extend a group object
   // (creating.py). We register a first-class group gadget so get_names lists it
