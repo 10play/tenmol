@@ -558,7 +558,6 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'assign_stereo',
       'text_type',
       'set_geometry',
-      'uniquify',
       'unset_deep',
       'pbc_wrap',
       'pbc_unwrap',

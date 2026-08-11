@@ -228,6 +228,25 @@ export function registerUtil2(ctx: RegistrarCtx): void {
     return sum;
   });
 
+  // util.interchain_distances(name, selection, ...) — create a distance object
+  // between every pair of distinct chains in the selection (util.py:1043).
+  ctx.command('util.interchain_distances', (args): Json => {
+    const name = ctx.str(args[0], 'interchain') || 'interchain';
+    const selection = sel0(args[1]);
+    const chains = [...new Set(ex.atomsMatching(selection).map((ua) => ua.atom.chain))];
+    for (let i = 0; i < chains.length; i++) {
+      for (let j = i + 1; j < chains.length; j++) {
+        ctx.call('distance', [
+          name,
+          `(${selection}) and chain ${chains[i]}`,
+          `(${selection}) and chain ${chains[j]}`,
+        ]);
+      }
+    }
+    ctx.call('enable', [name]);
+    return name;
+  });
+
   /* ------------------------------- util.cnc ----------------------------- */
 
   // Colour by element but leave carbon (and its current colour) untouched.

@@ -269,6 +269,45 @@ export function registerEditing(ctx: RegistrarCtx): void {
     return null;
   });
 
+  /* ------------------------------ uniquify ------------------------------- */
+  // uniquify(identifier, selection, reference='', ...) — make the identifier
+  // (chain/segi/…) of `selection` unique w.r.t. `reference` (default the
+  // complement), reassigning colliding values to the next free code (editing.py).
+  const UNIQ_BASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+  ctx.command('uniquify', (args, kwargs): Json => {
+    const identifier = ctx.str(pick(args, kwargs, 0, 'identifier'), 'segi');
+    const selection = sel(pick(args, kwargs, 1, 'selection'));
+    const refArg = ctx.str(pick(args, kwargs, 2, 'reference'), '');
+    const reference = refArg || `!(${selection})`;
+    const field = identifier as 'chain' | 'segi' | 'resi' | 'name';
+    const used = new Set<string>();
+    for (const ua of ex.atomsMatching(reference)) used.add(String(ua.atom[field] ?? ''));
+    const firstFree = (): string => {
+      for (const ch of UNIQ_BASE) if (!used.has(ch)) return ch;
+      return '';
+    };
+    const groups = new Map<string, Array<Record<string, unknown>>>();
+    for (const m of ex.atomsMatching(selection)) {
+      const v = String(m.atom[field] ?? '');
+      let g = groups.get(v);
+      if (!g) groups.set(v, (g = []));
+      g.push(m.atom as unknown as Record<string, unknown>);
+    }
+    let changed = 0;
+    for (const [v, atoms] of groups) {
+      if (!used.has(v)) continue; // already unique
+      const code = firstFree();
+      if (code === '') continue;
+      used.add(code);
+      for (const a of atoms) {
+        a[field] = code;
+        changed++;
+      }
+    }
+    if (changed > 0) ctx.publish();
+    return changed;
+  });
+
   /* ------------------------------- torsion ------------------------------- */
   // torsion(angle) — rotate the fragment on the pk2 side of the currently picked
   // bond (pk1–pk2) about that bond axis by `angle` degrees (editing.py:1135).
