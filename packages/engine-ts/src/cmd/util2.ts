@@ -213,6 +213,21 @@ export function registerUtil2(ctx: RegistrarCtx): void {
     return atoms.length;
   };
 
+  /* ----------------------- util.sum_*_charges --------------------------- */
+
+  // util.py:269/277 — total the per-atom formal / partial charge over a
+  // selection. Absent charge ⇒ 0 (an atom with no assigned charge).
+  ctx.command('util.sum_formal_charges', (args): Json => {
+    let sum = 0;
+    for (const ua of ex.atomsMatching(sel0(args[0]))) sum += ua.atom.formalCharge ?? 0;
+    return sum;
+  });
+  ctx.command('util.sum_partial_charges', (args): Json => {
+    let sum = 0;
+    for (const ua of ex.atomsMatching(sel0(args[0]))) sum += ua.atom.partialCharge ?? 0;
+    return sum;
+  });
+
   /* ------------------------------- util.cnc ----------------------------- */
 
   // Colour by element but leave carbon (and its current colour) untouched.
