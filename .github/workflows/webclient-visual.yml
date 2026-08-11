@@ -38,6 +38,19 @@ jobs:
       - name: visual regression (TS vs committed goldens; PyMOL similarity report)
         run: node apps/web/e2e/visual.e2e.mjs
 
+      # The tracked renderer-parity metric + ratchet: score committed goldens vs
+      # PyMOL refs (browser-free, deterministic) and FAIL if the mean dropped below
+      # the committed baseline in docs/screenshots/visual/scoreboard.json. Keeps the
+      # scoreboard honest (it must match the committed goldens) and monotonic.
+      - name: visual-parity scoreboard ratchet
+        run: node scripts/parity-visual.mjs --check
+
+      # Regenerate the visual gallery (browser-free — reads the committed PNGs) so
+      # every run ships a self-contained gallery.html to eyeball golden↔PyMOL.
+      - name: build parity gallery (artifact)
+        if: always()
+        run: node apps/web/e2e/gallery.mjs || true
+
       - name: performance report (informational)
         run: node apps/web/e2e/perf.e2e.mjs || true
 

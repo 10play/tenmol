@@ -30,6 +30,8 @@
     "//coverage": "The command/rep-coverage scoreboard and ratchet. Prints the backlog burndown (real vs. total PyMOL cmd symbols, reps built); `--write` regenerates docs/parity-dashboard.md. See scripts/coverage.mjs and packages/engine-ts/test/coverage.test.ts.",
     "coverage": "node scripts/coverage.mjs",
     "parity": "node scripts/parity.mjs",
+    "//parity:visual": "The visual renderer-parity scoreboard + ratchet. Scores committed goldens vs PyMOL refs (browser-free, deterministic) into docs/screenshots/visual/scoreboard.{json,md}; `--check` fails if the mean regressed below the committed baseline. See scripts/parity-visual.mjs; view scenes with `pnpm exec node apps/web/e2e/gallery.mjs`.",
+    "parity:visual": "node scripts/parity-visual.mjs",
     "//parity:engine": "The engine-parity gate: differential equivalence of the TypeScript engine vs. golden snapshots (and vs. real PyMOL with --remote). See scripts/parity-engine.mjs and tools/parity.",
     "parity:engine": "node scripts/parity-engine.mjs",
     "docs:dev": "cd docs && npx -y mint@4.2.778 dev",
