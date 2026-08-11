@@ -78,4 +78,31 @@ describe('parseCif — multi-model mmCIF', () => {
     // Distinct models really carry distinct coordinates.
     expect(Array.from(mol.states[0]!)).not.toEqual(Array.from(mol.states[1]!));
   });
+
+  it('drops a model whose atom count differs from the first (no mis-sized state)', () => {
+    // Model 1 has 2 atoms, model 2 has 1 (an NMR model missing a density). The
+    // wrong-length model must be dropped, never pushed as a misaligned state.
+    const cif = [
+      'data_mm',
+      'loop_',
+      '_atom_site.group_PDB',
+      '_atom_site.type_symbol',
+      '_atom_site.label_atom_id',
+      '_atom_site.label_comp_id',
+      '_atom_site.label_asym_id',
+      '_atom_site.label_seq_id',
+      '_atom_site.Cartn_x',
+      '_atom_site.Cartn_y',
+      '_atom_site.Cartn_z',
+      '_atom_site.pdbx_PDB_model_num',
+      'ATOM N N GLY A 1 0.0 0.0 0.0 1',
+      'ATOM C CA GLY A 1 1.5 0.0 0.0 1',
+      'ATOM N N GLY A 1 0.2 0.2 0.2 2',
+      '',
+    ].join('\n');
+    const mol = parseCif(cif, 'mm');
+    expect(mol.natom).toBe(2);
+    expect(mol.states).toHaveLength(1); // model 2 (1 atom) dropped
+    expect(mol.states[0]!.length).toBe(mol.natom * 3);
+  });
 });

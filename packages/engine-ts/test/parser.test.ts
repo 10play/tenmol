@@ -22,42 +22,29 @@ describe('parseCommand', () => {
     expect(parseCommand('Orient')).toEqual({ keyword: 'orient', args: [], kwargs: {} });
   });
 
-  it('parses `key=value` tokens as kwargs, keeping positional order', () => {
+  it('keeps `key=value` tokens POSITIONAL (never splits into kwargs)', () => {
+    // `=` is valid selection (`b=50`) and `alter`/`iterate` expression
+    // (`resi=10`) syntax, so a `key=value` token stays a positional arg — the
+    // console cannot infer kwargs without each command's signature.
     const p = parseCommand('spectrum count, palette=rainbow, selection=all');
     expect(p.keyword).toBe('spectrum');
-    expect(p.args).toEqual(['count']);
-    expect(p.kwargs).toEqual({ palette: 'rainbow', selection: 'all' });
-  });
-
-  it('does not treat `==` or an operator inside a value as a kwarg', () => {
-    const p = parseCommand('select b>50');
-    expect(p.args).toEqual(['b>50']);
+    expect(p.args).toEqual(['count', 'palette=rainbow', 'selection=all']);
     expect(p.kwargs).toEqual({});
   });
 
-  it('keeps selection comparison fields (`b=50`, `q=1`) positional, not kwargs', () => {
-    // Regression: the selector grammar uses bare `=` for b/q/pc/fc, so these
-    // MUST stay in the selection rather than be stripped into kwargs.
-    const p = parseCommand('select buried, b=50');
-    expect(p.args).toEqual(['buried', 'b=50']);
-    expect(p.kwargs).toEqual({});
-    const q = parseCommand('select occ1, q=1');
-    expect(q.args).toEqual(['occ1', 'q=1']);
-    expect(q.kwargs).toEqual({});
-    // A genuine keyword arg (non-selection key) still parses as a kwarg.
-    expect(parseCommand('spectrum count, palette=rainbow').kwargs).toEqual({ palette: 'rainbow' });
+  it('leaves selection/expression `=` intact (`b=50`, `resi=10`)', () => {
+    // Regression: the selector uses bare `=` for b/q/pc/fc, and alter/iterate
+    // take a `field=value` assignment expression. Both MUST reach the handler.
+    expect(parseCommand('select buried, b=50').args).toEqual(['buried', 'b=50']);
+    expect(parseCommand('alter all, resi=10').args).toEqual(['all', 'resi=10']);
+    expect(parseCommand("iterate all, name='CA'").args).toEqual(['all', "name='CA'"]);
   });
 
-  it('respects quotes: commas and `=` inside a quoted value do not split', () => {
-    // The comma inside the quotes does not split; `text=` makes it a kwarg whose
-    // value is the unquoted string (which itself contains `=` and `,`).
-    const p = parseCommand('label all, text="a=b,c"');
-    expect(p.args).toEqual(['all']);
-    expect(p.kwargs).toEqual({ text: 'a=b,c' });
-    // A leading-quote token is positional; its inner commas/`=` are preserved.
-    const q = parseCommand('set_title obj, "x, y = z"');
-    expect(q.args).toEqual(['obj', 'x, y = z']);
-    expect(q.kwargs).toEqual({});
+  it('respects quotes: a comma inside a quoted value does not split the token', () => {
+    // The comma inside the quotes does not split; the token is kept verbatim
+    // (only quotes surrounding the WHOLE token are stripped).
+    expect(parseCommand('label all, text="a=b,c"').args).toEqual(['all', 'text="a=b,c"']);
+    expect(parseCommand('set_title obj, "x, y = z"').args).toEqual(['obj', 'x, y = z']);
   });
 
   it('strips one layer of surrounding quotes from positional args', () => {
@@ -83,9 +70,18 @@ describe('do() integration', () => {
 
   it('runs a `key=value` console line through to the handler', async () => {
     const b = await boot();
-    // `set` via kwargs-free positional still works, and a kwarg line parses.
     await b.do('color red, all');
     expect(await b.call('count_atoms', ['color red'])).toBeGreaterThan(0);
+  });
+
+  it('an `alter … , field=value` expression reaches the handler intact', async () => {
+    const b = await boot();
+    // Regression: the parser must NOT strip `b=42` into kwargs — the whole
+    // expression is alter's second positional arg, or nothing gets mutated.
+    await b.do('alter all, b=42');
+    // Every atom now has b-factor 42 (the expression ran).
+    const total = (await b.call('count_atoms', ['all'])) as number;
+    expect(await b.call('count_atoms', ['b=42'])).toBe(total);
   });
 
   it('reports @script instead of evaluating it as JavaScript', async () => {

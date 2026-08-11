@@ -130,6 +130,21 @@ describe('misc2 — preset aliases / label2 / get_phipsi / dirty / colorection',
     expect(bcol.colors.every((c) => c === 3)).toBe(true);
   });
 
+  it('colorection state is per-engine, not shared across instances', async () => {
+    // Regression: the store must be instance-scoped. Saving a scheme under the
+    // default prefix in one engine must not be visible to a second engine.
+    const b1 = await boot();
+    await b1.call('alter', ['all', 'color=5']);
+    await b1.call('get_colorection', ['']); // save under default prefix on b1
+
+    const b2 = await boot();
+    const snap2 = await b2.call('get_colorection', ['']); // b2's own default prefix
+    // b2 never saved a '' scheme, so its snapshot reflects b2's atoms (colour 0),
+    // not b1's colour-5 scheme leaking through a shared module Map.
+    const colors = (snap2 as Array<[string, number, number]>).map((e) => e[2]);
+    expect(colors.every((c) => c === 0)).toBe(true);
+  });
+
   it('set_colorection also restores from a passed snapshot array', async () => {
     const b = await boot();
     await b.call('alter', ['all', 'color=7']);

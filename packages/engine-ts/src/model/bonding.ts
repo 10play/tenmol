@@ -33,7 +33,12 @@ const CONNECT_CUTOFF = 0.35;
 
 /** Covalent radius (Å) for an element token, defaulting for the unknown. */
 export function covalent(elem: string): number {
-  return COVALENT[canonicalElement(elem)] ?? DEFAULT_COVALENT;
+  // A file-controlled element token can be `__proto__` / `constructor` etc.;
+  // `COVALENT[key]` would then resolve to an inherited Object.prototype member
+  // (not undefined), so the `??` fallback would never fire and a non-number
+  // would poison the distance maths. Guard on the value actually being a number.
+  const r = COVALENT[canonicalElement(elem)];
+  return typeof r === 'number' ? r : DEFAULT_COVALENT;
 }
 
 /**

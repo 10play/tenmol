@@ -311,10 +311,17 @@ export function registerUtil2(ctx: RegistrarCtx): void {
     for (const mol of ex.moleculesInOrder()) {
       const chains = new Set<string>();
       for (const ua of ex.atomsMatching(`model ${mol.name} and (${s})`)) chains.add(ua.atom.chain);
+      const named = [...chains].filter((c) => c);
       for (const c of chains.size ? [...chains] : ['']) {
+        // A blank chain id is NOT "no chain filter": select only the atoms not
+        // in any named chain, so this pass never overwrites the named chains it
+        // just coloured. With no named chains, that is the whole object (one
+        // group, as intended).
         const target = c
           ? `(chain ${c} and model ${mol.name} and (${s}))`
-          : `(model ${mol.name} and (${s}))`;
+          : named.length
+            ? `(model ${mol.name} and (${s}) and not (${named.map((n) => `chain ${n}`).join(' or ')}))`
+            : `(model ${mol.name} and (${s}))`;
         ctx.call('spectrum', ['count', palette, target], { byres: 1 });
       }
     }
@@ -451,16 +458,19 @@ export function registerUtil2(ctx: RegistrarCtx): void {
     const name = ctx.str(args[1]) || 'exposed';
     const cutoff = cutoffOf(args[2]);
     getArea(s, true, 3, true);
+    // Key by OBJECT + chain + resi — two structures sharing a chain/resi label
+    // must not have their exposed areas merged, and the generated selection must
+    // be scoped to the right object.
     const resArea = new Map<string, number>();
     for (const ua of ex.atomsMatching(s)) {
-      const key = `${ua.atom.chain}|${ua.atom.resi}`;
+      const key = `${ua.objName}|${ua.atom.chain}|${ua.atom.resi}`;
       resArea.set(key, (resArea.get(key) ?? 0) + ua.atom.b);
     }
     const clauses: string[] = [];
     for (const [key, v] of resArea) {
       if (v < cutoff) continue;
-      const [chain, resi] = key.split('|');
-      clauses.push(`(chain ${chain} and resi ${resi})`);
+      const [obj, chain, resi] = key.split('|');
+      clauses.push(`(model ${obj} and chain ${chain} and resi ${resi})`);
     }
     ex.select(name, clauses.length ? `byres ((${s}) and (${clauses.join(' or ')}))` : 'none');
     ctx.publish();

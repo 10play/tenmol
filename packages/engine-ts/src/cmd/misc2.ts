@@ -16,12 +16,12 @@ import type { RegistrarCtx } from './registrar';
  * at `get_colorection` time. PyMOL keys its colorection by colour index -> atom
  * list; here we snapshot per-atom so a later `set_colorection` can restore the
  * exact `atom.color` each atom carried, matched back by stable identity
- * (`objName|id`). Kept in a module-level `Map` keyed by prefix — the same
- * side-state pattern `cmd/extras.ts` uses for its `MASKED` set.
+ * (`objName|id`). Stored in a Map keyed by prefix that is created PER
+ * `registerMisc2` call — i.e. per {@link Engine} instance — so two engines in
+ * one process never share or clobber each other's saved colour schemes (unlike
+ * a module-level Map, which the default `''` prefix would collide across).
  */
 type ColorSnapshot = Array<[string, number, number]>;
-
-const COLORECTIONS = new Map<string, ColorSnapshot>();
 
 /** The prefix a colorection call addresses: explicit `prefix` arg, else a
  *  string first arg (PyMOL's `set/get/del_colorection(name)`), else ''. */
@@ -33,6 +33,9 @@ function prefixOf(args: unknown[], str: RegistrarCtx['str']): string {
 export function registerMisc2(ctx: RegistrarCtx): void {
   const ex = ctx.executive;
   const { str } = ctx;
+
+  // Instance-scoped colorection store (see the module doc): one Map per engine.
+  const COLORECTIONS = new Map<string, ColorSnapshot>();
 
   /* --------------------------- preset aliases --------------------------- */
   // PyMOL re-exports these presets as flat top-level verbs; each forwards its

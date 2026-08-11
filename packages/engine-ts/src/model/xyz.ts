@@ -131,6 +131,11 @@ export function parseXyz(text: string, name: string): ObjectMolecule {
     nextLine();
 
     const coords: number[] = [];
+    // First-frame atoms are staged here and only committed to `mol.atoms` once
+    // the WHOLE frame parses — so a malformed row mid-frame drops the frame
+    // AND its half-built atom table together (a partial atom table with a zeroed
+    // state would otherwise result).
+    const frameAtoms: AtomInfo[] = [];
     let ok = true;
     for (let i = 0; i < natom; i++) {
       const line = nextLine();
@@ -144,9 +149,7 @@ export function parseXyz(text: string, name: string): ObjectMolecule {
       const y = parseFloat(parts[2] ?? '');
       const z = parseFloat(parts[3] ?? '');
       // A malformed row (missing/non-numeric coordinate) would poison the state
-      // with NaN. Dropping the whole frame keeps the atom table and every state
-      // the same length (skipping one atom would desync them), matching how a
-      // truncated frame is handled above.
+      // with NaN — drop the whole frame (staged atoms are discarded with it).
       if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
         ok = false;
         break;
@@ -156,8 +159,8 @@ export function parseXyz(text: string, name: string): ObjectMolecule {
       // Build the atom table only from the first frame.
       if (frameNatom === -1) {
         const elem = tokenToElement(token);
-        const atom: AtomInfo = {
-          id: mol.atoms.length + 1,
+        frameAtoms.push({
+          id: mol.atoms.length + frameAtoms.length + 1,
           name: elem, // XYZ has no atom names; use the element symbol.
           resn: 'UNK',
           resi: '1',
@@ -172,14 +175,16 @@ export function parseXyz(text: string, name: string): ObjectMolecule {
           color: 0, // assigned later by CPK/`color`
           ss: '',
           visRep: defaultVisRep(),
-        };
-        mol.atoms.push(atom);
+        });
       }
     }
 
     if (!ok) break;
     stateCoords.push(coords);
-    if (frameNatom === -1) frameNatom = natom;
+    if (frameNatom === -1) {
+      for (const atom of frameAtoms) mol.atoms.push(atom);
+      frameNatom = natom;
+    }
   }
 
   // Materialise each frame as a Float32 state (PyMOL's storage precision).

@@ -16,7 +16,13 @@ export interface ParsedCommand {
   keyword: string;
   /** Positional arguments, in order, quotes stripped. */
   args: string[];
-  /** `key=value` keyword arguments, quotes stripped from the value. */
+  /**
+   * Keyword arguments. Always empty: the console cannot safely infer `key=value`
+   * kwargs without each command's signature, because `=` is also legitimate
+   * selection syntax (`select s, b=50`) and the assignment expression that
+   * `alter`/`iterate` take (`alter all, resi=10`). Kept for API stability so
+   * callers can still thread kwargs they build explicitly.
+   */
   kwargs: Record<string, string>;
 }
 
@@ -74,39 +80,15 @@ export function parseCommand(command: string): ParsedCommand {
   const keyword = (space < 0 ? trimmed : trimmed.slice(0, space)).toLowerCase();
   const rest = space < 0 ? '' : trimmed.slice(space + 1).trim();
 
+  // Every comma-separated token is POSITIONAL. `key=value` is deliberately NOT
+  // split into kwargs — see the `kwargs` doc above: `=` is valid selection and
+  // `alter`/`iterate` expression syntax, so splitting it corrupts those args.
   const args: string[] = [];
-  const kwargs: Record<string, string> = {};
   if (rest !== '') {
     for (const raw of splitTopLevel(rest, ',')) {
       const token = raw.trim();
-      if (token === '') continue;
-      // A `key=value` token (identifier key, not `==`) is a keyword argument —
-      // EXCEPT when the key is a selection comparison field, because PyMOL's
-      // selection grammar uses bare `=` for equality (`b=50`, `q=1`,
-      // `partial_charge=0`, see select/selector.ts CMP_OPS). Treating those as
-      // kwargs would strip the term out of the selection, so they stay
-      // positional.
-      const kw = /^([A-Za-z_]\w*)\s*=(?!=)([\s\S]*)$/.exec(token);
-      if (kw && !SELECTION_CMP_FIELDS.has(kw[1]!.toLowerCase())) {
-        kwargs[kw[1]!] = unquote(kw[2]!);
-      } else {
-        args.push(unquote(token));
-      }
+      if (token !== '') args.push(unquote(token));
     }
   }
-  return { keyword, args, kwargs };
+  return { keyword, args, kwargs: {} };
 }
-
-/**
- * Selection fields that take a bare `=` comparison in the selector grammar
- * (`select s, b=50`). A `field=value` token starting with one of these is part
- * of a selection, not a keyword argument, so the parser leaves it positional.
- */
-const SELECTION_CMP_FIELDS: ReadonlySet<string> = new Set([
-  'b',
-  'q',
-  'pc',
-  'fc',
-  'partial_charge',
-  'formal_charge',
-]);

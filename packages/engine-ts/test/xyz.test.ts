@@ -117,4 +117,22 @@ describe('parseXyz — trajectory and atomic numbers', () => {
     expect(Array.from(mol.states[0]!)).toEqual([1, 2, 3]);
     expect(mol.atoms[0]!.elem).toBe('C');
   });
+
+  it('drops a frame whose LATER row is malformed — no partial atoms + zero coords', () => {
+    // Rows 1-2 parse, row 3 is malformed. The frame (and its staged atoms) must
+    // be dropped WHOLE: never a 2-atom table paired with an all-zero state.
+    const text = ['3', 'bad3', 'C 0 0 0', 'N 1 0 0', 'O x y z'].join('\n');
+    const mol = parseXyz(text, 'bad');
+    expect(mol.natom).toBe(0); // partial atoms were NOT committed
+    expect(mol.states.length).toBe(0);
+  });
+
+  it('does not choke on a prototype-polluting element token', () => {
+    // `__proto__` as an element must not resolve COVALENT to Object.prototype and
+    // NaN-out the bonding pass; a normal C-C pair still bonds.
+    const text = ['3', 'proto', '__proto__ 0 0 0', 'C 5 0 0', 'C 6.5 0 0'].join('\n');
+    const mol = parseXyz(text, 'proto');
+    expect(mol.natom).toBe(3);
+    expect(mol.bonds.some(([a, b]) => (a === 1 && b === 2) || (a === 2 && b === 1))).toBe(true);
+  });
 });

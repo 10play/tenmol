@@ -203,8 +203,13 @@ export function parseCif(text: string, name: string): ObjectMolecule {
   }
 
   // --- Materialise each model's coordinates as a Float32 state. ---
+  // Only models whose row count matches the (first-model) atom table become a
+  // state; an NMR model missing an atom's density would otherwise yield a
+  // wrong-length Float32Array that silently misaligns every later atom.
+  const need = mol.natom * 3;
   for (const model of modelOrder) {
-    mol.states.push(Float32Array.from(modelCoords.get(model)!));
+    const coords = modelCoords.get(model)!;
+    if (coords.length === need) mol.states.push(Float32Array.from(coords));
   }
   if (mol.states.length === 0 && mol.natom > 0) {
     mol.states.push(new Float32Array(mol.natom * 3));

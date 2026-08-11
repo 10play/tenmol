@@ -287,12 +287,16 @@ export function registerPreset(ctx: RegistrarCtx): void {
     const s = prepare(selection);
     soft('show', ['lines', s]);
     soft('show', ['nonbonded', s]);
-    const color = Number(softGet('get_object_color_index', [selection], 0)) || 0;
+    // `get_object_color` returns the object's colour index, or -1 when the object
+    // is at its default colour (the common case). The stub `get_object_color_index`
+    // always returns 0, which made this branch dead and coloured nothing — see
+    // display.ts. -1 => colour carbons green by element (cbag); a set colour =>
+    // colour non-carbons by element and leave carbon the object colour (cnc).
+    const color = Number(softGet('get_object_color', [selection], -1));
     if (color < 0) {
       soft('util.cbag', [selection]);
     } else {
-      soft('util.cnc', [selection]); // unported
-      soft('color', [String(color), `(${s}) and elem C`]);
+      soft('util.cnc', [selection]);
     }
     drop(s);
   };
