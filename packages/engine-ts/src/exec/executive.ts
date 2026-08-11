@@ -144,6 +144,30 @@ export class Executive {
     this.selections.delete(pattern);
   }
 
+  /** Rename an object or measurement (PyMOL `set_name`). Returns true on success. */
+  rename(oldName: string, newName: string): boolean {
+    if (oldName === newName) return true;
+    if (this.objects.has(newName) || this.measures.has(newName)) return false;
+    const i = this.order.indexOf(oldName);
+    if (i < 0) return false;
+    this.order[i] = newName;
+    const mol = this.objects.get(oldName);
+    if (mol) {
+      this.objects.delete(oldName);
+      (mol as { name: string }).name = newName;
+      this.objects.set(newName, mol);
+      return true;
+    }
+    const meas = this.measures.get(oldName);
+    if (meas) {
+      this.measures.delete(oldName);
+      meas.name = newName;
+      this.measures.set(newName, meas);
+      return true;
+    }
+    return false;
+  }
+
   /* ------------------------------ selection --------------------------- */
 
   countAtoms(sel: string): number {

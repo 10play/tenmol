@@ -630,7 +630,12 @@ export class Engine {
     }));
     h('get_object_list', () => ex.getNames('objects'));
     h('get_names_of_type', () => []);
-    h('get_type', () => 'object:molecule');
+    h('get_type', (args) => {
+      const name = str(args[0], '');
+      if (ex.measurement(name)) return 'object:measurement';
+      const mol = ex.molecule(name);
+      return (mol?.kind as string | undefined) ?? 'object:molecule';
+    });
     h('get_vis', () => ({}) as unknown as Json);
     h('get_setting_updates', () => []);
     h('get_setting_text', (args) => {
@@ -808,6 +813,7 @@ export class Engine {
         // PyMOL's chempy Atom exposes these; default to neutral when unassigned.
         formal_charge: ua.atom.formalCharge ?? 0,
         partial_charge: ua.atom.partialCharge ?? 0,
+        label: ua.atom.label ?? '',
       };
     });
     return { atom: atoms } as unknown as Json;
@@ -837,6 +843,20 @@ export class Engine {
         states: mol.nstate,
       };
     });
+    // Measurement objects (distance/angle/dihedral) render through the Dash rep.
+    for (const m of this.executive.measurementsInOrder()) {
+      objects.push({
+        name: m.name,
+        type: 'object:measurement',
+        enabled: m.enabled,
+        group: '',
+        nest: 0,
+        reps: 1 << Rep.Dash,
+        color: null,
+        caption: '',
+        states: 1,
+      });
+    }
     this.emitter.emit('objects', { objects });
   }
 

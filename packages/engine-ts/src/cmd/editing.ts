@@ -269,6 +269,17 @@ export function registerEditing(ctx: RegistrarCtx): void {
     return null;
   });
 
+  /* ------------------------------ set_name ------------------------------- */
+  // set_name(old, new) — rename an object or measurement (editing.py). Returns 1
+  // on success, 0 if the old name is unknown or the new name is taken.
+  ctx.command('set_name', (args, kwargs): Json => {
+    const oldName = ctx.str(pick(args, kwargs, 0, 'old_name'), '');
+    const newName = ctx.str(pick(args, kwargs, 1, 'new_name'), '');
+    const ok = oldName !== '' && newName !== '' && ex.rename(oldName, newName);
+    if (ok) ctx.publish();
+    return ok ? 1 : 0;
+  });
+
   /* --------------------------- remove_picked ----------------------------- */
   // remove_picked(hydrogens=1, ...) — delete the atom currently picked for
   // editing, i.e. everything in `pk1` (editing.py:839). Reuses `remove`.

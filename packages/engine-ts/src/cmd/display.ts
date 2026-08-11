@@ -44,8 +44,6 @@ import type { RegistrarCtx } from './registrar';
 const OBJECT_COLOR = new WeakMap<ObjectMolecule, number>();
 /** Per-object `cartoon_type` subtype. */
 const CARTOON_TYPE = new WeakMap<ObjectMolecule, number>();
-/** Per-atom label text (`AtomInfoType.label`). */
-const ATOM_LABEL = new WeakMap<AtomInfo, string>();
 
 /** `cmd.cartoon` type-name → `cartoon_type` int (viewing.py `cartoon`). */
 const CARTOON_TYPES: Readonly<Record<string, number>> = {
@@ -217,10 +215,10 @@ export function registerDisplay(ctx: RegistrarCtx): void {
     for (const ua of atoms) {
       const text = evalLabel(expression, ua.atom);
       if (text === '') {
-        ATOM_LABEL.delete(ua.atom);
+        delete ua.atom.label;
         ua.atom.visRep &= ~bit;
       } else {
-        ATOM_LABEL.set(ua.atom, text);
+        ua.atom.label = text;
         ua.atom.visRep |= bit;
       }
     }
@@ -233,7 +231,7 @@ export function registerDisplay(ctx: RegistrarCtx): void {
     const selection = str(args[0], 'all') || 'all';
     const out: Array<[string, number, string]> = [];
     for (const ua of ex.atomsMatching(selection)) {
-      const text = ATOM_LABEL.get(ua.atom);
+      const text = ua.atom.label;
       if (text !== undefined) out.push([ua.objName, ua.atom.id, text]);
     }
     return out;
@@ -250,7 +248,7 @@ export function registerDisplay(ctx: RegistrarCtx): void {
     const state = Number(args[1] ?? 0) || 1;
     const out: Array<{ object: string; id: number; x: number; y: number; z: number; text: string }> = [];
     for (const ua of ex.atomsMatching(selection)) {
-      const text = ATOM_LABEL.get(ua.atom);
+      const text = ua.atom.label;
       if (text === undefined) continue;
       const mol = ex.molecule(ua.objName);
       if (!mol) continue;

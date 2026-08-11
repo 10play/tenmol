@@ -40,6 +40,8 @@ export interface AtomInfo {
   color: number;
   /** Secondary structure: 'H' (helix), 'S' (strand), or '' (loop/unassigned). */
   ss: string;
+  /** Per-atom label text (PyMOL `label`), or undefined when none is set. */
+  label?: string;
   /**
    * Anisotropic displacement (ADP) from an ANISOU record, in Å²:
    * [U11, U22, U33, U12, U13, U23]. Absent for atoms without ANISOU (the
