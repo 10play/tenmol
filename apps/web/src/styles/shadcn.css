@@ -649,6 +649,16 @@
   flex: 0 0 auto;
   opacity: 0.92;
 }
+/* A control's icon is decorative: it must never intercept the pointer. The
+   modern theme fills icon buttons (the movie transport, quick buttons, …) with
+   an <svg>, and hit-testing that lands on the SVG rejects the control — an
+   SVGElement is not an HTMLElement — which reads as "unreachable" (the object-
+   list-reachable e2e checks exactly this). Pass the pointer through to the
+   button, which is always the real target. Classic has no icons and is unscoped. */
+:root[data-ui-theme='shadcn'] button svg,
+:root[data-ui-theme='shadcn'] [role='button'] svg {
+  pointer-events: none;
+}
 /* icon-only controls collapse to a square */
 :root[data-ui-theme='shadcn'] .ui-has-icon:has(.ui-sr) {
   gap: 0;
