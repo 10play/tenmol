@@ -37,12 +37,21 @@ const CROSS_SECTION_POINTS = 8;
 const DEFAULT_LOOP_RADIUS = 0.2;
 /** Helix ribbon half-width along the binormal (full width ≈ 2.4 Å). */
 const HELIX_HALF_WIDTH = 1.2;
-/** Strand ribbon half-width along the binormal. */
-const STRAND_HALF_WIDTH = 0.9;
+/**
+ * Strand ribbon half-width along the binormal. PyMOL's `ExtrudeRectangle` puts
+ * the rectangle corners at `sin(π/4) * cartoon_rect_length`, so the effective
+ * half-width is `0.707 * 1.40 ≈ 0.99`, NOT `cartoon_rect_length` itself.
+ */
+const STRAND_HALF_WIDTH = 0.99;
 /** Helix ribbon half-thickness along the normal (full thickness ≈ 0.4 Å). */
 const HELIX_HALF_THICKNESS = 0.3;
-/** Strand ribbon half-thickness — PyMOL renders β-sheets as very flat slabs. */
-const STRAND_HALF_THICKNESS = 0.03;
+/**
+ * Strand ribbon half-thickness along the normal — `0.707 * cartoon_rect_width`
+ * (`0.707 * 0.40 ≈ 0.283`). The β-slab is flat but not paper-thin: its edges
+ * catch the light and read as depth, which is why the ray reference shows a
+ * shaded rim along each strand. The previous 0.03 collapsed that rim to nothing.
+ */
+const STRAND_HALF_THICKNESS = 0.283;
 /** Strand arrowhead base is this multiple of the strand half-width. */
 const ARROW_WIDTH_SCALE = 1.9;
 
