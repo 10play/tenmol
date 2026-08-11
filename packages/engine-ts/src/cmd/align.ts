@@ -314,23 +314,6 @@ function num(v: unknown, dflt: number): number {
 
 /* ------------------------------- selection ------------------------------- */
 
-/** The paired atom coordinates of a selection in `state`, plus their objects. */
-function coordsOf(
-  uas: UniverseAtom[],
-  ctx: RegistrarCtx,
-  state: number,
-): { pts: Vec3[]; mols: Set<string> } {
-  const pts: Vec3[] = [];
-  const mols = new Set<string>();
-  for (const ua of uas) {
-    const mol = ctx.executive.molecule(ua.objName);
-    if (!mol) continue;
-    mols.add(ua.objName);
-    pts.push(mol.coord(ua.index, state));
-  }
-  return { pts, mols };
-}
-
 /** Atom-identity key for `matchmaker=0` pairing: segi/chain/resn/resi/name/alt. */
 function identityKey(ua: UniverseAtom): string {
   const a = ua.atom;
