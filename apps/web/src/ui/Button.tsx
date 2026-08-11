@@ -205,6 +205,7 @@ export interface ToggleButtonProps extends ButtonProps {
  */
 export function ToggleButton({
   variant = 'bare',
+  tone = 'default',
   pressed = false,
   type = 'button',
   className,
@@ -219,12 +220,16 @@ export function ToggleButton({
       type={type}
       data-slot="toggle-button"
       data-variant={variant}
+      data-tone={tone}
       data-state={pressed ? 'on' : 'off'}
       aria-pressed={pressed}
       className={cn(
         VARIANT_CLASS[variant],
         pressed && 'is-on',
         modern && MODERN_VARIANT[variant],
+        // `tone` colours the OFF state; the `data-[state=on]` accent below has an
+        // attribute-selector's higher specificity, so it wins when pressed.
+        modern && !pressed && tone !== 'default' && MODERN_TONE[tone],
         modern &&
           'data-[state=on]:border-transparent data-[state=on]:bg-[var(--pm-accent)] data-[state=on]:text-[var(--sh-accent-text)] data-[state=on]:hover:bg-[var(--pm-accent)]',
         className,

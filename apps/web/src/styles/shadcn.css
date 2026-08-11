@@ -97,7 +97,9 @@
   --pm-panel: #ffffff;
   --pm-panel-alt: #f1f4f9;
   --pm-edge: #dfe4ec;
-  --pm-line: rgba(15, 23, 42, 0.1);
+  /* Cool slate-700 hairline — reads cleaner than near-black against the
+     lavender stage (dark keeps its slate-400 line). */
+  --pm-line: rgba(51, 65, 85, 0.1);
   --pm-text: #2b3245;
   --pm-text-dim: #6b7488;
   --pm-text-bright: #0f1420;
@@ -108,7 +110,6 @@
   --pm-btn-cloaked: #e6eaf1;
   --pm-btn-pressed: #cfd6e4;
 
-  --pm-line: rgba(51, 65, 85, 0.1);
   --sh-panel-frost: rgba(255, 255, 255, 0.85);
   --sh-line-strong: rgba(51, 65, 85, 0.16);
   --sh-accent-soft: rgba(91, 87, 240, 0.12);

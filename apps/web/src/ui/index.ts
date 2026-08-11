@@ -19,7 +19,14 @@ export {
 } from './theme';
 
 // Atoms — native/passthrough DOM, styled per theme by CSS.
-export { Button, IconButton, ToggleButton, type ButtonVariant, type ButtonProps } from './Button';
+export {
+  Button,
+  IconButton,
+  ToggleButton,
+  type ButtonVariant,
+  type ButtonTone,
+  type ButtonProps,
+} from './Button';
 export { Panel, PanelHeader, Toolbar } from './Panel';
 export { TextInput, TextArea } from './Input';
 export { Badge } from './Badge';
