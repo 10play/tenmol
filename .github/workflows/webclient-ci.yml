@@ -390,34 +390,71 @@ jobs:
       # to run with pytest's capture on, because it un-installs pcatch). The
       # junit XML goes to RUNNER_TEMP so it cannot dirty the tree, and is
       # uploaded whether the step passed or failed.
-      - name: bridge pytest suite
+      # The suite is split into two SEQUENTIAL pytest invocations, each a fresh
+      # Python process and therefore a fresh PyMOL. The `bridge` fixture in
+      # conftest.py is scope="session" -- one PyMOL for the whole invocation,
+      # because PyMOL is a process singleton that starts once -- so memory
+      # accumulates for the life of the process. Against ~70 test files that
+      # peak passed the 7 GB macOS runner and the kernel OOM-killed pytest
+      # (exit 137, "Killed: 9") ~36 min in. Two invocations halve peak memory
+      # with no change to any test.
+      #
+      # Split: part 1 is the heavy protocol tests (test_p8/p9/p10/p11/p13, via
+      # test_p*.py); part 2 is everything else (test_[^p]*.py). The
+      # test_wf_*/test_wf_*verify.py pairs are stateful -- each *verify reads
+      # state its partner left in the shared PyMOL -- so both halves of every
+      # pair must run in ONE invocation. They all start test_wf_, so they all
+      # land in part 2 together; the glob keeps them there.
+      #
+      # Both invocations carry the same knobs as before:
+      #  - TENMOL_TEST_SLOW=3 scales every wall-clock deadline/rate/budget in
+      #    the suite (conftest.py::slow); this runner's GL is a software
+      #    rasteriser on shared CPU, so an absolute bound measures the box.
+      #    3x keeps a real regression failing while letting a slow box pass.
+      #  - `-k 'not benchmark'`: three tests assert a frame-time budget
+      #    (267.67 ms measured against a 6 ms bound). A perf number from a
+      #    shared, GPU-less runner is noise, not a signal.
+      #  - `-s` (capture=no) is mandatory: conftest.py refuses to run with
+      #    pytest's capture on, because it un-installs pcatch.
+      # Each writes its own junit XML to RUNNER_TEMP so neither can dirty the
+      # tree; both are uploaded whether the step passed or failed.
+      - name: bridge pytest suite (part 1 - protocol)
         run: |
           set -euo pipefail
           test -d packages/bridge/tests || {
             echo "::error::packages/bridge/tests does not exist -- this workflow is mis-pathed"
             exit 1
           }
-          # TENMOL_TEST_SLOW scales every wall-clock deadline, rate and budget in
-          # the suite (packages/bridge/tests/conftest.py::slow). This suite takes
-          # 21m43s here against ~9m on the dev machine, its GL is a software
-          # rasteriser and its CPU is shared, so an absolute bound measures the
-          # runner. 3x keeps a real regression failing while letting a slow box
-          # pass.
-          #
-          # `-k 'not benchmark'`: three tests assert a frame-time budget
-          # (measured 267.67 ms against a 6 ms bound). A performance number from
-          # a shared runner with no GPU is noise, not a signal.
           TENMOL_TEST_SLOW=3 \
-          bash scripts/dev-bridge.sh --exec python -m pytest packages/bridge/tests -q \
+          bash scripts/dev-bridge.sh --exec python -m pytest packages/bridge/tests/test_p*.py -q -s \
             -k 'not benchmark' \
-            --junitxml="$RUNNER_TEMP/pytest-bridge.xml"
+            --junitxml="$RUNNER_TEMP/pytest-bridge-1.xml"
+
+      # `if: success() || failure()` so a failure in part 1 does not skip part
+      # 2: the single-invocation suite this replaced let every file run and
+      # report regardless of earlier failures (pytest continues past a failing
+      # test), and the split must preserve that -- otherwise one failing
+      # protocol test hides the pass/fail status of the entire second half.
+      # (`|| failure()` still skips part 2 on cancellation, unlike `always()`.)
+      - name: bridge pytest suite (part 2 - workflow)
+        if: success() || failure()
+        run: |
+          set -euo pipefail
+          test -d packages/bridge/tests || {
+            echo "::error::packages/bridge/tests does not exist -- this workflow is mis-pathed"
+            exit 1
+          }
+          TENMOL_TEST_SLOW=3 \
+          bash scripts/dev-bridge.sh --exec python -m pytest packages/bridge/tests/test_[^p]*.py -q -s \
+            -k 'not benchmark' \
+            --junitxml="$RUNNER_TEMP/pytest-bridge-2.xml"
 
       - name: upload bridge pytest report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pytest-bridge-${{ github.run_id }}
-          path: ${{ runner.temp }}/pytest-bridge.xml
+          path: ${{ runner.temp }}/pytest-bridge-*.xml
           if-no-files-found: warn
 
       # Same caveat as `doctor`: with no window server the pump can come up

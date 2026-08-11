@@ -96,6 +96,11 @@ function tenmolDevFrames(): Plugin {
 }
 
 export default defineConfig(({ command }) => ({
+  // Asset base URL. Defaults to '/' for dev, preview and the desktop app. The
+  // GitHub Pages deploy serves the app under a project sub-path
+  // (https://<org>.github.io/tenmol/), so its build sets VITE_BASE_PATH=/tenmol/
+  // to emit sub-path-relative asset URLs.
+  base: process.env['VITE_BASE_PATH'] ?? '/',
   plugins: [react(), tailwindcss(), tenmolDevFrames()],
   define: {
     // The absolute directory the bridge writes frames into and the dev server

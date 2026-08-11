@@ -1,5 +1,7 @@
 # docs
 
+**Live demo:** [10play.github.io/tenmol](https://10play.github.io/tenmol/)
+
 What is in this directory, and what each file is for.
 
 | File                                                       | What it is                                                                                                                                                                                                                         |
