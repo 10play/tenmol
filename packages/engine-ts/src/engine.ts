@@ -633,6 +633,8 @@ export class Engine {
     h('get_type', (args) => {
       const name = str(args[0], '');
       if (ex.measurement(name)) return 'object:measurement';
+      const g = ex.gadget(name);
+      if (g) return g.kind;
       const mol = ex.molecule(name);
       return (mol?.kind as string | undefined) ?? 'object:molecule';
     });

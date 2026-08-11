@@ -109,7 +109,7 @@ export class Executive {
   getNames(type = 'public_objects', enabledOnly = false): string[] {
     const objs = this.order.filter((n) => {
       if (n.startsWith('_') && type.startsWith('public')) return false;
-      if (enabledOnly && !(this.objects.get(n)?.enabled ?? this.measures.get(n)?.enabled)) return false;
+      if (enabledOnly && !(this.objects.get(n)?.enabled ?? this.measures.get(n)?.enabled ?? this.gadgets.get(n)?.enabled)) return false;
       return true;
     });
     const sels = [...this.selections.keys()].filter((n) => !(n.startsWith('_') && type.startsWith('public')));
@@ -134,14 +134,33 @@ export class Executive {
       this.order.length = 0;
       this.objects.clear();
       this.measures.clear();
+      this.gadgets.clear();
       this.selections.clear();
       return;
     }
-    if (this.objects.delete(pattern) || this.measures.delete(pattern)) {
+    if (this.objects.delete(pattern) || this.measures.delete(pattern) || this.gadgets.delete(pattern)) {
       const i = this.order.indexOf(pattern);
       if (i >= 0) this.order.splice(i, 1);
     }
     this.selections.delete(pattern);
+  }
+
+  /* ------------------------------ gadgets ----------------------------- */
+  // Non-molecule, non-measurement named objects: maps, ramps, isosurface/
+  // isomesh/gradient meshes. Their geometry lives in the command modules; the
+  // executive only tracks name/kind so get_names lists them and get_type reports
+  // the right 'object:map'/'object:ramp'/'object:mesh'/'object:surface' kind.
+  private readonly gadgets = new Map<string, { name: string; kind: string; enabled: boolean }>();
+
+  registerGadget(name: string, kind: string): void {
+    if (!this.objects.has(name) && !this.measures.has(name) && !this.gadgets.has(name)) {
+      this.order.push(name);
+    }
+    this.gadgets.set(name, { name, kind, enabled: true });
+  }
+
+  gadget(name: string): { name: string; kind: string; enabled: boolean } | undefined {
+    return this.gadgets.get(name);
   }
 
   /** Rename an object or measurement (PyMOL `set_name`). Returns true on success. */

@@ -151,6 +151,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
     }
 
     maps.set(name, { name, origin, spacing, dims, data, levels: [] });
+    ex.registerGadget(name, 'object:map');
     ctx.publish();
     return name;
   });
@@ -334,6 +335,9 @@ export function registerMaps(ctx: RegistrarCtx): void {
         kind,
       });
     }
+    const typeName =
+      kind === 'mesh' ? 'object:mesh' : kind === 'surface' ? 'object:surface' : 'object:mesh';
+    ex.registerGadget(objName, typeName);
     ctx.publish();
     return objName;
   };
