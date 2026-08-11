@@ -8,10 +8,10 @@ coverage and foreground colour fidelity). Regenerate goldens with
 View the scenes visually in the gallery: `node apps/web/e2e/gallery.mjs` →
 `/gallery.html` on the front dev server.
 
-**Mean combined: 88.3%** (shape 94.3% · color 82.4%) across 22 scenes.
+**Mean combined: 88.4%** (shape 94.3% · color 82.6%) across 22 scenes.
 **Ceiling: 96.1%** — the max any renderer can reach under this metric (PyMOL ref scored against a 1px-shifted copy of itself; two different rasterisers can't align better than ~1px). "gap" = ceiling − current = remaining headroom.
 
-> Δ vs previous scoreboard: **+0%**
+> Δ vs previous scoreboard: **+0.1%**
 
 | scene | combined | shape | color | ceiling | gap |
 |---|--:|--:|--:|--:|--:|
@@ -20,18 +20,18 @@ View the scenes visually in the gallery: `node apps/web/e2e/gallery.mjs` →
 | `pept-cartoon-rainbow` | 79.7 | 92.2 | 67.3 | 99.1 | 19.4 |
 | `3al1-surface-bfactor` | 81.5 | 84.8 | 78.1 | 98.9 | 17.4 |
 | `pept-dots` | 82 | 88.4 | 75.6 | 87.4 | 5.5 |
-| `helix-sticks` | 84.3 | 94.4 | 74.2 | 93 | 8.7 |
+| `helix-sticks` | 84.4 | 94.4 | 74.5 | 93 | 8.6 |
 | `3al1-surface` | 86.1 | 88.9 | 83.4 | 99.2 | 13.1 |
 | `pept-lines` | 86.1 | 98.7 | 73.4 | 91.8 | 5.7 |
-| `3al1-sticks-element` | 87.5 | 95.8 | 79.2 | 92.7 | 5.1 |
+| `3al1-sticks-element` | 87.7 | 95.8 | 79.6 | 92.7 | 4.9 |
 | `pept-ribbon` | 88.8 | 99.2 | 78.4 | 96.3 | 7.5 |
 | `pept-labels` | 90.5 | 96.8 | 84.1 | 94.3 | 3.8 |
 | `helix-surface` | 91 | 92.2 | 89.7 | 99.2 | 8.3 |
 | `helix-cartoon` | 91.1 | 96.6 | 85.6 | 98.5 | 7.4 |
 | `pept-dashes` | 91.4 | 97.2 | 85.7 | 95.4 | 3.9 |
-| `pept-sticks-thick` | 91.8 | 96.2 | 87.4 | 96.7 | 5 |
-| `pept-sticks-element` | 92 | 97.4 | 86.7 | 95.6 | 3.6 |
 | `3al1-cartoon-rainbow` | 92.2 | 97.5 | 87 | 98 | 5.8 |
+| `pept-sticks-element` | 92.6 | 97.5 | 87.6 | 95.6 | 3.1 |
+| `pept-sticks-thick` | 92.9 | 96.6 | 89.2 | 96.7 | 3.8 |
 | `3al1-cartoon-ss` | 93.8 | 98 | 89.6 | 98.4 | 4.6 |
 | `3al1-spheres` | 94.3 | 95.3 | 93.3 | 97.1 | 2.8 |
 | `pept-spheres-half` | 95.1 | 96.8 | 93.4 | 97.9 | 2.8 |

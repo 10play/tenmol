@@ -1,8 +1,8 @@
 {
   "summary": {
-    "meanCombined": 88.3,
+    "meanCombined": 88.4,
     "meanShape": 94.3,
-    "meanColor": 82.4,
+    "meanColor": 82.6,
     "meanCeiling": 96.1,
     "scenes": 22
   },
@@ -33,11 +33,11 @@
     },
     {
       "id": "3al1-sticks-element",
-      "comb": 87.5,
+      "comb": 87.7,
       "shape": 95.8,
-      "color": 79.2,
+      "color": 79.6,
       "ceiling": 92.7,
-      "headroom": 5.1
+      "headroom": 4.9
     },
     {
       "id": "3al1-surface",
@@ -65,11 +65,11 @@
     },
     {
       "id": "helix-sticks",
-      "comb": 84.3,
+      "comb": 84.4,
       "shape": 94.4,
-      "color": 74.2,
+      "color": 74.5,
       "ceiling": 93,
-      "headroom": 8.7
+      "headroom": 8.6
     },
     {
       "id": "helix-surface",
@@ -161,19 +161,19 @@
     },
     {
       "id": "pept-sticks-element",
-      "comb": 92,
-      "shape": 97.4,
-      "color": 86.7,
+      "comb": 92.6,
+      "shape": 97.5,
+      "color": 87.6,
       "ceiling": 95.6,
-      "headroom": 3.6
+      "headroom": 3.1
     },
     {
       "id": "pept-sticks-thick",
-      "comb": 91.8,
-      "shape": 96.2,
-      "color": 87.4,
+      "comb": 92.9,
+      "shape": 96.6,
+      "color": 89.2,
       "ceiling": 96.7,
-      "headroom": 5
+      "headroom": 3.8
     },
     {
       "id": "pept-surface",

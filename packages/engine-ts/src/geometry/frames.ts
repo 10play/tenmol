@@ -273,7 +273,13 @@ export function buildSticksFrame(
     const atomB = mol.atoms[b]!;
     const isH = isHydrogen(atomA.elem, atomA.name) || isHydrogen(atomB.elem, atomB.name);
     data[o + 6] = isH ? stickRadius * STICK_H_SCALE : stickRadius;
-    data[o + 7] = 1; // capbits: capped
+    // capbits: ROUND caps at BOTH atom ends, matching PyMOL's RepCylBond
+    // (`cCylShaderCap1Round | cCylShaderCap2Round`). One cylinder2 spans atom→atom,
+    // so both ends sit at an atom; rounding them melts the multi-bond junction into
+    // a smooth ball-and-stick joint instead of the flat-cap star-burst spikes.
+    // Bits (cylinder.ts): frontcap(1)|endcap(2)|frontcapround(4)|endcapround(8) = 15;
+    // bit16 left 0 → nocolorinterp stays true, keeping the half-bond hard colour split.
+    data[o + 7] = 15;
     data[o + 8] = r1; data[o + 9] = g1; data[o + 10] = b1c; data[o + 11] = 1;
     data[o + 12] = r2; data[o + 13] = g2; data[o + 14] = b2c; data[o + 15] = 1;
     atom[k] = mol.atoms[a]!.id;
