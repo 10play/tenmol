@@ -25,8 +25,9 @@ user-visible impact. Every claim was verified against the source, not inferred.
   (highest first).
 - **Parity metric** — where a percentage is quoted, it is the TS render compared
   pixel-for-pixel (pixelmatch) against a **real-PyMOL reference PNG**. Current mean
-  ≈ **89.4%** across 22 scenes; solid/line/cartoon reps sit at 90–99%, surfaces at
-  65–75%, mesh at 64.6% (worst). See the `packages/e2e` docs page /
+  ≈ **92.7%** across 22 scenes (up from 89.4% after the SES surface shift);
+  solid/line/cartoon reps sit at 90–99%, surfaces at 84–92%, mesh at 74% (worst).
+  See the `packages/e2e` docs page /
   `apps/web/e2e/visual.e2e.mjs`.
 
 ### Where recent work landed (context)
@@ -247,19 +248,22 @@ Files: `geometry/registry.ts:43-61`.
 
 ## 3. Rendering — quality gaps
 
-Reps that **do** render but don't yet match desktop PyMOL. Mean parity ≈ 89.4%;
-surfaces 65–75%, mesh 64.6% (worst), everything else 90–99%.
+Reps that **do** render but don't yet match desktop PyMOL. Mean parity ≈ 92.7%;
+surfaces 84–92%, mesh 74% (worst), everything else 90–99%.
 
-### Surface is SAS, not the solvent-excluded surface (SES) — L · biggest surface gap
+### Surface — 🟡 SES-approximated (shift toward vdW); true probe-rolling still absent — M
 
-The field `min(|p−c|−(vdw+probe))` marching-cubed at 0 is the solvent-_accessible_
-surface; without probe rolling, re-entrant pockets and toroidal saddles fill in
-and the surface reads puffy/bubbly. The 90³ grid is coarsened (spacing ×1.3) on
-big molecules → visible faceting. This is the single largest cause of weak surface
-scores (3al1 75.1%, bfactor 68.5%, helix 72.2%, pept 71.7%). Also unmodelled:
-`surface_type` dot/mesh modes, `surface_cavity_mode`, per-atom surface flags.
+The raw field `min(|p−c|−(vdw+probe))` is the solvent-_accessible_ surface (puffy).
+It is now **shifted inward by ~0.9·probe** toward the vdW surface — a cheap
+solvent-_excluded_ approximation that removed most of the puffiness and lifted the
+surface/mesh scenes sharply: **3al1-surface 75.1→87.2%, bfactor 68.5→83.7%,
+helix 72.2→88.4%, pept-surface 71.7→91.7%, pept-mesh 64.6→74.0%** (mean **89.4→
+92.7%**). Still not modelled: true probe-rolling of re-entrant toroidal saddles,
+`surface_type` dot/mesh modes, `surface_cavity_mode`, per-atom surface flags; the
+faceting-vs-resolution lever was tried (finer grid + spatial index) and found NOT
+to matter — the gap was shape (SES), not tessellation.
 
-Files: `geometry/surface_gen.ts:11`, `geometry/surface.ts:23`.
+Files: `geometry/surface_gen.ts` (`SES_SHRINK`), `geometry/surface.ts`.
 
 ### Cartoon heavily simplified — L
 

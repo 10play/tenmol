@@ -7,11 +7,13 @@
  *
  *   1. A scalar field over a padded axis-aligned grid,
  *          f(p) = min over atoms of ( |p - center_i| - (vdw_i + probe) ),
- *      which is negative inside the union of the (vdw+probe) spheres — the
- *      solvent-accessible surface (SAS). This is an APPROXIMATION of PyMOL's
- *      solvent-EXCLUDED surface (`RepSurface` / `SurfaceJob`): we do not roll the
- *      probe to carve re-entrant pockets, so concave saddles read as the SAS
- *      rather than the SES. Exact SES is explicitly not required here.
+ *      the solvent-ACCESSIBLE surface (SAS) at f = 0. The SAS is puffy, so the
+ *      field is then shifted inward by {@link SES_SHRINK}·probe toward the vdW
+ *      surface — a cheap approximation of PyMOL's solvent-EXCLUDED surface
+ *      (`RepSurface` / `SurfaceJob`) that markedly improves the visual match.
+ *      True probe-rolling of re-entrant saddles is still not modelled (concave
+ *      pockets remain approximate), but the level shift removes most of the SAS
+ *      puffiness the exact SES lacks.
  *   2. Marching cubes at isolevel 0 (the full 256-case table is embedded below),
  *      with vertices de-duplicated per grid edge so the result is a connected,
  *      closed-ish mesh rather than a triangle soup.
@@ -61,6 +63,12 @@ export interface SurfaceGenOptions {
 
 /** PyMOL `solvent_radius` default. */
 export const DEFAULT_PROBE = 1.4;
+/**
+ * SES-approximation inward shift, as a fraction of the probe radius (0 = raw
+ * SAS, 1 = the vdW surface). ~0.9 best matches PyMOL's solvent-excluded surface
+ * across the visual corpus; the surface reads far less puffy than the SAS.
+ */
+const SES_SHRINK = 0.9;
 /** Default marching-cubes grid spacing (Å). */
 export const DEFAULT_SPACING = 0.6;
 /** Default grid-point cap (90³). */
@@ -165,6 +173,21 @@ export function generateSurface(
         }
       }
     }
+  }
+
+  // SES approximation: shift the isosurface inward toward the vdW surface. The
+  // raw field is the solvent-ACCESSIBLE surface (`dist − (vdw+probe)`), which
+  // reads puffy/bubbly; adding K·probe moves the zero-crossing from
+  // `dist = vdw+probe` toward `dist = vdw`, much closer to PyMOL's solvent-
+  // EXCLUDED surface. Applied to written cells only (the 1e9 outside sentinels
+  // stay outside). The field GRADIENT is shift-invariant, so normals/smoothing
+  // are unaffected — only the level moves. Empirically K≈0.9 maximises the
+  // TS-vs-PyMOL similarity of the surface/mesh scenes (see visual.e2e.mjs);
+  // the analytic `fieldAt` gradient below is unaffected (direction only).
+  const shrink = probe * SES_SHRINK;
+  for (let i = 0; i < field.length; i++) {
+    const v = field[i]!;
+    if (v < 1e8) field[i] = v + shrink;
   }
 
   /** Analytic field value at an arbitrary point (min over atoms of dist − r). */
@@ -417,7 +440,12 @@ function laplacianStep(
 }
 
 /** `iterations` Taubin λ|μ passes (near volume-preserving) applied in place. */
-function taubinSmooth(pos: Float32Array, idx: Uint32Array, verts: number, iterations: number): void {
+function taubinSmooth(
+  pos: Float32Array,
+  idx: Uint32Array,
+  verts: number,
+  iterations: number,
+): void {
   const { off, nbr } = buildAdjacency(idx, verts);
   const lambda = 0.5;
   const mu = -0.53;

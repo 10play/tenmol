@@ -53,7 +53,7 @@ const GOLDEN_MAX_DIFF_RATIO = 0.02;
 // (the "renderer silently drifts away from PyMOL" case). Bump it consciously, as
 // with the parity scoreboard's `--min`, when a change legitimately moves the mean.
 // The engine's EXACT PyMOL equivalence is gated elsewhere (the live differential).
-const MEAN_PYMOL_FLOOR = Number(process.env.TENMOL_VISUAL_PYMOL_FLOOR ?? 85);
+const MEAN_PYMOL_FLOOR = Number(process.env.TENMOL_VISUAL_PYMOL_FLOOR ?? 90);
 
 mkdirSync(GOLDEN, { recursive: true });
 mkdirSync(OUT, { recursive: true });
@@ -83,7 +83,12 @@ function compare(aBuf, bBuf) {
     return c.data;
   };
   const n = pixelmatch(crop(a), crop(b), out.data, width, height, { threshold: 0.12 });
-  return { n, total: width * height, out, sizeMismatch: a.width !== b.width || a.height !== b.height };
+  return {
+    n,
+    total: width * height,
+    out,
+    sizeMismatch: a.width !== b.width || a.height !== b.height,
+  };
 }
 
 let stack;
@@ -114,7 +119,9 @@ try {
       await page.goto(`${stack.url}?render=1&backend=local&scene=${id}&w=${w}&h=${h}`, {
         waitUntil: 'domcontentloaded',
       });
-      await page.waitForFunction(() => window.__tenmolRenderReady != null, null, { timeout: 60_000 });
+      await page.waitForFunction(() => window.__tenmolRenderReady != null, null, {
+        timeout: 60_000,
+      });
       const ready = await page.evaluate(() => window.__tenmolRenderReady);
       if (!ready.ok) throw new Error(`render not ok: ${ready.err}`);
       const el = await page.locator('[data-render-stage]');
@@ -148,7 +155,9 @@ try {
       }
     }
     rows.push({ id, simPct, goldStatus });
-    console.log(`  ${goldStatus.startsWith('REGRESSED') ? 'FAIL' : 'ok  '} ${id.padEnd(24)} PyMOL≈${simPct}%  golden:${goldStatus}`);
+    console.log(
+      `  ${goldStatus.startsWith('REGRESSED') ? 'FAIL' : 'ok  '} ${id.padEnd(24)} PyMOL≈${simPct}%  golden:${goldStatus}`,
+    );
   }
 } finally {
   await stack.close();
@@ -157,12 +166,18 @@ try {
 // A committed report of the PyMOL-similarity trend (the "how close to PyMOL" metric).
 const report = {
   generatedBy: 'visual.e2e.mjs',
-  scenes: rows.map((r) => ({ id: r.id, pymolSimilarityPct: Number(r.simPct), golden: r.goldStatus })),
+  scenes: rows.map((r) => ({
+    id: r.id,
+    pymolSimilarityPct: Number(r.simPct),
+    golden: r.goldStatus,
+  })),
   meanPymolSimilarityPct:
     Math.round((rows.reduce((s, r) => s + Number(r.simPct), 0) / rows.length) * 10) / 10,
 };
 writeFileSync(join(OUT, 'report.json'), JSON.stringify(report, null, 2) + '\n');
-console.log(`\nvisual: mean PyMOL similarity ${report.meanPymolSimilarityPct}%  ·  ${scenes.length - failed}/${scenes.length} golden gates passed`);
+console.log(
+  `\nvisual: mean PyMOL similarity ${report.meanPymolSimilarityPct}%  ·  ${scenes.length - failed}/${scenes.length} golden gates passed`,
+);
 
 // The mean-PyMOL floor (see MEAN_PYMOL_FLOOR). A drift AWAY from PyMOL that the
 // self-regression gate can't see (because the golden moved with it) fails here.
