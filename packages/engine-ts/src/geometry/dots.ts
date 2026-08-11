@@ -74,14 +74,10 @@ export const buildDotsFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
   const dotSolvent = getSettingFloat('dot_solvent') !== 0;
   const probe = dotSolvent ? getSettingFloat('solvent_radius') || 1.4 : 0;
   const density = getSettingFloat('dot_density') || 2;
-  // Coverage compensation for the GL point-size floor. The webgl backend can't
-  // draw a point smaller than ~2 device px, so each of our dots paints a far
-  // fatter footprint than PyMOL's sub-pixel `RepDot` points. At the full
-  // `dot_density` count that inflates the speckle's pixel coverage well past
-  // PyMOL's, muddying the match; dropping two density levels (e.g. the default
-  // 2 -> Sphere0's 42 dots) brings the rendered coverage back in line with the
-  // reference — measured to lift pept-dots parity from 87.8% to 88.2%.
-  const unit = fibonacciSphere(dotsForDensity(density - 2));
+  // PyMOL's `dot_density` 2 tiles each probe sphere with Sphere2's 162 points,
+  // and the ray reference is a DENSE, fully-covered dot surface. Matching that
+  // count is what makes the cloud read as PyMOL's rather than a sparse scatter.
+  const unit = fibonacciSphere(dotsForDensity(density));
 
   // Per-atom probe sphere: centre + radius (vdw, plus the solvent probe when on).
   // Precomputed once so the buried-point test is a cheap centre/radius compare.
@@ -161,12 +157,14 @@ export const buildDotsFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
   builder.addF32(normal, 3, (ref) => (inst.normal = ref));
   const payload = builder.build();
 
-  // Screen-space point size (`dot_width`, in CSS pixels). The webgl backend
-  // draws these radius-0 sphere instances as `GL_POINTS` of this many pixels;
-  // the header carries the size so the material can honour `dot_width` (PyMOL's
-  // default is 2) rather than the material's own fallback.
+  // Screen-space point size, in CSS pixels. The webgl backend draws these
+  // radius-0 sphere instances as `GL_POINTS`. PyMOL's `dot_width` is 2, but the
+  // ray reference is 2x-oversampled and down-filtered, so each dot lands as a
+  // soft ~3-4 px disc, not a hard 2 px square — the antialiased footprint. We
+  // size our GL points to that footprint so the cloud's coverage and colour
+  // match the ray render instead of reading as a sparse sub-pixel scatter.
   const dotWidth = getSettingFloat('dot_width') || 2;
-  const pointSize = Math.max(dotWidth, 2.0);
+  const pointSize = Math.max(dotWidth * 2, 4.0);
 
   const header: CgoDrawArraysHeader & { pointSize: number } = {
     v: 1,
