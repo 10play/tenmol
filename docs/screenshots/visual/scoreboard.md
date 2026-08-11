@@ -8,14 +8,14 @@ coverage and foreground colour fidelity). Regenerate goldens with
 View the scenes visually in the gallery: `node apps/web/e2e/gallery.mjs` →
 `/gallery.html` on the front dev server.
 
-**Mean combined: 88.7%** (shape 94.3% · color 82.9%) across 22 scenes.
+**Mean combined: 88.6%** (shape 94.2% · color 83%) across 22 scenes.
 **Ceiling: 96.1%** — the max any renderer can reach under this metric (PyMOL ref scored against a 1px-shifted copy of itself; two different rasterisers can't align better than ~1px). "gap" = ceiling − current = remaining headroom.
 
-> Δ vs previous scoreboard: **+0.3%**
+> Δ vs previous scoreboard: **-0.1%**
 
 | scene | combined | shape | color | ceiling | gap |
 |---|--:|--:|--:|--:|--:|
-| `pept-mesh` | 74.5 | 80.4 | 68.6 | 87.4 | 12.9 |
+| `pept-mesh` | 74.1 | 76.7 | 71.5 | 87.4 | 13.3 |
 | `pept-cartoon-ss` | 79.2 | 93.2 | 65.2 | 99.1 | 19.8 |
 | `pept-cartoon-rainbow` | 81.2 | 92.6 | 69.7 | 99.1 | 17.9 |
 | `3al1-surface-bfactor` | 81.5 | 84.8 | 78.1 | 98.9 | 17.4 |
@@ -25,10 +25,10 @@ View the scenes visually in the gallery: `node apps/web/e2e/gallery.mjs` →
 | `pept-lines` | 86.1 | 98.7 | 73.4 | 91.8 | 5.7 |
 | `3al1-sticks-element` | 87.7 | 95.8 | 79.7 | 92.7 | 4.9 |
 | `pept-ribbon` | 88.8 | 99.2 | 78.4 | 96.3 | 7.5 |
+| `pept-labels` | 90.5 | 96.8 | 84.1 | 94.3 | 3.8 |
 | `helix-surface` | 91 | 92.2 | 89.7 | 99.2 | 8.3 |
-| `pept-labels` | 91 | 96.9 | 85 | 94.3 | 3.3 |
 | `helix-cartoon` | 91.1 | 96.6 | 85.5 | 98.5 | 7.4 |
-| `pept-dashes` | 92 | 97.3 | 86.6 | 95.4 | 3.4 |
+| `pept-dashes` | 91.4 | 97.2 | 85.7 | 95.4 | 3.9 |
 | `3al1-cartoon-rainbow` | 92.2 | 97.5 | 87 | 98 | 5.8 |
 | `pept-sticks-element` | 92.6 | 97.5 | 87.6 | 95.6 | 3.1 |
 | `pept-sticks-thick` | 92.9 | 96.6 | 89.2 | 96.7 | 3.8 |

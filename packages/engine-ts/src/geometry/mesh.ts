@@ -27,23 +27,24 @@ const PLACEHOLDER: BufferRef = { byteOffset: 0, byteLength: 0, dtype: 'f32', ite
  */
 export const buildMeshFrame: RepBuilder = ({ mol, state, seq, getSettingFloat }) => {
   const probe = getSettingFloat('solvent_radius') || DEFAULT_PROBE;
-  // PyMOL's `mesh` is a FINE net over a SMOOTHED solvent-excluded blob — many
-  // small quads, not a sparse polygon cage. A very coarse grid (spacing ~3.0)
-  // reads as that cage; a raw fine grid with no smoothing reads as dense triangular
-  // noise. Use a moderately fine grid so the line DENSITY matches PyMOL, and run
-  // the SAME field-blur + Taubin smoothing the filled `surface` rep uses so the
-  // wire follows the fused blob (not separated per-atom bumps). Dropping each
-  // triangle's longest edge (the diagonal) below then leaves PyMOL's tidy net.
+  // PyMOL's `mesh` is a DENSE, FINE net over the solvent-excluded surface — a
+  // multitude of small cells following every per-atom bump (RepMesh draws the
+  // surface triangulation's edges at surface_quality resolution), NOT a coarse
+  // polygon cage. Earlier this rep used a very coarse grid (spacing 2.2) which
+  // rendered a sparse blob nothing like PyMOL; use a FINE grid at the surface
+  // rep's resolution with only light smoothing so the atom bumps stay visible,
+  // then draw the edges. Dropping each triangle's longest edge (the diagonal)
+  // below leaves the axis-following quad net PyMOL shows.
   let surf = generateSurface(mol, state, repBit(Rep.Mesh), {
     probe,
-    spacing: 2.2,
+    spacing: 0.7,
     smooth: true,
-    smoothPasses: 3,
+    smoothPasses: 2,
     fieldBlur: 2,
     shrink: 0.82,
   });
-  // A very small molecule (a handful of atoms) spans too few 2.2 Å cells for the
-  // blurred+shrunk field to keep a zero-crossing, so the coarse pass yields an
+  // A very small molecule (a handful of atoms) spans too few grid cells for the
+  // blurred+shrunk field to keep a zero-crossing, so the pass yields an
   // empty mesh. Fall back to the fine default grid so any real molecule still
   // renders a wire — the coarse look is preserved for the many-atom scenes that
   // actually produce a mesh above (this branch is dead for them).

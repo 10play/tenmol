@@ -1,8 +1,8 @@
 {
   "summary": {
-    "meanCombined": 88.7,
-    "meanShape": 94.3,
-    "meanColor": 82.9,
+    "meanCombined": 88.6,
+    "meanShape": 94.2,
+    "meanColor": 83,
     "meanCeiling": 96.1,
     "scenes": 22
   },
@@ -97,11 +97,11 @@
     },
     {
       "id": "pept-dashes",
-      "comb": 92,
-      "shape": 97.3,
-      "color": 86.6,
+      "comb": 91.4,
+      "shape": 97.2,
+      "color": 85.7,
       "ceiling": 95.4,
-      "headroom": 3.4
+      "headroom": 3.9
     },
     {
       "id": "pept-dots",
@@ -113,11 +113,11 @@
     },
     {
       "id": "pept-labels",
-      "comb": 91,
-      "shape": 96.9,
-      "color": 85,
+      "comb": 90.5,
+      "shape": 96.8,
+      "color": 84.1,
       "ceiling": 94.3,
-      "headroom": 3.3
+      "headroom": 3.8
     },
     {
       "id": "pept-lines",
@@ -129,11 +129,11 @@
     },
     {
       "id": "pept-mesh",
-      "comb": 74.5,
-      "shape": 80.4,
-      "color": 68.6,
+      "comb": 74.1,
+      "shape": 76.7,
+      "color": 71.5,
       "ceiling": 87.4,
-      "headroom": 12.9
+      "headroom": 13.3
     },
     {
       "id": "pept-ribbon",
