@@ -72,21 +72,48 @@ function anyPerp(a: Vec3): Vec3 {
 
 /** Typical (neutral) valence per element — how many bonds it wants. */
 const VALENCE: Readonly<Record<string, number>> = {
-  H: 1, C: 4, N: 3, O: 2, S: 2, P: 3, B: 3,
-  F: 1, Cl: 1, Br: 1, I: 1,
+  H: 1,
+  C: 4,
+  N: 3,
+  O: 2,
+  S: 2,
+  P: 3,
+  B: 3,
+  F: 1,
+  Cl: 1,
+  Br: 1,
+  I: 1,
 };
 
 /** Idealised X–H bond length (Å). */
 const XH_LENGTH: Readonly<Record<string, number>> = {
-  C: 1.09, N: 1.01, O: 0.96, S: 1.34, P: 1.44, B: 1.19,
+  C: 1.09,
+  N: 1.01,
+  O: 0.96,
+  S: 1.34,
+  P: 1.44,
+  B: 1.19,
 };
 const DEFAULT_XH = 1.0;
 
 /** Covalent radii (Å) — the distance-bonding pass (mirrors `pdb.ts`). */
 const COVALENT: Readonly<Record<string, number>> = {
-  H: 0.31, C: 0.76, N: 0.71, O: 0.66, F: 0.57, P: 1.07, S: 1.05,
-  Cl: 1.02, Se: 1.2, Br: 1.2, Fe: 1.32, Zn: 1.22, Mg: 1.41,
-  Ca: 1.76, Na: 1.66, K: 2.03,
+  H: 0.31,
+  C: 0.76,
+  N: 0.71,
+  O: 0.66,
+  F: 0.57,
+  P: 1.07,
+  S: 1.05,
+  Cl: 1.02,
+  Se: 1.2,
+  Br: 1.2,
+  Fe: 1.32,
+  Zn: 1.22,
+  Mg: 1.41,
+  Ca: 1.76,
+  Na: 1.66,
+  K: 2.03,
 };
 const DEFAULT_COVALENT = 0.77;
 const CONNECT_CUTOFF = 0.35;
@@ -105,7 +132,7 @@ const bondKey = (i: number, j: number): string => (i < j ? `${i}:${j}` : `${j}:$
 export function getBondOrder(mol: ObjectMolecule, i: number, j: number): number {
   return bondOrders.get(mol)?.get(bondKey(i, j)) ?? 1;
 }
-function setBondOrder(mol: ObjectMolecule, i: number, j: number, order: number): void {
+export function setBondOrder(mol: ObjectMolecule, i: number, j: number, order: number): void {
   let m = bondOrders.get(mol);
   if (!m) bondOrders.set(mol, (m = new Map()));
   m.set(bondKey(i, j), order);
@@ -213,7 +240,7 @@ function fillDirections(existing: Vec3[], count: number): Vec3[] {
 /* --------------------------- atom / coord edits -------------------------- */
 
 /** A new atom to splice into a molecule, with one coordinate per state. */
-interface NewAtom {
+export interface NewAtom {
   atom: AtomInfo;
   coords: Vec3[]; // indexed by state; falls back to coords[0]
   bondTo: number; // 0-based heavy-atom index to bond to (-1 = no bond)
@@ -224,7 +251,7 @@ interface NewAtom {
  * Append `specs` to `mol`: extend the atom table, every per-state coordinate
  * set, and (for `bondTo >= 0`) the bond list. Returns the first new index.
  */
-function appendAtoms(mol: ObjectMolecule, specs: NewAtom[]): number {
+export function appendAtoms(mol: ObjectMolecule, specs: NewAtom[]): number {
   if (specs.length === 0) return mol.natom;
   const base = mol.natom;
   if (mol.states.length === 0) mol.states.push(new Float32Array(base * 3));
@@ -262,7 +289,7 @@ function appendAtoms(mol: ObjectMolecule, specs: NewAtom[]): number {
  * every coordinate set, drop bonds touching them, reindex the survivors and
  * remap the bond-order side table.
  */
-function removeAtoms(mol: ObjectMolecule, drop: Set<number>): void {
+export function removeAtoms(mol: ObjectMolecule, drop: Set<number>): void {
   if (drop.size === 0) return;
   const n = mol.natom;
   const remap = new Int32Array(n).fill(-1);
@@ -310,7 +337,11 @@ function removeAtoms(mol: ObjectMolecule, drop: Set<number>): void {
  * Build the hydrogen specs to fill the valence of each heavy atom in
  * `heavyIdxs`. `hCounter` seeds the H atom names (mutated so names stay unique).
  */
-function buildHydrogens(mol: ObjectMolecule, heavyIdxs: number[], hCounter: { n: number }): NewAtom[] {
+function buildHydrogens(
+  mol: ObjectMolecule,
+  heavyIdxs: number[],
+  hCounter: { n: number },
+): NewAtom[] {
   const adj = buildAdjacency(mol);
   const specs: NewAtom[] = [];
   const nStates = Math.max(1, mol.states.length);
@@ -602,7 +633,9 @@ export function registerBuilder(ctx: RegistrarCtx): void {
     const nbrs = adj[target.index]!;
     if (nbrs.length < 2) return null;
     // Prefer swapping the two lightest substituents (typically hydrogens).
-    const ranked = [...nbrs].sort((a, b) => valenceOf(mol.atoms[a]!.elem) - valenceOf(mol.atoms[b]!.elem));
+    const ranked = [...nbrs].sort(
+      (a, b) => valenceOf(mol.atoms[a]!.elem) - valenceOf(mol.atoms[b]!.elem),
+    );
     const p = ranked[0]!;
     const q = ranked[1]!;
     for (let s = 0; s < mol.states.length; s++) {

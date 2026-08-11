@@ -5,7 +5,7 @@ of PyMOL (`@tenmol/engine-ts` + `@tenmol/viewport`) does **not** do yet:
 unported commands, missing and degraded rendering, deliberately deferred work,
 and performance/architecture levers.
 
-This is the *forward-looking* companion to two existing docs:
+This is the _forward-looking_ companion to two existing docs:
 
 - `docs/engine-port-gaps.md` — narrative of known gaps.
 - `docs/feature-parity.md` — parity status.
@@ -25,11 +25,26 @@ user-visible impact. Every claim was verified against the source, not inferred.
   (highest first).
 - **Parity metric** — where a percentage is quoted, it is the TS render compared
   pixel-for-pixel (pixelmatch) against a **real-PyMOL reference PNG**. Current mean
-  ≈ **89.4%** across 22 scenes; solid/line/cartoon reps sit at 90–99%, surfaces at
-  65–75%, mesh at 64.6% (worst). See the `packages/e2e` docs page /
+  ≈ **92.7%** across 22 scenes (up from 89.4% after the SES surface shift);
+  solid/line/cartoon reps sit at 90–99%, surfaces at 84–92%, mesh at 74% (worst).
+  See the `packages/e2e` docs page /
   `apps/web/e2e/visual.e2e.mjs`.
 
 ### Where recent work landed (context)
+
+**Backlog-closure effort (Waves 0–2, rolling PR).** A KPI-driven push to close this
+list is underway; see `docs/parity-dashboard.md` for the live command/rep burndown.
+Landed so far — the §1 items they close are marked **✅ ported** inline below:
+
+- **Wave 0** — a committed command/rep coverage scoreboard + ratchet
+  (`packages/engine-ts/test/coverage.test.ts`, `pnpm coverage`). Baseline: 271/506
+  real command handlers.
+- **Wave 1** — the `preset.*` (20/21), `util.*` remainder (+22), `movie.*` (20/20),
+  and `gui.*` (7/7) namespaces, plus flat `check` / `fork` / `dist` / help verbs and
+  British-spelling colour aliases — composed via a new `ctx.call(...)` seam. Coverage
+  rose to **350/506 (69.2%)**.
+- **Wave 2** — the console parser now handles `key=value` kwargs, quoted
+  commas/`=`, and reports `@script` honestly.
 
 The visual/perf regression suite and three fixes already shipped and set the
 baseline the numbers above reflect:
@@ -46,90 +61,106 @@ baseline the numbers above reflect:
 
 ## 1. Not supported / not ported commands
 
-What a user hits as *"not ported by `@tenmol/engine-ts` yet"* (a `NotPorted`
+What a user hits as _"not ported by `@tenmol/engine-ts` yet"_ (a `NotPorted`
 throw) — or, worse, a call that silently does nothing. Grouped by namespace.
 
-### `editor.*` namespace entirely unported — L · **reported bug**
+### `editor.*` namespace — 🟡 residue growth ported (3/23) — L · was the reported bug
 
-No `editor` registrar exists, so any `cmd.editor.<fn>` throws `NotPorted` — this
-is the exact `cmd.editor.attach_amino_acid` failure that prompted this list. The
-GUI's build/edit menus drive it; residue / fragment / monomer growth is
-impossible. Only the low-level topology half of `editor.py` (`add_bond`,
-`attach`, `h_add`/`h_fill`, `valence`, `fuse`, `invert`, `protonate`, `replace`,
-`rebond`, `fix_chemistry`, `sort`) is ported in `cmd/builder.ts`.
+`cmd/editor.ts` now ports the headline build path: **`editor.attach_amino_acid`**
+(the exact `cmd.editor.attach_amino_acid` that prompted this list), plus
+`editor.attach_fragment` and `editor.build_peptide`. It grows a chemically-valid
+residue — a trans peptide bond (omega ≈ 180°, C–N ≈ 1.33 Å, ideal backbone
+angles, no clashes) by superposing the real chempy fragment geometry
+(`model/aa-fragments.json`, all 20 amino acids, extracted by
+`scripts/extract-fragments.py`) with a 3-point rigid fit (`model/superpose.ts`).
+The low-level topology half of `editor.py` (`add_bond`, `attach`, `h_add`,
+`fuse`, `invert`, `protonate`, `replace`, `rebond`, `fix_chemistry`, `sort`)
+remains in `cmd/builder.ts`. Idealisation vs PyMOL: phi/psi are not applied (the
+residue comes out extended), and native `fuse`/`set_dihedral` are replaced by the
+direct rigid-fit construction.
 
-> Missing: `attach_amino_acid, attach_fragment, combine_fragment, build_peptide,
-> fab, fnab, fit_sugars, fit_DS_fragment, attach_nuc_acid, extend_nuc_acid,
-> attach_O5_phosphate, bond_single_stranded, bond_double_stranded, add2pO,
-> move_atom_in_res, move_new_res, rename_three_to_one, iterate_to_list,
-> check_dummy_oriention, check_DNA_base_pair, check_valid_attachment,
-> get_chains_oppo, get_new_chain`
+> Still missing: `combine_fragment, fab, fnab, fit_sugars, fit_DS_fragment,
+attach_nuc_acid, extend_nuc_acid, attach_O5_phosphate, bond_single_stranded,
+bond_double_stranded, add2pO, move_atom_in_res, move_new_res,
+rename_three_to_one, iterate_to_list, check_dummy_oriention, check_DNA_base_pair,
+check_valid_attachment, get_chains_oppo, get_new_chain`
 
-Files: `packages/engine-ts/src/cmd/registrars.ts:35`, `engine.ts:128`,
-`cmd/builder.ts`, ref `packages/engine/modules/pymol/editor.py`.
+Files: `cmd/editor.ts`, `model/{aa-fragments,superpose}.ts`,
+`scripts/extract-fragments.py`, ref `packages/engine/modules/pymol/editor.py`.
 
-### All file readers + every save/export are fake no-ops — L
+### File readers — ✅ core formats real (Wave 3); export partial — L
 
-`load, loadall, load_embedded, load_model, load_mtz, load_png, load_traj, save,
-fetch, png, ray, draw` return placeholders and mutate nothing — only
-`read_pdbstr` actually works. So users cannot open CIF/mmCIF/MMTF/SDF/MOL2/XYZ,
-maps, or trajectories; cannot load-from-path, fetch-from-PDB, or drop real files;
-and cannot save/export structures, images, sessions, movies, or meshes
-(`get_pdbstr`, `get_session`, `multisave`, STL/OBJ/glTF/POV).
+`load` is real (`cmd/fileio.ts`): it parses structured **content** for PDB, CIF/
+mmCIF, MOL/SDF, MOL2 and XYZ — by an explicit `format` or by sniffing — and
+`read_cifstr`/`read_mol2str`/`read_xyzstr` join the existing `read_pdbstr`/
+`read_molstr`/`read_sdfstr`. `get_str` now serializes `pdb`/`fasta`/`xyz`.
 
-Files: `cmd/extras.ts:505`, ref `docs/engine-port-gaps.md:220`.
+> Still missing: reading from a **path/URL** or `fetch`-from-PDB (the sync
+> browser engine has no filesystem/async network — belongs to the web-app/worker
+> layer), MMTF/mmCIF maps + trajectories (`load_traj`, `load_mtz`), and session/
+> mesh export (`get_session`, `multisave`, STL/OBJ/glTF/POV). `save` (disk write)
+> stays a no-op — the web app downloads the `get_str` output instead.
+
+Files: `cmd/fileio.ts`, `model/{cif,mol2,xyz,bonding}.ts`, ref `docs/engine-port-gaps.md`.
 
 ### Large batch of documented no-op verbs (callable, do nothing) — L
 
 Return-placeholder stubs that mislead scripts because they neither throw nor act:
 
 > logging (`log, log_open/close, resume`) · picking (`edit, edit_keys, drag,
-> release, unpick`) · movie edits (`mcopy, mdelete, mmove, mdo, minsert,
-> scene_order`) · maps/volumes (`map_set, slice_new, volume, volume_panel,
-> spheroid, vdw_fit`) · app/render (`cls, cache, callout, capture, quit,
-> meter_reset, focal_blur, decline, feedback, extend, alias, matrix_copy`) ·
+release, unpick`) · movie edits (`mcopy, mdelete, mmove, mdo, minsert,
+scene_order`) · maps/volumes (`map_set, slice_new, volume, volume_panel,
+spheroid, vdw_fit`) · app/render (`cls, cache, callout, capture, quit,
+meter_reset, focal_blur, decline, feedback, extend, alias, matrix_copy`) ·
 > chemistry/typing (`assign_stereo, text_type, set_geometry, uniquify,
-> unset_deep, pbc_wrap/unwrap`) · export (`get_mtl_obj, get_povray, povray,
-> remove_picked`)
+unset_deep, pbc_wrap/unwrap`) · export (`get_mtl_obj, get_povray, povray,
+remove_picked`)
 
 Files: `cmd/extras.ts:505`.
 
-### `preset.*` namespace entirely unported — M
+### `preset.*` namespace — ✅ ported (Wave 1, 20/21) — M
 
-No preset handlers, so every one-click representation preset throws `NotPorted`.
+All one-click representation presets are ported in `cmd/preset.ts`, composing
+`show`/`hide`/`color`/`set`/`spectrum`/`util.*` via `ctx.call`. Some steps that
+depend on still-unported sub-verbs (`flag`, `set_bond`, the `extend` selector
+operator, the `licorice` rep alias) are skipped and will fill in as those land.
 
-> Missing: `simple, simple_no_solv, technical, pretty, pretty_solv, publication,
-> pub_solv, default, ligands, ligand_cartoon, ligand_sites (+_hq/_trans/
-> _trans_hq/_mesh/_dots), ball_and_stick, b_factor_putty, interface, classified`
+> Ported: `simple, simple_no_solv, technical, pretty, pretty_solv, pretty_no_solv,
+publication, pub_solv, pub_no_solv, default, ligands, ligand_cartoon,
+ligand_sites (+_hq/_trans/_trans_hq/_mesh/_dots), ball_and_stick, b_factor_putty,
+interface, classified`
 
-Files: `registrars.ts:35`, ref `preset.py`.
+Files: `cmd/preset.ts`, `registrars.ts`, ref `preset.py`.
 
-### `util.*` only partially ported — M
+### `util.*` — ✅ largely ported (Wave 1, 30/45) — M
 
-Only the carbon / rainbow colorers are registered (`cbc, rainbow, cbag, cbac,
-cbay, cbas, cbap, cbaw`); every other `util.*` helper throws `NotPorted`.
+Beyond the carbon/rainbow colorers in `cmd/coloring.ts` (`cbc, rainbow, cbag,
+cbac, cbay, cbas, cbap, cbaw`), `cmd/util2.ts` now ports the coloring, analysis
+and labeling helpers: `cnc, color_carbon, cbss, ss, chainbow, cba, cbh, cbab,
+cbao, cbak, cbam, color_objs, color_deep, get_area, get_sasa, compute_mass,
+find_surface_residues, find_surface_atoms, phipsi, mass_align, label_chains,
+label_segments`.
 
-> Missing: `protein_vacuum_esp, protein_assign_charges_and_radii, color_by_area,
-> find_surface_residues/atoms, get_area, get_sasa(_relative), mass_align,
-> sum_formal/partial_charges, compute_mass, ss, cbss, cbam, cbab, cbao, cbak,
-> cnc, cba, cbh, color_carbon, color_objs, color_deep, chainbow, phipsi,
-> ray_shadows, b2vdw, ff_copy, colors, interchain_distances, ligand_zoom,
-> label_chains, label_segments, enable_all_shaders, modernize_rendering,
-> performance`
+> Still missing (need machinery the port lacks — charges, ESP maps, shader/render
+> settings): `protein_vacuum_esp, protein_assign_charges_and_radii, color_by_area,
+get_sasa_relative, sum_formal/partial_charges, ray_shadows, b2vdw, ff_copy,
+colors, interchain_distances, ligand_zoom, enable_all_shaders,
+modernize_rendering, performance`
 
-Files: `cmd/coloring.ts:419`, ref `util.py`.
+Files: `cmd/util2.ts`, `cmd/coloring.ts`, ref `util.py`.
 
-### `movie.*` namespace entirely unported — M
+### `movie.*` namespace — ✅ ported (Wave 1, 20/20) — M
 
-Top-level movie verbs are ported (`curve_new, mview, mset, mplay`…) but the
-`movie.` prefix registers nothing, so the movie/scene GUI panel is dead
-(`cmd.movie.add_blank` / `add_scenes` throw `NotPorted`).
+`cmd/movie3.ts` ports the whole `movie.*` namespace, composing the top-level
+`mview`/`mset`/`mplay`/`mdo` verbs. The frame-table / camera-keyframe side effects
+are faithful; per-frame motion via `mdo` and file encoding (`produce`, `find_exe`)
+are in-engine no-ops (no ffmpeg / filesystem), noted in the module.
 
-> Missing: `produce, roll, tdroll, timed_roll, rock, nutate, screw, sweep, zoom,
-> pause, load, add_blank, add_roll, add_rock, add_state_sweep, add_state_loop,
-> add_nutate, add_scenes, get_movie_fps, find_exe`
+> Ported: `produce, roll, tdroll, timed_roll, rock, nutate, screw, sweep, zoom,
+pause, load, add_blank, add_roll, add_rock, add_state_sweep, add_state_loop,
+add_nutate, add_scenes, get_movie_fps, find_exe`
 
-Files: `cmd/movie2.ts`, ref `movie.py`, `_gui.py:236`.
+Files: `cmd/movie3.ts`, ref `movie.py`, `_gui.py:236`.
 
 ### Structure-based superposition non-functional — M
 
@@ -147,23 +178,33 @@ fragment/monomer library exists in the port.
 
 Files: `cmd/extras.ts:515`.
 
-### Top-level verbs that throw `NotPorted` — M
+### Top-level verbs that throw `NotPorted` — M · partly landed (Wave 1)
 
-Real console keywords that reject: `check` (structure/geometry check), `torsion`
-(interactive torsion edit), `fork` (should alias `spawn`), plus the help/topic
-verbs (`commands, examples, launching, editing, editing_ring, keyboard, movies,
-selections, faster, help_setting, diagnostics, embed, skip`). Python-language
-keywords and disabled vendored verbs (`slice_lock`, `rgbfunction`) are
-intentionally absent.
+`cmd/topics.ts` now ports `check` (a real atom/bond structure summary), `fork`
+(→`spawn`), `dist` (→`distance`), and the flat help verbs re-exported by `api.py`
+(`commands, show_help, help_setting, editing_ring`), plus British-spelling colour
+aliases (`colour, bg_colour, recolour, set_colour`).
 
-Files: ref `keywords.py`, `engine.ts:125`.
+Wave 4a (`cmd/xform.ts`, `cmd/misc2.ts`) additionally ports
+`transform_object`/`transform_selection`, `set_state_order`, `get_coordset`,
+`load_coordset`, `set_frame`, `set_discrete`, `label2`, `get_phipsi`, and the
+`get`/`set`/`del_colorection` set.
 
-### `gui.*` namespace unported — S
+> Still throwing: `torsion` (interactive torsion edit) and functional verbs left
+> for later waves (`map_generate, auto_measure, copy_image, set_object_ttt`, …).
+> Python-language keywords and disabled vendored verbs (`slice_lock`,
+> `rgbfunction`) stay intentionally absent.
 
-`gui` is a declared cmd namespace the client type surface knows about, but no
-handler is registered.
+Files: `cmd/topics.ts`, ref `keywords.py`, `engine.ts`.
 
-Files: `packages/client/src/cmd.ts:286`, ref `gui.py`.
+### `gui.*` namespace — ✅ ported (Wave 1, 7/7) — S
+
+`cmd/guins.ts` registers the whole `gui.*` namespace. The verbs are external-GUI
+window controls; the browser has no such window, so most are faithfully modelled
+as env-bound (`ext_show`/`ext_hide` track visibility intent; accessors return
+`null` exactly as PyMOL's `ImportError` branch does).
+
+Files: `cmd/guins.ts`, `packages/client/src/cmd.ts:286`, ref `gui.py`.
 
 ---
 
@@ -207,19 +248,22 @@ Files: `geometry/registry.ts:43-61`.
 
 ## 3. Rendering — quality gaps
 
-Reps that **do** render but don't yet match desktop PyMOL. Mean parity ≈ 89.4%;
-surfaces 65–75%, mesh 64.6% (worst), everything else 90–99%.
+Reps that **do** render but don't yet match desktop PyMOL. Mean parity ≈ 92.7%;
+surfaces 84–92%, mesh 74% (worst), everything else 90–99%.
 
-### Surface is SAS, not the solvent-excluded surface (SES) — L · biggest surface gap
+### Surface — 🟡 SES-approximated (shift toward vdW); true probe-rolling still absent — M
 
-The field `min(|p−c|−(vdw+probe))` marching-cubed at 0 is the solvent-*accessible*
-surface; without probe rolling, re-entrant pockets and toroidal saddles fill in
-and the surface reads puffy/bubbly. The 90³ grid is coarsened (spacing ×1.3) on
-big molecules → visible faceting. This is the single largest cause of weak surface
-scores (3al1 75.1%, bfactor 68.5%, helix 72.2%, pept 71.7%). Also unmodelled:
-`surface_type` dot/mesh modes, `surface_cavity_mode`, per-atom surface flags.
+The raw field `min(|p−c|−(vdw+probe))` is the solvent-_accessible_ surface (puffy).
+It is now **shifted inward by ~0.9·probe** toward the vdW surface — a cheap
+solvent-_excluded_ approximation that removed most of the puffiness and lifted the
+surface/mesh scenes sharply: **3al1-surface 75.1→87.2%, bfactor 68.5→83.7%,
+helix 72.2→88.4%, pept-surface 71.7→91.7%, pept-mesh 64.6→74.0%** (mean **89.4→
+92.7%**). Still not modelled: true probe-rolling of re-entrant toroidal saddles,
+`surface_type` dot/mesh modes, `surface_cavity_mode`, per-atom surface flags; the
+faceting-vs-resolution lever was tried (finer grid + spatial index) and found NOT
+to matter — the gap was shape (SES), not tessellation.
 
-Files: `geometry/surface_gen.ts:11`, `geometry/surface.ts:23`.
+Files: `geometry/surface_gen.ts` (`SES_SHRINK`), `geometry/surface.ts`.
 
 ### Cartoon heavily simplified — L
 
@@ -314,7 +358,7 @@ ray-tracer.
 ### F4 per-vertex ambient occlusion — declined — M
 
 Desktop PyMOL's real-time GL path (the chosen parity target) ships AO **off** by
-default, so adding it would move the render *away* from the "looks like a fresh
+default, so adding it would move the render _away_ from the "looks like a fresh
 PyMOL install" target. The shader already consumes it; a spike measured it live on
 5,235 verts. Revisit only if the quality bar shifts to the ray-traced look.
 
@@ -322,7 +366,7 @@ Files: `plan:58`, `materials/vertex.ts:50`, `surface_gen.ts`.
 
 ### True SES surface generation — deferred (F5 residual) — L
 
-F5 only Taubin-smoothed the SAS mesh to *look* SES-like; real rolled-probe
+F5 only Taubin-smoothed the SAS mesh to _look_ SES-like; real rolled-probe
 re-entrant surfaces are a substantial two-pass algorithm (or an EDT inward
 offset) left as follow-up. Surface similarity plateaued ~71–75%. Same root cause
 as the §3 surface item.
@@ -341,7 +385,7 @@ Files: `docs/engine-port-gaps.md:124`, `plan:7`.
 
 A real-time WebGL renderer can't reproduce ray shadows/AO/SES pixel-for-pixel;
 only F4/F5 were scoped as quality fixes. This is the constant ceiling on the
-parity metric across *all* scenes — even strong sticks/cartoon top out ~95–98%
+parity metric across _all_ scenes — even strong sticks/cartoon top out ~95–98%
 partly because of the shadowless flat lighting.
 
 Files: `plan:13`, `lighting.ts:22`.
@@ -426,8 +470,9 @@ Files: `webgl/builder.ts:106,134`, `modeG/renderer.ts:332`.
 
 `new Matrix4().fromArray(mv).invert()` per call plus an `O(keys×materials)`
 `pushUniforms` walk (fog/ortho/bg) fired even on pure rotation, during active drag
-+ the 4 Hz poll. Hoist a reusable scratch `Matrix4` and gate the uniform fan-out
-on fog/ortho/bg actually changing.
+
+- the 4 Hz poll. Hoist a reusable scratch `Matrix4` and gate the uniform fan-out
+  on fog/ortho/bg actually changing.
 
 Files: `modeG/renderer.ts:276,282,289`.
 
@@ -449,21 +494,24 @@ Files: `modeG/renderer.ts:159,245`, `webgl/quadlines.ts:174`.
 Meaningful in-code markers and half-wired features surfaced across the engine,
 bridge, and web app.
 
-### Console command-language parser only knows 13 verbs — M · suggested priority #1
+### Console command language — ✅ mostly resolved (Wave 2)
 
-The console recognizes 13 verbs; everything else is evaluated as JavaScript, so
-valid PyMOL lines (`scene new, store`; `spectrum count`; `dss`; `rotate x, 90`;
-`ray`; `label …`; `distance d, …`) hit `NotPorted` or fail as JS ("Unexpected
-token"). Fix: add registered verbs to `KNOWN_KEYWORDS` with a `runKeyword` case.
+`isCommandWord` accepts any registered handler and `runKeyword`'s default case
+dispatches it generically, so every ported verb (`scene new, store`; `spectrum
+count`; `dss`; `rotate x, 90`; `label …`; `distance d, …`) is already a console
+verb — the old "13 verbs" limit is gone. Remaining: verbs that are themselves
+still unported (`ray` → remote backend; `torsion`, etc.) naturally still report.
 
-Files: `docs/engine-port-gaps.md:181,247`.
+Files: `packages/engine-ts/src/engine.ts` (`runKeyword`), ref `docs/engine-port-gaps.md`.
 
-### `cmd.do` parser drops python-escape / `@script` / `=kwarg` syntaxes — L
+### `cmd.do` parser — ✅ kwargs + `@script` handled (Wave 2) — remaining: python-escape
 
-The minimal parser only handles `keyword arg1, arg2`; richer forms are rejected
-(reported, not silently dropped).
+`cmd/parser.ts` now splits `keyword arg1, arg2, key=value` into positional args +
+kwargs (quote-aware, so commas/`=` inside quotes are preserved), and `@file.pml`
+is reported honestly (no browser filesystem). Still out of scope: arbitrary
+python-escape expressions (those run as JavaScript via the `/expr` path).
 
-Files: `cmd/parser.ts:8`.
+Files: `cmd/parser.ts`.
 
 ### Menu tree is a hand-written truncated excerpt — L
 

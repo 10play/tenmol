@@ -66,8 +66,9 @@ describe('extras — residual command sweep', () => {
       'split_states', 'join_states', 'copy_to', 'extract', 'overlap',
       'intra_rms', 'intra_rms_cur', 'look_at', 'middle', 'refresh',
       'transparency', 'stereo', 'edit_mode',
-      // no-ops (representative sample across every batch)
-      'load', 'save', 'fetch', 'png', 'ray', 'draw', 'log', 'edit', 'unpick',
+      // no-ops (representative sample across every batch). `load` is no longer
+      // here — it is a real handler in cmd/fileio.ts (see load.test.ts).
+      'save', 'fetch', 'png', 'ray', 'draw', 'log', 'edit', 'unpick',
       'fab', 'fnab', 'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
       'alias', 'assign_stereo', 'alignto', 'extra_fit', 'cealign', 'usalign',
       'get_mtl_obj', 'get_povray', 'povray', 'remove_picked', 'pair_fit',
@@ -217,8 +218,8 @@ describe('extras — residual command sweep', () => {
   it('environment-bound verbs are safe no-ops with the right shape', () => {
     const { ex, call } = setup();
     const before = ex.molecule('m')!.natom;
-    // null-returning
-    for (const v of ['load', 'save', 'fetch', 'png', 'ray', 'quit', 'cache', 'cls', 'log']) {
+    // null-returning (`load` is a real verb now — cmd/fileio.ts, load.test.ts)
+    for (const v of ['save', 'fetch', 'png', 'ray', 'quit', 'cache', 'cls', 'log']) {
       expect(call(v), `${v} should return null`).toBeNull();
     }
     // shaped returns

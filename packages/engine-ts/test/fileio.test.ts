@@ -46,14 +46,112 @@ function rec(o: {
 /** A tiny 3-residue peptide (ALA-GLY-SER) in chain A, plus a calcium ion and a
  * water (both HETATM) in chain B. Exact %8.3f coords -> bit-exact to 3 dp. */
 const PDB = [
-  rec({ serial: 1, name: ' N', resn: 'ALA', chain: 'A', resi: 1, x: 11.104, y: 6.134, z: 7.065, occ: 1, b: 20, elem: 'N' }),
-  rec({ serial: 2, name: ' CA', resn: 'ALA', chain: 'A', resi: 1, x: 12.56, y: 6.13, z: 7.075, occ: 1, b: 20, elem: 'C' }),
-  rec({ serial: 3, name: ' C', resn: 'ALA', chain: 'A', resi: 1, x: 13.0, y: 4.7, z: 7.1, occ: 1, b: 20, elem: 'C' }),
-  rec({ serial: 4, name: ' CA', resn: 'GLY', chain: 'A', resi: 2, x: 14.5, y: 4.5, z: 7.2, occ: 1, b: 20, elem: 'C' }),
-  rec({ serial: 5, name: ' N', resn: 'GLY', chain: 'A', resi: 2, x: 15.0, y: 5.5, z: 7.3, occ: 1, b: 20, elem: 'N' }),
-  rec({ serial: 6, name: ' CA', resn: 'SER', chain: 'A', resi: 3, x: 16.0, y: 4.0, z: 7.4, occ: 1, b: 20, elem: 'C' }),
-  rec({ het: true, serial: 7, name: 'CA', resn: 'CA', chain: 'B', resi: 1, x: 20.0, y: 20.0, z: 20.0, occ: 1, b: 30, elem: 'CA' }),
-  rec({ het: true, serial: 8, name: ' O', resn: 'HOH', chain: 'B', resi: 2, x: 25.0, y: 25.0, z: 25.0, occ: 1, b: 40, elem: 'O' }),
+  rec({
+    serial: 1,
+    name: ' N',
+    resn: 'ALA',
+    chain: 'A',
+    resi: 1,
+    x: 11.104,
+    y: 6.134,
+    z: 7.065,
+    occ: 1,
+    b: 20,
+    elem: 'N',
+  }),
+  rec({
+    serial: 2,
+    name: ' CA',
+    resn: 'ALA',
+    chain: 'A',
+    resi: 1,
+    x: 12.56,
+    y: 6.13,
+    z: 7.075,
+    occ: 1,
+    b: 20,
+    elem: 'C',
+  }),
+  rec({
+    serial: 3,
+    name: ' C',
+    resn: 'ALA',
+    chain: 'A',
+    resi: 1,
+    x: 13.0,
+    y: 4.7,
+    z: 7.1,
+    occ: 1,
+    b: 20,
+    elem: 'C',
+  }),
+  rec({
+    serial: 4,
+    name: ' CA',
+    resn: 'GLY',
+    chain: 'A',
+    resi: 2,
+    x: 14.5,
+    y: 4.5,
+    z: 7.2,
+    occ: 1,
+    b: 20,
+    elem: 'C',
+  }),
+  rec({
+    serial: 5,
+    name: ' N',
+    resn: 'GLY',
+    chain: 'A',
+    resi: 2,
+    x: 15.0,
+    y: 5.5,
+    z: 7.3,
+    occ: 1,
+    b: 20,
+    elem: 'N',
+  }),
+  rec({
+    serial: 6,
+    name: ' CA',
+    resn: 'SER',
+    chain: 'A',
+    resi: 3,
+    x: 16.0,
+    y: 4.0,
+    z: 7.4,
+    occ: 1,
+    b: 20,
+    elem: 'C',
+  }),
+  rec({
+    het: true,
+    serial: 7,
+    name: 'CA',
+    resn: 'CA',
+    chain: 'B',
+    resi: 1,
+    x: 20.0,
+    y: 20.0,
+    z: 20.0,
+    occ: 1,
+    b: 30,
+    elem: 'CA',
+  }),
+  rec({
+    het: true,
+    serial: 8,
+    name: ' O',
+    resn: 'HOH',
+    chain: 'B',
+    resi: 2,
+    x: 25.0,
+    y: 25.0,
+    z: 25.0,
+    occ: 1,
+    b: 40,
+    elem: 'O',
+  }),
   'END',
 ].join('\n');
 
@@ -61,7 +159,8 @@ function harness(ex: Executive) {
   const handlers = new Map<string, (a: unknown[], k: Record<string, unknown>) => unknown>();
   let published = 0;
   const ctx = {
-    command: (n: string, f: (a: unknown[], k: Record<string, unknown>) => unknown) => handlers.set(n, f),
+    command: (n: string, f: (a: unknown[], k: Record<string, unknown>) => unknown) =>
+      handlers.set(n, f),
     executive: ex,
     publish() {
       published++;
@@ -131,7 +230,9 @@ describe('get_pdbstr', () => {
     const ex = newEx();
     const h = harness(ex);
     const lines = (h.call('get_pdbstr', ['all']) as string).split('\n');
-    const carbonCA = lines.find((l) => l.slice(17, 20) === 'ALA' && l.slice(12, 16).trim() === 'CA')!;
+    const carbonCA = lines.find(
+      (l) => l.slice(17, 20) === 'ALA' && l.slice(12, 16).trim() === 'CA',
+    )!;
     const calcium = lines.find((l) => l.slice(76, 78) === 'Ca')!; // element col == Ca
     expect(carbonCA.slice(12, 16)).toBe(' CA '); // carbon: leading space
     expect(calcium.slice(12, 16)).toBe('CA  '); // calcium: flush left
@@ -176,8 +277,28 @@ describe('get_fastastr', () => {
   it('maps unknown residues to X', () => {
     const ex = new Executive();
     const pdb = [
-      rec({ serial: 1, name: ' CA', resn: 'ALA', chain: 'A', resi: 1, x: 0, y: 0, z: 0, elem: 'C' }),
-      rec({ serial: 2, name: ' CA', resn: 'ZZZ', chain: 'A', resi: 2, x: 3.8, y: 0, z: 0, elem: 'C' }),
+      rec({
+        serial: 1,
+        name: ' CA',
+        resn: 'ALA',
+        chain: 'A',
+        resi: 1,
+        x: 0,
+        y: 0,
+        z: 0,
+        elem: 'C',
+      }),
+      rec({
+        serial: 2,
+        name: ' CA',
+        resn: 'ZZZ',
+        chain: 'A',
+        resi: 2,
+        x: 3.8,
+        y: 0,
+        z: 0,
+        elem: 'C',
+      }),
       'END',
     ].join('\n');
     ex.addMolecule(parsePdb(pdb, 'p'));
@@ -191,7 +312,17 @@ describe('get_fastastr', () => {
     const rows: string[] = [];
     for (let i = 0; i < 75; i++) {
       rows.push(
-        rec({ serial: i + 1, name: ' CA', resn: 'ALA', chain: 'A', resi: i + 1, x: i * 4, y: 0, z: 0, elem: 'C' }),
+        rec({
+          serial: i + 1,
+          name: ' CA',
+          resn: 'ALA',
+          chain: 'A',
+          resi: i + 1,
+          x: i * 4,
+          y: 0,
+          z: 0,
+          elem: 'C',
+        }),
       );
     }
     rows.push('END');
@@ -204,19 +335,9 @@ describe('get_fastastr', () => {
   });
 });
 
-describe('get_str', () => {
-  it('dispatches pdb and fasta', () => {
-    const ex = newEx();
-    const h = harness(ex);
-    expect(h.call('get_str', ['pdb', 'all'])).toBe(h.call('get_pdbstr', ['all']));
-    expect(h.call('get_str', ['fasta', 'all'])).toBe(h.call('get_fastastr', ['all']));
-  });
-  it('rejects an unknown format', () => {
-    const ex = newEx();
-    const h = harness(ex);
-    expect(() => h.call('get_str', ['mol2', 'all'])).toThrow();
-  });
-});
+// `get_str` is owned by `cmd/exporters.ts` (it registers after fileio and
+// shadows it), so its format-dispatch is tested in exporters.test.ts. fileio
+// keeps only the single-format `get_pdbstr`/`get_fastastr` exporters.
 
 describe('load_coords', () => {
   it('overwrites a selection coordinates from an Nx3 array', () => {

@@ -44,7 +44,9 @@ function atomLine(
     ' A' +
     String(resi).padStart(4, ' ') +
     '    ' +
-    f(x) + f(y) + f(z) +
+    f(x) +
+    f(y) +
+    f(z) +
     '  1.00  0.00' +
     '          ' +
     elem.padStart(2, ' ')
@@ -93,12 +95,13 @@ describe('generateSurface', () => {
     const verts = mesh.atoms.length;
     const tris = mesh.indices.length / 3;
     expect(verts).toBeGreaterThan(0);
-    // A C (vdw 1.7) + probe 1.4 = 3.1 Å sphere at 0.6 spacing tessellates to
-    // hundreds of triangles.
+    // A C (vdw 1.7) sphere at 0.6 spacing tessellates to hundreds of triangles.
     expect(tris).toBeGreaterThan(100);
 
-    // Radius: single-atom SAS is the 3.1 Å sphere; every vertex sits near it.
-    const R = 1.7 + 1.4;
+    // Radius: the SAS 3.1 Å sphere (vdw 1.7 + probe 1.4) is shifted inward by the
+    // SES approximation (~0.9·probe) toward the vdW surface, so the shell sits at
+    // ≈ 1.7 + 0.1·1.4 = 1.84 Å; every vertex sits near it.
+    const R = 1.7 + 1.4 * 0.1;
     for (let v = 0; v < verts; v++) {
       const x = mesh.positions[v * 3]!;
       const y = mesh.positions[v * 3 + 1]!;
@@ -145,7 +148,13 @@ describe('generateSurface', () => {
   it('coarsens the spacing rather than exploding when the box is huge', () => {
     // Two far-apart atoms would need a large grid at 0.6 Å; a tiny cell cap
     // forces the generator to coarsen instead.
-    const mol = parsePdb(pdbOf([['C1', [0, 0, 0]], ['C2', [20, 0, 0]]]), 'far');
+    const mol = parsePdb(
+      pdbOf([
+        ['C1', [0, 0, 0]],
+        ['C2', [20, 0, 0]],
+      ]),
+      'far',
+    );
     show(mol, Rep.Surface);
     const mesh = generateSurface(mol, 1, repBit(Rep.Surface), { maxCells: 4000 })!;
     expect(mesh).not.toBeNull();

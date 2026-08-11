@@ -122,7 +122,11 @@ export class Engine {
 
   /* ------------------------------- call ------------------------------- */
 
-  call(fn: string, args: readonly unknown[] = [], kwargs: Readonly<Record<string, unknown>> = {}): Json {
+  call(
+    fn: string,
+    args: readonly unknown[] = [],
+    kwargs: Readonly<Record<string, unknown>> = {},
+  ): Json {
     const name = fn.startsWith('cmd.') ? fn.slice(4) : fn;
     const handler = this.handlers.get(name);
     if (!handler) {
@@ -147,8 +151,20 @@ export class Engine {
         );
       }
       const message = err instanceof Error ? err.message : String(err);
-      throw new PymolError({ kind: 'CmdException', type: 'CmdException', message, traceback: '' }, fn);
+      throw new PymolError(
+        { kind: 'CmdException', type: 'CmdException', message, traceback: '' },
+        fn,
+      );
     }
+  }
+
+  /**
+   * The names of every registered `cmd.*` handler. Powers the command-coverage
+   * KPI (`scripts/coverage.mjs`) — a burndown of ported vs. total PyMOL symbols.
+   * Order is registration order; callers that need a set should build their own.
+   */
+  commandNames(): string[] {
+    return [...this.handlers.keys()];
   }
 
   /* -------------------------------- do -------------------------------- */
@@ -165,16 +181,30 @@ export class Engine {
   }
 
   do(line: string): void {
+    // `@file.pml` runs a script file — there is no filesystem in the browser, so
+    // report it honestly rather than mis-evaluating it as JavaScript.
+    if (line.trim().startsWith('@')) {
+      this.appendFeedback(`tenmol>${line}`);
+      this.appendFeedback(' @script files are not supported in the browser console');
+      return;
+    }
+
     const commands = splitCommands(line).map(parseCommand);
     const anyCommand = commands.some((c) => this.isCommandWord(c.keyword));
 
     // A line with a recognized PyMOL command runs the command language.
     if (anyCommand) {
       this.appendFeedback(`tenmol>${line}`);
-      for (const { keyword, args } of commands) {
+      for (const { keyword, args, kwargs } of commands) {
+        // A `@script` include anywhere in a compound line (`sele x; @a.pml`)
+        // is reported, not silently dropped, and not mis-run as a command.
+        if (keyword.startsWith('@')) {
+          this.appendFeedback(' @script files are not supported in the browser console');
+          continue;
+        }
         if (!this.isCommandWord(keyword)) continue;
         try {
-          this.runKeyword(keyword, args);
+          this.runKeyword(keyword, args, kwargs);
         } catch (err) {
           this.appendFeedback(` ${err instanceof Error ? err.message : String(err)}`);
         }
@@ -197,16 +227,50 @@ export class Engine {
 
   /** The `cmd` object exposed to console JavaScript: `cmd.<symbol>(...args)`. */
   private jsCmd(): Record<string, (...args: unknown[]) => unknown> {
+    return this.nsProxy('');
+  }
+
+  /**
+   * A namespace proxy for the JS console: `<ns>.<fn>(...args)` dispatches through
+   * the engine as `cmd.<ns>.<fn>`. With `ns === ''` it is the bare `cmd` object.
+   * Nested access (`cmd.util.cbag(...)`) works because each property is itself a
+   * namespace proxy until it is called.
+   */
+  private nsProxy(ns: string): Record<string, (...args: unknown[]) => unknown> {
     const call = (fn: string, args: unknown[]): unknown => this.call(fn, args);
-    return new Proxy(
-      {},
-      {
-        get(_t, prop: string | symbol) {
-          if (typeof prop !== 'string') return undefined;
-          return (...args: unknown[]) => call(prop, args);
-        },
+    const prefix = ns === '' ? '' : `${ns}.`;
+    return new Proxy(function () {} as unknown as Record<string, (...args: unknown[]) => unknown>, {
+      get: (_t, prop: string | symbol) => {
+        if (typeof prop !== 'string') return undefined;
+        const full = `${prefix}${prop}`;
+        // Callable AND further-navigable: `preset.pretty('all')` calls, while
+        // `cmd.util.cbag(...)` navigates one more level first.
+        const fn = (...args: unknown[]): unknown => call(full, args);
+        return new Proxy(fn, {
+          get: (_f, p: string | symbol) =>
+            typeof p === 'string' ? this.nsProxy(full)[p] : undefined,
+          apply: (_f, _this, args: unknown[]) => call(full, args),
+        });
       },
-    ) as Record<string, (...args: unknown[]) => unknown>;
+    }) as Record<string, (...args: unknown[]) => unknown>;
+  }
+
+  /**
+   * PyMOL module names a console script may reference bare (`editor.foo()`,
+   * `util.cbag()`), so they resolve through the engine — and an unported one
+   * (`editor.*`) throws a clean `NotPorted` rather than a JS `ReferenceError`.
+   * Union of the namespace prefixes actually registered plus `editor`, which is
+   * unported but the exact thing users reach for (`attach_amino_acid`).
+   */
+  private consoleNamespaces(): string[] {
+    const ns = new Set<string>(['editor']);
+    for (const name of this.handlers.keys()) {
+      const dot = name.indexOf('.');
+      if (dot > 0) ns.add(name.slice(0, dot));
+    }
+    // Never shadow the reserved console params.
+    for (const reserved of ['cmd', 'print', 'console']) ns.delete(reserved);
+    return [...ns];
   }
 
   /**
@@ -230,18 +294,24 @@ export class Engine {
       out.push(a.map(fmt).join(' '));
     };
     const consoleShim = { log, info: log, warn: log, error: log, debug: log };
-    const cmd = this.jsCmd();
+    // Scope exposed to the eval: `cmd`, `print`, `console`, and one proxy per
+    // PyMOL namespace so `editor.attach_amino_acid(...)` / `util.cbag(...)` route
+    // through the engine instead of throwing `ReferenceError: editor is not defined`.
+    const scope: Record<string, unknown> = { cmd: this.jsCmd(), print: log, console: consoleShim };
+    for (const ns of this.consoleNamespaces()) scope[ns] = this.nsProxy(ns);
+    const names = Object.keys(scope);
+    const values = names.map((n) => scope[n]);
     try {
       let value: unknown;
       try {
         // Expression form first, so `1+1` / `cmd.count_atoms("all")` show a value.
-        const fn = new Function('cmd', 'print', 'console', `return (\n${code}\n);`);
-        value = fn(cmd, log, consoleShim);
+        const fn = new Function(...names, `return (\n${code}\n);`);
+        value = fn(...values);
       } catch (e) {
         if (!(e instanceof SyntaxError)) throw e;
         // Statement form: `for (...) {...}`, `let x = ...`, multiple statements.
-        const fn = new Function('cmd', 'print', 'console', code);
-        value = fn(cmd, log, consoleShim);
+        const fn = new Function(...names, code);
+        value = fn(...values);
       }
       if (value !== undefined) out.push(fmt(value));
     } catch (err) {
@@ -250,47 +320,49 @@ export class Engine {
     for (const l of out) this.appendFeedback(l);
   }
 
-  private runKeyword(keyword: string, args: string[]): void {
+  private runKeyword(keyword: string, args: string[], kwargs: Record<string, string> = {}): void {
     // Map the console keyword to a ported handler with positional string args.
+    // `kwargs` (parsed `key=value` tokens) is threaded through so verbs that take
+    // keyword arguments (e.g. `spectrum expression=count`) receive them.
     switch (keyword) {
       case 'fragment':
-        this.call('fragment', [args[0] ?? '', args[1] ?? '']);
+        this.call('fragment', [args[0] ?? '', args[1] ?? ''], kwargs);
         return;
       case 'bg_color':
-        this.call('bg_color', [args[0] ?? 'black']);
+        this.call('bg_color', [args[0] ?? 'black'], kwargs);
         return;
       case 'reset':
-        this.call('reset', []);
+        this.call('reset', [], kwargs);
         return;
       case 'show':
-        this.call('show', [args[0] ?? 'lines', args[1] ?? 'all']);
+        this.call('show', [args[0] ?? 'lines', args[1] ?? 'all'], kwargs);
         return;
       case 'hide':
-        this.call('hide', [args[0] ?? 'everything', args[1] ?? 'all']);
+        this.call('hide', [args[0] ?? 'everything', args[1] ?? 'all'], kwargs);
         return;
       case 'as':
-        this.call('as', [args[0] ?? 'lines', args[1] ?? 'all']);
+        this.call('as', [args[0] ?? 'lines', args[1] ?? 'all'], kwargs);
         return;
       case 'color':
-        this.call('color', [args[0] ?? '', args[1] ?? 'all']);
+        this.call('color', [args[0] ?? '', args[1] ?? 'all'], kwargs);
         return;
       case 'select':
-        this.call('select', [args[0] ?? 'sele', args[1] ?? 'all']);
+        this.call('select', [args[0] ?? 'sele', args[1] ?? 'all'], kwargs);
         return;
       case 'delete':
-        this.call('delete', [args[0] ?? 'all']);
+        this.call('delete', [args[0] ?? 'all'], kwargs);
         return;
       case 'zoom':
-        this.call('zoom', [args[0] ?? 'all']);
+        this.call('zoom', [args[0] ?? 'all'], kwargs);
         return;
       case 'orient':
-        this.call('orient', [args[0] ?? 'all']);
+        this.call('orient', [args[0] ?? 'all'], kwargs);
         return;
       case 'turn':
-        this.call('turn', [args[0] ?? 'y', Number(args[1] ?? 0)]);
+        this.call('turn', [args[0] ?? 'y', Number(args[1] ?? 0)], kwargs);
         return;
       case 'set':
-        this.call('set', [args[0] ?? '', args[1] ?? '1', args[2] ?? '']);
+        this.call('set', [args[0] ?? '', args[1] ?? '1', args[2] ?? ''], kwargs);
         return;
       default:
         // Any other registered command: call it generically with the console's
@@ -298,7 +370,7 @@ export class Engine {
         // makes every ported `cmd` symbol a console verb — `scene`, `spectrum`,
         // `rotate`, `dss`, ... — without a bespoke case each.
         if (this.handlers.has(keyword)) {
-          this.call(keyword, args);
+          this.call(keyword, args, kwargs);
           return;
         }
         // A command-shaped word we do not implement: report it (PyMOL's own
@@ -310,7 +382,14 @@ export class Engine {
 
   /* ------------------------------ input ------------------------------- */
 
-  input(msg: { kind: string; x?: number; y?: number; state?: number; width?: number; height?: number }): Json {
+  input(msg: {
+    kind: string;
+    x?: number;
+    y?: number;
+    state?: number;
+    width?: number;
+    height?: number;
+  }): Json {
     switch (msg.kind) {
       case 'button':
         this.dragging = msg.state === 0;
@@ -436,7 +515,8 @@ export class Engine {
     h('set', (args) => {
       const name = str(args[0]);
       const raw = args[1];
-      const value = typeof raw === 'number' ? raw : Number.isNaN(Number(raw)) ? str(raw) : Number(raw);
+      const value =
+        typeof raw === 'number' ? raw : Number.isNaN(Number(raw)) ? str(raw) : Number(raw);
       ex.set(name, value);
       this.publish();
       return null;
@@ -526,7 +606,10 @@ export class Engine {
     h('get_frame', () => 1);
     h('get_state', () => 1);
     h('count_frames', () => 0);
-    h('count_states', (args) => ex.molecule(str(args[0]))?.nstate ?? ex.moleculesInOrder()[0]?.nstate ?? 1);
+    h(
+      'count_states',
+      (args) => ex.molecule(str(args[0]))?.nstate ?? ex.moleculesInOrder()[0]?.nstate ?? 1,
+    );
     h('count_discrete', () => 0);
     h('get_movie_locked', () => 0);
     h('get_movie_length', () => 0);
@@ -627,6 +710,7 @@ export class Engine {
     // Subsystems in their own modules register their `cmd.*` handlers here.
     const ctx: RegistrarCtx = {
       command: (name, fn) => void this.handlers.set(name, fn),
+      call: (name, args = [], kwargs = {}) => this.call(name, args, kwargs),
       executive: ex,
       publish: () => this.publish(),
       emitView: () => this.emitView(),
@@ -714,7 +798,14 @@ export class Engine {
     const atoms = this.executive.atomsMatching(sel).map((ua) => {
       const mol = this.executive.molecule(ua.objName)!;
       const [x, y, z] = mol.coord(ua.index, 1);
-      return { name: ua.atom.name, resn: ua.atom.resn, resi: ua.atom.resi, chain: ua.atom.chain, elem: ua.atom.elem, coord: [x, y, z] };
+      return {
+        name: ua.atom.name,
+        resn: ua.atom.resn,
+        resi: ua.atom.resi,
+        chain: ua.atom.chain,
+        elem: ua.atom.elem,
+        coord: [x, y, z],
+      };
     });
     return { atom: atoms } as unknown as Json;
   }
@@ -748,7 +839,10 @@ export class Engine {
 
   private emitView(): void {
     // The `view` topic payload; the client narrows/uses get_view directly too.
-    this.emitter.emit('view' as keyof BackendEvents & string, { view: this.executive.view.get() } as never);
+    this.emitter.emit(
+      'view' as keyof BackendEvents & string,
+      { view: this.executive.view.get() } as never,
+    );
   }
 
   /** object/rep/state keys that currently have geometry on the client. */

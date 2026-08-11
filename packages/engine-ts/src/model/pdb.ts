@@ -14,33 +14,8 @@
 import type { AtomInfo } from './atom';
 import { defaultVisRep } from './atom';
 import { canonicalElement } from './element';
+import { connectByDistance } from './bonding';
 import { ObjectMolecule } from './molecule';
-
-/** Covalent radii (Å) for the distance-bonding pass. Common biomolecular set. */
-const COVALENT: Readonly<Record<string, number>> = {
-  H: 0.31,
-  C: 0.76,
-  N: 0.71,
-  O: 0.66,
-  F: 0.57,
-  P: 1.07,
-  S: 1.05,
-  Cl: 1.02,
-  Se: 1.2,
-  Br: 1.2,
-  Fe: 1.32,
-  Zn: 1.22,
-  Mg: 1.41,
-  Ca: 1.76,
-  Na: 1.66,
-  K: 2.03,
-};
-const DEFAULT_COVALENT = 0.77;
-const CONNECT_CUTOFF = 0.35;
-
-function covalent(elem: string): number {
-  return COVALENT[canonicalElement(elem)] ?? DEFAULT_COVALENT;
-}
 
 function col(line: string, start: number, end: number): string {
   // PDB columns are 1-based inclusive; slice with 0-based [start-1, end).
@@ -112,9 +87,16 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
       // U11(29-35) U22(36-42) U33(43-49) U12(50-56) U13(57-63) U23(64-70),
       // integers in 1e-4 Å². Keyed by serial to attach to the matching atom.
       const serial = parseInt(col(line, 7, 11).trim(), 10);
-      const u = ([
-        [29, 35], [36, 42], [43, 49], [50, 56], [57, 63], [64, 70],
-      ] as const).map(([a, b]) => (parseInt(col(line, a, b).trim(), 10) || 0) * 1e-4);
+      const u = (
+        [
+          [29, 35],
+          [36, 42],
+          [43, 49],
+          [50, 56],
+          [57, 63],
+          [64, 70],
+        ] as const
+      ).map(([a, b]) => (parseInt(col(line, a, b).trim(), 10) || 0) * 1e-4);
       if (Number.isFinite(serial)) {
         anisou.set(serial, [u[0]!, u[1]!, u[2]!, u[3]!, u[4]!, u[5]!]);
       }
@@ -207,29 +189,8 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
     }
   }
 
-  // Distance-based connectivity for standard residues (no CONECT). O(n^2); the
-  // covered corpus is small. A spatial grid is a later optimisation.
+  // Distance-based connectivity for standard residues (no CONECT).
   connectByDistance(mol, addBond);
 
   return mol;
-}
-
-function connectByDistance(mol: ObjectMolecule, addBond: (a: number, b: number) => void): void {
-  const set = mol.states[0];
-  if (!set) return;
-  const n = mol.natom;
-  for (let i = 0; i < n; i++) {
-    const ri = covalent(mol.atoms[i]!.elem);
-    const xi = set[i * 3]!;
-    const yi = set[i * 3 + 1]!;
-    const zi = set[i * 3 + 2]!;
-    for (let j = i + 1; j < n; j++) {
-      const cutoff = ri + covalent(mol.atoms[j]!.elem) + CONNECT_CUTOFF;
-      const dx = xi - set[j * 3]!;
-      const dy = yi - set[j * 3 + 1]!;
-      const dz = zi - set[j * 3 + 2]!;
-      const d2 = dx * dx + dy * dy + dz * dz;
-      if (d2 > 0.01 && d2 <= cutoff * cutoff) addBond(i, j);
-    }
-  }
 }

@@ -12,6 +12,10 @@ import type { AtomInfo } from '../model/atom';
 import { defaultVisRep } from '../model/atom';
 import { canonicalElement } from '../model/element';
 import { ObjectMolecule } from '../model/molecule';
+import { parsePdb } from '../model/pdb';
+import { parseCif } from '../model/cif';
+import { parseMol2 } from '../model/mol2';
+import { parseXyz } from '../model/xyz';
 import type { RegistrarCtx } from './registrar';
 
 /* ------------------------------- helpers ------------------------------- */
@@ -26,10 +30,26 @@ function isPolymer(a: AtomInfo): boolean {
 
 /** 3-letter -> 1-letter map for the 20 standard amino acids. */
 const RESN_TO_AA: Readonly<Record<string, string>> = {
-  ALA: 'A', ARG: 'R', ASN: 'N', ASP: 'D', CYS: 'C',
-  GLN: 'Q', GLU: 'E', GLY: 'G', HIS: 'H', ILE: 'I',
-  LEU: 'L', LYS: 'K', MET: 'M', PHE: 'F', PRO: 'P',
-  SER: 'S', THR: 'T', TRP: 'W', TYR: 'Y', VAL: 'V',
+  ALA: 'A',
+  ARG: 'R',
+  ASN: 'N',
+  ASP: 'D',
+  CYS: 'C',
+  GLN: 'Q',
+  GLU: 'E',
+  GLY: 'G',
+  HIS: 'H',
+  ILE: 'I',
+  LEU: 'L',
+  LYS: 'K',
+  MET: 'M',
+  PHE: 'F',
+  PRO: 'P',
+  SER: 'S',
+  THR: 'T',
+  TRP: 'W',
+  TYR: 'Y',
+  VAL: 'V',
 };
 
 /** Right-justify `s` into `width` (C `%Ns`); never truncates. */
@@ -211,7 +231,11 @@ export function registerFileio(ctx: RegistrarCtx): void {
   const ex = ctx.executive;
 
   /** Matched atoms grouped by object (object order), each group index-sorted. */
-  function grouped(sel: string): Array<{ objName: string; mol: ObjectMolecule; atoms: Array<{ index: number; atom: AtomInfo }> }> {
+  function grouped(sel: string): Array<{
+    objName: string;
+    mol: ObjectMolecule;
+    atoms: Array<{ index: number; atom: AtomInfo }>;
+  }> {
     const matched = ex.atomsMatching(sel);
     const order: string[] = [];
     const byObj = new Map<string, Array<{ index: number; atom: AtomInfo }>>();
@@ -271,7 +295,10 @@ export function registerFileio(ctx: RegistrarCtx): void {
     }
     const lines: string[] = [];
     for (const key of order) {
-      const seq = byKey.get(key)!.map((r) => RESN_TO_AA[r.toUpperCase()] ?? 'X').join('');
+      const seq = byKey
+        .get(key)!
+        .map((r) => RESN_TO_AA[r.toUpperCase()] ?? 'X')
+        .join('');
       lines.push('>' + key);
       for (let i = 0; i < seq.length; i += 70) lines.push(seq.slice(i, i + 70));
     }
@@ -291,14 +318,9 @@ export function registerFileio(ctx: RegistrarCtx): void {
     return getFastastr(sel);
   });
 
-  ctx.command('get_str', (args, kwargs) => {
-    const format = ctx.str(pick(args, kwargs, 0, 'format'), '').toLowerCase();
-    const sel = ctx.str(pick(args, kwargs, 1, 'selection'), 'all') || 'all';
-    const state = asInt(pick(args, kwargs, 2, 'state'), 0);
-    if (format === 'pdb') return getPdbstr(sel, state);
-    if (format === 'fasta') return getFastastr(sel);
-    throw new Error(`get_str: unsupported format '${format}'`);
-  });
+  // NOTE: the format-dispatching `get_str` (pdb/fasta/xyz/cif) lives in
+  // `cmd/exporters.ts`, which registers AFTER `fileio` and so owns the verb.
+  // `get_pdbstr`/`get_fastastr` above are the direct single-format exporters.
 
   ctx.command('load_coords', (args, kwargs) => {
     const coords = pick(args, kwargs, 0, 'coords') as unknown[];
@@ -340,4 +362,82 @@ export function registerFileio(ctx: RegistrarCtx): void {
     ctx.publish();
     return name;
   });
+
+  /* ------------------------------ load / read_*str ------------------------ */
+
+  /** Parse structured text of a known format into an {@link ObjectMolecule}. */
+  function parseByFormat(format: string, text: string, name: string): ObjectMolecule {
+    switch (format) {
+      case 'pdb':
+      case 'ent':
+        return parsePdb(text, name);
+      case 'cif':
+      case 'mmcif':
+      case 'mcif':
+        return parseCif(text, name);
+      case 'mol':
+      case 'sdf':
+      case 'mdl':
+        return parseMolBlock(text, name);
+      case 'mol2':
+        return parseMol2(text, name);
+      case 'xyz':
+        return parseXyz(text, name);
+      default:
+        throw new Error(`load: unsupported format '${format}'`);
+    }
+  }
+
+  /**
+   * Sniff a structure format from the content itself, so a pasted/dropped block
+   * loads without an explicit `format`. Distinctive markers first.
+   */
+  function sniffFormat(text: string): string {
+    if (/@<TRIPOS>MOLECULE/.test(text)) return 'mol2';
+    if (/^\s*data_/m.test(text) && /_atom_site/.test(text)) return 'cif';
+    if (/^(ATOM|HETATM|MODEL|CRYST1|HEADER)/m.test(text)) return 'pdb';
+    if (/\$\$\$\$/.test(text) || /^M {2}END\s*$/m.test(text) || /V2000/.test(text)) return 'sdf';
+    // XYZ: first non-empty line is a bare atom count.
+    const first = text.split(/\r?\n/).find((l) => l.trim() !== '');
+    if (first && /^\d+$/.test(first.trim())) return 'xyz';
+    return '';
+  }
+
+  // Real `load` — dispatches structured CONTENT to the right parser by an
+  // explicit `format` or by sniffing. The browser engine has no filesystem, so a
+  // bare path (single-line, no structure) cannot be read and is reported plainly
+  // rather than silently doing nothing; the web app passes file contents here.
+  ctx.command('load', (args, kwargs) => {
+    const content = ctx.str(pick(args, kwargs, 0, 'filename'), '');
+    const objArg = ctx.str(pick(args, kwargs, 1, 'object'), '');
+    const fmtArg = ctx.str(pick(args, kwargs, 3, 'format'), '').toLowerCase();
+    const format = fmtArg || sniffFormat(content);
+    if (format === '') {
+      if (!/\r?\n/.test(content)) {
+        throw new Error(
+          `load: cannot read '${content}' — the browser has no filesystem; ` +
+            `pass file contents (or drop the file) with a format`,
+        );
+      }
+      throw new Error('load: could not determine the structure format of the given content');
+    }
+    const name = ex.uniqueName(objArg || 'obj');
+    ex.addMolecule(parseByFormat(format, content, name));
+    ctx.publish();
+    return name;
+  });
+
+  /** Register a `read_<fmt>str(text, name)` convenience verb for a parser. */
+  const readStr = (verb: string, format: string, base: string): void => {
+    ctx.command(verb, (args, kwargs) => {
+      const text = ctx.str(pick(args, kwargs, 0, 'content'), '');
+      const name = ex.uniqueName(ctx.str(pick(args, kwargs, 1, 'name'), base) || base);
+      ex.addMolecule(parseByFormat(format, text, name));
+      ctx.publish();
+      return name;
+    });
+  };
+  readStr('read_cifstr', 'cif', 'obj');
+  readStr('read_mol2str', 'mol2', 'lig');
+  readStr('read_xyzstr', 'xyz', 'mol');
 }

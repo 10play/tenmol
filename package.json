@@ -27,6 +27,8 @@
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "ownership": "node scripts/ownership.mjs",
+    "//coverage": "The command/rep-coverage scoreboard and ratchet. Prints the backlog burndown (real vs. total PyMOL cmd symbols, reps built); `--write` regenerates docs/parity-dashboard.md. See scripts/coverage.mjs and packages/engine-ts/test/coverage.test.ts.",
+    "coverage": "node scripts/coverage.mjs",
     "parity": "node scripts/parity.mjs",
     "//parity:engine": "The engine-parity gate: differential equivalence of the TypeScript engine vs. golden snapshots (and vs. real PyMOL with --remote). See scripts/parity-engine.mjs and tools/parity.",
     "parity:engine": "node scripts/parity-engine.mjs",
