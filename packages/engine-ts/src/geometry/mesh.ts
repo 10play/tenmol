@@ -32,21 +32,29 @@ export const buildMeshFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
   // noise that reads nothing like it. Coarsen the marching-cubes grid so the
   // line density matches PyMOL, and run the same Taubin smoothing the filled
   // `surface` rep uses so the wire follows a smooth blob instead of grid facets.
-  const surf = generateSurface(mol, state, repBit(Rep.Mesh), {
+  // PyMOL's `mesh` is a FINE net, not a coarse one — many small quads follow a
+  // smooth solvent-excluded blob. A very coarse grid (spacing 3.0) reads as a
+  // sparse polygon cage nothing like it. Use a moderately fine grid so the line
+  // DENSITY matches, and run the SAME field-blur + Taubin smoothing the filled
+  // `surface` rep uses so the wire follows the fused blob (not separated per-atom
+  // bumps). Longest-edge (diagonal) dropping below then leaves PyMOL's tidy net.
+  let surf = generateSurface(mol, state, repBit(Rep.Mesh), {
     probe,
-    // PyMOL's `mesh` is a FINE net, not a coarse one — many small quads follow a
-    // smooth solvent-excluded blob. A very coarse grid (spacing 3.0) reads as a
-    // sparse polygon cage nothing like it. Use a moderately fine grid so the line
-    // DENSITY matches, and run the SAME field-blur + Taubin smoothing the filled
-    // `surface` rep uses so the wire follows the fused blob (not separated per-atom
-    // bumps). Longest-edge (diagonal) dropping below then leaves PyMOL's tidy net.
     spacing: 2.2,
     smooth: true,
     smoothPasses: 3,
     fieldBlur: 2,
     shrink: 0.82,
   });
-  if (!surf) return null;
+  // A very small molecule (a handful of atoms) spans too few 2.2 Å cells for the
+  // blurred+shrunk field to keep a zero-crossing, so the coarse pass yields an
+  // empty mesh. Fall back to the fine default grid so any real molecule still
+  // renders a wire — the coarse look is preserved for the many-atom scenes that
+  // actually produce a mesh above (this branch is dead for them).
+  if (!surf || surf.indices.length === 0) {
+    surf = generateSurface(mol, state, repBit(Rep.Mesh), { probe });
+  }
+  if (!surf || surf.indices.length === 0) return null;
 
   const { positions, colors, indices, atoms } = surf;
   const nVerts = atoms.length;

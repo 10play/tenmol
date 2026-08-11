@@ -44,14 +44,16 @@ describe('dashes: distance / angle / dihedral measurement objects', () => {
     expect(d).toBeCloseTo(3.0, 4);
     const m = t.ex.measurement('d1')!;
     expect(m.kind).toBe('distance');
-    expect(m.segments.length).toBe(1);
+    // The one 3.0 Å pair renders as PyMOL-style GAPPED dashes (DASH_LENGTH 0.1 +
+    // DASH_GAP 0.4 → 0.5 Å period → 6 dash segments), not a single solid line.
+    expect(m.segments.length).toBe(6);
     expect(t.ex.getNames('objects')).toContain('d1');
-    // renders as a dash line frame
+    // renders as a dash line frame — one line instance per dash segment
     const buf = buildMeasurementFrame(m, 0)!;
     const f = decodeGeometryFrame(buf);
     expect(f.header.rep).toBe(Rep.Dash);
     expect(isCgoDrawArraysHeader(f.header) && f.header.instances[0]!.kind).toBe('line');
-    expect(isCgoDrawArraysHeader(f.header) && f.header.instances[0]!.count).toBe(1);
+    expect(isCgoDrawArraysHeader(f.header) && f.header.instances[0]!.count).toBe(6);
     expect(t.pub()).toBe(1);
   });
 
