@@ -87,6 +87,7 @@ packages/engine/testing/timings.tab
 .claude/settings.local.json
 .claude/.state/
 .claude/STOP
+.claude/keep-going.md
 apps/web/e2e/output/
 
 # --- local, per-worktree, never commit -------------------------------------
