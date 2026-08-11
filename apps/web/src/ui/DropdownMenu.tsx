@@ -37,9 +37,9 @@ export function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          'z-[70] min-w-[12rem] overflow-hidden rounded-[10px] border border-white/10 p-1.5',
-          'bg-pm-panel/85 backdrop-blur-2xl backdrop-saturate-150',
-          'font-sans text-[12px] text-pm-text shadow-2xl shadow-black/60',
+          'z-[70] min-w-[12rem] overflow-hidden rounded-[var(--sh-r)] border border-line-strong p-1.5',
+          'bg-[var(--sh-panel-frost)] backdrop-blur-2xl backdrop-saturate-150',
+          'font-sans text-[12px] text-pm-text shadow-[var(--sh-pop)]',
           'data-[state=open]:animate-in data-[state=closed]:animate-out',
           className,
         )}
@@ -58,7 +58,7 @@ export function DropdownMenuItem({
     <RadixDropdownMenu.Item
       data-slot="dropdown-menu-item"
       className={cn(
-        'relative flex cursor-default select-none items-center gap-2 rounded-md px-2.5 py-1.5',
+        'relative flex cursor-default select-none items-center gap-2 rounded-[var(--sh-r-sm)] px-2.5 py-1.5',
         'outline-none data-[highlighted]:bg-pm-accent data-[highlighted]:text-white',
         'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,

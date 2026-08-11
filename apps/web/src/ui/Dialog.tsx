@@ -28,14 +28,14 @@ export function DialogContent({
     <RadixDialog.Portal>
       <RadixDialog.Overlay
         data-slot="dialog-overlay"
-        className="fixed inset-0 z-[80] bg-black/60 data-[state=open]:animate-in"
+        className="fixed inset-0 z-[80] bg-[color-mix(in_srgb,#1e1b4b_38%,transparent)] data-[state=open]:animate-in"
       />
       <RadixDialog.Content
         data-slot="dialog-content"
         className={cn(
           'fixed left-1/2 top-1/2 z-[80] w-full max-w-md -translate-x-1/2 -translate-y-1/2',
-          'rounded-[12px] border border-white/10 bg-pm-panel/90 backdrop-blur-2xl backdrop-saturate-150',
-          'p-5 font-sans text-[12px] text-pm-text shadow-2xl shadow-black/70',
+          'rounded-[var(--sh-r-panel)] border border-line-strong bg-[var(--sh-panel-frost)] backdrop-blur-2xl backdrop-saturate-150',
+          'p-5 font-sans text-[12px] text-pm-text shadow-[var(--sh-pop)]',
           className,
         )}
         {...props}

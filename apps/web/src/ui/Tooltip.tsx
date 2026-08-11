@@ -28,8 +28,8 @@ export function TooltipContent({
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          'z-[90] rounded-lg border border-white/10 bg-pm-panel/90 px-2.5 py-1.5 backdrop-blur-xl',
-          'font-sans text-[11px] text-pm-text shadow-xl shadow-black/60',
+          'z-[90] rounded-[var(--sh-r-btn)] border border-line-strong bg-[var(--sh-panel-frost)] px-2.5 py-1.5 backdrop-blur-xl',
+          'font-sans text-[11px] text-pm-text shadow-[var(--sh-pop)]',
           className,
         )}
         {...props}

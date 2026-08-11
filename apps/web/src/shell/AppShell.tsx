@@ -194,7 +194,7 @@ export function AppShell() {
     <div
       className={`extgui extgui--${dockModifier(dock)}${isSideDock(dock) ? ' extgui--side' : ''}${
         dock.floating
-          ? ' modern:rounded-[8px] modern:border modern:border-line-strong modern:shadow-[var(--sh-pop)] modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]'
+          ? ' modern:rounded-[var(--sh-r-panel)] modern:border modern:border-line-strong modern:shadow-[var(--sh-shadow-card)] modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]'
           : ' modern:border-0 modern:rounded-none modern:shadow-none'
       }`}
       data-dock={dockModifier(dock)}

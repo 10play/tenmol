@@ -8,7 +8,7 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Ban, Camera, Play, SkipBack } from 'lucide-react';
+import { Ban, Camera, Play, Search, SkipBack, Trash2 } from 'lucide-react';
 
 import { Button, IconButton, ToggleButton, type ButtonVariant } from '@web/ui';
 
@@ -91,6 +91,26 @@ export const WithIcon: Story = {
       <IconButton variant="quick" icon={Ban} title="Abort">
         abort
       </IconButton>
+    </div>
+  ),
+};
+
+/**
+ * Colour intent via `tone` (modern theme only): the solid indigo `accent` CTA
+ * outranks quiet `default` secondaries, with `danger` for destructive actions.
+ * In the classic theme every tone renders as the same PyMOL button.
+ */
+export const Hierarchy: Story = {
+  render: () => (
+    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Button variant="bare" tone="accent" icon={Search}>
+        Fetch
+      </Button>
+      <Button variant="bare">Cancel</Button>
+      <Button variant="menubar">Ghost</Button>
+      <Button variant="bare" tone="danger" icon={Trash2}>
+        Delete
+      </Button>
     </div>
   ),
 };

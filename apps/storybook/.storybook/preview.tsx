@@ -54,8 +54,10 @@ const preview: Preview = {
     },
   },
   initialGlobals: {
-    theme: 'classic',
-    appearance: 'dark',
+    // Open on the modern light target (the design the primitives are tuned for);
+    // classic / dark are one toolbar click away.
+    theme: 'shadcn',
+    appearance: 'light',
   },
   decorators: [withSession, withTheme],
 };

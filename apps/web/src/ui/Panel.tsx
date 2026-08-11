@@ -18,7 +18,7 @@ export function Panel({ className, ...rest }: ComponentPropsWithRef<'div'>) {
     <div
       data-slot="panel"
       className={cn(
-        'modern:rounded-[8px] modern:border modern:border-line-strong modern:shadow-[var(--sh-pop)] modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]',
+        'modern:rounded-[var(--sh-r-panel)] modern:border modern:border-line-strong modern:shadow-[var(--sh-shadow-card)] modern:bg-[var(--sh-panel-frost)] modern:[backdrop-filter:var(--sh-blur)]',
         className,
       )}
       {...rest}

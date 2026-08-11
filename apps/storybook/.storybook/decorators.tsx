@@ -51,7 +51,11 @@ export const withTheme: Decorator = (Story, context) => {
         style={{
           minHeight: '100%',
           padding: '24px',
-          background: 'var(--pm-bg)',
+          // Modern theme paints the app's real gradient stage (`--sh-app-bg`) so a
+          // primitive is shown on the surface it actually ships on; classic has no
+          // such token, so it falls back to its flat `--pm-bg`.
+          background: 'var(--sh-app-bg, var(--pm-bg))',
+          backgroundAttachment: 'fixed',
           color: 'var(--pm-text)',
           fontFamily: 'var(--pm-font-ui)',
         }}

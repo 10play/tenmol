@@ -50,7 +50,7 @@
   --pm-font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* design tokens */
-  --sh-panel-frost: rgba(18, 21, 28, 0.72);
+  --sh-panel-frost: rgba(17, 20, 27, 0.74);
   --sh-console-bg: #05070a;
   /* The console/viewport stay dark in BOTH appearances, so their text must NOT
      track --pm-text (which flips to dark in light mode → invisible). Pinned. */
@@ -58,16 +58,35 @@
   --sh-line-strong: rgba(148, 163, 184, 0.2);
   --sh-accent-text: #ffffff;
   --sh-accent-soft: rgba(99, 102, 241, 0.16);
+  --sh-accent-hover: color-mix(in srgb, var(--pm-accent) 86%, white);
+  /* A soft gradient swatch, for accent affordances that want a tint of energy. */
+  --sh-accent-grad: linear-gradient(135deg, #7c7cf6 0%, #6366f1 52%, #4f46e5 100%);
   --sh-danger: #f5455c;
   --sh-btn-fill: rgba(148, 163, 184, 0.08);
   --sh-btn-hover: rgba(148, 163, 184, 0.14);
   --sh-btn-border: rgba(148, 163, 184, 0.14);
   --sh-btn-border-strong: rgba(148, 163, 184, 0.2);
   --sh-focus-ring: color-mix(in srgb, #6366f1 42%, transparent);
-  --sh-pop: 0 16px 48px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
+  --sh-accent-line: color-mix(in srgb, var(--pm-accent) 45%, transparent);
+  /* Floaty, faintly indigo-tinted drop shadow for POPOVERS (menus, dialogs). */
+  --sh-pop:
+    0 24px 60px -18px rgba(0, 0, 0, 0.72), 0 8px 24px -12px rgba(79, 70, 229, 0.34),
+    0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  /* A softer RESTING lift for always-floating cards (panels, column). */
+  --sh-shadow-card: 0 10px 30px -16px rgba(0, 0, 0, 0.6), 0 2px 10px -6px rgba(79, 70, 229, 0.3);
+  /* The solid indigo CTA's small tinted glow, so it outranks quiet secondaries. */
+  --sh-shadow-cta: 0 2px 12px rgba(79, 70, 229, 0.45);
   --sh-blur: saturate(180%) blur(24px);
-  --sh-r: 8px;
-  --sh-r-sm: 6px;
+  /* Radius scale: buttons/inputs 10 · menus/bars 12 · cards/panels 16 · small 8. */
+  --sh-r-panel: 16px;
+  --sh-r: 12px;
+  --sh-r-btn: 10px;
+  --sh-r-sm: 8px;
+  /* The stage behind the chrome — soft radial color blobs on a deep base, so the
+     gaps between panels read as a calm gradient rather than flat black. */
+  --sh-app-bg:
+    radial-gradient(1200px 820px at 10% -8%, rgba(129, 140, 248, 0.14), transparent 60%),
+    radial-gradient(1000px 720px at 100% 106%, rgba(16, 185, 129, 0.08), transparent 55%), #0b0d12;
 
   color-scheme: dark;
   font-family: var(--pm-font-ui);
@@ -89,17 +108,31 @@
   --pm-btn-cloaked: #e6eaf1;
   --pm-btn-pressed: #cfd6e4;
 
-  --sh-panel-frost: rgba(255, 255, 255, 0.8);
-  --sh-line-strong: rgba(15, 23, 42, 0.16);
+  --pm-line: rgba(51, 65, 85, 0.1);
+  --sh-panel-frost: rgba(255, 255, 255, 0.85);
+  --sh-line-strong: rgba(51, 65, 85, 0.16);
   --sh-accent-soft: rgba(91, 87, 240, 0.12);
+  --sh-accent-hover: color-mix(in srgb, var(--pm-accent) 88%, black);
+  --sh-accent-grad: linear-gradient(135deg, #6d67f2 0%, #5b57f0 52%, #4f46e5 100%);
+  --sh-accent-line: color-mix(in srgb, var(--pm-accent) 45%, transparent);
   --sh-danger: #e11d48;
   --sh-btn-fill: rgba(15, 23, 42, 0.04);
   --sh-btn-hover: rgba(15, 23, 42, 0.07);
   --sh-btn-border: rgba(15, 23, 42, 0.1);
   --sh-btn-border-strong: rgba(15, 23, 42, 0.16);
   --sh-focus-ring: color-mix(in srgb, #5b57f0 34%, transparent);
-  --sh-pop: 0 12px 40px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.1);
+  /* Soft, floaty, faintly-lavender shadow — the PDV "hovering card" look. */
+  --sh-pop:
+    0 18px 44px -18px rgba(79, 70, 229, 0.26), 0 8px 22px -14px rgba(15, 23, 42, 0.12),
+    0 1px 2px rgba(15, 23, 42, 0.05);
+  --sh-shadow-card: 0 6px 22px -12px rgba(79, 70, 229, 0.14), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --sh-shadow-cta: 0 2px 8px rgba(79, 70, 229, 0.35);
   --sh-blur: saturate(140%) blur(24px);
+  /* The PDV hero: a lavender → white → mint diagonal with soft radial blobs. */
+  --sh-app-bg:
+    radial-gradient(1200px 820px at 10% -8%, rgba(129, 140, 248, 0.16), transparent 60%),
+    radial-gradient(1000px 720px at 100% 106%, rgba(45, 212, 191, 0.11), transparent 55%),
+    linear-gradient(135deg, #f5f4ff 0%, #f8fafc 46%, #f0fdf7 100%);
 
   color-scheme: light;
   /* The molecular SCENE stays on a dark stage (the viewport is always dark), but
@@ -291,7 +324,7 @@
 :root[data-ui-theme='shadcn'] [data-slot='select'] {
   background: var(--sh-btn-fill);
   border: 1px solid var(--sh-btn-border);
-  border-radius: var(--sh-r-sm);
+  border-radius: var(--sh-r-btn);
   color: var(--pm-text-bright);
   padding: 5px 9px;
   font-family: var(--pm-font-ui);
@@ -300,9 +333,65 @@
   cursor: pointer;
 }
 :root[data-ui-theme='shadcn'] [data-slot='checkbox'],
-:root[data-ui-theme='shadcn'] [data-slot='switch'],
 :root[data-ui-theme='shadcn'] [data-slot='slider'] {
   accent-color: var(--pm-accent);
+}
+
+/* The Switch renders as the sliding pill the primitive's doc-comment promises
+   (the theme only ever set accent-color before). A native `type=checkbox` under
+   the hood, so value/keyboard/`:checked` semantics — and the tests — are intact. */
+:root[data-ui-theme='shadcn'] [data-slot='switch'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--sh-btn-border-strong);
+  border: 0;
+  position: relative;
+  flex: 0 0 auto;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+:root[data-ui-theme='shadcn'] [data-slot='switch']::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.3);
+  transition: transform 0.15s ease;
+}
+:root[data-ui-theme='shadcn'] [data-slot='switch']:checked {
+  background: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] [data-slot='switch']:checked::before {
+  transform: translateX(14px);
+}
+:root[data-ui-theme='shadcn'] [data-slot='switch']:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Badge — a rounded accent-tint chip (the primitive had no modern paint). A
+   caller can still override colour with its own class for feedback badges. */
+:root[data-ui-theme='shadcn'] [data-slot='badge'] {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  background: var(--sh-accent-soft);
+  color: var(--pm-accent);
+  border: 1px solid transparent;
 }
 
 /* ================================================================== */
@@ -327,6 +416,17 @@
 /* Panel surfaces are Tailwind on the components: the shell dock/column/main in
    shell/AppShell.tsx (docked ext-gui flush; floating ext-gui frosted), and the
    `[data-slot='panel']` card treatment in ui/Panel.tsx. */
+
+/* The STAGE behind the chrome. The 3-D viewport + docked column paint their own
+   opaque fills on top; the soft radial-blob gradient only shows in the gaps and
+   behind floating/frosted panels, so the whole window reads as a calm gradient
+   rather than flat black/grey. `[data-sb-canvas]` is Storybook's story canvas —
+   the same treatment so a primitive sits on the app's real stage, not a void. */
+:root[data-ui-theme='shadcn'] .shell,
+:root[data-ui-theme='shadcn'] [data-sb-canvas] {
+  background: var(--sh-app-bg);
+  background-attachment: fixed;
+}
 
 /* ================================================================== */
 /* 9. OBJECT ROWS — calm accent tint, geometry preserved.             */
