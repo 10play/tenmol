@@ -54,5 +54,5 @@ suite('live differential — TypeScript engine vs. real PyMOL', () => {
 
     const diffs = diffCorpus(remoteSnaps, localSnaps);
     expect(diffs).toEqual([]);
-  });
+  }, 30_000); // generous timeout: real PyMOL + WS can be slow on CI runners
 });
