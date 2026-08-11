@@ -79,6 +79,19 @@ describe('parity: maps / isosurface geometry', () => {
     expect(stats.verts).toBeGreaterThan(0);
   });
 
+  it('set_name renames a map gadget cleanly (old name gone, new name resolves)', async () => {
+    // Regression for the Executive.rename() gadget bug: renaming a gadget must
+    // move it in `order` AND the gadgets registry, so both get_names and get_type
+    // follow the new name and the old name fully disappears.
+    const b = await boot();
+    await b.call('map_new', ['gmap', 'gaussian', 0.5, 'all']);
+    expect(await b.call('set_name', ['gmap', 'gmap2'])).toBe(1);
+    const names = (await b.call('get_names', ['objects'])) as string[];
+    expect(names).toContain('gmap2');
+    expect(names).not.toContain('gmap');
+    expect(await b.call('get_type', ['gmap2'])).toBe('object:map');
+  });
+
   it("gradient: creates a gradient mesh object of type 'object:mesh' in get_names", async () => {
     const b = await boot();
     // PyMOL ref: creating.py:843 `gradient(name, map, ...)` internally calls

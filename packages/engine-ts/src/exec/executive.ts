@@ -163,28 +163,34 @@ export class Executive {
     return this.gadgets.get(name);
   }
 
-  /** Rename an object or measurement (PyMOL `set_name`). Returns true on success. */
+  /** Rename an object, measurement or gadget (PyMOL `set_name`). Returns true on
+   *  success. Validates BEFORE mutating `order` so a failed rename never corrupts
+   *  state (the entry's backing registry, not just `order`, must be updated). */
   rename(oldName: string, newName: string): boolean {
     if (oldName === newName) return true;
-    if (this.objects.has(newName) || this.measures.has(newName)) return false;
-    const i = this.order.indexOf(oldName);
-    if (i < 0) return false;
-    this.order[i] = newName;
+    if (this.objects.has(newName) || this.measures.has(newName) || this.gadgets.has(newName)) {
+      return false;
+    }
     const mol = this.objects.get(oldName);
+    const meas = this.measures.get(oldName);
+    const gad = this.gadgets.get(oldName);
+    if (!mol && !meas && !gad) return false; // unknown name — leave `order` untouched
+    const i = this.order.indexOf(oldName);
+    if (i >= 0) this.order[i] = newName;
     if (mol) {
       this.objects.delete(oldName);
       (mol as { name: string }).name = newName;
       this.objects.set(newName, mol);
-      return true;
-    }
-    const meas = this.measures.get(oldName);
-    if (meas) {
+    } else if (meas) {
       this.measures.delete(oldName);
       meas.name = newName;
       this.measures.set(newName, meas);
-      return true;
+    } else if (gad) {
+      this.gadgets.delete(oldName);
+      gad.name = newName;
+      this.gadgets.set(newName, gad);
     }
-    return false;
+    return true;
   }
 
   /* ------------------------------ selection --------------------------- */
