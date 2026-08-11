@@ -254,6 +254,30 @@ export function registerEditing(ctx: RegistrarCtx): void {
     return removed;
   });
 
+  /* ------------------------------- edit ---------------------------------- */
+  // edit(selection1, selection2=None, ...) — pick atom(s)/a bond for editing by
+  // defining the `pk1` (and, with a second selection, `pk2`) named selections
+  // that the remove_picked/torsion family consume (editing.py:1080).
+  ctx.command('edit', (args, kwargs): Json => {
+    const s1 = sel(pick(args, kwargs, 0, 'selection1'));
+    ex.select('pk1', s1);
+    const s2raw = pick(args, kwargs, 1, 'selection2');
+    const s2 = s2raw == null ? '' : ctx.str(s2raw, '');
+    if (s2 && s2.toLowerCase() !== 'none') ex.select('pk2', s2);
+    else ex.delete('pk2');
+    ctx.publish();
+    return null;
+  });
+
+  /* --------------------------- remove_picked ----------------------------- */
+  // remove_picked(hydrogens=1, ...) — delete the atom currently picked for
+  // editing, i.e. everything in `pk1` (editing.py:839). Reuses `remove`.
+  ctx.command('remove_picked', (): Json => {
+    if (!ex.hasSelection('pk1')) return 0;
+    const n = ctx.call('remove', ['pk1']);
+    return typeof n === 'number' ? n : 0;
+  });
+
   /* --------------------------- protect / deprotect ----------------------- */
   // protect(selection='(all)') / deprotect(selection='(all)') — set/clear the
   // per-atom protected flag (movers like sculpt honour it). Returns the count.

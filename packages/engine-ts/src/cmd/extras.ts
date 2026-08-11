@@ -519,14 +519,13 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'log_close',
       'log_open',
       'resume',
-      // interaction / editor picking (no live picking model here)
-      'edit',
+      // interaction / editor picking (no live picking model here).
+      // `edit` (pk1/pk2) is real — see cmd/editing.ts.
       'edit_keys',
       'drag',
       'release',
       'unpick',
-      // builders needing a fragment library
-      'fab',
+      // builders needing a fragment library. `fab` (peptide) is real — editor.ts.
       'fnab',
       'h_fix',
       // movie frame-table edits (movie store lives in the engine)
@@ -581,5 +580,6 @@ export function registerExtras(ctx: RegistrarCtx): void {
   noop(['get_povray', 'povray'], ['', '']);
 
   // Return 0: verbs reporting a count / RMSD with nothing to act on.
-  noop(['remove_picked', 'pair_fit'], 0);
+  // `remove_picked` is real — see cmd/editing.ts.
+  noop(['pair_fit'], 0);
 }

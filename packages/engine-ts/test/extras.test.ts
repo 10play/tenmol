@@ -67,11 +67,13 @@ describe('extras — residual command sweep', () => {
       'intra_rms', 'intra_rms_cur', 'look_at', 'middle', 'refresh',
       'transparency', 'stereo', 'edit_mode',
       // no-ops (representative sample across every batch). `load` is no longer
-      // here — it is a real handler in cmd/fileio.ts (see load.test.ts).
-      'save', 'fetch', 'png', 'ray', 'draw', 'log', 'edit', 'unpick',
-      'fab', 'fnab', 'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
+      // here — it is a real handler in cmd/fileio.ts (see load.test.ts); likewise
+      // `edit`/`remove_picked` moved to cmd/editing.ts and `fab` to cmd/editor.ts
+      // (see parity-noop-stubs.test.ts).
+      'save', 'fetch', 'png', 'ray', 'draw', 'log', 'unpick',
+      'fnab', 'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
       'alias', 'assign_stereo', 'alignto', 'extra_fit', 'cealign', 'usalign',
-      'get_mtl_obj', 'get_povray', 'povray', 'remove_picked', 'pair_fit',
+      'get_mtl_obj', 'get_povray', 'povray', 'pair_fit',
     ];
     for (const name of claimed) {
       expect(handlers.has(name), `missing handler: ${name}`).toBe(true);
@@ -228,7 +230,7 @@ describe('extras — residual command sweep', () => {
     expect(call('get_povray')).toEqual(['', '']);
     expect(call('get_mtl_obj')).toBe('');
     expect(call('pair_fit')).toBe(0);
-    expect(call('remove_picked')).toBe(0);
+    // `remove_picked` is a real verb now (cmd/editing.ts, parity-noop-stubs.test.ts)
     // no side effects on the model
     expect(ex.molecule('m')!.natom).toBe(before);
   });
