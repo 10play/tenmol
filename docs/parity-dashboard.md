@@ -19,9 +19,9 @@ ceiling is ~93–95%, not 100%).
 | `preset.*`       | 20 / 21       | 95.2%     |
 | `util.*`         | 30 / 45       | 66.7%     |
 | `movie.*`        | 20 / 20       | 100.0%    |
-| `editor.*`       | 0 / 23        | 0.0%      |
+| `editor.*`       | 3 / 23        | 13.0%     |
 | `gui.*`          | 7 / 7         | 100.0%    |
-| **All commands** | **372 / 506** | **73.5%** |
+| **All commands** | **375 / 506** | **74.1%** |
 
 Flat `cmd.*` also has **57 stub** (no-op) handlers and **38**
 engine-only extensions (e.g. `tenmol_*`) outside the PyMOL surface.

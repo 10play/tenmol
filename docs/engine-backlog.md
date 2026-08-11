@@ -63,24 +63,29 @@ baseline the numbers above reflect:
 What a user hits as _"not ported by `@tenmol/engine-ts` yet"_ (a `NotPorted`
 throw) — or, worse, a call that silently does nothing. Grouped by namespace.
 
-### `editor.*` namespace entirely unported — L · **reported bug**
+### `editor.*` namespace — 🟡 residue growth ported (3/23) — L · was the reported bug
 
-No `editor` registrar exists, so any `cmd.editor.<fn>` throws `NotPorted` — this
-is the exact `cmd.editor.attach_amino_acid` failure that prompted this list. The
-GUI's build/edit menus drive it; residue / fragment / monomer growth is
-impossible. Only the low-level topology half of `editor.py` (`add_bond`,
-`attach`, `h_add`/`h_fill`, `valence`, `fuse`, `invert`, `protonate`, `replace`,
-`rebond`, `fix_chemistry`, `sort`) is ported in `cmd/builder.ts`.
+`cmd/editor.ts` now ports the headline build path: **`editor.attach_amino_acid`**
+(the exact `cmd.editor.attach_amino_acid` that prompted this list), plus
+`editor.attach_fragment` and `editor.build_peptide`. It grows a chemically-valid
+residue — a trans peptide bond (omega ≈ 180°, C–N ≈ 1.33 Å, ideal backbone
+angles, no clashes) by superposing the real chempy fragment geometry
+(`model/aa-fragments.json`, all 20 amino acids, extracted by
+`scripts/extract-fragments.py`) with a 3-point rigid fit (`model/superpose.ts`).
+The low-level topology half of `editor.py` (`add_bond`, `attach`, `h_add`,
+`fuse`, `invert`, `protonate`, `replace`, `rebond`, `fix_chemistry`, `sort`)
+remains in `cmd/builder.ts`. Idealisation vs PyMOL: phi/psi are not applied (the
+residue comes out extended), and native `fuse`/`set_dihedral` are replaced by the
+direct rigid-fit construction.
 
-> Missing: `attach_amino_acid, attach_fragment, combine_fragment, build_peptide,
-fab, fnab, fit_sugars, fit_DS_fragment, attach_nuc_acid, extend_nuc_acid,
-attach_O5_phosphate, bond_single_stranded, bond_double_stranded, add2pO,
-move_atom_in_res, move_new_res, rename_three_to_one, iterate_to_list,
-check_dummy_oriention, check_DNA_base_pair, check_valid_attachment,
-get_chains_oppo, get_new_chain`
+> Still missing: `combine_fragment, fab, fnab, fit_sugars, fit_DS_fragment,
+attach_nuc_acid, extend_nuc_acid, attach_O5_phosphate, bond_single_stranded,
+bond_double_stranded, add2pO, move_atom_in_res, move_new_res,
+rename_three_to_one, iterate_to_list, check_dummy_oriention, check_DNA_base_pair,
+check_valid_attachment, get_chains_oppo, get_new_chain`
 
-Files: `packages/engine-ts/src/cmd/registrars.ts:35`, `engine.ts:128`,
-`cmd/builder.ts`, ref `packages/engine/modules/pymol/editor.py`.
+Files: `cmd/editor.ts`, `model/{aa-fragments,superpose}.ts`,
+`scripts/extract-fragments.py`, ref `packages/engine/modules/pymol/editor.py`.
 
 ### File readers — ✅ core formats real (Wave 3); export partial — L
 

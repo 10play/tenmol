@@ -33,11 +33,12 @@ const PYMOL = join(REPO, 'packages', 'engine', 'modules', 'pymol');
  * Wave 1 (command namespaces): flat 273/390, namespaces 77/116, reps 13/21.
  * Wave 3 (file I/O): flat 274/390 (real `load`).
  * Wave 4a (transform/state/alias verbs): flat 295/390.
+ * Wave 7a (editor.attach_amino_acid/attach_fragment/build_peptide): namespaces 80/116.
  * Bump these up as each backlog wave lands.
  */
 const FLOORS = {
   flatReal: Number(process.env.TENMOL_COVERAGE_FLAT ?? 295),
-  nsReal: Number(process.env.TENMOL_COVERAGE_NS ?? 77),
+  nsReal: Number(process.env.TENMOL_COVERAGE_NS ?? 80),
   reps: Number(process.env.TENMOL_COVERAGE_REPS ?? 13),
 };
 

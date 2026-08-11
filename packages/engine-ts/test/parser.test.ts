@@ -101,9 +101,11 @@ describe('do() integration', () => {
     const seen: string[] = [];
     b.on('feedback', ({ lines }) => seen.push(...lines));
     // Function-call form falls to the JS evaluator; `editor` must resolve to a
-    // namespace proxy that dispatches through the engine (the exact case that
-    // started the backlog: attach_amino_acid).
-    await b.do("editor.attach_amino_acid('ALA')");
+    // namespace proxy that dispatches through the engine, so an UNPORTED editor
+    // verb reports a clean NotPorted rather than `editor is not defined`.
+    // (`attach_amino_acid` itself is now ported — see editor.test.ts — so this
+    // uses one that is still unported.)
+    await b.do("editor.combine_fragment('x')");
     const text = seen.join('\n');
     expect(text).not.toMatch(/editor is not defined/);
     expect(text).toMatch(/not ported by @tenmol\/engine-ts/);
