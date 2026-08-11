@@ -80,11 +80,33 @@ export function parseCommand(command: string): ParsedCommand {
     for (const raw of splitTopLevel(rest, ',')) {
       const token = raw.trim();
       if (token === '') continue;
-      // A `key=value` token (identifier key, not `==`) is a keyword argument.
+      // A `key=value` token (identifier key, not `==`) is a keyword argument —
+      // EXCEPT when the key is a selection comparison field, because PyMOL's
+      // selection grammar uses bare `=` for equality (`b=50`, `q=1`,
+      // `partial_charge=0`, see select/selector.ts CMP_OPS). Treating those as
+      // kwargs would strip the term out of the selection, so they stay
+      // positional.
       const kw = /^([A-Za-z_]\w*)\s*=(?!=)([\s\S]*)$/.exec(token);
-      if (kw) kwargs[kw[1]!] = unquote(kw[2]!);
-      else args.push(unquote(token));
+      if (kw && !SELECTION_CMP_FIELDS.has(kw[1]!.toLowerCase())) {
+        kwargs[kw[1]!] = unquote(kw[2]!);
+      } else {
+        args.push(unquote(token));
+      }
     }
   }
   return { keyword, args, kwargs };
 }
+
+/**
+ * Selection fields that take a bare `=` comparison in the selector grammar
+ * (`select s, b=50`). A `field=value` token starting with one of these is part
+ * of a selection, not a keyword argument, so the parser leaves it positional.
+ */
+const SELECTION_CMP_FIELDS: ReadonlySet<string> = new Set([
+  'b',
+  'q',
+  'pc',
+  'fc',
+  'partial_charge',
+  'formal_charge',
+]);

@@ -35,6 +35,19 @@ describe('parseCommand', () => {
     expect(p.kwargs).toEqual({});
   });
 
+  it('keeps selection comparison fields (`b=50`, `q=1`) positional, not kwargs', () => {
+    // Regression: the selector grammar uses bare `=` for b/q/pc/fc, so these
+    // MUST stay in the selection rather than be stripped into kwargs.
+    const p = parseCommand('select buried, b=50');
+    expect(p.args).toEqual(['buried', 'b=50']);
+    expect(p.kwargs).toEqual({});
+    const q = parseCommand('select occ1, q=1');
+    expect(q.args).toEqual(['occ1', 'q=1']);
+    expect(q.kwargs).toEqual({});
+    // A genuine keyword arg (non-selection key) still parses as a kwarg.
+    expect(parseCommand('spectrum count, palette=rainbow').kwargs).toEqual({ palette: 'rainbow' });
+  });
+
   it('respects quotes: commas and `=` inside a quoted value do not split', () => {
     // The comma inside the quotes does not split; `text=` makes it a kwarg whose
     // value is the unquoted string (which itself contains `=` and `,`).
@@ -101,5 +114,24 @@ describe('do() integration', () => {
     await b.do("util.cbag('all')");
     // cbag colours carbons green; at least it ran without a ReferenceError.
     expect(await b.call('count_atoms', ['all'])).toBeGreaterThan(0);
+  });
+
+  it('reports a @script embedded in a compound command line', async () => {
+    const b = await boot();
+    const seen: string[] = [];
+    b.on('feedback', ({ lines }) => seen.push(...lines));
+    // `select` makes this the command branch; the trailing @a.pml must still be
+    // reported, not silently dropped or mis-run.
+    await b.do('select x, all; @a.pml');
+    expect(seen.join('\n')).toMatch(/@script files are not supported/);
+  });
+
+  it('a `b=50` selection survives the command path (select then count)', async () => {
+    const b = await boot();
+    // If the parser had stripped `b=50` into kwargs, the selection would be
+    // empty/garbage; here it must select atoms with B-factor exactly 50 (none in
+    // the fixture) without error, proving the term reached the selector.
+    const n = await b.call('select', ['hib', 'b=50']);
+    expect(typeof n).toBe('number');
   });
 });

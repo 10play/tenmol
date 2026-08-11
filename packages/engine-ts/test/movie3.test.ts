@@ -29,6 +29,16 @@ async function movieLength(backend: LocalBackend): Promise<number> {
   return backend.call<number>('madd', ['']);
 }
 
+describe('movie.tdroll skip guard', () => {
+  it('does not hang when skip=0 (clamped to 1)', async () => {
+    const b = await booted();
+    // Regression: skip=0 made `range % skip` NaN and the frame loop never
+    // advanced (infinite loop). This must return promptly. vitest's per-test
+    // timeout would fail the test if it hung.
+    await expect(b.call('movie.tdroll', [1, 90, 0, 0, 0])).resolves.toBeNull();
+  });
+});
+
 describe('movie.get_movie_fps', () => {
   it('defaults to 30 and reflects the movie_fps setting', async () => {
     const backend = await booted();

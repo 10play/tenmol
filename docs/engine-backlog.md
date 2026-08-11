@@ -179,11 +179,15 @@ Files: `cmd/extras.ts:515`.
 (`commands, show_help, help_setting, editing_ring`), plus British-spelling colour
 aliases (`colour, bg_colour, recolour, set_colour`).
 
+Wave 4a (`cmd/xform.ts`, `cmd/misc2.ts`) additionally ports
+`transform_object`/`transform_selection`, `set_state_order`, `get_coordset`,
+`load_coordset`, `set_frame`, `set_discrete`, `label2`, `get_phipsi`, and the
+`get`/`set`/`del_colorection` set.
+
 > Still throwing: `torsion` (interactive torsion edit) and functional verbs left
-> for later waves (`map_generate, transform_object/selection, set_discrete,
-auto_measure, copy_image, label2`, the colorection getters/setters, …). Python-
-> language keywords and disabled vendored verbs (`slice_lock`, `rgbfunction`) stay
-> intentionally absent.
+> for later waves (`map_generate, auto_measure, copy_image, set_object_ttt`, …).
+> Python-language keywords and disabled vendored verbs (`slice_lock`,
+> `rgbfunction`) stay intentionally absent.
 
 Files: `cmd/topics.ts`, ref `keywords.py`, `engine.ts`.
 

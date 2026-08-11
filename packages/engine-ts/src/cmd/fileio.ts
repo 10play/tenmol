@@ -318,29 +318,9 @@ export function registerFileio(ctx: RegistrarCtx): void {
     return getFastastr(sel);
   });
 
-  /** Serialize matched atoms as an XMol XYZ block (`natom` / comment / rows). */
-  function getXyzstr(sel: string, state: number): string {
-    const st = state > 0 ? state : 1;
-    const rows: string[] = [];
-    for (const grp of grouped(sel)) {
-      for (const { index, atom } of grp.atoms) {
-        const c = grp.mol.coord(index, st);
-        const fmt = (v: number): string => v.toFixed(6).padStart(12);
-        rows.push(`${(atom.elem || 'X').padEnd(2)} ${fmt(c[0])} ${fmt(c[1])} ${fmt(c[2])}`);
-      }
-    }
-    return `${rows.length}\n${sel}\n${rows.join('\n')}\n`;
-  }
-
-  ctx.command('get_str', (args, kwargs) => {
-    const format = ctx.str(pick(args, kwargs, 0, 'format'), '').toLowerCase();
-    const sel = ctx.str(pick(args, kwargs, 1, 'selection'), 'all') || 'all';
-    const state = asInt(pick(args, kwargs, 2, 'state'), 0);
-    if (format === 'pdb') return getPdbstr(sel, state);
-    if (format === 'fasta') return getFastastr(sel);
-    if (format === 'xyz') return getXyzstr(sel, state);
-    throw new Error(`get_str: unsupported format '${format}'`);
-  });
+  // NOTE: the format-dispatching `get_str` (pdb/fasta/xyz/cif) lives in
+  // `cmd/exporters.ts`, which registers AFTER `fileio` and so owns the verb.
+  // `get_pdbstr`/`get_fastastr` above are the direct single-format exporters.
 
   ctx.command('load_coords', (args, kwargs) => {
     const coords = pick(args, kwargs, 0, 'coords') as unknown[];

@@ -123,7 +123,7 @@ export function registerPreset(ctx: RegistrarCtx): void {
 
   const HOST = '_preset_host';
   const SOLVENT = '_preset_solvent';
-  const NEAR = '_preset_solvent';
+  const NEAR = '_preset_near';
   const LIGSEL = '_preset_lig';
 
   /**

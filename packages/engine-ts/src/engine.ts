@@ -196,6 +196,12 @@ export class Engine {
     if (anyCommand) {
       this.appendFeedback(`tenmol>${line}`);
       for (const { keyword, args, kwargs } of commands) {
+        // A `@script` include anywhere in a compound line (`sele x; @a.pml`)
+        // is reported, not silently dropped, and not mis-run as a command.
+        if (keyword.startsWith('@')) {
+          this.appendFeedback(' @script files are not supported in the browser console');
+          continue;
+        }
         if (!this.isCommandWord(keyword)) continue;
         try {
           this.runKeyword(keyword, args, kwargs);

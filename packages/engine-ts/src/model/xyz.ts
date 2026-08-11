@@ -143,6 +143,14 @@ export function parseXyz(text: string, name: string): ObjectMolecule {
       const x = parseFloat(parts[1] ?? '');
       const y = parseFloat(parts[2] ?? '');
       const z = parseFloat(parts[3] ?? '');
+      // A malformed row (missing/non-numeric coordinate) would poison the state
+      // with NaN. Dropping the whole frame keeps the atom table and every state
+      // the same length (skipping one atom would desync them), matching how a
+      // truncated frame is handled above.
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+        ok = false;
+        break;
+      }
       coords.push(x, y, z);
 
       // Build the atom table only from the first frame.

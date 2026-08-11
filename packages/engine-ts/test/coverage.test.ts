@@ -173,7 +173,7 @@ function renderDashboard(s: Scoreboard): string {
 
 The hard KPIs for closing \`docs/engine-backlog.md\` to 100% feature parity. Command
 coverage counts a symbol as **real** only when it has a genuine handler; the
-documented no-ops in \`cmd/extras.ts\` (\`load\`, \`save\`, \`ray\`, …) count as **stub**,
+documented no-ops in \`cmd/extras.ts\` (\`save\`, \`fetch\`, \`ray\`, …) count as **stub**,
 not real. Visual parity is tracked separately by \`apps/web/e2e/visual.e2e.mjs\`
 (a realtime WebGL renderer cannot pixel-match the ray-traced reference, so its
 ceiling is ~93–95%, not 100%).

@@ -141,21 +141,29 @@ interface AreaAtom {
  */
 function shrakeRupley(
   entries: Array<{ atom: AtomInfo; pos: Vec3; vdw: number }>,
+  occluders: Array<{ atom: AtomInfo; pos: Vec3; vdw: number }>,
   probe: number,
   density: number,
   loadB: boolean,
 ): number {
   const n = entries.length;
   const spheres: AreaAtom[] = entries.map((e) => ({ pos: e.pos, r: e.vdw + probe }));
+  // The occluder shells: every atom of the enclosing objects. A measured atom is
+  // its own occluder too (matched by identity below), so it never buries itself.
+  const occ: Array<AreaAtom & { atom: AtomInfo }> = occluders.map((e) => ({
+    pos: e.pos,
+    r: e.vdw + probe,
+    atom: e.atom,
+  }));
   const dots = fibonacciSphere(dotCount(density));
   let total = 0;
   for (let i = 0; i < n; i++) {
     const si = spheres[i]!;
-    // Neighbours whose spheres can overlap atom i's dot shell.
+    const self = entries[i]!.atom;
+    // Neighbours whose spheres can overlap atom i's dot shell (excluding itself).
     const neigh: AreaAtom[] = [];
-    for (let j = 0; j < n; j++) {
-      if (j === i) continue;
-      const sj = spheres[j]!;
+    for (const sj of occ) {
+      if (sj.atom === self) continue;
       const d2 =
         (si.pos[0] - sj.pos[0]) ** 2 + (si.pos[1] - sj.pos[1]) ** 2 + (si.pos[2] - sj.pos[2]) ** 2;
       const reach = si.r + sj.r;
@@ -376,10 +384,29 @@ export function registerUtil2(ctx: RegistrarCtx): void {
   const getArea = (sel: string, dotSolvent: boolean, density: number, loadB: boolean): number => {
     const entries = areaEntries(sel);
     if (entries.length === 0) return 0;
+    // Occlude the measured atoms against EVERY atom of the objects the selection
+    // touches, not just the selection itself — otherwise a buried residue reads
+    // as fully exposed (the neighbours that bury it were excluded). This matches
+    // PyMOL's whole-object area context.
+    const occluders = occluderEntries(sel);
     const probe = dotSolvent ? ex.getSettingFloat('solvent_radius') || DEFAULT_PROBE : 0;
-    const area = shrakeRupley(entries, probe, density, loadB);
+    const area = shrakeRupley(entries, occluders, probe, density, loadB);
     if (loadB) ctx.publish();
     return area;
+  };
+
+  /** Every atom of the objects that `sel` touches — the occluder context. */
+  const occluderEntries = (sel: string): Array<{ atom: AtomInfo; pos: Vec3; vdw: number }> => {
+    const objNames = new Set(ex.atomsMatching(sel).map((ua) => ua.objName));
+    const out: Array<{ atom: AtomInfo; pos: Vec3; vdw: number }> = [];
+    for (const name of objNames) {
+      const mol = ex.molecule(name);
+      if (!mol) continue;
+      for (let i = 0; i < mol.natom; i++) {
+        out.push({ atom: mol.atoms[i]!, pos: mol.coord(i, 1), vdw: mol.vdw(i) });
+      }
+    }
+    return out;
   };
 
   // Van-der-Waals / molecular surface area (dot_solvent 0 by default).

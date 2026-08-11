@@ -248,7 +248,11 @@ export function registerMovieNs(ctx: RegistrarCtx): void {
       num(pick(args, kwargs, 2, 'rangey'), 0),
       num(pick(args, kwargs, 3, 'rangez'), 0),
     ];
-    const skip = intOf(pick(args, kwargs, 4, 'skip'), 1);
+    // `skip` is the per-frame turn step and a loop divisor — a non-positive or
+    // NaN value (e.g. `skip=0`) would make `range % skip` NaN and never advance
+    // the frame loop, so clamp it to a sane minimum.
+    const skipRaw = intOf(pick(args, kwargs, 4, 'skip'), 1);
+    const skip = skipRaw > 0 ? skipRaw : 1;
     const axes = ['x', 'y', 'z'];
     let frpos = 1;
     for (let axpos = 0; axpos < 3; axpos++) {

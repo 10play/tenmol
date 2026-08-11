@@ -162,6 +162,23 @@ describe('util.get_area / util.get_sasa / util.compute_mass', () => {
     expect(m).toBeGreaterThan(100);
     expect(m).toBeLessThan(140);
   });
+
+  it('occludes a measured selection against the WHOLE object, not just itself', async () => {
+    // Regression: get_area(sub) must use every atom of the object as occluders.
+    // If it did not, a single buried atom would read as a full free sphere and
+    // the per-atom areas would exceed the whole-molecule area. With the fix, an
+    // atom's area is identical whether measured alone or inside `all`, so the
+    // per-atom sum equals get_area('all').
+    const b = await boot();
+    const whole = await b.call<number>('util.get_area', ['all']);
+    const total = await b.call<number>('count_atoms', ['all']);
+    let perAtom = 0;
+    for (let i = 0; i < total; i++) {
+      perAtom += await b.call<number>('util.get_area', [`index ${i + 1}`]);
+    }
+    expect(perAtom).toBeGreaterThan(0);
+    expect(Math.abs(perAtom - whole)).toBeLessThan(whole * 0.02);
+  });
 });
 
 describe('util.find_surface_atoms / util.find_surface_residues', () => {
