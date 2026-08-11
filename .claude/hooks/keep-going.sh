@@ -8,10 +8,10 @@
 #   2. Iteration cap (default 100)     -> runaway guard, resets on the next user prompt
 #   3. Empty/absent goal               -> nothing to keep going for, allow stop
 #
-# The nudge text comes from (first that exists):
-#   - $KEEP_GOING_REASON               (env var, full reason text)
-#   - .claude/keep-going.md            (repo file, full reason text)
-#   - a generic built-in default
+# The goal comes from (first that exists):
+#   - $KEEP_GOING_REASON               (env var, full goal text)
+#   - .claude/keep-going.md            (repo file, full goal text)
+# With neither set the hook is inert and lets the turn end.
 #
 # Never exits non-zero: a failing Stop hook should not wedge the session.
 set -uo pipefail
