@@ -3,6 +3,8 @@
 A fork of [PyMOL](https://github.com/schrodinger/pymol-open-source) that keeps the C++/Python
 engine and replaces the Qt front-end with a React web app.
 
+**Live demo:** [10play.github.io/tenmol](https://10play.github.io/tenmol/)
+
 The engine lives in **`packages/engine/`** and is upstream code, edited in four places and
 otherwise untouched (see [What we changed in the engine](#what-we-changed-in-the-engine)).
 Everything else under `packages/`, plus `apps/web`, is this project.
