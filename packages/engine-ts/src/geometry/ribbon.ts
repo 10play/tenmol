@@ -66,7 +66,7 @@ function point(a: Guide, b: Guide, c: Guide, d: Guide, t: number): [number, numb
  * Build the `ribbon` frame for one object/state, or `null` when no atom carries
  * the ribbon rep (or no chain has enough guide atoms to trace).
  */
-export const buildRibbonFrame: RepBuilder = ({ mol, state, seq }) => {
+export const buildRibbonFrame: RepBuilder = ({ mol, state, seq, getSettingFloat }) => {
   const bit = repBit(Rep.Ribbon);
 
   // Group ribbon-flagged guide atoms by chain, preserving load order (the
@@ -160,7 +160,12 @@ export const buildRibbonFrame: RepBuilder = ({ mol, state, seq }) => {
   builder.addI32(atom, 1, (ref) => (inst.atom = ref));
   const payload = builder.build();
 
-  const header: CgoDrawArraysHeader = {
+  // `ribbon_width` (default 3.0) is the raw setting; the viewport applies
+  // PyMOL's dynamic-width factor per frame. Carried on the header the same way
+  // `dots` carries `pointSize`, so the wire type stays frozen.
+  const ribbonWidth = getSettingFloat('ribbon_width') || 3.0;
+
+  const header: CgoDrawArraysHeader & { lineWidth: number } = {
     v: 1,
     kind: 'cgo-draw-arrays',
     seq,
@@ -170,6 +175,7 @@ export const buildRibbonFrame: RepBuilder = ({ mol, state, seq }) => {
     rep: Rep.Ribbon,
     blocks: [],
     instances: [inst],
+    lineWidth: ribbonWidth,
   };
   return encode(header, payload);
 };

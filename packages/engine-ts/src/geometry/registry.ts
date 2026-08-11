@@ -41,7 +41,8 @@ export type RepBuilder = (ctx: RepBuildCtx) => ArrayBuffer | null;
  * disjoint `geometry/<rep>.ts` module. `RENDERABLE_REPS` is derived from the keys.
  */
 export const REP_BUILDERS: Partial<Record<RepId, RepBuilder>> = {
-  [Rep.Line]: ({ mol, state, seq }) => buildLinesFrame(mol, state, seq),
+  [Rep.Line]: ({ mol, state, seq, getSettingFloat }) =>
+    buildLinesFrame(mol, state, seq, getSettingFloat('line_width') || 1.49),
   [Rep.Sphere]: ({ mol, state, seq, getSettingFloat }) =>
     buildSpheresFrame(mol, state, seq, getSettingFloat('sphere_scale') || 1),
   [Rep.Cyl]: ({ mol, state, seq, getSettingFloat }) =>

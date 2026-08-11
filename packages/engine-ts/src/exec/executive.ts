@@ -31,7 +31,7 @@ const DEFAULT_SETTINGS: Readonly<Record<string, number | string>> = {
   sphere_scale: 1.0,
   stick_radius: 0.25,
   nb_spheres_size: 0.25,
-  line_width: 1.0,
+  line_width: 1.49, // packages/engine/layer1/SettingInfo.h (under 1.5 for SGI antialiasing)
   field_of_view: 20,
   orthoscopic: 0,
   // Mouse-config panel reads these; PyMOL's fresh-session defaults.

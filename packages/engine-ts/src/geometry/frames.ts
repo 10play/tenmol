@@ -169,6 +169,7 @@ export function buildLinesFrame(
   mol: ObjectMolecule,
   state: number,
   seq: number,
+  lineWidth: number,
 ): ArrayBuffer | null {
   const bit = repBit(Rep.Line);
   const bonds = mol.bonds.filter(
@@ -176,26 +177,41 @@ export function buildLinesFrame(
   );
   if (bonds.length === 0) return null;
 
-  const data = new Float32Array(bonds.length * INSTANCE_ITEM_SIZE.line);
-  const atom = new Int32Array(bonds.length);
+  // PyMOL's `RepLine` splits every bond at its midpoint and paints each half in
+  // its own atom's colour (`CGO_SPLITLINE`), so a C–O bond reads green|red with
+  // a hard seam — NOT a green→red gradient. We emit the two half-segments as two
+  // solid-coloured `line` instances to match; the viewport draws them as wide
+  // quad lines (`line_width`) rather than the 1px `GL_LINES` clamp.
+  const seg = bonds.length * 2;
+  const data = new Float32Array(seg * INSTANCE_ITEM_SIZE.line);
+  const atom = new Int32Array(seg);
   for (let k = 0; k < bonds.length; k++) {
     const [a, b] = bonds[k]!;
     const [x1, y1, z1] = mol.coord(a, state);
     const [x2, y2, z2] = mol.coord(b, state);
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, mz = (z1 + z2) / 2;
     const [r1, g1, b1] = rgbForIndex(mol.atoms[a]!.color);
     const [r2, g2, b2] = rgbForIndex(mol.atoms[b]!.color);
-    const o = k * INSTANCE_ITEM_SIZE.line;
+    // Half 1: atom a's colour, a -> midpoint.
+    let o = k * 2 * INSTANCE_ITEM_SIZE.line;
     data[o] = x1; data[o + 1] = y1; data[o + 2] = z1;
-    data[o + 3] = x2; data[o + 4] = y2; data[o + 5] = z2;
+    data[o + 3] = mx; data[o + 4] = my; data[o + 5] = mz;
     data[o + 6] = r1; data[o + 7] = g1; data[o + 8] = b1; data[o + 9] = 1;
+    data[o + 10] = r1; data[o + 11] = g1; data[o + 12] = b1; data[o + 13] = 1;
+    atom[k * 2] = mol.atoms[a]!.id;
+    // Half 2: atom b's colour, midpoint -> b.
+    o += INSTANCE_ITEM_SIZE.line;
+    data[o] = mx; data[o + 1] = my; data[o + 2] = mz;
+    data[o + 3] = x2; data[o + 4] = y2; data[o + 5] = z2;
+    data[o + 6] = r2; data[o + 7] = g2; data[o + 8] = b2; data[o + 9] = 1;
     data[o + 10] = r2; data[o + 11] = g2; data[o + 12] = b2; data[o + 13] = 1;
-    atom[k] = mol.atoms[a]!.id;
+    atom[k * 2 + 1] = mol.atoms[b]!.id;
   }
 
   const builder = new PayloadBuilder();
   const inst: InstanceBuffer = {
     kind: 'line',
-    count: bonds.length,
+    count: seg,
     itemSize: INSTANCE_ITEM_SIZE.line,
     data: PLACEHOLDER,
   };
@@ -203,7 +219,7 @@ export function buildLinesFrame(
   builder.addI32(atom, 1, (ref) => (inst.atom = ref));
   const payload = builder.build();
 
-  const header: CgoDrawArraysHeader = {
+  const header: CgoDrawArraysHeader & { lineWidth: number } = {
     v: 1,
     kind: 'cgo-draw-arrays',
     seq,
@@ -213,6 +229,7 @@ export function buildLinesFrame(
     rep: Rep.Line,
     blocks: [],
     instances: [inst],
+    lineWidth,
   };
   return encode(header, payload);
 }

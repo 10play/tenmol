@@ -245,6 +245,9 @@ export function buildGeometry(frame: GeometryFrame, options: BuildOptions = {}):
     }
     const pointSize = (header as unknown as { pointSize?: number }).pointSize;
     const nonbondedSize = (header as unknown as { nonbondedSize?: number }).nonbondedSize;
+    // `line`-kind reps (lines, ribbon) carry the raw PyMOL width setting so the
+    // viewport can draw wide quad lines instead of the 1px GL_LINES clamp.
+    const lineWidth = (header as unknown as { lineWidth?: number }).lineWidth;
     for (const buffer of header.instances) {
       if (!isDrawableInstanceKind(buffer.kind)) {
         problems.push(`instance kind '${buffer.kind}' has no impostor material yet`);
@@ -268,6 +271,7 @@ export function buildGeometry(frame: GeometryFrame, options: BuildOptions = {}):
         ...(options.pixelRatio === undefined ? {} : { pixelRatio: options.pixelRatio }),
         ...(nonbondedSize === undefined ? {} : { nonbondedSize }),
         ...(normal === undefined ? {} : { normal }),
+        ...(lineWidth === undefined ? {} : { lineWidth }),
       });
       if (draw === null) {
         problems.push(`instance buffer '${buffer.kind}' is malformed`);
