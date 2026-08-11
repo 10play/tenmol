@@ -25,7 +25,7 @@ import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
-import pixelmatch from 'pixelmatch';
+import { score } from './score.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..', '..', '..');
@@ -38,23 +38,6 @@ const HTML = join(OUT, 'gallery.html');
 const PUBLIC_HTML = join(REPO, 'apps/web/public/gallery.html');
 
 mkdirSync(OUT, { recursive: true });
-
-/** pixelmatch two PNG buffers (cropped to the shared box); returns diff PNG + counts. */
-function diff(aBuf, bBuf) {
-  const a = PNG.sync.read(aBuf);
-  const b = PNG.sync.read(bBuf);
-  const width = Math.min(a.width, b.width);
-  const height = Math.min(a.height, b.height);
-  const out = new PNG({ width, height });
-  const crop = (p) => {
-    if (p.width === width && p.height === height) return p.data;
-    const c = new PNG({ width, height });
-    PNG.bitblt(p, c, 0, 0, width, height, 0, 0);
-    return c.data;
-  };
-  const n = pixelmatch(crop(a), crop(b), out.data, width, height, { threshold: 0.12 });
-  return { n, total: width * height, out, width, height };
-}
 
 const dataUri = (buf) => `data:image/png;base64,${buf.toString('base64')}`;
 
@@ -80,43 +63,55 @@ for (const id of ids) {
   const actualPath = join(OUT, `${id}.actual.png`);
   const actualBuf = existsSync(actualPath) ? readFileSync(actualPath) : null;
 
-  const d = diff(goldBuf, refBuf);
-  const sim = 100 * (1 - d.n / d.total);
+  const d = score(goldBuf, refBuf);
   scenes.push({
     id,
-    sim,
+    sim: d.scorePct,
+    coverage: d.coveragePct,
+    color: d.colorPct,
     w: d.width,
     h: d.height,
     ref: dataUri(refBuf),
     gold: dataUri(goldBuf),
     actual: actualBuf ? dataUri(actualBuf) : null,
-    diff: dataUri(PNG.sync.write(d.out)),
+    diff: dataUri(PNG.sync.write(d.diff)),
+    colorDiff: dataUri(PNG.sync.write(d.colorDiff)),
   });
-  console.log(`  ${sim.toFixed(1).padStart(5)}%  ${id}`);
+  console.log(
+    `  ${d.scorePct.toFixed(1).padStart(5)}%  (shape ${d.coveragePct.toFixed(1)}% · color ${d.colorPct.toFixed(1)}%)  ${id}`,
+  );
 }
 
 scenes.sort((a, b) => a.sim - b.sim);
 const mean = scenes.reduce((s, x) => s + x.sim, 0) / scenes.length;
+const meanCoverage = scenes.reduce((s, x) => s + x.coverage, 0) / scenes.length;
+const meanColor = scenes.reduce((s, x) => s + x.color, 0) / scenes.length;
 
-const html = renderHtml(scenes, mean);
+const html = renderHtml(scenes, mean, meanCoverage, meanColor);
 writeFileSync(HTML, html);
 writeFileSync(PUBLIC_HTML, html);
 console.log(`\ngallery: wrote ${HTML}`);
-console.log(`gallery: served by front dev server at /gallery.html  (${scenes.length} scenes, mean ${mean.toFixed(1)}% golden↔ref)`);
+console.log(
+  `gallery: served by front dev server at /gallery.html  (${scenes.length} scenes, mean ${mean.toFixed(1)}% = shape ${meanCoverage.toFixed(1)}% · color ${meanColor.toFixed(1)}%)`,
+);
 if (process.argv.includes('--open')) {
   const { spawn } = await import('node:child_process');
   spawn('xdg-open', [HTML], { detached: true, stdio: 'ignore' }).unref();
 }
 
-function renderHtml(scenes, mean) {
+function renderHtml(scenes, mean, meanCoverage, meanColor) {
+  const band = (v) => (v >= 90 ? 'good' : v >= 80 ? 'mid' : 'bad');
   const cards = scenes
     .map((s, i) => {
-      const cls = s.sim >= 90 ? 'good' : s.sim >= 80 ? 'mid' : 'bad';
       return `
     <section class="card" data-i="${i}">
       <header>
         <h2>${s.id}</h2>
-        <span class="pct ${cls}">${s.sim.toFixed(1)}%</span>
+        <span class="pcts">
+          <span class="pct ${band(s.sim)}" title="combined = mean(shape, color)">${s.sim.toFixed(1)}%</span>
+          <span class="sub" title="pixelmatch shape/coverage">▢ ${s.coverage.toFixed(1)}</span>
+          <span class="sub" title="foreground perceptual color fidelity">◐ ${s.color.toFixed(1)}</span>
+        </span>
       </header>
       <div class="stage" style="aspect-ratio:${s.w}/${s.h}">
         <!-- wipe view: base = Ours (golden), top (left side) = PyMOL (ref) -->
@@ -133,13 +128,15 @@ function renderHtml(scenes, mean) {
         <img class="single" data-view="gold" src="${s.gold}" hidden>
         ${s.actual ? `<img class="single" data-view="actual" src="${s.actual}" hidden>` : ''}
         <img class="single" data-view="diff" src="${s.diff}" hidden>
+        <img class="single" data-view="cdiff" src="${s.colorDiff}" hidden>
       </div>
       <nav class="modes">
         <button data-m="wipe" class="on">Wipe</button>
         <button data-m="ref">PyMOL</button>
         <button data-m="gold">Ours</button>
         ${s.actual ? '<button data-m="actual">Actual</button>' : ''}
-        <button data-m="diff">Diff</button>
+        <button data-m="diff">Shape Δ</button>
+        <button data-m="cdiff">Color Δ</button>
       </nav>
     </section>`;
     })
@@ -165,8 +162,10 @@ function renderHtml(scenes, mean) {
   .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
   .card header { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); }
   .card h2 { font-size:13px; margin:0; font-weight:600; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
-  .pct { font-variant-numeric:tabular-nums; font-weight:700; padding:2px 8px; border-radius:999px; font-size:12px; }
+  .pcts { display:flex; align-items:center; gap:6px; font-variant-numeric:tabular-nums; }
+  .pct { font-weight:700; padding:2px 8px; border-radius:999px; font-size:12px; }
   .pct.good { background:#123021; color:#5ce39a; } .pct.mid { background:#332a12; color:#e9c65c; } .pct.bad { background:#3a1a1a; color:#f0857d; }
+  .sub { color:var(--dim); font-size:11px; }
   .stage { position:relative; width:100%; background:#000; }
   .stage img { display:block; width:100%; height:100%; object-fit:contain; }
   .stage img[hidden], .stage [hidden] { display:none; }  /* beat .stage img specificity */
@@ -192,8 +191,8 @@ function renderHtml(scenes, mean) {
 <body>
   <div class="top-bar">
     <h1>Visual parity <span class="hint">golden (ours) ↔ ref (PyMOL)</span></h1>
-    <div class="mean">mean similarity <b>${mean.toFixed(1)}%</b> · ${scenes.length} scenes · sorted worst-first</div>
-    <div class="hint">Drag the blue handle to wipe · left = PyMOL, right = Ours</div>
+    <div class="mean">mean <b>${mean.toFixed(1)}%</b> = shape ${meanCoverage.toFixed(1)}% · color ${meanColor.toFixed(1)}% · ${scenes.length} scenes · sorted worst-first</div>
+    <div class="hint">Drag to wipe (left = PyMOL) · Shape Δ = pixelmatch · Color Δ = perceptual hue/shade mismatch over foreground</div>
   </div>
   <div class="grid">
 ${cards}

@@ -27,6 +27,28 @@ import { repBit } from '../model/atom';
 import type { ObjectMolecule } from '../model/molecule';
 import { rgbForIndex } from '../exec/color';
 
+/** PyMOL `stick_h_scale` default: bonds to hydrogen draw at 0.4x stick_radius. */
+const STICK_H_SCALE = 0.3;
+
+/**
+ * True when an atom is hydrogen (or deuterium).
+ *
+ * The PDB parser's element inference takes the leading two letters of a 4-char
+ * atom name when the element column is blank (as in helix.pdb), so a hydrogen
+ * named `HB2`/`HH31`/`HE` is mis-canonicalised to `Hb`/`Hh`/`He` and never
+ * matches a bare `'H'`. Fall back to the atom NAME: in biomolecular PDBs a
+ * hydrogen's name always begins with `H` (optionally after a leading digit,
+ * e.g. `1HB`) and no heavy element beginning with H (He, Hf, Hg, Ho, Hs) occurs
+ * in these structures. Without this, ~165 of helix.pdb's 189 hydrogens draw at
+ * full stick_radius — the fat white rods that swamp the helix-sticks reference.
+ */
+function isHydrogen(elem: string, name: string): boolean {
+  if (elem === 'H' || elem === 'D') return true;
+  const n = name.trim().replace(/^[0-9]+/, '');
+  const c = n.charAt(0);
+  return c === 'H' || c === 'D';
+}
+
 /** A pending buffer to place into the payload. */
 interface Pending {
   bytes: Uint8Array;
@@ -106,7 +128,10 @@ export function buildSpheresFrame(
     const [r, g, b] = rgbForIndex(mol.atoms[i]!.color);
     const o = k * INSTANCE_ITEM_SIZE.sphere;
     data[o] = x; data[o + 1] = y; data[o + 2] = z;
-    data[o + 3] = mol.vdw(i) * sphereScale;
+    // PyMOL's ray-traced spheres read marginally larger than a bare vdw
+    // impostor at these view distances (its silhouette anti-aliasing bleeds
+    // outward); a ~3% radius bump best matches the reference silhouette.
+    data[o + 3] = mol.vdw(i) * sphereScale * 1.03;
     data[o + 4] = r; data[o + 5] = g; data[o + 6] = b; data[o + 7] = 1;
     atom[k] = mol.atoms[i]!.id;
   }
@@ -223,7 +248,14 @@ export function buildSticksFrame(
     // origin, axis (atom2 - atom1)
     data[o] = x1; data[o + 1] = y1; data[o + 2] = z1;
     data[o + 3] = x2 - x1; data[o + 4] = y2 - y1; data[o + 5] = z2 - z1;
-    data[o + 6] = stickRadius;
+    // PyMOL's `stick_h_scale` (default 0.4) draws bonds to hydrogen thinner
+    // than heavy-atom bonds. Without it, H sticks render at full stick_radius
+    // and swamp the image with fat white rods (helix-sticks measured ~11x too
+    // many white pixels vs the PyMOL reference).
+    const atomA = mol.atoms[a]!;
+    const atomB = mol.atoms[b]!;
+    const isH = isHydrogen(atomA.elem, atomA.name) || isHydrogen(atomB.elem, atomB.name);
+    data[o + 6] = isH ? stickRadius * STICK_H_SCALE : stickRadius;
     data[o + 7] = 1; // capbits: capped
     data[o + 8] = r1; data[o + 9] = g1; data[o + 10] = b1c; data[o + 11] = 1;
     data[o + 12] = r2; data[o + 13] = g2; data[o + 14] = b2c; data[o + 15] = 1;

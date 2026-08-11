@@ -240,7 +240,7 @@ export function createCylinderMaterial(): RawShaderMaterial {
     fragmentShader: FRAG,
     uniforms: {
       ...lightingUniforms(),
-      u_radiusScale: { value: 1 },
+      u_radiusScale: { value: 0.95 },
       u_ortho: { value: false },
       // `no_flat_caps` == !cSetting_cylinder_flat_caps; PyMOL's default is
       // round caps on shader cylinders.

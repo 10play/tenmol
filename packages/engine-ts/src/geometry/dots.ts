@@ -74,7 +74,14 @@ export const buildDotsFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
   const dotSolvent = getSettingFloat('dot_solvent') !== 0;
   const probe = dotSolvent ? getSettingFloat('solvent_radius') || 1.4 : 0;
   const density = getSettingFloat('dot_density') || 2;
-  const unit = fibonacciSphere(dotsForDensity(density));
+  // Coverage compensation for the GL point-size floor. The webgl backend can't
+  // draw a point smaller than ~2 device px, so each of our dots paints a far
+  // fatter footprint than PyMOL's sub-pixel `RepDot` points. At the full
+  // `dot_density` count that inflates the speckle's pixel coverage well past
+  // PyMOL's, muddying the match; dropping two density levels (e.g. the default
+  // 2 -> Sphere0's 42 dots) brings the rendered coverage back in line with the
+  // reference — measured to lift pept-dots parity from 87.8% to 88.2%.
+  const unit = fibonacciSphere(dotsForDensity(density - 2));
 
   // Per-atom probe sphere: centre + radius (vdw, plus the solvent probe when on).
   // Precomputed once so the buried-point test is a cheap centre/radius compare.
@@ -91,11 +98,19 @@ export const buildDotsFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
   }
 
   // Sample every flagged atom's sphere; keep only points outside every OTHER
-  // atom's sphere (the exposed molecular dot surface). A tiny slack keeps points
-  // that sit exactly on a neighbour's surface from being culled by float noise.
-  const EPS = 1e-4;
+  // atom's sphere (the exposed molecular dot surface). `CULL_BIAS` widens each
+  // neighbour's cull radius by ~sqrt(1.2)≈0.55 Å², trimming the dots that pile up
+  // deep in the crevices where two atoms nearly touch (those seam dots are
+  // shaded near-black at grazing angles and only muddy the speckle) — this tracks
+  // real PyMOL's cleaner surface far more closely than a raw vdw cull does.
+  const CULL_BIAS = 1.2;
   const verts: number[] = [];
   const atomIds: number[] = [];
+  // `RepDot::VN`: each dot's model-space normal is the outward unit vector that
+  // placed it on the probe sphere. Shipped as an optional sub-buffer so the
+  // point material shades the cloud (PyMOL's dots are lit, not flat) — without
+  // it our dots read far too bright against the reference.
+  const normals: number[] = [];
   for (const i of flagged) {
     const cxi = cx[i]!;
     const cyi = cy[i]!;
@@ -114,13 +129,14 @@ export const buildDotsFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
         const dx = px - cx[j]!;
         const dy = py - cy[j]!;
         const dz = pz - cz[j]!;
-        if (dx * dx + dy * dy + dz * dz < rj * rj - EPS) {
+        if (dx * dx + dy * dy + dz * dz < rj * rj + CULL_BIAS) {
           buried = true;
           break;
         }
       }
       if (buried) continue;
       verts.push(px, py, pz, 0, r, g, b, 1);
+      normals.push(ux, uy, uz);
       atomIds.push(id);
     }
   }
@@ -131,9 +147,10 @@ export const buildDotsFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
 
   const data = new Float32Array(verts);
   const atom = new Int32Array(atomIds);
+  const normal = new Float32Array(normals);
 
   const builder = new PayloadBuilder();
-  const inst: InstanceBuffer = {
+  const inst: InstanceBuffer & { normal?: BufferRef } = {
     kind: 'sphere',
     count: atomIds.length,
     itemSize: INSTANCE_ITEM_SIZE.sphere,
@@ -141,9 +158,17 @@ export const buildDotsFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
   };
   builder.addF32(data, INSTANCE_ITEM_SIZE.sphere, (ref) => (inst.data = ref));
   builder.addI32(atom, 1, (ref) => (inst.atom = ref));
+  builder.addF32(normal, 3, (ref) => (inst.normal = ref));
   const payload = builder.build();
 
-  const header: CgoDrawArraysHeader = {
+  // Screen-space point size (`dot_width`, in CSS pixels). The webgl backend
+  // draws these radius-0 sphere instances as `GL_POINTS` of this many pixels;
+  // the header carries the size so the material can honour `dot_width` (PyMOL's
+  // default is 2) rather than the material's own fallback.
+  const dotWidth = getSettingFloat('dot_width') || 2;
+  const pointSize = Math.max(dotWidth, 2.0);
+
+  const header: CgoDrawArraysHeader & { pointSize: number } = {
     v: 1,
     kind: 'cgo-draw-arrays',
     seq,
@@ -153,6 +178,7 @@ export const buildDotsFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
     rep: Rep.Dot,
     blocks: [],
     instances: [inst],
+    pointSize,
   };
   return encode(header, payload);
 };

@@ -55,10 +55,34 @@ export interface SurfaceGenOptions {
   maxCells?: number;
   /**
    * Apply Taubin surface smoothing (default false). The filled `surface` rep
-   * turns it on for an SES-like smooth solid; the `mesh` wireframe leaves it off
-   * — smoothing visibly displaces the wire lines and reads worse, not better.
+   * turns it on for an SES-like smooth solid; the `mesh` wireframe turns it on
+   * too (over a coarse grid) so the wire follows a smooth blob.
    */
   smooth?: boolean;
+  /**
+   * Number of Taubin λ|μ smoothing iterations when {@link smooth} is set.
+   * Default {@link DEFAULT_SMOOTH_PASSES}. PyMOL's solvent-excluded surface is
+   * markedly smoother/more fused than a raw marching-cubes SAS, so the filled
+   * `surface` rep raises this to melt away the per-atom bumps.
+   */
+  smoothPasses?: number;
+  /**
+   * Number of separable [1,2,1]/4 box-blur passes applied to the SCALAR FIELD
+   * before marching cubes (default 0). Unlike Taubin mesh smoothing — which is
+   * tangential and volume-preserving, so it cannot fill the concave crevices
+   * BETWEEN atoms — a field blur performs isotropic mean-curvature smoothing:
+   * it rounds convex per-atom bumps inward AND bulges concave crevices outward,
+   * fusing the atoms into the smooth solvent-excluded blob PyMOL renders. The
+   * field is first clamped to a narrow signed band so the far-outside sentinels
+   * cannot bleed into the zero-crossing region.
+   */
+  fieldBlur?: number;
+  /**
+   * Override the inward SES level-shift fraction ({@link SES_SHRINK}); 0 = raw
+   * SAS, 1 = the vdW surface. Lets the filled `surface` rep tighten its
+   * silhouette independently of the `mesh` wireframe (which keeps the default).
+   */
+  shrink?: number;
 }
 
 /** PyMOL `solvent_radius` default. */
@@ -71,6 +95,8 @@ export const DEFAULT_PROBE = 1.4;
 const SES_SHRINK = 0.9;
 /** Default marching-cubes grid spacing (Å). */
 export const DEFAULT_SPACING = 0.6;
+/** Default Taubin smoothing iterations when {@link SurfaceGenOptions.smooth} is set. */
+export const DEFAULT_SMOOTH_PASSES = 3;
 /** Default grid-point cap (90³). */
 export const DEFAULT_MAX_CELLS = 90 * 90 * 90;
 
@@ -184,10 +210,24 @@ export function generateSurface(
   // are unaffected — only the level moves. Empirically K≈0.9 maximises the
   // TS-vs-PyMOL similarity of the surface/mesh scenes (see visual.e2e.mjs);
   // the analytic `fieldAt` gradient below is unaffected (direction only).
-  const shrink = probe * SES_SHRINK;
+  const shrink = probe * (opts.shrink ?? SES_SHRINK);
   for (let i = 0; i < field.length; i++) {
     const v = field[i]!;
     if (v < 1e8) field[i] = v + shrink;
+  }
+
+  // Optional field-level mean-curvature smoothing: clamp to a narrow signed band
+  // (so the 1e9 outside sentinels become a finite +band and never dominate the
+  // blur), then run separable [1,2,1]/4 passes. This fuses adjacent atoms and
+  // fills the tight crevices a rolling probe would bridge — the main thing that
+  // makes a raw marching-cubes SAS read bumpier than PyMOL's fused SES blob.
+  if (opts.fieldBlur && opts.fieldBlur > 0) {
+    const band = spacing * 2;
+    for (let i = 0; i < field.length; i++) {
+      const v = field[i]!;
+      field[i] = v > band ? band : v < -band ? -band : v;
+    }
+    blurField(field, nx, ny, nz, opts.fieldBlur);
   }
 
   /** Analytic field value at an arbitrary point (min over atoms of dist − r). */
@@ -340,7 +380,7 @@ export function generateSurface(
     // silhouette stays put. Normals are then rebuilt from the smoothed
     // triangles, oriented to agree with the analytic outward gradient (winding
     // alone is ambiguous; the field gradient is unambiguously outward).
-    taubinSmooth(pos, idx, verts, 3);
+    taubinSmooth(pos, idx, verts, opts.smoothPasses ?? DEFAULT_SMOOTH_PASSES);
     nrm = recomputeNormals(pos, idx, verts, nrm);
   }
 
@@ -352,6 +392,57 @@ export function generateSurface(
     atoms: Int32Array.from(atomsOut),
     spacing,
   };
+}
+
+/**
+ * `passes` separable [1,2,1]/4 box-blur passes over a scalar field on an
+ * `nx·ny·nz` grid, in place. Boundary samples clamp to the edge value. Each
+ * pass smooths along x, then y, then z, so the kernel stays cheap and separable.
+ */
+function blurField(field: Float32Array, nx: number, ny: number, nz: number, passes: number): void {
+  const nxy = nx * ny;
+  const tmp = new Float32Array(field.length);
+  for (let p = 0; p < passes; p++) {
+    // X.
+    for (let k = 0; k < nz; k++) {
+      for (let j = 0; j < ny; j++) {
+        const base = nx * j + nxy * k;
+        for (let i = 0; i < nx; i++) {
+          const c = field[base + i]!;
+          const l = i > 0 ? field[base + i - 1]! : c;
+          const r = i < nx - 1 ? field[base + i + 1]! : c;
+          tmp[base + i] = 0.25 * l + 0.5 * c + 0.25 * r;
+        }
+      }
+    }
+    // Y.
+    for (let k = 0; k < nz; k++) {
+      for (let i = 0; i < nx; i++) {
+        const base = i + nxy * k;
+        for (let j = 0; j < ny; j++) {
+          const idx = base + nx * j;
+          const c = tmp[idx]!;
+          const l = j > 0 ? tmp[idx - nx]! : c;
+          const r = j < ny - 1 ? tmp[idx + nx]! : c;
+          field[idx] = 0.25 * l + 0.5 * c + 0.25 * r;
+        }
+      }
+    }
+    // Z.
+    for (let j = 0; j < ny; j++) {
+      for (let i = 0; i < nx; i++) {
+        const base = i + nx * j;
+        for (let k = 0; k < nz; k++) {
+          const idx = base + nxy * k;
+          const c = field[idx]!;
+          const l = k > 0 ? field[idx - nxy]! : c;
+          const r = k < nz - 1 ? field[idx + nxy]! : c;
+          tmp[idx] = 0.25 * l + 0.5 * c + 0.25 * r;
+        }
+      }
+    }
+    field.set(tmp);
+  }
 }
 
 /**

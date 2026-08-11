@@ -35,11 +35,15 @@ const SAMPLES_PER_SEGMENT = 8;
 const CROSS_SECTION_POINTS = 8;
 /** Loop tube radius (Å) — PyMOL `cartoon_loop_radius` default is 0.2. */
 const DEFAULT_LOOP_RADIUS = 0.2;
-/** Helix/strand ribbon half-width along the binormal (full width ≈ 1.8 Å). */
-const RIBBON_HALF_WIDTH = 0.9;
-/** Helix/strand ribbon half-thickness along the normal (full thickness ≈ 0.4 Å). */
-const RIBBON_HALF_THICKNESS = 0.2;
-/** Strand arrowhead base is this multiple of the ribbon half-width. */
+/** Helix ribbon half-width along the binormal (full width ≈ 2.4 Å). */
+const HELIX_HALF_WIDTH = 1.2;
+/** Strand ribbon half-width along the binormal. */
+const STRAND_HALF_WIDTH = 0.9;
+/** Helix ribbon half-thickness along the normal (full thickness ≈ 0.4 Å). */
+const HELIX_HALF_THICKNESS = 0.3;
+/** Strand ribbon half-thickness — PyMOL renders β-sheets as very flat slabs. */
+const STRAND_HALF_THICKNESS = 0.03;
+/** Strand arrowhead base is this multiple of the strand half-width. */
 const ARROW_WIDTH_SCALE = 1.9;
 
 type Vec3 = [number, number, number];
@@ -157,6 +161,40 @@ function tangents(samples: Sample[]): Vec3[] {
   return out;
 }
 
+/**
+ * Per-residue ribbon normal (the ribbon's THIN direction) derived from the local
+ * backbone curvature — the Carson-Bugg CA-only method. For three consecutive Cα
+ * the vector (CA_i−CA_{i-1})×(CA_{i+1}−CA_i) is perpendicular to the local peptide
+ * plane; it points radially out of a helix and out of a β-sheet, so extruding the
+ * flat ribbon with this as its thin axis makes the wide face point the same way
+ * PyMOL's does (helix faces spiral outward, strands lie flat). Signs are made
+ * consistent along the chain so the ribbon does not flip from residue to residue.
+ */
+function residueNormals(cas: CaResidue[]): Vec3[] {
+  const n = cas.length;
+  const raw: Vec3[] = [];
+  for (let i = 0; i < n; i++) {
+    const prev = cas[Math.max(0, i - 1)]!.pos;
+    const cur = cas[i]!.pos;
+    const next = cas[Math.min(n - 1, i + 1)]!.pos;
+    raw.push(cross(sub(cur, prev), sub(next, cur)));
+  }
+  const out: Vec3[] = [];
+  let prevN: Vec3 | null = null;
+  for (let i = 0; i < n; i++) {
+    let nv = raw[i]!;
+    if (len(nv) < 1e-6) {
+      nv = prevN ?? [0, 1, 0];
+    } else {
+      nv = norm(nv);
+      if (prevN && dot(nv, prevN) < 0) nv = [-nv[0], -nv[1], -nv[2]];
+    }
+    out.push(nv);
+    prevN = nv;
+  }
+  return out;
+}
+
 /** Parallel-transport frame normals along the tangents (smooth, flip-free). */
 function transportNormals(tans: Vec3[]): Vec3[] {
   const out: Vec3[] = [];
@@ -252,7 +290,27 @@ export const buildCartoonFrame: RepBuilder = ({ mol, state, seq, getSettingFloat
     const nRes = cas.length;
     const samples = sampleChain(cas);
     const tans = tangents(samples);
-    const nrms = transportNormals(tans);
+    const transportN = transportNormals(tans);
+    const resN = residueNormals(cas);
+    // Per-sample thin-axis normal: interpolate the curvature normals of the two
+    // residues this sample bridges, then project off the tangent. Fall back to
+    // the smooth parallel-transport normal wherever the curvature is degenerate
+    // (straight runs), so caps and colinear stretches stay artefact-free.
+    const nrms: Vec3[] = samples.map((s, si) => {
+      const r0 = resN[s.res]!;
+      const r1 = resN[Math.min(nRes - 1, s.res + 1)]!;
+      const w = s.u;
+      const nv: Vec3 = [
+        r0[0] * (1 - w) + r1[0] * w,
+        r0[1] * (1 - w) + r1[1] * w,
+        r0[2] * (1 - w) + r1[2] * w,
+      ];
+      const t = tans[si]!;
+      // `nv` is the curvature binormal; the ribbon's thin axis is the Frenet
+      // normal (radial for a helix, in-plane for a strand) = tangent × binormal.
+      const frenet = cross(t, nv);
+      return len(frenet) < 1e-3 ? transportN[si]! : norm(frenet);
+    });
 
     const isArrowRes = (r: number): boolean =>
       cas[r]!.ss === 'S' && (r + 1 >= nRes || cas[r + 1]!.ss !== 'S');
@@ -271,12 +329,12 @@ export const buildCartoonFrame: RepBuilder = ({ mol, state, seq, getSettingFloat
       let ht: number;
       if (ca.ss === 'H' || ca.ss === 'S') {
         shape = 'rect';
-        ht = RIBBON_HALF_THICKNESS;
-        if (isArrowRes(s.res)) {
+        ht = ca.ss === 'S' ? STRAND_HALF_THICKNESS : HELIX_HALF_THICKNESS;
+        if (ca.ss === 'S' && isArrowRes(s.res)) {
           // Taper from a wide base at the residue to a point at the next.
-          hw = RIBBON_HALF_WIDTH * ARROW_WIDTH_SCALE * (1 - s.u) + 0.02;
+          hw = STRAND_HALF_WIDTH * ARROW_WIDTH_SCALE * (1 - s.u) + 0.02;
         } else {
-          hw = RIBBON_HALF_WIDTH;
+          hw = ca.ss === 'S' ? STRAND_HALF_WIDTH : HELIX_HALF_WIDTH;
         }
       } else {
         shape = 'circle';

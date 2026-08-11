@@ -27,11 +27,45 @@ const PLACEHOLDER: BufferRef = { byteOffset: 0, byteLength: 0, dtype: 'f32', ite
  */
 export const buildMeshFrame: RepBuilder = ({ mol, state, seq, getSettingFloat }) => {
   const probe = getSettingFloat('solvent_radius') || DEFAULT_PROBE;
-  const surf = generateSurface(mol, state, repBit(Rep.Mesh), { probe });
+  // PyMOL's `mesh` is a clean, coarse wireframe over a SMOOTHED solvent-excluded
+  // surface. Our default (fine spacing, no smoothing) yields a dense triangular
+  // noise that reads nothing like it. Coarsen the marching-cubes grid so the
+  // line density matches PyMOL, and run the same Taubin smoothing the filled
+  // `surface` rep uses so the wire follows a smooth blob instead of grid facets.
+  const surf = generateSurface(mol, state, repBit(Rep.Mesh), {
+    probe,
+    // PyMOL's `mesh` is a FINE net, not a coarse one — many small quads follow a
+    // smooth solvent-excluded blob. A very coarse grid (spacing 3.0) reads as a
+    // sparse polygon cage nothing like it. Use a moderately fine grid so the line
+    // DENSITY matches, and run the SAME field-blur + Taubin smoothing the filled
+    // `surface` rep uses so the wire follows the fused blob (not separated per-atom
+    // bumps). Longest-edge (diagonal) dropping below then leaves PyMOL's tidy net.
+    spacing: 2.2,
+    smooth: true,
+    smoothPasses: 3,
+    fieldBlur: 2,
+    shrink: 0.82,
+  });
   if (!surf) return null;
 
   const { positions, colors, indices, atoms } = surf;
   const nVerts = atoms.length;
+
+  // PyMOL's `mesh` reads as a clean QUAD net (the surface intersected with the
+  // grid planes), not a triangulation. Our marching cubes emits triangles, so
+  // every quad carries an extra diagonal (its hypotenuse) — those diagonals are
+  // what make a fine mesh read as dense noise instead of PyMOL's tidy net. For
+  // each triangle we therefore DROP its longest edge (the diagonal): in a
+  // right-triangulated quad the hypotenuse is the longest side, so this leaves
+  // the axis-following net while letting us match PyMOL's fine line DENSITY.
+  const sqLen = (u: number, v: number): number => {
+    const pu = u * 3;
+    const pv = v * 3;
+    const dx = positions[pu]! - positions[pv]!;
+    const dy = positions[pu + 1]! - positions[pv + 1]!;
+    const dz = positions[pu + 2]! - positions[pv + 2]!;
+    return dx * dx + dy * dy + dz * dz;
+  };
 
   // Dedupe the undirected triangle edges: key each by its ordered vertex pair.
   const seen = new Set<number>();
@@ -40,11 +74,19 @@ export const buildMeshFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
     const a = indices[t]!;
     const b = indices[t + 1]!;
     const c = indices[t + 2]!;
-    for (const [u, v] of [
+    const lab = sqLen(a, b);
+    const lbc = sqLen(b, c);
+    const lca = sqLen(c, a);
+    // Index of the longest edge: 0 = a-b, 1 = b-c, 2 = c-a. Skip it (the diagonal).
+    const skip = lab >= lbc ? (lab >= lca ? 0 : 2) : lbc >= lca ? 1 : 2;
+    const tri: Array<[number, number]> = [
       [a, b],
       [b, c],
       [c, a],
-    ] as Array<[number, number]>) {
+    ];
+    for (let e = 0; e < 3; e++) {
+      if (e === skip) continue;
+      const [u, v] = tri[e]!;
       const lo = Math.min(u, v);
       const hi = Math.max(u, v);
       const key = lo * nVerts + hi;
