@@ -188,7 +188,7 @@ export function registerEditing(ctx: RegistrarCtx): void {
       if (!mol) continue;
       const s1 = new Set(ai);
       const s2 = new Set(bj);
-      const kept: Array<[number, number]> = [];
+      const kept: Array<[number, number, number?]> = [];
       for (const bond of mol.bonds) {
         const [a, b] = bond;
         const match = (s1.has(a) && s2.has(b)) || (s1.has(b) && s2.has(a));
@@ -265,6 +265,24 @@ export function registerEditing(ctx: RegistrarCtx): void {
     const s2 = s2raw == null ? '' : ctx.str(s2raw, '');
     if (s2 && s2.toLowerCase() !== 'none') ex.select('pk2', s2);
     else ex.delete('pk2');
+    ctx.publish();
+    return null;
+  });
+
+  /* ----------------------------- group / ungroup ------------------------- */
+  // group(name, members='', action='auto') — create/extend a group object
+  // (creating.py). We register a first-class group gadget so get_names lists it
+  // and get_type reports 'object:group'; membership is not modelled deeply.
+  ctx.command('group', (args, kwargs): Json => {
+    const name = ctx.str(pick(args, kwargs, 0, 'name'), '');
+    if (name === '') return 0;
+    ex.registerGadget(name, 'object:group');
+    ctx.publish();
+    return name;
+  });
+  ctx.command('ungroup', (args, kwargs): Json => {
+    const members = ctx.str(pick(args, kwargs, 0, 'members'), '');
+    if (members !== '' && ex.gadget(members)?.kind === 'object:group') ex.delete(members);
     ctx.publish();
     return null;
   });

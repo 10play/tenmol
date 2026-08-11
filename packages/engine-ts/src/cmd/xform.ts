@@ -60,6 +60,19 @@ function applyMat(set: Float32Array, o: number, m: number[]): void {
   set[o + 2] = m[8]! * x + m[9]! * y + m[10]! * z + m[11]!;
 }
 
+/** Row-major homogeneous 4×4 product a·b. */
+function mat4mul(a: number[], b: number[]): number[] {
+  const out = new Array<number>(16).fill(0);
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      let s = 0;
+      for (let k = 0; k < 4; k++) s += a[r * 4 + k]! * b[k * 4 + c]!;
+      out[r * 4 + c] = s;
+    }
+  }
+  return out;
+}
+
 /**
  * Per-object "discrete" flag maintained outside {@link ObjectMolecule} (which
  * has no such field). Keyed by object identity so it survives without touching
@@ -88,6 +101,10 @@ export function registerXform(ctx: RegistrarCtx): void {
       for (let o = 0; o < set.length; o += 3) applyMat(set, o, m);
       n++;
     }
+    // Record the applied matrix into the object's state matrix (PyMOL's
+    // CoordSetRecordTxfApplied): left-combine onto the existing one so
+    // get_object_matrix returns the cumulative transform.
+    mol.objectMatrix = mol.objectMatrix ? mat4mul(m, mol.objectMatrix) : m.slice();
     if (n > 0) ctx.publish();
     return mol.natom;
   });

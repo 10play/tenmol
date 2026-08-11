@@ -220,7 +220,10 @@ function parseMolBlock(text: string, name: string): ObjectMolecule {
     const key = a1 < a2 ? `${a1}:${a2}` : `${a2}:${a1}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    mol.bonds.push(a1 < a2 ? [a1, a2] : [a2, a1]);
+    // MDL bond order is cols 7-9 of the bond record (1/2/3, 4=aromatic).
+    let order = parseInt(l.slice(6, 9), 10);
+    if (!Number.isFinite(order) || order < 1) order = 1;
+    mol.bonds.push(a1 < a2 ? [a1, a2, order] : [a2, a1, order]);
   }
 
   // Formal charges: `M  CHG  n  atom1 chg1  atom2 chg2 …` (atom idx 1-based).

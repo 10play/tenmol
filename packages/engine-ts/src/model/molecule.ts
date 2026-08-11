@@ -38,10 +38,14 @@ export class ObjectMolecule {
   readonly atoms: AtomInfo[] = [];
   /** One Float32Array (natom*3) per state; `states[0]` is state 1. */
   readonly states: Float32Array[] = [];
-  /** Undirected bonds as 0-based atom-index pairs. */
-  readonly bonds: Array<[number, number]> = [];
+  /** Undirected bonds: 0-based atom-index pair, plus an optional bond order
+   *  (1 single, 2 double, 3 triple, 4 aromatic); absent order ⇒ single. */
+  readonly bonds: Array<[number, number, number?]> = [];
   /** Whether the object is enabled (shown) in the executive. */
   enabled = true;
+  /** Row-major homogeneous 4×4 recorded by `transform_object` (PyMOL's object
+   *  state matrix); absent ⇒ identity. Read by `get_object_matrix`. */
+  objectMatrix?: number[];
   /**
    * Unit-cell parameters from `CRYST1`, or `undefined` when the file carried no
    * crystal record. Read by the symmetry commands (`get_symmetry`, `symexp`).
