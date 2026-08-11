@@ -250,6 +250,16 @@
    fixed list, so the frost stays and the flyouts land correctly. */
 /* `.menubar` surface (height/padding/gap/border) is Tailwind on the component
    (shell/AppShell.tsx); only the frost ::before stays here. */
+/* The classic menubar paints a dark GRADIENT on the element itself; that sits IN
+   FRONT of the frost ::before (z-index:-1) and defeats it — invisible dark-on-dark,
+   but a dark strip across the whole light theme. Clear it so the frost shows;
+   position:relative anchors the ::before to the bar. The backdrop-filter must stay
+   on the ::before, never the element — on the element it becomes a containing block
+   that traps the fixed submenus (see the note above). */
+:root[data-ui-theme='shadcn'] .menubar {
+  background: transparent;
+  position: relative;
+}
 :root[data-ui-theme='shadcn'] .menubar::before {
   content: '';
   position: absolute;
