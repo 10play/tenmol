@@ -792,3 +792,88 @@
 :root[data-ui-theme='shadcn'] .splitter--h:hover::after {
   opacity: 1;
 }
+
+/* ================================================================== */
+/* 17. MODERN RAIL — tidy the internal-gui column into calm sections.  */
+/*                                                                     */
+/* The column stacks PyMOL's Executive / Wizard / ButMode / Movie /    */
+/* Scenes blocks; packed flush they read as a wall of controls. Give   */
+/* the column inset padding, put air between the sections with a soft   */
+/* divider, and calm the button rhythm — no control is removed, the     */
+/* rail just reads as intentional sections instead of a dump.           */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] .internal-gui {
+  padding: 4px;
+  gap: 2px;
+}
+
+/* Each top-level section: even inset + a hairline separator above (not on the
+   first). `.wizards` is just the collapsed launcher bar, kept flush to ButMode. */
+:root[data-ui-theme='shadcn'] .objpanel,
+:root[data-ui-theme='shadcn'] .butmode-host,
+:root[data-ui-theme='shadcn'] .mvpanel,
+:root[data-ui-theme='shadcn'] .scpanel {
+  padding: 8px;
+  border-radius: var(--sh-r-sm);
+}
+:root[data-ui-theme='shadcn'] .butmode-host,
+:root[data-ui-theme='shadcn'] .mvpanel,
+:root[data-ui-theme='shadcn'] .scpanel,
+:root[data-ui-theme='shadcn'] .wizards {
+  border-top: 1px solid var(--pm-line);
+  margin-top: 2px;
+  padding-top: 10px;
+}
+
+/* Section heads sit flush inside the new padding (they carried their own inset
+   borders/bg for the flush layout). */
+:root[data-ui-theme='shadcn'] .objpanel__head,
+:root[data-ui-theme='shadcn'] .mvpanel__head,
+:root[data-ui-theme='shadcn'] .scpanel__head {
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+  border-bottom: 0;
+  margin-bottom: 6px;
+}
+
+/* Button rows inside the rail breathe: consistent gap, wrap instead of clip. */
+:root[data-ui-theme='shadcn'] .scbar,
+:root[data-ui-theme='shadcn'] .scmenu,
+:root[data-ui-theme='shadcn'] .vwlist__head,
+:root[data-ui-theme='shadcn'] .mvpanel__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+:root[data-ui-theme='shadcn'] .scmenu {
+  margin-top: 8px;
+  border-top: 1px solid var(--pm-line);
+  padding-top: 8px;
+}
+
+/* The movie transport is 8 controls wide — it overran the 220px column and
+   clipped `seq/rock/full`. Let it wrap and let every control flex to share the
+   row evenly, so the transport fits the rail at any width. */
+:root[data-ui-theme='shadcn'] .mvctl {
+  flex-wrap: wrap;
+}
+:root[data-ui-theme='shadcn'] .mvctl__btn {
+  flex: 1 1 auto;
+  min-width: 26px;
+}
+/* The seek slider + tab row must never push past the card edge. */
+:root[data-ui-theme='shadcn'] .mvpanel__seek,
+:root[data-ui-theme='shadcn'] .mvpanel__seek input[type='range'] {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Object-row name inputs already fit; keep the A/S/H/L/C/M op cluster from
+   forcing a horizontal scrollbar inside the rounded objects card. */
+:root[data-ui-theme='shadcn'] .objpanel__rows,
+:root[data-ui-theme='shadcn'] .objpanel__body {
+  overflow-x: hidden;
+}
