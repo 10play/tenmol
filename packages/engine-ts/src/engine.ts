@@ -805,6 +805,9 @@ export class Engine {
         chain: ua.atom.chain,
         elem: ua.atom.elem,
         coord: [x, y, z],
+        // PyMOL's chempy Atom exposes these; default to neutral when unassigned.
+        formal_charge: ua.atom.formalCharge ?? 0,
+        partial_charge: ua.atom.partialCharge ?? 0,
       };
     });
     return { atom: atoms } as unknown as Json;
