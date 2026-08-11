@@ -3,7 +3,8 @@
 #
 # Generic, task-agnostic keep-going nudge. Blocks the stop and feeds Claude a
 # reason to keep working. Three ways out:
-#   1. `touch .claude/STOP`            -> the work is done / manual escape hatch
+#   1. `touch .claude/STOP`            -> one-shot escape hatch; honored once then
+#                                         removed, so the next turn re-arms the goal
 #   2. Iteration cap (default 100)     -> runaway guard, resets on the next user prompt
 #   3. Empty/absent goal               -> nothing to keep going for, allow stop
 #
@@ -38,9 +39,11 @@ case "$(printf '%s' "$GOAL" | tr -d '[:space:]')" in
 esac
 
 # --- escape hatch -----------------------------------------------------------
+# One-shot: consume the STOP flag as we honor it, so the next turn re-arms the
+# goal instead of the flag sticking around and disarming the loop forever.
 if [ -f ".claude/STOP" ]; then
-  rm -f "$COUNT_FILE"
-  emit '{"systemMessage":"keep-going: .claude/STOP present, allowing stop."}'
+  rm -f "$COUNT_FILE" ".claude/STOP"
+  emit '{"systemMessage":"keep-going: .claude/STOP present, honoring it once and clearing it."}'
 fi
 
 # --- runaway guard ----------------------------------------------------------

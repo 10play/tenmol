@@ -39,8 +39,8 @@ Two ways, pick per intent:
 - **Goal is genuinely done, or the user wants to cancel**: clear the goal so the hook goes
   inert — `rm -f .claude/keep-going.md .claude/.state/keep-going-count`.
 - **One-shot escape hatch** (stop this turn but keep the goal around): `touch .claude/STOP`.
-  The hook allows the next stop and removes the STOP file's effect on the counter; the goal
-  file stays, so re-arming later needs no retyping.
+  The hook honors it on the next stop and then deletes `.claude/STOP` itself, so it truly is
+  one-shot — the goal file stays and the loop re-arms on the following turn, no retyping.
 
 When *you* (Claude) decide the goal is complete or you're blocked on a real user decision,
 `touch .claude/STOP` and say so plainly — that is the sanctioned way for the loop to end.
