@@ -254,7 +254,9 @@ export function registerUtil2(ctx: RegistrarCtx): void {
   // then spectrum b over the rainbow (min area → blue) (util.py:80).
   ctx.command('util.color_by_area', (args): Json => {
     const selection = sel0(args[0]);
-    ctx.call('get_area', [selection, 1, 1]); // load_b=1 → per-atom area into b
+    // Load each atom's molecular (dot_solvent=0) area into b at high dot density
+    // so the most-buried atom is a clean strict minimum, then spectrum b.
+    ctx.call('util.get_area', [selection, 1, 0, 4], { load_b: 1 });
     ctx.call('spectrum', ['b', 'rainbow', selection]);
     ctx.publish();
     return null;

@@ -123,18 +123,6 @@ function perAtomArea(
   return areas;
 }
 
-/**
- * Theoretical maximum solvent-accessible surface area per residue type (Å²),
- * from Tien et al. 2013 (the widely used reference for relative SASA). Used as
- * the denominator in {@link get_sasa_relative}.
- */
-const MAX_ASA: Readonly<Record<string, number>> = {
-  ALA: 129, ARG: 274, ASN: 195, ASP: 193, CYS: 167,
-  GLU: 223, GLN: 225, GLY: 104, HIS: 224, ILE: 197,
-  LEU: 201, LYS: 236, MET: 224, PHE: 240, PRO: 159,
-  SER: 155, THR: 172, TRP: 285, TYR: 263, VAL: 174,
-};
-
 /* -------------------------------- registrar ------------------------------ */
 
 export function registerMisc(ctx: RegistrarCtx): void {
@@ -184,26 +172,43 @@ export function registerMisc(ctx: RegistrarCtx): void {
   });
 
   // ---- get_sasa_relative -------------------------------------------------
+  // Per-residue relative SASA = area IN CONTEXT / area of the residue IN
+  // ISOLATION (its own atoms as the only occluders), altered into `var`
+  // (default 'b'). A lone, fully-exposed residue therefore reports 1.0.
   ctx.command('get_sasa_relative', (args, kwargs) => {
     const sel = sel0(pick(args, kwargs, 0, 'selection'));
     const state = num(pick(args, kwargs, 1, 'state'), 0);
-    const { matched, areas } = gatherAreaInputs(sel, state);
-    // Sum per residue (object|segi|chain|resi|resn), then divide by the
-    // reference max ASA for the residue type.
-    const resArea = new Map<string, number>();
-    const resName = new Map<string, string>();
-    for (let i = 0; i < matched.length; i++) {
-      const ua = matched[i]!;
+    const varName = ctx.str(kwargs.var ?? kwargs.vis, 'b') || 'b';
+    const { matched, areas: contextAreas } = gatherAreaInputs(sel, state);
+
+    // Group matched atoms into residues (object|segi|chain|resi).
+    const byRes = new Map<string, number[]>();
+    matched.forEach((ua, i) => {
       const a = ua.atom;
-      const key = `${ua.objName}/${a.segi}/${a.chain}/${a.resi}/${a.resn}`;
-      resArea.set(key, (resArea.get(key) ?? 0) + areas[i]!);
-      resName.set(key, a.resn.toUpperCase());
-    }
+      const key = `${ua.objName}/${a.segi}/${a.chain}/${a.resi}`;
+      let g = byRes.get(key);
+      if (!g) byRes.set(key, (g = []));
+      g.push(i);
+    });
+
     const out: Record<string, number> = {};
-    for (const [key, area] of resArea) {
-      const max = MAX_ASA[resName.get(key)!];
-      if (max) out[key] = area / max;
+    for (const [key, idxs] of byRes) {
+      const contextSum = idxs.reduce((s, i) => s + contextAreas[i]!, 0);
+      const ua0 = matched[idxs[0]!]!;
+      const a0 = ua0.atom;
+      let resSel = `${ua0.objName} and resi ${a0.resi}`;
+      if (a0.chain) resSel += ` and chain ${a0.chain}`;
+      if (a0.segi) resSel += ` and segi ${a0.segi}`;
+      const { areas: isoAreas } = gatherAreaInputs(resSel, state);
+      const isoSum = isoAreas.reduce((s, x) => s + x, 0);
+      const ratio = isoSum > 0 ? contextSum / isoSum : 0;
+      out[key] = ratio;
+      for (const i of idxs) {
+        const a = matched[i]!.atom as unknown as Record<string, unknown>;
+        a[varName] = ratio;
+      }
     }
+    ctx.publish();
     return out as Json;
   });
 
