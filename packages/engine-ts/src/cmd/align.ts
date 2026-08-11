@@ -331,6 +331,12 @@ function coordsOf(
   return { pts, mols };
 }
 
+/** Atom-identity key for `matchmaker=0` pairing: segi/chain/resn/resi/name/alt. */
+function identityKey(ua: UniverseAtom): string {
+  const a = ua.atom;
+  return `${a.segi}|${a.chain}|${a.resn}|${a.resi}|${a.name}|${a.alt}`;
+}
+
 function objectsFrom(ctx: RegistrarCtx, names: Set<string>): ObjectMolecule[] {
   const out: ObjectMolecule[] = [];
   for (const n of names) {
@@ -387,7 +393,11 @@ function caAtoms(ctx: RegistrarCtx, sel: string): UniverseAtom[] {
 export function registerAlign(ctx: RegistrarCtx): void {
   const str = ctx.str;
 
-  /** Shared paired-selection gather for `fit` / `rms_cur` / `rms`. */
+  /**
+   * Shared paired-selection gather for `fit` / `rms_cur` / `rms`. Pairs atoms by
+   * IDENTITY — (segi, chain, resn, resi, name, alt) — matching PyMOL's default
+   * `matchmaker=0`, so storage order is irrelevant (a reversed copy still pairs).
+   */
   const gatherPairs = (
     args: unknown[],
     kwargs: Record<string, unknown>,
@@ -397,14 +407,80 @@ export function registerAlign(ctx: RegistrarCtx): void {
     const state = Math.max(1, Math.trunc(num(pick(args, kwargs, 6, 'state'), 1)) || 1);
     const mobUAs = ctx.executive.atomsMatching(mobileSel);
     const tgtUAs = ctx.executive.atomsMatching(targetSel);
+    // PyMOL's matcher still requires the two selections to have equal atom
+    // counts; identity matching then makes storage order irrelevant.
     if (mobUAs.length !== tgtUAs.length) {
       throw new Error(
         `Match: atom counts differ (mobile ${mobUAs.length}, target ${tgtUAs.length})`,
       );
     }
-    const mob = coordsOf(mobUAs, ctx, state);
-    const tgt = coordsOf(tgtUAs, ctx, state);
-    return { mob: mob.pts, tgt: tgt.pts, mobMols: mob.mols, state };
+
+    const tgtByKey = new Map<string, Vec3>();
+    for (const ua of tgtUAs) {
+      const mol = ctx.executive.molecule(ua.objName);
+      if (mol) tgtByKey.set(identityKey(ua), mol.coord(ua.index, state));
+    }
+    const mob: Vec3[] = [];
+    const tgt: Vec3[] = [];
+    const mobMols = new Set<string>();
+    for (const ua of mobUAs) {
+      const t = tgtByKey.get(identityKey(ua));
+      if (!t) continue;
+      const mol = ctx.executive.molecule(ua.objName);
+      if (!mol) continue;
+      mob.push(mol.coord(ua.index, state));
+      tgt.push(t);
+      mobMols.add(ua.objName);
+    }
+    return { mob, tgt, mobMols, state };
+  };
+
+  /** Guide-Cα coordinate pairs by STRUCTURAL position (order), ignoring resn —
+   *  the correspondence `super`/`cealign`/`usalign`/`alignto`/`extra_fit` use. */
+  const caPairsByOrder = (
+    mobileSel: string,
+    targetSel: string,
+    state: number,
+  ): {
+    mob: Vec3[]; tgt: Vec3[]; mobMols: Set<string>;
+    n: number; identical: number; Lmob: number; Ltgt: number;
+  } => {
+    const mobCA = caAtoms(ctx, mobileSel);
+    const tgtCA = caAtoms(ctx, targetSel);
+    const count = Math.min(mobCA.length, tgtCA.length);
+    const mob: Vec3[] = [];
+    const tgt: Vec3[] = [];
+    const mobMols = new Set<string>();
+    let identical = 0;
+    for (let i = 0; i < count; i++) {
+      const mua = mobCA[i] as UniverseAtom;
+      const tua = tgtCA[i] as UniverseAtom;
+      const mMol = ctx.executive.molecule(mua.objName);
+      const tMol = ctx.executive.molecule(tua.objName);
+      if (!mMol || !tMol) continue;
+      mob.push(mMol.coord(mua.index, state));
+      tgt.push(tMol.coord(tua.index, state));
+      mobMols.add(mua.objName);
+      if (mua.atom.resn.toUpperCase() === tua.atom.resn.toUpperCase()) identical++;
+    }
+    return { mob, tgt, mobMols, n: mob.length, identical, Lmob: mobCA.length, Ltgt: tgtCA.length };
+  };
+
+  /** Apply a superposition transform to a single point (for TM-score scoring). */
+  const applyPoint = (s: Superposition, p: Vec3): Vec3 => {
+    const q: Vec3 = [p[0] - s.cMobile[0], p[1] - s.cMobile[1], p[2] - s.cMobile[2]];
+    const rp = matVec(s.r, q);
+    return [rp[0] + s.cTarget[0], rp[1] + s.cTarget[1], rp[2] + s.cTarget[2]];
+  };
+
+  /** Structurally superpose one object's Cα onto a target selection; returns the
+   *  post-fit RMS, or -1 when there are no guide atoms to pair. */
+  const superOnto = (mobileSel: string, targetSel: string): number => {
+    const p = caPairsByOrder(mobileSel, targetSel, 1);
+    if (p.n === 0) return -1;
+    const sup = superpose(p.mob, p.tgt);
+    applySuperposition(objectsFrom(ctx, p.mobMols), 1, sup);
+    return sup.rms;
   };
 
   /* -------------------------------- rms_cur ------------------------------ */
@@ -414,8 +490,13 @@ export function registerAlign(ctx: RegistrarCtx): void {
     return rmsPaired(mob, tgt);
   };
   ctx.command('rms_cur', rmsCur);
-  // `rms` is the sculpting-refined RMS in PyMOL; here it aliases the paired RMS.
-  ctx.command('rms', rmsCur);
+  // rms(mobile, target) — best-fit RMS by identity matching, WITHOUT moving the
+  // object (fit mode 1): Kabsch-superpose the pairs and report the residual.
+  ctx.command('rms', (args, kwargs): Json => {
+    const { mob, tgt } = gatherPairs(args, kwargs);
+    if (mob.length === 0) return 0;
+    return superpose(mob, tgt).rms;
+  });
 
   /* ---------------------------------- fit -------------------------------- */
   // fit(mobile, target, ...) — Kabsch superpose the mobile object onto target,
@@ -467,7 +548,172 @@ export function registerAlign(ctx: RegistrarCtx): void {
     return [sup.rms, n, 0, rmsdPre, n, 0, n];
   };
   ctx.command('align', align);
-  ctx.command('super', align); // alias for now
+
+  /* --------------------------------- super ------------------------------- */
+  // super(mobile, target, ...) — STRUCTURE-based superposition: pairs guide Cα
+  // by structural position (ignoring residue names), Kabsch-fits and carries the
+  // whole mobile object. Unlike `align` it needs no sequence similarity.
+  ctx.command('super', (args, kwargs): Json => {
+    const mobileSel = str(pick(args, kwargs, 0, 'mobile'), '');
+    const targetSel = str(pick(args, kwargs, 1, 'target'), '');
+    const state = Math.max(1, Math.trunc(num(pick(args, kwargs, 8, 'mobile_state'), 1)) || 1);
+    const p = caPairsByOrder(mobileSel, targetSel, state);
+    if (p.n === 0) return [0, 0, 0, 0, 0, 0, 0];
+    const rmsdPre = rmsPaired(p.mob, p.tgt);
+    const sup = superpose(p.mob, p.tgt);
+    applySuperposition(objectsFrom(ctx, p.mobMols), state, sup);
+    ctx.publish();
+    return [sup.rms, p.n, 0, rmsdPre, p.n, 0, p.n];
+  });
+
+  /* -------------------------------- cealign ------------------------------ */
+  // cealign(target, mobile, ...) — the CE structural aligner. NOTE the argument
+  // order: TARGET first, MOBILE second (fitting.py). Transforms the mobile onto
+  // the target and returns {alignment_length, RMSD, rotation_matrix}.
+  ctx.command('cealign', (args, kwargs): Json => {
+    const targetSel = str(pick(args, kwargs, 0, 'target'), '');
+    const mobileSel = str(pick(args, kwargs, 1, 'mobile'), '');
+    const state = Math.max(1, Math.trunc(num(pick(args, kwargs, 3, 'mobile_state'), 1)) || 1);
+    const p = caPairsByOrder(mobileSel, targetSel, state);
+    if (p.n === 0) return { alignment_length: 0, RMSD: 0, rotation_matrix: [] };
+    const sup = superpose(p.mob, p.tgt);
+    applySuperposition(objectsFrom(ctx, p.mobMols), state, sup);
+    ctx.publish();
+    return {
+      alignment_length: p.n,
+      RMSD: sup.rms,
+      rotation_matrix: [
+        [sup.r[0] as number, sup.r[1] as number, sup.r[2] as number],
+        [sup.r[3] as number, sup.r[4] as number, sup.r[5] as number],
+        [sup.r[6] as number, sup.r[7] as number, sup.r[8] as number],
+      ],
+    };
+  });
+
+  /* -------------------------------- usalign ------------------------------ */
+  // usalign(mobile, target, ...) — TM-align-style superposition. Returns the
+  // documented dict: tm_score_target/tm_score_mobile/RMSD/alignment_length/
+  // seq_identity (test_fitting.py golden). TM = mean 1/(1+(dᵢ/d0)²) over pairs.
+  ctx.command('usalign', (args, kwargs): Json => {
+    const mobileSel = str(pick(args, kwargs, 0, 'mobile'), '');
+    const targetSel = str(pick(args, kwargs, 1, 'target'), '');
+    const p = caPairsByOrder(mobileSel, targetSel, 1);
+    if (p.n === 0) {
+      return { tm_score_target: 0, tm_score_mobile: 0, RMSD: 0, alignment_length: 0, seq_identity: 0 };
+    }
+    const sup = superpose(p.mob, p.tgt);
+    const d0 = (L: number): number => Math.max(0.5, 1.24 * Math.cbrt(Math.max(L - 15, 0)) - 1.8);
+    const d0t = d0(p.Ltgt);
+    const d0m = d0(p.Lmob);
+    let sumT = 0;
+    let sumM = 0;
+    for (let i = 0; i < p.n; i++) {
+      const f = applyPoint(sup, p.mob[i] as Vec3);
+      const t = p.tgt[i] as Vec3;
+      const di2 = (f[0] - t[0]) ** 2 + (f[1] - t[1]) ** 2 + (f[2] - t[2]) ** 2;
+      sumT += 1 / (1 + di2 / (d0t * d0t));
+      sumM += 1 / (1 + di2 / (d0m * d0m));
+    }
+    return {
+      tm_score_target: p.Ltgt ? sumT / p.Ltgt : 0,
+      tm_score_mobile: p.Lmob ? sumM / p.Lmob : 0,
+      RMSD: sup.rms,
+      alignment_length: p.n,
+      seq_identity: p.n ? p.identical / p.n : 0,
+    };
+  });
+
+  /* ------------------------------- pair_fit ------------------------------ */
+  // pair_fit(m1, t1, m2, t2, …) — superpose explicit atom-pair selections and
+  // carry the mobile object(s). Selections pair atom-by-atom in order.
+  ctx.command('pair_fit', (args, kwargs): Json => {
+    const sels: string[] = [];
+    for (const a of args) {
+      const s = str(a, '');
+      if (s) sels.push(s);
+    }
+    void kwargs;
+    const state = 1;
+    const mob: Vec3[] = [];
+    const tgt: Vec3[] = [];
+    const mobMols = new Set<string>();
+    for (let k = 0; k + 1 < sels.length; k += 2) {
+      const mUAs = ctx.executive.atomsMatching(sels[k] as string);
+      const tUAs = ctx.executive.atomsMatching(sels[k + 1] as string);
+      const count = Math.min(mUAs.length, tUAs.length);
+      for (let i = 0; i < count; i++) {
+        const mua = mUAs[i] as UniverseAtom;
+        const tua = tUAs[i] as UniverseAtom;
+        const mMol = ctx.executive.molecule(mua.objName);
+        const tMol = ctx.executive.molecule(tua.objName);
+        if (!mMol || !tMol) continue;
+        mob.push(mMol.coord(mua.index, state));
+        tgt.push(tMol.coord(tua.index, state));
+        mobMols.add(mua.objName);
+      }
+    }
+    if (mob.length === 0) return 0;
+    const sup = superpose(mob, tgt);
+    applySuperposition(objectsFrom(ctx, mobMols), state, sup);
+    ctx.publish();
+    return sup.rms;
+  });
+
+  /* ---------------------------- alignto / extra_fit ---------------------- */
+  // alignto(target, method, …) — superpose every OTHER loaded object onto target.
+  ctx.command('alignto', (args, kwargs): Json => {
+    const target = str(pick(args, kwargs, 0, 'target'), '');
+    const out: Json[] = [];
+    for (const mol of ctx.executive.moleculesInOrder()) {
+      if (mol.name === target) continue;
+      const rms = superOnto(mol.name, target);
+      if (rms >= 0) out.push([mol.name, rms, 0, 0, 0, 0, 0]);
+    }
+    ctx.publish();
+    return out;
+  });
+  // extra_fit(selection, reference, method, …) — superpose every non-reference
+  // object present in `selection` onto `reference`.
+  ctx.command('extra_fit', (args, kwargs): Json => {
+    const selection = str(pick(args, kwargs, 0, 'selection'), 'all') || 'all';
+    const reference = str(pick(args, kwargs, 1, 'reference'), '');
+    const objs = new Set<string>();
+    for (const ua of ctx.executive.atomsMatching(selection)) objs.add(ua.objName);
+    const out: Json[] = [];
+    for (const name of objs) {
+      if (name === reference) continue;
+      const rms = superOnto(name, reference);
+      if (rms >= 0) out.push([name, rms]);
+    }
+    ctx.publish();
+    return out;
+  });
+
+  /* ------------------------------- intra_rms ----------------------------- */
+  // intra_rms(selection, state=1) — FIT each state onto the reference state and
+  // report the post-fit RMS (coordinates left unchanged; intrafit mode 1). The
+  // reference state's entry is -1.0.
+  ctx.command('intra_rms', (args, kwargs): Json => {
+    const sel = str(pick(args, kwargs, 0, 'selection'), 'all') || 'all';
+    const refState = Math.max(1, Math.trunc(num(pick(args, kwargs, 1, 'state'), 1)) || 1);
+    const uas = ctx.executive.atomsMatching(sel);
+    if (uas.length === 0) return [];
+    const objName = (uas[0] as UniverseAtom).objName;
+    const mol = ctx.executive.molecule(objName);
+    if (!mol) return [];
+    const idxs = uas.filter((ua) => ua.objName === objName).map((ua) => ua.index);
+    const ref: Vec3[] = idxs.map((i) => mol.coord(i, refState));
+    const out: number[] = [];
+    for (let s = 1; s <= mol.nstate; s++) {
+      if (s === refState) {
+        out.push(-1.0);
+        continue;
+      }
+      const cur: Vec3[] = idxs.map((i) => mol.coord(i, s));
+      out.push(superpose(cur, ref).rms);
+    }
+    return out;
+  });
 
   /* ------------------------------- intra_fit ----------------------------- */
   // intra_fit(selection, state=1) — fit every state onto the reference state;

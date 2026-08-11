@@ -418,10 +418,10 @@ export function registerExtras(ctx: RegistrarCtx): void {
     return total;
   });
 
-  /* intra_rms / intra_rms_cur — per-state RMSD to state 1 over a selection.
-     `intra_rms` fits in real PyMOL; here both are unsuperposed (documented
-     approximation). The reference state reports -1.0, as PyMOL does. */
-  const intraRms = (args: unknown[], kwargs: Record<string, unknown>): Json => {
+  /* intra_rms_cur — per-state RMSD to state 1 over a selection, UNsuperposed
+     (intrafit mode 0). `intra_rms` (mode 1, fits first) is real in cmd/align.ts.
+     The reference state reports -1.0, as PyMOL does. */
+  const intraRmsCur = (args: unknown[], kwargs: Record<string, unknown>): Json => {
     const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
     const uas = ex.atomsMatching(selection) as UA[];
     const maxState = Math.max(1, ...uas.map((ua) => ex.molecule(ua.objName)?.nstate ?? 1));
@@ -429,8 +429,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
     for (let s = 1; s <= maxState; s++) out.push(s === 1 ? -1.0 : rmsdToRef(ex, uas, s));
     return out;
   };
-  ctx.command('intra_rms', intraRms);
-  ctx.command('intra_rms_cur', intraRms);
+  ctx.command('intra_rms_cur', intraRmsCur);
 
   /* look_at — aim the camera at a point (set the model-space rotation origin). */
   ctx.command('look_at', (args, kwargs): Json => {
@@ -567,11 +566,9 @@ export function registerExtras(ctx: RegistrarCtx): void {
     null,
   );
 
-  // Return an empty list: verbs whose result is a list of per-object results.
-  noop(['alignto', 'extra_fit'], []);
-
   // Return an empty dict: analysis verbs producing a name->value mapping.
-  noop(['cealign', 'usalign', 'pi_interactions', 'stereochemistry'], {});
+  // `cealign`/`usalign` are real now — see cmd/align.ts.
+  noop(['pi_interactions', 'stereochemistry'], {});
 
   // Return an empty string: text-export getters.
   noop(['get_mtl_obj'], '');
@@ -579,7 +576,5 @@ export function registerExtras(ctx: RegistrarCtx): void {
   // Return a pair of empty strings: PovRay exporters (scene, header).
   noop(['get_povray', 'povray'], ['', '']);
 
-  // Return 0: verbs reporting a count / RMSD with nothing to act on.
-  // `remove_picked` is real — see cmd/editing.ts.
-  noop(['pair_fit'], 0);
+  // `remove_picked` (cmd/editing.ts) and `pair_fit` (cmd/align.ts) are real now.
 }

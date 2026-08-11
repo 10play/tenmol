@@ -64,16 +64,17 @@ describe('extras — residual command sweep', () => {
       // real
       'alphatoall', 'mse2met', 'mask', 'unmask', 'get_mask', 'delete_states',
       'split_states', 'join_states', 'copy_to', 'extract', 'overlap',
-      'intra_rms', 'intra_rms_cur', 'look_at', 'middle', 'refresh',
+      'intra_rms_cur', 'look_at', 'middle', 'refresh',
       'transparency', 'stereo', 'edit_mode',
       // no-ops (representative sample across every batch). `load` is no longer
       // here — it is a real handler in cmd/fileio.ts (see load.test.ts); likewise
-      // `edit`/`remove_picked` moved to cmd/editing.ts and `fab` to cmd/editor.ts
-      // (see parity-noop-stubs.test.ts).
+      // `edit`/`remove_picked` moved to cmd/editing.ts, `fab` to cmd/editor.ts,
+      // and the superposition family (intra_rms/alignto/extra_fit/cealign/
+      // usalign/pair_fit) to cmd/align.ts (see parity-*.test.ts).
       'save', 'fetch', 'png', 'ray', 'draw', 'log', 'unpick',
       'fnab', 'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
-      'alias', 'assign_stereo', 'alignto', 'extra_fit', 'cealign', 'usalign',
-      'get_mtl_obj', 'get_povray', 'povray', 'pair_fit',
+      'alias', 'assign_stereo',
+      'get_mtl_obj', 'get_povray', 'povray',
     ];
     for (const name of claimed) {
       expect(handlers.has(name), `missing handler: ${name}`).toBe(true);
@@ -177,9 +178,11 @@ describe('extras — residual command sweep', () => {
     expect(none).toBe(0);
   });
 
-  it('intra_rms reports a per-state list with a -1.0 reference', () => {
+  it('intra_rms_cur reports an UNsuperposed per-state list with a -1.0 reference', () => {
+    // intra_rms_cur is the unfitted variant that stays in extras.ts; the fitted
+    // intra_rms (mode 1) now lives in cmd/align.ts (parity-superposition.test.ts).
     const { call } = setup();
-    const rms = call('intra_rms', ['all']) as number[];
+    const rms = call('intra_rms_cur', ['all']) as number[];
     expect(Array.isArray(rms)).toBe(true);
     expect(rms.length).toBe(2);
     expect(rms[0]).toBe(-1.0);
@@ -225,11 +228,9 @@ describe('extras — residual command sweep', () => {
       expect(call(v), `${v} should return null`).toBeNull();
     }
     // shaped returns
-    expect(call('alignto', ['ref'])).toEqual([]);
-    expect(call('cealign', ['a', 'b'])).toEqual({});
+    // alignto/cealign/pair_fit are real now (cmd/align.ts, parity-superposition)
     expect(call('get_povray')).toEqual(['', '']);
     expect(call('get_mtl_obj')).toBe('');
-    expect(call('pair_fit')).toBe(0);
     // `remove_picked` is a real verb now (cmd/editing.ts, parity-noop-stubs.test.ts)
     // no side effects on the model
     expect(ex.molecule('m')!.natom).toBe(before);

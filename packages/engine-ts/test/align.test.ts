@@ -339,12 +339,14 @@ describe('intra_fit (per-state superposition)', () => {
 /* --------------------------------- stubs -------------------------------- */
 
 describe('stubs', () => {
-  it('rms returns the paired RMS like rms_cur', () => {
+  it('rms is the best-fit RMS (mode 1): a pure translation fits to ~0', () => {
     const t = setup([
       { name: 'tgt', pdb: pointCloud(TETRA) },
       { name: 'mob', pdb: pointCloud(TETRA.map((p) => add(p, [1, 2, 2]))) },
     ]);
-    close(t.call('rms', ['mob', 'tgt']) as number, 3.0, 1e-4);
+    // Unlike rms_cur (which returns the raw 3.0 displacement), rms Kabsch-fits
+    // the pair first, so a rigid translation reduces to ~0 residual.
+    close(t.call('rms', ['mob', 'tgt']) as number, 0, 1e-4);
   });
 
   it('get_raw_alignment returns an empty list', () => {
