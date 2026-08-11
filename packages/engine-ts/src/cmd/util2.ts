@@ -228,6 +228,38 @@ export function registerUtil2(ctx: RegistrarCtx): void {
     return sum;
   });
 
+  // util.b2vdw(selection) — copy each atom's B-factor into its vdw radius as
+  // vdw = sqrt(b / 78.9568352087) (util.py:958).
+  ctx.command('util.b2vdw', (args): Json => {
+    let n = 0;
+    for (const ua of ex.atomsMatching(sel0(args[0]))) {
+      ua.atom.vdwRadius = Math.sqrt(Math.max(0, ua.atom.b) / 78.9568352087);
+      n++;
+    }
+    if (n > 0) ctx.publish();
+    return n;
+  });
+
+  // util.ligand_zoom(selection='', ...) — frame the next organic ligand
+  // (hetatm, non-solvent), moving the rotation origin onto it (util.py:1194).
+  ctx.command('util.ligand_zoom', (args): Json => {
+    const base = ctx.str(args[0], '') || 'all';
+    const ligSel = `(${base}) and (hetatm and not solvent)`;
+    if (ex.atomsMatching(ligSel).length === 0) return null;
+    ctx.call('zoom', [ligSel, 2, 0, 1]);
+    return null;
+  });
+
+  // util.color_by_area(selection, ...) — load each atom's surface area into b,
+  // then spectrum b over the rainbow (min area → blue) (util.py:80).
+  ctx.command('util.color_by_area', (args): Json => {
+    const selection = sel0(args[0]);
+    ctx.call('get_area', [selection, 1, 1]); // load_b=1 → per-atom area into b
+    ctx.call('spectrum', ['b', 'rainbow', selection]);
+    ctx.publish();
+    return null;
+  });
+
   // util.interchain_distances(name, selection, ...) — create a distance object
   // between every pair of distinct chains in the selection (util.py:1043).
   ctx.command('util.interchain_distances', (args): Json => {

@@ -104,6 +104,7 @@ export class ObjectMolecule {
 
   vdw(i: number): number {
     const a = this.atoms[i];
-    return a ? vdwForElement(a.elem) : 1.8;
+    if (!a) return 1.8;
+    return a.vdwRadius ?? vdwForElement(a.elem);
   }
 }

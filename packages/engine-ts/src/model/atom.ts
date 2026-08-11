@@ -42,6 +42,9 @@ export interface AtomInfo {
   ss: string;
   /** Per-atom label text (PyMOL `label`), or undefined when none is set. */
   label?: string;
+  /** Explicit vdw radius override (PyMOL `vdw`), e.g. set by `util.b2vdw`;
+   *  absent ⇒ the element's default radius. */
+  vdwRadius?: number;
   /**
    * Anisotropic displacement (ADP) from an ANISOU record, in Å²:
    * [U11, U22, U33, U12, U13, U23]. Absent for atoms without ANISOU (the
