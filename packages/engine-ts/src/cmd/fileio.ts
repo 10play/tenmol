@@ -235,7 +235,7 @@ function parseMolBlock(text: string, name: string): ObjectMolecule {
     for (let k = 0; k < cnt; k++) {
       const ai = nums[1 + k * 2];
       const ch = nums[2 + k * 2];
-      if (ai !== undefined && Number.isFinite(ai) && Number.isFinite(ch) && ai >= 1 && ai <= mol.atoms.length) {
+      if (ai !== undefined && ch !== undefined && Number.isFinite(ai) && Number.isFinite(ch) && ai >= 1 && ai <= mol.atoms.length) {
         mol.atoms[ai - 1]!.formalCharge = ch;
       }
     }
