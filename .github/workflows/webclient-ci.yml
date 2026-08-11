@@ -58,7 +58,7 @@ jobs:
   # whose failure is ignored is decoration.
   # -------------------------------------------------------------------------
   static:
-    name: lint / typecheck / build / unit / engine-parity
+    name: lint / typecheck / build / unit / linters
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -297,7 +297,7 @@ jobs:
   # packages/bridge/.venv and the bridge's pytest suite runs against it.
   # -------------------------------------------------------------------------
   bootstrap-macos:
-    name: bootstrap (macOS)
+    name: bootstrap + bridge (macOS)
     runs-on: macos-15
     timeout-minutes: 60
     steps:
