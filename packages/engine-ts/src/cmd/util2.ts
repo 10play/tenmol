@@ -15,7 +15,15 @@ import type { AtomInfo } from '../model/atom';
 import type { ObjectMolecule } from '../model/molecule';
 import { ELEMENT_COLOR, getColorIndex, setColor, type RGB } from '../exec/color';
 import { DEFAULT_PROBE } from '../geometry/surface_gen';
+import amber99 from '../model/amber99-charges.json';
 import type { RegistrarCtx } from './registrar';
+
+/** Amber-99 partial charges keyed `RESN|ATOMNAME`, per terminal context. */
+const AMBER99 = amber99 as {
+  normal: Record<string, number>;
+  n_terminal: Record<string, number>;
+  c_terminal: Record<string, number>;
+};
 
 /* --------------------------------------------------------------------------
  * Small numeric helpers.
@@ -226,6 +234,41 @@ export function registerUtil2(ctx: RegistrarCtx): void {
     let sum = 0;
     for (const ua of ex.atomsMatching(sel0(args[0]))) sum += ua.atom.partialCharge ?? 0;
     return sum;
+  });
+
+  // util.protein_assign_charges_and_radii(selection) — assign Amber-99 partial
+  // charges per (resn, atom name), using the N-/C-terminal tables for the first/
+  // last residue of each chain and the internal table otherwise (util.py:335).
+  ctx.command('util.protein_assign_charges_and_radii', (args): Json => {
+    const matched = ex.atomsMatching(sel0(args[0]));
+    // First/last residue value per object|chain, for terminal detection.
+    const term = new Map<string, { min: number; max: number }>();
+    for (const ua of matched) {
+      const k = `${ua.objName}|${ua.atom.chain}`;
+      const r = term.get(k);
+      if (!r) term.set(k, { min: ua.atom.resv, max: ua.atom.resv });
+      else {
+        r.min = Math.min(r.min, ua.atom.resv);
+        r.max = Math.max(r.max, ua.atom.resv);
+      }
+    }
+    let n = 0;
+    for (const ua of matched) {
+      const a = ua.atom;
+      const key = `${a.resn.toUpperCase()}|${a.name.toUpperCase()}`;
+      const t = term.get(`${ua.objName}|${a.chain}`)!;
+      let charge: number | undefined;
+      if (a.resv === t.min && AMBER99.n_terminal[key] !== undefined) charge = AMBER99.n_terminal[key];
+      else if (a.resv === t.max && AMBER99.c_terminal[key] !== undefined) charge = AMBER99.c_terminal[key];
+      else charge = AMBER99.normal[key];
+      if (charge === undefined) charge = AMBER99.normal[key];
+      if (charge !== undefined) {
+        a.partialCharge = charge;
+        n++;
+      }
+    }
+    if (n > 0) ctx.publish();
+    return n;
   });
 
   // util.b2vdw(selection) — copy each atom's B-factor into its vdw radius as
