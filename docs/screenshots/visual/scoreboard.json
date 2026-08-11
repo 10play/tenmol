@@ -1,7 +1,7 @@
 {
   "summary": {
     "meanCombined": 88.3,
-    "meanShape": 94.2,
+    "meanShape": 94.3,
     "meanColor": 82.4,
     "meanCeiling": 96.1,
     "scenes": 22
@@ -105,11 +105,11 @@
     },
     {
       "id": "pept-dots",
-      "comb": 80.5,
-      "shape": 87,
-      "color": 74,
+      "comb": 82,
+      "shape": 88.4,
+      "color": 75.6,
       "ceiling": 87.4,
-      "headroom": 7
+      "headroom": 5.5
     },
     {
       "id": "pept-labels",

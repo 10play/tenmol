@@ -33,8 +33,12 @@ import { rgbForIndex } from '../exec/color';
 import { PayloadBuilder, encode } from './payload';
 import type { RepBuilder } from './registry';
 
-/** Dots per unit sphere for `dot_density` 0..4 — PyMOL's `Sphere0..4` sizes. */
-const DENSITY_DOTS: readonly number[] = [42, 92, 162, 252, 642];
+/**
+ * Dots per unit sphere for `dot_density` 0..4 — PyMOL's exact `Sphere_nDot`
+ * (`packages/engine/layer0/SphereData.h`): the vertex counts of its icosahedral
+ * geodesic spheres, {@link geodesicSphere} level 0..4.
+ */
+const DENSITY_DOTS: readonly number[] = [12, 42, 162, 642, 2562];
 
 /** Number of sample points for a `dot_density` value (clamped to 0..4). */
 export function dotsForDensity(density: number): number {
@@ -42,22 +46,63 @@ export function dotsForDensity(density: number): number {
   return DENSITY_DOTS[d]!;
 }
 
+// Icosahedron seed — PyMOL's `start_points`/`icosahedron` (`Sphere.cpp:34-73`).
+// tau = t/sqrt(1+t^2), one = 1/sqrt(1+t^2), t = (1+sqrt(5))/2.
+const ICOS_TAU = 0.8506508084;
+const ICOS_ONE = 0.5257311121;
+const ICOS_VERTS: ReadonlyArray<readonly [number, number, number]> = [
+  [ICOS_TAU, ICOS_ONE, 0], [-ICOS_TAU, ICOS_ONE, 0], [-ICOS_TAU, -ICOS_ONE, 0], [ICOS_TAU, -ICOS_ONE, 0],
+  [ICOS_ONE, 0, ICOS_TAU], [ICOS_ONE, 0, -ICOS_TAU], [-ICOS_ONE, 0, -ICOS_TAU], [-ICOS_ONE, 0, ICOS_TAU],
+  [0, ICOS_TAU, ICOS_ONE], [0, -ICOS_TAU, ICOS_ONE], [0, -ICOS_TAU, -ICOS_ONE], [0, ICOS_TAU, -ICOS_ONE],
+];
+const ICOS_TRIS: ReadonlyArray<readonly [number, number, number]> = [
+  [4, 8, 7], [4, 7, 9], [5, 6, 11], [5, 10, 6], [0, 4, 3], [0, 3, 5], [2, 7, 1], [2, 1, 6], [8, 0, 11], [8, 11, 1],
+  [9, 10, 3], [9, 2, 10], [8, 4, 0], [11, 0, 5], [4, 9, 3], [5, 3, 10], [7, 8, 1], [6, 1, 11], [7, 2, 9], [6, 10, 2],
+];
+
 /**
- * `n` roughly evenly spread unit vectors via the Fibonacci sphere. Deterministic
- * and independent of the number of atoms, so two identical atoms tile the same
- * way (which is what makes the buried-dot cull symmetric).
+ * PyMOL's exact dot-sphere tessellation, ported from `MakeDotSphere`
+ * (`packages/engine/layer0/Sphere.cpp:390`): start from the 12 icosahedron
+ * vertices and 20 faces, then `level` times split every triangle into four by
+ * inserting the normalised midpoint of each edge (deduped so a shared edge makes
+ * ONE vertex). Level 0..4 yields 12, 42, 162, 642, 2562 unit vectors — the same
+ * geodesic point set PyMOL lays on each probe sphere, so our dot cloud sits on
+ * PyMOL's dots rather than the spiral a Fibonacci sphere produced.
  */
-function fibonacciSphere(n: number): Array<[number, number, number]> {
-  const pts: Array<[number, number, number]> = [];
-  const golden = Math.PI * (3 - Math.sqrt(5)); // ~2.399963 rad
-  for (let i = 0; i < n; i++) {
-    // z runs from just inside +1 to just inside -1 (avoids doubling the poles).
-    const z = 1 - (2 * i + 1) / n;
-    const r = Math.sqrt(Math.max(0, 1 - z * z));
-    const theta = golden * i;
-    pts.push([Math.cos(theta) * r, Math.sin(theta) * r, z]);
+function geodesicSphere(level: number): Array<[number, number, number]> {
+  const L = Math.max(0, Math.min(4, Math.round(level)));
+  const verts: Array<[number, number, number]> = ICOS_VERTS.map(([x, y, z]) => {
+    const l = Math.hypot(x, y, z) || 1;
+    return [x / l, y / l, z / l];
+  });
+  let tris: Array<[number, number, number]> = ICOS_TRIS.map((t) => [t[0], t[1], t[2]]);
+  const mids = new Map<number, number>();
+  const midpoint = (a: number, b: number): number => {
+    const key = a < b ? a * 100000 + b : b * 100000 + a;
+    const seen = mids.get(key);
+    if (seen !== undefined) return seen;
+    const va = verts[a]!;
+    const vb = verts[b]!;
+    const mx = va[0] + vb[0];
+    const my = va[1] + vb[1];
+    const mz = va[2] + vb[2];
+    const l = Math.hypot(mx, my, mz) || 1;
+    const idx = verts.length;
+    verts.push([mx / l, my / l, mz / l]);
+    mids.set(key, idx);
+    return idx;
+  };
+  for (let c = 0; c < L; c++) {
+    const next: Array<[number, number, number]> = [];
+    for (const [h, k, l] of tris) {
+      const hk = midpoint(h, k);
+      const kl = midpoint(k, l);
+      const hl = midpoint(h, l);
+      next.push([h, hk, hl], [k, kl, hk], [l, hl, kl], [hk, kl, hl]);
+    }
+    tris = next;
   }
-  return pts;
+  return verts;
 }
 
 /** Filled in by the builder; never read before assignment. */
@@ -74,10 +119,10 @@ export const buildDotsFrame: RepBuilder = ({ mol, state, seq, getSettingFloat })
   const dotSolvent = getSettingFloat('dot_solvent') !== 0;
   const probe = dotSolvent ? getSettingFloat('solvent_radius') || 1.4 : 0;
   const density = getSettingFloat('dot_density') || 2;
-  // PyMOL's `dot_density` 2 tiles each probe sphere with Sphere2's 162 points,
-  // and the ray reference is a DENSE, fully-covered dot surface. Matching that
-  // count is what makes the cloud read as PyMOL's rather than a sparse scatter.
-  const unit = fibonacciSphere(dotsForDensity(density));
+  // PyMOL's `dot_density` 2 tiles each probe sphere with Sphere2's 162 icosahedral
+  // geodesic points; the ray reference is a DENSE, fully-covered dot surface. Use
+  // PyMOL's EXACT tessellation (not a Fibonacci spiral) so our dots land on PyMOL's.
+  const unit = geodesicSphere(density);
 
   // Per-atom probe sphere: centre + radius (vdw, plus the solvent probe when on).
   // Precomputed once so the buried-point test is a cheap centre/radius compare.
