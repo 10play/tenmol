@@ -1,8 +1,8 @@
 {
   "summary": {
-    "meanCombined": 88,
+    "meanCombined": 88.3,
     "meanShape": 94.2,
-    "meanColor": 81.9,
+    "meanColor": 82.4,
     "meanCeiling": 96.1,
     "scenes": 22
   },
@@ -137,11 +137,11 @@
     },
     {
       "id": "pept-ribbon",
-      "comb": 83.1,
-      "shape": 98.9,
-      "color": 67.4,
+      "comb": 88.8,
+      "shape": 99.2,
+      "color": 78.4,
       "ceiling": 96.3,
-      "headroom": 13.1
+      "headroom": 7.5
     },
     {
       "id": "pept-spheres",

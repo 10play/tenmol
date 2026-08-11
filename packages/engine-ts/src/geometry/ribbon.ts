@@ -24,8 +24,15 @@ import { rgbForIndex } from '../exec/color';
 import { PayloadBuilder, encode } from './payload';
 import type { RepBuilder } from './registry';
 
-/** Sub-segments emitted per residue span; >1 so the curve is visibly smoothed. */
-const SAMPLES_PER_SPAN = 8;
+/**
+ * Sub-segments emitted per residue span = PyMOL `ribbon_sampling` (default 1).
+ * PyMOL's `RepRibbon` (`packages/engine/layer2/RepRibbon.cpp:230`) clamps this to
+ * ≥1 and, at the default 1, draws ONE segment per span — i.e. STRAIGHT chords
+ * between consecutive guide atoms, the angular trace the ray reference shows.
+ * Our previous fixed 8 over-smoothed the trace into curves that bow off PyMOL's
+ * straight segments (thin-line colour mismatch). Honour the real setting instead.
+ */
+const DEFAULT_RIBBON_SAMPLING = 1;
 
 /** Guide-atom names for the backbone trace (protein Cα, nucleic-acid P). */
 const GUIDE_NAMES = new Set(['CA', 'P']);
@@ -68,6 +75,11 @@ function point(a: Guide, b: Guide, c: Guide, d: Guide, t: number): [number, numb
  */
 export const buildRibbonFrame: RepBuilder = ({ mol, state, seq, getSettingFloat }) => {
   const bit = repBit(Rep.Ribbon);
+  // PyMOL `ribbon_sampling` (clamped ≥1). Default 1 = straight chords between guides.
+  const sampling = Math.max(
+    1,
+    Math.round(getSettingFloat('ribbon_sampling') || DEFAULT_RIBBON_SAMPLING),
+  );
 
   // Group ribbon-flagged guide atoms by chain, preserving load order (the
   // backbone trace order for a well-formed structure).
@@ -106,8 +118,8 @@ export const buildRibbonFrame: RepBuilder = ({ mol, state, seq, getSettingFloat 
       // Include t=0 only for the first span; later spans reuse the previous
       // span's endpoint so the poly-line is continuous with no dupes.
       const startStep = k === 0 ? 0 : 1;
-      for (let s = startStep; s <= SAMPLES_PER_SPAN; s++) {
-        const t = s / SAMPLES_PER_SPAN;
+      for (let s = startStep; s <= sampling; s++) {
+        const t = s / sampling;
         pts.push(point(p0, p1, p2, p3, t));
         // Colour/pick the span by its start residue (p1), matching PyMOL's
         // per-guide-atom ribbon colouring.

@@ -21,11 +21,17 @@ import {
   type CgoDrawArraysHeader,
 } from '@tenmol/protocol';
 
-/** Sub-segments per residue span, mirroring the constant in ribbon.ts. */
-const SAMPLES_PER_SPAN = 8;
+/** PyMOL `ribbon_sampling` default = 1 → one straight segment per residue span. */
+const RIBBON_SAMPLING = 1;
 
 /** One right-column-correct ATOM record. */
-function atomLine(serial: number, name: string, resi: number, chain: string, xyz: [number, number, number]): string {
+function atomLine(
+  serial: number,
+  name: string,
+  resi: number,
+  chain: string,
+  xyz: [number, number, number],
+): string {
   const [x, y, z] = xyz;
   const f = (v: number): string => v.toFixed(3).padStart(8, ' ');
   return (
@@ -39,7 +45,9 @@ function atomLine(serial: number, name: string, resi: number, chain: string, xyz
     chain +
     String(resi).padStart(4, ' ') +
     '    ' + // iCode + 3 blanks
-    f(x) + f(y) + f(z) +
+    f(x) +
+    f(y) +
+    f(z) +
     '  1.00  0.00' +
     '           C'
   );
@@ -77,7 +85,7 @@ describe('buildRibbonFrame', () => {
     expect(buildRibbonFrame(CTX(mol))).toBeNull();
   });
 
-  it('emits one line instance buffer, subsampled beyond #CA-1', () => {
+  it('emits one line instance buffer with one straight segment per span', () => {
     const n = 6;
     const mol = parsePdb(caChainPdb(n), 'ca');
     showRibbon(mol);
@@ -99,10 +107,9 @@ describe('buildRibbonFrame', () => {
     expect(h.seq).toBe(7);
     expect(h.object).toBe('ca');
 
-    // (n-1) spans, each split into SAMPLES_PER_SPAN sub-segments → far more than n-1.
-    const expected = (n - 1) * SAMPLES_PER_SPAN;
+    // (n-1) spans, each one straight segment at ribbon_sampling=1 → n-1 lines.
+    const expected = (n - 1) * RIBBON_SAMPLING;
     expect(inst.count).toBe(expected);
-    expect(inst.count).toBeGreaterThan(n - 1);
     expect(itemCount(inst.data)).toBe(expected);
 
     // Frame is well-formed by the protocol's own checker.
@@ -146,15 +153,14 @@ describe('buildRibbonFrame', () => {
     showRibbon(mol);
 
     const h = decodeGeometryFrame(buildRibbonFrame(CTX(mol))!).header as CgoDrawArraysHeader;
-    // Only chain A contributes: (5-1)*8 lines; chain B's lone CA adds none.
-    expect(h.instances[0]!.count).toBe((5 - 1) * SAMPLES_PER_SPAN);
+    // Only chain A contributes: (5-1) straight segments; chain B's lone CA adds none.
+    expect(h.instances[0]!.count).toBe((5 - 1) * RIBBON_SAMPLING);
     expect(geometryFrameProblems(h)).toEqual([]);
   });
 
   it('ignores non-guide atoms (only CA / P are traced)', () => {
     // A chain whose atoms are all ribbon-flagged but named CB (not a guide).
-    const line = (s: number, r: number): string =>
-      atomLine(s, 'CB', r, 'A', [r * 1.0, 0, 0]);
+    const line = (s: number, r: number): string => atomLine(s, 'CB', r, 'A', [r * 1.0, 0, 0]);
     const mol = parsePdb(line(1, 1) + '\n' + line(2, 2) + '\n', 'nocb');
     showRibbon(mol);
     expect(buildRibbonFrame(CTX(mol))).toBeNull();
