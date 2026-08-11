@@ -28,8 +28,9 @@ export function TooltipContent({
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          'z-[90] rounded-[var(--sh-r-btn)] border border-line-strong bg-[var(--sh-panel-frost)] px-2.5 py-1.5 backdrop-blur-xl',
-          'font-sans text-[11px] text-pm-text shadow-[var(--sh-pop)]',
+          // `--sh-*` tokens are shadcn-only; fallbacks keep classic intact.
+          'z-[90] rounded-[var(--sh-r-btn,8px)] border border-[var(--sh-line-strong,rgba(255,255,255,0.1))] bg-[var(--sh-panel-frost,var(--pm-panel))] px-2.5 py-1.5 backdrop-blur-xl',
+          'font-sans text-[11px] text-pm-text shadow-[var(--sh-pop,0_16px_40px_rgba(0,0,0,0.55))]',
           className,
         )}
         {...props}

@@ -134,6 +134,33 @@ describe('ToggleButton', () => {
     expect(btn?.className).not.toContain('is-on');
     expect(btn?.getAttribute('aria-pressed')).toBe('false');
   });
+
+  it('applies `tone` on the OFF state but suppresses it while pressed (modern only)', () => {
+    // Off + accent tone → the accent fill rides the button.
+    render(
+      <ThemeProvider theme="shadcn">
+        <ToggleButton variant="quick" tone="accent" data-testid="off">
+          off
+        </ToggleButton>
+      </ThemeProvider>,
+    );
+    const off = container.querySelector<HTMLButtonElement>('[data-testid="off"]');
+    expect(off?.getAttribute('data-tone')).toBe('accent');
+    expect(off?.className).toContain('bg-[var(--pm-accent)]');
+
+    // Pressed → the data-[state=on] accent owns the look, so the resting tone
+    // fill is NOT added (it would otherwise fight the pressed state).
+    render(
+      <ThemeProvider theme="shadcn">
+        <ToggleButton variant="quick" tone="accent" pressed data-testid="on">
+          on
+        </ToggleButton>
+      </ThemeProvider>,
+    );
+    const on = container.querySelector<HTMLButtonElement>('[data-testid="on"]');
+    expect(on?.className).toContain('data-[state=on]:bg-[var(--pm-accent)]');
+    expect(on?.className).not.toContain(' bg-[var(--pm-accent)]');
+  });
 });
 
 describe('ProgressBar', () => {

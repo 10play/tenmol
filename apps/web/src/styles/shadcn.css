@@ -765,7 +765,6 @@
    left border is dropped in favour of a full hairline. */
 :root[data-ui-theme='shadcn'] .internal-gui {
   border: 1px solid var(--sh-line-strong);
-  border-left: 1px solid var(--sh-line-strong);
   border-radius: var(--sh-r-panel);
   box-shadow: var(--sh-shadow-card);
 }
