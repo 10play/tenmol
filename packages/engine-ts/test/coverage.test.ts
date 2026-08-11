@@ -37,8 +37,10 @@ const PYMOL = join(REPO, 'packages', 'engine', 'modules', 'pymol');
  * Bump these up as each backlog wave lands.
  */
 const FLOORS = {
-  flatReal: Number(process.env.TENMOL_COVERAGE_FLAT ?? 295),
-  nsReal: Number(process.env.TENMOL_COVERAGE_NS ?? 80),
+  // Parity wave (superposition/measurement/maps/export/data-model/util/editing):
+  // flat 295→305, namespaces 80→87 as the stub verbs became real handlers.
+  flatReal: Number(process.env.TENMOL_COVERAGE_FLAT ?? 305),
+  nsReal: Number(process.env.TENMOL_COVERAGE_NS ?? 87),
   reps: Number(process.env.TENMOL_COVERAGE_REPS ?? 13),
 };
 
