@@ -77,9 +77,11 @@ function isPythonImport(line: string): boolean {
   if (line.trim().startsWith('@')) return true; // `@script` include
   return splitCommands(stripped).some((c) => {
     const t = c.trim();
-    // `from x import y` / `import x` statements, and the `__import__(...)` panel
-    // bootstrap idiom the Builder uses (a bare expression, not an `import` stmt).
-    return /^(from|import)\s/.test(t) || /\b__import__\s*\(/.test(t);
+    // `from x import y` / `import x` statements, and the Builder's bootstrap
+    // idiom `_ __import__('...').install(cmd)` — anchored to the leading
+    // `_ __import__(` so a user line that merely mentions `__import__` elsewhere
+    // (e.g. inside a string) is still evaluated as JavaScript.
+    return /^(from|import)\s/.test(t) || /^_\s+__import__\s*\(/.test(t);
   });
 }
 
