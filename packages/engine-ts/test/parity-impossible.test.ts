@@ -8,9 +8,10 @@
  * unreachable in a synchronous browser / WebGL engine.
  *
  * Reference: docs/engine-port-gaps.md §"Genuinely not modelled (documented
- * no-ops): file load/fetch/save/png, ray/draw to disk, and other FS/OS-bound
- * verbs" plus §1 (callback/CGO/slice/volume reps) and the vendored real-PyMOL
- * sources under packages/engine/modules/pymol/*.py cited per test.
+ * no-ops): file load/fetch/save to disk, and other FS/OS-bound verbs" plus §1
+ * (callback/CGO/slice/volume reps) and the vendored real-PyMOL sources under
+ * packages/engine/modules/pymol/*.py cited per test. (`ray`/`draw`/`png` are NOT
+ * here — a real CPU ray tracer renders them; see parity-render.test.ts.)
  */
 import { describe, it, expect } from 'vitest';
 import { existsSync, rmSync } from 'node:fs';
@@ -31,19 +32,8 @@ async function boot() {
 const ignore = (p: Promise<unknown>): Promise<unknown> => p.catch(() => null);
 
 describe('parity: provably-impossible-in-a-browser (xfail)', () => {
-  // (1) ray -> a CPU-ray-traced image buffer.
-  // WHY IMPOSSIBLE: PyMOL's `ray` runs its C++ CPU ray tracer (viewing.py ray(),
-  // line 1662; renderer=0 is the "built-in" ray tracer) and hands the pixels to
-  // get_image/png. The port has NO CPU ray tracer — `ray` is a documented no-op
-  // and `get_image` is not ported — so no image buffer is ever produced.
-  it.fails('ray: produces a non-empty ray-traced image buffer via get_image', async () => {
-    const b = await boot();
-    await ignore(b.call('ray', [64, 64])); // real PyMOL renders a 64x64 frame
-    // A real ray render is readable back as PNG bytes; assert a non-empty buffer.
-    const img = (await b.call('get_image', [])) as ArrayLike<number>;
-    expect(img).toBeTruthy();
-    expect(img.length).toBeGreaterThan(0);
-  });
+  // NOTE: `ray` graduated out of this set — a real headless CPU ray tracer now
+  // renders it (cmd/render.ts); see parity-render.test.ts. 6 items remain.
 
   // (2) volume + slice RENDERING -> volumetric 3-D-texture raymarch.
   // WHY IMPOSSIBLE: `volume` (creating.py, line 577) and `slice_new`
