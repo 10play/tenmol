@@ -55,10 +55,46 @@ export interface SurfaceGenOptions {
   maxCells?: number;
   /**
    * Apply Taubin surface smoothing (default false). The filled `surface` rep
-   * turns it on for an SES-like smooth solid; the `mesh` wireframe leaves it off
-   * — smoothing visibly displaces the wire lines and reads worse, not better.
+   * turns it on for an SES-like smooth solid; the `mesh` wireframe turns it on
+   * too (over a coarse grid) so the wire follows a smooth blob.
    */
   smooth?: boolean;
+  /**
+   * Number of Taubin λ|μ smoothing iterations when {@link smooth} is set.
+   * Default {@link DEFAULT_SMOOTH_PASSES}. PyMOL's solvent-excluded surface is
+   * markedly smoother/more fused than a raw marching-cubes SAS, so the filled
+   * `surface` rep raises this to melt away the per-atom bumps.
+   */
+  smoothPasses?: number;
+  /**
+   * Number of separable [1,2,1]/4 box-blur passes applied to the SCALAR FIELD
+   * before marching cubes (default 0). Unlike Taubin mesh smoothing — which is
+   * tangential and volume-preserving, so it cannot fill the concave crevices
+   * BETWEEN atoms — a field blur performs isotropic mean-curvature smoothing:
+   * it rounds convex per-atom bumps inward AND bulges concave crevices outward,
+   * fusing the atoms into the smooth solvent-excluded blob PyMOL renders. The
+   * field is first clamped to a narrow signed band so the far-outside sentinels
+   * cannot bleed into the zero-crossing region.
+   */
+  fieldBlur?: number;
+  /**
+   * Override the inward SES level-shift fraction ({@link SES_SHRINK}); 0 = raw
+   * SAS, 1 = the vdW surface. Lets the filled `surface` rep tighten its
+   * silhouette independently of the `mesh` wireframe (which keeps the default).
+   */
+  shrink?: number;
+  /**
+   * Compute the TRUE solvent-EXCLUDED surface instead of the {@link shrink}
+   * approximation. PyMOL's SES (RepSurface `SolventDotNew`/`SurfaceJob`) is the
+   * morphological CLOSING of the vdW solid by the probe: `erode(dilate(vdW,probe),
+   * probe)`. `dilate(vdW,probe)` is the SAS solid (our raw field ≤ 0); the erosion
+   * keeps points whose Euclidean distance to the SAS boundary exceeds the probe,
+   * which we get from a grid distance transform. The result carries PyMOL's smooth
+   * re-entrant surfaces in concave crevices (which the isotropic shrink+blur only
+   * crudely approximates) while leaving the convex contact patches on the atoms.
+   * Overrides {@link shrink} and {@link fieldBlur}.
+   */
+  ses?: boolean;
 }
 
 /** PyMOL `solvent_radius` default. */
@@ -71,6 +107,8 @@ export const DEFAULT_PROBE = 1.4;
 const SES_SHRINK = 0.9;
 /** Default marching-cubes grid spacing (Å). */
 export const DEFAULT_SPACING = 0.6;
+/** Default Taubin smoothing iterations when {@link SurfaceGenOptions.smooth} is set. */
+export const DEFAULT_SMOOTH_PASSES = 3;
 /** Default grid-point cap (90³). */
 export const DEFAULT_MAX_CELLS = 90 * 90 * 90;
 
@@ -175,19 +213,43 @@ export function generateSurface(
     }
   }
 
-  // SES approximation: shift the isosurface inward toward the vdW surface. The
-  // raw field is the solvent-ACCESSIBLE surface (`dist − (vdw+probe)`), which
-  // reads puffy/bubbly; adding K·probe moves the zero-crossing from
-  // `dist = vdw+probe` toward `dist = vdw`, much closer to PyMOL's solvent-
-  // EXCLUDED surface. Applied to written cells only (the 1e9 outside sentinels
-  // stay outside). The field GRADIENT is shift-invariant, so normals/smoothing
-  // are unaffected — only the level moves. Empirically K≈0.9 maximises the
-  // TS-vs-PyMOL similarity of the surface/mesh scenes (see visual.e2e.mjs);
-  // the analytic `fieldAt` gradient below is unaffected (direction only).
-  const shrink = probe * SES_SHRINK;
-  for (let i = 0; i < field.length; i++) {
-    const v = field[i]!;
-    if (v < 1e8) field[i] = v + shrink;
+  if (opts.ses) {
+    // TRUE solvent-EXCLUDED surface via morphological closing (see the `ses`
+    // option): SES_solid = erode(SAS_solid, probe). Our raw `field` is the SAS:
+    // `field ≤ 0` is the dilate(vdW, probe) solid. Erosion keeps the points whose
+    // Euclidean distance to the nearest OUTSIDE-of-SAS voxel exceeds the probe —
+    // so a rolling probe of that radius fits entirely inside the SAS there. The
+    // distance to the boundary is a grid distance transform (edtSquared3d).
+    const INF = 1e20;
+    const dt = new Float64Array(field.length);
+    // Features = the OUTSIDE of the SAS solid (field ≥ 0). dt→squared cell distance.
+    for (let i = 0; i < field.length; i++) dt[i] = field[i]! < 0 ? INF : 0;
+    edtSquared3d(dt, nx, ny, nz);
+    // Rewrite the field as the SES level set: g = probe − distance-to-SAS-boundary.
+    // g < 0 inside the SES, g = 0 on the SES surface, g > 0 outside. The convex
+    // atom contact patches survive; concave crevices become smooth re-entrant
+    // surfaces exactly where a probe of this radius cannot reach.
+    for (let i = 0; i < field.length; i++) field[i] = probe - Math.sqrt(dt[i]!) * spacing;
+  } else {
+    // SES APPROXIMATION (mesh + legacy path): shift the isosurface inward toward
+    // the vdW surface. Adding K·probe moves the zero-crossing from `dist = vdw+probe`
+    // toward `dist = vdw`. Applied to written cells only (1e9 sentinels stay out).
+    const shrink = probe * (opts.shrink ?? SES_SHRINK);
+    for (let i = 0; i < field.length; i++) {
+      const v = field[i]!;
+      if (v < 1e8) field[i] = v + shrink;
+    }
+    // Optional field-level mean-curvature smoothing: clamp to a narrow signed band
+    // (so the sentinels become a finite +band), then run separable [1,2,1]/4 passes
+    // to fuse adjacent atoms and fill tight crevices a rolling probe would bridge.
+    if (opts.fieldBlur && opts.fieldBlur > 0) {
+      const band = spacing * 2;
+      for (let i = 0; i < field.length; i++) {
+        const v = field[i]!;
+        field[i] = v > band ? band : v < -band ? -band : v;
+      }
+      blurField(field, nx, ny, nz, opts.fieldBlur);
+    }
   }
 
   /** Analytic field value at an arbitrary point (min over atoms of dist − r). */
@@ -202,6 +264,41 @@ export function generateSurface(
     }
     return m;
   };
+
+  /**
+   * Trilinear sample of the grid `field`. Used for SES-mode normals: the SES field
+   * is the distance-transform level set (only defined on the grid), so its gradient
+   * — the outward surface normal — must be read from the grid, not from the analytic
+   * SAS `fieldAt`. Coordinates are clamped to the interpolable interior.
+   */
+  const gridSample = (x: number, y: number, z: number): number => {
+    let fi = (x - ox) / spacing;
+    let fj = (y - oy) / spacing;
+    let fk = (z - oz) / spacing;
+    if (fi < 0) fi = 0;
+    else if (fi > nx - 1) fi = nx - 1;
+    if (fj < 0) fj = 0;
+    else if (fj > ny - 1) fj = ny - 1;
+    if (fk < 0) fk = 0;
+    else if (fk > nz - 1) fk = nz - 1;
+    const i0 = Math.min(nx - 2, fi | 0);
+    const j0 = Math.min(ny - 2, fj | 0);
+    const k0 = Math.min(nz - 2, fk | 0);
+    const tx = fi - i0;
+    const ty = fj - j0;
+    const tz = fk - k0;
+    const g = (di: number, dj: number, dk: number): number => field[gridIdx(i0 + di, j0 + dj, k0 + dk)]!;
+    const c00 = g(0, 0, 0) * (1 - tx) + g(1, 0, 0) * tx;
+    const c10 = g(0, 1, 0) * (1 - tx) + g(1, 1, 0) * tx;
+    const c01 = g(0, 0, 1) * (1 - tx) + g(1, 0, 1) * tx;
+    const c11 = g(0, 1, 1) * (1 - tx) + g(1, 1, 1) * tx;
+    const c0 = c00 * (1 - ty) + c10 * ty;
+    const c1 = c01 * (1 - ty) + c11 * ty;
+    return c0 * (1 - tz) + c1 * tz;
+  };
+
+  /** Field sampler for the outward-normal gradient: grid for SES, analytic otherwise. */
+  const sampleField = opts.ses ? gridSample : fieldAt;
 
   /** Nearest atom to a point (argmin of dist − r): its colour and id. */
   const nearest = (x: number, y: number, z: number): { rgb: RGB; id: number } => {
@@ -260,9 +357,9 @@ export function generateSurface(
     const pz = p1z + t * (p2z - p1z);
 
     // Outward normal = normalised gradient of the field (increases outward).
-    let gx = fieldAt(px + h, py, pz) - fieldAt(px - h, py, pz);
-    let gy = fieldAt(px, py + h, pz) - fieldAt(px, py - h, pz);
-    let gz = fieldAt(px, py, pz + h) - fieldAt(px, py, pz - h);
+    let gx = sampleField(px + h, py, pz) - sampleField(px - h, py, pz);
+    let gy = sampleField(px, py + h, pz) - sampleField(px, py - h, pz);
+    let gz = sampleField(px, py, pz + h) - sampleField(px, py, pz - h);
     let gl = Math.sqrt(gx * gx + gy * gy + gz * gz);
     const near = nearest(px, py, pz);
     if (gl < 1e-9) {
@@ -340,7 +437,7 @@ export function generateSurface(
     // silhouette stays put. Normals are then rebuilt from the smoothed
     // triangles, oriented to agree with the analytic outward gradient (winding
     // alone is ambiguous; the field gradient is unambiguously outward).
-    taubinSmooth(pos, idx, verts, 3);
+    taubinSmooth(pos, idx, verts, opts.smoothPasses ?? DEFAULT_SMOOTH_PASSES);
     nrm = recomputeNormals(pos, idx, verts, nrm);
   }
 
@@ -352,6 +449,117 @@ export function generateSurface(
     atoms: Int32Array.from(atomsOut),
     spacing,
   };
+}
+
+/**
+ * `passes` separable [1,2,1]/4 box-blur passes over a scalar field on an
+ * `nx·ny·nz` grid, in place. Boundary samples clamp to the edge value. Each
+ * pass smooths along x, then y, then z, so the kernel stays cheap and separable.
+ */
+/**
+ * In-place 1-D squared Euclidean distance transform of one grid line (Felzenszwalb
+ * & Huttenlocher 2012). `f` holds, per sample along the line, 0 at feature samples
+ * and a large value elsewhere; on return each entry is the squared distance (in
+ * grid units) to the nearest feature along the composed lower envelope of parabolas.
+ * `v`/`z`/`d` are scratch buffers of length ≥ n / n+1 reused across lines.
+ */
+function edt1d(
+  f: Float64Array,
+  n: number,
+  stride: number,
+  base: number,
+  d: Float64Array,
+  v: Int32Array,
+  z: Float64Array,
+): void {
+  for (let i = 0; i < n; i++) d[i] = f[base + i * stride]!;
+  let k = 0;
+  v[0] = 0;
+  z[0] = -Infinity;
+  z[1] = Infinity;
+  for (let q = 1; q < n; q++) {
+    let s = (d[q]! + q * q - (d[v[k]!]! + v[k]! * v[k]!)) / (2 * q - 2 * v[k]!);
+    while (s <= z[k]!) {
+      k--;
+      s = (d[q]! + q * q - (d[v[k]!]! + v[k]! * v[k]!)) / (2 * q - 2 * v[k]!);
+    }
+    k++;
+    v[k] = q;
+    z[k] = s;
+    z[k + 1] = Infinity;
+  }
+  k = 0;
+  for (let q = 0; q < n; q++) {
+    while (z[k + 1]! < q) k++;
+    const dv = q - v[k]!;
+    f[base + q * stride] = dv * dv + d[v[k]!]!;
+  }
+}
+
+/**
+ * In-place 3-D squared Euclidean distance transform: on entry `f[idx]` is 0 at
+ * feature voxels and a large sentinel elsewhere; on return it is the squared
+ * distance (in grid cells) to the nearest feature voxel. Separable — run the 1-D
+ * transform along x, then y, then z (Felzenszwalb & Huttenlocher).
+ */
+function edtSquared3d(f: Float64Array, nx: number, ny: number, nz: number): void {
+  const nxy = nx * ny;
+  const maxN = Math.max(nx, ny, nz);
+  const d = new Float64Array(maxN);
+  const v = new Int32Array(maxN);
+  const z = new Float64Array(maxN + 1);
+  for (let k = 0; k < nz; k++)
+    for (let j = 0; j < ny; j++) edt1d(f, nx, 1, nx * j + nxy * k, d, v, z);
+  for (let k = 0; k < nz; k++)
+    for (let i = 0; i < nx; i++) edt1d(f, ny, nx, i + nxy * k, d, v, z);
+  for (let j = 0; j < ny; j++)
+    for (let i = 0; i < nx; i++) edt1d(f, nz, nxy, i + nx * j, d, v, z);
+}
+
+function blurField(field: Float32Array, nx: number, ny: number, nz: number, passes: number): void {
+  const nxy = nx * ny;
+  const tmp = new Float32Array(field.length);
+  for (let p = 0; p < passes; p++) {
+    // X.
+    for (let k = 0; k < nz; k++) {
+      for (let j = 0; j < ny; j++) {
+        const base = nx * j + nxy * k;
+        for (let i = 0; i < nx; i++) {
+          const c = field[base + i]!;
+          const l = i > 0 ? field[base + i - 1]! : c;
+          const r = i < nx - 1 ? field[base + i + 1]! : c;
+          tmp[base + i] = 0.25 * l + 0.5 * c + 0.25 * r;
+        }
+      }
+    }
+    // Y.
+    for (let k = 0; k < nz; k++) {
+      for (let i = 0; i < nx; i++) {
+        const base = i + nxy * k;
+        for (let j = 0; j < ny; j++) {
+          const idx = base + nx * j;
+          const c = tmp[idx]!;
+          const l = j > 0 ? tmp[idx - nx]! : c;
+          const r = j < ny - 1 ? tmp[idx + nx]! : c;
+          field[idx] = 0.25 * l + 0.5 * c + 0.25 * r;
+        }
+      }
+    }
+    // Z.
+    for (let j = 0; j < ny; j++) {
+      for (let i = 0; i < nx; i++) {
+        const base = i + nx * j;
+        for (let k = 0; k < nz; k++) {
+          const idx = base + nxy * k;
+          const c = field[idx]!;
+          const l = k > 0 ? field[idx - nxy]! : c;
+          const r = k < nz - 1 ? field[idx + nxy]! : c;
+          tmp[idx] = 0.25 * l + 0.5 * c + 0.25 * r;
+        }
+      }
+    }
+    field.set(tmp);
+  }
 }
 
 /**

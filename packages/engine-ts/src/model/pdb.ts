@@ -13,7 +13,7 @@
 
 import type { AtomInfo } from './atom';
 import { defaultVisRep } from './atom';
-import { canonicalElement } from './element';
+import { canonicalElement, isKnownElement } from './element';
 import { connectByDistance } from './bonding';
 import { ObjectMolecule } from './molecule';
 
@@ -25,9 +25,26 @@ function col(line: string, start: number, end: number): string {
 function inferElement(rawName: string, elemCol: string): string {
   const e = elemCol.trim();
   if (e !== '') return canonicalElement(e);
-  // Fall back to the leading alphabetic characters of the atom name.
+  // No element column: infer from the atom-NAME field, which per the PDB spec is
+  // columns 13-16 with the element symbol right-justified in 13-14 (`rawName` is
+  // the untrimmed field, so that alignment is intact). PyMOL's guess:
+  //   * column 13 blank or a digit  -> single-char element in column 14
+  //     (the common C/N/O/H/S case, incl. 4-char H names like "1HB2"/"HB21");
+  //   * column 13 a letter          -> a right-justified 2-char element field
+  //     (metals: "CA"=Ca, "FE"=Fe, "MG"=Mg), accepted ONLY if it names a real
+  //     element, else the leading letter.
+  // Taking 2 chars unconditionally (the old behaviour) mis-maps every protein
+  // atom whose first two name letters spell another element — the alpha-carbon
+  // " CA " -> Ca(lcium), " NE " -> Ne(on), " CB " -> Cb — corrupting both the
+  // VDW radius and the CPK element COLOUR for any PDB with no element column.
   const letters = rawName.trim().replace(/[^A-Za-z]/g, '');
-  return canonicalElement(letters.slice(0, letters.length >= 2 ? 2 : 1) || letters.slice(0, 1));
+  if (letters === '') return '';
+  const col13 = rawName.charAt(0);
+  if (col13 !== ' ' && !/[0-9]/.test(col13)) {
+    const two = rawName.slice(0, 2).replace(/[^A-Za-z]/g, '');
+    if (two.length === 2 && isKnownElement(two)) return canonicalElement(two);
+  }
+  return canonicalElement(letters.charAt(0));
 }
 
 export interface ParsedPdb {

@@ -5,17 +5,33 @@
  * chosen by secondary structure (`atom.ss`, assigned by `dss`): a flat arrowed
  * ribbon for strands ('S'), a wide flat helix ribbon for 'H', a thin tube for
  * loops. It is emitted as an `indexed-mesh` frame (position/normal/color/index),
- * which the viewport already draws with its lit triangle-mesh material — so no
- * renderer changes are needed, only this geometry builder.
+ * which the viewport already draws with its lit triangle-mesh material.
  *
- * The path is a Catmull-Rom spline through each chain's ordered Cα atoms,
- * sampled `SAMPLES_PER_SEGMENT` times per residue segment. A smooth coordinate
- * frame is carried along the spline by parallel transport (no carbonyl needed),
- * and a fixed 8-point cross-section is extruded along it: a rectangle for
- * helix/strand (strands tapering to an arrowhead at the C-terminal end) and a
- * thin circle for loops. Each vertex is coloured by its residue's Cα colour and
- * tagged with that Cα's atom id (so `geometryFrameProblems` — which requires the
- * per-vertex `atom` mapping — passes).
+ * This is a faithful port of PyMOL's `RepCartoon.cpp`. The ribbon's *flat face*
+ * is not guessed from Cα curvature — it is derived from the real peptide-plane
+ * **carbonyl orientation vector** exactly as PyMOL does:
+ *
+ *   t0 = normalize(N − C);  t1 = normalize(N − O);  ori = normalize(t0 × t1)
+ *
+ * (`RepCartoon.cpp` ~L3240). That per-residue orientation is then run through
+ * PyMOL's two post-processing passes before extrusion:
+ *
+ *   1. `RepCartoonRefineNormals` (default on for single-state objects) —
+ *      orthogonalises each vector to the local tangent, then walks the chain
+ *      choosing, at each residue, whichever of {ori, −ori} best aligns with the
+ *      previous residue's vector (β-strand carbonyls alternate up/down, so the
+ *      raw vectors zig-zag; this de-pleats them into one coherent ribbon face),
+ *      and finally softens sharp kinks.
+ *   2. `RepCartoonFlattenSheets` (`cartoon_flat_sheets`=1, `cartoon_flat_cycles`
+ *      =4) — iteratively box-averages the guide points *and* orientation vectors
+ *      of each contiguous strand run, flattening the pleat into a planar sheet.
+ *
+ * The (flattened) Cα guide path is then sampled with a Catmull-Rom spline and a
+ * fixed 8-point cross-section is extruded along it: a rectangle for helix/strand
+ * (strands tapering to an arrowhead at the C-terminal end, since
+ * `cartoon_fancy_sheets`=1) whose THIN axis is the refined orientation vector and
+ * whose WIDE axis is tangent × orientation, and a thin circle for loops. Each
+ * vertex is coloured by its residue's Cα colour and tagged with that Cα's atom id.
  */
 
 import {
@@ -35,17 +51,36 @@ const SAMPLES_PER_SEGMENT = 8;
 const CROSS_SECTION_POINTS = 8;
 /** Loop tube radius (Å) — PyMOL `cartoon_loop_radius` default is 0.2. */
 const DEFAULT_LOOP_RADIUS = 0.2;
-/** Helix/strand ribbon half-width along the binormal (full width ≈ 1.8 Å). */
-const RIBBON_HALF_WIDTH = 0.9;
-/** Helix/strand ribbon half-thickness along the normal (full thickness ≈ 0.4 Å). */
-const RIBBON_HALF_THICKNESS = 0.2;
-/** Strand arrowhead base is this multiple of the ribbon half-width. */
+/** Helix ribbon half-width along the wide axis (full width ≈ 2.4 Å). */
+const HELIX_HALF_WIDTH = 1.2;
+/**
+ * Strand ribbon half-width along the wide axis. PyMOL's `ExtrudeRectangle` puts
+ * the rectangle corners at `sin(π/4) * cartoon_rect_length`, so the effective
+ * half-width is `0.707 * 1.40 ≈ 0.99`, NOT `cartoon_rect_length` itself.
+ */
+const STRAND_HALF_WIDTH = 0.99;
+/** Helix ribbon half-thickness along the thin (orientation) axis (full ≈ 0.4 Å). */
+const HELIX_HALF_THICKNESS = 0.3;
+/**
+ * Strand ribbon half-thickness along the thin (orientation) axis —
+ * `0.707 * cartoon_rect_width` (`0.707 * 0.40 ≈ 0.283`). The β-slab is flat but
+ * not paper-thin: its edges catch the light and read as depth.
+ */
+const STRAND_HALF_THICKNESS = 0.283;
+/** Strand arrowhead base is this multiple of the strand half-width. */
 const ARROW_WIDTH_SCALE = 1.9;
+/** PyMOL `cartoon_flat_cycles` — iterations of the sheet-flattening box filter. */
+const DEFAULT_FLAT_CYCLES = 4;
+/** PyMOL `cartoon_refine_tips` — how hard strand-tip tangents bias to the neighbour. */
+const DEFAULT_REFINE_TIPS = 10;
 
 type Vec3 = [number, number, number];
 
 function sub(a: Vec3, b: Vec3): Vec3 {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}
+function add(a: Vec3, b: Vec3): Vec3 {
+  return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 }
 function cross(a: Vec3, b: Vec3): Vec3 {
   return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
@@ -60,8 +95,19 @@ function norm(a: Vec3): Vec3 {
   const l = len(a);
   return l > 1e-9 ? [a[0] / l, a[1] / l, a[2] / l] : [0, 0, 0];
 }
+function scale(a: Vec3, s: number): Vec3 {
+  return [a[0] * s, a[1] * s, a[2] * s];
+}
 function addScaled(base: Vec3, v: Vec3, s: number): Vec3 {
   return [base[0] + v[0] * s, base[1] + v[1] * s, base[2] + v[2] * s];
+}
+function invert(a: Vec3): Vec3 {
+  return [-a[0], -a[1], -a[2]];
+}
+/** Component of `v` with its projection onto unit `axis` removed. */
+function removeComponent(v: Vec3, axis: Vec3): Vec3 {
+  const d = dot(v, axis);
+  return [v[0] - axis[0] * d, v[1] - axis[1] * d, v[2] - axis[2] * d];
 }
 
 /** Catmull-Rom interpolation at parameter `u` in [0,1] between p1 and p2. */
@@ -91,9 +137,14 @@ function rotate(v: Vec3, k: Vec3, cos: number, sin: number): Vec3 {
   ];
 }
 
-/** One CA of the ordered backbone: its residue index, position, ss and colour. */
-interface CaResidue {
-  pos: Vec3;
+/** One residue of the ordered backbone: guide point, orientation, ss, colour. */
+interface Residue {
+  /** Cα guide point (mutated in place by sheet flattening). */
+  ca: Vec3;
+  /** Refined ribbon-face orientation vector (thin axis); mutated by refine/flatten. */
+  ori: Vec3;
+  /** True if `ori` came from a real carbonyl (N,C,O all present). */
+  hasOri: boolean;
   ss: string;
   color: number;
   atomId: number;
@@ -107,10 +158,39 @@ interface Sample {
   u: number;
 }
 
-/** Ordered CA residues per chain (in atom-table order), cartoon-visible only. */
-function chainsOfCartoonCAs(mol: ObjectMolecule, state: number): CaResidue[][] {
+/**
+ * Ordered cartoon residues per chain (in atom-table order). Each residue carries
+ * its Cα guide point plus the raw carbonyl orientation vector
+ * `normalize((N−C) × (N−O))` (PyMOL `RepCartoon.cpp` ~L3240); residues missing any
+ * of N/C/O get `hasOri=false` and a zero vector (seeded later by transport).
+ */
+function chainsOfCartoonResidues(mol: ObjectMolecule, state: number): Residue[][] {
   const bit = repBit(Rep.Cartoon);
-  const byChain = new Map<string, CaResidue[]>();
+  // First pass: collect N/C/O/CA coordinates per residue key.
+  interface Backbone {
+    n?: Vec3;
+    c?: Vec3;
+    o?: Vec3;
+  }
+  const backbone = new Map<string, Backbone>();
+  const keyOf = (a: { chain: string; segi: string; resi: string }): string =>
+    `${a.segi} ${a.chain} ${a.resi}`;
+  for (let i = 0; i < mol.natom; i++) {
+    const a = mol.atoms[i]!;
+    if (a.name !== 'N' && a.name !== 'C' && a.name !== 'O') continue;
+    const k = keyOf(a);
+    let bb = backbone.get(k);
+    if (!bb) {
+      bb = {};
+      backbone.set(k, bb);
+    }
+    const p = mol.coord(i, state);
+    if (a.name === 'N' && !bb.n) bb.n = p;
+    else if (a.name === 'C' && !bb.c) bb.c = p;
+    else if (a.name === 'O' && !bb.o) bb.o = p;
+  }
+
+  const byChain = new Map<string, Residue[]>();
   const order: string[] = [];
   for (let i = 0; i < mol.natom; i++) {
     const a = mol.atoms[i]!;
@@ -122,15 +202,242 @@ function chainsOfCartoonCAs(mol: ObjectMolecule, state: number): CaResidue[][] {
       byChain.set(a.chain, list);
       order.push(a.chain);
     }
-    list.push({ pos: mol.coord(i, state), ss: a.ss, color: a.color, atomId: a.id });
+    const bb = backbone.get(keyOf(a));
+    let ori: Vec3 = [0, 0, 0];
+    let hasOri = false;
+    if (bb && bb.n && bb.c && bb.o) {
+      const t0 = norm(sub(bb.n, bb.c)); // N <--- C
+      const t1 = norm(sub(bb.n, bb.o)); // N <--- O
+      const v = cross(t0, t1);
+      if (len(v) > 1e-6) {
+        ori = norm(v);
+        hasOri = true;
+      }
+    }
+    list.push({ ca: mol.coord(i, state), ori, hasOri, ss: a.ss, color: a.color, atomId: a.id });
   }
   return order.map((c) => byChain.get(c)!);
 }
 
-/** Sample the Catmull-Rom spline of one chain's CAs into ordered points. */
-function sampleChain(cas: CaResidue[]): Sample[] {
-  const n = cas.length;
-  const p = (i: number): Vec3 => cas[Math.max(0, Math.min(n - 1, i))]!.pos;
+/**
+ * Per-residue unit tangents along the guide path (PyMOL `ExtrudeComputeTangents`
+ * style): normalise adjacent Cα differences, then average the two touching a
+ * residue. Endpoints copy their single neighbouring difference.
+ */
+function guideTangents(res: Residue[]): Vec3[] {
+  const n = res.length;
+  const diff: Vec3[] = [];
+  for (let i = 0; i < n - 1; i++) diff.push(norm(sub(res[i + 1]!.ca, res[i]!.ca)));
+  const out: Vec3[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i === 0) out.push(diff[0] ?? [0, 0, 1]);
+    else if (i === n - 1) out.push(diff[n - 2] ?? [0, 0, 1]);
+    else {
+      let t = norm(add(diff[i - 1]!, diff[i]!));
+      if (len(t) < 0.5) t = diff[i]!;
+      out.push(t);
+    }
+  }
+  return out;
+}
+
+/** Parallel-transport a seed normal along the tangents (smooth, flip-free). */
+function transportNormals(tans: Vec3[]): Vec3[] {
+  const out: Vec3[] = [];
+  const t0 = tans[0]!;
+  const ref: Vec3 = Math.abs(t0[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+  let prevN = norm(removeComponent(ref, t0));
+  out.push(prevN);
+  for (let i = 1; i < tans.length; i++) {
+    const tp = tans[i - 1]!;
+    const tc = tans[i]!;
+    const axis = cross(tp, tc);
+    const s = len(axis);
+    let nv: Vec3;
+    if (s < 1e-6) {
+      nv = prevN;
+    } else {
+      const k = [axis[0] / s, axis[1] / s, axis[2] / s] as Vec3;
+      const c = Math.max(-1, Math.min(1, dot(tp, tc)));
+      nv = rotate(prevN, k, c, s);
+    }
+    nv = norm(removeComponent(nv, tc));
+    out.push(nv);
+    prevN = nv;
+  }
+  return out;
+}
+
+/**
+ * Seed any residue lacking a real carbonyl orientation with the parallel-transport
+ * normal, so refine/flatten and extrusion stay well-defined at chain ends and
+ * non-standard residues (PyMOL leaves them zero but its extruder tolerates that;
+ * our transport seed is a stable analogue).
+ */
+function seedMissingOrientations(res: Residue[], tans: Vec3[]): void {
+  if (res.every((r) => r.hasOri)) return;
+  const transport = transportNormals(tans);
+  for (let i = 0; i < res.length; i++) {
+    if (!res[i]!.hasOri) res[i]!.ori = transport[i]!;
+  }
+}
+
+/**
+ * Port of `RepCartoonRefineNormals` (`RepCartoon.cpp` ~L3757). De-pleats the
+ * per-residue orientation vectors: orthogonalise to the tangent, then walk the
+ * chain choosing whichever of {ori, −ori} best continues the previous residue's
+ * face (helices are never inverted, to preserve inside/outside), and soften kinks.
+ * Interior residues (1..n-2) only, matching PyMOL.
+ */
+function refineNormals(res: Residue[], tans: Vec3[]): void {
+  const n = res.length;
+  if (n < 3) return;
+
+  // (1) orthogonalise interior orientation vectors to the tangent
+  for (let a = 1; a < n - 1; a++) {
+    res[a]!.ori = norm(removeComponent(res[a]!.ori, tans[a]!));
+  }
+
+  // (2) forward pass — pick the candidate best aligned with the previous face
+  for (let a = 1; a < n - 1; a++) {
+    const o0 = norm(removeComponent(res[a - 1]!.ori, tans[a - 1]!));
+    const orig = res[a]!.ori;
+    const inv = res[a]!.ss === 'H' ? orig : invert(orig);
+    const c0 = norm(removeComponent(orig, tans[a - 1]!));
+    const c1 = norm(removeComponent(inv, tans[a - 1]!));
+    res[a]!.ori = dot(o0, c1) > dot(o0, c0) ? inv : orig;
+  }
+
+  // (3) soften up the kinks — where a residue's face reverses vs both neighbours
+  const modified: Vec3[] = res.map((r) => r.ori);
+  for (let a = 1; a < n - 1; a++) {
+    const cur = res[a]!.ori;
+    const prev = res[a - 1]!.ori;
+    const next = res[a + 1]!.ori;
+    const dp = dot(cur, next) * dot(cur, prev);
+    if (dp < -0.1) {
+      let t0 = add(add(next, prev), scale(cur, 0.001));
+      t0 = norm(removeComponent(t0, tans[a]!));
+      const t2 = norm(dot(cur, t0) < 0 ? sub(cur, t0) : add(cur, t0));
+      let f = 2 * (-0.1 - dp);
+      if (f > 1) f = 1;
+      modified[a] = [
+        cur[0] * (1 - f) + t2[0] * f,
+        cur[1] * (1 - f) + t2[1] * f,
+        cur[2] * (1 - f) + t2[2] * f,
+      ];
+    }
+  }
+  for (let a = 1; a < n - 1; a++) res[a]!.ori = modified[a]!;
+}
+
+/**
+ * Port of `RepCartoonFlattenSheets` (`RepCartoon.cpp` ~L3901). For each contiguous
+ * β-strand run, box-average the guide points and orientation vectors (window ±1)
+ * `cartoon_flat_cycles` times, re-projecting the orientation off the recomputed
+ * tangent each cycle — collapsing the pleat into a planar ribbon.
+ */
+function flattenSheets(res: Residue[], flatCycles: number): void {
+  const n = res.length;
+  if (n < 2) return;
+  const f = 1;
+
+  const runFlatten = (first: number, last: number): void => {
+    if (last - first < 2 * f) return; // need at least one interior point
+    for (let c = 0; c < flatCycles; c++) {
+      // average guide points
+      const tmpP: Vec3[] = [];
+      for (let b = first + f; b <= last - f; b++) {
+        let acc: Vec3 = [0, 0, 0];
+        for (let e = -f; e <= f; e++) acc = add(acc, res[b + e]!.ca);
+        tmpP[b] = scale(acc, 1 / (f * 2 + 1));
+      }
+      for (let b = first + f; b <= last - f; b++) res[b]!.ca = tmpP[b]!;
+      // average orientation vectors
+      const tmpO: Vec3[] = [];
+      for (let b = first + f; b <= last - f; b++) {
+        let acc: Vec3 = [0, 0, 0];
+        for (let e = -f; e <= f; e++) acc = add(acc, res[b + e]!.ori);
+        tmpO[b] = scale(acc, 1 / (f * 2 + 1));
+      }
+      for (let b = first + f; b <= last - f; b++) res[b]!.ori = tmpO[b]!;
+      // re-project orientation off the recomputed tangent
+      for (let b = first + f; b <= last - f; b++) {
+        const tan = norm(sub(res[b + 1]!.ca, res[b - 1]!.ca));
+        res[b]!.ori = norm(removeComponent(res[b]!.ori, tan));
+      }
+    }
+  };
+
+  let first = -1;
+  for (let a = 0; a < n; a++) {
+    if (res[a]!.ss === 'S') {
+      if (first < 0) first = a;
+      if (a === n - 1) runFlatten(first, a);
+    } else {
+      if (first >= 0) runFlatten(first, a - 1);
+      first = -1;
+    }
+  }
+}
+
+/**
+ * Per-residue curvature (Carson-Bugg) ribbon-face normal, used for HELIX and LOOP
+ * residues instead of the raw carbonyl vector. PyMOL derives helix faces from the
+ * carbonyl too, but then reshapes them with `cartoon_round_helices` (a helix-axis
+ * projection we do not port); the raw carbonyl helix ribbon twists more than
+ * PyMOL's rendered oval. The curvature normal `tangent × ((CA_i−CA_{i-1}) ×
+ * (CA_{i+1}−CA_i))` points radially out of the helix and tracks PyMOL's rendered
+ * helix face far more closely (measured: helix scenes regress ~3% on raw carbonyl,
+ * hold at baseline on curvature). Strands keep the faithful carbonyl pipeline.
+ */
+function curvatureNormals(res: Residue[], tans: Vec3[]): Vec3[] {
+  const n = res.length;
+  const binorm: Vec3[] = [];
+  let prev: Vec3 | null = null;
+  for (let i = 0; i < n; i++) {
+    const p = res[Math.max(0, i - 1)]!.ca;
+    const c = res[i]!.ca;
+    const q = res[Math.min(n - 1, i + 1)]!.ca;
+    let b = cross(sub(c, p), sub(q, c));
+    if (len(b) < 1e-6) b = prev ?? [0, 1, 0];
+    else {
+      b = norm(b);
+      if (prev && dot(b, prev) < 0) b = invert(b);
+    }
+    binorm.push(b);
+    prev = b;
+  }
+  const out: Vec3[] = [];
+  for (let i = 0; i < n; i++) {
+    const frenet = cross(tans[i]!, binorm[i]!);
+    out.push(len(frenet) < 1e-3 ? binorm[i]! : norm(frenet));
+  }
+  return out;
+}
+
+/**
+ * Port of `RepCartoonFlattenSheetsRefineTips` (`RepCartoon.cpp` ~L3987). At each
+ * strand's first/last residue, bias the sampling tangent hard toward the interior
+ * neighbour (`cartoon_refine_tips`), sharpening the arrowhead and its base.
+ */
+function refineTips(res: Residue[], tans: Vec3[], refineTips: number): Vec3[] {
+  const n = res.length;
+  const out = tans.map((t) => t);
+  for (let a = 1; a < n - 1; a++) {
+    if (res[a]!.ss !== 'S') continue;
+    const isStart = res[a + 1]!.ss === 'S' && res[a - 1]!.ss !== 'S';
+    const isEnd = res[a - 1]!.ss === 'S' && res[a + 1]!.ss !== 'S';
+    if (isStart) out[a] = norm(add(tans[a]!, scale(tans[a + 1]!, refineTips)));
+    else if (isEnd) out[a] = norm(add(tans[a]!, scale(tans[a - 1]!, refineTips)));
+  }
+  return out;
+}
+
+/** Sample the Catmull-Rom spline of one chain's guide points into ordered points. */
+function sampleChain(res: Residue[]): Sample[] {
+  const n = res.length;
+  const p = (i: number): Vec3 => res[Math.max(0, Math.min(n - 1, i))]!.ca;
   const out: Sample[] = [];
   for (let i = 0; i < n - 1; i++) {
     for (let k = 0; k < SAMPLES_PER_SEGMENT; k++) {
@@ -138,13 +445,12 @@ function sampleChain(cas: CaResidue[]): Sample[] {
       out.push({ pos: catmull(p(i - 1), p(i), p(i + 1), p(i + 2), u), res: i, u });
     }
   }
-  // Terminal cap: the last CA exactly.
-  out.push({ pos: [...cas[n - 1]!.pos] as Vec3, res: n - 1, u: 0 });
+  out.push({ pos: [...res[n - 1]!.ca] as Vec3, res: n - 1, u: 0 });
   return out;
 }
 
 /** Unit tangents at each sample by central difference along the path. */
-function tangents(samples: Sample[]): Vec3[] {
+function sampleTangents(samples: Sample[]): Vec3[] {
   const n = samples.length;
   const out: Vec3[] = [];
   for (let i = 0; i < n; i++) {
@@ -153,35 +459,6 @@ function tangents(samples: Sample[]): Vec3[] {
     let t = norm(sub(b, a));
     if (len(t) < 0.5) t = [0, 0, 1];
     out.push(t);
-  }
-  return out;
-}
-
-/** Parallel-transport frame normals along the tangents (smooth, flip-free). */
-function transportNormals(tans: Vec3[]): Vec3[] {
-  const out: Vec3[] = [];
-  // Seed: any unit vector perpendicular to the first tangent.
-  const t0 = tans[0]!;
-  const ref: Vec3 = Math.abs(t0[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
-  let prevN = norm(sub(ref, [t0[0] * dot(ref, t0), t0[1] * dot(ref, t0), t0[2] * dot(ref, t0)]));
-  out.push(prevN);
-  for (let i = 1; i < tans.length; i++) {
-    const tp = tans[i - 1]!;
-    const tc = tans[i]!;
-    const axis = cross(tp, tc);
-    const s = len(axis);
-    let n: Vec3;
-    if (s < 1e-6) {
-      n = prevN;
-    } else {
-      const k = [axis[0] / s, axis[1] / s, axis[2] / s] as Vec3;
-      const c = Math.max(-1, Math.min(1, dot(tp, tc)));
-      n = rotate(prevN, k, c, s);
-    }
-    // Re-orthogonalise against the current tangent to fight drift.
-    n = norm(sub(n, [tc[0] * dot(n, tc), tc[1] * dot(n, tc), tc[2] * dot(n, tc)]));
-    out.push(n);
-    prevN = n;
   }
   return out;
 }
@@ -236,10 +513,12 @@ function crossSection(shape: 'rect' | 'circle', hw: number, ht: number): {
  * Cα carries the cartoon rep (or no chain has ≥2 such CAs to spline through).
  */
 export const buildCartoonFrame: RepBuilder = ({ mol, state, seq, getSettingFloat }) => {
-  const chains = chainsOfCartoonCAs(mol, state);
+  const chains = chainsOfCartoonResidues(mol, state);
   if (chains.length === 0) return null;
 
   const loopRadius = getSettingFloat('cartoon_loop_radius') || DEFAULT_LOOP_RADIUS;
+  const flatCycles = getSettingFloat('cartoon_flat_cycles') || DEFAULT_FLAT_CYCLES;
+  const tips = getSettingFloat('cartoon_refine_tips') || DEFAULT_REFINE_TIPS;
 
   const position: number[] = [];
   const normal: number[] = [];
@@ -247,22 +526,58 @@ export const buildCartoonFrame: RepBuilder = ({ mol, state, seq, getSettingFloat
   const atom: number[] = [];
   const index: number[] = [];
 
-  for (const cas of chains) {
-    if (cas.length < 2) continue;
-    const nRes = cas.length;
-    const samples = sampleChain(cas);
-    const tans = tangents(samples);
-    const nrms = transportNormals(tans);
+  for (const res of chains) {
+    if (res.length < 2) continue;
+    const nRes = res.length;
+
+    // --- PyMOL orientation pipeline (on the per-residue guide data) ---
+    let tans = guideTangents(res);
+    seedMissingOrientations(res, tans);
+    refineNormals(res, tans);
+    flattenSheets(res, flatCycles);
+    // flattening moved the guide points → recompute tangents, then bias tips.
+    tans = guideTangents(res);
+    // Hybrid: PyMOL's `round_helices` (unported) reshapes helix faces, so the raw
+    // carbonyl orientation regresses helix/loop residues. Override those with the
+    // curvature normal (baseline behaviour) while strands keep the faithful
+    // carbonyl → refine → flatten pipeline above.
+    const curv = curvatureNormals(res, tans);
+    for (let i = 0; i < nRes; i++) {
+      if (res[i]!.ss !== 'S') res[i]!.ori = curv[i]!;
+    }
+    tans = refineTips(res, tans, tips);
+
+    // --- sample the (flattened) guide spline ---
+    const samples = sampleChain(res);
+    const sampleTans = sampleTangents(samples);
+    const transportN = transportNormals(sampleTans);
+
+    // Per-sample thin-axis orientation: interpolate the two residue orientation
+    // vectors this sample bridges, project off the local tangent, normalise. Fall
+    // back to parallel-transport wherever the interpolation degenerates.
+    const nrms: Vec3[] = samples.map((s, si) => {
+      const o0 = res[s.res]!.ori;
+      const o1 = res[Math.min(nRes - 1, s.res + 1)]!.ori;
+      const w = s.u;
+      let ov: Vec3 = [
+        o0[0] * (1 - w) + o1[0] * w,
+        o0[1] * (1 - w) + o1[1] * w,
+        o0[2] * (1 - w) + o1[2] * w,
+      ];
+      ov = removeComponent(ov, sampleTans[si]!);
+      return len(ov) < 1e-3 ? transportN[si]! : norm(ov);
+    });
 
     const isArrowRes = (r: number): boolean =>
-      cas[r]!.ss === 'S' && (r + 1 >= nRes || cas[r + 1]!.ss !== 'S');
+      res[r]!.ss === 'S' && (r + 1 >= nRes || res[r + 1]!.ss !== 'S');
 
     // Emit one ring of CROSS_SECTION_POINTS vertices per sample.
     const ringBase: number[] = [];
     for (let si = 0; si < samples.length; si++) {
       const s = samples[si]!;
-      const ca = cas[s.res]!;
-      const tan = tans[si]!;
+      const ca = res[s.res]!;
+      const tan = sampleTans[si]!;
+      // thin axis = refined orientation vector; wide axis = tangent × thin.
       const nrm = nrms[si]!;
       const bnm = norm(cross(tan, nrm));
 
@@ -271,12 +586,12 @@ export const buildCartoonFrame: RepBuilder = ({ mol, state, seq, getSettingFloat
       let ht: number;
       if (ca.ss === 'H' || ca.ss === 'S') {
         shape = 'rect';
-        ht = RIBBON_HALF_THICKNESS;
-        if (isArrowRes(s.res)) {
+        ht = ca.ss === 'S' ? STRAND_HALF_THICKNESS : HELIX_HALF_THICKNESS;
+        if (ca.ss === 'S' && isArrowRes(s.res)) {
           // Taper from a wide base at the residue to a point at the next.
-          hw = RIBBON_HALF_WIDTH * ARROW_WIDTH_SCALE * (1 - s.u) + 0.02;
+          hw = STRAND_HALF_WIDTH * ARROW_WIDTH_SCALE * (1 - s.u) + 0.02;
         } else {
-          hw = RIBBON_HALF_WIDTH;
+          hw = ca.ss === 'S' ? STRAND_HALF_WIDTH : HELIX_HALF_WIDTH;
         }
       } else {
         shape = 'circle';

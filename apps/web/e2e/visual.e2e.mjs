@@ -30,6 +30,7 @@ import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 
 import { join } from 'node:path';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
+import { score } from './score.mjs';
 import { startWebOnly, REPO } from './harness.mjs';
 
 const REFS = join(REPO, 'docs/screenshots/visual/refs');
@@ -53,7 +54,12 @@ const GOLDEN_MAX_DIFF_RATIO = 0.02;
 // (the "renderer silently drifts away from PyMOL" case). Bump it consciously, as
 // with the parity scoreboard's `--min`, when a change legitimately moves the mean.
 // The engine's EXACT PyMOL equivalence is gated elsewhere (the live differential).
-const MEAN_PYMOL_FLOOR = Number(process.env.TENMOL_VISUAL_PYMOL_FLOOR ?? 90);
+//
+// The gated mean is now the COLOUR-AWARE headline (mean of shape coverage and
+// foreground colour fidelity — see score.mjs), so the floor sits below the
+// pure-shape floor it replaced: colour fidelity (~81% mean) legitimately pulls
+// the combined mean down from shape's ~94%. Raise it as colour parity improves.
+const MEAN_PYMOL_FLOOR = Number(process.env.TENMOL_VISUAL_PYMOL_FLOOR ?? 85);
 
 mkdirSync(GOLDEN, { recursive: true });
 mkdirSync(OUT, { recursive: true });
@@ -132,10 +138,16 @@ try {
 
     writeFileSync(join(OUT, `${id}.actual.png`), actualBuf);
 
-    // (a) TS vs PyMOL — informational similarity.
-    const vsRef = compare(actualBuf, refBuf);
-    const simPct = (100 * (1 - vsRef.n / vsRef.total)).toFixed(1);
-    writeFileSync(join(OUT, `${id}.pymol-diff.png`), PNG.sync.write(vsRef.out));
+    // (a) TS vs PyMOL — colour-AWARE similarity. `scorePct` is the headline
+    // (the mean of shape coverage and foreground colour fidelity); shape and
+    // colour are also reported so a hue/shade drift the silhouette metric is
+    // blind to still shows up. Two diff PNGs: pixelmatch shape + colour heatmap.
+    const vsRef = score(actualBuf, refBuf);
+    const simPct = vsRef.scorePct.toFixed(1);
+    const covPct = vsRef.coveragePct.toFixed(1);
+    const colPct = vsRef.colorPct.toFixed(1);
+    writeFileSync(join(OUT, `${id}.pymol-diff.png`), PNG.sync.write(vsRef.diff));
+    writeFileSync(join(OUT, `${id}.pymol-cdiff.png`), PNG.sync.write(vsRef.colorDiff));
 
     // (b) TS vs golden — strict self-regression.
     const goldenPath = join(GOLDEN, `${id}.png`);
@@ -154,9 +166,9 @@ try {
         goldStatus = `ok ${(ratio * 100).toFixed(2)}%`;
       }
     }
-    rows.push({ id, simPct, goldStatus });
+    rows.push({ id, simPct, covPct, colPct, goldStatus });
     console.log(
-      `  ${goldStatus.startsWith('REGRESSED') ? 'FAIL' : 'ok  '} ${id.padEnd(24)} PyMOL≈${simPct}%  golden:${goldStatus}`,
+      `  ${goldStatus.startsWith('REGRESSED') ? 'FAIL' : 'ok  '} ${id.padEnd(24)} PyMOL≈${simPct}% (shape ${covPct} · color ${colPct})  golden:${goldStatus}`,
     );
   }
 } finally {
@@ -164,19 +176,24 @@ try {
 }
 
 // A committed report of the PyMOL-similarity trend (the "how close to PyMOL" metric).
+const mean1 = (key) => Math.round((rows.reduce((s, r) => s + Number(r[key]), 0) / rows.length) * 10) / 10;
 const report = {
   generatedBy: 'visual.e2e.mjs',
   scenes: rows.map((r) => ({
     id: r.id,
-    pymolSimilarityPct: Number(r.simPct),
+    pymolSimilarityPct: Number(r.simPct), // headline: colour-aware (shape+colour)
+    shapePct: Number(r.covPct), // pixelmatch coverage
+    colorPct: Number(r.colPct), // foreground perceptual colour fidelity
     golden: r.goldStatus,
   })),
-  meanPymolSimilarityPct:
-    Math.round((rows.reduce((s, r) => s + Number(r.simPct), 0) / rows.length) * 10) / 10,
+  meanPymolSimilarityPct: mean1('simPct'),
+  meanShapePct: mean1('covPct'),
+  meanColorPct: mean1('colPct'),
 };
 writeFileSync(join(OUT, 'report.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(
-  `\nvisual: mean PyMOL similarity ${report.meanPymolSimilarityPct}%  ·  ${scenes.length - failed}/${scenes.length} golden gates passed`,
+  `\nvisual: mean PyMOL similarity ${report.meanPymolSimilarityPct}% ` +
+    `(shape ${report.meanShapePct}% · color ${report.meanColorPct}%)  ·  ${scenes.length - failed}/${scenes.length} golden gates passed`,
 );
 
 // The mean-PyMOL floor (see MEAN_PYMOL_FLOOR). A drift AWAY from PyMOL that the

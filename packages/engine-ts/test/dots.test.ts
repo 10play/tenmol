@@ -206,13 +206,14 @@ describe('buildDotsFrame', () => {
     const mol = parsePdb(pdbFromAtoms([{ x: 0, y: 0, z: 0, elem: 'C' }]), 'm');
     enableDots(mol);
 
-    // dot_density 1 -> 92 dots, 4 -> 642. (0 is the codebase's "unset" sentinel,
-    // which falls through to the PyMOL default of 2 via the `|| 2` idiom.)
+    // dot_density 1 -> 42 dots, 4 -> 2562 (PyMOL's icosahedral Sphere_nDot). (0 is
+    // the codebase's "unset" sentinel, which falls through to the PyMOL default of
+    // 2 via the `|| 2` idiom.)
     const sparse = decode(buildDotsFrame(ctx(mol, { dot_density: 1 }))!);
     const dense = decode(buildDotsFrame(ctx(mol, { dot_density: 4 }))!);
 
-    expect(sparse.inst.count).toBe(dotsForDensity(1)); // 92
-    expect(dense.inst.count).toBe(dotsForDensity(4)); // 642
+    expect(sparse.inst.count).toBe(dotsForDensity(1)); // 42
+    expect(dense.inst.count).toBe(dotsForDensity(4)); // 2562
     expect(dense.inst.count).toBeGreaterThan(sparse.inst.count);
   });
 });

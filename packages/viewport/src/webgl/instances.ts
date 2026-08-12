@@ -46,6 +46,7 @@ import { createEllipsoidMaterial } from '../materials/ellipsoid';
 import { createPointMaterial } from '../materials/point';
 import { createCylinderMaterial } from '../modeG/materials/cylinder';
 import { createSphereMaterial } from '../modeG/materials/sphere';
+import { buildQuadLines } from './quadlines';
 
 /** Every instance kind on the wire is drawable now. */
 export const DRAWABLE_INSTANCE_KINDS: readonly InstanceKind[] = [
@@ -139,6 +140,14 @@ export interface InstanceDrawOptions {
    * that does not send it — the points are then flat, as they always were.
    */
   normal?: Float32Array;
+  /**
+   * Raw PyMOL width setting for a `line`-kind buffer — `line_width` for the
+   * `lines` rep, `ribbon_width` for `ribbon`. When present, the segments are
+   * drawn as screen-space quad lines (`buildQuadLines`) so the width and the
+   * distance-scaling match Mode P / PyMOL instead of the 1px `GL_LINES` clamp.
+   * Absent for reps that have not (yet) plumbed a width; those stay 1px.
+   */
+  lineWidth?: number;
 }
 
 /** Largest `w` in a sphere buffer. 0 means "these are dots, not spheres". */
@@ -166,7 +175,11 @@ export function buildInstancedDraw(
   if (buffer.kind === 'sphere' && maxSphereRadius(data, buffer.count) === 0) {
     return buildPointCloud(buffer, data, options);
   }
-  if (buffer.kind === 'line') return buildLineSegments(buffer, data);
+  if (buffer.kind === 'line') {
+    return options.lineWidth === undefined
+      ? buildLineSegments(buffer, data)
+      : buildWideLines(buffer, data, options.lineWidth);
+  }
   if (buffer.kind === 'cross') return buildCrosses(buffer, data, options);
 
   const geometry =
@@ -251,6 +264,30 @@ function buildLineSegments(buffer: InstanceBuffer, data: Float32Array): Instance
     colors.set(data.subarray(o + 10, o + 14), i * 8 + 4);
   }
   return lineDraw(positions, colors, n * 2, 'line');
+}
+
+/**
+ * Wide `line` segments — the same 14-float records `buildLineSegments` reads,
+ * but drawn through the screen-space quad-line path (`buildQuadLines`) so a
+ * `line_width`/`ribbon_width` above 1 is actually rasterised. WebGL2 clamps
+ * `GL_LINES` to a single pixel, which left `ribbon` (default width 3) and
+ * `lines` (1.49) far thinner than PyMOL's ray render; the quad path applies
+ * PyMOL's own `dynamic_line_width` factor per frame. The buffer layout already
+ * matches `QUADLINE_ITEM_SIZE` (14), so the float view is fed straight in.
+ */
+function buildWideLines(
+  buffer: InstanceBuffer,
+  data: Float32Array,
+  width: number,
+): InstancedDraw {
+  const draw = buildQuadLines(data, buffer.count, width);
+  return {
+    object: draw.object,
+    material: draw.material,
+    count: buffer.count,
+    kind: 'line',
+    points: false,
+  };
 }
 
 /**

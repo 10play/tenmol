@@ -22,7 +22,21 @@ const PLACEHOLDER: BufferRef = { byteOffset: 0, byteLength: 0, dtype: 'f32', ite
  */
 export const buildSurfaceFrame: RepBuilder = ({ mol, state, seq, getSettingFloat }) => {
   const probe = getSettingFloat('solvent_radius') || DEFAULT_PROBE;
-  const mesh = generateSurface(mol, state, repBit(Rep.Surface), { probe, smooth: true });
+
+  // PyMOL's `surface` is the TRUE solvent-EXCLUDED surface (RepSurface's
+  // SolventDot/SurfaceJob), i.e. the morphological closing of the vdW solid by
+  // the probe — smooth re-entrant surfaces in the concave crevices a rolling
+  // probe bridges, convex contact patches on the exposed atoms. `ses: true`
+  // computes exactly that (distance-transform erosion of the SAS solid), which
+  // matches PyMOL far better than the old isotropic shrink+blur approximation
+  // (that over-rounded the silhouette and left per-atom bumps). A couple of light
+  // Taubin passes then remove marching-cubes facet noise without moving the level.
+  const mesh = generateSurface(mol, state, repBit(Rep.Surface), {
+    probe,
+    ses: true,
+    smooth: true,
+    smoothPasses: 2,
+  });
   if (!mesh) return null;
 
   const verts = mesh.atoms.length;

@@ -90,8 +90,30 @@ function arcSegments(a: Vec3, b: Vec3, c: Vec3, radius: number, steps = 6): Arra
   return out;
 }
 
+/**
+ * PyMOL default dash spacing (Å): each dashed line is split into short solid
+ * dashes of `DASH_LENGTH` separated by `DASH_GAP` empty space.
+ */
+const DASH_LENGTH = 0.1;
+const DASH_GAP = 0.4;
+
+/** Split a single endpoint pair into PyMOL-style gapped dash segments. */
+function dashSegments(a: Vec3, b: Vec3): Array<[Vec3, Vec3]> {
+  const d = sub(b, a);
+  const len = norm(d);
+  if (len <= DASH_LENGTH) return [[a, b]];
+  const dir = scale(d, 1 / len);
+  const period = DASH_LENGTH + DASH_GAP;
+  const out: Array<[Vec3, Vec3]> = [];
+  for (let t = 0; t < len; t += period) {
+    const t2 = Math.min(t + DASH_LENGTH, len);
+    out.push([add(a, scale(dir, t)), add(a, scale(dir, t2))]);
+  }
+  return out;
+}
+
 export function makeDistance(name: string, pairs: Array<[Vec3, Vec3]>, color: number): MeasurementObject {
-  const segments = pairs.slice();
+  const segments = pairs.flatMap(([a, b]) => dashSegments(a, b));
   const values = pairs.map(([a, b]) => distanceOf(a, b));
   const value = values.length ? values.reduce((s, v) => s + v, 0) / values.length : 0;
   const labels = pairs.map(([a, b], i) => ({ pos: mid(a, b), text: (values[i] ?? 0).toFixed(2) }));

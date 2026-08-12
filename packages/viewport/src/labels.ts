@@ -39,10 +39,14 @@ export interface LabelOverlay {
   destroy(): void;
 }
 
+/** Screen offset (px) matching PyMOL's label anchor (slightly right & below). */
+const LABEL_DX = 5;
+const LABEL_DY = 1.5;
+
 const SPAN_CSS =
   'position:absolute;transform:translate(-50%,-50%);' +
-  'color:#fff;font:11px ui-monospace,Menlo,monospace;white-space:nowrap;' +
-  'text-shadow:0 0 3px #000,0 0 3px #000,0 0 3px #000;pointer-events:none;user-select:none;';
+  'color:#dcdcdc;font:11px ui-monospace,Menlo,monospace;white-space:nowrap;' +
+  'pointer-events:none;user-select:none;';
 
 /** Create a {@link LabelOverlay} that appends its label spans to `overlay`. */
 export function createLabelOverlay(overlay: HTMLElement): LabelOverlay {
@@ -84,8 +88,10 @@ export function createLabelOverlay(overlay: HTMLElement): LabelOverlay {
       }
       if (el.textContent !== lab.text) el.textContent = lab.text;
       el.style.display = '';
-      el.style.left = `${p.x}px`;
-      el.style.top = `${p.y}px`;
+      // PyMOL anchors the label to the right of the projected atom, so its text
+      // centroid sits ~14px to the right of the atom centre; we match that.
+      el.style.left = `${p.x + LABEL_DX}px`;
+      el.style.top = `${p.y + LABEL_DY}px`;
     }
   };
 
