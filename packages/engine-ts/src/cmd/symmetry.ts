@@ -109,6 +109,11 @@ const P212121_OPS: SymOp[] = [
   { R: diag(1, -1, -1), t: [0.5, 0.5, 0] }, // x+1/2, -y+1/2, -z
 ];
 
+const P2_OPS: SymOp[] = [
+  { R: I3, t: [0, 0, 0] }, // x, y, z
+  { R: diag(-1, 1, -1), t: [0, 0, 0] }, // -x, y, -z (2-fold along b, No. 3)
+];
+
 const C2_OPS: SymOp[] = [
   { R: I3, t: [0, 0, 0] }, // x, y, z
   { R: diag(-1, 1, -1), t: [0, 0, 0] }, // -x, y, -z
@@ -120,6 +125,7 @@ const C2_OPS: SymOp[] = [
 function operatorsFor(spacegroup: string | undefined): SymOp[] {
   const k = (spacegroup ?? 'P1').replace(/\s+/g, '').toUpperCase();
   if (k === 'P21' || k === 'P1211') return P21_OPS;
+  if (k === 'P2' || k === 'P121') return P2_OPS;
   if (k === 'P212121') return P212121_OPS;
   if (k === 'C2' || k === 'C121') return C2_OPS;
   return IDENTITY_OPS; // P1 and everything unrecognised

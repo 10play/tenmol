@@ -188,7 +188,7 @@ export function registerEditing(ctx: RegistrarCtx): void {
       if (!mol) continue;
       const s1 = new Set(ai);
       const s2 = new Set(bj);
-      const kept: Array<[number, number]> = [];
+      const kept: Array<[number, number, number?]> = [];
       for (const bond of mol.bonds) {
         const [a, b] = bond;
         const match = (s1.has(a) && s2.has(b)) || (s1.has(b) && s2.has(a));
@@ -252,6 +252,157 @@ export function registerEditing(ctx: RegistrarCtx): void {
     }
     if (removed > 0) ctx.publish();
     return removed;
+  });
+
+  /* ------------------------------- edit ---------------------------------- */
+  // edit(selection1, selection2=None, ...) — pick atom(s)/a bond for editing by
+  // defining the `pk1` (and, with a second selection, `pk2`) named selections
+  // that the remove_picked/torsion family consume (editing.py:1080).
+  ctx.command('edit', (args, kwargs): Json => {
+    const s1 = sel(pick(args, kwargs, 0, 'selection1'));
+    ex.select('pk1', s1);
+    const s2raw = pick(args, kwargs, 1, 'selection2');
+    const s2 = s2raw == null ? '' : ctx.str(s2raw, '');
+    if (s2 && s2.toLowerCase() !== 'none') ex.select('pk2', s2);
+    else ex.delete('pk2');
+    ctx.publish();
+    return null;
+  });
+
+  /* ------------------------------ uniquify ------------------------------- */
+  // uniquify(identifier, selection, reference='', ...) — make the identifier
+  // (chain/segi/…) of `selection` unique w.r.t. `reference` (default the
+  // complement), reassigning colliding values to the next free code (editing.py).
+  const UNIQ_BASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+  ctx.command('uniquify', (args, kwargs): Json => {
+    const identifier = ctx.str(pick(args, kwargs, 0, 'identifier'), 'segi');
+    const selection = sel(pick(args, kwargs, 1, 'selection'));
+    const refArg = ctx.str(pick(args, kwargs, 2, 'reference'), '');
+    const reference = refArg || `!(${selection})`;
+    const field = identifier as 'chain' | 'segi' | 'resi' | 'name';
+    const used = new Set<string>();
+    for (const ua of ex.atomsMatching(reference)) used.add(String(ua.atom[field] ?? ''));
+    const firstFree = (): string => {
+      for (const ch of UNIQ_BASE) if (!used.has(ch)) return ch;
+      return '';
+    };
+    const groups = new Map<string, Array<Record<string, unknown>>>();
+    for (const m of ex.atomsMatching(selection)) {
+      const v = String(m.atom[field] ?? '');
+      let g = groups.get(v);
+      if (!g) groups.set(v, (g = []));
+      g.push(m.atom as unknown as Record<string, unknown>);
+    }
+    let changed = 0;
+    for (const [v, atoms] of groups) {
+      if (!used.has(v)) continue; // already unique
+      const code = firstFree();
+      if (code === '') continue;
+      used.add(code);
+      for (const a of atoms) {
+        a[field] = code;
+        changed++;
+      }
+    }
+    if (changed > 0) ctx.publish();
+    return changed;
+  });
+
+  /* ------------------------------- torsion ------------------------------- */
+  // torsion(angle) — rotate the fragment on the pk2 side of the currently picked
+  // bond (pk1–pk2) about that bond axis by `angle` degrees (editing.py:1135).
+  ctx.command('torsion', (args, kwargs): Json => {
+    const angle = (Number(pick(args, kwargs, 0, 'angle') ?? 0) || 0) * (Math.PI / 180);
+    const p1u = ex.atomsMatching('pk1');
+    const p2u = ex.atomsMatching('pk2');
+    if (p1u.length === 0 || p2u.length === 0) return null;
+    const a1 = p1u[0]!;
+    const a2 = p2u[0]!;
+    if (a1.objName !== a2.objName) return null;
+    const mol = ex.molecule(a1.objName);
+    if (!mol) return null;
+    const i1 = a1.index;
+    const i2 = a2.index;
+
+    // Adjacency, then the pk2-side fragment: reachable from i2 without crossing
+    // the i1–i2 bond or ever entering i1.
+    const adj: number[][] = Array.from({ length: mol.natom }, () => []);
+    for (const [a, b] of mol.bonds) {
+      adj[a]!.push(b);
+      adj[b]!.push(a);
+    }
+    const frag = new Set<number>([i2]);
+    const stack = [i2];
+    while (stack.length > 0) {
+      const x = stack.pop()!;
+      for (const y of adj[x] ?? []) {
+        if (y === i1) continue; // never cross onto the pk1 side
+        if (!frag.has(y)) {
+          frag.add(y);
+          stack.push(y);
+        }
+      }
+    }
+    frag.delete(i2); // on the rotation axis — unaffected
+
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    for (const set of mol.states) {
+      if (!set) continue;
+      const ox = set[i1 * 3]!, oy = set[i1 * 3 + 1]!, oz = set[i1 * 3 + 2]!;
+      let ux = set[i2 * 3]! - ox, uy = set[i2 * 3 + 1]! - oy, uz = set[i2 * 3 + 2]! - oz;
+      const len = Math.hypot(ux, uy, uz) || 1;
+      ux /= len; uy /= len; uz /= len;
+      for (const k of frag) {
+        const px = set[k * 3]! - ox, py = set[k * 3 + 1]! - oy, pz = set[k * 3 + 2]! - oz;
+        // Rodrigues rotation of (p-o) about unit axis u by `angle`.
+        const dotp = ux * px + uy * py + uz * pz;
+        const cx = uy * pz - uz * py, cy = uz * px - ux * pz, cz = ux * py - uy * px;
+        set[k * 3] = ox + px * cos + cx * sin + ux * dotp * (1 - cos);
+        set[k * 3 + 1] = oy + py * cos + cy * sin + uy * dotp * (1 - cos);
+        set[k * 3 + 2] = oz + pz * cos + cz * sin + uz * dotp * (1 - cos);
+      }
+    }
+    ctx.publish();
+    return null;
+  });
+
+  /* ----------------------------- group / ungroup ------------------------- */
+  // group(name, members='', action='auto') — create/extend a group object
+  // (creating.py). We register a first-class group gadget so get_names lists it
+  // and get_type reports 'object:group'; membership is not modelled deeply.
+  ctx.command('group', (args, kwargs): Json => {
+    const name = ctx.str(pick(args, kwargs, 0, 'name'), '');
+    if (name === '') return 0;
+    ex.registerGadget(name, 'object:group');
+    ctx.publish();
+    return name;
+  });
+  ctx.command('ungroup', (args, kwargs): Json => {
+    const members = ctx.str(pick(args, kwargs, 0, 'members'), '');
+    if (members !== '' && ex.gadget(members)?.kind === 'object:group') ex.delete(members);
+    ctx.publish();
+    return null;
+  });
+
+  /* ------------------------------ set_name ------------------------------- */
+  // set_name(old, new) — rename an object or measurement (editing.py). Returns 1
+  // on success, 0 if the old name is unknown or the new name is taken.
+  ctx.command('set_name', (args, kwargs): Json => {
+    const oldName = ctx.str(pick(args, kwargs, 0, 'old_name'), '');
+    const newName = ctx.str(pick(args, kwargs, 1, 'new_name'), '');
+    const ok = oldName !== '' && newName !== '' && ex.rename(oldName, newName);
+    if (ok) ctx.publish();
+    return ok ? 1 : 0;
+  });
+
+  /* --------------------------- remove_picked ----------------------------- */
+  // remove_picked(hydrogens=1, ...) — delete the atom currently picked for
+  // editing, i.e. everything in `pk1` (editing.py:839). Reuses `remove`.
+  ctx.command('remove_picked', (): Json => {
+    if (!ex.hasSelection('pk1')) return 0;
+    const n = ctx.call('remove', ['pk1']);
+    return typeof n === 'number' ? n : 0;
   });
 
   /* --------------------------- protect / deprotect ----------------------- */

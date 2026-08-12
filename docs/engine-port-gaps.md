@@ -6,6 +6,28 @@ drives real PyMOL; this document is only about the **client-side TypeScript port
 
 Legend: ✅ implemented · 🟡 partial / approximate · ❌ not implemented.
 
+> **Parity wave (2026-08, this session) — supersedes the per-command/per-selector
+> lists below.** A KPI-driven push pinned every gap with a red parity suite
+> (`packages/engine-ts/test/parity-*.test.ts`) and implemented the bulk of it.
+> Now **real** (so the "❌ Not implemented" bullets in §2/§4 and the "fake"/"none"
+> notes are historical, not current): structure-based **superposition**
+> (`super`/`cealign`/`usalign`/`pair_fit`/`alignto`/`extra_fit`, identity-matched
+> `fit`/`rms`/`rms_cur`/`intra_rms`); **selection** extras (`byring`, `bycalpha`,
+> `pepseq`, `altloc`, real `fc.`/`pc.` charge comparisons); **measurement objects**
+> (`distance`/`angle`/`dihedral` → `object:measurement`, the Dash rep, atom
+> labels, `set_name`); **editing** (`edit`/`remove_picked` pk1 picking, `fab`,
+> `torsion`, `uniquify`, `group`/`ungroup`); **export** writers (`get_str`
+> `mol`/`sdf`/`mol2`, `multisave` HEADER, PyMOL-shaped `get_session`); **maps**
+> (`map_new`/`ramp_new`/`isomesh`/`isosurface`/`gradient` registered as executive
+> gadgets); **data model** (bond orders, ANISOU + object matrix in `get_model`,
+> P 2 symmetry); and **util** (`sum_formal/partial_charges`,
+> `protein_assign_charges_and_radii` (Amber-99), `b2vdw`, `ligand_zoom`,
+> `interchain_distances`, `get_sasa_relative`). Command coverage rose 375→392/506
+> (see `docs/parity-dashboard.md`). Still deferred (pinned `it.fails`): the
+> nucleic-acid builders, the valence-chemistry edits (protonate/replace/
+> cycle_valence/set_geometry/invert), `combine_fragment`, and byte-exact
+> `color_by_area`.
+
 ## Status (after waves 1–5)
 
 The port now registers the **entire public `cmd.*` surface** (~346 verbs): every

@@ -630,7 +630,14 @@ export class Engine {
     }));
     h('get_object_list', () => ex.getNames('objects'));
     h('get_names_of_type', () => []);
-    h('get_type', () => 'object:molecule');
+    h('get_type', (args) => {
+      const name = str(args[0], '');
+      if (ex.measurement(name)) return 'object:measurement';
+      const g = ex.gadget(name);
+      if (g) return g.kind;
+      const mol = ex.molecule(name);
+      return (mol?.kind as string | undefined) ?? 'object:molecule';
+    });
     h('get_vis', () => ({}) as unknown as Json);
     h('get_setting_updates', () => []);
     h('get_setting_text', (args) => {
@@ -643,7 +650,10 @@ export class Engine {
     h('set_title', () => null);
     h('matrix_reset', () => null);
     h('get_object_color_index', () => 0);
-    h('get_object_matrix', () => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+    h('get_object_matrix', (args) => {
+      const mol = ex.molecule(str(args[0], ''));
+      return (mol?.objectMatrix ?? [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]) as Json;
+    });
     h('get_object_ttt', () => null);
     h('get_progress', () => -1);
     h('get_idle', () => 0);
@@ -795,7 +805,8 @@ export class Engine {
   }
 
   private getModel(sel: string): Json {
-    const atoms = this.executive.atomsMatching(sel).map((ua) => {
+    const matched = this.executive.atomsMatching(sel);
+    const atoms = matched.map((ua) => {
       const mol = this.executive.molecule(ua.objName)!;
       const [x, y, z] = mol.coord(ua.index, 1);
       return {
@@ -805,9 +816,32 @@ export class Engine {
         chain: ua.atom.chain,
         elem: ua.atom.elem,
         coord: [x, y, z],
+        // PyMOL's chempy Atom exposes these; default to neutral when unassigned.
+        formal_charge: ua.atom.formalCharge ?? 0,
+        partial_charge: ua.atom.partialCharge ?? 0,
+        label: ua.atom.label ?? '',
+        u_aniso: ua.atom.u ? Array.from(ua.atom.u) : undefined,
       };
     });
-    return { atom: atoms } as unknown as Json;
+    // Bonds among the matched atoms, reindexed to the model's atom order
+    // (chempy `get_bonds`: (atm1, atm2, order)).
+    const posOf = new Map<string, number>();
+    matched.forEach((ua, i) => posOf.set(`${ua.objName} ${ua.index}`, i));
+    const bonds: Array<{ index: [number, number]; order: number }> = [];
+    const seenObj = new Set<string>();
+    for (const ua of matched) {
+      if (seenObj.has(ua.objName)) continue;
+      seenObj.add(ua.objName);
+      const mol = this.executive.molecule(ua.objName);
+      if (!mol) continue;
+      for (const [a, b, order] of mol.bonds) {
+        const ia = posOf.get(`${ua.objName} ${a}`);
+        const ib = posOf.get(`${ua.objName} ${b}`);
+        if (ia === undefined || ib === undefined) continue;
+        bonds.push({ index: [ia, ib], order: order ?? 1 });
+      }
+    }
+    return { atom: atoms, bond: bonds } as unknown as Json;
   }
 
   /* --------------------------- publishing ----------------------------- */
@@ -834,6 +868,20 @@ export class Engine {
         states: mol.nstate,
       };
     });
+    // Measurement objects (distance/angle/dihedral) render through the Dash rep.
+    for (const m of this.executive.measurementsInOrder()) {
+      objects.push({
+        name: m.name,
+        type: 'object:measurement',
+        enabled: m.enabled,
+        group: '',
+        nest: 0,
+        reps: 1 << Rep.Dash,
+        color: null,
+        caption: '',
+        states: 1,
+      });
+    }
     this.emitter.emit('objects', { objects });
   }
 

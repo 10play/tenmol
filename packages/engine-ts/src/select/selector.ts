@@ -58,6 +58,9 @@ type Node =
   | { t: 'or'; a: Node; b: Node }
   // Set operators (need the whole matched set, not a per-atom predicate):
   | { t: 'byres'; a: Node }
+  | { t: 'bycalpha'; a: Node }
+  | { t: 'byring'; a: Node }
+  | { t: 'pepseq'; seq: string }
   | { t: 'bymol'; a: Node }
   | { t: 'byobject'; a: Node }
   | { t: 'bychain'; a: Node }
@@ -122,6 +125,7 @@ const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
   segi: 'segi',
   's.': 'segi',
   alt: 'alt',
+  altloc: 'alt',
   color: 'color',
   rep: 'rep',
   ss: 'ss',
@@ -290,6 +294,22 @@ class Parser {
     if (this.isOp(t, 'bychain')) {
       this.next();
       return { t: 'bychain', a: this.parseNot() };
+    }
+    // bycalpha / bca. — the C-alpha of every residue the operand touches.
+    if (this.isOp(t, 'bycalpha', 'bca.')) {
+      this.next();
+      return { t: 'bycalpha', a: this.parseNot() };
+    }
+    // byring — atoms on a ring (SSSR, ring size ≤ 7) containing the operand.
+    if (this.isOp(t, 'byring')) {
+      this.next();
+      return { t: 'byring', a: this.parseNot() };
+    }
+    // pepseq / ps. — a one-letter peptide-sequence motif (consumes the pattern
+    // word, not a sub-selection, mirroring PyMOL's SELE_PEPs).
+    if (this.isOp(t, 'pepseq', 'ps.')) {
+      this.next();
+      return { t: 'pepseq', seq: this.next() };
     }
     if (this.isOp(t, 'first')) {
       this.next();
@@ -529,9 +549,16 @@ function matchProp(node: Extract<Node, { t: 'prop' }>, ua: UniverseAtom): boolea
   }
 }
 
-/** Numeric comparison on a per-atom field (`b`, `q`; `pc`/`fc` are 0 here). */
+/** Numeric comparison on a per-atom field (`b`, `q`, `pc`, `fc`). */
 function matchCmp(node: Extract<Node, { t: 'cmp' }>, a: AtomInfo): boolean {
-  const lhs = node.field === 'b' ? a.b : node.field === 'q' ? a.q : 0;
+  const lhs =
+    node.field === 'b'
+      ? a.b
+      : node.field === 'q'
+        ? a.q
+        : node.field === 'pc'
+          ? a.partialCharge ?? 0
+          : a.formalCharge ?? 0;
   switch (node.op) {
     case '<':
       return lhs < node.value;
@@ -637,6 +664,122 @@ function expandGroups(a: Set<number>, keyOf: (i: number) => number[]): Set<numbe
   return s;
 }
 
+/** PyMOL's ring-finder cap: rings up to 7 members (SelectorRingFinder). */
+const MAX_RING_SIZE = 7;
+
+/**
+ * `byring` — every atom on a ring (size ≤ 7) that contains a seed atom. Mirrors
+ * PyMOL's SelectorRingFinder: enumerate the smallest cycle through each bond,
+ * then keep the rings touched by the operand.
+ */
+function ringAtoms(seeds: Set<number>, env: EvalEnv): Set<number> {
+  const adj = env.adj;
+  const rings: number[][] = [];
+  const seenKey = new Set<string>();
+  for (let u = 0; u < adj.length; u++) {
+    for (const v of adj[u] ?? []) {
+      if (v <= u) continue; // each edge once
+      const path = shortestCyclePath(u, v, adj, MAX_RING_SIZE);
+      if (!path) continue;
+      const key = [...path].sort((a, b) => a - b).join(',');
+      if (seenKey.has(key)) continue;
+      seenKey.add(key);
+      rings.push(path);
+    }
+  }
+  const out = new Set<number>();
+  for (const ring of rings) {
+    if (ring.some((i) => seeds.has(i))) for (const i of ring) out.add(i);
+  }
+  return out;
+}
+
+/**
+ * Shortest cycle through edge (u,v): a BFS from u to v that forbids the direct
+ * u→v edge, so the returned node path closed by that edge is the smallest ring.
+ * Bounded to `maxNodes` so only rings ≤ that size are found.
+ */
+function shortestCyclePath(
+  u: number,
+  v: number,
+  adj: number[][],
+  maxNodes: number,
+): number[] | null {
+  const prev = new Map<number, number>();
+  const visited = new Set<number>([u]);
+  let frontier = [u];
+  let nodes = 1;
+  while (frontier.length > 0 && nodes < maxNodes) {
+    const next: number[] = [];
+    for (const x of frontier) {
+      for (const y of adj[x] ?? []) {
+        if (x === u && y === v) continue; // forbid the direct edge
+        if (visited.has(y)) continue;
+        visited.add(y);
+        prev.set(y, x);
+        if (y === v) {
+          const path = [v];
+          let c = v;
+          while (c !== u) {
+            c = prev.get(c)!;
+            path.push(c);
+          }
+          return path.reverse();
+        }
+        next.push(y);
+      }
+    }
+    frontier = next;
+    nodes++;
+  }
+  return null;
+}
+
+/** Three-letter → one-letter residue codes for `pepseq` matching. */
+const AA3TO1: Readonly<Record<string, string>> = {
+  ALA: 'A', ARG: 'R', ASN: 'N', ASP: 'D', CYS: 'C', GLN: 'Q', GLU: 'E',
+  GLY: 'G', HIS: 'H', ILE: 'I', LEU: 'L', LYS: 'K', MET: 'M', PHE: 'F',
+  PRO: 'P', SER: 'S', THR: 'T', TRP: 'W', TYR: 'Y', VAL: 'V',
+  MSE: 'M', SEC: 'U', PYL: 'O', ASX: 'B', GLX: 'Z',
+};
+
+/**
+ * `pepseq <motif>` — select every atom of each residue in a consecutive stretch
+ * whose one-letter codes match `motif`. Residues are walked per object in
+ * load (table) order, matching PyMOL's SELE_PEPs.
+ */
+function pepseqAtoms(pattern: string, env: EvalEnv): Set<number> {
+  const out = new Set<number>();
+  const pat = pattern.toUpperCase();
+  if (pat === '') return out;
+  const perObj = new Map<string, string[]>(); // objName → ordered resKeys
+  const seen = new Set<string>();
+  for (const ua of env.universe) {
+    const rk = resKey(ua);
+    if (seen.has(rk)) continue;
+    seen.add(rk);
+    let arr = perObj.get(ua.objName);
+    if (!arr) perObj.set(ua.objName, (arr = []));
+    arr.push(rk);
+  }
+  for (const resKeys of perObj.values()) {
+    const seq = resKeys
+      .map((rk) => {
+        const idxs = env.byRes.get(rk) ?? [];
+        const resn = idxs.length ? env.universe[idxs[0]!]!.atom.resn : '';
+        return AA3TO1[resn.toUpperCase()] ?? 'X';
+      })
+      .join('');
+    for (let start = 0; start + pat.length <= seq.length; start++) {
+      if (!seq.startsWith(pat, start)) continue;
+      for (let k = start; k < start + pat.length; k++) {
+        for (const j of env.byRes.get(resKeys[k]!) ?? []) out.add(j);
+      }
+    }
+  }
+  return out;
+}
+
 function resKey(ua: UniverseAtom): string {
   return `${ua.objName}|${ua.atom.chain}|${ua.atom.segi}|${ua.atom.resi}`;
 }
@@ -701,6 +844,21 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
       for (const i of a) for (const j of env.byRes.get(resKey(env.universe[i]!)) ?? []) s.add(j);
       return s;
     }
+    case 'bycalpha': {
+      // Grow to the whole residue, then keep only its C-alpha (a carbon named CA).
+      const a = evalSet(node.a, env);
+      const s = new Set<number>();
+      for (const i of a)
+        for (const j of env.byRes.get(resKey(env.universe[i]!)) ?? []) {
+          const at = env.universe[j]!.atom;
+          if (at.name.toUpperCase() === 'CA' && at.elem.toUpperCase() === 'C') s.add(j);
+        }
+      return s;
+    }
+    case 'byring':
+      return ringAtoms(evalSet(node.a, env), env);
+    case 'pepseq':
+      return pepseqAtoms(node.seq, env);
     case 'first': {
       let min = Infinity;
       for (const i of evalSet(node.a, env)) if (i < min) min = i;

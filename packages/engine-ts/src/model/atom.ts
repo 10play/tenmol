@@ -32,10 +32,19 @@ export interface AtomInfo {
   b: number;
   /** Occupancy. */
   q: number;
+  /** Formal (integer) charge — MOL `M  CHG`, PDB cols 79-80. Absent ⇒ 0. */
+  formalCharge?: number;
+  /** Partial (fractional) charge — MOL2 charge column, `set_charge`. Absent ⇒ 0. */
+  partialCharge?: number;
   /** Colour index into the colour table (PyMOL `color`). */
   color: number;
   /** Secondary structure: 'H' (helix), 'S' (strand), or '' (loop/unassigned). */
   ss: string;
+  /** Per-atom label text (PyMOL `label`), or undefined when none is set. */
+  label?: string;
+  /** Explicit vdw radius override (PyMOL `vdw`), e.g. set by `util.b2vdw`;
+   *  absent ⇒ the element's default radius. */
+  vdwRadius?: number;
   /**
    * Anisotropic displacement (ADP) from an ANISOU record, in Å²:
    * [U11, U22, U33, U12, U13, U23]. Absent for atoms without ANISOU (the

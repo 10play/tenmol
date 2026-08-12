@@ -99,12 +99,13 @@ describe('get_area', () => {
 });
 
 describe('get_sasa_relative', () => {
-  it('a fully exposed lone residue is over-exposed relative to its max ASA', () => {
-    // Lone glycine CA: SASA ~120.76, max ASA(GLY)=104 -> rel > 1.
+  it('a lone residue in isolation has relative SASA 1.0 (context == isolated)', () => {
+    // Relative SASA is area-in-context / area-in-isolation (PyMOL). A single
+    // residue that IS the whole object is its own isolated reference, so 1.0.
     const { call } = harness(atom(1, 'CA', 'GLY', 'A', 7, 0, 0, 0, 'C'));
     const map = call('get_sasa_relative', 'all') as Record<string, number>;
-    const key = 'm//A/7/GLY'; // empty segi
-    expect(map[key]).toBeCloseTo(LONE_C_AREA / 104, 6);
+    const key = 'm//A/7'; // object/segi/chain/resi
+    expect(map[key]).toBeCloseTo(1.0, 6);
   });
 });
 
