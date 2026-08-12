@@ -183,9 +183,14 @@ const NUMERIC_FIELDS = new Set(['resv', 'b', 'q', 'color', 'id']);
  * possibly-reassigned atom-field values in `ATOM_FIELDS` order.
  */
 function compileExpr(expr: string, extraParams: string[]): (...a: unknown[]) => unknown[] {
-  const params = [...ATOM_FIELDS, 'index', 'hetatm', 'model', ...extraParams, 'stored'];
-  const body = `${expr}\n;return [${ATOM_FIELDS.join(',')}];`;
-   
+  // `formal_charge`/`partial_charge` use PyMOL's snake_case names in the body but
+  // map to the camelCase AtomInfo keys on write-back (see runPerAtom).
+  const params = [
+    ...ATOM_FIELDS, 'index', 'hetatm', 'model',
+    'formal_charge', 'partial_charge', ...extraParams, 'stored',
+  ];
+  const body = `${expr}\n;return [${ATOM_FIELDS.join(',')},formal_charge,partial_charge];`;
+
   const fn = new Function(...params, body) as (...a: unknown[]) => unknown[];
   return fn;
 }
@@ -263,6 +268,7 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
       const a = ua.atom;
       const base: unknown[] = ATOM_FIELDS.map((f) => a[f]);
       base.push(ua.index + 1, a.hetatm, ua.objName);
+      base.push(a.formalCharge ?? 0, a.partialCharge ?? 0);
       if (withCoords) {
         const mol = ex.molecule(ua.objName)!;
         const [x, y, z] = mol.coord(ua.index, opts.state && opts.state > 0 ? opts.state : 1);
@@ -283,6 +289,11 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
             rec[field] = String(raw);
           }
         }
+        // Charges are appended after ATOM_FIELDS in the returned tuple; map the
+        // snake_case body names back to the camelCase AtomInfo keys.
+        const rec = a as unknown as Record<string, unknown>;
+        rec.formalCharge = Number(result[ATOM_FIELDS.length]);
+        rec.partialCharge = Number(result[ATOM_FIELDS.length + 1]);
       }
     }
     return matched.length;

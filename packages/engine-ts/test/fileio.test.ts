@@ -388,10 +388,10 @@ describe('read_molstr / read_sdfstr', () => {
     expect(mol.atoms.map((a: AtomInfo) => a.elem)).toEqual(['O', 'H', 'H']);
     expect(mol.coord(1, 1)[0]).toBeCloseTo(0.9572, 4);
     expect(mol.coord(2, 1)[1]).toBeCloseTo(0.927, 4);
-    // Bonds: O-H1 and O-H2 (0-based, normalised i<j).
+    // Bonds: O-H1 and O-H2 (0-based, normalised i<j), each a single bond (order 1).
     expect(mol.bonds).toEqual([
-      [0, 1],
-      [0, 2],
+      [0, 1, 1],
+      [0, 2, 1],
     ]);
   });
 

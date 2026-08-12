@@ -100,6 +100,8 @@ export function parseMol2(text: string, name: string): ObjectMolecule {
       const hasSubst = t.length >= 8;
       const substId = hasSubst ? parseInt(t[6] ?? '', 10) : NaN;
       const substName = hasSubst ? (t[7] ?? '') : '';
+      // Optional trailing charge column (USER_CHARGES / Gasteiger / …).
+      const charge = t.length >= 9 ? parseFloat(t[8] ?? '') : NaN;
 
       const atom: AtomInfo = {
         id: mol.atoms.length + 1,
@@ -120,6 +122,7 @@ export function parseMol2(text: string, name: string): ObjectMolecule {
         ss: '', // assigned by `dss`
         visRep: defaultVisRep(),
       };
+      if (Number.isFinite(charge)) atom.partialCharge = charge;
       if (Number.isFinite(fileId)) idToIndex.set(fileId, mol.atoms.length);
       mol.atoms.push(atom);
       coords.push(x, y, z);

@@ -466,6 +466,34 @@ function buildResidueObject(
 
 /* -------------------------------- registrar ------------------------------ */
 
+/**
+ * Build a peptide object named `name` from a one-letter ("AG") or
+ * whitespace-separated 3-letter ("ala gly") sequence: seed the first residue as
+ * a new object, then attach the rest onto its growing C-terminus. Shared by
+ * `editor.build_peptide` and the flat `fab` verb.
+ */
+function buildPeptideObject(ctx: RegistrarCtx, sequence: string, name: string): string {
+  const raw = sequence.trim();
+  const tokens = /\s/.test(raw) ? raw.split(/\s+/) : raw.split('');
+  const codes: string[] = [];
+  for (const t of tokens) {
+    if (t === '') continue;
+    const code = resolveAminoAcidCode(t);
+    if (!code) throw new Error(`build_peptide: unknown residue '${t}' in sequence`);
+    codes.push(code);
+  }
+  if (codes.length === 0) throw new Error('build_peptide: empty sequence');
+
+  const first = getAminoAcidFragment(codes[0]!)!;
+  ctx.executive.addMolecule(buildResidueObject(codes[0]!, first, name, 1));
+  for (let i = 1; i < codes.length; i++) {
+    const conn = resolveConnection(ctx, `${name} and name C`);
+    growResidue(ctx, conn, codes[i]!, getAminoAcidFragment(codes[i]!)!);
+  }
+  ctx.publish();
+  return name;
+}
+
 export function registerEditor(ctx: RegistrarCtx): void {
   const str = ctx.str;
   const arg = (
@@ -531,25 +559,21 @@ export function registerEditor(ctx: RegistrarCtx): void {
   // the new object name.
   ctx.command('editor.build_peptide', (args, kwargs): Json => {
     const sequence = str(arg(args, kwargs, 0, 'sequence'), '');
-    const raw = sequence.trim();
-    const tokens = /\s/.test(raw) ? raw.split(/\s+/) : raw.split('');
-    const codes: string[] = [];
-    for (const t of tokens) {
-      if (t === '') continue;
-      const code = resolveAminoAcidCode(t);
-      if (!code) throw new Error(`build_peptide: unknown residue '${t}' in sequence`);
-      codes.push(code);
-    }
-    if (codes.length === 0) throw new Error('build_peptide: empty sequence');
+    return buildPeptideObject(ctx, sequence, ctx.executive.uniqueName('pept'));
+  });
 
-    const name = ctx.executive.uniqueName('pept');
-    const first = getAminoAcidFragment(codes[0]!)!;
-    ctx.executive.addMolecule(buildResidueObject(codes[0]!, first, name, 1));
-    for (let i = 1; i < codes.length; i++) {
-      const conn = resolveConnection(ctx, `${name} and name C`);
-      growResidue(ctx, conn, codes[i]!, getAminoAcidFragment(codes[i]!)!);
+  /* -------------------------------- fab -------------------------------- */
+  // fab(input, name=None, mode='peptide', ...) — build a molecule from a
+  // one-letter sequence (editor.py:1062). Peptide mode is supported; nucleic
+  // modes need the fnab monomer library the port lacks.
+  ctx.command('fab', (args, kwargs): Json => {
+    const input = str(arg(args, kwargs, 0, 'input'), '');
+    const nameArg = str(arg(args, kwargs, 1, 'name'), '');
+    const mode = str(arg(args, kwargs, 2, 'mode'), 'peptide') || 'peptide';
+    if (mode !== 'peptide') {
+      throw new Error(`fab: mode '${mode}' not supported (peptide only in this port)`);
     }
-    ctx.publish();
-    return name;
+    const name = ctx.executive.uniqueName(nameArg || 'obj');
+    return buildPeptideObject(ctx, input, name);
   });
 }

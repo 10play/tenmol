@@ -180,6 +180,7 @@ export function registerRamps(ctx: RegistrarCtx): void {
     const range = parseNumberList(args[2] ?? kwargs.range);
     const colors = parseColorList(args[3] ?? kwargs.color);
     defineRamp(name, range, colors);
+    ex.registerGadget(name, 'object:ramp');
     ctx.publish();
     return name;
   });
@@ -224,6 +225,8 @@ export function registerRamps(ctx: RegistrarCtx): void {
         ? parseColorList(colorArg)
         : [coerceColor('blue'), coerceColor('white'), coerceColor('red')];
     defineRamp(name, range, colors);
+    // PyMOL's gradient builds an ObjectMesh gadget over the map's value range.
+    ex.registerGadget(name, 'object:mesh');
     ctx.publish();
     return name;
   });

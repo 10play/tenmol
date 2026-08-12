@@ -296,6 +296,74 @@ export function registerExporters(ctx: RegistrarCtx): void {
     return lines.join('\n');
   }
 
+  /** Matched atoms (with coords) and their bonds, reindexed to selection order. */
+  function selAtomsBonds(sel: string, st: number): {
+    atoms: Array<{ atom: AtomInfo; x: number; y: number; z: number }>;
+    bonds: Array<[number, number, number]>;
+  } {
+    const matched = ex.atomsMatching(sel);
+    const posOf = new Map<string, number>();
+    matched.forEach((ua, i) => posOf.set(`${ua.objName} ${ua.index}`, i));
+    const atoms = matched.map((ua) => {
+      const [x, y, z] = ex.molecule(ua.objName)!.coord(ua.index, st);
+      return { atom: ua.atom, x, y, z };
+    });
+    const bonds: Array<[number, number, number]> = [];
+    const seen = new Set<string>();
+    for (const ua of matched) {
+      if (seen.has(ua.objName)) continue;
+      seen.add(ua.objName);
+      const mol = ex.molecule(ua.objName);
+      if (!mol) continue;
+      for (const [a, b, order] of mol.bonds) {
+        const ia = posOf.get(`${ua.objName} ${a}`);
+        const ib = posOf.get(`${ua.objName} ${b}`);
+        if (ia === undefined || ib === undefined) continue;
+        bonds.push([ia, ib, order ?? 1]);
+      }
+    }
+    return { atoms, bonds };
+  }
+
+  /** An MDL V2000 molfile (cols line-exact so read_molstr round-trips). */
+  function getMolstr(sel: string, state: number): string {
+    const st = state > 0 ? state : 1;
+    const { atoms, bonds } = selAtomsBonds(sel, st);
+    const n3 = (n: number): string => String(n).slice(0, 3).padStart(3);
+    const f10 = (v: number): string => v.toFixed(4).padStart(10);
+    const lines = ['', '  tenmol', '', `${n3(atoms.length)}${n3(bonds.length)}  0  0  0  0  0  0  0  0999 V2000`];
+    for (const { atom, x, y, z } of atoms) {
+      lines.push(`${f10(x)}${f10(y)}${f10(z)} ${padR(atom.elem, 3)} 0  0  0  0  0  0  0  0  0  0  0  0`);
+    }
+    for (const [i, j, order] of bonds) lines.push(`${n3(i + 1)}${n3(j + 1)}${n3(order)}  0  0  0  0`);
+    lines.push('M  END');
+    return lines.join('\n') + '\n';
+  }
+
+  /** A single-record SDF: the molfile plus the `$$$$` terminator. */
+  function getSdfstr(sel: string, state: number): string {
+    return getMolstr(sel, state) + '$$$$\n';
+  }
+
+  /** A Tripos MOL2 block (round-trips through read_mol2str). */
+  function getMol2str(sel: string, state: number): string {
+    const st = state > 0 ? state : 1;
+    const { atoms, bonds } = selAtomsBonds(sel, st);
+    const f = (v: number): string => v.toFixed(4);
+    const lines = [
+      '@<TRIPOS>MOLECULE', 'tenmol',
+      ` ${atoms.length} ${bonds.length} 0 0 0`, 'SMALL', 'USER_CHARGES', '',
+      '@<TRIPOS>ATOM',
+    ];
+    atoms.forEach(({ atom, x, y, z }, i) => {
+      const nm = (atom.name || atom.elem).replace(/\s+/g, '') || atom.elem;
+      lines.push(`${i + 1} ${nm} ${f(x)} ${f(y)} ${f(z)} ${atom.elem} 1 UNL1 ${(atom.partialCharge ?? 0).toFixed(4)}`);
+    });
+    lines.push('@<TRIPOS>BOND');
+    bonds.forEach(([i, j, order], k) => lines.push(`${k + 1} ${i + 1} ${j + 1} ${order}`));
+    return lines.join('\n') + '\n';
+  }
+
   /** The shared body of `get_str` / `get_bytes`. */
   function getStr(format: string, sel: string, state: number): string {
     switch (format) {
@@ -308,6 +376,12 @@ export function registerExporters(ctx: RegistrarCtx): void {
         return getPdbstr(sel, state);
       case 'fasta':
         return getFastastr(sel);
+      case 'mol':
+        return getMolstr(sel, state);
+      case 'sdf':
+        return getSdfstr(sel, state);
+      case 'mol2':
+        return getMol2str(sel, state);
       default:
         throw new Error(`get_str: unsupported format '${format}'`);
     }
@@ -324,7 +398,9 @@ export function registerExporters(ctx: RegistrarCtx): void {
   interface Session {
     kind: 'tenmol-session';
     version: 1;
-    names: string[];
+    /** PyMOL-shaped per-object spec list: [name, spec_type, enabled, ?, type_code].
+     *  type_code 1 == molecule (exporting.py `_session_convert_legacy`). */
+    names: Array<unknown[]>;
     objects: SessionObject[];
     settings: Record<string, number | string>;
     view: number[];
@@ -345,10 +421,15 @@ export function registerExporters(ctx: RegistrarCtx): void {
       const v = ex.getSetting(k);
       if (v !== undefined) settings[k] = v;
     }
+    // PyMOL's session['names'] is a list of per-object spec lists; index 4 is the
+    // object type code (1 = molecule). We emit one spec per molecule object.
+    const names: Array<unknown[]> = ex
+      .moleculesInOrder()
+      .map((mol) => [mol.name, 0, mol.enabled ? 1 : 0, 0, 1]);
     return {
       kind: 'tenmol-session',
       version: 1,
-      names: ex.getNames('objects'),
+      names,
       objects,
       settings,
       view: ex.view.get(),
@@ -447,7 +528,9 @@ export function registerExporters(ctx: RegistrarCtx): void {
     const st = state > 0 ? state : 1;
     const blocks: string[] = [];
     for (const grp of grouped(sel)) {
-      const lines: string[] = [];
+      // One HEADER per object so a multi-entry PDB loads each as a separate
+      // object (exporting.py multisave).
+      const lines: string[] = [`HEADER    ${grp.mol.name}`];
       let serial = 1;
       let preTer: AtomInfo | null = null;
       const writeTer = (ai: AtomInfo | null): void => {

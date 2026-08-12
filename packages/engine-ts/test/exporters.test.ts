@@ -189,7 +189,8 @@ describe('get_str', () => {
 
   it('rejects an unknown format', () => {
     const h = harness(newEx());
-    expect(() => h.call('get_str', ['mol2', 'all'])).toThrow();
+    // mol/sdf/mol2 are supported now; a truly unknown format still throws.
+    expect(() => h.call('get_str', ['nonsense', 'all'])).toThrow();
   });
 });
 

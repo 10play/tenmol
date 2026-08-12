@@ -45,6 +45,18 @@ Landed so far — the §1 items they close are marked **✅ ported** inline belo
   rose to **350/506 (69.2%)**.
 - **Wave 2** — the console parser now handles `key=value` kwargs, quoted
   commas/`=`, and reports `@script` honestly.
+- **Parity wave (2026-08)** — a red parity suite
+  (`packages/engine-ts/test/parity-*.test.ts`) pinned every remaining gap and
+  closed 53 of 64 achievable targets: structure-based superposition,
+  selection extras (`byring`/`bycalpha`/`pepseq`/`altloc`/`fc.`/`pc.`),
+  measurement objects + labels + `set_name`, map/ramp/isosurface gadgets,
+  `mol`/`sdf`/`mol2` export + `multisave` + `get_session`, bond orders +
+  ANISOU + object matrix + groups + P 2 symmetry, `edit`/`remove_picked`/`fab`/
+  `torsion`/`uniquify`, and the `util.*` charge/area helpers (incl. Amber-99
+  `protein_assign_charges_and_radii`). Command coverage 375→392/506. The
+  deferred 11 (nucleic builders, valence-chemistry edits, `combine_fragment`,
+  byte-exact `color_by_area`) stay pinned as `it.fails`; the individual
+  §1 entries below are marked accordingly.
 
 The visual/perf regression suite and three fixes already shipped and set the
 baseline the numbers above reflect:
@@ -162,19 +174,26 @@ add_nutate, add_scenes, get_movie_fps, find_exe`
 
 Files: `cmd/movie3.ts`, ref `movie.py`, `_gui.py:236`.
 
-### Structure-based superposition non-functional — M
+### Structure-based superposition — ✅ ported (parity wave) — M
 
-`super` is a bare alias for sequence-based `align`; `cealign`/`usalign` return
-`{}`, `alignto`/`extra_fit` return `[]`, `pair_fit` returns `0` — all fake.
-Superposing low-identity structures gives wrong or empty results.
+`super` is now a real **structure-based** superposition (pairs guide Cα by
+position, Kabsch-fits, carries the whole mobile object — no sequence similarity
+needed); `cealign(target, mobile)` returns `{alignment_length, RMSD,
+rotation_matrix}`; `usalign` returns `{tm_score_target, tm_score_mobile, RMSD,
+alignment_length, seq_identity}`; `pair_fit` fits explicit atom-pair selections;
+`alignto`/`extra_fit` superpose every other/listed object onto the reference; and
+`fit`/`rms`/`rms_cur` now pair atoms by **identity** (`matchmaker=0`), with `rms`
+the fitted RMS and `intra_rms` fitting each state first. Pinned by
+`parity-superposition.test.ts` (10/10).
 
-Files: `cmd/align.ts:470`, `cmd/extras.ts:505`.
+Files: `cmd/align.ts`, `cmd/extras.ts`.
 
-### `fab` / `fnab` / `h_fix` are silent no-op stubs — M
+### `fab` ported; `fnab` / `h_fix` still stubs — M
 
-Registered as documented no-ops (return `null`, build nothing) —
-`cmd.fab('ACDEF')` does **not** throw but produces no geometry. No
-fragment/monomer library exists in the port.
+`cmd.fab(seq, name)` now builds a peptide object from a one-letter sequence
+(shares `editor.build_peptide`; `cmd/editor.ts`). `fnab` (nucleic) and `h_fix`
+remain no-ops — the nucleic monomer library is the next wave (the pickled
+`atpB`/`ttpB`/`gtpB`/`ctpB`/`utpA` fragments exist and are extraction-ready).
 
 Files: `cmd/extras.ts:515`.
 

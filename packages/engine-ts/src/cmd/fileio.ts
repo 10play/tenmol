@@ -220,7 +220,25 @@ function parseMolBlock(text: string, name: string): ObjectMolecule {
     const key = a1 < a2 ? `${a1}:${a2}` : `${a2}:${a1}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    mol.bonds.push(a1 < a2 ? [a1, a2] : [a2, a1]);
+    // MDL bond order is cols 7-9 of the bond record (1/2/3, 4=aromatic).
+    let order = parseInt(l.slice(6, 9), 10);
+    if (!Number.isFinite(order) || order < 1) order = 1;
+    mol.bonds.push(a1 < a2 ? [a1, a2, order] : [a2, a1, order]);
+  }
+
+  // Formal charges: `M  CHG  n  atom1 chg1  atom2 chg2 …` (atom idx 1-based).
+  // A `M  CHG` block overrides the legacy column-charge codes entirely.
+  for (const l of lines) {
+    if (!/^M {2}CHG/.test(l)) continue;
+    const nums = l.slice(6).trim().split(/\s+/).map((s) => parseInt(s, 10));
+    const cnt = Number.isFinite(nums[0]) ? nums[0]! : 0;
+    for (let k = 0; k < cnt; k++) {
+      const ai = nums[1 + k * 2];
+      const ch = nums[2 + k * 2];
+      if (ai !== undefined && ch !== undefined && Number.isFinite(ai) && Number.isFinite(ch) && ai >= 1 && ai <= mol.atoms.length) {
+        mol.atoms[ai - 1]!.formalCharge = ch;
+      }
+    }
   }
   return mol;
 }

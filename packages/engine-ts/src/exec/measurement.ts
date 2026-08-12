@@ -62,7 +62,9 @@ export function dihedralOf(p1: Vec3, p2: Vec3, p3: Vec3, p4: Vec3): number {
   const n2 = cross(b2, b3);
   const b2n = scale(b2, 1 / (norm(b2) || 1));
   const m1 = cross(n1, b2n);
-  return (Math.atan2(dot(m1, n2), dot(n1, n2)) * 180) / Math.PI;
+  // Negated to match PyMOL's right-handed get_dihedral3f (layer0/Vector.cpp),
+  // so a dihedral OBJECT's value equals what get_dihedral reports.
+  return (-Math.atan2(dot(m1, n2), dot(n1, n2)) * 180) / Math.PI;
 }
 
 /** Sample a short arc (a few segments) sweeping from `a` to `c` about vertex `b`. */
