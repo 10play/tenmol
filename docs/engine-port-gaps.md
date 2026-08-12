@@ -272,11 +272,12 @@ saving/exporting (structures, images, sessions, movies, meshes).
   driven through the ported chemistry verbs (`bond`, `unbond`, `cycle_valence`,
   `h_add`/`h_fill`, `invert`, `replace`, `remove_picked`, `editor.attach_*`), so the
   panel opens, polls and its buttons work instead of erroring. ONE divergence: this
-  engine has no PyMOL wizard state machine, so the Python panel's wizard-arming
-  fallbacks (press a button with the wrong pick → arm a `Wizard`) are honest no-ops
-  here and `builder_state` always reports `wizard: null` — the React panel handles
-  that by falling back to `pickHint()`. Still absent: `clean` (incentive-only) and
-  the wizard-mediated sculpt/flag modes.
+  engine has no PyMOL wizard state machine, so instead of arming a `Wizard` object,
+  a button pressed with the wrong pick ARMS THE TOOL and applies it on the next
+  qualifying `builder_pick` (click-to-place). `builder_state` reports the armed tool
+  as a synthetic `wizard` (name + "Pick an atom to…" prompt) so the React panel shows
+  the prompt and routes the pick; re-pressing the tool (or its Cancel row) disarms.
+  Still absent: `clean` (incentive-only) and the wizard-mediated sculpt/flag modes.
 
 ---
 

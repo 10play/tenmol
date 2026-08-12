@@ -195,17 +195,73 @@ describe('builder_action', () => {
     expect(String(reply.value)).toContain('IncentiveOnlyException');
   });
 
-  it('is a no-op (not a crash) when the required pick is absent', () => {
+  it('arms the tool (as a wizard) when the required pick is absent', () => {
     const e = engineWith(ETHANE_CORE);
-    const reply = e.call('builder_action', ['createBond'], {}) as unknown as { error?: unknown };
-    // Nothing picked → the Python panel would arm a wizard; here it just refreshes.
+    const reply = e.call('builder_action', ['createBond'], {}) as unknown as BuilderState & {
+      error?: unknown;
+    };
+    // Nothing picked → arm a BondWizard whose prompt the panel shows.
     expect(reply.error).toBeNull();
+    expect(reply.wizard?.name).toBe('BondWizard');
+    expect(reply.wizard?.prompt.join(' ')).toMatch(/pick/i);
   });
 
   it('rejects an unknown action kind', () => {
     const e = engineWith(ETHANE_CORE);
     const reply = e.call('builder_action', ['nope'], {}) as unknown as { error?: string };
     expect(reply.error).toContain("unknown builder action 'nope'");
+  });
+});
+
+/* ----------------------------- arm-then-pick ----------------------------- */
+
+describe('arm-then-pick (wizard-less click-to-place)', () => {
+  it('arms Add H, then applies it on the next pick', () => {
+    const e = engineWith(ETHANE_CORE);
+    const count = (s: string) => e.call('count_atoms', [s]) as number;
+    // Press Add H with nothing picked -> arms a HydrogenWizard.
+    const armed = e.call('builder_action', ['addH'], {}) as unknown as BuilderState;
+    expect(armed.wizard?.name).toBe('HydrogenWizard');
+    expect(count('elem H')).toBe(0);
+    // The next pick completes it: hydrogens appear and the tool disarms.
+    const after = e.call('builder_pick', ['m', 1, null, 'multi']) as unknown as BuilderState;
+    expect(after.wizard).toBeNull();
+    expect(count('elem H')).toBeGreaterThan(0);
+  });
+
+  it('arms Create bond, then bonds the two atoms picked across two clicks', () => {
+    const e = engineWith(TWO_C_UNBONDED);
+    type Mol = { bonds: Array<[number, number]>; atoms: Array<{ elem: string }> };
+    const mol = () =>
+      (e as unknown as { executive: { molecule(n: string): Mol } }).executive.molecule('m');
+    const carbonsBonded = (): boolean => {
+      const m = mol();
+      const cs = m.atoms.map((a, i) => (a.elem === 'C' ? i : -1)).filter((i) => i >= 0);
+      return m.bonds.some(([a, b]) => cs.includes(a) && cs.includes(b));
+    };
+    expect(carbonsBonded()).toBe(false);
+    e.call('builder_action', ['createBond'], {}); // arm BondWizard
+    e.call('builder_pick', ['m', 1, null, 'multi']); // pk1 — still armed
+    expect((state(e).wizard as unknown) !== null).toBe(true);
+    const done = e.call('builder_pick', ['m', 2, null, 'multi']) as unknown as BuilderState; // pk2 — applies
+    expect(done.wizard).toBeNull();
+    expect(carbonsBonded()).toBe(true); // the C–C bond now exists
+  });
+
+  it('cancels an armed tool when the same button is pressed again', () => {
+    const e = engineWith(ETHANE_CORE);
+    const armed = e.call('builder_action', ['addH'], {}) as unknown as BuilderState;
+    expect(armed.wizard?.name).toBe('HydrogenWizard');
+    const cancelled = e.call('builder_action', ['addH'], {}) as unknown as BuilderState;
+    expect(cancelled.wizard).toBeNull();
+  });
+
+  it('disarms on builder_dismiss', () => {
+    const e = engineWith(ETHANE_CORE);
+    e.call('builder_action', ['removeAtom'], {});
+    expect(state(e).wizard).not.toBeNull();
+    e.call('builder_dismiss', []);
+    expect(state(e).wizard).toBeNull();
   });
 });
 

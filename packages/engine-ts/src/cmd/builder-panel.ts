@@ -13,17 +13,18 @@
  * engine already ports (`bond`, `unbond`, `valence`, `cycle_valence`, `h_add`,
  * `h_fill`, `invert`, `replace`, `remove_picked`, `editor.attach_*`).
  *
- * ── One deliberate divergence from the Python panel ─────────────────────────
- * The bridge port is a PyMOL *wizard* state machine: when a button is pressed
- * with the wrong pick (e.g. "Create Bond" with nothing selected) it ARMS a
- * `Wizard` object the engine owns, and later viewport picks flow into
- * `wizard.do_pick(bondFlag)`. This engine has no wizard machinery, so those
- * arming fallbacks are honest NO-OPS here: the direct actions (right pick
- * present) run, and a wrong-pick press simply refreshes state without arming
- * anything. `builder_state` therefore always reports `wizard: null`, which the
- * React panel already handles — it falls back to `pickHint()` to tell the user
- * what pick a button needs. `builder_wizard_click`/`builder_select` are wizard
- * callbacks and are correspondingly inert.
+ * ── Arm-then-pick, without a PyMOL Wizard object ────────────────────────────
+ * The bridge port is a PyMOL *wizard* state machine: pressing a button with the
+ * wrong pick (e.g. "Create Bond" with nothing selected) ARMS a `Wizard` the
+ * engine owns, and later viewport picks flow into `wizard.do_pick(bondFlag)`.
+ * This engine has no wizard machinery, so instead we remember the pressed tool
+ * ({@link Armed}) and apply it on the next {@link builder_pick} that satisfies
+ * its precondition. `builder_state` reports the armed tool AS a `wizard` (name +
+ * "Pick an atom to…" prompt) so the React panel shows the prompt and routes the
+ * pick in the right mode (`ValenceWizard`/`UnbondWizard` force bond picking —
+ * BuilderPanel.tsx:76). Pressing the armed tool again, or its Cancel row
+ * (`builder_wizard_click`), disarms it. So every button does something visible:
+ * it either edits the picked atoms now, or arms and edits on your next click.
  */
 
 import type { Json } from '@tenmol/protocol';
@@ -171,7 +172,56 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
   let dnaDblHelix = true;
   let nucType = 'DNA';
 
+  /**
+   * The ARMED TOOL — this engine's stand-in for a PyMOL editor Wizard.
+   *
+   * PyMOL's Builder arms a `Wizard` object when a button is pressed with the
+   * wrong pick, and the next viewport pick flows into `wizard.do_pick`. There is
+   * no wizard machinery here, so instead we remember the pressed tool and apply
+   * it on the next `builder_pick` that satisfies its precondition. `builder_state`
+   * reports the armed tool AS a `wizard` (name + prompt) so the React panel shows
+   * a "Pick an atom to…" prompt and routes the pick in the right mode
+   * (`ValenceWizard`/`UnbondWizard` force bond picking — BuilderPanel.tsx:76).
+   */
+  interface Armed {
+    kind: string;
+    params: Record<string, unknown>;
+    name: string; // the wizard class name the panel keys pick-mode + label off
+    prompt: string;
+  }
+  let armed: Armed | null = null;
+
+  /** Thrown by an action whose required pick is absent — becomes an armed tool. */
+  class NotReady extends Error {
+    constructor(
+      readonly wizardName: string,
+      readonly wizardPrompt: string,
+    ) {
+      super('not ready');
+    }
+  }
+  const notReady = (wizardName: string, wizardPrompt: string): never => {
+    throw new NotReady(wizardName, wizardPrompt);
+  };
+  const sameParams = (a: Record<string, unknown>, b: Record<string, unknown>): boolean => {
+    const ak = Object.keys(a);
+    const bk = Object.keys(b);
+    if (ak.length !== bk.length) return false;
+    return ak.every((k) => String(a[k]) === String(b[k]));
+  };
+
   const si = (name: string): number => Math.trunc(ex.getSettingFloat(name));
+
+  /** A human label for a tool's arm prompt (the button's own text/symbol). */
+  const label = (params: Record<string, unknown>, dflt: string): string =>
+    String(
+      params['text'] ??
+        params['symbol'] ??
+        params['base'] ??
+        params['order'] ??
+        params['charge'] ??
+        dflt,
+    );
 
   /** Select `sel` into `name`, swallowing a grammar error (leaves it deleted). */
   const selectSafe = (name: string, sel: string): number => {
@@ -267,7 +317,17 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
   const builderState = (): BuilderState => ({
     editor: editorState(),
     mouse: mouseState(),
-    wizard: null, // no wizard machinery in this engine (see module header)
+    // An armed tool is surfaced AS a wizard so the panel shows its prompt and
+    // routes the next pick in the right mode; null when nothing is armed.
+    wizard: armed
+      ? {
+          name: armed.name,
+          mine: true,
+          prompt: [armed.prompt],
+          panel: [[2, 'Cancel', 'cmd.set_wizard()']],
+          repeating: false,
+        }
+      : null,
     settings: settingsState(),
     clean_available: false,
     clean_reason: CLEAN_REASON,
@@ -324,59 +384,100 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
     const mode = ctx.str(args[3] ?? kwargs['mode'], 'multi') || 'multi';
     if (!object) throw new Error('builder_pick needs an object name');
 
+    let bondFlag = 0;
+    let unpicked = false;
     if (mode === 'bond') {
       if (index2 === null) throw new Error('bond picking needs index2');
       writePicks([{ object, index }, { object, index: index2 }]);
       selectSafe('pkbond', `(${object} and index ${index}) or (${object} and index ${index2})`);
-      ctx.publish();
-      const state = builderState() as unknown as Record<string, unknown>;
-      state.bondFlag = 1;
-      return state as Json;
-    }
-
-    if (mode === 'single') {
+      bondFlag = 1;
+    } else if (mode === 'single') {
       ex.delete('pkbond');
       writePicks([{ object, index }]);
-      ctx.publish();
-      const state = builderState() as unknown as Record<string, unknown>;
-      state.bondFlag = 0;
-      return state as Json;
-    }
-
-    // multi (cButModePickAtom): re-hold the current picks by identity, then add,
-    // remove-on-re-click, or overwrite pk4 (Editor.cpp:499-536).
-    ex.delete('pkbond');
-    let held: Held[] = editorState().picked.map((p) => ({ object: p.object, index: p.index }));
-    const already = held.some((h) => h.object === object && h.index === index);
-    let unpicked = false;
-    if (already) {
-      held = held.filter((h) => !(h.object === object && h.index === index));
-      unpicked = true;
     } else {
-      if (held.length >= 4) held = held.slice(0, 3); // a fifth pick overwrites pk4
-      held = [...held, { object, index }];
+      // multi (cButModePickAtom): re-hold the current picks by identity, then add,
+      // remove-on-re-click, or overwrite pk4 (Editor.cpp:499-536).
+      ex.delete('pkbond');
+      let held: Held[] = editorState().picked.map((p) => ({ object: p.object, index: p.index }));
+      const already = held.some((h) => h.object === object && h.index === index);
+      if (already) {
+        held = held.filter((h) => !(h.object === object && h.index === index));
+        unpicked = true;
+      } else {
+        if (held.length >= 4) held = held.slice(0, 3); // a fifth pick overwrites pk4
+        held = [...held, { object, index }];
+      }
+      writePicks(held);
     }
-    writePicks(held);
     ctx.publish();
+
+    // If a tool is armed (PyMOL's `wizard.do_pick`), apply it now that the pick
+    // may satisfy it. It stays armed until a pick completes it.
+    const armError = applyArmedIfReady();
+
     const state = builderState() as unknown as Record<string, unknown>;
-    state.bondFlag = 0;
+    state.bondFlag = bondFlag;
     if (unpicked) state.unpicked = true;
+    if (armError) state.error = armError;
     return state as Json;
   });
 
+  /**
+   * Try to run the armed tool against the current picks. Returns an error string
+   * if the tool ran but threw a real error; null otherwise. A `NotReady` throw
+   * (pick still incomplete) leaves the tool armed and returns null.
+   */
+  function applyArmedIfReady(): string | null {
+    if (!armed) return null;
+    try {
+      runAction(armed.kind, armed.params);
+      armed = null; // completed
+      ctx.publish();
+      return null;
+    } catch (err) {
+      if (err instanceof NotReady) return null; // need more picks; stay armed
+      armed = null; // a real failure disarms, like a wizard aborting
+      ctx.publish();
+      return `${err instanceof Error ? err.name : 'Error'}: ${
+        err instanceof Error ? err.message : String(err)
+      }`;
+    }
+  }
+
   /* ------------------------------ builder_action ---------------------- */
+  // One button press. If the required pick is present the chemistry verb runs
+  // now; otherwise the tool is ARMED (PyMOL would arm a wizard) and applied on
+  // the next qualifying pick. Pressing the armed tool again cancels it.
   ctx.command('builder_action', (args, kwargs): Json => {
     const kind = ctx.str(args[0] ?? kwargs['kind'], '');
-    // The action reads its named params from kwargs (the web sends them there).
     const params = kwargs;
+
+    // Re-press of the armed tool -> cancel it (PyMOL activateOrDismiss).
+    if (armed && armed.kind === kind && sameParams(armed.params, params)) {
+      armed = null;
+      clearPicks();
+      ctx.publish();
+      const s = builderState() as unknown as Record<string, unknown>;
+      s.kind = kind;
+      s.error = null;
+      s.value = null;
+      return s as Json;
+    }
+
     let error: string | null = null;
     let value: unknown = null;
     try {
       value = runAction(kind, params);
+      armed = null; // ran now -> nothing left armed
     } catch (err) {
-      error = `${err instanceof Error ? err.name : 'Error'}: ${
-        err instanceof Error ? err.message : String(err)
-      }`;
+      if (err instanceof NotReady) {
+        // Precondition not met: arm the tool for the next pick to complete.
+        armed = { kind, params, name: err.wizardName, prompt: err.wizardPrompt };
+      } else {
+        error = `${err instanceof Error ? err.name : 'Error'}: ${
+          err instanceof Error ? err.message : String(err)
+        }`;
+      }
     }
     ctx.publish();
     const state = builderState() as unknown as Record<string, unknown>;
@@ -387,9 +488,9 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
   });
 
   /**
-   * One button press. Runs the direct chemistry verb when the required pick is
-   * present; a wrong-pick press is a no-op here (the Python panel would arm a
-   * wizard — see the module header). Returns the verb's own value, if any.
+   * Run one Builder action. When the required pick is present the chemistry verb
+   * runs and returns its value; when it is absent this throws {@link NotReady}
+   * carrying the wizard name/prompt to arm (the caller catches it).
    */
   function runAction(kind: string, params: Record<string, unknown>): unknown {
     const slots = editorState().slots;
@@ -401,7 +502,8 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
     switch (kind) {
       case 'grow': {
         need(['fragment']);
-        if (!ex.hasSelection('pk1')) return null; // would arm AttachWizard
+        if (!ex.hasSelection('pk1'))
+          notReady('AttachWizard', `Pick an atom to grow ${label(params, 'the fragment')} onto…`);
         selectSafe(ACTIVE_SELE, 'byobj pk1');
         ctx.call('editor.attach_fragment', [
           'pk1',
@@ -414,7 +516,8 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
       }
       case 'replace': {
         need(['symbol', 'geometry', 'valence']);
-        if (slots.length === 0) return null; // would arm ReplaceWizard
+        if (slots.length === 0)
+          notReady('ReplaceWizard', `Pick an atom to replace with ${label(params, 'the element')}…`);
         selectSafe(ACTIVE_SELE, `byobj ${slots[0]}`);
         ctx.call('replace', [
           String(params['symbol']),
@@ -428,7 +531,8 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
       }
       case 'attachAA': {
         need(['residue']);
-        if (slots.length !== 1) return null; // would arm AminoAcidWizard
+        if (slots.length !== 1)
+          notReady('AminoAcidWizard', `Pick one atom to attach ${String(params['residue'])}…`);
         ctx.call('editor.attach_amino_acid', [slots[0], String(params['residue'])], {
           ss: ssIndex + 1,
         });
@@ -444,7 +548,8 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
         }
         if (params['dblHelix'] !== undefined) dnaDblHelix = Boolean(params['dblHelix']);
         nucType = String(params['nucType']);
-        if (slots.length !== 1) return null; // would arm NucleicAcidWizard
+        if (slots.length !== 1)
+          notReady('NucleicAcidWizard', `Pick one atom to attach ${String(params['base'])}…`);
         ctx.call('attach_nuc_acid', [slots[0], String(params['base'])], {
           nuc_type: nucType,
           form: dnaForm,
@@ -459,17 +564,18 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
         return null;
       }
       case 'removeResn': {
-        if (slots.length === 1 && slots[0] === 'pk1') {
-          selectSafe('_builder_added', 'byres pk1');
-          ctx.call('remove', ['_builder_added']);
-          ex.delete('_builder_added');
-          clearPicks();
-        }
+        if (!(slots.length === 1 && slots[0] === 'pk1'))
+          notReady('RemoveWizard', 'Pick a single atom on the residue to remove…');
+        selectSafe('_builder_added', 'byres pk1');
+        ctx.call('remove', ['_builder_added']);
+        ex.delete('_builder_added');
+        clearPicks();
         return null;
       }
       case 'setCharge': {
         need(['charge']);
-        if (slots.length === 0) return null; // would arm ChargeWizard
+        if (slots.length === 0)
+          notReady('ChargeWizard', `Pick atoms to set charge ${label(params, '')}…`);
         const sel = slots.join(' or ');
         const charge = Math.trunc(Number(params['charge']));
         ctx.call('alter', [sel, `formal_charge=${charge}`]);
@@ -478,26 +584,28 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
         return null;
       }
       case 'fixH': {
-        if (slots.length === 0) return null; // would arm HydrogenWizard
+        if (slots.length === 0)
+          notReady('HydrogenWizard', 'Pick an atom on the molecule to fix hydrogens…');
         ctx.call('h_fill', [slots.join(' or ')]);
         clearPicks();
         return null;
       }
       case 'addH': {
-        if (slots.length === 0) return null; // would arm HydrogenWizard
+        if (slots.length === 0)
+          notReady('HydrogenWizard', 'Pick an atom on the molecule to add hydrogens…');
         ctx.call('h_add', [`bymol (${slots.join(' or ')})`]);
         clearPicks();
         return null;
       }
       case 'invert': {
         if (!(slots.length === 3 && slots[0] === 'pk1' && slots[1] === 'pk2' && slots[2] === 'pk3'))
-          return null; // would arm InvertWizard
+          notReady('InvertWizard', 'Pick pk1, then pk2 and pk3 to invert around pk1…');
         ctx.call('invert', ['pk1']);
         clearPicks();
         return null;
       }
       case 'removeAtom': {
-        if (slots.length === 0) return null; // would arm RemoveWizard
+        if (slots.length === 0) notReady('RemoveWizard', 'Pick atoms to remove…');
         // builder.py:1782-1801 removes the picked atoms, then re-adds the
         // hydrogens the removal freed on the SURVIVING heavy neighbours
         // (fix_chemistry + h_add on `((?pk…) and not hydro) extend 1`).
@@ -540,7 +648,8 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
         return null;
       }
       case 'createBond': {
-        if (!(slots.length === 2 && slots[0] === 'pk1' && slots[1] === 'pk2')) return null;
+        if (!(slots.length === 2 && slots[0] === 'pk1' && slots[1] === 'pk2'))
+          notReady('BondWizard', 'Pick pk1 and pk2 (two atoms) to bond…');
         // BondWizard.staticaction (builder.py:1180-1206): bond, then h_fill to
         // trim the hydrogens the new bond makes excess.
         ctx.call('bond', ['pk1', 'pk2']);
@@ -549,21 +658,24 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
         return null;
       }
       case 'deleteBond': {
-        if (!(slots.length === 2 && slots[0] === 'pk1' && slots[1] === 'pk2')) return null;
+        if (!(slots.length === 2 && slots[0] === 'pk1' && slots[1] === 'pk2'))
+          notReady('UnbondWizard', 'Pick the bond to delete…');
         ctx.call('unbond', ['pk1', 'pk2']);
         ctx.call('h_fill', []);
         clearPicks();
         return null;
       }
       case 'cycleBond': {
-        if (!(slots.length === 2 && slots[0] === 'pk1' && slots[1] === 'pk2')) return null;
+        if (!(slots.length === 2 && slots[0] === 'pk1' && slots[1] === 'pk2'))
+          notReady('ValenceWizard', 'Pick a bond to cycle its valence…');
         ctx.call('cycle_valence', []);
         clearPicks();
         return null;
       }
       case 'setOrder': {
         need(['order']);
-        if (!(slots.length === 2 && slots[0] === 'pk1' && slots[1] === 'pk2')) return null;
+        if (!(slots.length === 2 && slots[0] === 'pk1' && slots[1] === 'pk2'))
+          notReady('ValenceWizard', `Pick a bond to set as ${label(params, 'that order')}…`);
         ctx.call('unbond', ['pk1', 'pk2']);
         ctx.call('bond', ['pk1', 'pk2', params['order']]);
         ctx.call('h_fill', []);
@@ -607,10 +719,16 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
     si('suspend_undo') ? [...ex.getNames('objects')].sort() : [];
 
   /* -------------------------- wizard callbacks ------------------------- */
-  // No wizard state machine here, so these are inert (the panel never renders
-  // wizard rows because builder_state always reports `wizard: null`).
+  // The synthesized wizard's only panel row is "Cancel"; any click disarms the
+  // pending tool (there is no multi-row wizard panel in this engine).
   ctx.command('builder_wizard_click', (): Json => {
-    throw new Error('no wizard is active');
+    armed = null;
+    clearPicks();
+    ctx.publish();
+    const state = builderState() as unknown as Record<string, unknown>;
+    state.error = null;
+    state.clicked = 'Cancel';
+    return state as Json;
   });
   ctx.command('builder_select', (args, kwargs): Json => {
     const selection = ctx.str(args[0] ?? kwargs['selection'], '');
@@ -644,8 +762,9 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
   });
 
   /* ------------------------------ dismiss ------------------------------ */
-  // The universal Done: drop the builder's scratch selections and picks.
+  // The universal Done: disarm any pending tool and drop the scratch picks.
   ctx.command('builder_dismiss', (): Json => {
+    armed = null;
     clearPicks();
     ctx.publish();
     return builderState() as unknown as Json;
