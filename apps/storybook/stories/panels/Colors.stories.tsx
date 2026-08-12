@@ -11,10 +11,12 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ColorsPanel } from '@web/features/colors/ColorsPanel';
+import { withColorsData } from './colorsSession';
 
 const meta = {
   title: 'Panels/Colors',
   parameters: { layout: 'padded' },
+  decorators: [withColorsData],
 } satisfies Meta<typeof ColorsPanel>;
 
 export default meta;

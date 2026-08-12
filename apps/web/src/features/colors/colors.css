@@ -1019,3 +1019,58 @@
     color: #b08a4a;
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * Modern theme (shadcn) polish.
+ *
+ * Unlayered, so it outranks the `@layer legacy` defaults above; scoped to
+ * `[data-ui-theme='shadcn']`, so classic stays pixel-exact. Typography +
+ * token colours only — no metrics, no renamed classes.
+ *
+ * The colour window's chrome (the window title, the group eyebrows, the swatch
+ * captions, the section heads) shipped in the mono face PyMOL uses everywhere;
+ * in the modern look those are UI chrome, not data, so they move to the sans UI
+ * face. Mono is kept for the genuinely tabular/identifier surfaces — the band
+ * grid, the spectrum palette names, hex codes, the console.
+ * ------------------------------------------------------------------ */
+
+:root[data-ui-theme='shadcn'] .colors__title,
+:root[data-ui-theme='shadcn'] .cmenu__group-name,
+:root[data-ui-theme='shadcn'] .cmenu__sub-head,
+:root[data-ui-theme='shadcn'] .cedit__specials-head,
+:root[data-ui-theme='shadcn'] .cramp__head,
+:root[data-ui-theme='shadcn'] .cspace__head {
+  font-family: var(--pm-font-ui);
+}
+
+/* Section eyebrows: a touch of weight so the sans caps still read as headers. */
+:root[data-ui-theme='shadcn'] .cmenu__group-name,
+:root[data-ui-theme='shadcn'] .cmenu__sub-head,
+:root[data-ui-theme='shadcn'] .cedit__specials-head,
+:root[data-ui-theme='shadcn'] .cramp__head,
+:root[data-ui-theme='shadcn'] .cspace__head {
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: var(--pm-text-dim);
+}
+
+/* Swatch captions: the sans face reads cleaner than mono at this size and no
+   longer crowds the longer names ('yelloworange', 'brightorange'). */
+:root[data-ui-theme='shadcn'] .cmenu__tile-label {
+  font-family: var(--pm-font-ui);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* The muted helper/notes hardcode a slate (`#5b6167`) that dips below readable
+   contrast on the light stage — ride the theme's dim token in both appearances
+   so they stay legible without shouting. */
+:root[data-ui-theme='shadcn'] .colors__sele-note,
+:root[data-ui-theme='shadcn'] .cmenu__note,
+:root[data-ui-theme='shadcn'] .cspec__note,
+:root[data-ui-theme='shadcn'] .cramp__empty,
+:root[data-ui-theme='shadcn'] .cramp__note,
+:root[data-ui-theme='shadcn'] .cspace__note {
+  color: var(--pm-text-dim);
+}

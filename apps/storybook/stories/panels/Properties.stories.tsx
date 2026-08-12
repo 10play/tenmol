@@ -12,6 +12,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PropertiesPanel } from '@web/features/properties/PropertiesPanel';
 import type { DialogWindowSpec } from '@web/features/dialogs/store';
+import { withPropertiesData } from './propertiesSession';
 
 const SPEC: DialogWindowSpec = {
   key: 'properties',
@@ -29,12 +30,17 @@ const SPEC: DialogWindowSpec = {
 const meta = {
   title: 'Panels/Properties',
   parameters: { layout: 'padded' },
+  decorators: [withPropertiesData],
 } satisfies Meta<typeof PropertiesPanel>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The Properties inspector window on an idle session. */
+/**
+ * The Properties inspector reading a picked atom in ubiquitin: the object combo,
+ * the state/index spinners and every branch of the tree filled from the seeded
+ * session (see {@link withPropertiesData}).
+ */
 export const Default: Story = {
   render: () => <PropertiesPanel spec={SPEC} />,
 };

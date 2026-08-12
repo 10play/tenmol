@@ -593,3 +593,184 @@
     flex: 2;
   }
 }
+
+/* =========================================================================== *
+ * MODERN THEME ONLY — the File dialog surfaces (parity area 6).
+ *
+ * Scoped under :root[data-ui-theme='shadcn'] so classic is byte-for-byte
+ * untouched. These are VALUE changes on the existing legacy BEM classes (no
+ * class is renamed): sans typography for chrome, rounded controls, roomier
+ * spacing, and the indigo accent for primaries — the PDV look. Monospace is
+ * kept only where it is genuinely code (the command preview, server paths).
+ * =========================================================================== */
+
+/* --- the modal card ------------------------------------------------------- */
+:root[data-ui-theme='shadcn'] .fdlg {
+  border-radius: var(--sh-r-panel);
+  box-shadow: var(--sh-pop);
+}
+:root[data-ui-theme='shadcn'] .fdlg__title {
+  padding: 11px 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+:root[data-ui-theme='shadcn'] .fdlg__body {
+  padding: 14px 16px;
+}
+:root[data-ui-theme='shadcn'] .fdlg__foot {
+  gap: 8px;
+  padding: 11px 14px;
+}
+
+/* --- inputs + selects: sans, rounded, roomy, consistent fill -------------- */
+:root[data-ui-theme='shadcn'] .fdlg input[type='text'],
+:root[data-ui-theme='shadcn'] .fdlg input[type='number'],
+:root[data-ui-theme='shadcn'] .fdlg input:not([type]),
+:root[data-ui-theme='shadcn'] .fdlg select,
+:root[data-ui-theme='shadcn'] .fdlg__input,
+:root[data-ui-theme='shadcn'] .fdlg__select {
+  font-family: var(--pm-font-ui);
+  font-size: var(--pm-fs);
+  padding: 5px 9px;
+  border-radius: var(--sh-r-sm);
+  background: var(--sh-btn-fill);
+  border: 1px solid var(--sh-btn-border);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .fdlg input::placeholder {
+  color: var(--pm-text-dim);
+}
+
+/* --- buttons: rounded quiet fill; primary = solid accent ------------------ */
+:root[data-ui-theme='shadcn'] .fdlg__btn {
+  padding: 5px 13px;
+  border-radius: var(--sh-r-btn);
+  background: var(--sh-btn-fill);
+  border: 1px solid var(--sh-btn-border);
+  color: var(--pm-text);
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+:root[data-ui-theme='shadcn'] .fdlg__btn:hover:not(:disabled) {
+  background: var(--sh-btn-hover);
+  border-color: var(--sh-btn-border-strong);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .fdlg__btn--go {
+  background: var(--pm-accent);
+  border-color: transparent;
+  color: var(--sh-accent-text);
+  box-shadow: var(--sh-shadow-cta);
+}
+:root[data-ui-theme='shadcn'] .fdlg__btn--go:hover:not(:disabled) {
+  background: var(--sh-accent-hover);
+  border-color: transparent;
+  color: var(--sh-accent-text);
+}
+:root[data-ui-theme='shadcn'] .fdlg__btn:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+/* --- fields + rows: a touch more air -------------------------------------- */
+:root[data-ui-theme='shadcn'] .fdlg__field,
+:root[data-ui-theme='shadcn'] .fdlg__row {
+  margin: 7px 0;
+}
+
+/* --- fieldset group -> soft rounded card ---------------------------------- */
+:root[data-ui-theme='shadcn'] .fdlg__group {
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-sm);
+  padding: 8px 12px 10px;
+  margin: 12px 0;
+}
+:root[data-ui-theme='shadcn'] .fdlg__group legend {
+  color: var(--pm-text-dim);
+  letter-spacing: 0.09em;
+}
+
+/* --- command preview -> rounded frame (mono STAYS: it is a command) -------- */
+:root[data-ui-theme='shadcn'] .fdlg__preview {
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-sm);
+  overflow: hidden;
+}
+
+/* --- links -> accent, underline only on hover ----------------------------- */
+:root[data-ui-theme='shadcn'] .fdlg__link {
+  color: var(--pm-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+:root[data-ui-theme='shadcn'] .fdlg__link:hover {
+  text-decoration: underline;
+}
+
+/* --- recent / object lists -> sans rows, rounded soft-accent hover -------- */
+:root[data-ui-theme='shadcn'] .fdlg__list {
+  gap: 2px;
+  padding: 2px;
+}
+:root[data-ui-theme='shadcn'] .fdlg__listrow {
+  font-family: var(--pm-font-ui);
+  font-size: var(--pm-fs);
+  padding: 6px 10px;
+  border-radius: var(--sh-r-sm);
+  direction: ltr;
+  text-align: left;
+}
+:root[data-ui-theme='shadcn'] .fdlg__listrow:hover {
+  background: var(--sh-accent-soft);
+  color: var(--pm-accent);
+}
+
+/* --- tabs -> quiet pills -------------------------------------------------- */
+:root[data-ui-theme='shadcn'] .fdlg__tabs {
+  gap: 4px;
+  border-bottom: 1px solid var(--pm-line);
+  padding-bottom: 6px;
+}
+:root[data-ui-theme='shadcn'] .fdlg__tabs button {
+  border-radius: var(--sh-r-sm);
+  border: 1px solid transparent;
+  padding: 4px 12px;
+}
+:root[data-ui-theme='shadcn'] .fdlg__tabs button:hover {
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .fdlg__tabs button.is-on {
+  background: var(--sh-accent-soft);
+  border-color: transparent;
+  color: var(--pm-accent);
+}
+
+/* --- checkboxes / radios: accent tint + a little spacing ------------------ */
+:root[data-ui-theme='shadcn'] .fdlg__check,
+:root[data-ui-theme='shadcn'] .fdlg__radio {
+  margin: 6px 0;
+}
+:root[data-ui-theme='shadcn'] .fdlg input[type='checkbox'],
+:root[data-ui-theme='shadcn'] .fdlg input[type='radio'] {
+  accent-color: var(--pm-accent);
+}
+
+/* --- the launcher strip's File dropdown: sans keys, rounded rows ---------- */
+:root[data-ui-theme='shadcn'] .files__menu {
+  padding: 5px;
+  box-shadow: var(--sh-pop);
+}
+:root[data-ui-theme='shadcn'] .files__menuitem {
+  border-radius: var(--sh-r-sm);
+  padding: 5px 10px;
+}
+:root[data-ui-theme='shadcn'] .files__menuitem:hover:not(:disabled) {
+  background: var(--sh-accent-soft);
+  color: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] .files__menukey {
+  font-family: var(--pm-font-ui);
+  color: var(--pm-text-dim);
+}

@@ -12,6 +12,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { VolumePanel } from '@web/features/volume/VolumePanel';
 import type { DialogWindowSpec } from '@web/features/dialogs/store';
+import { withVolumeData } from './volumeSession';
 
 const SPEC: DialogWindowSpec = {
   key: 'volume:map',
@@ -29,12 +30,17 @@ const SPEC: DialogWindowSpec = {
 const meta = {
   title: 'Panels/Volume',
   parameters: { layout: 'padded' },
+  decorators: [withVolumeData],
 } satisfies Meta<typeof VolumePanel>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The volume transfer-function editor on an idle session. */
+/**
+ * The volume transfer-function editor over a seeded electron-density map: a
+ * six-stop colour ramp, the captured 64-bin histogram, and a live named-ramp
+ * list.
+ */
 export const Default: Story = {
   render: () => <VolumePanel spec={SPEC} />,
 };

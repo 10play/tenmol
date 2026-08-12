@@ -157,3 +157,148 @@
     border-top: 1px solid #e0cfa0;
   }
 }
+
+/* ===================================================================== *
+ * Modern theme (shadcn) ONLY — scoped so classic is never touched.      *
+ * The editor becomes a pair of soft rounded cards (a toolbar bar over a *
+ * code surface) that live on the app's gradient stage in either         *
+ * appearance, with legible token colours on the dark surface.           *
+ * ===================================================================== */
+:root[data-ui-theme='shadcn'] .txted {
+  gap: 10px;
+  font-family: var(--pm-font-ui);
+}
+
+/* Toolbar — one rounded bar instead of a bare row of controls. */
+:root[data-ui-theme='shadcn'] .txted__menu {
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r);
+}
+
+:root[data-ui-theme='shadcn'] .txted__menu-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--pm-text-dim);
+}
+
+:root[data-ui-theme='shadcn'] .txted__menu kbd {
+  font-family: var(--pm-font-mono);
+  font-size: 9px;
+  line-height: 1.4;
+  padding: 1px 4px;
+  border: 1px solid var(--pm-line);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--pm-text) 7%, transparent);
+  color: var(--pm-text-dim);
+  opacity: 1;
+}
+
+:root[data-ui-theme='shadcn'] .txted__sep {
+  width: 1px;
+  height: 18px;
+  background: var(--pm-line);
+}
+
+:root[data-ui-theme='shadcn'] .txted__radio {
+  gap: 5px;
+  font-size: 12px;
+  color: var(--pm-text);
+}
+
+:root[data-ui-theme='shadcn'] .txted__radio input[type='radio'] {
+  accent-color: var(--pm-accent);
+}
+
+:root[data-ui-theme='shadcn'] .txted__radio input[type='number'] {
+  width: 52px;
+}
+
+/* Status line — a touch more air; the path stays mono (it is a path). */
+:root[data-ui-theme='shadcn'] .txted__bar {
+  gap: 8px;
+  padding: 0 2px;
+  font-size: 11.5px;
+}
+
+:root[data-ui-theme='shadcn'] .txted__path {
+  font-family: var(--pm-font-mono);
+  color: var(--pm-text-dim);
+}
+
+:root[data-ui-theme='shadcn'] .txted__dirty {
+  color: var(--pm-accent);
+  font-weight: 600;
+}
+
+:root[data-ui-theme='shadcn'] .txted__access {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--pm-line);
+  background: color-mix(in srgb, var(--pm-text) 6%, transparent);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  opacity: 1;
+}
+
+/* The edit surface — a rounded code card that follows the appearance. */
+:root[data-ui-theme='shadcn'] .txted__editor {
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r);
+  background: var(--pm-panel-alt);
+  font-family: var(--pm-font-mono);
+}
+
+:root[data-ui-theme='shadcn'] .txted__pre,
+:root[data-ui-theme='shadcn'] .txted__area {
+  padding: 12px 14px;
+}
+
+:root[data-ui-theme='shadcn'] .txted__pre {
+  color: var(--pm-text);
+}
+
+:root[data-ui-theme='shadcn'] .txted__area {
+  caret-color: var(--pm-accent);
+}
+
+:root[data-ui-theme='shadcn'] .txted__area::selection {
+  background: var(--sh-accent-soft);
+}
+
+/* The "restart to apply" / chooser notes become inset cards, not a strip. */
+:root[data-ui-theme='shadcn'] .txted__note {
+  padding: 8px 12px;
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-sm);
+  font-size: 11.5px;
+}
+
+/* Token colours for the DARK surface — the legacy set is tuned for white and
+   goes invisible on #171b24. Light modern keeps the legacy colours (they read
+   fine on the pale surface), so this is gated to the non-light appearance. */
+:root[data-ui-theme='shadcn']:not([data-appearance='light']) .tok--comment {
+  color: #7f8aa3;
+  font-style: italic;
+}
+
+:root[data-ui-theme='shadcn']:not([data-appearance='light']) .tok--keyword {
+  color: #b8aaff;
+}
+
+:root[data-ui-theme='shadcn']:not([data-appearance='light']) .tok--argument {
+  color: #83cf92;
+}
+
+:root[data-ui-theme='shadcn']:not([data-appearance='light']) .tok--string {
+  color: #e8a6d4;
+}
+
+:root[data-ui-theme='shadcn']:not([data-appearance='light']) .tok--skipped {
+  color: #6b7488;
+}

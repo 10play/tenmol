@@ -9,15 +9,18 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MouseConfigPanel } from '@web/features/mouse/MouseConfigPanel';
 
+import { withMouseMode } from './mouseSession';
+
 const meta = {
   title: 'Panels/Mouse Config',
   parameters: { layout: 'padded' },
+  decorators: [withMouseMode],
 } satisfies Meta<typeof MouseConfigPanel>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The 80-slot mouse-action matrix. */
+/** The 80-slot mouse-action matrix, seeded with a live 3-Button Viewing mode. */
 export const Default: Story = {
   render: () => <MouseConfigPanel />,
 };

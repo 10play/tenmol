@@ -14,6 +14,8 @@ import { useEffect } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BuilderPanel, OPEN_EVENT } from '@web/features/builder/BuilderPanel';
 
+import { withBuilderData } from './builderSession';
+
 const meta = {
   title: 'Panels/Builder',
   parameters: { layout: 'padded' },
@@ -24,6 +26,7 @@ type Story = StoryObj<typeof meta>;
 
 /** The collapsed Builder tab, as it first mounts in the shell's overlay. */
 export const Default: Story = {
+  decorators: [withBuilderData],
   render: () => <BuilderPanel />,
 };
 
@@ -33,6 +36,7 @@ export const Default: Story = {
  * three-tab panel and action rows instead of the bare tab.
  */
 export const Open: Story = {
+  decorators: [withBuilderData],
   render: () => {
     useEffect(() => {
       window.dispatchEvent(new Event(OPEN_EVENT));

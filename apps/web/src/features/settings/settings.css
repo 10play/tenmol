@@ -482,3 +482,147 @@
     vertical-align: middle;
   }
 }
+
+/* ================================================================== *
+ * Modern theme (shadcn) — settings overlay polish.
+ *
+ * Unlayered and scoped under `:root[data-ui-theme='shadcn']`, so these win
+ * over the `@layer legacy` rules above (and over the Button primitive's
+ * `@layer utilities`) while CLASSIC is left completely untouched. Only values
+ * and typography change; no BEM class is renamed.
+ * ================================================================== */
+
+/* The window as a floating, rounded, frosted card. */
+:root[data-ui-theme='shadcn'] .setwin {
+  border-radius: var(--sh-r-panel);
+  overflow: hidden;
+  box-shadow: var(--sh-pop);
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+}
+
+:root[data-ui-theme='shadcn'] .setwin__title {
+  height: 30px;
+  padding: 0 6px 0 12px;
+}
+
+/* --- the setting menu ---------------------------------------------------- */
+
+:root[data-ui-theme='shadcn'] .setmenu__tabs {
+  gap: 4px;
+  padding: 8px 10px;
+}
+
+:root[data-ui-theme='shadcn'] .setmenu__tab {
+  padding: 3px 10px;
+  font-weight: 500;
+}
+
+:root[data-ui-theme='shadcn'] .setmenu__list[data-depth='0'] {
+  padding: 6px 6px 8px;
+}
+
+:root[data-ui-theme='shadcn'] .setmenu__row {
+  border-radius: var(--sh-r-sm);
+  padding: 3px 8px;
+}
+
+/*
+ * Submenu headers render through the Button primitive, which in the modern
+ * theme is a CENTRED bordered pill — wrong for a menu row. Flatten it back to
+ * a left-aligned, full-width row so it reads like the check/command rows
+ * beside it.
+ */
+:root[data-ui-theme='shadcn'] .setmenu__row--menu {
+  justify-content: flex-start;
+  width: 100%;
+  height: auto;
+  padding: 3px 8px;
+  border-color: transparent;
+  border-radius: var(--sh-r-sm);
+  background: transparent;
+  color: var(--pm-text);
+  font-weight: 500;
+}
+
+:root[data-ui-theme='shadcn'] .setmenu__row--menu:hover {
+  border-color: transparent;
+  background: var(--pm-panel-alt);
+  color: var(--pm-text-bright);
+}
+
+/* The `get_menudata` provenance chip. */
+:root[data-ui-theme='shadcn'] .setmenu__source {
+  font-family: var(--pm-font-mono);
+  font-size: 9.5px;
+  opacity: 0.75;
+}
+
+/* --- the advanced table -------------------------------------------------- *
+ * A data grid, not a code dump: sans for names / levels / defaults, and mono
+ * kept ONLY on the numeric value inputs so columns still line up.            */
+
+:root[data-ui-theme='shadcn'] .setadv {
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+}
+
+:root[data-ui-theme='shadcn'] .setadv__bar {
+  gap: 12px;
+  padding: 8px 12px;
+}
+
+:root[data-ui-theme='shadcn'] .setadv__head {
+  padding: 0 12px;
+}
+
+:root[data-ui-theme='shadcn'] .setadv__row {
+  padding: 0 12px;
+  border-bottom-color: color-mix(in srgb, var(--pm-line) 55%, transparent);
+}
+
+:root[data-ui-theme='shadcn'] .setadv__row:hover {
+  background: color-mix(in srgb, var(--pm-accent) 7%, transparent);
+}
+
+:root[data-ui-theme='shadcn'] .setadv__c-value input[type='text'] {
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+}
+
+/* Reset (⟲) — a quiet ghost glyph that lights up on hover. */
+:root[data-ui-theme='shadcn'] .setadv__c-reset button {
+  border-radius: var(--sh-r-sm);
+  border: 1px solid transparent;
+}
+
+:root[data-ui-theme='shadcn'] .setadv__c-reset button:hover:not(:disabled) {
+  border-color: var(--sh-btn-border);
+  background: var(--sh-btn-hover);
+  color: var(--pm-text-bright);
+}
+
+/* Reinitialize strip + footer: sans, and never split a button label mid-word. */
+:root[data-ui-theme='shadcn'] .setadv__reinit,
+:root[data-ui-theme='shadcn'] .setadv__foot,
+:root[data-ui-theme='shadcn'] .setadv__overrides {
+  font-family: var(--pm-font-ui);
+}
+
+:root[data-ui-theme='shadcn'] .setadv__reinit {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  padding: 8px 12px;
+}
+
+:root[data-ui-theme='shadcn'] .setadv__reinit button {
+  white-space: nowrap;
+}
+
+/* --- lighting ------------------------------------------------------------ *
+ * The row labels are setting names, not tabular numbers, so they take the sans
+ * UI face; the value boxes stay mono so digits align.                        */
+
+:root[data-ui-theme='shadcn'] .lighting__row label {
+  font-family: var(--pm-font-ui);
+}

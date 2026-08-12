@@ -140,3 +140,106 @@
     font: inherit;
   }
 }
+
+/* ==================================================================== *
+ * MODERN THEME (shadcn) — the 80-slot mouse-action matrix.
+ *
+ * Scoped entirely under :root[data-ui-theme='shadcn'] and left OUTSIDE the
+ * @layer legacy above, so these rules win by being unlayered while classic
+ * (the default theme) is untouched. Only VALUES + added scoped rules; no BEM
+ * name is renamed. Kills the inherited monospace on the header, the note, the
+ * L/M/R + modifier headers and the dropdown values (all prose -> the sans
+ * --pm-font-ui), and turns the cramped hairline <select> grid into an even
+ * lattice of soft rounded controls with the PDV accent on focus.
+ * ==================================================================== */
+
+:root[data-ui-theme='shadcn'] .mousecfg {
+  gap: 12px;
+  font-family: var(--pm-font-ui);
+  color: var(--pm-text);
+}
+
+/* -- the header line + honesty note ------------------------------------ */
+:root[data-ui-theme='shadcn'] .mousecfg__head {
+  gap: 6px;
+}
+/* The header sentence is a compact tracked title; the code span inside it
+   keeps mono (it is the literal `three_button_viewing` key). */
+:root[data-ui-theme='shadcn'] .mousecfg__head > span:first-child {
+  font-family: var(--pm-font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--pm-text-bright);
+  text-transform: none;
+}
+/* The note is prose, not a section label: normal case, comfortable leading. */
+:root[data-ui-theme='shadcn'] .mousecfg__note {
+  font-family: var(--pm-font-ui);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.5;
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .mousecfg__note code {
+  font-family: var(--pm-font-mono);
+  font-size: 10.5px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: var(--sh-btn-fill);
+}
+
+/* -- the matrix ------------------------------------------------------- */
+:root[data-ui-theme='shadcn'] .mousecfg__table {
+  font-family: var(--pm-font-ui);
+  border-spacing: 6px;
+  border-collapse: separate;
+}
+:root[data-ui-theme='shadcn'] .mousecfg__table td {
+  padding: 0;
+}
+/* Column (button) + row (modifier) headers: small sans tracked labels. */
+:root[data-ui-theme='shadcn'] .mousecfg__table th {
+  padding: 0 2px;
+  font-family: var(--pm-font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .mousecfg__table th[scope='row'] {
+  padding-right: 8px;
+  text-align: right;
+}
+
+/* -- each cell dropdown: even, rounded, sans, accent focus ------------- */
+:root[data-ui-theme='shadcn'] .mousecfg__select {
+  width: 118px;
+  padding: 6px 8px;
+  font-family: var(--pm-font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-btn);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text);
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+:root[data-ui-theme='shadcn'] .mousecfg__select:hover:not(:disabled) {
+  background: var(--sh-btn-hover);
+  border-color: var(--sh-btn-border-strong);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .mousecfg__select:focus-visible {
+  outline: none;
+  border-color: var(--pm-accent);
+  box-shadow: 0 0 0 3px var(--sh-focus-ring);
+}
+:root[data-ui-theme='shadcn'] .mousecfg__select:disabled {
+  opacity: 0.6;
+}

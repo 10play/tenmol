@@ -123,3 +123,60 @@
     z-index: 3;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Modern theme only. The ramp arithmetic and the canvas painter are shared with
+ * classic (the axis lines and tick text are drawn onto the canvas at fixed
+ * light-surface colours), so the plot stays a LIGHT chart surface in both
+ * appearances — but here it is dressed as a deliberate, rounded, inset card
+ * instead of the hard white rectangle classic draws. Chrome (header, status,
+ * footer) picks up the sans UI font and the panel's generous spacing.
+ * ------------------------------------------------------------------------- */
+:root[data-ui-theme='shadcn'] .volpanel {
+  gap: 10px;
+  font-family: var(--pm-font-ui);
+}
+
+:root[data-ui-theme='shadcn'] .volpanel__head {
+  gap: 10px;
+  font-size: 11px;
+}
+
+/* The tiny meta chips — preset source, watch state, stop count — read as one
+   quiet uppercase key/value strip rather than three different grey scraps. */
+:root[data-ui-theme='shadcn'] .volpanel__presetsrc,
+:root[data-ui-theme='shadcn'] .volpanel__watch,
+:root[data-ui-theme='shadcn'] .volpanel__count {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 1;
+  color: var(--pm-text-dim);
+}
+
+:root[data-ui-theme='shadcn'] .volpanel__watch[data-volume-watch='live'] {
+  color: var(--pm-accent);
+}
+
+:root[data-ui-theme='shadcn'] .volpanel__status {
+  font-size: 10.5px;
+  color: var(--pm-text-dim);
+}
+
+:root[data-ui-theme='shadcn'] .volcanvas {
+  border-radius: 10px;
+  border: 1px solid var(--sh-line-strong);
+  background: #ffffff;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+:root[data-ui-theme='shadcn'] .volpanel__buttons {
+  gap: 8px;
+  font-family: var(--pm-font-ui);
+}
+
+:root[data-ui-theme='shadcn'] .volpanel__check {
+  gap: 6px;
+  font-size: 12px;
+  color: var(--pm-text-dim);
+}

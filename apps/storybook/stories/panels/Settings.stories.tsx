@@ -12,12 +12,12 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { SettingsPanel } from '@web/features/settings/SettingsPanel';
-import { withSettingsData } from './settingsSession';
+import { withSettingsCatalogue } from './settingsSession';
 
 const meta = {
   title: 'Panels/Settings',
   parameters: { layout: 'padded' },
-  decorators: [withSettingsData],
+  decorators: [withSettingsCatalogue],
 } satisfies Meta<typeof SettingsPanel>;
 
 export default meta;
@@ -47,6 +47,24 @@ function OpenWindow({ label, children }: { label: string; children: ReactNode })
 export const SettingMenuOpen: Story = {
   render: () => (
     <OpenWindow label="Setting">
+      <SettingsPanel />
+    </OpenWindow>
+  ),
+};
+
+/** The Advanced Settings table (`Edit All…`) over the seeded 779-row catalogue. */
+export const EditAllOpen: Story = {
+  render: () => (
+    <OpenWindow label="Edit All">
+      <SettingsPanel />
+    </OpenWindow>
+  ),
+};
+
+/** The Lighting window opened over the launcher. */
+export const LightingOpen: Story = {
+  render: () => (
+    <OpenWindow label="Lighting">
       <SettingsPanel />
     </OpenWindow>
   ),

@@ -399,6 +399,12 @@ export function formatResult(metric: Metric, value: unknown): string {
     // the honest report; printing "null" would look like a failure.
     return 'done';
   }
+  if (metric.kind === 'table') {
+    // The per-residue table renders itself from `row.table` (see SasaTable); the
+    // scalar cell is left empty rather than stringifying the object to the
+    // literal "[object Object]" that `String(value)` would otherwise produce.
+    return '';
+  }
   if (metric.kind === 'angles') {
     // `util.phipsi` returns `(phi, psi)`, either of which is None when the
     // residue has no preceding or following neighbour — a chain terminus.

@@ -230,3 +230,106 @@
     pointer-events: none;
   }
 }
+
+/* ====================================================================
+ * MODERN THEME ("shadcn") — the Seeker strip as a frosted viewport overlay.
+ *
+ * Scoped entirely under :root[data-ui-theme='shadcn'] and left OUTSIDE the
+ * @layer legacy block above, so an unlayered rule wins over the layered
+ * defaults without touching classic. VALUES + added rules only; no BEM name is
+ * renamed. The residue GRID stays monospace (it is a tabular sequence and the
+ * cell geometry is pinned to CHAR_WIDTH = 8px) — only the CHROME (header,
+ * labels, scrollbar) moves to the sans --pm-font-ui and gets the indigo accent.
+ *
+ * WHY THE STRIP STAYS DARK IN BOTH APPEARANCES.  This block draws OVER the GL
+ * viewport, and the molecular stage is dark in both light and dark modern
+ * (`--pm-bg-viewport: #05070a` under both roots). So the overlay carries its
+ * own fixed dark-frost surface and light-on-dark chrome text — using the
+ * theme's `--pm-text-*` (which flip dark in light mode) would print the header
+ * invisibly on the dark strip. The indigo accent (`--pm-accent`) reads on the
+ * dark surface in both, so it stays a token. The per-residue tints come from
+ * the engine's colour indices and already read as light glyphs on this dark
+ * band — the reason the whole strip is kept dark rather than frosted white.
+ * ==================================================================== */
+
+/* -- the strip: a dark frosted, accent-edged band over the scene ------- */
+:root[data-ui-theme='shadcn'] .seqview {
+  background: rgb(12 15 22 / 72%);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
+  border-bottom: 1px solid var(--sh-accent-line);
+  box-shadow: 0 10px 30px -22px rgb(0 0 0 / 65%);
+}
+:root[data-ui-theme='shadcn'] .seqview--bottom {
+  border-top: 1px solid var(--sh-accent-line);
+  border-bottom: none;
+}
+:root[data-ui-theme='shadcn'] .seqview--overlay {
+  background: rgb(8 10 16 / 62%);
+}
+
+/* -- head: tiny UPPERCASE tracked sans section chrome ------------------ */
+:root[data-ui-theme='shadcn'] .seqview__head {
+  height: auto;
+  padding: 8px 14px;
+  gap: 14px;
+  background: transparent;
+  border-bottom: 1px solid rgb(148 163 184 / 16%);
+  font-family: var(--pm-font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgb(203 213 225 / 68%);
+}
+:root[data-ui-theme='shadcn'] .seqview__alignment {
+  color: var(--pm-accent);
+}
+
+/* -- rows: breathing room; the grid itself stays monospace ------------- */
+:root[data-ui-theme='shadcn'] .seqview__rows {
+  padding: 8px 14px 6px;
+}
+:root[data-ui-theme='shadcn'] .seqrow {
+  padding: 1px 0;
+}
+
+/* Chain breadcrumb reads as the object's accent tag; numbers stay a dim,
+   tabular monospace so they line up under the residues they mark. */
+:root[data-ui-theme='shadcn'] .seqrow__crumb {
+  color: var(--pm-accent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+:root[data-ui-theme='shadcn'] .seqrow__num {
+  color: rgb(148 163 184 / 78%);
+}
+:root[data-ui-theme='shadcn'] .seqrow__name {
+  font-family: var(--pm-font-ui);
+  color: rgb(148 163 184 / 78%);
+}
+
+/* Hover lifts an idle cell with the accent wash; a selected cell keeps its
+   inline inverted-video tint (inline style wins), only softened at the corners. */
+:root[data-ui-theme='shadcn'] .seqcell:not(.is-spacer):not(.is-locked):hover {
+  background: var(--sh-accent-soft);
+  border-radius: 3px;
+}
+:root[data-ui-theme='shadcn'] .seqcell.is-selected {
+  border-radius: 3px;
+}
+
+/* -- scrollbar / selection mini-map: indigo pill thumb, accent ticks --- */
+:root[data-ui-theme='shadcn'] .seqview__scroll {
+  background: transparent;
+  border-top: 1px solid rgb(148 163 184 / 16%);
+}
+:root[data-ui-theme='shadcn'] .seqview__thumb {
+  background: var(--sh-accent-soft);
+  border: 1px solid var(--sh-accent-line);
+  border-radius: 999px;
+}
+:root[data-ui-theme='shadcn'] .seqview__tick {
+  background: var(--pm-accent);
+  border-radius: 2px;
+}
