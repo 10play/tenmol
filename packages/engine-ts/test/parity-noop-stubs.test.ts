@@ -85,7 +85,7 @@ describe('parity: silent no-op verbs with observable effects', () => {
     expect(await b.call('count_atoms', ['pep and resn GLY and name CA'])).toBe(1);
   });
 
-  it.fails('fnab: builds a nucleic-acid object from a sequence', async () => {
+  it('fnab: builds a nucleic-acid object from a sequence', async () => {
     const b = new LocalBackend();
     await b.connect();
     // PyMOL ref: editor.py `def fnab(input, name, mode='DNA', form='B',

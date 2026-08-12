@@ -22,11 +22,17 @@ Legend: ✅ implemented · 🟡 partial / approximate · ❌ not implemented.
 > gadgets); **data model** (bond orders, ANISOU + object matrix in `get_model`,
 > P 2 symmetry); and **util** (`sum_formal/partial_charges`,
 > `protein_assign_charges_and_radii` (Amber-99), `b2vdw`, `ligand_zoom`,
-> `interchain_distances`, `get_sasa_relative`). Command coverage rose 375→392/506
-> (see `docs/parity-dashboard.md`). Still deferred (pinned `it.fails`): the
-> nucleic-acid builders, the valence-chemistry edits (protonate/replace/
-> cycle_valence/set_geometry/invert), `combine_fragment`, and byte-exact
-> `color_by_area`.
+> `interchain_distances`, `get_sasa_relative`). Command coverage rose 375→394/506
+> (see `docs/parity-dashboard.md`). A follow-up wave then landed the remaining
+> big subsystems — **valence-chemistry perception** (standard-residue bond orders
+> from `chempy/bonds.py`, so `protonate`/`replace`/`cycle_valence`/`set_geometry`/
+> `invert` fill the right hydrogens) and the **nucleic-acid builders**
+> (`fnab`/`attach_nuc_acid`/`extend_nuc_acid` + the double strand, from the
+> vendored monomer fragments), plus `combine_fragment` (fuse). **63 of 64
+> achievable targets are now real**; the only remaining `it.fails` is byte-exact
+> `color_by_area` (a realtime dot-SASA can't reproduce PyMOL's exact per-atom
+> areas to make the most-buried atom the byte-identical spectrum minimum — the
+> colouring itself is correct).
 
 ## Status (after waves 1–5)
 

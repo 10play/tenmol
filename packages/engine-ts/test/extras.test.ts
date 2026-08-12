@@ -72,7 +72,7 @@ describe('extras — residual command sweep', () => {
       // and the superposition family (intra_rms/alignto/extra_fit/cealign/
       // usalign/pair_fit) to cmd/align.ts (see parity-*.test.ts).
       'save', 'fetch', 'png', 'ray', 'draw', 'log', 'unpick',
-      'fnab', 'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
+      'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
       'alias', 'assign_stereo',
       'get_mtl_obj', 'get_povray', 'povray',
     ];

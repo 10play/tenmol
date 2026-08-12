@@ -22,6 +22,7 @@ import type { AtomInfo } from '../model/atom';
 import { defaultVisRep } from '../model/atom';
 import { canonicalElement } from '../model/element';
 import type { ObjectMolecule } from '../model/molecule';
+import { templateBondOrder } from '../model/residue-bonds';
 import type { RegistrarCtx } from './registrar';
 
 /* ------------------------------ arg helpers ------------------------------ */
@@ -136,6 +137,18 @@ export function setBondOrder(mol: ObjectMolecule, i: number, j: number, order: n
   let m = bondOrders.get(mol);
   if (!m) bondOrders.set(mol, (m = new Map()));
   m.set(bondKey(i, j), order);
+}
+
+/** Per-atom valence overrides (PyMOL `set_geometry`), keyed by stable atom id so
+ *  they survive the reindexing that H removal/addition performs. */
+const valenceOverrides = new WeakMap<ObjectMolecule, Map<number, number>>();
+function setValenceOverride(mol: ObjectMolecule, id: number, valence: number): void {
+  let m = valenceOverrides.get(mol);
+  if (!m) valenceOverrides.set(mol, (m = new Map()));
+  m.set(id, valence);
+}
+function valenceOverrideOf(mol: ObjectMolecule, id: number): number | undefined {
+  return valenceOverrides.get(mol)?.get(id);
 }
 function clearBondOrders(mol: ObjectMolecule): void {
   bondOrders.delete(mol);
@@ -337,18 +350,38 @@ export function removeAtoms(mol: ObjectMolecule, drop: Set<number>): void {
  * Build the hydrogen specs to fill the valence of each heavy atom in
  * `heavyIdxs`. `hCounter` seeds the H atom names (mutated so names stay unique).
  */
+/**
+ * Perceive intra-residue bond orders from the standard-residue templates so
+ * valence maths sees, e.g., the backbone carbonyl C=O as a double bond. Only
+ * fills orders that aren't already set (an explicit MOL/MOL2 order wins).
+ */
+function perceiveBondOrders(mol: ObjectMolecule): void {
+  for (const [i, j] of mol.bonds) {
+    const a = mol.atoms[i];
+    const b = mol.atoms[j];
+    if (!a || !b) continue;
+    // Only intra-residue bonds are templated; the peptide/backbone links across
+    // residues stay single.
+    if (a.resi !== b.resi || a.chain !== b.chain || a.segi !== b.segi) continue;
+    if (getBondOrder(mol, i, j) !== 1) continue; // already assigned
+    const order = templateBondOrder(a.resn, a.name, b.name);
+    if (order !== undefined && order !== 1) setBondOrder(mol, i, j, order);
+  }
+}
+
 function buildHydrogens(
   mol: ObjectMolecule,
   heavyIdxs: number[],
   hCounter: { n: number },
 ): NewAtom[] {
+  perceiveBondOrders(mol);
   const adj = buildAdjacency(mol);
   const specs: NewAtom[] = [];
   const nStates = Math.max(1, mol.states.length);
   for (const idx of heavyIdxs) {
     const parent = mol.atoms[idx];
     if (!parent) continue;
-    const val = valenceOf(parent.elem);
+    const val = valenceOverrideOf(mol, parent.id) ?? valenceOf(parent.elem);
     if (val <= 0) continue;
     const nMiss = val - bondOrderSum(mol, idx);
     if (nMiss <= 0) continue;
@@ -389,6 +422,34 @@ function buildHydrogens(
     }
   }
   return specs;
+}
+
+/**
+ * Drop the hydrogens bonded to each heavy atom in `heavyIdxs`, then re-add them
+ * at idealised positions to satisfy the (perceived / overridden) valence — the
+ * `h_fill` core shared by `h_fill`, `cycle_valence` and `replace`. Returns the
+ * number of hydrogens added.
+ */
+function refillHydrogens(mol: ObjectMolecule, heavyIdxs: number[]): number {
+  const targetIds = new Set<number>();
+  for (const i of heavyIdxs) {
+    const a = mol.atoms[i];
+    if (a && a.elem !== 'H' && a.elem !== 'D') targetIds.add(a.id);
+  }
+  const adj = buildAdjacency(mol);
+  const drop = new Set<number>();
+  for (const i of heavyIdxs) {
+    for (const nb of adj[i] ?? []) {
+      const e = mol.atoms[nb]!.elem;
+      if (e === 'H' || e === 'D') drop.add(nb);
+    }
+  }
+  removeAtoms(mol, drop);
+  const heavy: number[] = [];
+  for (let i = 0; i < mol.natom; i++) if (targetIds.has(mol.atoms[i]!.id)) heavy.push(i);
+  const specs = buildHydrogens(mol, heavy, { n: countHydrogens(mol) + 1 });
+  appendAtoms(mol, specs);
+  return specs.length;
 }
 
 /** Count of existing hydrogens in a molecule (seed for unique H names). */
@@ -599,6 +660,9 @@ export function registerBuilder(ctx: RegistrarCtx): void {
     if (!mol || !hasBond(mol, t1.index, t2.index)) return 0;
     const nextOrder = (getBondOrder(mol, t1.index, t2.index) % 3) + 1;
     setBondOrder(mol, t1.index, t2.index, nextOrder);
+    // h_fill (default): refill both atoms' hydrogens to satisfy the new order.
+    const hFill = Number(pick(args, kwargs, 2, 'h_fill') ?? 1) !== 0;
+    if (hFill) refillHydrogens(mol, [t1.index, t2.index]);
     ctx.publish();
     return nextOrder;
   });
@@ -617,8 +681,33 @@ export function registerBuilder(ctx: RegistrarCtx): void {
     const atom = mol.atoms[target.index]!;
     atom.elem = element;
     atom.name = name;
+    // An explicit valence overrides the element default for H-filling.
+    const valence = Number(pick(args, kwargs, 2, 'valence') ?? NaN);
+    if (Number.isFinite(valence) && valence > 0) setValenceOverride(mol, atom.id, valence);
+    // h_fill: strip the replaced atom's old hydrogens and refill to its valence.
+    refillHydrogens(mol, [target.index]);
     ctx.publish();
     return 1;
+  });
+
+  /* ------------------------------ set_geometry --------------------------- */
+  // set_geometry(selection, geometry, valence) — override the assumed valence of
+  // the selected atoms so a later h_add/h_fill fills to it (editing.py). We store
+  // the valence (falling back to the geometry code) as a per-atom override.
+  ctx.command('set_geometry', (args, kwargs): Json => {
+    const selection = sel(pick(args, kwargs, 0, 'selection'), 'pk1');
+    const valence = Number(
+      pick(args, kwargs, 2, 'valence') ?? pick(args, kwargs, 1, 'geometry') ?? NaN,
+    );
+    if (!Number.isFinite(valence) || valence <= 0) return 0;
+    let n = 0;
+    for (const ua of ex.atomsMatching(selection)) {
+      const mol = ex.molecule(ua.objName);
+      if (!mol) continue;
+      setValenceOverride(mol, ua.atom.id, valence);
+      n++;
+    }
+    return n;
   });
 
   /* --------------------------------- invert ------------------------------ */
@@ -638,13 +727,28 @@ export function registerBuilder(ctx: RegistrarCtx): void {
     );
     const p = ranked[0]!;
     const q = ranked[1]!;
+    const ci = target.index;
+    // Invert stereochemistry by swapping the two substituents' ANGULAR positions
+    // about the centre while preserving each bond length — a rigid reflection
+    // that never changes a bond length (editing.py invert holds atoms immobile).
     for (let s = 0; s < mol.states.length; s++) {
       const set = mol.states[s]!;
-      for (let c = 0; c < 3; c++) {
-        const tmp = set[p * 3 + c] ?? 0;
-        set[p * 3 + c] = set[q * 3 + c] ?? 0;
-        set[q * 3 + c] = tmp;
-      }
+      const cx = set[ci * 3] ?? 0, cy = set[ci * 3 + 1] ?? 0, cz = set[ci * 3 + 2] ?? 0;
+      const vp: [number, number, number] = [
+        (set[p * 3] ?? 0) - cx, (set[p * 3 + 1] ?? 0) - cy, (set[p * 3 + 2] ?? 0) - cz,
+      ];
+      const vq: [number, number, number] = [
+        (set[q * 3] ?? 0) - cx, (set[q * 3 + 1] ?? 0) - cy, (set[q * 3 + 2] ?? 0) - cz,
+      ];
+      const lp = Math.hypot(vp[0], vp[1], vp[2]) || 1;
+      const lq = Math.hypot(vq[0], vq[1], vq[2]) || 1;
+      // p takes q's direction at p's own length, and vice versa.
+      set[p * 3] = cx + (vq[0] / lq) * lp;
+      set[p * 3 + 1] = cy + (vq[1] / lq) * lp;
+      set[p * 3 + 2] = cz + (vq[2] / lq) * lp;
+      set[q * 3] = cx + (vp[0] / lp) * lq;
+      set[q * 3 + 1] = cy + (vp[1] / lp) * lq;
+      set[q * 3 + 2] = cz + (vp[2] / lp) * lq;
     }
     ctx.publish();
     return null;
