@@ -293,3 +293,243 @@
     font-size: 11px;
   }
 }
+
+/* =====================================================================
+ * Modern theme (shadcn) ONLY — scoped so classic is never touched.
+ *
+ * The area-10 dialog family — the floating window chrome, the launcher
+ * strip, the Advanced Settings table and the three small modals — is
+ * re-dressed as one PDV system: frosted rounded cards, sans chrome
+ * (mono kept ONLY for the setting-name / value columns, which are a
+ * genuine aligned data table), tidy rounded controls and even spacing.
+ * ===================================================================== */
+
+/* --- floating window chrome --------------------------------------------- */
+:root[data-ui-theme='shadcn'] .dlgwin {
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-panel);
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
+  box-shadow: var(--sh-shadow-card);
+  overflow: hidden;
+  font-family: var(--pm-font-ui);
+  color: var(--pm-text);
+}
+
+:root[data-ui-theme='shadcn'] .dlgwin__title {
+  padding: 10px 10px 10px 14px;
+  gap: 4px;
+  background: transparent;
+  border-bottom: 1px solid var(--pm-line);
+  border-radius: 0;
+  cursor: move;
+}
+
+:root[data-ui-theme='shadcn'] .dlgwin__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--pm-text-bright);
+}
+
+:root[data-ui-theme='shadcn'] .dlgwin__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--sh-r-sm);
+  color: var(--pm-text-dim);
+  font-size: 14px;
+}
+
+:root[data-ui-theme='shadcn'] .dlgwin__btn:hover {
+  background: var(--sh-btn-hover);
+  color: var(--pm-text-bright);
+}
+
+:root[data-ui-theme='shadcn'] .dlgwin__body {
+  padding: 12px;
+}
+
+:root[data-ui-theme='shadcn'] .dlgwin__footer {
+  border-top: 1px solid var(--pm-line);
+  padding: 9px 12px;
+}
+
+:root[data-ui-theme='shadcn'] .dlgwin__grip {
+  background: none;
+}
+
+:root[data-ui-theme='shadcn'] .dlgwin__grip::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid color-mix(in srgb, var(--pm-text-dim) 55%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--pm-text-dim) 55%, transparent);
+  border-radius: 0 0 3px 0;
+}
+
+/* --- the launcher strip -------------------------------------------------- */
+:root[data-ui-theme='shadcn'] .dlglaunch {
+  left: 16px;
+  bottom: 16px;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r);
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
+  box-shadow: var(--sh-shadow-card);
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+  color: var(--pm-text);
+}
+
+/* Kill the legacy dark chrome + monospace the launcher buttons/select
+   inherit — the Button primitive already draws its own modern fill, this
+   only fixes the font it inherits from the strip. */
+:root[data-ui-theme='shadcn'] .dlglaunch button,
+:root[data-ui-theme='shadcn'] .dlglaunch select {
+  font-family: var(--pm-font-ui);
+  background: none;
+  color: inherit;
+}
+
+:root[data-ui-theme='shadcn'] .dlglaunch select {
+  background: var(--sh-btn-fill);
+  color: var(--pm-text-bright);
+}
+
+:root[data-ui-theme='shadcn'] .dlglaunch__title {
+  padding-right: 4px;
+  padding-left: 2px;
+  opacity: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--pm-text-dim);
+}
+
+/* --- the advanced settings table ---------------------------------------- */
+:root[data-ui-theme='shadcn'] .advset {
+  gap: 10px;
+}
+
+:root[data-ui-theme='shadcn'] .advset__head {
+  gap: 8px;
+}
+
+:root[data-ui-theme='shadcn'] .advset__filter {
+  border-radius: var(--sh-r-btn);
+}
+
+:root[data-ui-theme='shadcn'] .advset__note {
+  opacity: 1;
+  font-family: var(--pm-font-ui);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--pm-text-dim);
+  white-space: nowrap;
+}
+
+:root[data-ui-theme='shadcn'] .advset__scroll {
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r);
+  background: var(--pm-panel-alt);
+}
+
+:root[data-ui-theme='shadcn'] .advset__row {
+  gap: 10px;
+  padding: 0 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--pm-line) 55%, transparent);
+}
+
+:root[data-ui-theme='shadcn'] .advset__row:hover {
+  background: color-mix(in srgb, var(--pm-accent) 7%, transparent);
+}
+
+:root[data-ui-theme='shadcn'] .advset__name {
+  width: 48%;
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  color: var(--pm-text);
+}
+
+/* Compact value input, sized to the 22px virtualised row — the shadcn
+   input default would be too tall and overlap its neighbours. */
+:root[data-ui-theme='shadcn'] .advset__value {
+  height: 18px;
+  padding: 0 7px;
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-sm);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text-bright);
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  line-height: 18px;
+}
+
+:root[data-ui-theme='shadcn'] .advset__value:focus {
+  outline: none;
+  border-color: var(--pm-accent);
+  box-shadow: var(--sh-focus-ring);
+}
+
+:root[data-ui-theme='shadcn'] .advset__error {
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--sh-danger) 40%, var(--pm-line));
+  border-radius: var(--sh-r-sm);
+  background: color-mix(in srgb, var(--sh-danger) 12%, transparent);
+  color: var(--sh-danger);
+  font-size: 11.5px;
+}
+
+/* --- the three small modals --------------------------------------------- */
+:root[data-ui-theme='shadcn'] .dlgmodal__box {
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-panel);
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  -webkit-backdrop-filter: var(--sh-blur);
+  box-shadow: var(--sh-shadow-card);
+  padding: 14px;
+  gap: 10px;
+}
+
+:root[data-ui-theme='shadcn'] .dlgmodal__title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--pm-text-bright);
+}
+
+:root[data-ui-theme='shadcn'] .dlgmodal__pre {
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r);
+  background: var(--pm-panel-alt);
+  color: var(--pm-text);
+  padding: 10px 12px;
+  font-family: var(--pm-font-mono);
+}
+
+:root[data-ui-theme='shadcn'] .dlgmodal__input {
+  font-family: var(--pm-font-ui);
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-btn);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text-bright);
+  padding: 6px 9px;
+}
+
+:root[data-ui-theme='shadcn'] .dlgmodal__hint,
+:root[data-ui-theme='shadcn'] .dlgmodal__note {
+  opacity: 1;
+  color: var(--pm-text-dim);
+}

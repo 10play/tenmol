@@ -269,3 +269,276 @@
     line-height: 1.35;
   }
 }
+
+/* ===================================================================== *
+ * Modern theme (shadcn) ONLY — scoped so classic is never touched.       *
+ * The compute panel becomes one floating frosted card: a small uppercase *
+ * section header over a two-column metrics table (a consistent left-      *
+ * aligned action button per helper, its result to the right). Chrome is   *
+ * sans; mono is kept only where it earns it — the numbers, the selection  *
+ * expression and the captured diagnostics.                                *
+ * ===================================================================== */
+:root[data-ui-theme='shadcn'] .compute {
+  min-width: 0;
+  max-width: 660px;
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-panel);
+  background: var(--pm-panel);
+  box-shadow: var(--sh-shadow-card);
+  overflow: hidden;
+  color: var(--pm-text);
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+}
+
+/* Section header — a tiny uppercase letter-spaced label, not a title bar. */
+:root[data-ui-theme='shadcn'] .compute__title {
+  padding: 13px 16px 11px;
+  background: transparent;
+  border-bottom: 1px solid var(--pm-line);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--pm-text-dim);
+}
+
+/* Selection row. */
+:root[data-ui-theme='shadcn'] .compute__sel {
+  gap: 10px;
+  padding: 14px 16px 8px;
+}
+
+:root[data-ui-theme='shadcn'] .compute__sel label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--pm-text-dim);
+}
+
+/* The selection box holds a selection EXPRESSION, so it stays mono. */
+:root[data-ui-theme='shadcn'] .compute__sel input {
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-btn);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text-bright);
+  font-family: var(--pm-font-mono);
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+/* Table — a fixed action column so every button reads as one control, with
+   results aligned in the column to its right. */
+:root[data-ui-theme='shadcn'] .compute__table {
+  width: 100%;
+  padding: 8px;
+}
+
+:root[data-ui-theme='shadcn'] .compute__table td {
+  padding: 3px 8px;
+}
+
+/* Keep the result column from collapsing the action column: a nowrap button
+   (below) makes each row's min-content the full label, so the auto table sizes
+   the first column to the widest label in any container width — no fixed width
+   that could overflow a narrow overlay. */
+:root[data-ui-theme='shadcn'] .compute__table td:first-child {
+  width: 1%;
+}
+
+/* Action buttons — one consistent left-aligned rounded control per helper. */
+:root[data-ui-theme='shadcn'] .compute__btn {
+  width: 100%;
+  height: auto;
+  min-height: 30px;
+  justify-content: flex-start;
+  text-align: left;
+  padding: 6px 12px;
+  border-radius: var(--sh-r-btn);
+  font-family: var(--pm-font-ui);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+:root[data-ui-theme='shadcn'] .compute__btn.is-danger {
+  border-color: color-mix(in srgb, var(--sh-danger) 55%, transparent);
+  color: var(--sh-danger);
+}
+
+:root[data-ui-theme='shadcn'] .compute__btn.is-danger:hover {
+  border-color: var(--sh-danger);
+  background: color-mix(in srgb, var(--sh-danger) 14%, transparent);
+  color: var(--sh-danger);
+}
+
+/* Result cell — mono numbers, bright; errors in the danger colour. */
+:root[data-ui-theme='shadcn'] .compute__val {
+  font-family: var(--pm-font-mono);
+  color: var(--pm-text-bright);
+  font-size: 12px;
+  /* Legacy pins this nowrap for one-line scalars; the SASA summary and diagnostics
+     that also live in this cell must wrap inside the fixed-width column. */
+  white-space: normal;
+}
+
+:root[data-ui-theme='shadcn'] .compute__val.is-error {
+  color: var(--sh-danger);
+}
+
+:root[data-ui-theme='shadcn'] .compute__off {
+  font-family: var(--pm-font-ui);
+  color: var(--pm-text-dim);
+}
+
+/* Declared-argument fields under a button. */
+:root[data-ui-theme='shadcn'] .compute__args {
+  gap: 6px 10px;
+  margin: 6px 0 2px;
+}
+
+:root[data-ui-theme='shadcn'] .compute__arg {
+  font-family: var(--pm-font-ui);
+  font-size: 11px;
+  color: var(--pm-text-dim);
+  gap: 5px;
+}
+
+:root[data-ui-theme='shadcn'] .compute__arg input[type='text'],
+:root[data-ui-theme='shadcn'] .compute__arg input[type='number'] {
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-sm);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text);
+  padding: 3px 7px;
+}
+
+/* Inline caveats under a button — a small amber inset note, in sans. */
+:root[data-ui-theme='shadcn'] .compute__note-inline {
+  max-width: none;
+  margin: 6px 0 2px;
+  padding: 7px 10px;
+  border-radius: var(--sh-r-sm);
+  border: 1px solid color-mix(in srgb, #d89b3a 32%, transparent);
+  background: color-mix(in srgb, #d89b3a 9%, transparent);
+  font-family: var(--pm-font-ui);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #cf9236;
+}
+
+:root[data-ui-theme='shadcn'][data-appearance='light'] .compute__note-inline {
+  color: #9a6412;
+  border-color: color-mix(in srgb, #b5741a 32%, transparent);
+  background: color-mix(in srgb, #cf9236 12%, transparent);
+}
+
+/* Footer caption. */
+:root[data-ui-theme='shadcn'] .compute__note {
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--pm-line);
+  font-family: var(--pm-font-ui);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--pm-text-dim);
+}
+
+/* Confirm step — an inset danger-tinted card. */
+:root[data-ui-theme='shadcn'] .compute__confirm {
+  margin: 8px 16px 12px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--sh-danger) 45%, transparent);
+  border-radius: var(--sh-r);
+  background: color-mix(in srgb, var(--sh-danger) 8%, var(--pm-panel-alt));
+}
+
+:root[data-ui-theme='shadcn'] .compute__warn {
+  color: var(--pm-text-bright);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+:root[data-ui-theme='shadcn'] .compute__confirm-actions {
+  gap: 8px;
+}
+
+:root[data-ui-theme='shadcn'] .compute__confirm-actions .compute__btn {
+  width: auto;
+  min-height: 28px;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Per-residue SASA — sans header, link-style selections, pill exposure bars. */
+:root[data-ui-theme='shadcn'] .compute__sasa-head {
+  font-family: var(--pm-font-ui);
+  font-size: 10.5px;
+  color: var(--pm-text-dim);
+  margin-bottom: 6px;
+}
+
+:root[data-ui-theme='shadcn'] .compute__sasa-list li {
+  gap: 8px;
+  padding: 2px 0;
+  font-size: 11px;
+}
+
+/* The clickable key reads as a link, not a bordered pill. */
+:root[data-ui-theme='shadcn'] .compute__sasa-sele {
+  width: auto;
+  min-height: 0;
+  height: auto;
+  padding: 2px 5px;
+  justify-content: flex-start;
+  border-color: transparent;
+  background: none;
+  border-radius: var(--sh-r-sm);
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--pm-accent);
+}
+
+:root[data-ui-theme='shadcn'] .compute__sasa-sele:hover {
+  border-color: transparent;
+  background: var(--sh-accent-soft);
+  color: var(--pm-accent);
+}
+
+:root[data-ui-theme='shadcn'] .compute__sasa-bar {
+  height: 7px;
+  border-radius: 999px;
+}
+
+:root[data-ui-theme='shadcn'] .compute__sasa-bar > span {
+  border-radius: 999px;
+}
+
+:root[data-ui-theme='shadcn'] .compute__sasa-num {
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  color: var(--pm-text);
+}
+
+:root[data-ui-theme='shadcn'] .compute__empty {
+  font-family: var(--pm-font-ui);
+  color: var(--pm-text-dim);
+}
+
+/* Diagnostics — sans summary, the captured console text stays mono. */
+:root[data-ui-theme='shadcn'] .compute__diag,
+:root[data-ui-theme='shadcn'] .compute__diag > summary {
+  font-family: var(--pm-font-ui);
+  font-size: 10.5px;
+  color: var(--pm-text-dim);
+}
+
+:root[data-ui-theme='shadcn'] .compute__diaglines {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-sm);
+  background: var(--pm-panel-alt);
+  color: var(--pm-text);
+  font-family: var(--pm-font-mono);
+}

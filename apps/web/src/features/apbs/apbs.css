@@ -92,3 +92,172 @@
     font-family: var(--pm-font-mono);
   }
 }
+
+/* =====================================================================
+ * Modern theme (shadcn) ONLY — scoped so classic is never touched.
+ * The APBS stub becomes one floating frosted card: a tiny uppercase
+ * section header, sans prose, a clean two-row probe readout with a
+ * status dot per program, rounded mono recipe blocks, and consistent
+ * pill copy-buttons. Mono is kept only where it earns it — the resolved
+ * paths and the pasteable command recipes.
+ * ===================================================================== */
+:root[data-ui-theme='shadcn'] .apbs {
+  min-width: 0;
+  max-width: 560px;
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-panel);
+  background: var(--pm-panel);
+  box-shadow: var(--sh-shadow-card);
+  overflow: hidden;
+  color: var(--pm-text);
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+}
+
+/* Section header — a tiny uppercase letter-spaced label, not a title bar. */
+:root[data-ui-theme='shadcn'] .apbs__title {
+  padding: 13px 16px 11px;
+  background: transparent;
+  border-bottom: 1px solid var(--pm-line);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--pm-text-dim);
+}
+
+:root[data-ui-theme='shadcn'] .apbs__body {
+  padding: 16px;
+}
+
+:root[data-ui-theme='shadcn'] .apbs__lead {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--pm-text);
+}
+
+/* A lead that introduces a recipe block sits tighter to it and reads as a
+   small uppercase eyebrow. */
+:root[data-ui-theme='shadcn'] .apbs__lead + .apbs__script {
+  margin-top: 0;
+}
+
+:root[data-ui-theme='shadcn'] .apbs__status {
+  margin: 0 0 12px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--pm-text-dim);
+}
+
+:root[data-ui-theme='shadcn'] .apbs__probe {
+  margin: 0 0 12px;
+}
+
+/* Probe readout — an inset card, one program per row with a status dot. */
+:root[data-ui-theme='shadcn'] .apbs__list {
+  margin: 0;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r);
+  background: var(--pm-panel-alt);
+  list-style: none;
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+:root[data-ui-theme='shadcn'] .apbs__list li {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 5px 8px;
+  border-radius: var(--sh-r-sm);
+  word-break: break-all;
+}
+
+:root[data-ui-theme='shadcn'] .apbs__list li::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  transform: translateY(1px);
+}
+
+:root[data-ui-theme='shadcn'] .apbs__found {
+  color: var(--pm-text-bright);
+}
+
+:root[data-ui-theme='shadcn'] .apbs__found::before {
+  background: #34b981;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #34b981 18%, transparent);
+}
+
+:root[data-ui-theme='shadcn'] .apbs__missing {
+  color: var(--pm-text-dim);
+}
+
+:root[data-ui-theme='shadcn'] .apbs__missing::before {
+  background: color-mix(in srgb, var(--pm-text-dim) 55%, transparent);
+}
+
+/* Recipe blocks — rounded inset code, mono (it is code you paste). */
+:root[data-ui-theme='shadcn'] .apbs__script {
+  margin: 0 0 10px;
+  padding: 11px 13px;
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r);
+  background: var(--pm-panel-alt);
+  color: var(--pm-text-bright);
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  line-height: 1.55;
+  overflow-x: auto;
+}
+
+/* Copy buttons — a consistent rounded pill control in sans. */
+:root[data-ui-theme='shadcn'] .apbs__btn {
+  margin: 0 0 16px;
+  height: auto;
+  min-height: 30px;
+  padding: 6px 14px;
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-btn);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text);
+  font-family: var(--pm-font-ui);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+:root[data-ui-theme='shadcn'] .apbs__btn:hover {
+  border-color: var(--pm-accent);
+  background: var(--sh-accent-soft);
+  color: var(--pm-accent);
+}
+
+/* Footer caption — sans, dim, sitting above a divider. */
+:root[data-ui-theme='shadcn'] .apbs__note {
+  margin: 4px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid var(--pm-line);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--pm-text-dim);
+}
+
+/* Inline code inside prose — a subtle tinted chip, still mono. */
+:root[data-ui-theme='shadcn'] .apbs__lead code,
+:root[data-ui-theme='shadcn'] .apbs__status code,
+:root[data-ui-theme='shadcn'] .apbs__note code {
+  padding: 1px 5px;
+  border-radius: var(--sh-r-sm);
+  background: color-mix(in srgb, var(--pm-text) 8%, transparent);
+  font-family: var(--pm-font-mono);
+  font-size: 0.92em;
+  color: var(--pm-text-bright);
+}

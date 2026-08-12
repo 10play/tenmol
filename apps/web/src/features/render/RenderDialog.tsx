@@ -304,6 +304,7 @@ export function RenderDialog() {
             </Button>
             <Button
               type="button"
+              tone="accent"
               className="render__btn render__btn--primary"
               disabled={busy !== null}
               onClick={() => void render('ray')}

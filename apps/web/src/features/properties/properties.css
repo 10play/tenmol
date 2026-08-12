@@ -128,3 +128,107 @@
     opacity: 0.5;
   }
 }
+
+/* ================================================================== *
+ * Modern theme (shadcn) — the Properties inspector.
+ *
+ * Unlayered, so these win over the `@layer legacy` block above without any
+ * specificity arms race, and scoped to `[data-ui-theme='shadcn']` so classic is
+ * untouched. The tree becomes a card of quiet key/value rows organised by tiny
+ * UPPERCASE accent section headers and hushed group sub-labels; values keep mono
+ * because they are genuinely tabular (numbers, matrices, coordinates).
+ * ================================================================== */
+
+:root[data-ui-theme='shadcn'] .props {
+  gap: 8px;
+}
+
+:root[data-ui-theme='shadcn'] .props__tree {
+  padding: 4px 10px 12px;
+}
+
+/* Section header: tiny uppercase, accent-tinted, over a hairline divider. */
+:root[data-ui-theme='shadcn'] .props__section-label {
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pm-accent);
+  margin: 16px 0 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--pm-line);
+}
+
+:root[data-ui-theme='shadcn'] .props__section:first-child .props__section-label {
+  margin-top: 2px;
+}
+
+/* Group sub-label: a quiet uppercase micro-header, no indent. */
+:root[data-ui-theme='shadcn'] .props__group {
+  margin-left: 0;
+  margin-bottom: 4px;
+}
+
+:root[data-ui-theme='shadcn'] .props__group-label {
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 9.5px;
+  font-weight: 600;
+  opacity: 0.72;
+  margin: 9px 0 3px;
+}
+
+/* Rows: even, full-width, gently rounded with a hover wash. */
+:root[data-ui-theme='shadcn'] .props__row {
+  margin-left: 0;
+  gap: 12px;
+  padding: 3px 8px;
+  min-height: 27px;
+  border-radius: var(--sh-r-sm);
+}
+
+:root[data-ui-theme='shadcn'] .props__row:hover {
+  background: var(--sh-btn-fill);
+}
+
+:root[data-ui-theme='shadcn'] .props__row.is-selected {
+  box-shadow: inset 0 0 0 1px var(--sh-accent-line);
+}
+
+:root[data-ui-theme='shadcn'] .props__key {
+  width: 172px;
+  flex: none;
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  color: var(--pm-text);
+}
+
+/* Values are numeric/tabular, so they stay mono for column alignment. */
+:root[data-ui-theme='shadcn'] .props__value {
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+}
+
+/* Read-only value: quiet mono, aligned to the editable column. */
+:root[data-ui-theme='shadcn'] .props__ro {
+  font-family: var(--pm-font-mono);
+  font-size: 11px;
+  color: var(--pm-text-dim);
+  padding: 1px 3px;
+}
+
+:root[data-ui-theme='shadcn'] .props__empty {
+  margin-left: 0;
+  padding: 1px 3px;
+}
+
+/* Unavailable: a soft amber note that reads on both the dark and light card. */
+:root[data-ui-theme='shadcn'] .props__unavailable {
+  font-family: var(--pm-font-ui);
+  font-size: 10.5px;
+  color: #d9a441;
+}
+
+:root[data-ui-theme='shadcn'][data-appearance='light'] .props__unavailable {
+  color: #b07714;
+}

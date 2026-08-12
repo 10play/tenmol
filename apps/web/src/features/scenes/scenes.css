@@ -488,3 +488,310 @@
     background: rgb(128 128 128);
   }
 }
+
+/* ==================================================================== *
+ * MODERN THEME (shadcn) — Scenes + Views panel.
+ *
+ * Scoped entirely under :root[data-ui-theme='shadcn'] so classic is untouched.
+ * Only VALUES + added scoped rules; no BEM name is renamed. Kills the inherited
+ * monospace on chrome (buttons, labels, names, links -> the sans --pm-font-ui),
+ * tidies the button walls into consistent rounded controls with even gaps, and
+ * gives the scene table, thumbnails and Views chips the PDV card look.
+ * ==================================================================== */
+
+:root[data-ui-theme='shadcn'] .scpanel {
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+  border-top: 0;
+  color: var(--pm-text);
+}
+
+/* -- head: section label + count badge + +/</>/sort controls ---------- */
+:root[data-ui-theme='shadcn'] .scpanel__head,
+:root[data-ui-theme='shadcn'] .vwlist__head {
+  gap: 6px;
+  padding: 10px 14px;
+  height: auto;
+  background: transparent;
+  border-bottom: 1px solid var(--sh-line-strong);
+}
+:root[data-ui-theme='shadcn'] .scpanel__title,
+:root[data-ui-theme='shadcn'] .vwlist__title {
+  font-family: var(--pm-font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .scpanel__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--sh-accent-soft);
+  color: var(--pm-accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+:root[data-ui-theme='shadcn'] .scpanel__btn {
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+  color: var(--pm-text);
+}
+
+/* -- the in-viewport scene-button strip: sans rounded chips ------------ */
+:root[data-ui-theme='shadcn'] .scbar,
+:root[data-ui-theme='shadcn'] .scbar--laid {
+  background: transparent;
+  padding: 10px 14px;
+}
+:root[data-ui-theme='shadcn'] .scbar__empty {
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .scbar__btn {
+  font-family: var(--pm-font-ui) !important;
+  font-size: 11px !important;
+  font-weight: 500;
+  border: 1px solid var(--sh-btn-border);
+  border-radius: var(--sh-r-sm);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text);
+  padding: 0 9px !important;
+}
+:root[data-ui-theme='shadcn'] .scbar__btn:hover {
+  background: var(--sh-btn-hover);
+  border-color: var(--sh-btn-border-strong);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .scbar__btn.is-current {
+  background: var(--pm-accent);
+  border-color: transparent;
+  color: var(--sh-accent-text);
+}
+:root[data-ui-theme='shadcn'] .scbar__btn.is-truncated {
+  border-right: 1px solid var(--sh-btn-border-strong);
+}
+
+/* -- hint line -------------------------------------------------------- */
+:root[data-ui-theme='shadcn'] .scpanel__hint {
+  font-family: var(--pm-font-ui);
+  font-size: 11px;
+  color: var(--pm-text-dim);
+  margin: 10px 14px 2px;
+}
+
+/* -- the scene table -------------------------------------------------- */
+:root[data-ui-theme='shadcn'] .scpanel__rows {
+  padding: 4px 0;
+}
+:root[data-ui-theme='shadcn'] .scrow {
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--sh-line-strong);
+}
+:root[data-ui-theme='shadcn'] .scrow.is-current {
+  background: var(--sh-accent-soft);
+}
+:root[data-ui-theme='shadcn'] .scrow.is-selected {
+  outline: 1px solid var(--sh-accent-line);
+  outline-offset: -1px;
+  border-radius: var(--sh-r-sm);
+}
+:root[data-ui-theme='shadcn'] .scrow__handle {
+  font-family: var(--pm-font-ui);
+  color: var(--pm-text-dim);
+  font-size: 13px;
+  border-radius: var(--sh-r-sm);
+  align-self: center;
+}
+:root[data-ui-theme='shadcn'] .scrow__handle:hover {
+  color: var(--pm-text-bright);
+  background: var(--sh-btn-hover);
+}
+:root[data-ui-theme='shadcn'] .scrow__thumb {
+  width: 92px;
+  flex-basis: 92px;
+  height: 52px;
+  border-radius: var(--sh-r-sm);
+  border: 1px solid var(--sh-btn-border);
+  background: #000;
+}
+:root[data-ui-theme='shadcn'] .scrow__nothumb {
+  font-family: var(--pm-font-ui);
+  font-size: 10px;
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .scrow__body {
+  gap: 4px;
+}
+
+/* Name: a left-aligned title, not a full-width pill. Highlights on hover to
+   advertise the double-click-to-rename affordance. */
+:root[data-ui-theme='shadcn'] .scpanel .scrow__name {
+  width: fit-content;
+  max-width: 100%;
+  height: auto;
+  justify-content: flex-start;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
+  border-radius: var(--sh-r-sm);
+  font-family: var(--pm-font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .scpanel .scrow__name:hover {
+  background: var(--sh-btn-hover);
+}
+
+/* Message: a quiet inline field that only frames itself on hover/focus. */
+:root[data-ui-theme='shadcn'] .scpanel .scrow__message {
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--sh-r-sm);
+  color: var(--pm-text-dim);
+  padding: 3px 6px;
+  margin-left: -6px;
+  width: 100%;
+}
+:root[data-ui-theme='shadcn'] .scpanel .scrow__message:hover {
+  border-color: var(--sh-btn-border);
+}
+:root[data-ui-theme='shadcn'] .scpanel .scrow__message:focus {
+  background: var(--sh-btn-fill);
+  border-color: var(--sh-accent-line);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .scpanel .scrow__rename {
+  font-family: var(--pm-font-ui);
+  font-size: 13px;
+}
+
+/* Store tags: sans pills. */
+:root[data-ui-theme='shadcn'] .scrow__stores {
+  gap: 4px;
+  margin-top: 2px;
+}
+:root[data-ui-theme='shadcn'] .scrow__store {
+  font-family: var(--pm-font-ui);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--sh-btn-fill);
+  border: 1px solid var(--sh-btn-border);
+  color: var(--pm-text-dim);
+}
+
+/* upd / del ops. */
+:root[data-ui-theme='shadcn'] .scrow__ops {
+  gap: 4px;
+  align-self: center;
+}
+:root[data-ui-theme='shadcn'] .scrow__ops button {
+  height: 26px;
+  min-width: 44px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+:root[data-ui-theme='shadcn'] .scrow__renameerr,
+:root[data-ui-theme='shadcn'] .vwlist__err {
+  font-family: var(--pm-font-ui);
+  font-size: 11px;
+}
+
+/* -- the Scene menu button wall: even gaps, grouped submenus ----------- */
+:root[data-ui-theme='shadcn'] .scmenu {
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--sh-line-strong);
+}
+:root[data-ui-theme='shadcn'] .scmenu__row,
+:root[data-ui-theme='shadcn'] .scmenu__sub {
+  gap: 6px;
+}
+:root[data-ui-theme='shadcn'] .scmenu__sub {
+  padding: 8px 10px;
+  border-left: 2px solid var(--sh-accent-line);
+  border-radius: var(--sh-r-sm);
+  background: var(--sh-accent-soft);
+}
+:root[data-ui-theme='shadcn'] .scmenu button.is-on,
+:root[data-ui-theme='shadcn'] .scmenu button.has-scene {
+  background: var(--pm-accent);
+  border-color: transparent;
+  color: var(--sh-accent-text);
+}
+:root[data-ui-theme='shadcn'] .scmenu__check {
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .scmenu__current {
+  font-family: var(--pm-font-ui);
+  font-size: 11px;
+  color: var(--pm-text-dim);
+}
+
+/* -- named views: header field + chip list ---------------------------- */
+:root[data-ui-theme='shadcn'] .vwlist {
+  border-top: 1px solid var(--sh-line-strong);
+  padding: 4px 0 8px;
+}
+:root[data-ui-theme='shadcn'] .scpanel .vwlist__name {
+  width: 110px;
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+}
+:root[data-ui-theme='shadcn'] .vwlist__rows {
+  gap: 8px;
+  padding: 8px 14px 4px;
+}
+:root[data-ui-theme='shadcn'] .vwrow {
+  border: 1px solid var(--sh-btn-border);
+  border-radius: 999px;
+  background: var(--sh-btn-fill);
+  overflow: hidden;
+}
+:root[data-ui-theme='shadcn'] .vwrow:hover {
+  border-color: var(--sh-btn-border-strong);
+}
+:root[data-ui-theme='shadcn'] .scpanel .vwrow__name,
+:root[data-ui-theme='shadcn'] .scpanel .vwrow__del {
+  height: 28px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+  color: var(--pm-text);
+}
+:root[data-ui-theme='shadcn'] .scpanel .vwrow__name {
+  padding: 0 4px 0 12px;
+  font-weight: 500;
+}
+:root[data-ui-theme='shadcn'] .scpanel .vwrow__del {
+  padding: 0 10px 0 6px;
+  color: var(--pm-text-dim);
+  font-size: 14px;
+}
+:root[data-ui-theme='shadcn'] .scpanel .vwrow__name:hover {
+  background: var(--sh-btn-hover);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .scpanel .vwrow__del:hover {
+  background: var(--sh-danger);
+  color: #fff;
+}

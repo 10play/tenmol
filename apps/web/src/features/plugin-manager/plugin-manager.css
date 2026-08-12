@@ -316,3 +316,260 @@
     color: var(--error, #e06c75);
   }
 }
+
+/* ==================================================================== *
+ * MODERN THEME (shadcn) — the Plugin Manager panel.
+ *
+ * Scoped entirely under :root[data-ui-theme='shadcn'] and left OUTSIDE the
+ * @layer legacy above, so these rules win by being unlayered while classic
+ * (the default theme) is untouched. Only VALUES + added scoped rules; no BEM
+ * name is renamed. Turns the dense 11px classic dialog into a floating frosted
+ * card: sans chrome, uppercase tracked column/section headers, roomy rows,
+ * mono kept ONLY for the literal filesystem paths and the code spans. Kills the
+ * bare-link legacy leaves in favour of hoverable menu rows.
+ * ==================================================================== */
+
+:root[data-ui-theme='shadcn'] .plugmgr {
+  min-width: 0;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  max-height: none;
+  font-family: var(--pm-font-ui);
+  font-size: 13px;
+  color: var(--pm-text);
+  background: var(--sh-panel-frost);
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-panel);
+  box-shadow: var(--sh-shadow-card);
+  overflow: hidden;
+}
+
+/* -- header: the tab bar ---------------------------------------------- */
+:root[data-ui-theme='shadcn'] .plugmgr__tabs {
+  gap: 6px;
+  padding: 12px 14px;
+  background: transparent;
+  border-bottom: 1px solid var(--pm-line);
+}
+
+:root[data-ui-theme='shadcn'] .plugmgr__body {
+  padding: 16px 18px 18px;
+  overflow: visible;
+}
+
+/* -- Installed: the plugin table -------------------------------------- */
+:root[data-ui-theme='shadcn'] .plugmgr__table {
+  font-family: var(--pm-font-ui);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__table th {
+  padding: 2px 10px 9px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--pm-text-dim);
+  border-bottom: 1px solid var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__table td {
+  padding: 8px 10px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--pm-line);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__table tbody tr:last-child td {
+  border-bottom: none;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__table tbody tr:hover td {
+  background: var(--sh-btn-fill);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__enabled input {
+  accent-color: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__name {
+  font-family: var(--pm-font-ui);
+  font-weight: 500;
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__path {
+  font-family: var(--pm-font-mono);
+  font-size: 11.5px;
+  color: var(--pm-text-dim);
+  max-width: 440px;
+}
+
+/* -- prose notes ------------------------------------------------------ */
+:root[data-ui-theme='shadcn'] .plugmgr__note {
+  font-family: var(--pm-font-ui);
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--pm-text-dim);
+  border-top: 1px solid var(--pm-line);
+  margin-top: 12px;
+  padding-top: 10px;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__note code,
+:root[data-ui-theme='shadcn'] .plugmgr__confirmtext code {
+  font-family: var(--pm-font-mono);
+  font-size: 10.5px;
+  padding: 1px 4px;
+  border-radius: 5px;
+  background: var(--sh-btn-fill);
+  color: var(--pm-text);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__empty {
+  color: var(--pm-text-dim);
+  font-size: 12.5px;
+}
+
+/* -- error banners ---------------------------------------------------- */
+:root[data-ui-theme='shadcn'] .plugmgr__error {
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+  color: var(--sh-danger);
+  background: color-mix(in srgb, var(--sh-danger) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sh-danger) 40%, transparent);
+  border-radius: var(--sh-r-sm);
+  padding: 8px 12px;
+  margin: 10px 14px 0;
+}
+
+/* -- Settings: preferences + confirmation band ------------------------ */
+:root[data-ui-theme='shadcn'] .plugmgr__prefs {
+  gap: 10px 18px;
+  margin-bottom: 14px;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__prefs dt {
+  font-family: var(--pm-font-ui);
+  color: var(--pm-text);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__prefs dt label {
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__prefs dt label input {
+  accent-color: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__prefs dd {
+  font-family: var(--pm-font-mono);
+  font-size: 11.5px;
+  color: var(--pm-text-dim);
+}
+
+:root[data-ui-theme='shadcn'] .plugmgr__confirm {
+  background: var(--pm-panel-alt);
+  border: 1px solid var(--sh-accent-line);
+  border-radius: var(--sh-r-sm);
+  padding: 12px 14px;
+  margin: 10px 0;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__confirmtext {
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--pm-text);
+}
+
+/* -- Startup Paths: rows + add row ------------------------------------ */
+:root[data-ui-theme='shadcn'] .plugmgr__paths {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 14px;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__paths li {
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  margin-bottom: 6px;
+  border: 1px solid var(--pm-line);
+  border-radius: var(--sh-r-sm);
+  background: var(--sh-btn-fill);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__paths--fixed li {
+  opacity: 1;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--pm-text-dim);
+  font-family: var(--pm-font-mono);
+  font-size: 11.5px;
+  /* Classic reads paths right-to-left to keep the tail in view; here they fit,
+     so show them naturally (the leading slash stays where it belongs). */
+  direction: ltr;
+  text-align: left;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__pathtext {
+  font-family: var(--pm-font-mono);
+  font-size: 11.5px;
+  color: var(--pm-text);
+  direction: ltr;
+  text-align: left;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__paths li button {
+  flex: none;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__addrow {
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+/* -- Legacy Plugins: the recorded addmenuitem tree -------------------- */
+:root[data-ui-theme='shadcn'] .plugmgr__legacyhead {
+  font-family: var(--pm-font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--pm-text-dim);
+  margin-bottom: 10px;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__legacy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__legacymenu {
+  display: inline-block;
+  padding: 8px 4px 4px;
+  font-family: var(--pm-font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__legacyleaf {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--pm-font-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--pm-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--sh-r-sm);
+  padding: 6px 10px;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__legacyleaf:hover {
+  background: var(--sh-btn-hover);
+  color: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__legacysep {
+  border-top: 1px solid var(--pm-line);
+  margin: 6px 8px;
+}
+:root[data-ui-theme='shadcn'] .plugmgr__legacyresult {
+  font-family: var(--pm-font-ui);
+  font-size: 12px;
+  border: 1px solid var(--pm-line);
+  background: var(--pm-panel-alt);
+  border-radius: var(--sh-r-sm);
+  padding: 8px 12px;
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .plugmgr__legacyresult.is-error {
+  color: var(--sh-danger);
+}

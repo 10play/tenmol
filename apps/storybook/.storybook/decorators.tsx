@@ -51,7 +51,11 @@ export const withTheme: Decorator = (Story, context) => {
         style={{
           minHeight: '100%',
           padding: '24px',
-          background: 'var(--pm-bg)',
+          // Modern theme paints the app's real gradient stage (`--sh-app-bg`) so a
+          // primitive is shown on the surface it actually ships on; classic has no
+          // such token, so it falls back to its flat `--pm-bg`.
+          background: 'var(--sh-app-bg, var(--pm-bg))',
+          backgroundAttachment: 'fixed',
           color: 'var(--pm-text)',
           fontFamily: 'var(--pm-font-ui)',
         }}
@@ -77,7 +81,19 @@ export function mockSession(): Session {
   const noop = () => Promise.resolve();
   return {
     config: {} as Session['config'],
-    conn: { sendInput: () => undefined, isOpen: true },
+    // Enough of the connection surface for feature bundles to mount without a
+    // bridge. `on`/`sub`/`ack` are what the viewport transport reaches for
+    // (`features/viewport/transport.ts`); as inert stubs they let the real
+    // viewport slot mount its idle canvas instead of a crash note. No frames
+    // ever arrive, which is the honest "engine up, nothing loaded" state.
+    conn: {
+      sendInput: () => undefined,
+      isOpen: true,
+      on: () => () => undefined,
+      sub: () => Promise.resolve(),
+      ack: () => undefined,
+      call: () => Promise.resolve(null),
+    },
     stores,
     objectsSource: { poll: () => Promise.resolve(), invalidate: () => undefined },
     poller: { stats: () => ({ hz: 30 }) },

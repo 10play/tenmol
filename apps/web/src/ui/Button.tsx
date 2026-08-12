@@ -24,6 +24,9 @@ import type { LucideIcon } from 'lucide-react';
 import { cn } from './cn';
 import { useTheme } from './theme';
 
+/** Colour intent, applied over the base appearance in the modern theme only. */
+export type ButtonTone = 'default' | 'accent' | 'danger';
+
 /** The semantic button roles; each maps to a legacy BEM base class it replaces. */
 export type ButtonVariant =
   | 'bare'
@@ -53,14 +56,28 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
 // Tailwind `bg-[color]` only sets background-color, and utilities beat the
 // `legacy` layer in every state, so the flat fill is clean in dark AND light.
 const FLAT =
-  'inline-flex items-center justify-center gap-1.5 rounded-[6px] border font-medium leading-none ' +
-  'border-[var(--sh-btn-border)] bg-none bg-[var(--sh-btn-fill)] text-[var(--pm-text)] transition-colors ' +
+  'inline-flex items-center justify-center gap-1.5 rounded-[var(--sh-r-btn)] border font-medium leading-none ' +
+  'border-[var(--sh-btn-border)] bg-none bg-[var(--sh-btn-fill)] text-[var(--pm-text)] transition-[color,background-color,border-color,box-shadow] ' +
   'hover:border-[var(--sh-btn-border-strong)] hover:bg-[var(--sh-btn-hover)] hover:text-[var(--pm-text-bright)] ' +
   'active:opacity-90 disabled:opacity-45 disabled:pointer-events-none';
 const GHOST =
-  'inline-flex items-center justify-center gap-1.5 rounded-[6px] font-medium leading-none ' +
-  'bg-none text-[var(--pm-text-dim)] transition-colors hover:bg-[var(--sh-btn-hover)] hover:text-[var(--pm-text-bright)] ' +
+  'inline-flex items-center justify-center gap-1.5 rounded-[var(--sh-r-btn)] font-medium leading-none ' +
+  'bg-none text-[var(--pm-text-dim)] transition-[color,background-color,border-color,box-shadow] hover:bg-[var(--sh-btn-hover)] hover:text-[var(--pm-text-bright)] ' +
   'disabled:opacity-45 disabled:pointer-events-none';
+
+/* Optional colour intent, layered over the base appearance in the modern theme.
+ * `accent` is the PDV-style primary CTA (solid indigo, white label); `danger`
+ * the destructive fill. `default` leaves the quiet base untouched. Classic is
+ * unaffected — this only rides the modern utilities. */
+const MODERN_TONE: Record<ButtonTone, string> = {
+  default: '',
+  accent:
+    'border-transparent bg-none bg-[var(--pm-accent)] text-[var(--sh-accent-text)] shadow-[var(--sh-shadow-cta)] ' +
+    'hover:border-transparent hover:bg-[var(--sh-accent-hover)] hover:text-[var(--sh-accent-text)]',
+  danger:
+    'border-transparent bg-none bg-[var(--sh-danger)] text-white ' +
+    'hover:border-transparent hover:bg-[color-mix(in_srgb,var(--sh-danger)_88%,white)] hover:text-white',
+};
 
 const MODERN_VARIANT: Record<ButtonVariant, string> = {
   bare: `${FLAT} h-7 px-3 text-[12px]`,
@@ -85,6 +102,8 @@ interface IconProps {
 /** Props for {@link Button}: native `<button>` props plus a semantic `variant` and optional icon. */
 export interface ButtonProps extends ComponentPropsWithRef<'button'>, IconProps {
   variant?: ButtonVariant;
+  /** Colour intent (modern theme only); defaults to the quiet `default`. */
+  tone?: ButtonTone;
 }
 
 /** Icon + label body; label text always stays in the DOM. */
@@ -111,6 +130,7 @@ function body(
  */
 export function Button({
   variant = 'bare',
+  tone = 'default',
   type = 'button',
   className,
   icon,
@@ -124,7 +144,13 @@ export function Button({
       type={type}
       data-slot="button"
       data-variant={variant}
-      className={cn(VARIANT_CLASS[variant], modern && MODERN_VARIANT[variant], className)}
+      data-tone={tone}
+      className={cn(
+        VARIANT_CLASS[variant],
+        modern && MODERN_VARIANT[variant],
+        modern && tone !== 'default' && MODERN_TONE[tone],
+        className,
+      )}
       {...rest}
     >
       {body(modern, icon, iconOnly, children)}
@@ -138,6 +164,7 @@ export function Button({
  */
 export function IconButton({
   variant = 'bare',
+  tone = 'default',
   type = 'button',
   className,
   icon,
@@ -151,9 +178,11 @@ export function IconButton({
       type={type}
       data-slot="icon-button"
       data-variant={variant}
+      data-tone={tone}
       className={cn(
         VARIANT_CLASS[variant],
         modern && MODERN_VARIANT[variant],
+        modern && tone !== 'default' && MODERN_TONE[tone],
         modern && icon && iconOnly && 'aspect-square px-0',
         className,
       )}
@@ -176,6 +205,7 @@ export interface ToggleButtonProps extends ButtonProps {
  */
 export function ToggleButton({
   variant = 'bare',
+  tone = 'default',
   pressed = false,
   type = 'button',
   className,
@@ -190,12 +220,16 @@ export function ToggleButton({
       type={type}
       data-slot="toggle-button"
       data-variant={variant}
+      data-tone={tone}
       data-state={pressed ? 'on' : 'off'}
       aria-pressed={pressed}
       className={cn(
         VARIANT_CLASS[variant],
         pressed && 'is-on',
         modern && MODERN_VARIANT[variant],
+        // `tone` colours the OFF state; the `data-[state=on]` accent below has an
+        // attribute-selector's higher specificity, so it wins when pressed.
+        modern && !pressed && tone !== 'default' && MODERN_TONE[tone],
         modern &&
           'data-[state=on]:border-transparent data-[state=on]:bg-[var(--pm-accent)] data-[state=on]:text-[var(--sh-accent-text)] data-[state=on]:hover:bg-[var(--pm-accent)]',
         className,

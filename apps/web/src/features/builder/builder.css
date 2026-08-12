@@ -288,3 +288,83 @@
     font: inherit;
   }
 }
+
+/* ===================================================================
+   MODERN THEME ONLY (data-ui-theme='shadcn').
+   The shared <Button>/<IconButton> primitives already give every `.bbtn`
+   the modern sans pill; these rules tidy the Builder's OWN chrome — the
+   inline section labels, the ring-icon buttons' width, and the pk chips —
+   into the same card idiom, and fix the ring-glyph inversion so it keys off
+   the app's appearance toggle rather than the OS colour scheme.
+   Scoped so classic is untouched.
+   =================================================================== */
+
+/* Tiny UPPERCASE letter-spaced inline section headers (Atoms:/Bonds:/…). */
+:root[data-ui-theme='shadcn'] .builder__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  opacity: 0.62;
+  padding: 0 6px 0 2px;
+}
+
+/* The ring-icon buttons carry only a 20px glyph — the primitive's 12px side
+   padding blew them out to ~46px, wider than the element buttons beside them.
+   Tighten them back to a consistent, roughly-square control. */
+:root[data-ui-theme='shadcn'] .bbtn--icon {
+  min-width: 32px;
+  padding: 2px 7px;
+}
+
+/* Ring glyphs are black line art. Invert on the DARK appearance and leave them
+   be on light — keyed to the app's own toggle, not `prefers-color-scheme`, so
+   they read correctly no matter the OS setting (the legacy media-query rule
+   would flip them the wrong way in modern light on a dark desktop). */
+:root[data-ui-theme='shadcn'][data-appearance='dark'] .bbtn__icon {
+  filter: invert(1) brightness(1.05);
+}
+:root[data-ui-theme='shadcn'][data-appearance='light'] .bbtn__icon {
+  filter: none;
+}
+
+/* pk1..pk4 chips: soft rounded slots that light up in the accent when set. */
+:root[data-ui-theme='shadcn'] .builder__picks {
+  gap: 6px;
+  padding: 2px 0;
+}
+:root[data-ui-theme='shadcn'] .builder__pick {
+  border-radius: 999px;
+  border-color: var(--sh-line-strong);
+  padding: 2px 9px;
+}
+:root[data-ui-theme='shadcn'] .builder__pick.is-set {
+  border-color: var(--sh-accent-line);
+  background: var(--sh-accent-soft);
+  color: var(--pm-text-bright);
+}
+:root[data-ui-theme='shadcn'] .builder__pick.is-set b {
+  color: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] .builder__pick.is-bond {
+  border-color: var(--sh-accent-line);
+  color: var(--pm-accent);
+}
+
+/* A touch more air between the dense action rows and inside the tab body. */
+:root[data-ui-theme='shadcn'] .builder__grid,
+:root[data-ui-theme='shadcn'] .builder__actions {
+  gap: 7px;
+}
+:root[data-ui-theme='shadcn'] .builder__row {
+  gap: 5px;
+}
+:root[data-ui-theme='shadcn'] .builder__body {
+  padding: 8px;
+}
+
+/* Nudge the footer + mouse-mode readout to a calm muted tone. */
+:root[data-ui-theme='shadcn'] .builder__footer,
+:root[data-ui-theme='shadcn'] .builder__mouse {
+  opacity: 0.7;
+}

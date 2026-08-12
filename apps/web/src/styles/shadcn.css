@@ -50,7 +50,7 @@
   --pm-font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* design tokens */
-  --sh-panel-frost: rgba(18, 21, 28, 0.72);
+  --sh-panel-frost: rgba(17, 20, 27, 0.74);
   --sh-console-bg: #05070a;
   /* The console/viewport stay dark in BOTH appearances, so their text must NOT
      track --pm-text (which flips to dark in light mode → invisible). Pinned. */
@@ -58,16 +58,35 @@
   --sh-line-strong: rgba(148, 163, 184, 0.2);
   --sh-accent-text: #ffffff;
   --sh-accent-soft: rgba(99, 102, 241, 0.16);
+  --sh-accent-hover: color-mix(in srgb, var(--pm-accent) 86%, white);
+  /* A soft gradient swatch, for accent affordances that want a tint of energy. */
+  --sh-accent-grad: linear-gradient(135deg, #7c7cf6 0%, #6366f1 52%, #4f46e5 100%);
   --sh-danger: #f5455c;
   --sh-btn-fill: rgba(148, 163, 184, 0.08);
   --sh-btn-hover: rgba(148, 163, 184, 0.14);
   --sh-btn-border: rgba(148, 163, 184, 0.14);
   --sh-btn-border-strong: rgba(148, 163, 184, 0.2);
   --sh-focus-ring: color-mix(in srgb, #6366f1 42%, transparent);
-  --sh-pop: 0 16px 48px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
+  --sh-accent-line: color-mix(in srgb, var(--pm-accent) 45%, transparent);
+  /* Floaty, faintly indigo-tinted drop shadow for POPOVERS (menus, dialogs). */
+  --sh-pop:
+    0 24px 60px -18px rgba(0, 0, 0, 0.72), 0 8px 24px -12px rgba(79, 70, 229, 0.34),
+    0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  /* A softer RESTING lift for always-floating cards (panels, column). */
+  --sh-shadow-card: 0 10px 30px -16px rgba(0, 0, 0, 0.6), 0 2px 10px -6px rgba(79, 70, 229, 0.3);
+  /* The solid indigo CTA's small tinted glow, so it outranks quiet secondaries. */
+  --sh-shadow-cta: 0 2px 12px rgba(79, 70, 229, 0.45);
   --sh-blur: saturate(180%) blur(24px);
-  --sh-r: 8px;
-  --sh-r-sm: 6px;
+  /* Radius scale: buttons/inputs 10 · menus/bars 12 · cards/panels 16 · small 8. */
+  --sh-r-panel: 16px;
+  --sh-r: 12px;
+  --sh-r-btn: 10px;
+  --sh-r-sm: 8px;
+  /* The stage behind the chrome — soft radial color blobs on a deep base, so the
+     gaps between panels read as a calm gradient rather than flat black. */
+  --sh-app-bg:
+    radial-gradient(1200px 820px at 10% -8%, rgba(129, 140, 248, 0.14), transparent 60%),
+    radial-gradient(1000px 720px at 100% 106%, rgba(16, 185, 129, 0.08), transparent 55%), #0b0d12;
 
   color-scheme: dark;
   font-family: var(--pm-font-ui);
@@ -78,7 +97,9 @@
   --pm-panel: #ffffff;
   --pm-panel-alt: #f1f4f9;
   --pm-edge: #dfe4ec;
-  --pm-line: rgba(15, 23, 42, 0.1);
+  /* Cool slate-700 hairline — reads cleaner than near-black against the
+     lavender stage (dark keeps its slate-400 line). */
+  --pm-line: rgba(51, 65, 85, 0.1);
   --pm-text: #2b3245;
   --pm-text-dim: #6b7488;
   --pm-text-bright: #0f1420;
@@ -89,17 +110,30 @@
   --pm-btn-cloaked: #e6eaf1;
   --pm-btn-pressed: #cfd6e4;
 
-  --sh-panel-frost: rgba(255, 255, 255, 0.8);
-  --sh-line-strong: rgba(15, 23, 42, 0.16);
+  --sh-panel-frost: rgba(255, 255, 255, 0.85);
+  --sh-line-strong: rgba(51, 65, 85, 0.16);
   --sh-accent-soft: rgba(91, 87, 240, 0.12);
+  --sh-accent-hover: color-mix(in srgb, var(--pm-accent) 88%, black);
+  --sh-accent-grad: linear-gradient(135deg, #6d67f2 0%, #5b57f0 52%, #4f46e5 100%);
+  --sh-accent-line: color-mix(in srgb, var(--pm-accent) 45%, transparent);
   --sh-danger: #e11d48;
   --sh-btn-fill: rgba(15, 23, 42, 0.04);
   --sh-btn-hover: rgba(15, 23, 42, 0.07);
   --sh-btn-border: rgba(15, 23, 42, 0.1);
   --sh-btn-border-strong: rgba(15, 23, 42, 0.16);
   --sh-focus-ring: color-mix(in srgb, #5b57f0 34%, transparent);
-  --sh-pop: 0 12px 40px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.1);
+  /* Soft, floaty, faintly-lavender shadow — the PDV "hovering card" look. */
+  --sh-pop:
+    0 18px 44px -18px rgba(79, 70, 229, 0.26), 0 8px 22px -14px rgba(15, 23, 42, 0.12),
+    0 1px 2px rgba(15, 23, 42, 0.05);
+  --sh-shadow-card: 0 6px 22px -12px rgba(79, 70, 229, 0.14), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --sh-shadow-cta: 0 2px 8px rgba(79, 70, 229, 0.35);
   --sh-blur: saturate(140%) blur(24px);
+  /* The PDV hero: a lavender → white → mint diagonal with soft radial blobs. */
+  --sh-app-bg:
+    radial-gradient(1200px 820px at 10% -8%, rgba(129, 140, 248, 0.16), transparent 60%),
+    radial-gradient(1000px 720px at 100% 106%, rgba(45, 212, 191, 0.11), transparent 55%),
+    linear-gradient(135deg, #f5f4ff 0%, #f8fafc 46%, #f0fdf7 100%);
 
   color-scheme: light;
   /* The molecular SCENE stays on a dark stage (the viewport is always dark), but
@@ -216,11 +250,29 @@
    fixed list, so the frost stays and the flyouts land correctly. */
 /* `.menubar` surface (height/padding/gap/border) is Tailwind on the component
    (shell/AppShell.tsx); only the frost ::before stays here. */
+/* The classic menubar paints a dark GRADIENT on the element itself; that sits IN
+   FRONT of the frost ::before (z-index:-1) and defeats it — invisible dark-on-dark,
+   but a dark strip across the whole light theme. Clear it so the frost shows;
+   position:relative anchors the ::before to the bar. The backdrop-filter must stay
+   on the ::before, never the element — on the element it becomes a containing block
+   that traps the fixed submenus (see the note above). */
+:root[data-ui-theme='shadcn'] .menubar {
+  background: transparent;
+  position: relative;
+  /* Float the bar as a rounded card on the gradient stage (see §16). */
+  height: 38px;
+  margin: 10px 10px 0;
+  border: 1px solid var(--sh-line-strong);
+  border-radius: var(--sh-r-panel);
+  box-shadow: var(--sh-shadow-card);
+  padding: 0 8px;
+}
 :root[data-ui-theme='shadcn'] .menubar::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
+  border-radius: inherit;
   background: var(--sh-panel-frost);
   backdrop-filter: var(--sh-blur);
   -webkit-backdrop-filter: var(--sh-blur);
@@ -291,7 +343,7 @@
 :root[data-ui-theme='shadcn'] [data-slot='select'] {
   background: var(--sh-btn-fill);
   border: 1px solid var(--sh-btn-border);
-  border-radius: var(--sh-r-sm);
+  border-radius: var(--sh-r-btn);
   color: var(--pm-text-bright);
   padding: 5px 9px;
   font-family: var(--pm-font-ui);
@@ -300,9 +352,65 @@
   cursor: pointer;
 }
 :root[data-ui-theme='shadcn'] [data-slot='checkbox'],
-:root[data-ui-theme='shadcn'] [data-slot='switch'],
 :root[data-ui-theme='shadcn'] [data-slot='slider'] {
   accent-color: var(--pm-accent);
+}
+
+/* The Switch renders as the sliding pill the primitive's doc-comment promises
+   (the theme only ever set accent-color before). A native `type=checkbox` under
+   the hood, so value/keyboard/`:checked` semantics — and the tests — are intact. */
+:root[data-ui-theme='shadcn'] [data-slot='switch'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--sh-btn-border-strong);
+  border: 0;
+  position: relative;
+  flex: 0 0 auto;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+:root[data-ui-theme='shadcn'] [data-slot='switch']::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.3);
+  transition: transform 0.15s ease;
+}
+:root[data-ui-theme='shadcn'] [data-slot='switch']:checked {
+  background: var(--pm-accent);
+}
+:root[data-ui-theme='shadcn'] [data-slot='switch']:checked::before {
+  transform: translateX(14px);
+}
+:root[data-ui-theme='shadcn'] [data-slot='switch']:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Badge — a rounded accent-tint chip (the primitive had no modern paint). A
+   caller can still override colour with its own class for feedback badges. */
+:root[data-ui-theme='shadcn'] [data-slot='badge'] {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  background: var(--sh-accent-soft);
+  color: var(--pm-accent);
+  border: 1px solid transparent;
 }
 
 /* ================================================================== */
@@ -320,6 +428,50 @@
   outline: none;
 }
 
+/* OUTPUT toolbar: one consistent terminal control set. The bar packs an info
+   group (title + count) then the ortho / follow / font / A- / A+ / clear /
+   splash controls. Base console.css sizes them tiny (13-14px) and mixes forms —
+   bare-text buttons beside a bordered select — so they read as a scatter of
+   affordances. Unify them into 20px ghost controls that share the card's 6px
+   radius language, sit on one baseline, and hover with a soft accent wash. */
+:root[data-ui-theme='shadcn'] .console__bar {
+  gap: 6px;
+}
+:root[data-ui-theme='shadcn'] .console__bar-btn,
+:root[data-ui-theme='shadcn'] .console__bar-font {
+  height: 20px;
+  border-radius: 6px;
+  font-size: 10.5px;
+}
+:root[data-ui-theme='shadcn'] .console__bar-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  line-height: 1;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--pm-text-dim);
+}
+/* Ghost hover — a soft wash, no border-shift (never on an active toggle: the
+   §4 is-on accent fill owns that state). */
+:root[data-ui-theme='shadcn'] .console__bar-btn:not(.is-on):hover {
+  background: var(--sh-accent-soft);
+  border-color: transparent;
+  color: var(--pm-text-bright);
+}
+/* The font select keeps a dropdown affordance: a subtle boxed control that
+   matches the ghost buttons' size + radius. */
+:root[data-ui-theme='shadcn'] .console__bar-font {
+  padding: 0 6px;
+  border: 1px solid var(--sh-btn-border);
+  background: var(--sh-btn-fill);
+  color: var(--pm-text-dim);
+}
+:root[data-ui-theme='shadcn'] .console__bar-font:hover {
+  border-color: var(--sh-btn-border-strong);
+  color: var(--pm-text-bright);
+}
+
 /* ================================================================== */
 /* 8. PANELS + DOCK — single-owner seams, flush docked, float floats.  */
 /* ================================================================== */
@@ -327,6 +479,17 @@
 /* Panel surfaces are Tailwind on the components: the shell dock/column/main in
    shell/AppShell.tsx (docked ext-gui flush; floating ext-gui frosted), and the
    `[data-slot='panel']` card treatment in ui/Panel.tsx. */
+
+/* The STAGE behind the chrome. The 3-D viewport + docked column paint their own
+   opaque fills on top; the soft radial-blob gradient only shows in the gaps and
+   behind floating/frosted panels, so the whole window reads as a calm gradient
+   rather than flat black/grey. `[data-sb-canvas]` is Storybook's story canvas —
+   the same treatment so a primitive sits on the app's real stage, not a void. */
+:root[data-ui-theme='shadcn'] .shell,
+:root[data-ui-theme='shadcn'] [data-sb-canvas] {
+  background: var(--sh-app-bg);
+  background-attachment: fixed;
+}
 
 /* ================================================================== */
 /* 9. OBJECT ROWS — calm accent tint, geometry preserved.             */
@@ -486,6 +649,16 @@
   flex: 0 0 auto;
   opacity: 0.92;
 }
+/* A control's icon is decorative: it must never intercept the pointer. The
+   modern theme fills icon buttons (the movie transport, quick buttons, …) with
+   an <svg>, and hit-testing that lands on the SVG rejects the control — an
+   SVGElement is not an HTMLElement — which reads as "unreachable" (the object-
+   list-reachable e2e checks exactly this). Pass the pointer through to the
+   button, which is always the real target. Classic has no icons and is unscoped. */
+:root[data-ui-theme='shadcn'] button svg,
+:root[data-ui-theme='shadcn'] [role='button'] svg {
+  pointer-events: none;
+}
 /* icon-only controls collapse to a square */
 :root[data-ui-theme='shadcn'] .ui-has-icon:has(.ui-sr) {
   gap: 0;
@@ -609,4 +782,507 @@
 :root[data-ui-theme='shadcn'] .scpanel {
   flex: 0 0 auto;
   overflow: visible;
+}
+
+/* ================================================================== */
+/* 16. MODERN SHELL — floating cards on the gradient stage.            */
+/*                                                                     */
+/* The classic layout is PyMOL's flush Ortho geometry; the modern      */
+/* theme lifts each region into a rounded, shadowed card with the      */
+/* --sh-app-bg stage showing between them (the design the app is tuned */
+/* for). These are PURELY COSMETIC insets: the 3-D viewport maps        */
+/* pointer coords from its own bounding rect and the shell keeps        */
+/* PyMOL's internal_gui at 0, so the scene rectangle is unaffected —    */
+/* nothing here changes what the engine is told, only where the DOM     */
+/* boxes sit. Classic (no data-ui-theme) is untouched.                  */
+/* ================================================================== */
+
+/* Reveal the stage: the row that holds the viewport + column must not
+   paint a flat fill over the .shell gradient (it carries the legacy
+   `--pm-bg-viewport` and, in modern, a `bg-pm-bg` utility — both cleared
+   here), and it insets its children so the gradient shows around them. */
+:root[data-ui-theme='shadcn'] .shell__main {
+  background: transparent;
+  /* One uniform 10px stage gutter everywhere. The flex `gap` lands on BOTH
+     sides of the 4px .splitter--v, so 3 + 4 + 3 = a 10px viewport↔rail gutter
+     that matches the 10px outer margins (was 10 → a lopsided 24px gutter).
+     Bottom padding is trimmed to 6 because the 4px .splitter--h below adds the
+     rest: 6 + 4 = a 10px viewport↔console gutter (was 10 → 14px). */
+  padding: 10px 10px 6px;
+  gap: 3px;
+}
+
+/* The 3-D canvas floats as a rounded card (its dark fill + overflow:hidden
+   come from shell.css; we only round + lift it). */
+:root[data-ui-theme='shadcn'] .shell__viewport {
+  border-radius: var(--sh-r-panel);
+  box-shadow: var(--sh-shadow-card);
+}
+
+/* The right internal-gui column floats as a card. It keeps its own
+   overflow-y:auto (rounded corners clip the scroll content); the legacy
+   left border is dropped in favour of a full hairline. */
+:root[data-ui-theme='shadcn'] .internal-gui {
+  border: 1px solid var(--sh-line-strong);
+  border-radius: var(--sh-r-panel);
+  box-shadow: var(--sh-shadow-card);
+}
+
+/* The docked console (bottom/side) floats above the status bar. AppShell
+   pins it flush when docked (`rounded-none/border-0/shadow-none`); this
+   unlayered rule overrides those utilities to give it the card treatment.
+   The floating form already gets its own card in AppShell. */
+:root[data-ui-theme='shadcn'] .extgui:not(.extgui--float) {
+  /* 10px below to the status bar, matching the stage rhythm (was 8px). */
+  margin: 0 10px 10px;
+  border: 1px solid var(--sh-line-strong);
+  border-radius: var(--sh-r-panel);
+  box-shadow: var(--sh-shadow-card);
+  overflow: hidden;
+}
+
+/* Between two floating cards the gutter's centered hairline reads as clutter;
+   the gap itself is the seam. Show the accent line only while resizing/hover. */
+:root[data-ui-theme='shadcn'] .splitter--v::after,
+:root[data-ui-theme='shadcn'] .splitter--h::after {
+  opacity: 0;
+}
+:root[data-ui-theme='shadcn'] .splitter--v:hover::after,
+:root[data-ui-theme='shadcn'] .splitter--h:hover::after {
+  opacity: 1;
+}
+
+/* ================================================================== */
+/* 17. MODERN RAIL — tidy the internal-gui column into calm sections.  */
+/*                                                                     */
+/* The column stacks PyMOL's Executive / Wizard / ButMode / Movie /    */
+/* Scenes blocks; packed flush they read as a wall of controls. Give   */
+/* the column inset padding, put air between the sections with a soft   */
+/* divider, and calm the button rhythm — no control is removed, the     */
+/* rail just reads as intentional sections instead of a dump.           */
+/* ================================================================== */
+
+:root[data-ui-theme='shadcn'] .internal-gui {
+  padding: 4px;
+  gap: 2px;
+}
+
+/* Each top-level section: even inset + a hairline separator above (not on the
+   first). `.wizards` is just the collapsed launcher bar, kept flush to ButMode.
+   These three MAY scroll, so full padding is safe. */
+:root[data-ui-theme='shadcn'] .butmode-host,
+:root[data-ui-theme='shadcn'] .mvpanel,
+:root[data-ui-theme='shadcn'] .scpanel {
+  padding: 8px;
+  border-radius: var(--sh-r-sm);
+}
+/* The objects panel carries the load-bearing Executive floor: head (17px) + rows
+   (144px) = 161px, in an `overflow:hidden` box sized to exactly that min-height.
+   It may take only a HORIZONTAL inset — any vertical padding/margin would push
+   its content past 161 and clip the object list out of reach (guarded by the
+   smoke.e2e "internal-gui column keeps the object list reachable" spec). */
+:root[data-ui-theme='shadcn'] .objpanel {
+  padding: 0 8px;
+  border-radius: var(--sh-r-sm);
+}
+:root[data-ui-theme='shadcn'] .butmode-host,
+:root[data-ui-theme='shadcn'] .mvpanel,
+:root[data-ui-theme='shadcn'] .scpanel,
+:root[data-ui-theme='shadcn'] .wizards {
+  border-top: 1px solid var(--pm-line);
+  margin-top: 2px;
+  padding-top: 10px;
+}
+
+/* Section heads sit flush inside the new padding (they carried their own inset
+   borders/bg for the flush layout). */
+:root[data-ui-theme='shadcn'] .objpanel__head,
+:root[data-ui-theme='shadcn'] .mvpanel__head,
+:root[data-ui-theme='shadcn'] .scpanel__head {
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+  border-bottom: 0;
+  margin-bottom: 6px;
+}
+/* …but the objects head takes NO bottom margin: its panel is floored to exactly
+   head + rows (161px), so a margin here would overflow + clip the list (see above). */
+:root[data-ui-theme='shadcn'] .objpanel__head {
+  margin-bottom: 0;
+}
+
+/* Button rows inside the rail breathe: consistent gap, wrap instead of clip. */
+:root[data-ui-theme='shadcn'] .scbar,
+:root[data-ui-theme='shadcn'] .scmenu,
+:root[data-ui-theme='shadcn'] .vwlist__head,
+:root[data-ui-theme='shadcn'] .mvpanel__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+:root[data-ui-theme='shadcn'] .scmenu {
+  margin-top: 8px;
+  border-top: 1px solid var(--pm-line);
+  padding-top: 8px;
+}
+
+/* The movie transport is NINE controls — six transport icons plus the seq / rock
+   / full toggles — packed into PyMOL's `repeat(9, 1fr)` grid (movie.css). With the
+   modern icon+label buttons that nine-across grid overran the 220px column and
+   pushed seq/rock/full clean off the card (the §17 flex rules were inert on a grid
+   container). Re-flow it as two tidy rows: the six transport icons across the top,
+   then the three labelled toggles as equal thirds beneath. `minmax(0, 1fr)` lets
+   the cells shrink to share the width instead of forcing overflow, and clearing
+   the legacy dark edge-strip lets each control read as its own §10 pill. */
+:root[data-ui-theme='shadcn'] .mvctl {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  height: auto;
+  padding: 0;
+  background: transparent;
+}
+:root[data-ui-theme='shadcn'] .mvctl__btn {
+  min-width: 0;
+  width: auto;
+}
+/* seq / rock / full (children 7–9) drop to the second row, each an equal third. */
+:root[data-ui-theme='shadcn'] .mvctl__btn:nth-child(n + 7) {
+  grid-column: span 2;
+}
+
+/* The four view tabs (timeline · edit · menu · sweep) share the row as equal
+   segments instead of clumping to the left, so the strip reads as one control. */
+:root[data-ui-theme='shadcn'] .mvpanel__tabs {
+  flex-wrap: nowrap;
+}
+:root[data-ui-theme='shadcn'] .mvpanel__tabs .mvpanel__tabbtn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 3px 4px;
+  text-align: center;
+}
+
+/* The seek scrubber + tab row must never push past the card edge; the scrubber
+   spans the full card width and sits on its own vertical rhythm. */
+:root[data-ui-theme='shadcn'] .mvpanel__seek,
+:root[data-ui-theme='shadcn'] .mvpanel__seek input[type='range'] {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+:root[data-ui-theme='shadcn'] .mvpanel__seek {
+  padding: 6px 0;
+}
+/* The scrubber is a native range with only accent-color set — a thin, near-
+   invisible track. Give it a slim rounded rail with a clear accent thumb so it
+   reads as a real timeline scrubber. */
+:root[data-ui-theme='shadcn'] .mvpanel__range {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--sh-line-strong);
+  cursor: pointer;
+}
+:root[data-ui-theme='shadcn'] .mvpanel__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--pm-accent);
+  border: 2px solid var(--pm-panel);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+}
+:root[data-ui-theme='shadcn'] .mvpanel__range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--pm-panel);
+  border-radius: 999px;
+  background: var(--pm-accent);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+}
+:root[data-ui-theme='shadcn'] .mvpanel__range::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--sh-line-strong);
+}
+
+/* Timeline strip: the canvas is a bare hardcoded-black rectangle that floated as a
+   stray dark smear. Frame it — full card width, rounded, hairline border — so the
+   empty ("no movie…") and defined timeline both read as one intentional inset. */
+:root[data-ui-theme='shadcn'] .mvtl {
+  padding: 2px 0 4px;
+}
+:root[data-ui-theme='shadcn'] .mvtl__canvas {
+  border-radius: var(--sh-r-sm);
+  border: 1px solid var(--sh-line-strong);
+}
+:root[data-ui-theme='shadcn'] .mvtl__foot {
+  padding-top: 4px;
+}
+
+/* Object-row name inputs already fit; keep the A/S/H/L/C/M op cluster from
+   forcing a horizontal scrollbar inside the rounded objects card. */
+:root[data-ui-theme='shadcn'] .objpanel__rows,
+:root[data-ui-theme='shadcn'] .objpanel__body {
+  overflow-x: hidden;
+}
+
+/* Quick-button cluster: classic packs 4 compact 62px buttons per no-wrap row,
+   but the modern buttons carry an icon + a full label, so a narrow dock
+   overflowed (labels clipped) and a wide dock left the column clumped top-left
+   with a tall void beneath it. Give the column a calm, bounded width, let it
+   shrink at narrow widths, and CENTER the cluster in its column so the leftover
+   dock height reads as even breathing room instead of dead space at the bottom. */
+:root[data-ui-theme='shadcn'] .quickbuttons {
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  min-width: 0;
+  flex: 0 1 auto;
+  max-width: 46%;
+}
+/* The widest row (four labelled buttons) sets the column width; every shorter
+   row GROWS its cells to fill that same width, so all rows share one clean left
+   AND right edge without any label clipping. `min-width` is the wrap threshold:
+   when the dock is squeezed the cells reflow onto a new line instead of
+   clipping or overlapping. */
+:root[data-ui-theme='shadcn'] .quickbuttons__row {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+:root[data-ui-theme='shadcn'] .quickbutton {
+  flex: 1 1 auto;
+  min-width: 3.25rem;
+}
+/* The movie transport (row 3: |◁ ◁ □ ▷ ▷| clear) reads as ONE segmented group:
+   the seven icon controls sit connected inside a soft inset track with hairline
+   dividers, so it is legible as a single transport rather than seven loose pills. */
+:root[data-ui-theme='shadcn'] .quickbuttons__row:nth-child(3) {
+  gap: 0;
+  padding: 3px;
+  border-radius: var(--sh-r-btn);
+  background: var(--pm-line);
+  border: 1px solid var(--sh-line-strong);
+}
+:root[data-ui-theme='shadcn'] .quickbuttons__row:nth-child(3) .quickbutton {
+  min-width: 2rem;
+  background: transparent;
+  border-color: transparent;
+  border-radius: var(--sh-r-sm);
+  box-shadow: none;
+}
+:root[data-ui-theme='shadcn'] .quickbuttons__row:nth-child(3) .quickbutton:not(:last-child) {
+  border-right: 1px solid var(--pm-line);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+:root[data-ui-theme='shadcn'] .quickbuttons__row:nth-child(3) .quickbutton:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+:root[data-ui-theme='shadcn'] .quickbuttons__row:nth-child(3) .quickbutton:hover {
+  background: var(--sh-btn-hover);
+  border-color: transparent;
+}
+:root[data-ui-theme='shadcn'] .quickbuttons__row:nth-child(3) .quickbutton:hover:not(:last-child) {
+  border-right-color: var(--pm-line);
+}
+/* The abort/progress row keeps its own alignment when a job is running. */
+:root[data-ui-theme='shadcn'] .quickbuttons__progress {
+  gap: 8px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 17b. RAIL — uniform section headers + Scenes-head overflow.         */
+/*                                                                     */
+/* The rail's section names were mixed: Objects/Scenes/Views read as   */
+/* tiny dim slate labels while the Movie head shouted in near-black    */
+/* (title #0f1420, clock #2b3245) with a different letter-spacing —    */
+/* so the eye snagged on Movie and the rail felt uneven. Normalise     */
+/* every section NAME to one dim uppercase label, and drop the         */
+/* secondary bits (the 'panel' note, scene count, movie clock) to a    */
+/* quieter tier so the name always leads. Calm, consistent, minimal.   */
+/* ------------------------------------------------------------------ */
+:root[data-ui-theme='shadcn'] .objpanel__head-title,
+:root[data-ui-theme='shadcn'] .mvpanel__title,
+:root[data-ui-theme='shadcn'] .scpanel__title,
+:root[data-ui-theme='shadcn'] .wizlaunch__bar {
+  color: var(--pm-text-dim);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+/* Secondary head bits read one tier quieter so the section name leads and the
+   long movie clock stops competing with 'MOVIE'. */
+:root[data-ui-theme='shadcn'] .objpanel__head-note,
+:root[data-ui-theme='shadcn'] .scpanel__count,
+:root[data-ui-theme='shadcn'] .mvpanel__clock {
+  color: var(--pm-text-dim);
+  /* 0.68 dropped these 10px meta labels to ~3.4:1 on the dark stage — muddy.
+     0.8 lifts them to ~4:1 (still a clear tier below the section name) and
+     helps the light meta read a touch cleaner too. */
+  opacity: 0.8;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* The Scenes head packs the title + a +/</>/sort toolbar on one no-wrap row;
+   on the 220px rail the 'sort' button ran ~13px past the rounded card edge.
+   Slim the glyph buttons (single-char +/</> don't need button padding) so the
+   whole cluster stays inside the card, and let the head wrap as a safety net
+   at narrower dock widths instead of clipping. */
+:root[data-ui-theme='shadcn'] .scpanel__head {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+:root[data-ui-theme='shadcn'] .scpanel__btn {
+  padding-left: 7px;
+  padding-right: 7px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 17c. OBJECT ROWS — clean name pill + tidy A/S/H/L/C/M op cluster.    */
+/*                                                                     */
+/* Each row is name-button | A S H L C M. Classic packs them flush     */
+/* with 1px gaps and a 17x16 (non-square) op, so the six saturated     */
+/* chips read as one smeared rainbow bar butted against the name. The  */
+/* row height is load-bearing (JS hit-tests at ROW_HEIGHT=18, --pm-    */
+/* row-h), so this ONLY touches horizontal geometry: square the ops,   */
+/* even their gaps, and open a clear seam between the name and the op   */
+/* cluster so the two groups read as name ▸ actions. Widths are        */
+/* bounded (group 15 + name-flex + ops 106 + 2 seams) so the cluster    */
+/* can never force a scrollbar or overflow the objects card.           */
+/* ------------------------------------------------------------------ */
+
+/* Clear seam between the name pill and its op cluster (was a flush 1px). */
+:root[data-ui-theme='shadcn'] .objrow {
+  gap: 3px;
+}
+
+/* The name pill vertically centres against the 16px ops and gets a touch
+   more inner breathing so the label clears the rounded corners. */
+:root[data-ui-theme='shadcn'] .objrow__name {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* The op cluster: even 2px gaps so the chips read as six distinct actions
+   rather than a connected bar. */
+:root[data-ui-theme='shadcn'] .objrow__ops {
+  gap: 2px;
+}
+
+/* Square, uniform op chips (classic is 17x16). 16x16 sits centred in the
+   18px row with 1px of breathing top and bottom, flat and calm. */
+:root[data-ui-theme='shadcn'] .objrow__op {
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+}
+
+/* ================================================================== */
+/* 18. DARK POLISH — retheme theme-blind hardcoded greys.              */
+/*                                                                     */
+/* A handful of meta labels are painted with a FIXED slate #hex in the */
+/* base (classic) CSS — they ignore the token set entirely. On the     */
+/* modern dark stage they collapse to 1.7–3.1:1 and read muddy /       */
+/* near-invisible (the menubar 'N menus · N settings' note, the OUTPUT */
+/* line-count, the status-bar dim text + its · separators). Re-point   */
+/* them at the theme's dim token so they clear ~5–6:1 in dark and stay */
+/* consistent in light (where the same token flips). Text-only colour  */
+/* swaps — geometry and BEM names are untouched. */
+:root[data-ui-theme='shadcn'] .menubar__note,
+:root[data-ui-theme='shadcn'] .console__bar-count,
+:root[data-ui-theme='shadcn'] .statusbar__text--dim {
+  color: var(--pm-text-dim);
+}
+/* The status-bar dot separators were a fixed near-black (#3a3e42 → 1.7:1);
+   a muted tint of the dim token keeps them quiet but actually visible. */
+:root[data-ui-theme='shadcn'] .statusbar__sep {
+  color: color-mix(in srgb, var(--pm-text-dim) 48%, transparent);
+}
+
+/* The active movie view-tab fills with the indigo accent but kept --pm-text
+   (a soft off-white → only 3.5:1 on indigo). Join the §4 'on/selected' set so
+   its label paints the crisp accent-text white like every other toggled
+   control. */
+:root[data-ui-theme='shadcn'] .mvpanel__tabbtn.is-on {
+  color: var(--sh-accent-text);
+}
+
+/* ================================================================== */
+/* 19. OVERLAY WINDOWS — float clear of the taller modern menubar and  */
+/*     inherit the floating-card language.                             */
+/*                                                                     */
+/* The Settings + Builder launch bars and the Colours/Builder/Settings */
+/* windows anchor a few px from the top — a measurement tuned to the   */
+/* classic 26px menu strip. The modern menubar floats as a 38px card   */
+/* with a 10px top margin (§5), so its bottom edge sits at ~48px and   */
+/* every top-anchored overlay tucks UNDER it: the launch bars vanish   */
+/* behind the bar (their controls become unreachable) and the windows  */
+/* open flush to it with hard square corners and a heavy near-black    */
+/* drop shadow. Push them clear (geometry only) and re-skin them with  */
+/* the card radius + the soft diffuse pop shadow so an opened panel    */
+/* reads as a floating card, not a slab welded to the menubar. Values  */
+/* only — no BEM renames, and classic keeps its original numbers. */
+
+/* Launch bars drop below the floating menubar so their buttons are
+   fully visible and clickable (Settings top-right, Builder top-left). */
+:root[data-ui-theme='shadcn'] .setlaunch,
+:root[data-ui-theme='shadcn'] .builder-launch {
+  top: 56px;
+}
+
+/* The collapsed Builder chip floats over the ALWAYS-DARK viewport canvas, but as
+   a bare <Button> it only carried the translucent §10 btn fill — in light mode
+   its slate text on the near-black canvas was effectively invisible (a ghost
+   "Builder" bleeding into the viewport HUD text). Give it the same frosted
+   floating-chip skin the Settings launch bar already wears so it reads as a
+   deliberate control on ANY backdrop. (setlaunch's own buttons are opaque
+   --pm-panel-alt, so they stay legible; this only needs the Builder chip.) */
+:root[data-ui-theme='shadcn'] .builder-launch {
+  background: var(--sh-panel-frost);
+  backdrop-filter: var(--sh-blur);
+  border-color: var(--sh-line-strong);
+  box-shadow: var(--sh-shadow-card);
+}
+:root[data-ui-theme='shadcn'] .builder-launch:hover {
+  background: var(--sh-panel-frost);
+  border-color: var(--pm-accent);
+  color: var(--pm-text-bright);
+}
+
+/* The windows themselves clear the bar and gain an 8px breathing gap. */
+:root[data-ui-theme='shadcn'] .colors,
+:root[data-ui-theme='shadcn'] .builder {
+  top: 56px;
+}
+/* `.setwin` opens directly beneath the relocated `.setlaunch` bar. */
+:root[data-ui-theme='shadcn'] .setwin {
+  top: 84px;
+}
+
+/* Soften every overlay window into the same card idiom: the rounded
+   corner, the calm hairline, and the diffuse pop shadow the menus and
+   rail cards already use (replacing the legacy 2–4px corners + 35–55%
+   black drop shadow that read harsh on the light stage). */
+:root[data-ui-theme='shadcn'] .colors,
+:root[data-ui-theme='shadcn'] .setwin,
+:root[data-ui-theme='shadcn'] .builder,
+:root[data-ui-theme='shadcn'] .dlgwin {
+  border-radius: var(--sh-r);
+  border-color: var(--sh-line-strong);
+  box-shadow: var(--sh-pop);
+}
+
+/* Round the full-bleed title bars to match, so no square header corner
+   pokes past the window's rounded edge. */
+:root[data-ui-theme='shadcn'] .colors__title,
+:root[data-ui-theme='shadcn'] .setwin__title,
+:root[data-ui-theme='shadcn'] .dlgwin__title {
+  border-radius: var(--sh-r) var(--sh-r) 0 0;
 }
