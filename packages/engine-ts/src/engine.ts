@@ -38,6 +38,7 @@ import { parseCommand, splitCommands } from './cmd/parser';
 import { SelectionError } from './select/selector';
 import type { RegistrarCtx } from './cmd/registrar';
 import { ALL_REGISTRARS } from './cmd/registrars';
+import { renderRayImage, setLastImage, resolveAntialias } from './cmd/render';
 
 /** Representation name -> RepId, for `_bridge.pull_geometry(object, repName)`. */
 const REP_BY_NAME = new Map<string, number>();
@@ -546,6 +547,21 @@ export class Engine {
     // re-fetched here the moment it tracks the object.
     h('_engine.pull_geometry', (args) => this.pullGeometry(args));
     h('_bridge.pull_geometry', (args) => this.pullGeometry(args));
+
+    // `_bridge.ray` / `_bridge.draw` — the web UI's Ray/Draw buttons
+    // (`features/render/RenderDialog.tsx`). The real bridge renders and pushes a
+    // Mode-P still onto the pixel stream; the local engine has no GL, so it runs
+    // the CPU ray tracer (`cmd/render.ts`) into the image buffer instead. The
+    // rendered PNG is then read back with `cmd.png(prior)` for the dialog preview
+    // / save / clipboard. Returns null, exactly like the bridge symbol.
+    const bridgeRender = (args: unknown[], shadows: boolean): Json => {
+      const w = Math.round(Number(args[0]) || 0) || this.width;
+      const h2 = Math.round(Number(args[1]) || 0) || this.height;
+      setLastImage(ex, renderRayImage(ex, w, h2, shadows, resolveAntialias(-1)));
+      return null;
+    };
+    h('_bridge.ray', (args) => bridgeRender(args, true));
+    h('_bridge.draw', (args) => bridgeRender(args, false));
 
     // `cmd.tenmol_objects('snapshot')` — the object-panel endpoint. Answering it
     // means the panel renders from real rows (group/enabled/reps/caption)

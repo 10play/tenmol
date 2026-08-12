@@ -69,8 +69,10 @@ The remaining 6 rep slots are specialised or inapplicable, not core structure:
   back to identity + lattice).
 - **h_add**, **get_area** (dot-SASA), **morph**, **ramps** — reasonable ports.
 
-**Genuinely not modelled (documented no-ops):** file `load`/`fetch`/`save`/`png`,
-`ray`/`draw` to disk (WebGL already renders on screen), and other FS/OS-bound verbs.
+**Genuinely not modelled (documented no-ops):** file `load`/`fetch`/`save` to
+disk, and other FS/OS-bound verbs. (`ray`/`draw`/`png` are now **real** — a
+headless CPU ray tracer renders the scene in `packages/engine-ts/src/render/`;
+`png` returns real PNG bytes. Only the *disk write* remains a no-op.)
 
 **Not yet rendered visually (data present, no viewport draw):**
 - **labels** — the label text/positions are stored, but the viewport has no text
@@ -148,8 +150,11 @@ Rendered client-side via Mode-G instance/mesh buffers:
 | `extent` | ❌ | bounding-box wireframe |
 
 Also missing at the render level: per-atom **transparency/alpha**, `cartoon_*`
-/ `stick_*` style settings actually affecting geometry, `set_bond`, ambient
-occlusion, and **ray tracing** (`cmd.ray`) — there is no CPU ray tracer.
+/ `stick_*` style settings actually affecting geometry, `set_bond`, and ambient
+occlusion. **Ray tracing** (`cmd.ray`) is now **supported** — a headless CPU ray
+tracer (`packages/engine-ts/src/render/`) renders spheres/sticks/lines/nonbonded
+plus surface & cartoon triangle meshes with PyMOL-faithful two-light shading,
+shadows, antialiasing, depth-cue fog and a BVH; `get_image`/`png` read it back.
 
 ---
 
@@ -332,4 +337,6 @@ saving/exporting (structures, images, sessions, movies, meshes).
 7. **Surfaces** (`surface`/`mesh`/`dots`) — marching cubes.
 8. **States/trajectories → movies → scenes → wizards → builder → maps/volumes**.
 9. **File I/O** (more readers) and **export/save**.
-10. **Ray tracing** — likely permanently deferred to the remote backend.
+10. **Ray tracing** — ✅ **done**: a headless CPU ray tracer
+    (`packages/engine-ts/src/render/`) renders `cmd.ray`/`draw` in-process and
+    `png` emits real PNG bytes (no remote backend needed).

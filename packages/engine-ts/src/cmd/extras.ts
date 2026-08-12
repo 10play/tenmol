@@ -510,9 +510,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'load_traj',
       'save',
       'fetch',
-      'png',
-      'ray',
-      'draw',
+      // `ray`/`draw`/`png` are real now — see cmd/render.ts.
       // logging to disk
       'log',
       'log_close',

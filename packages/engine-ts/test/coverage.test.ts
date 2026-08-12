@@ -41,7 +41,8 @@ const FLOORS = {
   // flat 295→305, namespaces 80→87 as the stub verbs became real handlers.
   // Parity resume (valence chemistry + nucleic builders + combine_fragment):
   // set_geometry/fnab go real -> flat 305→307.
-  flatReal: Number(process.env.TENMOL_COVERAGE_FLAT ?? 307),
+  // Ray tracer (cmd/render.ts): ray/draw/png become real handlers -> flat 307→310.
+  flatReal: Number(process.env.TENMOL_COVERAGE_FLAT ?? 310),
   nsReal: Number(process.env.TENMOL_COVERAGE_NS ?? 87),
   reps: Number(process.env.TENMOL_COVERAGE_REPS ?? 13),
 };

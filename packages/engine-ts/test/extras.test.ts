@@ -71,7 +71,7 @@ describe('extras — residual command sweep', () => {
       // `edit`/`remove_picked` moved to cmd/editing.ts, `fab` to cmd/editor.ts,
       // and the superposition family (intra_rms/alignto/extra_fit/cealign/
       // usalign/pair_fit) to cmd/align.ts (see parity-*.test.ts).
-      'save', 'fetch', 'png', 'ray', 'draw', 'log', 'unpick',
+      'save', 'fetch', 'log', 'unpick', // ray/draw/png are real now (cmd/render.ts)
       'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
       'alias', 'assign_stereo',
       'get_mtl_obj', 'get_povray', 'povray',
@@ -224,7 +224,7 @@ describe('extras — residual command sweep', () => {
     const { ex, call } = setup();
     const before = ex.molecule('m')!.natom;
     // null-returning (`load` is a real verb now — cmd/fileio.ts, load.test.ts)
-    for (const v of ['save', 'fetch', 'png', 'ray', 'quit', 'cache', 'cls', 'log']) {
+    for (const v of ['save', 'fetch', 'quit', 'cache', 'cls', 'log']) {
       expect(call(v), `${v} should return null`).toBeNull();
     }
     // shaped returns
