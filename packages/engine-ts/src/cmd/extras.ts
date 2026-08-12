@@ -524,8 +524,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'drag',
       'release',
       'unpick',
-      // builders needing a fragment library. `fab` (peptide) is real — editor.ts.
-      'fnab',
+      // `fab` (peptide) is real — editor.ts; `fnab` (nucleic) — cmd/nucleic.ts.
       'h_fix',
       // movie frame-table edits (movie store lives in the engine)
       'mcopy',
@@ -557,7 +556,6 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // chemistry/typing we do not model
       'assign_stereo',
       'text_type',
-      'set_geometry',
       'unset_deep',
       'pbc_wrap',
       'pbc_unwrap',

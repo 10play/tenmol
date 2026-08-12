@@ -15,15 +15,15 @@ ceiling is ~93–95%, not 100%).
 
 | Surface | Real / total | % |
 |---|---|---|
-| Flat `cmd.*` | 305 / 390 | 78.2% |
+| Flat `cmd.*` | 307 / 390 | 78.7% |
 | `preset.*` | 20 / 21 | 95.2% |
 | `util.*` | 37 / 45 | 82.2% |
 | `movie.*` | 20 / 20 | 100.0% |
 | `editor.*` | 3 / 23 | 13.0% |
 | `gui.*` | 7 / 7 | 100.0% |
-| **All commands** | **392 / 506** | **77.5%** |
+| **All commands** | **394 / 506** | **77.9%** |
 
-Flat `cmd.*` also has **48 stub** (no-op) handlers and **38**
+Flat `cmd.*` also has **46 stub** (no-op) handlers and **43**
 engine-only extensions (e.g. `tenmol_*`) outside the PyMOL surface.
 
 ## Representation coverage
