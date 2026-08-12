@@ -48,6 +48,20 @@ export const RENDER_HOOK = 'render_dialog';
 /** Also accepted, for symmetry with `features/builder`'s `tenmol:open-builder`. */
 export const OPEN_EVENT = 'tenmol:open-render';
 
+/**
+ * A PNG byte array (from `cmd.png`, which returns `number[]`) → a `data:` URL.
+ * Base64 is built in chunks: `btoa(String.fromCharCode(...huge))` overflows the
+ * argument stack on a full-frame image, so fold 8 KB at a time.
+ */
+function bytesToPngDataUrl(bytes: number[]): string {
+  let binary = '';
+  const CHUNK = 0x2000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.slice(i, i + CHUNK));
+  }
+  return `data:image/png;base64,${btoa(binary)}`;
+}
+
 /** The Draw/Ray dialog: a size-and-render setup page and a save page for the result. */
 export function RenderDialog() {
   const session = useSession();
@@ -64,6 +78,10 @@ export function RenderDialog() {
   const [busy, setBusy] = useState<null | 'draw' | 'ray'>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [savePath, setSavePath] = useState('');
+  // A data-URL preview of the just-rendered image, shown on the result page. The
+  // local (in-browser) backend has no Mode-P pixel stream to push a still onto
+  // the viewport, so the render is shown HERE instead of "in the viewport".
+  const [preview, setPreview] = useState<string | null>(null);
   const d = derive(state);
 
   /*
@@ -125,15 +143,28 @@ export function RenderDialog() {
     async (mode: 'draw' | 'ray') => {
       setBusy(mode);
       setStatus(null);
+      setPreview(null);
       try {
         if (mode === 'ray') {
           // Qt sets opaque_background from the transparent checkbox first.
           await session.call('cmd.set', ['opaque_background', state.transparent ? 0 : 1]);
           await session.call('_bridge.ray', [state.width, state.height]);
         } else {
-          await session.run(`draw ${state.width}, ${state.height}`);
+          await session.call('_bridge.draw', [state.width, state.height]);
         }
-        setStatus(`${mode} ${state.width}x${state.height} complete — shown in the viewport`);
+        // Read the just-rendered image back as PNG (prior=1: do not re-render) and
+        // show it on the result page. Remote pushes a still to the viewport too;
+        // the preview is the honest fallback for the GL-less local backend.
+        try {
+          const png = await session.call<number[]>('cmd.png', ['', state.width, state.height], {
+            prior: 1,
+            ray: 0,
+          });
+          if (Array.isArray(png) && png.length > 0) setPreview(bytesToPngDataUrl(png));
+        } catch {
+          /* the render succeeded; only the preview read-back failed */
+        }
+        setStatus(`${mode} ${state.width}x${state.height} complete`);
         setPage('result');
       } catch (e) {
         setStatus(e instanceof Error ? e.message : String(e));
@@ -318,9 +349,17 @@ export function RenderDialog() {
       {page === 'result' && (
         <div className="render__body">
           <p className="render__note modern:text-pm-text-dim">
-            The rendered image is in the viewport. Ray output is the CPU ray tracer, the same
-            renderer desktop PyMOL uses, so it is identical rather than approximated.
+            Ray output is the CPU ray tracer, the same algorithm desktop PyMOL uses, so it is
+            identical rather than approximated. Save or copy the image below.
           </p>
+          {preview !== null && (
+            <img
+              className="render__preview"
+              src={preview}
+              alt={`${state.width}×${state.height} render`}
+              style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '0 0 8px' }}
+            />
+          )}
           <div className="render__row">
             <TextInput
               className="render__path"

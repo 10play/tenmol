@@ -37,6 +37,7 @@ import { registerGuiNs } from './guins';
 import { registerTopics } from './topics';
 import { registerXform } from './xform';
 import { registerNucleic } from './nucleic';
+import { registerRender } from './render';
 import { registerMisc2 } from './misc2';
 import { registerEditor } from './editor';
 
@@ -75,6 +76,7 @@ export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
   registerTopics,
   registerXform,
   registerNucleic,
+  registerRender,
   registerMisc2,
   registerEditor,
 ];
