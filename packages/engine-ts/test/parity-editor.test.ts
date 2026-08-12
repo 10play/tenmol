@@ -92,7 +92,7 @@ describe('parity: editor.* peptide & fragment builders', () => {
     expect(await count(b, 'pep and name CA')).toBe(3); // RED: no-op builds nothing
   });
 
-  it.fails('combine_fragment: fuses a fragment INTO the object, adding its atoms', async () => {
+  it('combine_fragment: fuses a fragment INTO the object, adding its atoms', async () => {
     const b = await boot();
     // PyMOL ref: editor.py combine_fragment() (line ~88) loads `fragment` and
     // `fuse(..., mode 3)` joins it to the selection's object WITHOUT consuming an

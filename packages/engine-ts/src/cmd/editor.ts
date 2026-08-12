@@ -576,4 +576,63 @@ export function registerEditor(ctx: RegistrarCtx): void {
     const name = ctx.executive.uniqueName(nameArg || 'obj');
     return buildPeptideObject(ctx, input, name);
   });
+
+  /* -------------------------- combine_fragment ------------------------- */
+  // combine_fragment(selection, fragment, hydrogen, anchor) — load `fragment`
+  // and fuse it INTO the selection's object without consuming an atom, so the
+  // object gains the fragment's atoms as a new residue (editor.py:88, fuse mode 3).
+  ctx.command('combine_fragment', (args, kwargs): Json => {
+    const selection = str(arg(args, kwargs, 0, 'selection'), '');
+    const fragment = str(arg(args, kwargs, 1, 'fragment'), '');
+    const matched = ctx.executive.atomsMatching(selection);
+    if (matched.length === 0) return null;
+    const objName = matched[0]!.objName;
+    const mol = ctx.executive.molecule(objName);
+    if (!mol) return null;
+    const frag = getAminoAcidFragment(fragment);
+    if (!frag) return null; // unknown fragment
+    const resn = resolveAminoAcidCode(fragment) ?? fragment.toUpperCase();
+    const chain = matched[0]!.atom.chain;
+    const resv = mol.atoms.length ? Math.max(0, ...mol.atoms.map((a) => a.resv)) + 1 : 1;
+
+    const base = mol.atoms.length;
+    const coords: number[] = [];
+    frag.atoms.forEach((fa, i) => {
+      mol.atoms.push({
+        id: base + i + 1,
+        name: fa.name,
+        resn,
+        resi: String(resv),
+        resv,
+        chain,
+        segi: '',
+        alt: '',
+        elem: fa.elem,
+        hetatm: false,
+        b: 0,
+        q: 1,
+        color: 0,
+        ss: '',
+        visRep: defaultVisRep(),
+      });
+      coords.push(fa.x, fa.y, fa.z);
+    });
+    if (mol.states.length === 0) mol.states.push(Float32Array.from(coords));
+    else {
+      for (let s = 0; s < mol.states.length; s++) {
+        const old = mol.states[s]!;
+        const merged = new Float32Array(old.length + coords.length);
+        merged.set(old, 0);
+        merged.set(coords, old.length);
+        mol.states[s] = merged;
+      }
+    }
+    for (const [i, j] of frag.bonds) {
+      const a = base + i;
+      const b = base + j;
+      mol.bonds.push(a < b ? [a, b] : [b, a]);
+    }
+    ctx.publish();
+    return objName;
+  });
 }
