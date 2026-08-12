@@ -498,7 +498,40 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
       }
       case 'removeAtom': {
         if (slots.length === 0) return null; // would arm RemoveWizard
-        ctx.call('remove_picked', []);
+        // builder.py:1782-1801 removes the picked atoms, then re-adds the
+        // hydrogens the removal freed on the SURVIVING heavy neighbours
+        // (fix_chemistry + h_add on `((?pk…) and not hydro) extend 1`).
+        // fix_chemistry is a no-op stub in this engine; h_add is real. Collect
+        // the heavy neighbours (by stable id, so removal's reindex can't lose
+        // them) BEFORE removing, then h_add them after.
+        const neighbourIdsByObj = new Map<string, Set<number>>();
+        const pickedByObj = new Map<string, Set<number>>();
+        for (const slot of slots) {
+          for (const ua of ex.atomsMatching(slot)) {
+            let pset = pickedByObj.get(ua.objName);
+            if (!pset) pickedByObj.set(ua.objName, (pset = new Set()));
+            pset.add(ua.index);
+          }
+        }
+        for (const [obj, picks] of pickedByObj) {
+          const mol = ex.molecule(obj);
+          if (!mol) continue;
+          const nset = new Set<number>();
+          for (const [a, b] of mol.bonds) {
+            let nb = -1;
+            if (picks.has(a) && !picks.has(b)) nb = b;
+            else if (picks.has(b) && !picks.has(a)) nb = a;
+            if (nb < 0) continue;
+            const at = mol.atoms[nb];
+            if (at && at.elem !== 'H' && at.elem !== 'D') nset.add(at.id);
+          }
+          if (nset.size) neighbourIdsByObj.set(obj, nset);
+        }
+        // Remove every picked atom (Editor's pkset ∪ pk1), not just pk1.
+        ctx.call('remove', [slots.join(' or ')]);
+        for (const [obj, ids] of neighbourIdsByObj) {
+          ctx.call('h_add', [`${obj} and id ${[...ids].join('+')}`]);
+        }
         clearPicks();
         return null;
       }
@@ -508,7 +541,10 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
       }
       case 'createBond': {
         if (!(slots.length === 2 && slots[0] === 'pk1' && slots[1] === 'pk2')) return null;
+        // BondWizard.staticaction (builder.py:1180-1206): bond, then h_fill to
+        // trim the hydrogens the new bond makes excess.
         ctx.call('bond', ['pk1', 'pk2']);
+        ctx.call('h_fill', []);
         clearPicks();
         return null;
       }

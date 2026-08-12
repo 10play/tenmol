@@ -22,6 +22,13 @@ const ETHANE_CORE = [
   'END',
 ].join('\n');
 
+/** Two carbons 5 Å apart with NO bond — each saturates to CH4 under h_add. */
+const TWO_C_UNBONDED = [
+  'ATOM      1  C1  UNK A   1       0.000   0.000   0.000  1.00  0.00           C',
+  'ATOM      2  C2  UNK A   1       5.000   0.000   0.000  1.00  0.00           C',
+  'END',
+].join('\n');
+
 function engineWith(pdb: string, name = 'm'): RealEngine {
   const e = new RealEngine();
   e.boot();
@@ -150,6 +157,35 @@ describe('builder_action', () => {
     expect(carbonsBonded()).toBe(false);
     // The picks are cleared after the edit.
     expect(reply.editor.slots).toEqual([]);
+  });
+
+  it('createBond trims the excess hydrogens the new bond frees (h_fill)', () => {
+    const e = engineWith(TWO_C_UNBONDED);
+    const count = (s: string) => e.call('count_atoms', [s]) as number;
+    // Saturate both isolated carbons to CH4 (4 H each = 8 H).
+    e.call('h_add', ['all']);
+    expect(count('elem H')).toBe(8);
+    // Pick both carbons and bond them: h_fill then trims pk1 (C1) from 4 H to 3.
+    e.call('builder_pick', ['m', 1, null, 'multi']);
+    e.call('builder_pick', ['m', 2, null, 'multi']);
+    const reply = e.call('builder_action', ['createBond'], {}) as unknown as { error?: unknown };
+    expect(reply.error).toBeNull();
+    // Without the h_fill the count would stay 8 (both carbons left over-valent).
+    expect(count('elem H')).toBe(7);
+  });
+
+  it('removeAtom refills the hydrogens freed on the surviving neighbour (h_add)', () => {
+    // Two bonded carbons, no hydrogens. Remove C1; C2 is freed and must be
+    // re-hydrogenated (builder.py:1782-1801 h_add on the neighbour set).
+    const e = engineWith(ETHANE_CORE);
+    const count = (s: string) => e.call('count_atoms', [s]) as number;
+    expect(count('elem H')).toBe(0);
+    e.call('builder_pick', ['m', 1, null, 'single']); // pk1 = C1
+    const reply = e.call('builder_action', ['removeAtom'], {}) as unknown as { error?: unknown };
+    expect(reply.error).toBeNull();
+    // C1 gone; C2 (now isolated) refilled to a full valence of hydrogens.
+    expect(count('elem C')).toBe(1);
+    expect(count('elem H')).toBe(4);
   });
 
   it('reports the incentive-only reason for clean without throwing', () => {
