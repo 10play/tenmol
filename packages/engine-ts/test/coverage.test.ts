@@ -39,7 +39,9 @@ const PYMOL = join(REPO, 'packages', 'engine', 'modules', 'pymol');
 const FLOORS = {
   // Parity wave (superposition/measurement/maps/export/data-model/util/editing):
   // flat 295→305, namespaces 80→87 as the stub verbs became real handlers.
-  flatReal: Number(process.env.TENMOL_COVERAGE_FLAT ?? 305),
+  // Parity resume (valence chemistry + nucleic builders + combine_fragment):
+  // set_geometry/fnab go real -> flat 305→307.
+  flatReal: Number(process.env.TENMOL_COVERAGE_FLAT ?? 307),
   nsReal: Number(process.env.TENMOL_COVERAGE_NS ?? 87),
   reps: Number(process.env.TENMOL_COVERAGE_REPS ?? 13),
 };

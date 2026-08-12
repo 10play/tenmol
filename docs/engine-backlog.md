@@ -91,11 +91,16 @@ remains in `cmd/builder.ts`. Idealisation vs PyMOL: phi/psi are not applied (the
 residue comes out extended), and native `fuse`/`set_dihedral` are replaced by the
 direct rigid-fit construction.
 
-> Still missing: `combine_fragment, fab, fnab, fit_sugars, fit_DS_fragment,
-attach_nuc_acid, extend_nuc_acid, attach_O5_phosphate, bond_single_stranded,
-bond_double_stranded, add2pO, move_atom_in_res, move_new_res,
-rename_three_to_one, iterate_to_list, check_dummy_oriention, check_DNA_base_pair,
-check_valid_attachment, get_chains_oppo, get_new_chain`
+Now also real (flat verbs, `cmd/nucleic.ts` + `cmd/editor.ts` + `cmd/builder.ts`):
+`fab`, `combine_fragment`, `fnab`, `attach_nuc_acid`, `extend_nuc_acid`,
+`bond_single_stranded`, `bond_double_stranded`, and the valence edits
+`protonate`/`replace`/`cycle_valence`/`set_geometry`/`invert` (bond-order
+perception from `model/residue-bonds.json`).
+
+> Still missing: `fit_sugars, fit_DS_fragment, attach_O5_phosphate, add2pO,
+move_atom_in_res, move_new_res, rename_three_to_one, iterate_to_list,
+check_dummy_oriention, check_DNA_base_pair, check_valid_attachment,
+get_chains_oppo, get_new_chain`
 
 Files: `cmd/editor.ts`, `model/{aa-fragments,superpose}.ts`,
 `scripts/extract-fragments.py`, ref `packages/engine/modules/pymol/editor.py`.
@@ -188,14 +193,17 @@ the fitted RMS and `intra_rms` fitting each state first. Pinned by
 
 Files: `cmd/align.ts`, `cmd/extras.ts`.
 
-### `fab` ported; `fnab` / `h_fix` still stubs — M
+### `fab` + nucleic builders ported; `h_fix` still a stub — M
 
-`cmd.fab(seq, name)` now builds a peptide object from a one-letter sequence
-(shares `editor.build_peptide`; `cmd/editor.ts`). `fnab` (nucleic) and `h_fix`
-remain no-ops — the nucleic monomer library is the next wave (the pickled
-`atpB`/`ttpB`/`gtpB`/`ctpB`/`utpA` fragments exist and are extraction-ready).
+`cmd.fab(seq, name)` builds a peptide from a one-letter sequence
+(`editor.build_peptide`), and the **nucleic-acid builders are now real**
+(`cmd/nucleic.ts`): `fnab`/`attach_nuc_acid`/`extend_nuc_acid` grow a strand
+(and, with `dbl_helix`, the antiparallel complement) from the vendored monomer
+fragments (`model/nucleic-fragments.json` — `atpB`/`ttpB`/`gtpB`/`ctpB`/`utpA`),
+phosphodiester-linking O3'(i)→P(i+1). `combine_fragment` fuses a fragment into an
+object. Only `h_fix` remains a documented no-op.
 
-Files: `cmd/extras.ts:515`.
+Files: `cmd/nucleic.ts`, `cmd/editor.ts`, `cmd/extras.ts`.
 
 ### Top-level verbs that throw `NotPorted` — M · partly landed (Wave 1)
 
