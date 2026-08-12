@@ -396,14 +396,25 @@ function shade(
   const camZ: Vec3 = [-forward[0], -forward[1], -forward[2]];
   // World normal → view space; two-sided (face the viewer).
   let Nv: Vec3 = norm([dot(hit.normal, right), dot(hit.normal, up), dot(hit.normal, camZ)]);
-  if (Nv[2] < 0) Nv = [-Nv[0], -Nv[1], -Nv[2]];
+  let flipped = false;
+  if (Nv[2] < 0) {
+    Nv = [-Nv[0], -Nv[1], -Nv[2]];
+    flipped = true;
+  }
+  // Same two-sided normal in WORLD space — for the shadow-ray self-offset.
+  const NvWorld: Vec3 = flipped
+    ? [-hit.normal[0], -hit.normal[1], -hit.normal[2]]
+    : hit.normal;
 
   const point = addScaled(o, d, hit.t);
   const shadowedBy = (Lworld: Vec3): number => {
     if (!lights.shadows) return 1;
-    const origin = addScaled(point, hit.normal, EPS * 4);
-    const dir: Vec3 = [-Lworld[0], -Lworld[1], -Lworld[2]]; // toward the light
-    return scene.occluded(origin, dir, shadowLen) ? 0 : 1;
+    // Offset along the (viewer-facing) shading normal to avoid self-shadow acne,
+    // then trace TOWARD the light. `Lworld` already points toward the light (it is
+    // the world-space image of the view-space `L` used for N·L), so the shadow
+    // ray direction is +Lworld — negating it would trace into the surface.
+    const origin = addScaled(point, NvWorld, EPS * 4);
+    return scene.occluded(origin, Lworld, shadowLen) ? 0 : 1;
   };
 
   let diffuse = lights.ambient;

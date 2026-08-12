@@ -81,14 +81,16 @@ export function registerRender(ctx: RegistrarCtx): void {
     const aaArg = Number(pick(args, kwargs, 2, 'antialias') ?? -1);
     const antialias = aaArg < 0 ? 2 : aaArg >= 2 ? 3 : aaArg >= 1 ? 2 : 1;
 
-    // Depth-cue fog: PyMOL `depth_cue`/`fog` default on (getSettingFloat returns
-    // 0 for absent settings, so fall back to PyMOL's 1). Only fogs when the view
-    // carries real near/far clip planes (set by zoom); a bare view leaves it off.
-    const depthCue = ex.getSetting('depth_cue') === undefined ? 1 : ex.getSettingFloat('depth_cue');
-    const fogAmt = ex.getSetting('fog') === undefined ? 1 : ex.getSettingFloat('fog');
+    // Depth-cue fog is OFF by default, matching the WebGL renderer (its lighting
+    // uniforms run `fogScale=0`, `lighting.ts`), which scores ~94% vs the PyMOL
+    // ray refs. PyMOL's clip planes hug the object, so a naive depth-cue that
+    // spans [near,far] over-darkens the back half; it only fogs when the user
+    // EXPLICITLY sets `depth_cue`/`fog` on (getSettingFloat returns 0 for absent).
+    const depthCue = ex.getSettingFloat('depth_cue');
+    const fogAmt = ex.getSettingFloat('fog');
     const fogStart = ex.getSetting('fog_start') === undefined ? 0.45 : ex.getSettingFloat('fog_start');
     const fog =
-      depthCue && fogAmt > 0 && cam.far > cam.near
+      depthCue > 0 && fogAmt > 0 && cam.far > cam.near
         ? { near: cam.near, far: cam.far, start: fogStart, amount: fogAmt }
         : null;
 
