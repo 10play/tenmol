@@ -53,7 +53,7 @@ const count = (b: LocalBackend, sel: string): Promise<number> =>
   b.call('count_atoms', [sel]) as Promise<number>;
 
 describe('parity: editor.* nucleic-acid builders', () => {
-  it.fails('fnab: builds one nucleotide per input letter (single strand)', async () => {
+  it('fnab: builds one nucleotide per input letter (single strand)', async () => {
     const b = await bootEmpty();
     // PyMOL ref: editor.py fnab() (line ~1100) loops over `input` calling
     // attach_nuc_acid once per one-letter code, growing an object of that length.
@@ -62,7 +62,7 @@ describe('parity: editor.* nucleic-acid builders', () => {
     expect(await count(b, "dna1 and name C1'")).toBe(4); // RED: no-op builds nothing
   });
 
-  it.fails('attach_nuc_acid / extend_nuc_acid: grows a phosphodiester-linked dimer', async () => {
+  it('attach_nuc_acid / extend_nuc_acid: grows a phosphodiester-linked dimer', async () => {
     const b = await bootEmpty();
     // PyMOL ref: editor.py attach_nuc_acid() (line ~789) builds the first
     // nucleotide; a second call routes through extend_nuc_acid() (line ~856) to
@@ -72,7 +72,7 @@ describe('parity: editor.* nucleic-acid builders', () => {
     expect(await count(b, "na and name C1'")).toBe(2); // RED: throws NotPorted
   });
 
-  it.fails('bond_single_stranded / bond_double_stranded: double helix gets the complement strand', async () => {
+  it('bond_single_stranded / bond_double_stranded: double helix gets the complement strand', async () => {
     const b = await bootEmpty();
     // PyMOL ref: editor.py bond_single_stranded() (line ~708) closes each strand's
     // O3'(i)->P(i+1) backbone; bond_double_stranded() (line ~740) builds and pairs
