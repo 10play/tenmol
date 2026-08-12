@@ -64,6 +64,22 @@ describe('parity: ray — real CPU ray-traced render', () => {
     expect(Math.abs(r - g)).toBeLessThan(60); // white surface ⇒ near-neutral
   });
 
+  it('_bridge.ray renders into the buffer the web UI reads back via png', async () => {
+    const b = await boot();
+    await b.call('show_as', ['sticks', 'm']);
+    await b.call('zoom', ['m']);
+    // The Ray button's exact call (features/render/RenderDialog.tsx).
+    const rv = await b.call('_bridge.ray', [50, 40]);
+    expect(rv).toBeNull(); // mirrors the bridge symbol: renders, returns nothing
+    // The dialog then reads the render back with cmd.png(prior).
+    const png = (await b.call('png', ['', 50, 40, -1, 0])) as number[];
+    expect(png.slice(0, 4)).toEqual([137, 80, 78, 71]);
+    // get_image sees the same buffer.
+    const img = (await b.call('get_image', [])) as number[];
+    expect(img.length).toBe(50 * 40 * 4);
+    expect(nonBackground(img)).toBeGreaterThan(0);
+  });
+
   it('png() returns real PNG bytes with a valid signature and IHDR', async () => {
     const b = await boot();
     await b.call('show_as', ['sticks', 'm']);
