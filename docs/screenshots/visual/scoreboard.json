@@ -1,8 +1,8 @@
 {
   "summary": {
-    "meanCombined": 88.6,
-    "meanShape": 94.2,
-    "meanColor": 83,
+    "meanCombined": 88.7,
+    "meanShape": 94.3,
+    "meanColor": 83.1,
     "meanCeiling": 96.1,
     "scenes": 22
   },
@@ -41,19 +41,19 @@
     },
     {
       "id": "3al1-surface",
-      "comb": 86.1,
-      "shape": 88.9,
-      "color": 83.4,
+      "comb": 85.7,
+      "shape": 88.3,
+      "color": 83.2,
       "ceiling": 99.2,
-      "headroom": 13.1
+      "headroom": 13.5
     },
     {
       "id": "3al1-surface-bfactor",
-      "comb": 81.5,
-      "shape": 84.8,
-      "color": 78.1,
+      "comb": 81,
+      "shape": 84.3,
+      "color": 77.8,
       "ceiling": 98.9,
-      "headroom": 17.4
+      "headroom": 17.8
     },
     {
       "id": "helix-cartoon",
@@ -73,11 +73,11 @@
     },
     {
       "id": "helix-surface",
-      "comb": 91,
-      "shape": 92.2,
-      "color": 89.7,
+      "comb": 95.4,
+      "shape": 96.7,
+      "color": 94,
       "ceiling": 99.2,
-      "headroom": 8.3
+      "headroom": 3.8
     },
     {
       "id": "pept-cartoon-rainbow",
@@ -177,11 +177,11 @@
     },
     {
       "id": "pept-surface",
-      "comb": 97,
-      "shape": 97.9,
-      "color": 96,
+      "comb": 95.8,
+      "shape": 96.9,
+      "color": 94.7,
       "ceiling": 99.5,
-      "headroom": 2.5
+      "headroom": 3.7
     }
   ]
 }

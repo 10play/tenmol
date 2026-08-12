@@ -212,7 +212,7 @@ describe('buildSurfaceFrame', () => {
     for (let v = 0; v < h.counts.verts; v++) expect(color[v * 4 + 3]).toBeCloseTo(1, 6);
   });
 
-  it('picks up the solvent_radius setting (larger probe → larger surface)', () => {
+  it('honours solvent_radius: an isolated atom is its vdW sphere (SES is probe-independent)', () => {
     const mk = (probe: number): IndexedMeshHeader => {
       const mol = parsePdb(pdbOf([['C1', [0, 0, 0]]]), 'one');
       show(mol, Rep.Surface);
@@ -224,12 +224,22 @@ describe('buildSurfaceFrame', () => {
       })!;
       return decodeGeometryFrame(frame).header as IndexedMeshHeader;
     };
+    // PyMOL's solvent-EXCLUDED surface of a lone atom is just its vdW sphere: the
+    // probe rolls over the convex surface without changing the contact patch, so
+    // the surface is the SAME regardless of solvent_radius (unlike the old SAS
+    // approximation, whose size grew with the probe). Both runs must still produce
+    // a valid non-empty sphere of about the same size.
     const small = mk(0.5);
     const big = mk(2.5);
-    // The 4.2 Å sphere (vdw 1.7 + probe 2.5) has more surface area, hence more
-    // vertices/triangles, than the 2.2 Å one (probe 0.5).
-    expect(big.counts.verts).toBeGreaterThan(small.counts.verts);
-    expect(big.counts.tris).toBeGreaterThan(small.counts.tris);
+    expect(small.counts.verts).toBeGreaterThan(0);
+    expect(big.counts.verts).toBeGreaterThan(0);
+    // Both resolve the same ~1.7 Å vdW sphere. Crucially the big probe does NOT
+    // yield a much LARGER surface (the SAS approximation used to) — the SES does
+    // not grow with the probe. The tolerance is wide because eroding the grid by a
+    // large probe (2.5 Å ≈ 4 cells) discretises more coarsely than a 0.5 Å one.
+    const ratio = big.counts.verts / small.counts.verts;
+    expect(ratio).toBeGreaterThan(0.4);
+    expect(ratio).toBeLessThan(1.3);
   });
 });
 

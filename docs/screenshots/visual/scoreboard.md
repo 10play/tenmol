@@ -8,25 +8,24 @@ coverage and foreground colour fidelity). Regenerate goldens with
 View the scenes visually in the gallery: `node apps/web/e2e/gallery.mjs` →
 `/gallery.html` on the front dev server.
 
-**Mean combined: 88.6%** (shape 94.2% · color 83%) across 22 scenes.
+**Mean combined: 88.7%** (shape 94.3% · color 83.1%) across 22 scenes.
 **Ceiling: 96.1%** — the max any renderer can reach under this metric (PyMOL ref scored against a 1px-shifted copy of itself; two different rasterisers can't align better than ~1px). "gap" = ceiling − current = remaining headroom.
 
-> Δ vs previous scoreboard: **-0.1%**
+> Δ vs previous scoreboard: **+0.1%**
 
 | scene | combined | shape | color | ceiling | gap |
 |---|--:|--:|--:|--:|--:|
 | `pept-mesh` | 74.1 | 76.7 | 71.5 | 87.4 | 13.3 |
 | `pept-cartoon-ss` | 79.2 | 93.2 | 65.2 | 99.1 | 19.8 |
+| `3al1-surface-bfactor` | 81 | 84.3 | 77.8 | 98.9 | 17.8 |
 | `pept-cartoon-rainbow` | 81.2 | 92.6 | 69.7 | 99.1 | 17.9 |
-| `3al1-surface-bfactor` | 81.5 | 84.8 | 78.1 | 98.9 | 17.4 |
 | `pept-dots` | 82 | 88.4 | 75.6 | 87.4 | 5.5 |
 | `helix-sticks` | 84.4 | 94.3 | 74.4 | 93 | 8.7 |
-| `3al1-surface` | 86.1 | 88.9 | 83.4 | 99.2 | 13.1 |
+| `3al1-surface` | 85.7 | 88.3 | 83.2 | 99.2 | 13.5 |
 | `pept-lines` | 86.1 | 98.7 | 73.4 | 91.8 | 5.7 |
 | `3al1-sticks-element` | 87.7 | 95.8 | 79.7 | 92.7 | 4.9 |
 | `pept-ribbon` | 88.8 | 99.2 | 78.4 | 96.3 | 7.5 |
 | `pept-labels` | 90.5 | 96.8 | 84.1 | 94.3 | 3.8 |
-| `helix-surface` | 91 | 92.2 | 89.7 | 99.2 | 8.3 |
 | `helix-cartoon` | 91.1 | 96.6 | 85.5 | 98.5 | 7.4 |
 | `pept-dashes` | 91.4 | 97.2 | 85.7 | 95.4 | 3.9 |
 | `3al1-cartoon-rainbow` | 92.2 | 97.5 | 87 | 98 | 5.8 |
@@ -35,5 +34,6 @@ View the scenes visually in the gallery: `node apps/web/e2e/gallery.mjs` →
 | `3al1-cartoon-ss` | 93.7 | 98 | 89.5 | 98.4 | 4.6 |
 | `3al1-spheres` | 94.3 | 95.3 | 93.3 | 97.1 | 2.8 |
 | `pept-spheres-half` | 95.1 | 96.8 | 93.4 | 97.9 | 2.8 |
+| `helix-surface` | 95.4 | 96.7 | 94 | 99.2 | 3.8 |
+| `pept-surface` | 95.8 | 96.9 | 94.7 | 99.5 | 3.7 |
 | `pept-spheres` | 96.1 | 96.7 | 95.5 | 98.4 | 2.3 |
-| `pept-surface` | 97 | 97.9 | 96 | 99.5 | 2.5 |

@@ -23,29 +23,19 @@ const PLACEHOLDER: BufferRef = { byteOffset: 0, byteLength: 0, dtype: 'f32', ite
 export const buildSurfaceFrame: RepBuilder = ({ mol, state, seq, getSettingFloat }) => {
   const probe = getSettingFloat('solvent_radius') || DEFAULT_PROBE;
 
-  // Count the atoms actually carrying the surface rep. The inward SES level-shift
-  // that best matches PyMOL depends on molecular SIZE: a small peptide's
-  // solvent-excluded surface reads relatively PUFFIER (fewer buried atoms, less
-  // fused interior), so it wants a smaller inward shift, while a compact protein
-  // packs into a tighter, more fused blob. A single global shrink over- or
-  // under-shrinks one end; keying it to the flagged-atom count tracks PyMOL's
-  // silhouette across the whole size range far better.
-  let nSurf = 0;
-  for (let i = 0; i < mol.natom; i++) {
-    const a = mol.atoms[i];
-    if (a && (a.visRep & repBit(Rep.Surface)) !== 0) nSurf++;
-  }
-  const shrink = nSurf < 200 ? 0.7 : nSurf < 500 ? 0.9 : 0.8;
-
-  // PyMOL's solvent-excluded surface reads as a smooth, fused blob; a raw
-  // marching-cubes SAS still shows individual atom bumps. Extra Taubin passes
-  // melt those bumps together so the silhouette and shading match PyMOL.
+  // PyMOL's `surface` is the TRUE solvent-EXCLUDED surface (RepSurface's
+  // SolventDot/SurfaceJob), i.e. the morphological closing of the vdW solid by
+  // the probe — smooth re-entrant surfaces in the concave crevices a rolling
+  // probe bridges, convex contact patches on the exposed atoms. `ses: true`
+  // computes exactly that (distance-transform erosion of the SAS solid), which
+  // matches PyMOL far better than the old isotropic shrink+blur approximation
+  // (that over-rounded the silhouette and left per-atom bumps). A couple of light
+  // Taubin passes then remove marching-cubes facet noise without moving the level.
   const mesh = generateSurface(mol, state, repBit(Rep.Surface), {
     probe,
+    ses: true,
     smooth: true,
-    smoothPasses: 3,
-    fieldBlur: 4,
-    shrink,
+    smoothPasses: 2,
   });
   if (!mesh) return null;
 
