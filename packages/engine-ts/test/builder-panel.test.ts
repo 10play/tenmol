@@ -188,6 +188,59 @@ describe('builder_action', () => {
     expect(count('elem H')).toBe(4);
   });
 
+  it('createBond bonds the heavy neighbours when two hydrogens are picked', () => {
+    // Two methane-ish carbons (each 1 H), far apart. Picking one H on each and
+    // pressing Create bond must join the CARBONS, not make an H–H bond
+    // (builder.py:1186-1198). Fixture: C1-H1, C2-H2, carbons 5 Å apart.
+    const pdb = [
+      'ATOM      1  C1  UNK A   1       0.000   0.000   0.000  1.00  0.00           C',
+      'ATOM      2  H1  UNK A   1       0.600   0.600   0.600  1.00  0.00           H',
+      'ATOM      3  C2  UNK A   1       5.000   0.000   0.000  1.00  0.00           C',
+      'ATOM      4  H2  UNK A   1       4.400   0.600   0.600  1.00  0.00           H',
+      'CONECT    1    2',
+      'CONECT    3    4',
+      'END',
+    ].join('\n');
+    const e = engineWith(pdb);
+    type Mol = { bonds: Array<[number, number]>; atoms: Array<{ elem: string }> };
+    const mol = () =>
+      (e as unknown as { executive: { molecule(n: string): Mol } }).executive.molecule('m');
+    const bonded = (e1: string, e2: string): boolean => {
+      const m = mol();
+      return m.bonds.some(([a, b]) => {
+        const ea = m.atoms[a]!.elem;
+        const eb = m.atoms[b]!.elem;
+        return (ea === e1 && eb === e2) || (ea === e2 && eb === e1);
+      });
+    };
+    // Pick H1 (index 2) and H2 (index 4).
+    e.call('builder_pick', ['m', 2, null, 'multi']);
+    e.call('builder_pick', ['m', 4, null, 'multi']);
+    const reply = e.call('builder_action', ['createBond'], {}) as unknown as { error?: unknown };
+    expect(reply.error).toBeNull();
+    expect(bonded('C', 'C')).toBe(true); // carbons joined
+    expect(bonded('H', 'H')).toBe(false); // never an H–H bond
+  });
+
+  it('removeAtom deletes a lone picked hydrogen instead of re-adding it', () => {
+    // C with one H; pick the H and remove it. The refill only seeds from HEAVY
+    // picks (builder.py filters `and not hydro`), so removing the H must NOT
+    // immediately h_add it back.
+    const pdb = [
+      'ATOM      1  C1  UNK A   1       0.000   0.000   0.000  1.00  0.00           C',
+      'ATOM      2  H1  UNK A   1       1.000   0.000   0.000  1.00  0.00           H',
+      'CONECT    1    2',
+      'END',
+    ].join('\n');
+    const e = engineWith(pdb);
+    const count = (s: string) => e.call('count_atoms', [s]) as number;
+    expect(count('elem H')).toBe(1);
+    e.call('builder_pick', ['m', 2, null, 'single']); // pk1 = the hydrogen
+    const reply = e.call('builder_action', ['removeAtom'], {}) as unknown as { error?: unknown };
+    expect(reply.error).toBeNull();
+    expect(count('elem H')).toBe(0); // gone, not refilled
+  });
+
   it('reports the incentive-only reason for clean without throwing', () => {
     const e = engineWith(ETHANE_CORE);
     const reply = e.call('builder_action', ['clean'], {}) as unknown as { value?: unknown; error?: unknown };

@@ -34,6 +34,7 @@ import type {
   BuilderPickedAtom,
 } from '@tenmol/protocol/topics/builder';
 import type { Executive } from '../exec/executive';
+import type { ObjectMolecule } from '../model/molecule';
 import type { RegistrarCtx } from './registrar';
 
 /* ------------------------------------------------------------------------- */
@@ -613,9 +614,13 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
         // the heavy neighbours (by stable id, so removal's reindex can't lose
         // them) BEFORE removing, then h_add them after.
         const neighbourIdsByObj = new Map<string, Set<number>>();
+        // Only HEAVY picked atoms seed the refill — builder.py filters
+        // `and not hydro` BEFORE `extend 1`, so a hydrogen-only pick refills
+        // nothing (removing a lone H is a real removal, not a no-op).
         const pickedByObj = new Map<string, Set<number>>();
         for (const slot of slots) {
           for (const ua of ex.atomsMatching(slot)) {
+            if (ua.atom.elem === 'H' || ua.atom.elem === 'D') continue;
             let pset = pickedByObj.get(ua.objName);
             if (!pset) pickedByObj.set(ua.objName, (pset = new Set()));
             pset.add(ua.index);
@@ -650,8 +655,21 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
       case 'createBond': {
         if (!(slots.length === 2 && slots[0] === 'pk1' && slots[1] === 'pk2'))
           notReady('BondWizard', 'Pick pk1 and pk2 (two atoms) to bond…');
-        // BondWizard.staticaction (builder.py:1180-1206): bond, then h_fill to
-        // trim the hydrogens the new bond makes excess.
+        // BondWizard.staticaction (builder.py:1186-1198): if BOTH picks are
+        // hydrogens with a heavy neighbour, bond the heavy neighbours instead
+        // (the "pick two terminal H's to fuse two fragments" workflow) — bonding
+        // the hydrogens themselves would make an invalid H–H bond.
+        const p1 = ex.atomsMatching('pk1')[0];
+        const p2 = ex.atomsMatching('pk2')[0];
+        if (p1 && p2 && isHydrogen(p1.atom.elem) && isHydrogen(p2.atom.elem)) {
+          const h1 = heavyNeighbour(ex.molecule(p1.objName), p1.index);
+          const h2 = heavyNeighbour(ex.molecule(p2.objName), p2.index);
+          if (h1 >= 0 && h2 >= 0) {
+            selectSafe('pk1', `${p1.objName} and index ${h1 + 1}`);
+            selectSafe('pk2', `${p2.objName} and index ${h2 + 1}`);
+          }
+        }
+        // Then bond, and h_fill to trim the hydrogens the new bond makes excess.
         ctx.call('bond', ['pk1', 'pk2']);
         ctx.call('h_fill', []);
         clearPicks();
@@ -769,6 +787,21 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
     ctx.publish();
     return builderState() as unknown as Json;
   });
+}
+
+/** Hydrogen (or deuterium) — the elements `hydro` selects. */
+function isHydrogen(elem: string): boolean {
+  return elem === 'H' || elem === 'D';
+}
+
+/** The first non-hydrogen atom bonded to local atom `idx`, or -1. */
+function heavyNeighbour(mol: ObjectMolecule | undefined, idx: number): number {
+  if (!mol) return -1;
+  for (const [a, b] of mol.bonds) {
+    const nb = a === idx ? b : b === idx ? a : -1;
+    if (nb >= 0 && !isHydrogen(mol.atoms[nb]?.elem ?? '')) return nb;
+  }
+  return -1;
 }
 
 /** `count_atoms` that never throws (a bad/absent selection counts as 0). */
