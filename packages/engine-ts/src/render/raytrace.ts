@@ -67,18 +67,20 @@ function hitCylinder(o: Vec3, d: Vec3, cyl: Cylinder, tMax: number): Hit | null 
     const disc = B * B - 4 * A * C;
     if (disc >= 0) {
       const sq = Math.sqrt(disc);
+      // Both roots are tested: when the near root is BEHIND the origin (t < EPS,
+      // e.g. the camera/shadow origin sits inside the stick) `consider` rejects
+      // it, and the far root is the visible surface. `consider` keeps the nearest
+      // valid t, so evaluating both — not breaking after the near one — is right.
       for (const t of [(-B - sq) / (2 * A), (-B + sq) / (2 * A)]) {
         const sAxis = dpPar + t * dPar;
-        if (sAxis >= 0 && sAxis <= h) {
-          const hp = addScaled(o, d, t);
-          const axisPt: Vec3 = [
-            cyl.p0[0] + a[0] * sAxis,
-            cyl.p0[1] + a[1] * sAxis,
-            cyl.p0[2] + a[2] * sAxis,
-          ];
-          consider(t, norm(sub(hp, axisPt)), sAxis);
-          break; // nearer root first; if valid, it's the body hit
-        }
+        if (sAxis < 0 || sAxis > h) continue;
+        const hp = addScaled(o, d, t);
+        const axisPt: Vec3 = [
+          cyl.p0[0] + a[0] * sAxis,
+          cyl.p0[1] + a[1] * sAxis,
+          cyl.p0[2] + a[2] * sAxis,
+        ];
+        consider(t, norm(sub(hp, axisPt)), sAxis);
       }
     }
   }
@@ -437,9 +439,11 @@ function shade(
     hit.color[2] * df + spec,
   ];
 
-  // Fog / depth-cue: blend toward bg by camera-space depth.
+  // Fog / depth-cue: blend toward bg by camera-space depth. `forward` points into
+  // the scene, so a visible hit's (point − eye)·forward is its POSITIVE depth — do
+  // NOT negate it, or `(far − distCam)/(far − near)` inverts and fog runs backwards.
   if (opts.fog) {
-    const distCam = -dot(sub(point, cam.eye), forward); // depth along view axis
+    const distCam = dot(sub(point, cam.eye), forward); // depth along view axis
     const { near, far, start, amount } = opts.fog;
     if (far > near) {
       let f = clamp01((far - distCam) / (far - near)); // 1 near, 0 far

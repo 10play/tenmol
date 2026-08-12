@@ -154,9 +154,11 @@ export function registerRender(ctx: RegistrarCtx): void {
     const doRay = Number(pick(args, kwargs, 4, 'ray') ?? 0);
     if (doRay || !IMAGES.get(ex)) {
       // png(filename, width, height, ...) → renderInto reads width/height at 0/1.
+      // Shadows only when a ray was actually asked for; `ray=0` with no cached
+      // image falls back to a fast draw-style raster, not a full shadowed trace.
       const w = pick(args, kwargs, 1, 'width');
       const h = pick(args, kwargs, 2, 'height');
-      renderInto([w, h], {}, true);
+      renderInto([w, h], {}, Boolean(doRay));
     }
     const img = IMAGES.get(ex);
     if (!img) return [];
