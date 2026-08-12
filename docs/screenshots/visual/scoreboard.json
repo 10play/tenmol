@@ -11,113 +11,113 @@
       "id": "3al1-cartoon-rainbow",
       "comb": 92.2,
       "shape": 97.5,
-      "color": 87,
+      "color": 86.8,
       "ceiling": 98,
-      "headroom": 5.8
+      "headroom": 5.9
     },
     {
       "id": "3al1-cartoon-ss",
       "comb": 93.7,
       "shape": 98,
-      "color": 89.5,
+      "color": 89.4,
       "ceiling": 98.4,
-      "headroom": 4.6
+      "headroom": 4.7
     },
     {
       "id": "3al1-spheres",
-      "comb": 94.3,
-      "shape": 95.3,
-      "color": 93.3,
+      "comb": 94.2,
+      "shape": 95.2,
+      "color": 93.2,
       "ceiling": 97.1,
-      "headroom": 2.8
+      "headroom": 2.9
     },
     {
       "id": "3al1-sticks-element",
-      "comb": 87.7,
-      "shape": 95.8,
-      "color": 79.7,
+      "comb": 87.5,
+      "shape": 95.7,
+      "color": 79.3,
       "ceiling": 92.7,
-      "headroom": 4.9
+      "headroom": 5.1
     },
     {
       "id": "3al1-surface",
-      "comb": 85.7,
-      "shape": 88.3,
-      "color": 83.2,
+      "comb": 85.5,
+      "shape": 88.1,
+      "color": 82.8,
       "ceiling": 99.2,
-      "headroom": 13.5
+      "headroom": 13.8
     },
     {
       "id": "3al1-surface-bfactor",
-      "comb": 81,
-      "shape": 84.3,
-      "color": 77.8,
+      "comb": 80.7,
+      "shape": 84.1,
+      "color": 77.4,
       "ceiling": 98.9,
-      "headroom": 17.8
+      "headroom": 18.2
     },
     {
       "id": "helix-cartoon",
-      "comb": 91.1,
+      "comb": 91,
       "shape": 96.6,
-      "color": 85.5,
+      "color": 85.3,
       "ceiling": 98.5,
-      "headroom": 7.4
+      "headroom": 7.5
     },
     {
       "id": "helix-sticks",
-      "comb": 84.4,
+      "comb": 84.1,
       "shape": 94.3,
-      "color": 74.4,
+      "color": 73.9,
       "ceiling": 93,
-      "headroom": 8.7
+      "headroom": 8.9
     },
     {
       "id": "helix-surface",
-      "comb": 95.4,
+      "comb": 95.3,
       "shape": 96.7,
       "color": 94,
       "ceiling": 99.2,
-      "headroom": 3.8
+      "headroom": 3.9
     },
     {
       "id": "pept-cartoon-rainbow",
-      "comb": 81.2,
+      "comb": 81.1,
       "shape": 92.6,
-      "color": 69.7,
+      "color": 69.6,
       "ceiling": 99.1,
-      "headroom": 17.9
+      "headroom": 18
     },
     {
       "id": "pept-cartoon-ss",
       "comb": 79.2,
-      "shape": 93.2,
-      "color": 65.2,
+      "shape": 93.4,
+      "color": 65.1,
       "ceiling": 99.1,
-      "headroom": 19.8
+      "headroom": 19.9
     },
     {
       "id": "pept-dashes",
-      "comb": 91.4,
-      "shape": 97.2,
-      "color": 85.7,
+      "comb": 91.9,
+      "shape": 97.3,
+      "color": 86.5,
       "ceiling": 95.4,
-      "headroom": 3.9
+      "headroom": 3.5
     },
     {
       "id": "pept-dots",
-      "comb": 82,
+      "comb": 81.9,
       "shape": 88.4,
-      "color": 75.6,
+      "color": 75.5,
       "ceiling": 87.4,
       "headroom": 5.5
     },
     {
       "id": "pept-labels",
-      "comb": 90.5,
-      "shape": 96.8,
-      "color": 84.1,
+      "comb": 90.9,
+      "shape": 96.9,
+      "color": 85,
       "ceiling": 94.3,
-      "headroom": 3.8
+      "headroom": 3.4
     },
     {
       "id": "pept-lines",
@@ -145,25 +145,25 @@
     },
     {
       "id": "pept-spheres",
-      "comb": 96.1,
-      "shape": 96.7,
-      "color": 95.5,
+      "comb": 96,
+      "shape": 96.6,
+      "color": 95.4,
       "ceiling": 98.4,
-      "headroom": 2.3
+      "headroom": 2.4
     },
     {
       "id": "pept-spheres-half",
-      "comb": 95.1,
-      "shape": 96.8,
-      "color": 93.4,
+      "comb": 94.9,
+      "shape": 96.6,
+      "color": 93.2,
       "ceiling": 97.9,
-      "headroom": 2.8
+      "headroom": 3
     },
     {
       "id": "pept-sticks-element",
-      "comb": 92.6,
+      "comb": 92.5,
       "shape": 97.5,
-      "color": 87.6,
+      "color": 87.5,
       "ceiling": 95.6,
       "headroom": 3.1
     },

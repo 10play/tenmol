@@ -41,6 +41,20 @@ export const LIGHT_DEFAULTS = {
   light: [-0.4, -0.4, -1] as const,
 } as const;
 
+/**
+ * PyMOL's `SceneGetReflectScaleValue` (`Scene.cpp:4897`): with more than one light
+ * the `reflect` diffuse is divided by `0.5·Σ(1 − light_i.z)` over the reflected
+ * lights (normalised). For the default two-light rig that sum is the single `light`
+ * vector, so the scale is `1 / (0.5·(1 − light.z))` — ≈1.069 for the default light
+ * (-0.4,-0.4,-1), i.e. PyMOL's fill light is ~7% brighter than the raw `reflect`
+ * 0.45. We used 0.45 flat, leaving every lit scene's shaded side slightly too dark.
+ */
+function reflectScale(l: readonly [number, number, number]): number {
+  const len = Math.hypot(l[0], l[1], l[2]) || 1;
+  const sum = 0.5 * (1 - l[2] / len);
+  return sum > 1e-6 ? 1 / sum : 1;
+}
+
 /** Uniform block shared by every Mode-G material. */
 export function lightingUniforms(): Record<string, { value: unknown }> {
   const l = LIGHT_DEFAULTS.light;
@@ -48,7 +62,7 @@ export function lightingUniforms(): Record<string, { value: unknown }> {
   return {
     u_ambient: { value: LIGHT_DEFAULTS.ambient },
     u_direct: { value: LIGHT_DEFAULTS.direct },
-    u_reflect: { value: LIGHT_DEFAULTS.reflect },
+    u_reflect: { value: LIGHT_DEFAULTS.reflect * reflectScale(l) },
     u_specValue: { value: LIGHT_DEFAULTS.specValue },
     u_specDirect: { value: LIGHT_DEFAULTS.specDirect },
     u_shininess: { value: LIGHT_DEFAULTS.shininess },

@@ -11,29 +11,29 @@ View the scenes visually in the gallery: `node apps/web/e2e/gallery.mjs` →
 **Mean combined: 88.7%** (shape 94.3% · color 83.1%) across 22 scenes.
 **Ceiling: 96.1%** — the max any renderer can reach under this metric (PyMOL ref scored against a 1px-shifted copy of itself; two different rasterisers can't align better than ~1px). "gap" = ceiling − current = remaining headroom.
 
-> Δ vs previous scoreboard: **+0.1%**
+> Δ vs previous scoreboard: **+0%**
 
 | scene | combined | shape | color | ceiling | gap |
 |---|--:|--:|--:|--:|--:|
 | `pept-mesh` | 74.1 | 76.7 | 71.5 | 87.4 | 13.3 |
-| `pept-cartoon-ss` | 79.2 | 93.2 | 65.2 | 99.1 | 19.8 |
-| `3al1-surface-bfactor` | 81 | 84.3 | 77.8 | 98.9 | 17.8 |
-| `pept-cartoon-rainbow` | 81.2 | 92.6 | 69.7 | 99.1 | 17.9 |
-| `pept-dots` | 82 | 88.4 | 75.6 | 87.4 | 5.5 |
-| `helix-sticks` | 84.4 | 94.3 | 74.4 | 93 | 8.7 |
-| `3al1-surface` | 85.7 | 88.3 | 83.2 | 99.2 | 13.5 |
+| `pept-cartoon-ss` | 79.2 | 93.4 | 65.1 | 99.1 | 19.9 |
+| `3al1-surface-bfactor` | 80.7 | 84.1 | 77.4 | 98.9 | 18.2 |
+| `pept-cartoon-rainbow` | 81.1 | 92.6 | 69.6 | 99.1 | 18 |
+| `pept-dots` | 81.9 | 88.4 | 75.5 | 87.4 | 5.5 |
+| `helix-sticks` | 84.1 | 94.3 | 73.9 | 93 | 8.9 |
+| `3al1-surface` | 85.5 | 88.1 | 82.8 | 99.2 | 13.8 |
 | `pept-lines` | 86.1 | 98.7 | 73.4 | 91.8 | 5.7 |
-| `3al1-sticks-element` | 87.7 | 95.8 | 79.7 | 92.7 | 4.9 |
+| `3al1-sticks-element` | 87.5 | 95.7 | 79.3 | 92.7 | 5.1 |
 | `pept-ribbon` | 88.8 | 99.2 | 78.4 | 96.3 | 7.5 |
-| `pept-labels` | 90.5 | 96.8 | 84.1 | 94.3 | 3.8 |
-| `helix-cartoon` | 91.1 | 96.6 | 85.5 | 98.5 | 7.4 |
-| `pept-dashes` | 91.4 | 97.2 | 85.7 | 95.4 | 3.9 |
-| `3al1-cartoon-rainbow` | 92.2 | 97.5 | 87 | 98 | 5.8 |
-| `pept-sticks-element` | 92.6 | 97.5 | 87.6 | 95.6 | 3.1 |
+| `pept-labels` | 90.9 | 96.9 | 85 | 94.3 | 3.4 |
+| `helix-cartoon` | 91 | 96.6 | 85.3 | 98.5 | 7.5 |
+| `pept-dashes` | 91.9 | 97.3 | 86.5 | 95.4 | 3.5 |
+| `3al1-cartoon-rainbow` | 92.2 | 97.5 | 86.8 | 98 | 5.9 |
+| `pept-sticks-element` | 92.5 | 97.5 | 87.5 | 95.6 | 3.1 |
 | `pept-sticks-thick` | 92.9 | 96.6 | 89.2 | 96.7 | 3.8 |
-| `3al1-cartoon-ss` | 93.7 | 98 | 89.5 | 98.4 | 4.6 |
-| `3al1-spheres` | 94.3 | 95.3 | 93.3 | 97.1 | 2.8 |
-| `pept-spheres-half` | 95.1 | 96.8 | 93.4 | 97.9 | 2.8 |
-| `helix-surface` | 95.4 | 96.7 | 94 | 99.2 | 3.8 |
+| `3al1-cartoon-ss` | 93.7 | 98 | 89.4 | 98.4 | 4.7 |
+| `3al1-spheres` | 94.2 | 95.2 | 93.2 | 97.1 | 2.9 |
+| `pept-spheres-half` | 94.9 | 96.6 | 93.2 | 97.9 | 3 |
+| `helix-surface` | 95.3 | 96.7 | 94 | 99.2 | 3.9 |
 | `pept-surface` | 95.8 | 96.9 | 94.7 | 99.5 | 3.7 |
-| `pept-spheres` | 96.1 | 96.7 | 95.5 | 98.4 | 2.3 |
+| `pept-spheres` | 96 | 96.6 | 95.4 | 98.4 | 2.4 |
