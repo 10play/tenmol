@@ -103,7 +103,7 @@ describe('parity: editor.* peptide & fragment builders', () => {
 });
 
 describe('parity: editor.* low-level topology edits', () => {
-  it.fails('protonate / h_fix: a backbone carbonyl oxygen is never protonated', async () => {
+  it('protonate / h_fix: a backbone carbonyl oxygen is never protonated', async () => {
     const b = await boot();
     // PyMOL ref: editing.py protonate()/h_add() fill each atom to its perceived
     // valence. Backbone carbonyl O is double-bonded (valence 2 satisfied) so it
@@ -113,7 +113,7 @@ describe('parity: editor.* low-level topology edits', () => {
     expect(await count(b, 'elem H and neighbor name O')).toBe(0); // RED: TS adds 2
   });
 
-  it.fails('replace: strips old H and refills the new element to a valid valence', async () => {
+  it('replace: strips old H and refills the new element to a valid valence', async () => {
     const b = await boot();
     // PyMOL ref: editing.py replace() (line ~1572) with h_fill=1 removes the
     // picked atom's neighbour hydrogens, then _cmd.replace re-fills to the given
@@ -124,7 +124,7 @@ describe('parity: editor.* low-level topology edits', () => {
     expect(await count(b, 'elem H')).toBe(2); // RED: TS keeps the 3 methyl H
   });
 
-  it.fails('cycle_valence: promoting CA=CB to a double bond removes a methyl H (h_fill)', async () => {
+  it('cycle_valence: promoting CA=CB to a double bond removes a methyl H (h_fill)', async () => {
     const b = await boot();
     // PyMOL ref: editing.py cycle_valence() (line ~876) cycles the bond order and,
     // with h_fill=1 (default), calls h_fill so hydrogens satisfy the new valence.
@@ -135,7 +135,7 @@ describe('parity: editor.* low-level topology edits', () => {
     expect(await count(b, 'elem H and neighbor name CB')).toBe(2); // RED: TS leaves 3
   });
 
-  it.fails('set_geometry: raising an amide N to valence 4 makes h_add place two H', async () => {
+  it('set_geometry: raising an amide N to valence 4 makes h_add place two H', async () => {
     const b = await boot();
     // PyMOL ref: editing.py set_geometry() (line ~473) changes the assumed valence
     // /geometry of the atoms; a later h_add then fills to the NEW valence. Forcing
@@ -146,7 +146,7 @@ describe('parity: editor.* low-level topology edits', () => {
     expect(await count(b, 'elem H and neighbor (name N and resi 2)')).toBe(2); // RED: 1
   });
 
-  it.fails('invert: stereo inversion about CA is rigid — bond lengths are preserved', async () => {
+  it('invert: stereo inversion about CA is rigid — bond lengths are preserved', async () => {
     const b = await boot();
     // PyMOL ref: editing.py invert() (line ~739) inverts stereochemistry "holding
     // attached atoms immobile" — a rigid reflection that never changes a bond

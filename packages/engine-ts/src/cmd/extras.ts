@@ -557,7 +557,6 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // chemistry/typing we do not model
       'assign_stereo',
       'text_type',
-      'set_geometry',
       'unset_deep',
       'pbc_wrap',
       'pbc_unwrap',
