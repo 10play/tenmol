@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Assemble packages/graph/manifest.json + MANIFEST.md by merging every *.manifest.json sidecar
 // written by the feature-graph workflow. Deterministic; safe to re-run.
-import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs'
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, relative, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
