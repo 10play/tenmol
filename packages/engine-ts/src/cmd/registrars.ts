@@ -40,6 +40,7 @@ import { registerNucleic } from './nucleic';
 import { registerRender } from './render';
 import { registerMisc2 } from './misc2';
 import { registerEditor } from './editor';
+import { registerBuilderPanel } from './builder-panel';
 
 /** Every subsystem registrar, applied in order to the engine's context. */
 export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
@@ -79,4 +80,5 @@ export const ALL_REGISTRARS: ReadonlyArray<(ctx: RegistrarCtx) => void> = [
   registerRender,
   registerMisc2,
   registerEditor,
+  registerBuilderPanel,
 ];
