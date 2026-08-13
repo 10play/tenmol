@@ -1,19 +1,13 @@
 @layer legacy {
   /* Compute panel (pymol.util helpers). Shares the global panel tokens. */
 
+  /* The Compute panel now renders inside the shared `.flwin` chrome
+     (ui/FloatingWindow), which owns positioning, sizing, the title bar and the
+     scroll — so this is just the inner content column. The framing background,
+     border, min-width and title bar it used to draw itself are gone. */
   .compute {
-    min-width: 380px;
-    background: var(--pm-panel);
-    border: 1px solid var(--pm-edge);
     color: var(--pm-text);
     font-size: 11px;
-  }
-
-  .compute__title {
-    padding: 3px 6px;
-    background: var(--pm-panel-alt);
-    border-bottom: 1px solid var(--pm-edge);
-    color: var(--pm-text-dim);
   }
 
   .compute__sel {
@@ -278,29 +272,13 @@
  * sans; mono is kept only where it earns it — the numbers, the selection  *
  * expression and the captured diagnostics.                                *
  * ===================================================================== */
+/* The floating window (ui/FloatingWindow) owns the card frame — border, radius,
+   background, shadow, clipping and sizing — so the inner column only sets its
+   own type here. */
 :root[data-ui-theme='shadcn'] .compute {
-  min-width: 0;
-  max-width: 660px;
-  border: 1px solid var(--pm-line);
-  border-radius: var(--sh-r-panel);
-  background: var(--pm-panel);
-  box-shadow: var(--sh-shadow-card);
-  overflow: hidden;
   color: var(--pm-text);
   font-family: var(--pm-font-ui);
   font-size: 12px;
-}
-
-/* Section header — a tiny uppercase letter-spaced label, not a title bar. */
-:root[data-ui-theme='shadcn'] .compute__title {
-  padding: 13px 16px 11px;
-  background: transparent;
-  border-bottom: 1px solid var(--pm-line);
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--pm-text-dim);
 }
 
 /* Selection row. */

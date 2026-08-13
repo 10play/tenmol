@@ -126,7 +126,10 @@ describe('ApbsPanel', () => {
     expect(text()).toContain('NOT Poisson-Boltzmann');
     expect(text()).toContain('util.protein_assign_charges_and_radii');
 
-    const labels = [...container.querySelectorAll('button')].map((b) => b.textContent);
+    // Scope to the panel body: the FloatingWindow chrome adds its own
+    // shade/close buttons in the title bar, which are not the panel's controls.
+    const panel = container.querySelector('.apbs')!;
+    const labels = [...panel.querySelectorAll('button')].map((b) => b.textContent);
     expect(labels).toEqual(['copy vacuum ESP', 'copy script']);
   });
 
@@ -139,7 +142,7 @@ describe('ApbsPanel', () => {
     });
     await render();
 
-    const buttons = [...container.querySelectorAll('button')];
+    const buttons = [...container.querySelector('.apbs')!.querySelectorAll('button')];
     await act(async () => {
       buttons[0]!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });

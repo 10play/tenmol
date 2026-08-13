@@ -32,7 +32,8 @@ import {
   COMPUTE_NS,
   type SasaRelativeResult,
 } from '@tenmol/protocol/topics/compute';
-import { Button, Checkbox, TextInput } from '../../ui';
+import { Button, Checkbox, TextInput, FloatingWindow } from '../../ui';
+import { closePanel } from '../../shell/panelHooks';
 import './compute.css';
 
 type Row = {
@@ -217,11 +218,19 @@ export function ComputePanel() {
   );
 
   return (
-    <div className="compute modern:bg-pm-panel modern:text-pm-text">
-      <div className="compute__title modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line">
-        Compute
-      </div>
-
+    <FloatingWindow
+      title="Compute"
+      ariaLabel="Compute"
+      onClose={() => closePanel('compute')}
+      persistKey="compute"
+      defaultWidth={420}
+      defaultHeight={520}
+      minWidth={320}
+      minHeight={320}
+      anchor="right"
+      data-testid="compute-window"
+    >
+      <div className="compute modern:text-pm-text">
       <div className="compute__sel">
         <label htmlFor="cp-sel">Selection</label>
         <TextInput
@@ -336,7 +345,8 @@ export function ComputePanel() {
         well as going to the console. Results use each helper&rsquo;s own units; a failure is shown
         here rather than only in the feedback pane.
       </p>
-    </div>
+      </div>
+    </FloatingWindow>
   );
 }
 

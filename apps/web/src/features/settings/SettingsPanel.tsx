@@ -13,6 +13,7 @@ import type { SettingMeta } from '@tenmol/protocol';
 import type { MenuCommandNode, MenuValue } from '@tenmol/protocol/topics/menus';
 import { valueKey } from '@tenmol/stores/settings';
 import { useSession, useStore } from '../../app';
+import { FloatingWindow } from '../../ui';
 import { menuHooks, subscribeMenuHooks } from '../../shell/panelHooks';
 import { HOOK_OWNERS, UNAVAILABLE_HOOKS } from '../menubar/model';
 import { runAction, type MenuRuntime } from '../menubar/actions';
@@ -173,27 +174,24 @@ export function SettingsPanel() {
       </div>
 
       {open && (
-        <div
-          className="setwin modern:bg-pm-panel modern:text-pm-text modern:border-line"
-          data-window={open}
+        <FloatingWindow
+          title={
+            open === 'menu'
+              ? which
+              : open === 'table'
+                ? 'PyMOL Advanced Settings'
+                : 'Lighting Settings'
+          }
+          onClose={() => setOpen(null)}
+          persistKey="settings"
+          defaultWidth={620}
+          defaultHeight={520}
+          minWidth={400}
+          minHeight={320}
+          anchor="right"
+          data-testid="settings-window"
+          className="modern:bg-pm-panel modern:text-pm-text modern:border-line"
         >
-          <div className="setwin__title modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line">
-            <span>
-              {open === 'menu'
-                ? which
-                : open === 'table'
-                  ? 'PyMOL Advanced Settings'
-                  : 'Lighting Settings'}
-            </span>
-            <button
-              type="button"
-              aria-label="Close"
-              className="modern:text-pm-text-dim modern:hover:text-pm-text-bright"
-              onClick={() => setOpen(null)}
-            >
-              ×
-            </button>
-          </div>
           <div className="setwin__body">
             {phase !== 'ready' ? (
               <p className="setwin__status modern:text-pm-text-dim">
@@ -251,7 +249,7 @@ export function SettingsPanel() {
               <LightingPanel store={store} source={source} />
             )}
           </div>
-        </div>
+        </FloatingWindow>
       )}
     </>
   );

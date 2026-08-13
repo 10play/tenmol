@@ -20,23 +20,14 @@
     cursor: pointer;
   }
 
+  /* The Builder now renders inside the shared `.flwin` chrome (ui/FloatingWindow),
+     which owns positioning, sizing, the title bar and the scroll — so this is
+     just the inner content column. Was an absolute, centered, 940px, unmovable
+     box that covered the scene. */
   .builder {
-    position: absolute;
-    top: 26px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 45;
-    width: min(940px, calc(100% - 24px));
-    max-height: calc(100% - 60px);
-    overflow: auto;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 5px; /* Qt margins 5,5,5,5 */
-    background: var(--panel, #202020);
-    border: 1px solid var(--line, #3a3a3a);
-    border-radius: 4px;
-    box-shadow: 0 8px 26px rgb(0 0 0 / 55%);
     font-size: 11px;
   }
 

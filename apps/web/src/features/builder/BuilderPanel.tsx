@@ -37,7 +37,7 @@ import type {
 } from '@tenmol/protocol/topics/builder';
 import { registerPickRoute } from './viewportPicking';
 import { errorText, useSession } from '../../app';
-import { Button, IconButton, Checkbox, Select } from '../../ui';
+import { Button, IconButton, Checkbox, Select, FloatingWindow } from '../../ui';
 import { createBuilderController, pickHint } from './controller';
 import {
   AMINO_ACIDS_ROW0,
@@ -288,45 +288,50 @@ export function BuilderPanel() {
   }
 
   return (
-    <div
-      className="builder modern:bg-pm-panel modern:text-pm-text modern:border-line modern:rounded-lg"
-      role="dialog"
-      aria-label="Builder"
-      /*
-       * "Two toolbar buttons plus keyboard shortcuts". Scoped to the panel
-       * rather than the window on purpose: the ortho console already forwards
-       * Ctrl-Z to PyMOL's own key table as a `cmd._ctrl('Z')` chord while IT
-       * has focus, and two features racing for the same chord on `window` is
-       * how a viewport stops rotating.
-       */
-      onKeyDown={(event) => {
-        if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
-        const key = event.key.toLowerCase();
-        if (key === 'z') {
-          event.preventDefault();
-          event.stopPropagation();
-          if (event.shiftKey) redo();
-          else undo();
-        } else if (key === 'y' && !event.shiftKey) {
-          event.preventDefault();
-          event.stopPropagation();
-          redo();
-        }
-      }}
+    <FloatingWindow
+      title="Builder"
+      ariaLabel="Builder"
+      onClose={() => setOpen(false)}
+      persistKey="builder"
+      defaultWidth={560}
+      defaultHeight={440}
+      minWidth={360}
+      minHeight={260}
+      data-testid="builder-window"
+      titleExtra={
+        <>
+          {busy && <span className="builder__busy" aria-label="working" />}
+          <span className="builder__mouse" title="cmd.edit_mode(1) rotates the mouse ring">
+            {state?.mouse.mode_name || 'mouse mode ?'}
+          </span>
+        </>
+      }
     >
-      <div className="builder__title modern:border-line">
-        <span className="builder__title-text modern:text-pm-text-bright">Builder</span>
-        {busy && <span className="builder__busy" aria-label="working" />}
-        <span className="builder__spacer" />
-        <span className="builder__mouse" title="cmd.edit_mode(1) rotates the mouse ring">
-          {state?.mouse.mode_name || 'mouse mode ?'}
-        </span>
-        <IconButton type="button" className="builder__close" onClick={() => setOpen(false)}>
-          ×
-        </IconButton>
-      </div>
-
-      {drift.length > 0 && (
+      <div
+        className="builder modern:text-pm-text"
+        /*
+         * "Two toolbar buttons plus keyboard shortcuts". Scoped to the panel
+         * rather than the window on purpose: the ortho console already forwards
+         * Ctrl-Z to PyMOL's own key table as a `cmd._ctrl('Z')` chord while IT
+         * has focus, and two features racing for the same chord on `window` is
+         * how a viewport stops rotating.
+         */
+        onKeyDown={(event) => {
+          if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+          const key = event.key.toLowerCase();
+          if (key === 'z') {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.shiftKey) redo();
+            else undo();
+          } else if (key === 'y' && !event.shiftKey) {
+            event.preventDefault();
+            event.stopPropagation();
+            redo();
+          }
+        }}
+      >
+        {drift.length > 0 && (
         <div
           className="builder__error modern:rounded-md modern:border modern:border-danger modern:bg-danger/10 modern:text-danger"
           data-testid="builder-drift"
@@ -784,7 +789,8 @@ export function BuilderPanel() {
         </span>
         <span>{state ? `${state.objects.length} object(s)` : ''}</span>
       </div>
-    </div>
+      </div>
+    </FloatingWindow>
   );
 }
 

@@ -14,7 +14,8 @@
 
 import { useState } from 'react';
 
-import { Button, Checkbox, TextInput } from '../../ui';
+import { Button, Checkbox, FloatingWindow, TextInput } from '../../ui';
+import { closePanel } from '../../shell/panelHooks';
 import { LegacyPlugins } from './LegacyPlugins';
 import { usePluginRegistry } from './usePluginRegistry';
 import {
@@ -113,7 +114,19 @@ export function PluginManager() {
     (draft.length !== reg.paths.user.length || draft.some((p, i) => p !== reg.paths.user[i]));
 
   return (
-    <div className="plugmgr modern:bg-pm-panel modern:text-pm-text">
+    <FloatingWindow
+      title="Plugin Manager"
+      ariaLabel="Plugin Manager"
+      onClose={() => closePanel('plugin-manager')}
+      persistKey="plugin-manager"
+      defaultWidth={720}
+      defaultHeight={560}
+      minWidth={420}
+      minHeight={320}
+      anchor="left"
+      data-testid="plugin-manager-window"
+    >
+      <div className="plugmgr modern:text-pm-text">
       <div className="plugmgr__tabs modern:bg-pm-panel-alt modern:border-b modern:border-line" role="tablist">
         {TABS.map((t) => (
           <Button
@@ -376,6 +389,7 @@ export function PluginManager() {
           </ol>
         </div>
       )}
-    </div>
+      </div>
+    </FloatingWindow>
   );
 }

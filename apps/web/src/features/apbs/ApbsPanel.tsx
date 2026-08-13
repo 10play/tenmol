@@ -30,7 +30,7 @@
 import { useEffect, useState } from 'react';
 
 import { useSession } from '../../app';
-import { Button } from '../../ui';
+import { Button, FloatingWindow } from '../../ui';
 import {
   describeProgram,
   pipelineIsRunnable,
@@ -100,6 +100,9 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 export function ApbsPanel() {
   const session = useSession();
   const [probe, setProbe] = useState<ApbsProbe | null>(null);
+  // Always-mounted stub with no launch button of its own; keep an open flag so
+  // the window's × can dismiss it (the Plugin menu re-opens the slot).
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,12 +118,23 @@ export function ApbsPanel() {
   const view = probe ?? UNKNOWN_PROBE;
   const runnable = known && pipelineIsRunnable(view);
 
+  if (!open) return null;
+
   return (
-    <div className="apbs modern:border-line modern:bg-pm-panel modern:text-pm-text">
-      <div className="apbs__title modern:border-b modern:border-line modern:bg-pm-panel-alt modern:text-pm-text-dim">
-        APBS Electrostatics
-      </div>
-      <div className="apbs__body">
+    <FloatingWindow
+      title="APBS Electrostatics"
+      ariaLabel="APBS Electrostatics"
+      onClose={() => setOpen(false)}
+      persistKey="apbs"
+      defaultWidth={520}
+      defaultHeight={560}
+      minWidth={360}
+      minHeight={320}
+      anchor="right"
+      data-testid="apbs-window"
+    >
+      <div className="apbs modern:text-pm-text">
+        <div className="apbs__body">
         <p className="apbs__lead">
           Not available in the web client yet. The Qt plugin is a seven-page stack of options around
           two external programs, <code>pdb2pqr</code> and <code>apbs</code>, neither of which is
@@ -188,7 +202,8 @@ export function ApbsPanel() {
           inventory. Child-process output from those two programs already has a home: the bridge
           streams it onto the <code>feedback</code> topic (<code>subproc.execute</code>).
         </p>
+        </div>
       </div>
-    </div>
+    </FloatingWindow>
   );
 }
