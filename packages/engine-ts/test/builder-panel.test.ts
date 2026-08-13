@@ -65,6 +65,27 @@ describe('builder_show', () => {
     expect(s.mouse.editing).toBe(true);
   });
 
+  it('makes atoms clickable (adds lines) when the object shows only cartoon', () => {
+    const e = engineWith(ETHANE_CORE);
+    const count = (s: string) => e.call('count_atoms', [s]) as number;
+    // Show ONLY cartoon — no per-atom pick target for viewport clicks.
+    e.call('hide', ['everything', 'm']);
+    e.call('show', ['cartoon', 'm']);
+    expect(count('rep lines')).toBe(0);
+    e.call('builder_show', []);
+    // builder_show added a clickable lines rep so picks can land.
+    expect(count('rep lines')).toBe(count('m'));
+  });
+
+  it('leaves an already-clickable object (sticks) untouched', () => {
+    const e = engineWith(ETHANE_CORE);
+    const count = (s: string) => e.call('count_atoms', [s]) as number;
+    e.call('hide', ['everything', 'm']);
+    e.call('show', ['sticks', 'm']);
+    e.call('builder_show', []);
+    expect(count('rep lines')).toBe(0); // sticks are already pickable; no lines added
+  });
+
   it('forces the showEvent settings and turns editing on', () => {
     const e = engineWith(ETHANE_CORE);
     const s = e.call('builder_show', []) as unknown as BuilderState;

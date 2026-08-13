@@ -27,7 +27,7 @@
  * it either edits the picked atoms now, or arms and edits on your next click.
  */
 
-import type { Json } from '@tenmol/protocol';
+import { Rep, type Json } from '@tenmol/protocol';
 import type {
   BuilderState,
   BuilderTables,
@@ -35,7 +35,21 @@ import type {
 } from '@tenmol/protocol/topics/builder';
 import type { Executive } from '../exec/executive';
 import type { ObjectMolecule } from '../model/molecule';
+import { repBit } from '../model/atom';
 import type { RegistrarCtx } from './registrar';
+
+/**
+ * The reps whose geometry carries a per-atom index the viewport can pick — i.e.
+ * clicking them fills `pkN`. Cartoon/ribbon/surface follow the backbone spline
+ * and give the user almost nothing to aim at, so an object shown only in those
+ * is effectively un-editable until a clickable rep is added.
+ */
+const PICKABLE_REP_BITS =
+  repBit(Rep.Cyl) | // sticks
+  repBit(Rep.Sphere) |
+  repBit(Rep.NonbondedSphere) |
+  repBit(Rep.Line) | // lines
+  repBit(Rep.Nonbonded);
 
 /* ------------------------------------------------------------------------- */
 /* The declarative button tables (builder.py:118-238)                        */
@@ -213,6 +227,28 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
 
   const si = (name: string): number => Math.trunc(ex.getSettingFloat(name));
 
+  /**
+   * Ensure every molecular object shows a CLICKABLE rep, so editing-mode picks
+   * actually land on atoms. An object shown only as cartoon/ribbon/surface has
+   * no per-atom pick target — the user clicks and the tool keeps asking for a
+   * pick — so we add `lines` (cheap, non-destructive: it sits under the cartoon).
+   * A no-op for objects that already show sticks/lines/spheres. Returns true if
+   * anything changed (so the caller republishes).
+   */
+  const ensurePickable = (): boolean => {
+    let changed = false;
+    for (const mol of ex.moleculesInOrder()) {
+      if (!mol.enabled || mol.natom === 0) continue;
+      let shown = 0;
+      for (const a of mol.atoms) shown |= a.visRep;
+      if ((shown & PICKABLE_REP_BITS) === 0) {
+        ex.show('lines', mol.name);
+        changed = true;
+      }
+    }
+    return changed;
+  };
+
   /** A human label for a tool's arm prompt (the button's own text/symbol). */
   const label = (params: Record<string, unknown>, dflt: string): string =>
     String(
@@ -344,6 +380,9 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
     ex.set('auto_overlay', 1);
     ex.set('valence', 1);
     ctx.call('edit_mode', [1]);
+    // Make atoms clickable so viewport picks land (a cartoon-only object has no
+    // pick target); publish if that changed what's shown.
+    if (ensurePickable()) ctx.publish();
     return builderState() as unknown as Json;
   });
 
@@ -472,8 +511,10 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
       armed = null; // ran now -> nothing left armed
     } catch (err) {
       if (err instanceof NotReady) {
-        // Precondition not met: arm the tool for the next pick to complete.
+        // Precondition not met: arm the tool for the next pick to complete, and
+        // make sure atoms are clickable so that pick can actually land.
         armed = { kind, params, name: err.wizardName, prompt: err.wizardPrompt };
+        ensurePickable();
       } else {
         error = `${err instanceof Error ? err.name : 'Error'}: ${
           err instanceof Error ? err.message : String(err)
