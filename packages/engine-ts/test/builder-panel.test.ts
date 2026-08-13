@@ -262,6 +262,21 @@ describe('builder_action', () => {
     expect(count('elem H')).toBe(0); // gone, not refilled
   });
 
+  it('attachNA extends the PICKED object, not a stray "obj"', () => {
+    const e = engineWith(ETHANE_CORE);
+    const count = (s: string) => e.call('count_atoms', [s]) as number;
+    const before = count('m');
+    e.call('builder_pick', ['m', 1, null, 'single']); // pk1 on object m
+    const reply = e.call('builder_action', ['attachNA'], {
+      base: 'A',
+      nucType: 'DNA',
+    }) as unknown as { error?: unknown };
+    expect(reply.error).toBeNull();
+    // The base was added to m (the picked object), and no stray 'obj' appeared.
+    expect(count('m')).toBeGreaterThan(before);
+    expect(e.call('get_names', ['objects'])).not.toContain('obj');
+  });
+
   it('reports the incentive-only reason for clean without throwing', () => {
     const e = engineWith(ETHANE_CORE);
     const reply = e.call('builder_action', ['clean'], {}) as unknown as { value?: unknown; error?: unknown };

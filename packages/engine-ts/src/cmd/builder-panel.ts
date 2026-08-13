@@ -592,8 +592,13 @@ export function registerBuilderPanel(ctx: RegistrarCtx): void {
         nucType = String(params['nucType']);
         if (slots.length !== 1)
           notReady('NucleicAcidWizard', `Pick one atom to attach ${String(params['base'])}…`);
+        // The engine's attach_nuc_acid grows/extends a NAMED object (it does not
+        // read the selection arg), so pass the PICKED object as `object` — the
+        // base extends the picked strand instead of a stray hardcoded 'obj'.
+        const naObj = ex.atomsMatching(slots[0]!)[0]?.objName ?? '';
         ctx.call('attach_nuc_acid', [slots[0], String(params['base'])], {
           nuc_type: nucType,
+          object: naObj,
           form: dnaForm,
           dbl_helix: dnaDblHelix ? 1 : 0,
         });
