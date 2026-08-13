@@ -1,0 +1,2508 @@
+[
+  {
+    "name": "sdof_drag_scale",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sdof",
+    "summary": "SpaceNavigator drag sensitivity scale.",
+    "signature": "",
+    "default": "0.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 597)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sdof"
+  },
+  {
+    "name": "secondary_structure",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "Secondary-structure assignment source/mode on load.",
+    "signature": "",
+    "default": "2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 157)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "security",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system",
+    "summary": "Guards execution of embedded/scripted code.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 197)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#system"
+  },
+  {
+    "name": "sel_counter",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system",
+    "summary": "Internal counter for auto-named selections.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 5)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#system"
+  },
+  {
+    "name": "selection_overlay",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "selection-display",
+    "summary": "Draw selection indicators in front of geometry.",
+    "signature": "",
+    "default": "1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 81)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#selection-display"
+  },
+  {
+    "name": "selection_round_points",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "selection-display",
+    "summary": "Render selection indicators as round points.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 459)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#selection-display"
+  },
+  {
+    "name": "selection_visible_only",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "selection-display",
+    "summary": "Only indicate atoms currently displayed.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 470)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#selection-display"
+  },
+  {
+    "name": "selection_width",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "selection-display",
+    "summary": "Base pixel size of selection indicator dots.",
+    "signature": "",
+    "default": "3.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 80)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#selection-display"
+  },
+  {
+    "name": "selection_width_max",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "selection-display",
+    "summary": "Upper clamp for scaled selection dot size.",
+    "signature": "",
+    "default": "10.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 394)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#selection-display"
+  },
+  {
+    "name": "selection_width_scale",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "selection-display",
+    "summary": "Zoom-dependent scale factor for selection dots.",
+    "signature": "",
+    "default": "2.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 395)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#selection-display"
+  },
+  {
+    "name": "seq_view",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Master toggle for the sequence viewer.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 353)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_alignment",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Named alignment object driving aligned rows.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 513)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Sequence text color.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 362)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_discrete_by_state",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Treat multi-state objects as discrete rows.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 410)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_fill_char",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Character used to pad gaps.",
+    "signature": "",
+    "default": "-",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 516)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_fill_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Color index for gap fill characters.",
+    "signature": "",
+    "default": "104",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 517)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_format",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Row content (codes/names/atoms/chains).",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 357)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_gap_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "How alignment gaps are drawn/collapsed.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 767)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_label_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Color of the sequence row labels.",
+    "signature": "",
+    "default": "front",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 518)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_label_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "What labels accompany rows.",
+    "signature": "",
+    "default": "2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 363)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_label_spacing",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Residue-number label interval.",
+    "signature": "",
+    "default": "5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 355)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_label_start",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "First residue number shown as a label.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 356)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_location",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Viewer placement (bottom/top).",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 358)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_overlay",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Overlay the sequence on the 3D view.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 359)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_unaligned_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Color for residues outside the alignment.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 515)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "seq_view_unaligned_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "How unaligned residues are shown.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 514)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "session_cache_optimize",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "session",
+    "summary": "Optimise/dedup cached data on session save.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 596)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#session"
+  },
+  {
+    "name": "session_changed",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "session",
+    "summary": "Dirty flag when session diverges from file.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 521)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#session"
+  },
+  {
+    "name": "session_compression",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "session",
+    "summary": "Compress session payloads on save.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 549)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#session"
+  },
+  {
+    "name": "session_embeds_data",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "session",
+    "summary": "Embed loaded map/data blobs into the session.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 738)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#session"
+  },
+  {
+    "name": "session_file",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "session",
+    "summary": "Path of the last loaded/saved session.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 440)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#session"
+  },
+  {
+    "name": "session_migration",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "session",
+    "summary": "Upgrade older-version session data on load.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 333)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#session"
+  },
+  {
+    "name": "session_version_check",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "session",
+    "summary": "Warn on session version mismatch.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 200)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#session"
+  },
+  {
+    "name": "shaders_from_disk",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "shaders",
+    "summary": "Load shader source from disk instead of compiled-in.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 648)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#shaders"
+  },
+  {
+    "name": "shininess",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Specular exponent (highlight tightness).",
+    "signature": "",
+    "default": "55.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 86)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#lighting"
+  },
+  {
+    "name": "show_alpha_checker",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "display-feedback",
+    "summary": "Checkerboard behind transparent-background renders.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 437)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#display-feedback"
+  },
+  {
+    "name": "show_frame_rate",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "display-feedback",
+    "summary": "Overlay a live FPS counter.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 617)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#display-feedback"
+  },
+  {
+    "name": "show_progress",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "display-feedback",
+    "summary": "Show progress bars for long operations.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 262)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#display-feedback"
+  },
+  {
+    "name": "single_image",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "display-feedback",
+    "summary": "Hold a single static image (no continuous redraw).",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 15)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#display-feedback"
+  },
+  {
+    "name": "slice_dynamic_grid",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "slice",
+    "summary": "Recompute slice sampling grid dynamically.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 372)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#slice"
+  },
+  {
+    "name": "slice_dynamic_grid_resolution",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "slice",
+    "summary": "Grid resolution for dynamic slice gridding.",
+    "signature": "",
+    "default": "3.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 373)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#slice"
+  },
+  {
+    "name": "slice_grid",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "slice",
+    "summary": "Static slice sampling spacing.",
+    "signature": "",
+    "default": "0.3",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 371)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#slice"
+  },
+  {
+    "name": "slice_height_map",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "slice",
+    "summary": "Render the slice as a height field.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 370)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#slice"
+  },
+  {
+    "name": "slice_height_scale",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "slice",
+    "summary": "Vertical exaggeration of the height map.",
+    "signature": "",
+    "default": "1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 369)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#slice"
+  },
+  {
+    "name": "slice_track_camera",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "slice",
+    "summary": "Keep the slice plane facing the camera.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 368)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#slice"
+  },
+  {
+    "name": "slow_idle",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system",
+    "summary": "Idle threshold before slow-idle work runs.",
+    "signature": "",
+    "default": "40000.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 55)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#system"
+  },
+  {
+    "name": "smooth_color_triangle",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "rendering",
+    "summary": "Gouraud-interpolate color across ray triangles.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 150)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#rendering"
+  },
+  {
+    "name": "smooth_half_bonds",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "rendering",
+    "summary": "Blend the two half-bond colors across midpoint.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 705)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#rendering"
+  },
+  {
+    "name": "solvent_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Probe radius for solvent/molecular surfaces.",
+    "signature": "",
+    "default": "1.4",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 4)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface-solvent-radius"
+  },
+  {
+    "name": "spec_count",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Number of specular reflections.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 492)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#lighting"
+  },
+  {
+    "name": "spec_direct",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Direct specular contribution toward camera.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 454)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#lighting"
+  },
+  {
+    "name": "spec_direct_power",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Exponent for the direct specular term.",
+    "signature": "",
+    "default": "55.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 488)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#lighting"
+  },
+  {
+    "name": "spec_power",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Specular exponent for ray tracing.",
+    "signature": "",
+    "default": "-1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 25)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#lighting"
+  },
+  {
+    "name": "spec_reflect",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Specular reflectance intensity.",
+    "signature": "",
+    "default": "-1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 24)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#lighting"
+  },
+  {
+    "name": "specular",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Global specular on/intensity master.",
+    "signature": "",
+    "default": "1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 85)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#lighting"
+  },
+  {
+    "name": "specular_intensity",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Specular highlight intensity.",
+    "signature": "",
+    "default": "0.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 310)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#lighting"
+  },
+  {
+    "name": "sphere_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sphere",
+    "summary": "Sphere color override.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 173)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#sphere"
+  },
+  {
+    "name": "sphere_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sphere",
+    "summary": "Sphere draw path (impostor vs geometry).",
+    "signature": "",
+    "default": "9",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 421)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sphere"
+  },
+  {
+    "name": "sphere_point_max_size",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sphere",
+    "summary": "Max pixel size for point-mode spheres.",
+    "signature": "",
+    "default": "18.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 422)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sphere"
+  },
+  {
+    "name": "sphere_point_size",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sphere",
+    "summary": "Base point size for point-mode spheres.",
+    "signature": "",
+    "default": "1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 423)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sphere"
+  },
+  {
+    "name": "sphere_quality",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sphere",
+    "summary": "Sphere tessellation subdivision level.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 87)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sphere"
+  },
+  {
+    "name": "sphere_scale",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sphere",
+    "summary": "Multiplier on VDW radius for sphere rep.",
+    "signature": "",
+    "default": "1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 155)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#sphere"
+  },
+  {
+    "name": "sphere_solvent",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sphere",
+    "summary": "Add the solvent radius to sphere radii.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 203)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sphere"
+  },
+  {
+    "name": "sphere_transparency",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sphere",
+    "summary": "Per-atom sphere transparency.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 172)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#sphere"
+  },
+  {
+    "name": "sphere_use_shader",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sphere",
+    "summary": "Use shader impostor path for spheres.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 646)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sphere"
+  },
+  {
+    "name": "spheroid_fill",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "spheroid",
+    "summary": "Fill factor for spheroid density fitting.",
+    "signature": "",
+    "default": "1.30",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 71)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#spheroid"
+  },
+  {
+    "name": "spheroid_scale",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "spheroid",
+    "summary": "Overall spheroid size multiplier.",
+    "signature": "",
+    "default": "1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 68)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#spheroid"
+  },
+  {
+    "name": "spheroid_smooth",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "spheroid",
+    "summary": "Smoothing applied to spheroid surface.",
+    "signature": "",
+    "default": "1.1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 70)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#spheroid"
+  },
+  {
+    "name": "ss_helix_phi_exclude",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "\u03c6 half-window beyond which helix is rejected.",
+    "signature": "",
+    "default": "85.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 292)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_helix_phi_include",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "\u03c6 half-window fully counting as helix.",
+    "signature": "",
+    "default": "55.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 291)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_helix_phi_target",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "Ideal helix \u03c6 angle.",
+    "signature": "",
+    "default": "-57.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 290)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_helix_psi_exclude",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "\u03c8 helix exclude half-window.",
+    "signature": "",
+    "default": "85.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 289)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_helix_psi_include",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "\u03c8 helix include half-window.",
+    "signature": "",
+    "default": "55.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 288)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_helix_psi_target",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "Ideal helix \u03c8 angle.",
+    "signature": "",
+    "default": "-48.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 287)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_strand_phi_exclude",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "\u03c6 strand exclude half-window.",
+    "signature": "",
+    "default": "100.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 298)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_strand_phi_include",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "\u03c6 strand include half-window.",
+    "signature": "",
+    "default": "40.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 297)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_strand_phi_target",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "Ideal \u03b2-strand \u03c6 angle.",
+    "signature": "",
+    "default": "-129.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 296)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_strand_psi_exclude",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "\u03c8 strand exclude half-window.",
+    "signature": "",
+    "default": "90.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 295)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_strand_psi_include",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "\u03c8 strand include half-window.",
+    "signature": "",
+    "default": "40.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 294)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "ss_strand_psi_target",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "secondary-structure",
+    "summary": "Ideal \u03b2-strand \u03c8 angle.",
+    "signature": "",
+    "default": "124.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 293)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#secondary-structure"
+  },
+  {
+    "name": "state",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "states",
+    "summary": "Current/displayed object state.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 193)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#states"
+  },
+  {
+    "name": "state_counter_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "states",
+    "summary": "On-screen state counter format.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 667)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#states"
+  },
+  {
+    "name": "static_singletons",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "states",
+    "summary": "Show single-state objects in every state.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 82)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#states"
+  },
+  {
+    "name": "stereo",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stereo",
+    "summary": "Master stereo toggle.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 365)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stereo"
+  },
+  {
+    "name": "stereo_angle",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stereo",
+    "summary": "Stereo convergence/toe-in angle.",
+    "signature": "",
+    "default": "2.1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 41)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stereo"
+  },
+  {
+    "name": "stereo_double_pump_mono",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stereo",
+    "summary": "Double-pump a mono buffer for stereo hardware.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 202)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stereo"
+  },
+  {
+    "name": "stereo_dynamic_strength",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stereo",
+    "summary": "Strength of dynamic-depth stereo modes.",
+    "signature": "",
+    "default": "0.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 609)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stereo"
+  },
+  {
+    "name": "stereo_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stereo",
+    "summary": "Stereo method (1..13; 2=cross-eye).",
+    "signature": "",
+    "default": "2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 188)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stereo"
+  },
+  {
+    "name": "stereo_shift",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stereo",
+    "summary": "Camera separation shift for stereo pairs.",
+    "signature": "",
+    "default": "2.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 42)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stereo"
+  },
+  {
+    "name": "stick_as_cylinders",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Draw sticks as true cylinders.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 677)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_ball",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Enable ball-and-stick.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 276)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_ball_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Ball color override in ball-and-stick.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 604)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_ball_ratio",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Ball radius relative to stick radius.",
+    "signature": "",
+    "default": "1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 277)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Stick color override.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 376)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_debug",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Draw debug geometry for stick generation.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 673)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_fixed_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Use a fixed stick radius (no scaling).",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 278)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_good_geometry",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Prefer higher-quality stick joins.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 676)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_h_scale",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Radius scale for bonds to hydrogens.",
+    "signature": "",
+    "default": "0.4",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 605)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_nub",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Length of the capping nub at open stick ends.",
+    "signature": "",
+    "default": "0.7",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 48)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_overlap",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Overlap between stick segments to hide seams.",
+    "signature": "",
+    "default": "0.2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 47)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_quality",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Cylinder tessellation for sticks.",
+    "signature": "",
+    "default": "8",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 46)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Stick cylinder radius.",
+    "signature": "",
+    "default": "0.25",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 21)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_round_nub",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Round rather than flat stick end caps.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 675)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_transparency",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Per-bond stick transparency.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 198)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_use_shader",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Use shader cylinder path for sticks.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 644)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stick_valence_scale",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stick",
+    "summary": "Spacing scale for multiple-bond valence lines.",
+    "signature": "",
+    "default": "1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 512)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#stick"
+  },
+  {
+    "name": "stop_on_exceptions",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system",
+    "summary": "Halt command execution on a Python exception.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 160)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#system"
+  },
+  {
+    "name": "suppress_hidden",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "display-feedback",
+    "summary": "Skip hidden reps when composing geometry.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 548)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#display-feedback"
+  },
+  {
+    "name": "surface_best",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Triangle spacing at the best quality preset.",
+    "signature": "",
+    "default": "0.25",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 36)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_carve_cutoff",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Carve radius around the carve selection.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 344)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_carve_normal_cutoff",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Normal-alignment cutoff for carving.",
+    "signature": "",
+    "default": "-1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 519)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_carve_selection",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Selection the surface is carved to.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 342)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_carve_state",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "State providing the carve selection.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 343)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_cavity_cutoff",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Cavity detection cutoff.",
+    "signature": "",
+    "default": "-3.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 626)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_cavity_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Cavity display mode (exterior/cavities/culled).",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 624)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_cavity_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Cavity detection probe radius.",
+    "signature": "",
+    "default": "7.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 625)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_circumscribe",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Extra circumscribing pass control.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 501)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_clear_cutoff",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Clear radius around the clear selection.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 347)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_clear_selection",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Selection cleared from the surface.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 345)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_clear_state",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "State providing the clear selection.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 346)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Surface color override.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 144)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_color_smoothing",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Smooth per-vertex surface colors.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 698)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_color_smoothing_threshold",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Color-difference threshold for smoothing.",
+    "signature": "",
+    "default": "0.05",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 699)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_debug",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Emit surface-generation debug geometry.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 148)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_miserable",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Triangle spacing at the coarsest preset.",
+    "signature": "",
+    "default": "2.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 136)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Atom-inclusion mode for surfacing.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 143)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_negative_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Color for the negative side of a signed surface.",
+    "signature": "",
+    "default": "red",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 534)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_negative_visible",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Show the negative-value surface lobe.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 533)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_normal",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Normal-vector smoothing radius.",
+    "signature": "",
+    "default": "0.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 37)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_optimize_subsets",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Optimise surfacing of selected subsets.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 384)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_poor",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Triangle spacing at the poor quality preset.",
+    "signature": "",
+    "default": "0.85",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 127)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_proximity",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Require edge/vertex proximity when trimming.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 39)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_quality",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Surface quality tier selector.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 38)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_ramp_above_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Ramp behaviour above the color threshold.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 364)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_residue_cutoff",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Distance cutoff grouping residues into a patch.",
+    "signature": "",
+    "default": "2.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 641)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_smooth_edges",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Smooth surface patch boundaries.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 762)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_solvent",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Compute a solvent-accessible surface.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 338)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_trim_cutoff",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Cutoff for trimming small surface fragments.",
+    "signature": "",
+    "default": "0.2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 348)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_trim_factor",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Aggressiveness of surface trimming.",
+    "signature": "",
+    "default": "2.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 349)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_type",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Surface style (solid/dot/wireframe).",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 331)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "surface_use_shader",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "Use shader path for surface rendering.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 642)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#surface"
+  },
+  {
+    "name": "suspend_deferred",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system",
+    "summary": "Suspend deferred builds/updates processing.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 710)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#system"
+  },
+  {
+    "name": "suspend_undo",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system",
+    "summary": "Suspend undo capture.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 708)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#system"
+  },
+  {
+    "name": "suspend_undo_atom_count",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system",
+    "summary": "Auto-suspend undo above this atom count.",
+    "signature": "",
+    "default": "1000",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 709)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#system"
+  },
+  {
+    "name": "suspend_updates",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system",
+    "summary": "Freeze scene/geometry updates.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 141)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#system"
+  },
+  {
+    "name": "swap_dsn6_bytes",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "file-io",
+    "summary": "Byte-swap DSN6/BRIX map files on load.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 306)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#swap-dsn6"
+  },
+  {
+    "name": "sweep_angle",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sweep",
+    "summary": "Amplitude of the sweep/rock in degrees.",
+    "signature": "",
+    "default": "20.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 26)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sweep"
+  },
+  {
+    "name": "sweep_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sweep",
+    "summary": "Sweep axis/pattern selector.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 401)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sweep"
+  },
+  {
+    "name": "sweep_phase",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sweep",
+    "summary": "Phase offset of the sweep cycle.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 402)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sweep"
+  },
+  {
+    "name": "sweep_speed",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sweep",
+    "summary": "Sweep oscillation speed.",
+    "signature": "",
+    "default": "0.75",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 27)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sweep"
+  },
+  {
+    "name": "test1",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "debug",
+    "summary": "Scratch float for engine test/debug paths.",
+    "signature": "",
+    "default": "3.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 34)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#debug"
+  },
+  {
+    "name": "test2",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "debug",
+    "summary": "Scratch float for engine test/debug paths.",
+    "signature": "",
+    "default": "-0.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 35)"
+    ],
+    "parityStatus": "internal",
+    "doc": "packages/graph/features/settings/_batch-03.md#debug"
+  },
+  {
+    "name": "text",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "debug",
+    "summary": "Text-only/debug rendering toggle.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 62)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#debug"
+  },
+  {
+    "name": "trace_atoms_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sequence-view",
+    "summary": "Which atoms define the trace/sequence row.",
+    "signature": "",
+    "default": "5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 520)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#sequence-view"
+  },
+  {
+    "name": "transparency",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "transparency",
+    "summary": "Surface transparency (atom-level).",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 138)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#transparency"
+  },
+  {
+    "name": "transparency_global_sort",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "transparency",
+    "summary": "Depth-sort transparent geometry globally.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 559)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#transparency"
+  },
+  {
+    "name": "transparency_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "transparency",
+    "summary": "Transparency blending method.",
+    "signature": "",
+    "default": "2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 213)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#transparency"
+  },
+  {
+    "name": "transparency_picking_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "transparency",
+    "summary": "Picking behaviour through transparent surfaces.",
+    "signature": "",
+    "default": "2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 324)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#transparency"
+  },
+  {
+    "name": "triangle_max_passes",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "rendering",
+    "summary": "Max smoothing passes for triangle meshes.",
+    "signature": "",
+    "default": "5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 339)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#rendering"
+  },
+  {
+    "name": "trilines",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "rendering",
+    "summary": "Use triangle-based thick line rendering.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 740)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#rendering"
+  },
+  {
+    "name": "trim_dots",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dots",
+    "summary": "Trim dot-surface dots inside neighbouring atoms.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 32)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#dots"
+  },
+  {
+    "name": "two_sided_lighting",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Light back faces too (-1=auto).",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 156)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#lighting"
+  },
+  {
+    "name": "use_geometry_shaders",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "shaders",
+    "summary": "Permit geometry-shader draw paths.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 726)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#shaders"
+  },
+  {
+    "name": "use_shaders",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "shaders",
+    "summary": "Master shader-path toggle.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 647)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#shaders"
+  },
+  {
+    "name": "use_tessellation_shaders",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "shaders",
+    "summary": "Permit tessellation-shader draw paths.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 796)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#shaders"
+  },
+  {
+    "name": "valence",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "valence",
+    "summary": "Draw multiple bonds as multiple lines.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 64)"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-03.md#valence"
+  },
+  {
+    "name": "valence_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "valence",
+    "summary": "Valence-line placement algorithm.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 616)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#valence"
+  },
+  {
+    "name": "valence_size",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "valence",
+    "summary": "Offset spacing between valence lines.",
+    "signature": "",
+    "default": "0.060",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 135)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#valence"
+  },
+  {
+    "name": "valence_zero_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "valence",
+    "summary": "Zero-order bond style (skip/dashed/solid).",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 753)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#valence"
+  },
+  {
+    "name": "valence_zero_scale",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "valence",
+    "summary": "Radius/scale for zero-order bond sticks.",
+    "signature": "",
+    "default": "0.2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 752)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#valence"
+  },
+  {
+    "name": "validate_object_names",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system",
+    "summary": "Reject/normalise illegal object-name characters.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 418)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#system"
+  },
+  {
+    "name": "virtual_trackball",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "camera",
+    "summary": "Use virtual-trackball rotation mapping.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 325)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#camera"
+  },
+  {
+    "name": "volume_bit_depth",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "volume",
+    "summary": "Texture bit depth for the volume.",
+    "signature": "",
+    "default": "16",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 649)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#volume"
+  },
+  {
+    "name": "volume_data_range",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "volume",
+    "summary": "Data value range mapped by transfer function.",
+    "signature": "",
+    "default": "5.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 652)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#volume"
+  },
+  {
+    "name": "volume_layers",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "volume",
+    "summary": "Number of sampling slabs through the volume.",
+    "signature": "",
+    "default": "256.",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 651)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#volume"
+  },
+  {
+    "name": "volume_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "volume",
+    "summary": "Volume rendering path.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 739)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#volume"
+  },
+  {
+    "name": "wildcard",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "selection",
+    "summary": "Wildcard character in selection matching.",
+    "signature": "",
+    "default": "*",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 412)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#wildcard"
+  },
+  {
+    "name": "wizard_prompt_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "wizard",
+    "summary": "How wizard prompts are surfaced in the GUI.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 366)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#wizard"
+  },
+  {
+    "name": "wrap_output",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system",
+    "summary": "Word-wrap text in the output feedback pane.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h (index 191)"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-03.md#system"
+  }
+]

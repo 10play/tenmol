@@ -1,0 +1,2979 @@
+[
+  {
+    "name": "active_selections",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "selections",
+    "summary": "controls whether or not PyMOL relies upon the concept of an active selection.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#selections-active-selections"
+  },
+  {
+    "name": "alignment_as_cylinders",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "alignment",
+    "summary": "If true, distance measure dashes are drawn as high-quality cylinders instead of lines.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#alignment-alignment-as-cylinders"
+  },
+  {
+    "name": "all_states",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "states",
+    "summary": "controls whether or not all molecular states are visible.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#object-states-all-states"
+  },
+  {
+    "name": "ambient",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "(float 0.0-1.0, default: 0.14) controls the ambient lighting level.",
+    "signature": "",
+    "default": "0.14",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#lighting-ambient-direct"
+  },
+  {
+    "name": "ambient_occlusion_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Controls which method is used to draw ambient occlusion. 0=disabled, 1=atom-based occlusion, 2=triangle-based occlusion",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#lighting-ambient-direct"
+  },
+  {
+    "name": "ambient_occlusion_scale",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "The scale by which ambient occlusion values are modified. The larger this value the more hinting is applied.",
+    "signature": "",
+    "default": "25.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#lighting-ambient-direct"
+  },
+  {
+    "name": "ambient_occlusion_smooth",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "Controls whether or not ambient occlusion uses smoothing of nearby values.",
+    "signature": "",
+    "default": "10",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#lighting-ambient-direct"
+  },
+  {
+    "name": "anaglyph_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stereo",
+    "summary": "implements the following 4 anaglyph modes (see also Anaglyph stereo mode settings) 0 = true anaglyph 1 = gray 2 = color 3 = half-color 4 = optimized (default)",
+    "signature": "",
+    "default": "4",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#stereo-depth-anaglyph-mode-chromadepth-depth-cue"
+  },
+  {
+    "name": "angle_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "measurement",
+    "summary": "Controls the coloring of angle measures.",
+    "signature": "",
+    "default": "default",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#measurement-labels-angle-dihedral-dist-distance-dynamic-measures"
+  },
+  {
+    "name": "angle_label_position",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "measurement",
+    "summary": "(float: >0.0, default: 0.5) controls where the angle label is drawn.",
+    "signature": "",
+    "default": "0.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#measurement-labels-angle-dihedral-dist-distance-dynamic-measures"
+  },
+  {
+    "name": "angle_size",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "measurement",
+    "summary": "(float: >0.0, default: 0.6666) controls how far out the angle indicator is drawn.",
+    "signature": "",
+    "default": "0.6666",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#measurement-labels-angle-dihedral-dist-distance-dynamic-measures"
+  },
+  {
+    "name": "animation",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "animation",
+    "summary": "controls whether or not the camera is smoothly interpolated between views.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#animation-animation"
+  },
+  {
+    "name": "animation_duration",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "animation",
+    "summary": "controls the default duration of animation for changes in view (note: scene_animation_duration controls the timing of scene transitions.",
+    "signature": "",
+    "default": "0.75",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#animation-animation"
+  },
+  {
+    "name": "antialias",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "rendering",
+    "summary": "(integer 0-4, default: 1) general settings for controlling antialiasing. 0 = no antialiasing 1 = adaptive antialiasing 2 = 2-times uniform oversampling plus adaptive antialiasing 3 = 3-times unifor...",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#rendering-antialiasing-antialias-backface-cull-draw-ati-bugs"
+  },
+  {
+    "name": "antialias_shader",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "rendering",
+    "summary": "Real-time (shader) antialiasing: 0 none, 1 FXAA, 2 SMAA.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#rendering-antialiasing-antialias-backface-cull-draw-ati-bugs"
+  },
+  {
+    "name": "assembly",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "file-io",
+    "summary": "For loading mmCIF files: Read assembly (biological unit) instead of asymmetric unit",
+    "signature": "",
+    "default": "''",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#file-i-o-mmcif-assembly-cif-chem-comp-cartn-use"
+  },
+  {
+    "name": "async_builds",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "performance-cache",
+    "summary": "controls whether or not geometry builds should be performed in parallel on multithreaded machines. WARNING: This setting can create instability and should be used with caution.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#performance-deferred-builds-cache-async-builds-defer-cache"
+  },
+  {
+    "name": "ati_bugs",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "rendering",
+    "summary": "Controls whether or not PyMOL adapts its rendering to avoid known ATI bugs.",
+    "signature": "",
+    "default": "false",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#rendering-antialiasing-antialias-backface-cull-draw-ati-bugs"
+  },
+  {
+    "name": "atom_name_wildcard",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "atoms",
+    "summary": "controls the wildcard character used when matching atom names. If this string is empty, then the normal wildcard setting will be used. The practical purpose of this setting is to disable use of ast...",
+    "signature": "",
+    "default": "''",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#atom-naming-typing-atom"
+  },
+  {
+    "name": "atom_type_format",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "atoms",
+    "summary": "Sets the label format for label types. Supported options are: mol2, sybyl, macromodel, mmd, sdf. mol2 sybyl (synonym for mol2) macromodel mmd (synonym for macromodel) sdf (default)",
+    "signature": "",
+    "default": "mol2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#atom-naming-typing-atom"
+  },
+  {
+    "name": "auto_classify_atoms",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not PyMOL spends extra CPU cycles classifying atoms as polymer, organic, solvent, or inorganic as well as locating per-residue guide atoms.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not new objects are given a different color for their carbon atoms.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_color_next",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "Index of the next auto color to be assigned by auto_color.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_copy_images",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not PyMOL automatically copies images from the OpenGL viewport into the system's clipboard.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_defer_atom_count",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "Structures with fewer than ''auto_defer_atom_count'' atoms are automatically labeled upon loading. Set to 0 to auto label none.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_defer_builds",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "performance-cache",
+    "summary": "Multistate models with fewer than ''auto_defer_builds'' number of states will automatically be preprocessed for geometry and rendering. Set to -1 to process all states regardless of count.",
+    "signature": "",
+    "default": "500",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#performance-deferred-builds-cache-async-builds-defer-cache"
+  },
+  {
+    "name": "auto_dss",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not secondary structure is automatically computed for structure which lack such definitions.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_hide_selections",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not PyMOL automatically disables selections when new objects or selections are created.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_indicate_flags",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not PyMOL automatically indicates flagged atoms when the \\flag\\\" command is issue.\"",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_number_selections",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether PyMOL gives each new unnamed selection a unique name or whether it simply uses \\sele\\\".\"",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_overlay",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not overlay text is automatically shown/hidden in response to user actions.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_remove_hydrogens",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not hydrogens are automatically removed when building.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_rename_duplicate_objects",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "if on, PyMOL will rename new objects that have the same name as an existing object; if off, PyMOL will overwrite the existing object.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_sculpt",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not sculpting is automatically activated when an atom is moved.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_show_classified",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "How newly classified atoms are shown: -1 auto, 0 off, 1 as, 2 show, 3 simple.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_show_lines",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not the lines representation is automatically shown for new objects.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_show_nonbonded",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "control whether or not the nonbonded representation is automatically shown for new objects.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_show_selections",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not PyMOL automatically enables each new selection.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_show_spheres",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls whether or not the sphere representation is automatically shown for new objects.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "auto_zoom",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "controls automatic zooming behavior: 0 = no zoom 1 = zoom new objects 2 = zoom always 3 = zoom current state always 4 = zoom all objects 5 = zoom first object only",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "autoclose_dialogs",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "auto-behaviours",
+    "summary": "Unused setting.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#automatic-behaviours-auto-autoclose-dialogs"
+  },
+  {
+    "name": "backface_cull",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "rendering",
+    "summary": "controls whether or not the raytracer renders backfacing triangles.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#rendering-antialiasing-antialias-backface-cull-draw-ati-bugs"
+  },
+  {
+    "name": "batch_prefix",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system-gui",
+    "summary": "contains a prefix to be used for temporary files.",
+    "signature": "",
+    "default": "tmp_pymol",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#system-gui-batch-prefix-debug-pick-colored-feedback-display-scale-factor"
+  },
+  {
+    "name": "bg_gradient",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "background",
+    "summary": "Controls whether or not the background is gradient colored. If yes, then bg_rgb_top and bg_rgb_bottom will be used to set the colors.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#background-bg"
+  },
+  {
+    "name": "bg_image_filename",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "background",
+    "summary": "if set controls the image used in the background.",
+    "signature": "",
+    "default": "''",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#background-bg"
+  },
+  {
+    "name": "bg_image_linear",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "background",
+    "summary": "controls the sampling of the texture for the background image. If off, then the nearest pixel is set, otherwise, a linear interpolation is used.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#background-bg"
+  },
+  {
+    "name": "bg_image_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "background",
+    "summary": "Determines how the background image is drawn. 0 - stretched, 1 - centered, 2 - tiled, 3 - centered and repeated",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#background-bg"
+  },
+  {
+    "name": "bg_image_tilesize",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "background",
+    "summary": "This setting is used when bg_image_mode=3 and defines the size of each tile (in x and y, z is not used).",
+    "signature": "",
+    "default": "[100.0, 100.0, 0.0]",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#background-bg"
+  },
+  {
+    "name": "bg_rgb",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "background",
+    "summary": "controls the background rgb color.",
+    "signature": "",
+    "default": "[0.0,0.0,0.0]",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#background-bg"
+  },
+  {
+    "name": "bg_rgb_bottom",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "background",
+    "summary": "Controls bottom color when bg_gradient is set.",
+    "signature": "",
+    "default": "[0.2,0.2,0.5]",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#background-bg"
+  },
+  {
+    "name": "bg_rgb_top",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "background",
+    "summary": "Controls top color when bg_grdient is set.",
+    "signature": "",
+    "default": "[0.0,0.0,0.3]",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#background-bg"
+  },
+  {
+    "name": "button_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "mouse",
+    "summary": "reports the current button mode index (internal).",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#mouse-button-mode-button-mode"
+  },
+  {
+    "name": "button_mode_name",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "mouse",
+    "summary": "reports the current button mode name.",
+    "signature": "",
+    "default": "3-Button Viewing",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#mouse-button-mode-button-mode"
+  },
+  {
+    "name": "cache_display",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "performance-cache",
+    "summary": "controls whether or not a copy is made of the current display in order to speed updates of menus, etc.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#performance-deferred-builds-cache-async-builds-defer-cache"
+  },
+  {
+    "name": "cache_frames",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "performance-cache",
+    "summary": "controls whether or not each movie frame will be stored in RAM and then replayed from memory. This is used for previewing a movie at a higher frame rate. The \\mclear\\\" command can be used to flush ...",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#performance-deferred-builds-cache-async-builds-defer-cache"
+  },
+  {
+    "name": "cache_max",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "performance-cache",
+    "summary": "controls how many primitive data elements can be retained in the geometry cache (before old/unused entries are expired).",
+    "signature": "",
+    "default": "25000000",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#performance-deferred-builds-cache-async-builds-defer-cache"
+  },
+  {
+    "name": "cache_memory",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "performance-cache",
+    "summary": "special case, currently unsupported setting.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#performance-deferred-builds-cache-async-builds-defer-cache"
+  },
+  {
+    "name": "cache_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "performance-cache",
+    "summary": "(integer: 0-2, default 0) controls whether or not PyMOL retains precomputed geometries (such as molecular surfaces) inside the session file. 0: off 1: read only 2: retain all new surfaces computed",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#performance-deferred-builds-cache-async-builds-defer-cache"
+  },
+  {
+    "name": "cartoon_all_alt",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "If on, cartoon is drawn through all alternate-location atoms rather than just the primary altloc.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "(color, default:-1) controls the color of the cartoon representation.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_cylindrical_helices",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls whether helices are displayed as cylinders or as a residue-based cartoon.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_debug",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "(integer: 0-3, default: 0) is for development.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_discrete_colors",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "affects whether per-residue colors change at or halfway inbetween the C-alpha position.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_dumbbell_length",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is a parameter for the dumbbell cross-section.",
+    "signature": "",
+    "default": "1.6",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_dumbbell_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is a parameter for the dumbbell cross-section.",
+    "signature": "",
+    "default": "0.16",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_dumbbell_width",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is a parameter for the dumbbell cross-section.",
+    "signature": "",
+    "default": "0.17",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_fancy_helices",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls whether dumbbell or oval cross-section is used.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_fancy_sheets",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls whether or not beta-sheet strands have arrows.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_flat_cycles",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is the number of cycles of \\flattening\\\" applied to beta-sheets when cartoon_flat_sheets is on.\"",
+    "signature": "",
+    "default": "4",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_flat_sheets",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls whether or not beta-sheet strands are flattened.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_gap_cutoff",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "cutoff for drawing a dashed cartoon loop across gaps. E.g. if one residue is missing, the cutoff needs to be >=2 (or for 5 missing residues, >= 6, etc.).",
+    "signature": "",
+    "default": "10",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_helix_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the radius of the cylindrical helix representation.",
+    "signature": "",
+    "default": "2.25",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_highlight_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the accent color.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_ladder_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the color of the ladder representation.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_ladder_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how the ladder is drawn.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_ladder_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the radius of the ladder representation.",
+    "signature": "",
+    "default": "0.25",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_loop_cap",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "(integer: 0-2, default: 1) controls how loop segments are capped: 0 = not capped 1 = round cap 2 = flat cap",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_loop_quality",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how many facets are used to draw the loop cross-section.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_loop_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the radius of loop segments.",
+    "signature": "",
+    "default": "0.2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_nucleic_acid_as_cylinders",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls whether or not PyMOL draws cartoon nucleic acids as high-quality cylinders or low-quality.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_nucleic_acid_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the control of nucleic acid backbone cartoons.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_nucleic_acid_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how the nucleic acid backbone is computed: 0 = use P coordinates 1 = use C1* coordinates 2 = use P coordinates and terminal 3' OH (if present) 3 = use P coordinates and terminal 5' OH (if ...",
+    "signature": "",
+    "default": "4",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_oval_length",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is the length of the oval cross-section.",
+    "signature": "",
+    "default": "1.35",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_oval_quality",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how many facets are used to draw the oval cross-section.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_oval_width",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is the width of the oval cross section.",
+    "signature": "",
+    "default": "0.25",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_power",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "affects cartoon shape.",
+    "signature": "",
+    "default": "2.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_power_b",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "affects cartoon shape.",
+    "signature": "",
+    "default": "0.52",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_putty_quality",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how many facets are used.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_putty_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is the default putty size.",
+    "signature": "",
+    "default": "0.4",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_putty_range",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is a putty scaling parameter.",
+    "signature": "",
+    "default": "2.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_putty_scale_max",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is a putty scaling parameter.",
+    "signature": "",
+    "default": "4.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_putty_scale_min",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is a putty scaling parameter.",
+    "signature": "",
+    "default": "0.6",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_putty_scale_power",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is a putty scaling parameter.",
+    "signature": "",
+    "default": "1.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_putty_transform",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "0 is normalized nonlinear scaling; 1 is relative nonlinear scaling; 2 is scaled nonlinear scaling; 3 is absolute nonlinear scaling; 4 is normalized linear scaling; 5 is relative linear scaling; 6 i...",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_rect_length",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is the length of the rectangle cross-section.",
+    "signature": "",
+    "default": "1.4",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_rect_width",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "is the width of the rectangle cross-section.",
+    "signature": "",
+    "default": "0.4",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_refine",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how much refinement is done of intermediate cartoon coordinates.",
+    "signature": "",
+    "default": "5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_refine_normals",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls whether or not normals are refined (-1 = automatic).",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_refine_tips",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how much the tips of beta-strands are refined (straightened).",
+    "signature": "",
+    "default": "10",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_ring_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the color of ring representation.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_ring_finder",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "Which rings the cartoon ring finder detects: 1 bases+sugars, 2 bases only, 3 non-protein rings, 4 all rings.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_ring_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how rings are shown: 0 = no ring (use ladders for bases, if applicable) 1 = round-edge rings 2 = square-edge rings 3 = rings with edges 4 = show ring as a sphere of approximate size 5 = sh...",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_ring_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the radius of the sphere used to represent rings (-1.0 means compute from ring geometry).",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_ring_transparency",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the transparency level of rings. When negative, this setting is controlled by cartoon_transparency.",
+    "signature": "",
+    "default": "-1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_ring_width",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the thickness of the ring representation.",
+    "signature": "",
+    "default": "0.125",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_round_helices",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls whether or not PyMOL makes helices round by forcing orientation vectors to point along the helix axes.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_sampling",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how many facets are used to draw cartoon segments.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_side_chain_helper",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls whether or not PyMOL will hide backbone lines and sticks when the cartoon representation is visible as well as disabling smoothing for C-alpha coordinates for residues whose side chains ar...",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_smooth_cycles",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how many smoothing cycles are applied to the overall cartoon.",
+    "signature": "",
+    "default": "2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_smooth_cylinder_cycles",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "Number of smoothing passes applied to cylindrical (helix) cartoon axes.",
+    "signature": "",
+    "default": "3",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_smooth_cylinder_window",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "Window size used when smoothing cylindrical (helix) cartoon axes.",
+    "signature": "",
+    "default": "2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_smooth_first",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "(integer, default: 1) controls the start point for smoothing each segment.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_smooth_last",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the stop point for smoothing of each segment.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_smooth_loops",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls whether or not loop segments are smoothed. Note that this setting modifies the apparent coordinates of the loop in order to achieve improved aesthetics.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_throw",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "affects cartoon geometry.",
+    "signature": "",
+    "default": "1.35",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_trace_atoms",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls whether cartoons are traced through all atoms. Note that this setting only works well for the loop and tube representations.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_transparency",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the transparency of cartoon representations.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_tube_cap",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the type of cap applied to the tube, and accepts the same values as cartoon_loop_cap.",
+    "signature": "",
+    "default": "2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_tube_quality",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls how many facets are used in the tube cross-section.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_tube_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "controls the radius of tube segments.",
+    "signature": "",
+    "default": "0.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cartoon_use_shader",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cartoon",
+    "summary": "If true, on screen rendering of cartoons uses the OpenGL shader language (GLSL) to render cartoon. If false, OpenGL v1.x style rendering is used.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cartoon-representation-cartoon"
+  },
+  {
+    "name": "cavity_cull",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "is the threshold below which isolated clusters of points will be excluded from the surface representation. These are generally interior pockets inside of proteins.",
+    "signature": "",
+    "default": "10",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#surface-cavity-cull-dot-solvent"
+  },
+  {
+    "name": "cell_centered",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "unit-cell",
+    "summary": "If on, the crystallographic unit-cell box is drawn centered on the origin.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#crystallographic-unit-cell-cell"
+  },
+  {
+    "name": "cell_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "unit-cell",
+    "summary": "Color of the unit-cell box (-1 = default/object color).",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#crystallographic-unit-cell-cell"
+  },
+  {
+    "name": "cgo_debug",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "Controls whether or not PyMOL shows debugging graphics related to CGO objects.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_dot_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "if greater than zero, controls the default radius for cgo dots when ray tracing. Otherwise, the radius is computed from cgo_dot_width.",
+    "signature": "",
+    "default": "-1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_dot_width",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "controls the width of cgo dots.",
+    "signature": "",
+    "default": "2.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_ellipsoid_quality",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "Controls cgo-based representation quality of ellipsoids.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_lighting",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "controls whether or not PyMOL lights CGOs.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_line_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "if greater than zero, controls the default radius for lines when ray tracing. Otherwise, the radius is computed from cgo_line_width;",
+    "signature": "",
+    "default": "-0.05",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_line_width",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "is the default line width for cgo geometries.",
+    "signature": "",
+    "default": "1.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_ray_width_scale",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "Scale applied to CGO line widths when ray tracing (negative = pixel-width fallback).",
+    "signature": "",
+    "default": "-0.15",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_shader_ub_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "controls the data size of color data sent to the graphics card. If enabled, unsigned bytes are sent which may be faster and smaller.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_shader_ub_flags",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "controls whether or not unsigned bytes are used in sending data to the graphics card.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_shader_ub_normal",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "controls the data size of normals sent to the graphics card. If enabled, unsigned bytes are sent which may be faster and smaller.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_sphere_quality",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "controls the sphere quality to use when loading CGO representations.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_transparency",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "controls the default transparency of cgo geometries.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "cgo_use_shader",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "If true, on screen rendering of CGOs uses the OpenGL shader language (GLSL). If false, OpenGL v1.x style rendering is used.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "chem_comp_cartn_use",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "file-io",
+    "summary": "For mmCIF chem_comp: which Cartesian coordinate columns to use.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#file-i-o-mmcif-assembly-cif-chem-comp-cartn-use"
+  },
+  {
+    "name": "chromadepth",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stereo",
+    "summary": "Enables ChromaDepth stereo encoding (color-coded depth) when non-zero.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#stereo-depth-anaglyph-mode-chromadepth-depth-cue"
+  },
+  {
+    "name": "cif_keepinmemory",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "file-io",
+    "summary": "Experimental feature. Retain parsed CIF file in memory, for pymol.querying.cif_get_array",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#file-i-o-mmcif-assembly-cif-chem-comp-cartn-use"
+  },
+  {
+    "name": "cif_metalc_as_zero_order_bonds",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "file-io",
+    "summary": "If on, metal-coordination records in mmCIF are imported as zero-order bonds.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#file-i-o-mmcif-assembly-cif-chem-comp-cartn-use"
+  },
+  {
+    "name": "cif_use_auth",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "file-io",
+    "summary": "When loading mmCIF files, use 'auth_*' identifiers (if present, fallback to 'label_*' identifiers). Note that 'label_asym_id' is always loaded as the 'segi' identifier (if present).",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#file-i-o-mmcif-assembly-cif-chem-comp-cartn-use"
+  },
+  {
+    "name": "clamp_colors",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "coloring",
+    "summary": "controls whether or not colors are clamped to the current color table.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#coloring-clamp-colors"
+  },
+  {
+    "name": "clean_electro_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "sculpting",
+    "summary": "Electrostatic model used by the clean/geometry-optimization routine.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#sculpting-clean-clean-electro-mode"
+  },
+  {
+    "name": "collada_background_box",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "export",
+    "summary": "If on, a background box is included in exported COLLADA (.dae) scenes.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#export-collada-collada"
+  },
+  {
+    "name": "collada_export_lighting",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "export",
+    "summary": "If non-zero, light sources are written into exported COLLADA scenes.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#export-collada-collada"
+  },
+  {
+    "name": "collada_geometry_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "export",
+    "summary": "Geometry granularity/mode used when exporting COLLADA.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#export-collada-collada"
+  },
+  {
+    "name": "colored_feedback",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system-gui",
+    "summary": "If on, console/feedback text is colorized.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#system-gui-batch-prefix-debug-pick-colored-feedback-display-scale-factor"
+  },
+  {
+    "name": "cone_quality",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "cgo",
+    "summary": "controls the number of segments used to draw CGO cones.",
+    "signature": "",
+    "default": "18",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#cgo-procedural-geometry-cgo-cone-quality"
+  },
+  {
+    "name": "connect_bonded",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "bonding",
+    "summary": "controls whether or not bonds can be detected between atoms with explicit bonds in the PDB file.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#bond-detection-connect"
+  },
+  {
+    "name": "connect_cutoff",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "bonding",
+    "summary": "affects how close atoms need to be in order for bonds to be created.",
+    "signature": "",
+    "default": "0.35",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#bond-detection-connect"
+  },
+  {
+    "name": "connect_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "bonding",
+    "summary": "controls how bonds are detected when PDB files are loaded. 0 = auto-connect and use explicit valences 1 = use explicit valences only 2 = reserved",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#bond-detection-connect"
+  },
+  {
+    "name": "coulomb_cutoff",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "electrostatics",
+    "summary": "is the cutoff for coulombic calculations.",
+    "signature": "",
+    "default": "10.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#electrostatics-coulomb"
+  },
+  {
+    "name": "coulomb_dielectric",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "electrostatics",
+    "summary": "is the dielectric for coulombic calculations.",
+    "signature": "",
+    "default": "2.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#electrostatics-coulomb"
+  },
+  {
+    "name": "coulomb_units_factor",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "electrostatics",
+    "summary": "is the conversion factor to give output units (kT/e).",
+    "signature": "",
+    "default": "557.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#electrostatics-coulomb"
+  },
+  {
+    "name": "dash_as_cylinders",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dashes",
+    "summary": "If true, distance measure dashes are drawn as high-quality cylinders instead of lines.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dashed-lines-dash"
+  },
+  {
+    "name": "dash_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dashes",
+    "summary": "Controls the color of dashes used to represent distance measures.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dashed-lines-dash"
+  },
+  {
+    "name": "dash_gap",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dashes",
+    "summary": "controls the length of the visible dash.",
+    "signature": "",
+    "default": "0.45",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dashed-lines-dash"
+  },
+  {
+    "name": "dash_length",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dashes",
+    "summary": "controls the separation between dashes.",
+    "signature": "",
+    "default": "0.15",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dashed-lines-dash"
+  },
+  {
+    "name": "dash_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dashes",
+    "summary": "if greater than zero, controls the radius of the dash when ray tracing. Otherwise, the radius is computed from dash_width.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dashed-lines-dash"
+  },
+  {
+    "name": "dash_round_ends",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dashes",
+    "summary": "controls whether or not dashes are rounded on their ends.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dashed-lines-dash"
+  },
+  {
+    "name": "dash_transparency",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dashes",
+    "summary": "Transparency (0-1) of dashed lines such as distance measures.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dashed-lines-dash"
+  },
+  {
+    "name": "dash_use_shader",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dashes",
+    "summary": "If true, on screen rendering of dashes uses the OpenGL shader language (GLSL). If false, OpenGL v1.x style rendering is used.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dashed-lines-dash"
+  },
+  {
+    "name": "dash_width",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dashes",
+    "summary": "controls the width of the lines used to draw dashes.",
+    "signature": "",
+    "default": "2.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dashed-lines-dash"
+  },
+  {
+    "name": "debug_pick",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system-gui",
+    "summary": "a setting for debugging mouse pick problems.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#system-gui-batch-prefix-debug-pick-colored-feedback-display-scale-factor"
+  },
+  {
+    "name": "default_2fofc_map_rep",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "map-defaults",
+    "summary": "This controls the default map representation when a 2FoFc map is loaded from an MTZ map.",
+    "signature": "",
+    "default": "volume",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#map-mtz-auto-load-defaults-default"
+  },
+  {
+    "name": "default_buster_names",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "map-defaults",
+    "summary": "This is the list of valid column names to be sought when autoloading Buster maps.",
+    "signature": "",
+    "default": "2FOFCWT PH2FOFCWT FOFCWT PHFOFCWT",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#map-mtz-auto-load-defaults-default"
+  },
+  {
+    "name": "default_fofc_map_rep",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "map-defaults",
+    "summary": "This controls the default map representation when a FoFc map is loaded from an MTZ map.",
+    "signature": "",
+    "default": "volume",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#map-mtz-auto-load-defaults-default"
+  },
+  {
+    "name": "default_phenix_names",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "map-defaults",
+    "summary": "This is the list of valid column names to be sought when autoloading Phenix maps.",
+    "signature": "",
+    "default": "2FOFCWT PH2FOFCWT FOFCWT PHFOFCWT",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#map-mtz-auto-load-defaults-default"
+  },
+  {
+    "name": "default_phenix_no_fill_names",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "map-defaults",
+    "summary": "This is the list of valid column names to be sought when autoloading Phenix (no fill) maps.",
+    "signature": "",
+    "default": "2FOFCWT_no_fill PH2FOFCWT_no_fill None None",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#map-mtz-auto-load-defaults-default"
+  },
+  {
+    "name": "default_refmac_names",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "map-defaults",
+    "summary": "This is the list of valid column names to be sought when autoloading Refmac maps.",
+    "signature": "",
+    "default": "FWT PHWT DELFWT PHDELWT",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#map-mtz-auto-load-defaults-default"
+  },
+  {
+    "name": "defer_builds_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "performance-cache",
+    "summary": "controls when the underlying geometry for molecular representations is generated, as follows: 0: visible geometry for all states of all enabled objects is generated upfront and retained in memory f...",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#performance-deferred-builds-cache-async-builds-defer-cache"
+  },
+  {
+    "name": "defer_updates",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "performance-cache",
+    "summary": "If on, scene/geometry updates are deferred (batched) rather than applied immediately.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#performance-deferred-builds-cache-async-builds-defer-cache"
+  },
+  {
+    "name": "depth_cue",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "stereo",
+    "summary": "controls whether or not a depth cue fog effect is used.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#stereo-depth-anaglyph-mode-chromadepth-depth-cue"
+  },
+  {
+    "name": "dihedral_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "measurement",
+    "summary": "controls dihedral measurement colors.",
+    "signature": "",
+    "default": "default",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#measurement-labels-angle-dihedral-dist-distance-dynamic-measures"
+  },
+  {
+    "name": "dihedral_label_position",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "measurement",
+    "summary": "(float: >0.0, default: 1.2) controls where the dihedral label is drawn.",
+    "signature": "",
+    "default": "1.2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#measurement-labels-angle-dihedral-dist-distance-dynamic-measures"
+  },
+  {
+    "name": "dihedral_size",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "measurement",
+    "summary": "(float: >0.0, default: 0.6666) controls how far out the dihedral indicator is drawn.",
+    "signature": "",
+    "default": "0.6666",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#measurement-labels-angle-dihedral-dist-distance-dynamic-measures"
+  },
+  {
+    "name": "direct",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "lighting",
+    "summary": "(float 0.0-1.0, default: 0.45) is the amount of light being emitted from the camera.",
+    "signature": "",
+    "default": "0.45",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#lighting-ambient-direct"
+  },
+  {
+    "name": "display_scale_factor",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "system-gui",
+    "summary": "Integer UI/display scaling factor for high-DPI (HiDPI/Retina) screens.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#system-gui-batch-prefix-debug-pick-colored-feedback-display-scale-factor"
+  },
+  {
+    "name": "dist_counter",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "measurement",
+    "summary": "is the counter used when auto-generating measurement object names.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#measurement-labels-angle-dihedral-dist-distance-dynamic-measures"
+  },
+  {
+    "name": "distance_exclusion",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "measurement",
+    "summary": "controls the cutoff of bonds that two atoms must exceed if a distance is to be drawn between them when mode=3 is used as an option to the distance command.",
+    "signature": "",
+    "default": "5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#measurement-labels-angle-dihedral-dist-distance-dynamic-measures"
+  },
+  {
+    "name": "dot_as_spheres",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dot-surface",
+    "summary": "If on, dot-surface dots are drawn as small shaded spheres instead of flat points.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dot-surface-dot"
+  },
+  {
+    "name": "dot_color",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dot-surface",
+    "summary": "(color, default -1) controls the color of the dot representation. By default, dots assume the color of the associated atom.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dot-surface-dot"
+  },
+  {
+    "name": "dot_density",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dot-surface",
+    "summary": "controls the density of dots taken from the surface of a sphere.",
+    "signature": "",
+    "default": "2",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#dot-surface-dot"
+  },
+  {
+    "name": "dot_hydrogens",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dot-surface",
+    "summary": "controls whether or not dots are drawn on hydrogen atoms.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dot-surface-dot"
+  },
+  {
+    "name": "dot_lighting",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dot-surface",
+    "summary": "controls whether or not dots are lit based on their associated surface normals. The setting has no effect when ray tracing.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dot-surface-dot"
+  },
+  {
+    "name": "dot_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dot-surface",
+    "summary": "Dot-surface generation mode.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dot-surface-dot"
+  },
+  {
+    "name": "dot_normals",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dot-surface",
+    "summary": "controls whether or not dots are drawn with normals. This achieves essentially the same effect as dot_lighting, and it too has no effect when ray tracing.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dot-surface-dot"
+  },
+  {
+    "name": "dot_radius",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dot-surface",
+    "summary": "if greater than zero, controls the radius of dots. Otherwise, the dot radius is computed from dot_width based on the pixel size of the current viewport.",
+    "signature": "",
+    "default": "0.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dot-surface-dot"
+  },
+  {
+    "name": "dot_solvent",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "surface",
+    "summary": "controls whether we generate dots for the atomic or solvent accessible surface.",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#surface-cavity-cull-dot-solvent"
+  },
+  {
+    "name": "dot_use_shader",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dot-surface",
+    "summary": "If true, on screen rendering of dots uses the OpenGL shader language (GLSL). If false, OpenGL v1.x style rendering is used.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dot-surface-dot"
+  },
+  {
+    "name": "dot_width",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dot-surface",
+    "summary": "controls the dot width in viewport pixels.",
+    "signature": "",
+    "default": "2.0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/settings/_batch-00.md#dot-surface-dot"
+  },
+  {
+    "name": "draw_frames",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "rendering",
+    "summary": "controls whether or not each movie frame is rendered using the \\draw\\\" command.\"",
+    "signature": "",
+    "default": "off",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#rendering-antialiasing-antialias-backface-cull-draw-ati-bugs"
+  },
+  {
+    "name": "draw_mode",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "rendering",
+    "summary": "0 is the normal OpenGL renderer; 1 is antialised OpenGL; 2 is ray traced without shadows; 3 is ray traced with shadows.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#rendering-antialiasing-antialias-backface-cull-draw-ati-bugs"
+  },
+  {
+    "name": "dynamic_measures",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "measurement",
+    "summary": "controls whether or not PyMOL updates measurement objects when incorporated atoms are moved.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#measurement-labels-angle-dihedral-dist-distance-dynamic-measures"
+  },
+  {
+    "name": "dynamic_width",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dynamic-width",
+    "summary": "controls whether or not PyMOL draws lines thicker for easier viewing.",
+    "signature": "",
+    "default": "on",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dynamic-line-width-dynamic"
+  },
+  {
+    "name": "dynamic_width_factor",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dynamic-width",
+    "summary": "controls the dynamic width scaling.",
+    "signature": "",
+    "default": "0.06",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dynamic-line-width-dynamic"
+  },
+  {
+    "name": "dynamic_width_max",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dynamic-width",
+    "summary": "controls the dynamic width scaling.",
+    "signature": "",
+    "default": "2.5",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dynamic-line-width-dynamic"
+  },
+  {
+    "name": "dynamic_width_min",
+    "kind": "setting",
+    "category": "settings",
+    "subcategory": "dynamic-width",
+    "summary": "controls the dynamic width scaling.",
+    "signature": "",
+    "default": "0.75",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h",
+      "packages/engine/data/setting_help.csv"
+    ],
+    "parityStatus": "unknown",
+    "doc": "packages/graph/features/settings/_batch-00.md#dynamic-line-width-dynamic"
+  }
+]

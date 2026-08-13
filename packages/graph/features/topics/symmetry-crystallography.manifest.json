@@ -1,0 +1,192 @@
+[
+  {
+    "name": "symexp",
+    "kind": "command",
+    "category": "symmetry",
+    "subcategory": "symmetry-mate expansion",
+    "summary": "Creates every space-group and lattice symmetry mate of an object that falls within a cutoff of an atom selection, as fresh prefix## objects.",
+    "signature": "symexp(prefix, object, selection, cutoff, segi=0, quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:909",
+      "docs/api-reference/commands.mdx:3967",
+      "packages/engine-ts/src/cmd/symmetry.ts"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#symexp"
+  },
+  {
+    "name": "symmetry_copy",
+    "kind": "command",
+    "category": "symmetry",
+    "subcategory": "unit cell",
+    "summary": "Copies the crystal cell and space-group parameters from one object to another.",
+    "signature": "symmetry_copy(source_name, target_name, source_state=1, target_state=1, quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:412",
+      "docs/api-reference/commands.mdx:3982",
+      "packages/engine-ts/src/cmd/symmetry.ts"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#symmetry_copy"
+  },
+  {
+    "name": "get_symmetry",
+    "kind": "command",
+    "category": "symmetry",
+    "subcategory": "unit cell",
+    "summary": "Returns a molecule or map's crystal cell and space group as [a,b,c,alpha,beta,gamma,spacegroup].",
+    "signature": "get_symmetry(selection='(all)', state=-1, quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:147",
+      "docs/api-reference/commands.mdx:1623",
+      "packages/engine-ts/src/cmd/symmetry.ts"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#get_symmetry"
+  },
+  {
+    "name": "set_symmetry",
+    "kind": "command",
+    "category": "symmetry",
+    "subcategory": "unit cell",
+    "summary": "Defines or redefines the crystal cell parameters and space group for a molecule or map object.",
+    "signature": "set_symmetry(selection, a, b, c, alpha, beta, gamma, spacegroup='P1', state=-1, quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:379",
+      "docs/api-reference/commands.mdx:3713",
+      "packages/engine-ts/src/cmd/symmetry.ts"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#set_symmetry"
+  },
+  {
+    "name": "cell",
+    "kind": "representation",
+    "category": "symmetry",
+    "subcategory": "unit-cell display",
+    "summary": "Wireframe representation of the crystallographic unit-cell box and its a/b/c axes, drawn from the object's cell parameters.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/layer2/CoordSet.cpp:1265",
+      "packages/engine-ts/src/geometry/cell.ts"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#cell"
+  },
+  {
+    "name": "pbc_wrap",
+    "kind": "command",
+    "category": "symmetry",
+    "subcategory": "periodic boundary",
+    "summary": "Wraps molecules by whole lattice vectors back into the periodic (PBC) box.",
+    "signature": "pbc_wrap(oname, center=None)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:328",
+      "docs/api-reference/commands.mdx:2843",
+      "packages/engine-ts/src/cmd/extras.ts:558"
+    ],
+    "parityStatus": "planned",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#pbc_wrap"
+  },
+  {
+    "name": "pbc_unwrap",
+    "kind": "command",
+    "category": "symmetry",
+    "subcategory": "periodic boundary",
+    "summary": "Unwraps atoms or molecules so they stop jumping across periodic boundaries in a trajectory.",
+    "signature": "pbc_unwrap(oname, bymol=True)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:312",
+      "docs/api-reference/commands.mdx:2834",
+      "packages/engine-ts/src/cmd/extras.ts:559"
+    ],
+    "parityStatus": "planned",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#pbc_unwrap"
+  },
+  {
+    "name": "get_assembly_ids",
+    "kind": "command",
+    "category": "symmetry",
+    "subcategory": "biological assemblies",
+    "summary": "Experimental: returns the list of biological-assembly ids from an mmCIF-loaded object.",
+    "signature": "get_assembly_ids(name, quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:1606",
+      "docs/api-reference/commands.mdx:1085",
+      "packages/engine-ts/src/cmd/symmetry.ts"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#get_assembly_ids"
+  },
+  {
+    "name": "assembly",
+    "kind": "setting",
+    "category": "symmetry",
+    "subcategory": "biological assemblies",
+    "summary": "Selects which biological assembly to generate when loading an mmCIF file; empty loads the asymmetric unit as-is.",
+    "signature": "",
+    "default": "''",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:857",
+      "docs/api-reference/settings.mdx:25",
+      "docs/feature-parity.md:82"
+    ],
+    "parityStatus": "planned",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#assembly"
+  },
+  {
+    "name": "space groups",
+    "kind": "feature",
+    "category": "symmetry",
+    "subcategory": "space groups",
+    "summary": "The table of Hermann-Mauguin space-group symmetry operators used to tile the unit cell; the TS port covers P1, P2, P2-1, P2-1-2-1-2-1 and C2 with a P1 identity fallback.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine-ts/src/cmd/symmetry.ts",
+      "packages/engine/modules/pymol/creating.py:909"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#space-groups"
+  },
+  {
+    "name": "cell_color",
+    "kind": "setting",
+    "category": "symmetry",
+    "subcategory": "unit-cell display",
+    "summary": "Color of the unit-cell representation box; -1 uses the object color.",
+    "signature": "",
+    "default": "-1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:907",
+      "docs/api-reference/settings.mdx:133",
+      "packages/engine/layer1/Setting.cpp:2479"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#cell_color"
+  },
+  {
+    "name": "cell_centered",
+    "kind": "setting",
+    "category": "symmetry",
+    "subcategory": "unit-cell display",
+    "summary": "When true, draws the unit-cell box centered on the origin instead of anchored at the (0,0,0) corner.",
+    "signature": "",
+    "default": "false",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:898",
+      "docs/api-reference/settings.mdx:132",
+      "packages/engine/layer1/Setting.cpp:2736"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/symmetry-crystallography.md#cell_centered"
+  }
+]

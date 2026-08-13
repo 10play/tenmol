@@ -1,0 +1,2494 @@
+[
+  {
+    "name": "_deepsalmon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.42, 0.42",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "actinium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Actinium",
+    "signature": "",
+    "default": "0.439215686, 0.670588235, 0.980392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "aluminum",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Aluminum",
+    "signature": "",
+    "default": "0.749019608, 0.650980392, 0.650980392",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "americium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Americium",
+    "signature": "",
+    "default": "0.329411765, 0.360784314, 0.949019608",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "antimony",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Antimony",
+    "signature": "",
+    "default": "0.619607843, 0.388235294, 0.709803922",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "aquamarine",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.5, 1, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "argon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Argon",
+    "signature": "",
+    "default": "0.501960784, 0.819607843, 0.890196078",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "arsenic",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Arsenic",
+    "signature": "",
+    "default": "0.741176471, 0.501960784, 0.890196078",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "astatine",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Astatine",
+    "signature": "",
+    "default": "0.458823529, 0.309803922, 0.270588235",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "barium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Barium",
+    "signature": "",
+    "default": "0, 0.788235294, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "berkelium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Berkelium",
+    "signature": "",
+    "default": "0.541176471, 0.309803922, 0.890196078",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "beryllium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Beryllium",
+    "signature": "",
+    "default": "0.760784314, 1, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "bismuth",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Bismuth",
+    "signature": "",
+    "default": "0.619607843, 0.309803922, 0.709803922",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "black",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0, 0, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "blue",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0, 0, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "bluewhite",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.85, 0.85, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "bohrium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Bohrium",
+    "signature": "",
+    "default": "0.878431373, 0, 0.219607843",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "boron",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Boron",
+    "signature": "",
+    "default": "1, 0.709803922, 0.709803922",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "brightorange",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.7, 0.2",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "bromine",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Bromine",
+    "signature": "",
+    "default": "0.650980392, 0.160784314, 0.160784314",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "brown",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.65, 0.32, 0.17",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "cadmium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Cadmium",
+    "signature": "",
+    "default": "1, 0.850980392, 0.560784314",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "calcium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Calcium",
+    "signature": "",
+    "default": "0.239215686, 1, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "californium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Californium",
+    "signature": "",
+    "default": "0.631372549, 0.211764706, 0.831372549",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "carbon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Carbon",
+    "signature": "",
+    "default": "0.2, 1, 0.2",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "cerium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Cerium",
+    "signature": "",
+    "default": "1, 1, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "cesium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Cesium",
+    "signature": "",
+    "default": "0.341176471, 0.090196078, 0.560784314",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "chartreuse",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.5, 1, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "chlorine",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Chlorine",
+    "signature": "",
+    "default": "0.121568627, 0.941176471, 0.121568627",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "chocolate",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.555, 0.222, 0.111",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "chromium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Chromium",
+    "signature": "",
+    "default": "0.541176471, 0.6, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "cobalt",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Cobalt",
+    "signature": "",
+    "default": "0.941176471, 0.564705882, 0.62745098",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "copper",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Copper",
+    "signature": "",
+    "default": "0.784313725, 0.501960784, 0.2",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "curium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Curium",
+    "signature": "",
+    "default": "0.470588235, 0.360784314, 0.890196078",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "cyan",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0, 1, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "darksalmon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.73, 0.55, 0.52",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "dash",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 1, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "deepblue",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.25, 0.25, 0.65",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "deepolive",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.6, 0.6, 0.1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "deeppurple",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.6, 0.1, 0.6",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "deepsalmon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.5, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "deepteal",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.1, 0.6, 0.6",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "density",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.1, 0.1, 0.6",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "deuterium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Deuterium",
+    "signature": "",
+    "default": "0.9, 0.9, 0.9",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "dirtyviolet",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.7, 0.5, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "dubnium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Dubnium",
+    "signature": "",
+    "default": "0.819607843, 0, 0.309803922",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "dysprosium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Dysprosium",
+    "signature": "",
+    "default": "0.121568627, 1, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "einsteinium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Einsteinium",
+    "signature": "",
+    "default": "0.701960784, 0.121568627, 0.831372549",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "erbium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Erbium",
+    "signature": "",
+    "default": "0, 0.901960784, 0.458823529",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "europium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Europium",
+    "signature": "",
+    "default": "0.380392157, 1, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "fermium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Fermium",
+    "signature": "",
+    "default": "0.701960784, 0.121568627, 0.729411765",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "firebrick",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.698, 0.13, 0.13",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "fluorine",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Fluorine",
+    "signature": "",
+    "default": "0.701960784, 1, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "forest",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.2, 0.6, 0.2",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "francium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Francium",
+    "signature": "",
+    "default": "0.258823529, 0, 0.4",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "gadolinium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Gadolinium",
+    "signature": "",
+    "default": "0.270588235, 1, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "gallium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Gallium",
+    "signature": "",
+    "default": "0.760784314, 0.560784314, 0.560784314",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "germanium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Germanium",
+    "signature": "",
+    "default": "0.4, 0.560784314, 0.560784314",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "gold",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Gold",
+    "signature": "",
+    "default": "1, 0.819607843, 0.137254902",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "gray",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "grey",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.5, 0.5, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "green",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0, 1, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "greencyan",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.25, 1, 0.75",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "grey",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "grey",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.5, 0.5, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "hafnium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Hafnium",
+    "signature": "",
+    "default": "0.301960784, 0.760784314, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "hassium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Hassium",
+    "signature": "",
+    "default": "0.901960784, 0, 0.180392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "helium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Helium",
+    "signature": "",
+    "default": "0.850980392, 1, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "holmium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Holmium",
+    "signature": "",
+    "default": "0, 1, 0.611764706",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "hotpink",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "hydrogen",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Hydrogen",
+    "signature": "",
+    "default": "0.9, 0.9, 0.9",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "indium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Indium",
+    "signature": "",
+    "default": "0.650980392, 0.458823529, 0.450980392",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "iodine",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Iodine",
+    "signature": "",
+    "default": "0.580392157, 0, 0.580392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "iridium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Iridium",
+    "signature": "",
+    "default": "0.090196078, 0.329411765, 0.529411765",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "iron",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Iron",
+    "signature": "",
+    "default": "0.878431373, 0.4, 0.2",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "krypton",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Krypton",
+    "signature": "",
+    "default": "0.360784314, 0.721568627, 0.819607843",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lanthanum",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Lanthanum",
+    "signature": "",
+    "default": "0.439215686, 0.831372549, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lawrencium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Lawrencium",
+    "signature": "",
+    "default": "0.780392157, 0, 0.4",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lead",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Lead",
+    "signature": "",
+    "default": "0.341176471, 0.349019608, 0.380392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lightblue",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.75, 0.75, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lightmagenta",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.2, 0.8",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lightorange",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.8, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lightpink",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.75, 0.87",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lightteal",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.4, 0.7, 0.7",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lime",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.5, 1, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "limegreen",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0, 1, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "limon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.75, 1, 0.25",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lithium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Lithium",
+    "signature": "",
+    "default": "0.8, 0.501960784, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lonepair",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Lone pair",
+    "signature": "",
+    "default": "0.5, 0.5, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "lutetium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Lutetium",
+    "signature": "",
+    "default": "0, 0.670588235, 0.141176471",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "magenta",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "magnesium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Magnesium",
+    "signature": "",
+    "default": "0.541176471, 1, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "manganese",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Manganese",
+    "signature": "",
+    "default": "0.611764706, 0.478431373, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "marine",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0, 0.5, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "meitnerium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Meitnerium",
+    "signature": "",
+    "default": "0.921568627, 0, 0.149019608",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "mendelevium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Mendelevium",
+    "signature": "",
+    "default": "0.701960784, 0.050980392, 0.650980392",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "mercury",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Mercury",
+    "signature": "",
+    "default": "0.721568627, 0.721568627, 0.815686275",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "molybdenum",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Molybdenum",
+    "signature": "",
+    "default": "0.329411765, 0.709803922, 0.709803922",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "neodymium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Neodymium",
+    "signature": "",
+    "default": "0.780392157, 1, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "neon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Neon",
+    "signature": "",
+    "default": "0.701960784, 0.890196078, 0.960784314",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "neptunium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Neptunium",
+    "signature": "",
+    "default": "0, 0.501960784, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "nickel",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Nickel",
+    "signature": "",
+    "default": "0.31372549, 0.815686275, 0.31372549",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "niobium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Niobium",
+    "signature": "",
+    "default": "0.450980392, 0.760784314, 0.788235294",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "nitrogen",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Nitrogen",
+    "signature": "",
+    "default": "0.2, 0.2, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "nobelium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Nobelium",
+    "signature": "",
+    "default": "0.741176471, 0.050980392, 0.529411765",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "olive",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.77, 0.7, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "orange",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.5, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "osmium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Osmium",
+    "signature": "",
+    "default": "0.149019608, 0.4, 0.588235294",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "oxygen",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Oxygen",
+    "signature": "",
+    "default": "1, 0.3, 0.3",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "palecyan",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.8, 1, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "palegreen",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.65, 0.9, 0.65",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "paleyellow",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 1, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "palladium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Palladium",
+    "signature": "",
+    "default": "0, 0.411764706, 0.521568627",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "phosphorus",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Phosphorus",
+    "signature": "",
+    "default": "1, 0.501960784, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "pink",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.65, 0.85",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "platinum",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Platinum",
+    "signature": "",
+    "default": "0.815686275, 0.815686275, 0.878431373",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "plutonium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Plutonium",
+    "signature": "",
+    "default": "0, 0.419607843, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "polonium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Polonium",
+    "signature": "",
+    "default": "0.670588235, 0.360784314, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "potassium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Potassium",
+    "signature": "",
+    "default": "0.560784314, 0.250980392, 0.831372549",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "praseodymium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Praseodymium",
+    "signature": "",
+    "default": "0.850980392, 1, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "promethium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Promethium",
+    "signature": "",
+    "default": "0.639215686, 1, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "protactinium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Protactinium",
+    "signature": "",
+    "default": "0, 0.631372549, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "pseudoatom",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Pseudoatom",
+    "signature": "",
+    "default": "0.9, 0.9, 0.9",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "purple",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.75, 0, 0.75",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "purpleblue",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.5, 0, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "radium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Radium",
+    "signature": "",
+    "default": "0, 0.490196078, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "radon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Radon",
+    "signature": "",
+    "default": "0.258823529, 0.509803922, 0.588235294",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "raspberry",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.7, 0.3, 0.4",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "red",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "rhenium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Rhenium",
+    "signature": "",
+    "default": "0.149019608, 0.490196078, 0.670588235",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "rhodium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Rhodium",
+    "signature": "",
+    "default": "0.039215686, 0.490196078, 0.549019608",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "rubidium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Rubidium",
+    "signature": "",
+    "default": "0.439215686, 0.180392157, 0.690196078",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "ruby",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.6, 0.2, 0.2",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "ruthenium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Ruthenium",
+    "signature": "",
+    "default": "0.141176471, 0.560784314, 0.560784314",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "rutherfordium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Rutherfordium",
+    "signature": "",
+    "default": "0.8, 0, 0.349019608",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "salmon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.6, 0.6",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "samarium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Samarium",
+    "signature": "",
+    "default": "0.560784314, 1, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "sand",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.72, 0.55, 0.3",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "scandium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Scandium",
+    "signature": "",
+    "default": "0.901960784, 0.901960784, 0.901960784",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "seaborgium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Seaborgium",
+    "signature": "",
+    "default": "0.850980392, 0, 0.270588235",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "selenium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Selenium",
+    "signature": "",
+    "default": "1, 0.631372549, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "silicon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Silicon",
+    "signature": "",
+    "default": "0.941176471, 0.784313725, 0.62745098",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "silver",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Silver",
+    "signature": "",
+    "default": "0.752941176, 0.752941176, 0.752941176",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "skyblue",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.2, 0.5, 0.8",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "slate",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.5, 0.5, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "smudge",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.55, 0.7, 0.4",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "sodium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Sodium",
+    "signature": "",
+    "default": "0.670588235, 0.360784314, 0.949019608",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "splitpea",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.52, 0.75, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "strontium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Strontium",
+    "signature": "",
+    "default": "0, 1, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "sulfur",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Sulfur",
+    "signature": "",
+    "default": "0.9, 0.775, 0.25",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "tantalum",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Tantalum",
+    "signature": "",
+    "default": "0.301960784, 0.650980392, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "teal",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0, 0.75, 0.75",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "technetium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Technetium",
+    "signature": "",
+    "default": "0.231372549, 0.619607843, 0.619607843",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "tellurium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Tellurium",
+    "signature": "",
+    "default": "0.831372549, 0.478431373, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "terbium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Terbium",
+    "signature": "",
+    "default": "0.188235294, 1, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "thallium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Thallium",
+    "signature": "",
+    "default": "0.650980392, 0.329411765, 0.301960784",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "thorium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Thorium",
+    "signature": "",
+    "default": "0, 0.729411765, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "thulium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Thulium",
+    "signature": "",
+    "default": "0, 0.831372549, 0.321568627",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "tin",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Tin",
+    "signature": "",
+    "default": "0.4, 0.501960784, 0.501960784",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "titanium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Titanium",
+    "signature": "",
+    "default": "0.749019608, 0.760784314, 0.780392157",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "tungsten",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Tungsten",
+    "signature": "",
+    "default": "0.129411765, 0.580392157, 0.839215686",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "tv_blue",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.3, 0.3, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "tv_green",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.2, 1, 0.2",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "tv_orange",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.55, 0.15",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "tv_red",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.2, 0.2",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "tv_yellow",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 1, 0.2",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "uranium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Uranium",
+    "signature": "",
+    "default": "0, 0.560784314, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "vanadium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Vanadium",
+    "signature": "",
+    "default": "0.650980392, 0.650980392, 0.670588235",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "violet",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.5, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "violetpurple",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.55, 0.25, 0.6",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "warmpink",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.85, 0.2, 0.5",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "wheat",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "0.99, 0.82, 0.65",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "white",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 1, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "xenon",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Xenon",
+    "signature": "",
+    "default": "0.258823529, 0.619607843, 0.690196078",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "yellow",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "standard",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 1, 0",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "yelloworange",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "variant",
+    "summary": "Built-in named color",
+    "signature": "",
+    "default": "1, 0.87, 0.37",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "ytterbium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Ytterbium",
+    "signature": "",
+    "default": "0, 0.749019608, 0.219607843",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "yttrium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Yttrium",
+    "signature": "",
+    "default": "0.580392157, 1, 1",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "zinc",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Zinc",
+    "signature": "",
+    "default": "0.490196078, 0.501960784, 0.690196078",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  },
+  {
+    "name": "zirconium",
+    "kind": "color",
+    "category": "coloring",
+    "subcategory": "element",
+    "summary": "Element color for Zirconium",
+    "signature": "",
+    "default": "0.580392157, 0.878431373, 0.878431373",
+    "sourceRefs": [
+      "docs/api-reference/colors.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/named-colors.md"
+  }
+]

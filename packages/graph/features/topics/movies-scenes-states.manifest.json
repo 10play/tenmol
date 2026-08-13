@@ -1,0 +1,925 @@
+[
+  {
+    "name": "state-vs-frame",
+    "kind": "feature",
+    "category": "movies-scenes-states",
+    "subcategory": "frames vs states",
+    "summary": "Objects hold states (coordinate sets); the viewer has frames; mset maps frame->state, otherwise 1:1.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/layer1/Movie.cpp:979",
+      "docs/movies-scenes-states.md"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#state-vs-frame"
+  },
+  {
+    "name": "get_state",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "state query",
+    "summary": "Returns the current object display state index (1-based), taking no lock.",
+    "signature": "get_state()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:958",
+      "docs/api-reference/commands.mdx"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#get_state"
+  },
+  {
+    "name": "get_frame",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame query",
+    "summary": "Returns the current movie frame index (1-based), taking no lock.",
+    "signature": "get_frame()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:984"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#get_frame"
+  },
+  {
+    "name": "set_frame",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame navigation",
+    "summary": "Jumps the viewer to an absolute movie frame via SceneSetFrame.",
+    "signature": "set_frame(frame=1, mode=0)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:898"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#set_frame"
+  },
+  {
+    "name": "frame",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame navigation",
+    "summary": "Sets the viewer to a specific movie frame, optionally running its command/scene.",
+    "signature": "frame(frame, trigger=-1, scene=0)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:460",
+      "packages/engine-ts/src/cmd/system.ts:141"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#frame"
+  },
+  {
+    "name": "forward",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame navigation",
+    "summary": "Advances the movie one frame (relative + auto movie command).",
+    "signature": "forward()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:819",
+      "packages/engine-ts/src/cmd/system.ts:148"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#forward"
+  },
+  {
+    "name": "backward",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame navigation",
+    "summary": "Steps the movie back one frame.",
+    "signature": "backward()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:846",
+      "packages/engine-ts/src/cmd/system.ts:154"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#backward"
+  },
+  {
+    "name": "rewind",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame navigation",
+    "summary": "Goes to the first movie frame.",
+    "signature": "rewind()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:874",
+      "packages/engine-ts/src/cmd/system.ts:160"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#rewind"
+  },
+  {
+    "name": "ending",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame navigation",
+    "summary": "Jumps to the last movie frame.",
+    "signature": "ending()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:911",
+      "packages/engine-ts/src/cmd/controlflow.ts:204"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#ending"
+  },
+  {
+    "name": "middle",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame navigation",
+    "summary": "Jumps to the middle movie frame.",
+    "signature": "middle()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:934"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#middle"
+  },
+  {
+    "name": "count_frames",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame query",
+    "summary": "Returns the number of frames defined for the movie.",
+    "signature": "count_frames(quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:759"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#count_frames"
+  },
+  {
+    "name": "count_states",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "state query",
+    "summary": "Returns the number of states spanned by a selection.",
+    "signature": "count_states(selection='(all)', quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:703",
+      "packages/engine-ts/src/cmd/analysis.ts:224"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#count_states"
+  },
+  {
+    "name": "get_movie_length",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame query",
+    "summary": "Returns frames explicitly defined by mset, excluding implicit molecular states.",
+    "signature": "get_movie_length(quiet=1, images=-1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:730"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#get_movie_length"
+  },
+  {
+    "name": "get_movie_playing",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "playback query",
+    "summary": "Returns whether the movie is currently playing.",
+    "signature": "get_movie_playing()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:64"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#get_movie_playing"
+  },
+  {
+    "name": "get_movie_locked",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "playback query",
+    "summary": "Returns whether movie commands are currently suppressed (locked).",
+    "signature": "get_movie_locked()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:814"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#get_movie_locked"
+  },
+  {
+    "name": "mset",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "movie programming",
+    "summary": "Defines the frame->state program via a mini-language (N, xN repeat, -N ramp).",
+    "signature": "mset(specification='', frame=1, freeze=0)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:691",
+      "packages/engine/layer1/Movie.cpp:877",
+      "packages/engine-ts/src/cmd/system.ts:169"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mset"
+  },
+  {
+    "name": "madd",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "movie programming",
+    "summary": "Extends an existing movie using the same syntax as mset (append).",
+    "signature": "madd(specification='', frame=0, freeze=0)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:677",
+      "packages/engine-ts/src/cmd/system.ts:182"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#madd"
+  },
+  {
+    "name": "mdo",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "movie programming",
+    "summary": "Defines (replaces) the command string executed each time a frame plays.",
+    "signature": "mdo(frame, command)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:274",
+      "packages/engine/layer1/Movie.cpp:1074"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mdo"
+  },
+  {
+    "name": "mappend",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "movie programming",
+    "summary": "Appends an additional command string to a frame's movie command.",
+    "signature": "mappend(frame, command)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:323",
+      "packages/engine-ts/src/cmd/system.ts:183"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mappend"
+  },
+  {
+    "name": "mdump",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "movie programming",
+    "summary": "Prints all defined movie commands to the feedback stream.",
+    "signature": "mdump()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:81",
+      "packages/engine/layer1/Movie.cpp:378"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mdump"
+  },
+  {
+    "name": "mmatrix",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "movie programming",
+    "summary": "Stores/recalls the camera matrix applied at the first movie frame.",
+    "signature": "mmatrix(action)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:772",
+      "packages/engine-ts/src/cmd/movie2.ts:254"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mmatrix"
+  },
+  {
+    "name": "mview",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "key frames",
+    "summary": "Stores and interpolates camera/object key frames; power/linear control easing.",
+    "signature": "mview(action='store', first=0, last=0, power=0.0, bias=-1.0, simple=-1, linear=0.0, object='', wrap=-1, hand=0, window=5, cycles=1, scene='', cut=0.5, quiet=1, auto=-1, state=0, freeze=0)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:160",
+      "packages/engine/layer1/Movie.cpp:1155",
+      "packages/engine-ts/src/cmd/movie2.ts:201"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mview"
+  },
+  {
+    "name": "mmove",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame-range editing",
+    "summary": "Moves key frames and movie commands between timeline positions.",
+    "signature": "mmove(target, source=0, count=-1, freeze=0, object='', quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:493",
+      "packages/engine/layer1/Movie.cpp:89"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#frame-range-editing"
+  },
+  {
+    "name": "mcopy",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame-range editing",
+    "summary": "Copies key frames and movie commands to another timeline position.",
+    "signature": "mcopy(target, source=0, count=-1, freeze=0, object='', quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:545"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#frame-range-editing"
+  },
+  {
+    "name": "mdelete",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame-range editing",
+    "summary": "Removes frames (key frames + commands); count<0 deletes to the end.",
+    "signature": "mdelete(count=-1, frame=0, freeze=0, object='', quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:591"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#frame-range-editing"
+  },
+  {
+    "name": "minsert",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "frame-range editing",
+    "summary": "Inserts blank frames into camera view and object motions.",
+    "signature": "minsert(count, frame=0, freeze=0, object='', quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:640"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#frame-range-editing"
+  },
+  {
+    "name": "mplay",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "playback",
+    "summary": "Starts movie playback (backend-paced by movie_fps).",
+    "signature": "mplay()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/layer1/Movie.cpp:555",
+      "packages/engine-ts/src/cmd/system.ts:195"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mplay"
+  },
+  {
+    "name": "mstop",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "playback",
+    "summary": "Stops movie playback.",
+    "signature": "mstop()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine-ts/src/cmd/system.ts:199"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mstop"
+  },
+  {
+    "name": "mtoggle",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "playback",
+    "summary": "Toggles movie playback (Spacebar / End).",
+    "signature": "mtoggle()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine-ts/src/cmd/system.ts:203"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mtoggle"
+  },
+  {
+    "name": "mclear",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "playback",
+    "summary": "Clears the cached rendered movie frame images.",
+    "signature": "mclear()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:436",
+      "packages/engine/layer1/Movie.cpp:1432",
+      "packages/engine-ts/src/cmd/system.ts:186"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mclear"
+  },
+  {
+    "name": "mpng",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "export",
+    "summary": "Exports movie frames as a numbered PNG series (normal/draw/ray).",
+    "signature": "mpng(prefix, first=0, last=0, preserve=0, modal=0, mode=-1, quiet=1, width=0, height=0)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:366",
+      "packages/engine/layer1/Movie.cpp:819"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#mpng"
+  },
+  {
+    "name": "movie-programs",
+    "kind": "feature",
+    "category": "movies-scenes-states",
+    "subcategory": "movie programs",
+    "summary": "The pymol.movie add_* generators that program camera/state/scene loops in one call.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/movie.py:268",
+      "docs/movies-scenes-states.md"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#movie-programs"
+  },
+  {
+    "name": "movie.produce",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "export",
+    "summary": "Encodes the movie to a video file (mp4/mov/webm/gif/mpg) autodetecting the encoder.",
+    "signature": "movie.produce(filename, mode='', first=0, last=0, preserve=0, encoder='', quality=-1, quiet=1, width=0, height=0)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/movie.py:846"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#movie-produce"
+  },
+  {
+    "name": "scene",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "scenes",
+    "summary": "Stores/recalls named scenes: view + reps + colors + activity + frame + message + thumbnail.",
+    "signature": "scene(key='auto', action='recall', message=None, view=1, color=1, active=1, rep=1, frame=1, animate=-1, new_key=None, hand=1, quiet=1, sele='all')",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1034",
+      "packages/engine/layer3/MovieScene.cpp:755"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#scene"
+  },
+  {
+    "name": "scene_order",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "scenes",
+    "summary": "Reorders the stored scenes (top/current/bottom or natural sort).",
+    "signature": "scene_order(names, sort=0, location='current', quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:961",
+      "packages/engine/layer3/MovieScene.cpp:88"
+    ],
+    "parityStatus": "partial",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#scene_order"
+  },
+  {
+    "name": "get_scene_list",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "scenes",
+    "summary": "Returns scene names in display order.",
+    "signature": "get_scene_list()",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:919"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#get_scene_list"
+  },
+  {
+    "name": "get_scene_message",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "scenes",
+    "summary": "Reads the text message stored with a scene.",
+    "signature": "get_scene_message(name)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:927"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#get_scene_message"
+  },
+  {
+    "name": "set_scene_message",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "scenes",
+    "summary": "Sets the text message stored with a scene.",
+    "signature": "set_scene_message(name, message)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:931"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#set_scene_message"
+  },
+  {
+    "name": "get_scene_thumbnail",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "scenes",
+    "summary": "Fetches a scene's 220x124 PNG thumbnail as a byte buffer.",
+    "signature": "get_scene_thumbnail(name)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:923",
+      "packages/engine/layer3/MovieScene.cpp:225"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#get_scene_thumbnail"
+  },
+  {
+    "name": "scene_buttons",
+    "kind": "setting",
+    "category": "movies-scenes-states",
+    "subcategory": "scenes",
+    "summary": "Draws the in-viewport clickable scene-button overlay.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/Scene.cpp:3456",
+      "packages/engine/layer1/SettingInfo.h:699"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#scene_buttons"
+  },
+  {
+    "name": "scene_animation_duration",
+    "kind": "setting",
+    "category": "movies-scenes-states",
+    "subcategory": "scenes",
+    "summary": "Seconds of camera animation when recalling a scene (animate=-1).",
+    "signature": "",
+    "default": "2.25",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:506",
+      "packages/engine/layer3/MovieScene.cpp:429"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#scene_animation_duration"
+  },
+  {
+    "name": "animation_duration",
+    "kind": "setting",
+    "category": "movies-scenes-states",
+    "subcategory": "camera",
+    "summary": "Default seconds for camera animations (zoom/orient/view with animate=-1).",
+    "signature": "",
+    "default": "0.75",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:484"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#animation_duration"
+  },
+  {
+    "name": "scene-fkeys",
+    "kind": "feature",
+    "category": "movies-scenes-states",
+    "subcategory": "scenes",
+    "summary": "F1-F12 recall/store scenes (falling back to views); PgUp/PgDn step scenes.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/shortcut_dict.py",
+      "packages/engine/modules/pymol/internal.py:447"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#scene-fkeys"
+  },
+  {
+    "name": "set_state",
+    "kind": "feature",
+    "category": "movies-scenes-states",
+    "subcategory": "state handling",
+    "summary": "No dedicated command; set state via frame/set_frame or the per-object 'state' setting.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:958",
+      "packages/engine/layer1/SettingInfo.h:278"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#set_state"
+  },
+  {
+    "name": "split_states",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "state handling",
+    "summary": "Separates a multi-state object into single-state objects.",
+    "signature": "split_states(object, first=1, last=0, prefix=None)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:175",
+      "packages/engine-ts/src/cmd/extras.ts"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#split_states"
+  },
+  {
+    "name": "join_states",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "state handling",
+    "summary": "Builds one multi-state object from a selection spanning several objects.",
+    "signature": "join_states(name, selection='all', mode=2, zoom=0, quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:1145",
+      "packages/engine-ts/src/cmd/extras.ts"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#join_states"
+  },
+  {
+    "name": "delete_states",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "state handling",
+    "summary": "Deletes specific states (list or ranges) from an object.",
+    "signature": "delete_states(name, states)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/commanding.py:548",
+      "packages/engine-ts/src/cmd/extras.ts"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#delete_states"
+  },
+  {
+    "name": "set_state_order",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "state handling",
+    "summary": "API-only: reorders an object's states by a permutation list.",
+    "signature": "set_state_order(name, order, quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:350"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#set_state_order"
+  },
+  {
+    "name": "all_states",
+    "kind": "setting",
+    "category": "movies-scenes-states",
+    "subcategory": "state handling",
+    "summary": "Overlays every state of an object at once instead of one.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:133"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#all_states"
+  },
+  {
+    "name": "static_singletons",
+    "kind": "setting",
+    "category": "movies-scenes-states",
+    "subcategory": "state handling",
+    "summary": "Keeps single-state objects visible in every movie frame.",
+    "signature": "",
+    "default": "1",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:166"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#static_singletons"
+  },
+  {
+    "name": "get_view",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "camera view",
+    "summary": "Returns the current camera as 18 floats (rotation, origin, clip, ortho/fov).",
+    "signature": "get_view(output=1, quiet=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:634"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#get_view"
+  },
+  {
+    "name": "set_view",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "camera view",
+    "summary": "Sets the camera from an exactly-18-float view vector, optionally animated.",
+    "signature": "set_view(view, animate=0, quiet=1, hand=1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:734"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#set_view"
+  },
+  {
+    "name": "view",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "camera view",
+    "summary": "Saves/recalls named camera views (view-only, unlike scenes).",
+    "signature": "view(key, action='recall', animate=-1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:783"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#view"
+  },
+  {
+    "name": "look_at",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "camera view",
+    "summary": "Reorients an object or the camera to face a target object's center.",
+    "signature": "look_at(target_obj, mobile_obj='_Camera')",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py",
+      "packages/engine-ts/src/cmd/extras.ts"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#look_at"
+  },
+  {
+    "name": "turn",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "camera op",
+    "summary": "Rotates the camera about a primary axis, centered on the origin.",
+    "signature": "turn(axis, angle)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1300"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#turn"
+  },
+  {
+    "name": "move",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "camera op",
+    "summary": "Translates the camera along a primary axis.",
+    "signature": "move(axis, distance)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:352"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#move"
+  },
+  {
+    "name": "rotate",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "camera op",
+    "summary": "Rotates atomic coordinates about an axis (or an object/state matrix).",
+    "signature": "rotate(axis='x', angle=0.0, selection='all', state=-1, camera=1, object=None, origin=None, object_mode=0)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py",
+      "packages/engine-ts/src/cmd/transforms.ts:177"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#rotate"
+  },
+  {
+    "name": "translate",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "camera op",
+    "summary": "Translates atomic coordinates (or an object/state matrix).",
+    "signature": "translate(vector=[0.0, 0.0, 0.0], selection='all', state=-1, camera=1, object=None, object_mode=0)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py",
+      "packages/engine-ts/src/cmd/transforms.ts:230"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#translate"
+  },
+  {
+    "name": "camera-framing",
+    "kind": "feature",
+    "category": "movies-scenes-states",
+    "subcategory": "camera op",
+    "summary": "The framing verbs zoom/center/orient/reset that reposition the camera over a selection.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:66",
+      "packages/engine-ts/src/cmd/transforms.ts:246"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#camera-framing"
+  },
+  {
+    "name": "rock",
+    "kind": "command",
+    "category": "movies-scenes-states",
+    "subcategory": "rock/roll",
+    "summary": "Toggles live camera rocking/rolling/nutation about the sweep axis.",
+    "signature": "rock(mode=-1)",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1360",
+      "packages/engine/layer1/Control.cpp:415",
+      "packages/engine-ts/src/cmd/movie2.ts:312"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#rock"
+  },
+  {
+    "name": "sequence-viewer",
+    "kind": "feature",
+    "category": "movies-scenes-states",
+    "subcategory": "sequence viewer",
+    "summary": "In-viewport residue/atom grid (Seeker) whose cell clicks build the active selection.",
+    "signature": "",
+    "default": "",
+    "sourceRefs": [
+      "packages/engine/layer3/Seeker.cpp:969",
+      "packages/engine/layer1/Seq.cpp:259"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#sequence-viewer"
+  },
+  {
+    "name": "seq_view",
+    "kind": "setting",
+    "category": "movies-scenes-states",
+    "subcategory": "sequence viewer",
+    "summary": "Shows/hides the sequence viewer for an object.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:448"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#seq_view"
+  },
+  {
+    "name": "seq_view_format",
+    "kind": "setting",
+    "category": "movies-scenes-states",
+    "subcategory": "sequence viewer",
+    "summary": "Sequence-viewer display mode: residue codes/names, atom names, chains, states.",
+    "signature": "",
+    "default": "0",
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:452",
+      "packages/engine/layer3/Seeker.cpp:1016"
+    ],
+    "parityStatus": "implemented",
+    "doc": "packages/graph/features/topics/movies-scenes-states.md#seq_view_format"
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "name": "@tenmol/graph",
+  "version": "0.0.0",
+  "private": true,
+  "description": "PyMOL feature knowledge graph — a generic manifest of every PyMOL feature plus per-feature deep-dive docs",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "type": "module",
+  "files": [
+    "features",
+    "manifest.json",
+    "MANIFEST.md",
+    "scripts"
+  ],
+  "exports": {
+    "./manifest.json": "./manifest.json",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build:manifest": "node scripts/assemble-manifest.mjs"
+  }
+}
