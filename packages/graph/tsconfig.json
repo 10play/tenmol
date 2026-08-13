@@ -1,0 +1,19 @@
+{
+  // This package is data + a plain-Node build script (scripts/assemble-manifest.mjs),
+  // run directly with `node`, never bundled or emitted. This config brings that script
+  // under `tsc` so `pnpm -r run typecheck` covers it (syntax + module resolution); it is
+  // authored as ESM JavaScript, so deep type-checking (checkJs) is intentionally off.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "types": []
+  },
+  "include": ["scripts/**/*.mjs"]
+}

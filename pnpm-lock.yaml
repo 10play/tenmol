@@ -269,6 +269,8 @@ importers:
         specifier: workspace:*
         version: link:../protocol
 
+  packages/graph: {}
+
   packages/protocol: {}
 
   packages/stores:
