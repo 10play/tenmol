@@ -72,7 +72,7 @@ describe('system: reinitialize', () => {
     const { ex, call } = harness();
     ex.view.set([2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, -99, 0, 0, 0, 1, 2, -5]);
     call('reinitialize');
-    expect(ex.view.get()).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -40, 0, 0, 0, 20, 60, -20]);
+    expect(ex.view.get()).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50, 0, 0, 0, 40, 100, -20]);
   });
 
   it('clears a previously-defined movie', () => {

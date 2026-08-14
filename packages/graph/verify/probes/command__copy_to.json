@@ -1,0 +1,18 @@
+{
+  "id": "command__copy_to",
+  "feature": "copy_to",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom src, pos=[0,0,0]"},
+    {"do": "copy_to tgt, src"},
+    {"do": "copy_to tgt, src"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "tgt"], "label": "tgt accumulated both copies"},
+    {"call": ["count_atoms", "src"], "label": "source object unchanged"},
+    {"call": ["count_atoms", "tgt or src"], "label": "total atoms across both objects"}
+  ],
+  "tol": 1e-3,
+  "expected": [2, 1, 3]
+}

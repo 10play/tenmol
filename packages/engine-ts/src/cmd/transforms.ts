@@ -242,18 +242,40 @@ export function registerTransforms(ctx: RegistrarCtx): void {
   });
 
   /* ------------------------------- center ------------------------------- */
-  // center(selection='all', state=0, origin=1) — pivot on the selection centroid.
+  // center(selection='all', state=0, origin=1) — translate the window, clipping
+  // slab and origin to the centre of the selection. Ports ExecutiveCenter:
+  // `SceneOriginSet(center, preserve=0)` (when origin=1) followed by
+  // `SceneRelocate(center)` (`packages/engine/layer1/Scene.cpp`). The camera
+  // DISTANCE and slab THICKNESS are preserved; the front/back clip planes are
+  // recomputed symmetric about the new distance.
   ctx.command('center', (args, kwargs): Json => {
     const sel = ctx.str(pick(args, kwargs, 0, 'selection'), 'all') || 'all';
+    const originFlag = flag(pick(args, kwargs, 2, 'origin'), true);
     const sphere = ctx.executive.selectionSphere(sel);
     if (!sphere) return null;
+    const loc = sphere.center;
     const v = view.get();
-    v[12] = sphere.center[0];
-    v[13] = sphere.center[1];
-    v[14] = sphere.center[2];
-    // Recentre the pivot on screen (Pos x/y -> 0), as PyMOL's `center` does.
-    v[9] = 0;
-    v[10] = 0;
+    // origin=1 (default): move the rotation origin to the selection centre with
+    // no compensating shift (SceneOriginSet, preserve=0). origin=0 leaves it.
+    if (originFlag) {
+      v[12] = loc[0];
+      v[13] = loc[1];
+      v[14] = loc[2];
+    }
+    // SceneRelocate: re-aim the camera at `loc`, preserving the camera distance.
+    const rot = v.slice(0, 9);
+    let dist = v[11] as number;
+    if (dist > -5) dist = -5; // keep the camera in front (>= 1 bond visible)
+    const o: [number, number, number] = [v[12] as number, v[13] as number, v[14] as number];
+    // v0 = origin - location, mapped model -> camera space by the view 3x3.
+    const pos = transform3(rot, [o[0] - loc[0], o[1] - loc[1], o[2] - loc[2]]);
+    const slab = (v[16] as number) - (v[15] as number);
+    pos[2] = dist;
+    v[9] = pos[0];
+    v[10] = pos[1];
+    v[11] = pos[2];
+    v[15] = -pos[2] - slab * 0.5;
+    v[16] = -pos[2] + slab * 0.5;
     view.set(v);
     ctx.emitView();
     return null;

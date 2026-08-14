@@ -1,0 +1,15 @@
+{
+  "id": "command__center", "feature": "center", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1, pos=[10, 20, 30]"},
+    {"do":"pseudoatom p2, pos=[-40, -50, -60]"},
+    {"do":"center p1"}
+  ],
+  "checks": [
+    {"call":["get_view"],"label":"view vector after center p1 (origin -> [10,20,30])","tol":1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50, 10, 20, 30, 20, 80, -20]
+  ]
+}

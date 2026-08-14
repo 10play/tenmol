@@ -40,12 +40,16 @@ export function splitCommands(line: string): string[] {
 
 /**
  * Split `s` on every top-level `sep` character — one not inside a single- or
- * double-quoted run. Quotes are left in place (callers strip them per token).
+ * double-quoted run, and not inside a `[]`/`{}`/`()` bracket group. Quotes and
+ * brackets are left in place (callers strip quotes per token). Respecting
+ * brackets keeps list-valued args like `pos=[1.5,0,0]` a single token instead of
+ * shattering on the interior commas.
  */
 function splitTopLevel(s: string, sep: string): string[] {
   const out: string[] = [];
   let buf = '';
   let quote = '';
+  let depth = 0;
   for (const ch of s) {
     if (quote) {
       if (ch === quote) quote = '';
@@ -53,7 +57,13 @@ function splitTopLevel(s: string, sep: string): string[] {
     } else if (ch === '"' || ch === "'") {
       quote = ch;
       buf += ch;
-    } else if (ch === sep) {
+    } else if (ch === '[' || ch === '{' || ch === '(') {
+      depth++;
+      buf += ch;
+    } else if (ch === ']' || ch === '}' || ch === ')') {
+      if (depth > 0) depth--;
+      buf += ch;
+    } else if (ch === sep && depth === 0) {
       out.push(buf);
       buf = '';
     } else {

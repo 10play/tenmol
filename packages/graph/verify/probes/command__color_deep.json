@@ -1,0 +1,16 @@
+{
+  "id": "command__color_deep", "feature": "color_deep", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set stick_color, blue, ala"},
+    {"do":"color_deep red, ala"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color red"],"label":"atoms recolored red by color_deep"},
+    {"call":["count_atoms","color blue"],"label":"no atoms left blue"},
+    {"call":["get_color_index","red"],"label":"red palette index"},
+    {"call":["get_setting_int","stick_color","ala"],"label":"stick_color override unset (deep)"}
+  ],
+  "tol": 0,
+  "expected": [10, 0, 4, -1]
+}

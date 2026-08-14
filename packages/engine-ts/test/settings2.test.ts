@@ -156,8 +156,8 @@ describe('settings2: bond settings', () => {
 describe('settings2: view extras', () => {
   it('get_clip reads front/back from the default view', () => {
     const h = makeHarness();
-    // defaultView(): dist=40, front=dist-20=20, back=dist+20=60.
-    expect(h.call('get_clip')).toEqual([20, 60]);
+    // defaultView() matches PyMOL SceneSetDefaultView: front=40, back=100.
+    expect(h.call('get_clip')).toEqual([40, 100]);
     // A set_view moves the clip planes; get_clip tracks them.
     const v = h.ex.view.get();
     v[15] = 5;

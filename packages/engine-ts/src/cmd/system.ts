@@ -21,9 +21,12 @@
  */
 import type { RegistrarCtx } from './registrar';
 
-/** PyMOL's fresh-session camera (identity rotation, perspective fov, dist 40). */
+/**
+ * PyMOL's fresh-session camera (identity rotation, perspective fov, camera at
+ * distance 50, clip slab 40..100), matching `SceneSetDefaultView`.
+ */
 const DEFAULT_VIEW: readonly number[] = [
-  1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -40, 0, 0, 0, 20, 60, -20,
+  1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50, 0, 0, 0, 40, 100, -20,
 ];
 
 /**

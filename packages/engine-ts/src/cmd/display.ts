@@ -26,6 +26,7 @@ import type { ObjectMolecule } from '../model/molecule';
 import {
   colorNames,
   getColorIndex,
+  REP_COLOR_SETTING_DEFAULTS,
   rgbForIndex,
   setColor,
   type RGB,
@@ -131,9 +132,22 @@ export function registerDisplay(ctx: RegistrarCtx): void {
 
   ctx.command('color_deep', (args, kwargs): Json => {
     const color = str(args[0] ?? kwargs.color);
-    const selection = str(args[1] ?? kwargs.selection, 'all') || 'all';
+    // PyMOL names this arg `name` (object name/pattern), default `all`.
+    const selection = str(args[1] ?? kwargs.name ?? kwargs.selection, 'all') || 'all';
     const idx = getColorIndex(color);
     if (idx < 0) return 0;
+    // The "deep" part: `unset_deep` every object/atom-level colour SETTING over
+    // the selection (PyMOL's `menu.rep_setting_lists`) so no per-rep override
+    // survives, then apply the colour. Mirrors `viewing.py:color_deep`.
+    for (const setting of Object.keys(REP_COLOR_SETTING_DEFAULTS)) {
+      // `unset` lives in the settings subsystem; tolerate its absence when
+      // `color_deep` is exercised against a display-only registrar.
+      try {
+        ctx.call?.('unset', [setting, selection]);
+      } catch {
+        /* no `unset` handler registered — skip the deep-unset step */
+      }
+    }
     // Per-atom colour (like `cmd.color`)…
     const count = ex.color(color, selection);
     // …plus the object colour of every object the selection touches (the

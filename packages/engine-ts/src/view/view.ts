@@ -29,15 +29,16 @@ export const DEFAULT_FOV = 20;
 /** The default view PyMOL shows for an empty scene: identity rotation, */
 /** perspective fov, origin at 0, a nominal camera distance. */
 export function defaultView(): View18 {
-  const dist = 40;
+  // Exact constants from PyMOL's `SceneSetDefaultView`
+  // (`packages/engine/layer1/Scene.cpp`): setPos(0,0,-50), front=40, back=100.
   return [
     1, 0, 0, //
     0, 1, 0, //
     0, 0, 1, //
-    0, 0, -dist, // camera-space origin
-    0, 0, 0, // model-space origin
-    dist - 20, // front
-    dist + 20, // back
+    0, 0, -50, // camera-space origin (Pos)
+    0, 0, 0, // model-space origin (Origin)
+    40, // front
+    100, // back
     -DEFAULT_FOV, // perspective (negative sign)
   ];
 }

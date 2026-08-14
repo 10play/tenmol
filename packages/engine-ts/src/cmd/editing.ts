@@ -558,8 +558,31 @@ export function registerEditing(ctx: RegistrarCtx): void {
   // pseudoatom(object, pos=[0,0,0], ...) — create a new object (or append to an
   // existing one) holding one pseudo atom at `pos`. Returns the object name.
   ctx.command('pseudoatom', (args, kwargs): Json => {
-    const objName = ctx.str(pick(args, kwargs, 0, 'object'), '') || 'pseudo01';
-    const pos = parseTriple(pick(args, kwargs, 1, 'pos')) ?? [0, 0, 0];
+    // The console parser keeps every `key=value` token positional (it cannot
+    // infer kwargs without a signature). `pseudoatom` is almost entirely
+    // keyword-driven, so fold any `key=value` positional token back into kwargs
+    // here — the one place that knows the parameter names — so console lines like
+    // `pseudoatom m, name=AA, pos=[0,0,0]` behave exactly as in real PyMOL.
+    const PARAMS = new Set([
+      'object', 'selection', 'name', 'resn', 'resi', 'chain', 'segi', 'elem',
+      'vdw', 'hetatm', 'b', 'q', 'color', 'label', 'pos', 'state', 'mode', 'quiet',
+    ]);
+    const kw: Record<string, unknown> = { ...kwargs };
+    const positional: unknown[] = [];
+    for (const a of args) {
+      if (typeof a === 'string') {
+        const eq = a.indexOf('=');
+        const key = eq > 0 ? a.slice(0, eq).trim() : '';
+        if (eq > 0 && PARAMS.has(key)) {
+          kw[key] = a.slice(eq + 1).trim();
+          continue;
+        }
+      }
+      positional.push(a);
+    }
+
+    const objName = ctx.str(pick(positional, kw, 0, 'object'), '') || 'pseudo01';
+    const pos = parseTriple(pick(positional, kw, 1, 'pos')) ?? [0, 0, 0];
 
     let mol = ex.molecule(objName);
     const fresh = !mol;
@@ -571,18 +594,18 @@ export function registerEditing(ctx: RegistrarCtx): void {
 
     const atom: AtomInfo = {
       id: mol.atoms.length + 1,
-      name: ctx.str(kwargs.name, '') || 'PS1',
-      resn: ctx.str(kwargs.resn, '') || 'PSD',
-      resi: ctx.str(kwargs.resi, '') || '1',
-      resv: num(kwargs.resi, 1),
-      chain: ctx.str(kwargs.chain, '') || 'P',
-      segi: ctx.str(kwargs.segi, '') || 'PSDO',
+      name: ctx.str(kw.name, '') || 'PS1',
+      resn: ctx.str(kw.resn, '') || 'PSD',
+      resi: ctx.str(kw.resi, '') || '1',
+      resv: num(kw.resi, 1),
+      chain: ctx.str(kw.chain, '') || 'P',
+      segi: ctx.str(kw.segi, '') || 'PSDO',
       alt: '',
-      elem: ctx.str(kwargs.elem, '') || 'PS',
+      elem: ctx.str(kw.elem, '') || 'PS',
       hetatm: true,
-      b: num(kwargs.b, 0),
-      q: num(kwargs.q, 0),
-      color: num(kwargs.color, 0),
+      b: num(kw.b, 0),
+      q: num(kw.q, 0),
+      color: num(kw.color, 0),
       ss: '',
       visRep: defaultVisRep(),
     };

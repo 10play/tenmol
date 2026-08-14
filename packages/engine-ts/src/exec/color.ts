@@ -443,3 +443,36 @@ export function colorSettingText(value: number | string | undefined): string {
 export function colorNames(): string[] {
   return [...NAME_TO_INDEX.keys()];
 }
+
+/**
+ * The object/atom-level colour settings `color_deep` clears (PyMOL's
+ * `menu.rep_setting_lists`), each mapped to its compiled default colour index
+ * (`layer1/SettingInfo.h`, the `REC_c` rows). `color_deep` `unset`s all of
+ * these over its selection; once unset, `get_setting_*` resolves the setting to
+ * the default here (mostly `-1` = "follow atom colour", `-6` = "front" for the
+ * label/ray-trace pair). Registered so a colour-typed setting reads back its
+ * real PyMOL default rather than a bare `0`.
+ */
+export const REP_COLOR_SETTING_DEFAULTS: Readonly<Record<string, number>> = {
+  line_color: -1,
+  stick_color: -1,
+  ribbon_color: -1,
+  cartoon_color: -1,
+  label_color: -6,
+  dot_color: -1,
+  sphere_color: -1,
+  mesh_color: -1,
+  surface_color: -1,
+  dash_color: -1,
+  angle_color: -1,
+  dihedral_color: -1,
+  cartoon_highlight_color: -1,
+  cartoon_ladder_color: -1,
+  cartoon_nucleic_acid_color: -1,
+  cartoon_ring_color: -1,
+  ellipsoid_color: -1,
+  label_outline_color: -1,
+  ray_interior_color: -1,
+  ray_trace_color: -6,
+  stick_ball_color: -1,
+};

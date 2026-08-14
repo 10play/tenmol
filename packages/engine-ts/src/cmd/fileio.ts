@@ -20,6 +20,27 @@ import type { RegistrarCtx } from './registrar';
 
 /* ------------------------------- helpers ------------------------------- */
 
+/**
+ * Read a file synchronously off disk, or `null` when no filesystem is reachable
+ * (the browser). Under Node — where the differential and app-server run — this
+ * reaches the real `fs` through `process.getBuiltinModule`, so `load <path>`
+ * behaves like PyMOL's; a browser bundle (no `process`) gets `null` and the
+ * caller falls back to treating the argument as pasted content.
+ */
+function readDiskFile(path: string): string | null {
+  const proc = (globalThis as { process?: { getBuiltinModule?: (id: string) => unknown } }).process;
+  const getBuiltin = proc?.getBuiltinModule;
+  if (typeof getBuiltin !== 'function') return null;
+  try {
+    const fs = getBuiltin.call(proc, 'node:fs') as {
+      readFileSync(p: string, enc: string): string;
+    };
+    return fs.readFileSync(path, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
 /** Residues treated as solvent (mirrors the selector's `SOLVENT_RESN`). */
 const SOLVENT_RESN = new Set(['HOH', 'WAT', 'H2O', 'TIP', 'SOL']);
 
@@ -407,6 +428,35 @@ export function registerFileio(ctx: RegistrarCtx): void {
   }
 
   /**
+   * Map a filename extension to a loader format, matching PyMOL's extension
+   * dispatch in `load` (`importing.py`). Returns '' for an unknown extension.
+   */
+  function formatFromExtension(path: string): string {
+    const m = /\.([A-Za-z0-9]+)\s*$/.exec(path.trim());
+    if (!m) return '';
+    const ext = m[1]!.toLowerCase();
+    switch (ext) {
+      case 'pdb':
+      case 'ent':
+        return 'pdb';
+      case 'cif':
+      case 'mmcif':
+      case 'mcif':
+        return 'cif';
+      case 'mol':
+      case 'sdf':
+      case 'mdl':
+        return ext;
+      case 'mol2':
+        return 'mol2';
+      case 'xyz':
+        return 'xyz';
+      default:
+        return '';
+    }
+  }
+
+  /**
    * Sniff a structure format from the content itself, so a pasted/dropped block
    * loads without an explicit `format`. Distinctive markers first.
    */
@@ -422,21 +472,34 @@ export function registerFileio(ctx: RegistrarCtx): void {
   }
 
   // Real `load` — dispatches structured CONTENT to the right parser by an
-  // explicit `format` or by sniffing. The browser engine has no filesystem, so a
-  // bare path (single-line, no structure) cannot be read and is reported plainly
-  // rather than silently doing nothing; the web app passes file contents here.
+  // explicit `format` or by sniffing. Under Node (the differential + app-server)
+  // a bare path is read off disk and its format taken from the extension, exactly
+  // as PyMOL's `load` does; in the browser (no filesystem) the web app passes file
+  // contents here, and a bare path that cannot be read is reported plainly.
   ctx.command('load', (args, kwargs) => {
-    const content = ctx.str(pick(args, kwargs, 0, 'filename'), '');
+    let content = ctx.str(pick(args, kwargs, 0, 'filename'), '');
     const objArg = ctx.str(pick(args, kwargs, 1, 'object'), '');
     const fmtArg = ctx.str(pick(args, kwargs, 3, 'format'), '').toLowerCase();
-    const format = fmtArg || sniffFormat(content);
-    if (format === '') {
-      if (!/\r?\n/.test(content)) {
+
+    // A single-line argument with no embedded structure is a filename, not
+    // content. Under Node, read it off disk (PyMOL loads files by path); the
+    // format comes from the explicit `format`, then the extension, then a sniff.
+    let extFormat = '';
+    if (content !== '' && !/\r?\n/.test(content)) {
+      const fileText = readDiskFile(content);
+      if (fileText !== null) {
+        extFormat = formatFromExtension(content);
+        content = fileText;
+      } else if (fmtArg === '' && sniffFormat(content) === '') {
         throw new Error(
           `load: cannot read '${content}' — the browser has no filesystem; ` +
             `pass file contents (or drop the file) with a format`,
         );
       }
+    }
+
+    const format = fmtArg || sniffFormat(content) || extFormat;
+    if (format === '') {
       throw new Error('load: could not determine the structure format of the given content');
     }
     const name = ex.uniqueName(objArg || 'obj');
