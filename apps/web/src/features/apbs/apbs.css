@@ -2,24 +2,16 @@
   /* APBS stub. Deliberately looks like a real panel, not an error state: the
    feature is deferred, not broken. */
 
+  /* The APBS stub now renders inside the shared `.flwin` chrome
+     (ui/FloatingWindow), which owns positioning, sizing, the title bar and the
+     scroll — so this is just the inner content column. */
   .apbs {
-    min-width: 420px;
-    max-width: 560px;
-    background: var(--pm-panel);
-    border: 1px solid var(--pm-edge);
     color: var(--pm-text);
     font-size: 11px;
   }
 
-  .apbs__title {
-    padding: 3px 6px;
-    background: var(--pm-panel-alt);
-    border-bottom: 1px solid var(--pm-edge);
-    color: var(--pm-text-dim);
-  }
-
   .apbs__body {
-    padding: 8px;
+    padding: 0;
   }
 
   .apbs__lead {
@@ -102,32 +94,13 @@
  * paths and the pasteable command recipes.
  * ===================================================================== */
 :root[data-ui-theme='shadcn'] .apbs {
-  min-width: 0;
-  max-width: 560px;
-  border: 1px solid var(--pm-line);
-  border-radius: var(--sh-r-panel);
-  background: var(--pm-panel);
-  box-shadow: var(--sh-shadow-card);
-  overflow: hidden;
   color: var(--pm-text);
   font-family: var(--pm-font-ui);
   font-size: 12px;
 }
 
-/* Section header — a tiny uppercase letter-spaced label, not a title bar. */
-:root[data-ui-theme='shadcn'] .apbs__title {
-  padding: 13px 16px 11px;
-  background: transparent;
-  border-bottom: 1px solid var(--pm-line);
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--pm-text-dim);
-}
-
 :root[data-ui-theme='shadcn'] .apbs__body {
-  padding: 16px;
+  padding: 0;
 }
 
 :root[data-ui-theme='shadcn'] .apbs__lead {

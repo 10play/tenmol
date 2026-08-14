@@ -19,7 +19,7 @@
 import { useState } from 'react';
 import { rgbToCss } from '@tenmol/protocol';
 import { useSession, useStore } from '../../app';
-import { Button, Select, TextInput } from '../../ui';
+import { Button, FloatingWindow, Select, TextInput } from '../../ui';
 import { COLOR_SPACES, UTIL_COLOR_SCHEMES } from './menuData';
 import { paletteIntegrity } from './palette';
 import { BandGrid } from './BandGrid';
@@ -66,79 +66,85 @@ export function ColorsPanel() {
   }
 
   return (
-    <div
-      className="colors modern:bg-pm-panel modern:text-pm-text"
-      role="dialog"
-      aria-label="Colours"
-    >
-      <div className="colors__title modern:bg-pm-panel-alt modern:border-b modern:border-line modern:text-pm-text-dim">
-        <span>Colours</span>
-        <span
-          className="colors__status modern:text-pm-text-dim"
-          title="cmd.get_color_indices(all=1) + get_color_tuple"
-        >
-          {palette.status === 'ready'
-            ? `${palette.entries.length} slots / ${palette.named.length} named` +
-              (integrity.custom > 0 ? ` (+${integrity.custom} set_color)` : '') +
-              (palette.loadedMs !== null ? ` in ${Math.round(palette.loadedMs)} ms` : '')
-            : palette.status === 'loading'
-              ? 'loading the colour table…'
-              : palette.status === 'error'
-                ? `error: ${palette.error ?? ''}`
-                : phase === 'open'
-                  ? 'idle'
-                  : 'not connected'}
-        </span>
-        <Button
-          className="colors__reload"
-          onClick={() => void refreshPalette(callOf(session), true)}
-        >
-          refetch
-        </Button>
-        <Button className="colors__close" onClick={() => setOpen(false)}>
-          ×
-        </Button>
-      </div>
-
-      {!integrity.ok && palette.status === 'ready' && (
-        <div className="colors__warn modern:bg-accent-soft modern:text-pm-text">
-          colour table does not match this PyMOL build: {integrity.problems.join('; ')}
-        </div>
-      )}
-
-      <div className="colors__sele modern:border-b modern:border-line">
-        <label>
-          selection
-          <TextInput value={sele} onChange={(e) => setSele(e.target.value)} spellCheck={false} />
-        </label>
-        <span className="colors__sele-note modern:text-pm-text-dim">
-          every command below is applied to this selection
-        </span>
-      </div>
-
-      <div className="colors__tabs" role="tablist">
-        {TABS.map((id) => (
-          <Button
-            key={id}
-            role="tab"
-            aria-selected={tab === id}
-            className={'colors__tab' + (tab === id ? ' is-on' : '')}
-            onClick={() => setTab(id)}
+    <FloatingWindow
+      title="Colours"
+      ariaLabel="Colours"
+      onClose={() => setOpen(false)}
+      persistKey="colors"
+      defaultWidth={460}
+      defaultHeight={560}
+      minWidth={360}
+      minHeight={320}
+      anchor="right"
+      data-testid="colors-window"
+      titleExtra={
+        <>
+          <span
+            className="colors__status modern:text-pm-text-dim"
+            title="cmd.get_color_indices(all=1) + get_color_tuple"
           >
-            {id}
+            {palette.status === 'ready'
+              ? `${palette.entries.length} slots / ${palette.named.length} named` +
+                (integrity.custom > 0 ? ` (+${integrity.custom} set_color)` : '') +
+                (palette.loadedMs !== null ? ` in ${Math.round(palette.loadedMs)} ms` : '')
+              : palette.status === 'loading'
+                ? 'loading the colour table…'
+                : palette.status === 'error'
+                  ? `error: ${palette.error ?? ''}`
+                  : phase === 'open'
+                    ? 'idle'
+                    : 'not connected'}
+          </span>
+          <Button
+            className="colors__reload"
+            onClick={() => void refreshPalette(callOf(session), true)}
+          >
+            refetch
           </Button>
-        ))}
-      </div>
+        </>
+      }
+    >
+      <div className="colors modern:text-pm-text">
+        {!integrity.ok && palette.status === 'ready' && (
+          <div className="colors__warn modern:bg-accent-soft modern:text-pm-text">
+            colour table does not match this PyMOL build: {integrity.problems.join('; ')}
+          </div>
+        )}
 
-      <div className="colors__body">
-        {tab === 'palette' && <SwatchGrid palette={palette} sele={sele} />}
-        {tab === 'bands' && <BandGrid palette={palette} sele={sele} />}
-        {tab === 'editor' && <ColorEditor palette={palette} />}
-        {tab === 'spectrum' && <SpectrumPanel palette={palette} sele={sele} />}
-        {tab === 'ramps' && <RampPanel palette={palette} />}
-        {tab === 'space' && <SpacePanel />}
+        <div className="colors__sele modern:border-b modern:border-line">
+          <label>
+            selection
+            <TextInput value={sele} onChange={(e) => setSele(e.target.value)} spellCheck={false} />
+          </label>
+          <span className="colors__sele-note modern:text-pm-text-dim">
+            every command below is applied to this selection
+          </span>
+        </div>
+
+        <div className="colors__tabs" role="tablist">
+          {TABS.map((id) => (
+            <Button
+              key={id}
+              role="tab"
+              aria-selected={tab === id}
+              className={'colors__tab' + (tab === id ? ' is-on' : '')}
+              onClick={() => setTab(id)}
+            >
+              {id}
+            </Button>
+          ))}
+        </div>
+
+        <div className="colors__body">
+          {tab === 'palette' && <SwatchGrid palette={palette} sele={sele} />}
+          {tab === 'bands' && <BandGrid palette={palette} sele={sele} />}
+          {tab === 'editor' && <ColorEditor palette={palette} />}
+          {tab === 'spectrum' && <SpectrumPanel palette={palette} sele={sele} />}
+          {tab === 'ramps' && <RampPanel palette={palette} />}
+          {tab === 'space' && <SpacePanel />}
+        </div>
       </div>
-    </div>
+    </FloatingWindow>
   );
 }
 

@@ -28,6 +28,8 @@ export {
   type ButtonProps,
 } from './Button';
 export { Panel, PanelHeader, Toolbar } from './Panel';
+export { FloatingWindow, type FloatingWindowProps, type WindowAnchor } from './FloatingWindow';
+export { WINDOW_Z_FLOOR, nextWindowZ, topWindowZ } from './windowZ';
 export { TextInput, TextArea } from './Input';
 export { Badge } from './Badge';
 export { ProgressBar, type ProgressBarProps } from './ProgressBar';

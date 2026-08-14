@@ -28,6 +28,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type {
   BuilderActionKind,
   BuilderPickMode,
@@ -37,7 +38,7 @@ import type {
 } from '@tenmol/protocol/topics/builder';
 import { registerPickRoute } from './viewportPicking';
 import { errorText, useSession } from '../../app';
-import { Button, IconButton, Checkbox, Select } from '../../ui';
+import { Button, IconButton, Checkbox, Select, FloatingWindow } from '../../ui';
 import { createBuilderController, pickHint } from './controller';
 import {
   AMINO_ACIDS_ROW0,
@@ -149,14 +150,31 @@ export function BuilderPanel() {
    * console do not come back through `builder_action`, and there is no editor
    * push topic in this wave, so the panel polls — slowly, because every read is
    * a lock-taking `get_names`/`iterate` on the engine thread.
+   *
+   * TWO GUARDS, both about that lock. A `builder_state` read can take longer
+   * than the 250 ms tick on a slow/headless engine; firing the next tick anyway
+   * stacks reads on the single engine thread, and a button press (`grow` etc.)
+   * then queues BEHIND that backlog and lands seconds later — long enough that a
+   * freshly-armed wizard misses the window a caller waits for it in. So (1) never
+   * let a poll overlap itself — skip the tick while one read is still out; and
+   * (2) don't poll while an action is in flight, so the action owns the thread
+   * and its reply (the authoritative new state) is never racing a stale read.
    */
+  const busyRef = useRef(busy);
+  busyRef.current = busy;
   useEffect(() => {
     if (!open) return;
+    let inFlight = false;
     const timer = window.setInterval(() => {
+      if (inFlight || busyRef.current) return;
+      inFlight = true;
       controller
         .refresh()
         .then(apply)
-        .catch(() => undefined);
+        .catch(() => undefined)
+        .finally(() => {
+          inFlight = false;
+        });
     }, 250);
     return () => window.clearInterval(timer);
   }, [open, controller, apply]);
@@ -288,503 +306,525 @@ export function BuilderPanel() {
   }
 
   return (
-    <div
-      className="builder modern:bg-pm-panel modern:text-pm-text modern:border-line modern:rounded-lg"
-      role="dialog"
-      aria-label="Builder"
-      /*
-       * "Two toolbar buttons plus keyboard shortcuts". Scoped to the panel
-       * rather than the window on purpose: the ortho console already forwards
-       * Ctrl-Z to PyMOL's own key table as a `cmd._ctrl('Z')` chord while IT
-       * has focus, and two features racing for the same chord on `window` is
-       * how a viewport stops rotating.
-       */
-      onKeyDown={(event) => {
-        if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
-        const key = event.key.toLowerCase();
-        if (key === 'z') {
-          event.preventDefault();
-          event.stopPropagation();
-          if (event.shiftKey) redo();
-          else undo();
-        } else if (key === 'y' && !event.shiftKey) {
-          event.preventDefault();
-          event.stopPropagation();
-          redo();
-        }
-      }}
+    <FloatingWindow
+      title="Builder"
+      ariaLabel="Builder"
+      onClose={() => setOpen(false)}
+      // Anchor LEFT: the wizard panel WP-16 renders for an armed builder wizard
+      // (`features/wizards`) lives on the right edge, and a right-anchored
+      // builder would sit on top of it — hiding the very "Create As New
+      // Object" / "Done" controls the armed wizard needs. The left gutter keeps
+      // both reachable and still clears the scene centre.
+      anchor="left"
+      persistKey="builder"
+      defaultWidth={560}
+      // The builder is a DENSE panel: three tab pages over three always-visible
+      // action rows, and an armed wizard strip appends more. Its natural content
+      // is ~430–520px depending on mouse mode and whether a wizard is showing.
+      // A default height near that number leaves the `overflow:auto` body
+      // hovering at its scrollbar threshold, where one extra row toggles the
+      // scrollbar on and off every render — which reads to a headless click as a
+      // perpetually-moving target and hangs actionability. Open tall enough that
+      // the whole panel fits without a scrollbar, the way the Qt dock and the
+      // old `max-height: calc(100% - 60px)` popup did; the user can still shrink
+      // it, and small viewports maximise.
+      defaultHeight={620}
+      minWidth={360}
+      minHeight={260}
+      data-testid="builder-window"
+      titleExtra={
+        <>
+          {busy && <span className="builder__busy" aria-label="working" />}
+          <span className="builder__mouse" title="cmd.edit_mode(1) rotates the mouse ring">
+            {state?.mouse.mode_name || 'mouse mode ?'}
+          </span>
+        </>
+      }
     >
-      <div className="builder__title modern:border-line">
-        <span className="builder__title-text modern:text-pm-text-bright">Builder</span>
-        {busy && <span className="builder__busy" aria-label="working" />}
-        <span className="builder__spacer" />
-        <span className="builder__mouse" title="cmd.edit_mode(1) rotates the mouse ring">
-          {state?.mouse.mode_name || 'mouse mode ?'}
-        </span>
-        <IconButton type="button" className="builder__close" onClick={() => setOpen(false)}>
-          ×
-        </IconButton>
-      </div>
-
-      {drift.length > 0 && (
-        <div
-          className="builder__error modern:rounded-md modern:border modern:border-danger modern:bg-danger/10 modern:text-danger"
-          data-testid="builder-drift"
-        >
-          button table drift vs the bridge: {drift.join(' | ')}
-        </div>
-      )}
-      {error && (
-        <div
-          className="builder__error modern:rounded-md modern:border modern:border-danger modern:bg-danger/10 modern:text-danger"
-          data-testid="builder-error"
-        >
-          {error}
-        </div>
-      )}
-
-      <PickStrip
-        state={state}
-        onUnpick={() => {
-          void session
-            .call('cmd.unpick')
-            .then(() => controller.refresh().then(apply))
-            .catch((exc: unknown) => setError(errorText(exc)));
+      <div
+        className="builder modern:text-pm-text"
+        /*
+         * "Two toolbar buttons plus keyboard shortcuts". Scoped to the panel
+         * rather than the window on purpose: the ortho console already forwards
+         * Ctrl-Z to PyMOL's own key table as a `cmd._ctrl('Z')` chord while IT
+         * has focus, and two features racing for the same chord on `window` is
+         * how a viewport stops rotating.
+         */
+        onKeyDown={(event) => {
+          if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+          const key = event.key.toLowerCase();
+          if (key === 'z') {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.shiftKey) redo();
+            else undo();
+          } else if (key === 'y' && !event.shiftKey) {
+            event.preventDefault();
+            event.stopPropagation();
+            redo();
+          }
         }}
-      />
-
-      <div className="builder__tabs" role="tablist">
-        {(['Chemical', 'Protein', 'Nucleic Acid'] as Tab[]).map((name) => (
-          <Button
-            type="button"
-            role="tab"
-            key={name}
-            aria-selected={tab === name}
-            className={`builder__tab${tab === name ? ' is-active modern:bg-pm-accent modern:text-accent-text modern:border-transparent modern:hover:bg-pm-accent' : ''}`}
-            onClick={() => setTab(name)}
+      >
+        {drift.length > 0 && (
+          <div
+            className="builder__error modern:rounded-md modern:border modern:border-danger modern:bg-danger/10 modern:text-danger"
+            data-testid="builder-drift"
           >
-            {name}
-          </Button>
-        ))}
-      </div>
-
-      <div className="builder__body modern:border-line modern:rounded-md">
-        {tab === 'Chemical' && (
-          <div className="builder__grid" data-testid="tab-chemical">
-            <div className="builder__row">
-              {ELEMENTS.map((element) => (
-                <Button
-                  type="button"
-                  key={element.label}
-                  className="bbtn"
-                  title={`${element.tooltip} — ${pickHint(state, 'replace')}`}
-                  onClick={() =>
-                    act('replace', {
-                      symbol: element.symbol,
-                      geometry: element.geometry,
-                      valence: element.valence,
-                      text: element.text,
-                    })
-                  }
-                >
-                  {element.label}
-                </Button>
-              ))}
-              {CHEM_ROW0_FRAGMENTS.map((fragment) => (
-                <GrowButton key={fragment.label} fragment={fragment} state={state} act={act} />
-              ))}
-            </div>
-
-            <div className="builder__row">
-              {FUNCTIONAL_GROUPS.map((fragment) => (
-                <GrowButton key={fragment.label} fragment={fragment} state={state} act={act} />
-              ))}
-            </div>
-
-            <div className="builder__row">
-              {RINGS.map((ring) => (
-                <IconButton
-                  type="button"
-                  key={ring.icon}
-                  className="bbtn bbtn--icon"
-                  title={`${ring.tooltip} — ${pickHint(state, 'grow')}`}
-                  aria-label={ring.tooltip}
-                  onClick={() =>
-                    act('grow', {
-                      fragment: ring.fragment,
-                      hydrogen: ring.hydrogen,
-                      anchor: ring.anchor,
-                      text: ring.text,
-                    })
-                  }
-                >
-                  <RingGlyph ring={ring} />
-                </IconButton>
-              ))}
-            </div>
+            button table drift vs the bridge: {drift.join(' | ')}
           </div>
         )}
-
-        {tab === 'Protein' && (
-          <div className="builder__grid" data-testid="tab-protein">
-            <div className="builder__row">
-              {AMINO_ACIDS_ROW0.map((residue) => (
-                <Button
-                  type="button"
-                  key={residue}
-                  className="bbtn"
-                  title={`Build ${residue} residue — ${pickHint(state, 'attachAA')}`}
-                  onClick={() => act('attachAA', { residue: residue.toLowerCase() })}
-                >
-                  {residue}
-                </Button>
-              ))}
-            </div>
-            <div className="builder__row">
-              {AMINO_ACIDS_ROW1.map((residue) => (
-                <Button
-                  type="button"
-                  key={residue}
-                  className="bbtn"
-                  title={`Build ${residue} residue — ${pickHint(state, 'attachAA')}`}
-                  onClick={() => act('attachAA', { residue: residue.toLowerCase() })}
-                >
-                  {residue}
-                </Button>
-              ))}
-            </div>
-            <div className="builder__row builder__row--form">
-              <label htmlFor="builder-ss">Secondary Structure:</label>
-              <Select
-                id="builder-ss"
-                value={ssIndex}
-                onChange={(event) => {
-                  const index = Number(event.target.value);
-                  setSsIndex(index);
-                  // builder.py:1376-1379 also pushes into a live AminoAcidWizard.
-                  act('ssChanged', { index });
-                }}
-              >
-                {SECONDARY_STRUCTURE.map((entry, index) => (
-                  <option key={entry.label} value={index}>
-                    {entry.label}
-                  </option>
-                ))}
-              </Select>
-              <span className="builder__note">
-                phi {SECONDARY_STRUCTURE[ssIndex]?.phi} / psi {SECONDARY_STRUCTURE[ssIndex]?.psi}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {tab === 'Nucleic Acid' && (
-          <div className="builder__grid" data-testid="tab-nucleic">
-            <div className="builder__tabs builder__tabs--nested" role="tablist">
-              {(['DNA', 'RNA'] as NucTab[]).map((name) => (
-                <Button
-                  type="button"
-                  role="tab"
-                  key={name}
-                  aria-selected={nucTab === name}
-                  className={`builder__tab${nucTab === name ? ' is-active modern:bg-pm-accent modern:text-accent-text modern:border-transparent modern:hover:bg-pm-accent' : ''}`}
-                  onClick={() => setNucTab(name)}
-                >
-                  {name}
-                </Button>
-              ))}
-            </div>
-
-            {nucTab === 'DNA' ? (
-              <DnaTab state={state} act={act} />
-            ) : (
-              <div className="builder__grid">
-                <div className="builder__row">
-                  {RNA_BASES.map((base) => (
-                    <Button
-                      type="button"
-                      key={base.label}
-                      className="bbtn"
-                      title={`${base.tooltip} — ${pickHint(state, 'attachNA')}`}
-                      onClick={() => act('attachNA', { base: base.fragment, nucType: 'RNA' })}
-                    >
-                      {base.label}
-                    </Button>
-                  ))}
-                </div>
-                <p className="builder__hint">
-                  Hint: Also check out{' '}
-                  {RNA_HINT_LINKS.map((link, index) => (
-                    <span key={link.href}>
-                      {index > 0 && ' and its '}
-                      <a href={link.href} target="_blank" rel="noreferrer">
-                        {link.text}
-                      </a>
-                    </span>
-                  ))}
-                  .
-                </p>
-                <p className="builder__note">
-                  RNA is always form A, single strand (`editor.py:803-805` forces it).
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ---- the three always-visible action rows (builder.py:1227-1264) --- */}
-
-      <div className="builder__actions">
-        <div className="builder__row">
-          <span className="builder__label">Atoms:</span>
-          <ActionButton
-            kind="fixH"
-            label="Fix H"
-            tip="Fix hydrogens on picked atoms"
-            state={state}
-            act={act}
-          />
-          <ActionButton
-            kind="addH"
-            label="Add H"
-            tip="Add hydrogens to entire molecule"
-            state={state}
-            act={act}
-          />
-          <ActionButton
-            kind="invert"
-            label="Invert"
-            tip="Invert stereochemistry around pk1 (pk2 and pk3 will remain fixed)"
-            state={state}
-            act={act}
-          />
-          <ActionButton
-            kind="removeAtom"
-            label="Delete"
-            tip="Remove atoms"
-            state={state}
-            act={act}
-          />
-          <Button
-            type="button"
-            className="bbtn"
-            title="Delete everything"
-            onClick={() => setConfirmClear(true)}
+        {error && (
+          <div
+            className="builder__error modern:rounded-md modern:border modern:border-danger modern:bg-danger/10 modern:text-danger"
+            data-testid="builder-error"
           >
-            Clear
-          </Button>
-          <span className="builder__label">Charge:</span>
-          <ActionButton
-            kind="setCharge"
-            label="+1"
-            tip="Positive Charge"
-            params={{ charge: 1, text: '+1' }}
-            state={state}
-            act={act}
-          />
-          <ActionButton
-            kind="setCharge"
-            label="0"
-            tip="Neutral Charge"
-            params={{ charge: 0, text: 'neutral' }}
-            state={state}
-            act={act}
-          />
-          <ActionButton
-            kind="setCharge"
-            label="-1"
-            tip="Negative Charge"
-            params={{ charge: -1, text: '-1' }}
-            state={state}
-            act={act}
-          />
-          <span className="builder__label">Residue:</span>
-          <ActionButton
-            kind="removeResn"
-            label="Remove"
-            tip="Remove residue"
-            state={state}
-            act={act}
-          />
+            {error}
+          </div>
+        )}
+
+        <PickStrip
+          state={state}
+          onUnpick={() => {
+            void session
+              .call('cmd.unpick')
+              .then(() => controller.refresh().then(apply))
+              .catch((exc: unknown) => setError(errorText(exc)));
+          }}
+        />
+
+        <div className="builder__tabs" role="tablist">
+          {(['Chemical', 'Protein', 'Nucleic Acid'] as Tab[]).map((name) => (
+            <Button
+              type="button"
+              role="tab"
+              key={name}
+              aria-selected={tab === name}
+              className={`builder__tab${tab === name ? ' is-active modern:bg-pm-accent modern:text-accent-text modern:border-transparent modern:hover:bg-pm-accent' : ''}`}
+              onClick={() => setTab(name)}
+            >
+              {name}
+            </Button>
+          ))}
         </div>
 
-        <div className="builder__row">
-          <span className="builder__label">Bonds:</span>
-          <ActionButton
-            kind="createBond"
-            label="Create"
-            tip="Create bond between pk1 and pk2"
-            state={state}
-            act={act}
-          />
-          <ActionButton
-            kind="deleteBond"
-            label="Delete"
-            tip="Delete bond between pk1 and pk2"
-            state={state}
-            act={act}
-          />
-          <ActionButton
-            kind="cycleBond"
-            label="Cycle"
-            tip="Cycle bond valence"
-            state={state}
-            act={act}
-          />
-          {BOND_ORDERS.map((entry) => (
+        <div className="builder__body modern:border-line modern:rounded-md">
+          {tab === 'Chemical' && (
+            <div className="builder__grid" data-testid="tab-chemical">
+              <div className="builder__row">
+                {ELEMENTS.map((element) => (
+                  <Button
+                    type="button"
+                    key={element.label}
+                    className="bbtn"
+                    title={`${element.tooltip} — ${pickHint(state, 'replace')}`}
+                    onClick={() =>
+                      act('replace', {
+                        symbol: element.symbol,
+                        geometry: element.geometry,
+                        valence: element.valence,
+                        text: element.text,
+                      })
+                    }
+                  >
+                    {element.label}
+                  </Button>
+                ))}
+                {CHEM_ROW0_FRAGMENTS.map((fragment) => (
+                  <GrowButton key={fragment.label} fragment={fragment} state={state} act={act} />
+                ))}
+              </div>
+
+              <div className="builder__row">
+                {FUNCTIONAL_GROUPS.map((fragment) => (
+                  <GrowButton key={fragment.label} fragment={fragment} state={state} act={act} />
+                ))}
+              </div>
+
+              <div className="builder__row">
+                {RINGS.map((ring) => (
+                  <IconButton
+                    type="button"
+                    key={ring.icon}
+                    className="bbtn bbtn--icon"
+                    title={`${ring.tooltip} — ${pickHint(state, 'grow')}`}
+                    aria-label={ring.tooltip}
+                    onClick={() =>
+                      act('grow', {
+                        fragment: ring.fragment,
+                        hydrogen: ring.hydrogen,
+                        anchor: ring.anchor,
+                        text: ring.text,
+                      })
+                    }
+                  >
+                    <RingGlyph ring={ring} />
+                  </IconButton>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {tab === 'Protein' && (
+            <div className="builder__grid" data-testid="tab-protein">
+              <div className="builder__row">
+                {AMINO_ACIDS_ROW0.map((residue) => (
+                  <Button
+                    type="button"
+                    key={residue}
+                    className="bbtn"
+                    title={`Build ${residue} residue — ${pickHint(state, 'attachAA')}`}
+                    onClick={() => act('attachAA', { residue: residue.toLowerCase() })}
+                  >
+                    {residue}
+                  </Button>
+                ))}
+              </div>
+              <div className="builder__row">
+                {AMINO_ACIDS_ROW1.map((residue) => (
+                  <Button
+                    type="button"
+                    key={residue}
+                    className="bbtn"
+                    title={`Build ${residue} residue — ${pickHint(state, 'attachAA')}`}
+                    onClick={() => act('attachAA', { residue: residue.toLowerCase() })}
+                  >
+                    {residue}
+                  </Button>
+                ))}
+              </div>
+              <div className="builder__row builder__row--form">
+                <label htmlFor="builder-ss">Secondary Structure:</label>
+                <Select
+                  id="builder-ss"
+                  value={ssIndex}
+                  onChange={(event) => {
+                    const index = Number(event.target.value);
+                    setSsIndex(index);
+                    // builder.py:1376-1379 also pushes into a live AminoAcidWizard.
+                    act('ssChanged', { index });
+                  }}
+                >
+                  {SECONDARY_STRUCTURE.map((entry, index) => (
+                    <option key={entry.label} value={index}>
+                      {entry.label}
+                    </option>
+                  ))}
+                </Select>
+                <span className="builder__note">
+                  phi {SECONDARY_STRUCTURE[ssIndex]?.phi} / psi {SECONDARY_STRUCTURE[ssIndex]?.psi}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {tab === 'Nucleic Acid' && (
+            <div className="builder__grid" data-testid="tab-nucleic">
+              <div className="builder__tabs builder__tabs--nested" role="tablist">
+                {(['DNA', 'RNA'] as NucTab[]).map((name) => (
+                  <Button
+                    type="button"
+                    role="tab"
+                    key={name}
+                    aria-selected={nucTab === name}
+                    className={`builder__tab${nucTab === name ? ' is-active modern:bg-pm-accent modern:text-accent-text modern:border-transparent modern:hover:bg-pm-accent' : ''}`}
+                    onClick={() => setNucTab(name)}
+                  >
+                    {name}
+                  </Button>
+                ))}
+              </div>
+
+              {nucTab === 'DNA' ? (
+                <DnaTab state={state} act={act} />
+              ) : (
+                <div className="builder__grid">
+                  <div className="builder__row">
+                    {RNA_BASES.map((base) => (
+                      <Button
+                        type="button"
+                        key={base.label}
+                        className="bbtn"
+                        title={`${base.tooltip} — ${pickHint(state, 'attachNA')}`}
+                        onClick={() => act('attachNA', { base: base.fragment, nucType: 'RNA' })}
+                      >
+                        {base.label}
+                      </Button>
+                    ))}
+                  </div>
+                  <p className="builder__hint">
+                    Hint: Also check out{' '}
+                    {RNA_HINT_LINKS.map((link, index) => (
+                      <span key={link.href}>
+                        {index > 0 && ' and its '}
+                        <a href={link.href} target="_blank" rel="noreferrer">
+                          {link.text}
+                        </a>
+                      </span>
+                    ))}
+                    .
+                  </p>
+                  <p className="builder__note">
+                    RNA is always form A, single strand (`editor.py:803-805` forces it).
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ---- the three always-visible action rows (builder.py:1227-1264) --- */}
+
+        <div className="builder__actions">
+          <div className="builder__row">
+            <span className="builder__label">Atoms:</span>
             <ActionButton
-              key={entry.order}
-              kind="setOrder"
-              label={entry.glyph}
-              tip={entry.tooltip}
-              params={{ order: entry.order, text: entry.text }}
+              kind="fixH"
+              label="Fix H"
+              tip="Fix hydrogens on picked atoms"
               state={state}
               act={act}
             />
-          ))}
-          <span className="builder__label">Model:</span>
-          <Button
-            type="button"
-            className="bbtn bbtn--disabled"
-            disabled
-            data-testid="builder-clean"
-            title={state?.clean_reason ?? 'cmd.clean is Incentive-only in this build'}
-          >
-            Clean
-          </Button>
-          <ActionButton
-            kind="sculpt"
-            label="Sculpt"
-            tip="Molecular sculpting"
-            state={state}
-            act={act}
-          />
-          <ActionButton kind="fix" label="Fix" tip="Fix atom positions" state={state} act={act} />
-          <ActionButton
-            kind="rest"
-            label="Rest"
-            tip="Restrain atom positions"
-            state={state}
-            act={act}
-          />
+            <ActionButton
+              kind="addH"
+              label="Add H"
+              tip="Add hydrogens to entire molecule"
+              state={state}
+              act={act}
+            />
+            <ActionButton
+              kind="invert"
+              label="Invert"
+              tip="Invert stereochemistry around pk1 (pk2 and pk3 will remain fixed)"
+              state={state}
+              act={act}
+            />
+            <ActionButton
+              kind="removeAtom"
+              label="Delete"
+              tip="Remove atoms"
+              state={state}
+              act={act}
+            />
+            <Button
+              type="button"
+              className="bbtn"
+              title="Delete everything"
+              onClick={() => setConfirmClear(true)}
+            >
+              Clear
+            </Button>
+            <span className="builder__label">Charge:</span>
+            <ActionButton
+              kind="setCharge"
+              label="+1"
+              tip="Positive Charge"
+              params={{ charge: 1, text: '+1' }}
+              state={state}
+              act={act}
+            />
+            <ActionButton
+              kind="setCharge"
+              label="0"
+              tip="Neutral Charge"
+              params={{ charge: 0, text: 'neutral' }}
+              state={state}
+              act={act}
+            />
+            <ActionButton
+              kind="setCharge"
+              label="-1"
+              tip="Negative Charge"
+              params={{ charge: -1, text: '-1' }}
+              state={state}
+              act={act}
+            />
+            <span className="builder__label">Residue:</span>
+            <ActionButton
+              kind="removeResn"
+              label="Remove"
+              tip="Remove residue"
+              state={state}
+              act={act}
+            />
+          </div>
+
+          <div className="builder__row">
+            <span className="builder__label">Bonds:</span>
+            <ActionButton
+              kind="createBond"
+              label="Create"
+              tip="Create bond between pk1 and pk2"
+              state={state}
+              act={act}
+            />
+            <ActionButton
+              kind="deleteBond"
+              label="Delete"
+              tip="Delete bond between pk1 and pk2"
+              state={state}
+              act={act}
+            />
+            <ActionButton
+              kind="cycleBond"
+              label="Cycle"
+              tip="Cycle bond valence"
+              state={state}
+              act={act}
+            />
+            {BOND_ORDERS.map((entry) => (
+              <ActionButton
+                key={entry.order}
+                kind="setOrder"
+                label={entry.glyph}
+                tip={entry.tooltip}
+                params={{ order: entry.order, text: entry.text }}
+                state={state}
+                act={act}
+              />
+            ))}
+            <span className="builder__label">Model:</span>
+            <Button
+              type="button"
+              className="bbtn bbtn--disabled"
+              disabled
+              data-testid="builder-clean"
+              title={state?.clean_reason ?? 'cmd.clean is Incentive-only in this build'}
+            >
+              Clean
+            </Button>
+            <ActionButton
+              kind="sculpt"
+              label="Sculpt"
+              tip="Molecular sculpting"
+              state={state}
+              act={act}
+            />
+            <ActionButton kind="fix" label="Fix" tip="Fix atom positions" state={state} act={act} />
+            <ActionButton
+              kind="rest"
+              label="Rest"
+              tip="Restrain atom positions"
+              state={state}
+              act={act}
+            />
+          </div>
+
+          <div className="builder__row">
+            {SETTING_CHECKBOXES.map((entry) => {
+              const raw = state?.settings[entry.setting] ?? 0;
+              const checked = entry.inverted ? !raw : Boolean(raw);
+              return (
+                <label className="builder__check" key={entry.setting} title={entry.tooltip}>
+                  <Checkbox
+                    checked={checked}
+                    onChange={(event) => {
+                      const next = event.target.checked;
+                      if (entry.inverted) {
+                        act('setUndoEnabled', { enabled: next });
+                      } else {
+                        void session
+                          .call('cmd.set', [entry.setting, next ? 1 : 0], { quiet: 0 })
+                          .then(() => controller.refresh().then(apply))
+                          .catch((exc: unknown) => setError(errorText(exc)));
+                      }
+                    }}
+                  />
+                  {entry.label}
+                </label>
+              );
+            })}
+            <Button
+              type="button"
+              className="bbtn"
+              title="Undo last change"
+              aria-keyshortcuts="Control+Z"
+              onClick={undo}
+            >
+              Undo
+            </Button>
+            <Button
+              type="button"
+              className="bbtn"
+              title="Redo last change"
+              aria-keyshortcuts="Control+Shift+Z Control+Y"
+              onClick={redo}
+            >
+              Redo
+            </Button>
+            {state?.undo_is_noop && (
+              <span className="builder__note" title="packages/engine/modules/pymol/editor.py:38-49">
+                editor.undocontext is a no-op here — only cmd.undo/redo against the C ring works
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="builder__row">
-          {SETTING_CHECKBOXES.map((entry) => {
-            const raw = state?.settings[entry.setting] ?? 0;
-            const checked = entry.inverted ? !raw : Boolean(raw);
-            return (
-              <label className="builder__check" key={entry.setting} title={entry.tooltip}>
-                <Checkbox
-                  checked={checked}
-                  onChange={(event) => {
-                    const next = event.target.checked;
-                    if (entry.inverted) {
-                      act('setUndoEnabled', { enabled: next });
-                    } else {
-                      void session
-                        .call('cmd.set', [entry.setting, next ? 1 : 0], { quiet: 0 })
-                        .then(() => controller.refresh().then(apply))
-                        .catch((exc: unknown) => setError(errorText(exc)));
-                    }
-                  }}
-                />
-                {entry.label}
-              </label>
-            );
-          })}
-          <Button
-            type="button"
-            className="bbtn"
-            title="Undo last change"
-            aria-keyshortcuts="Control+Z"
-            onClick={undo}
-          >
-            Undo
-          </Button>
-          <Button
-            type="button"
-            className="bbtn"
-            title="Redo last change"
-            aria-keyshortcuts="Control+Shift+Z Control+Y"
-            onClick={redo}
-          >
-            Redo
-          </Button>
-          {state?.undo_is_noop && (
-            <span className="builder__note" title="packages/engine/modules/pymol/editor.py:38-49">
-              editor.undocontext is a no-op here — only cmd.undo/redo against the C ring works
-            </span>
-          )}
+        <WizardStrip
+          state={state}
+          onClick={(index) => {
+            setBusy(true);
+            controller
+              .wizardClick(index)
+              .then(apply)
+              .catch((exc: unknown) => setError(errorText(exc)))
+              .finally(() => setBusy(false));
+          }}
+          onDismiss={() => {
+            setBusy(true);
+            controller
+              .dismiss()
+              .then(apply)
+              .catch((exc: unknown) => setError(errorText(exc)))
+              .finally(() => setBusy(false));
+          }}
+        />
+
+        {confirmClear && (
+          <ConfirmModal
+            title="Confirm"
+            message="Really delete everything?"
+            confirmLabel="Yes"
+            cancelLabel="No"
+            onCancel={() => setConfirmClear(false)}
+            onConfirm={() => {
+              setConfirmClear(false);
+              act('clear');
+            }}
+          />
+        )}
+
+        {undoObjects && (
+          <ConfirmModal
+            title="Enable for objects?"
+            message={`Building "Undo" is disabled for the following objects:\n\n${undoObjects.join(
+              '\n',
+            )}\n\nEnable "Undo" for these objects?`}
+            confirmLabel="Yes"
+            cancelLabel="No"
+            onCancel={() => setUndoObjects(null)}
+            onConfirm={() => {
+              const names = undoObjects;
+              setUndoObjects(null);
+              act('enableUndoForObjects', { objects: names });
+            }}
+          />
+        )}
+
+        <div className="builder__footer">
+          <span>
+            {slots.length ? `picked: ${slots.join(' ')}` : 'nothing picked — buttons arm a wizard'}
+          </span>
+          <span data-testid="builder-sculpt">
+            {sculpt?.active
+              ? `sculpting: strain ${sculpt.strain.toFixed(2)} · ${sculpt.cycles} cycles/frame`
+              : state?.settings.sculpting
+                ? 'sculpting: starting…'
+                : ''}
+          </span>
+          <span>{state ? `${state.objects.length} object(s)` : ''}</span>
         </div>
       </div>
-
-      <WizardStrip
-        state={state}
-        onClick={(index) => {
-          setBusy(true);
-          controller
-            .wizardClick(index)
-            .then(apply)
-            .catch((exc: unknown) => setError(errorText(exc)))
-            .finally(() => setBusy(false));
-        }}
-        onDismiss={() => {
-          setBusy(true);
-          controller
-            .dismiss()
-            .then(apply)
-            .catch((exc: unknown) => setError(errorText(exc)))
-            .finally(() => setBusy(false));
-        }}
-      />
-
-      {confirmClear && (
-        <ConfirmModal
-          title="Confirm"
-          message="Really delete everything?"
-          confirmLabel="Yes"
-          cancelLabel="No"
-          onCancel={() => setConfirmClear(false)}
-          onConfirm={() => {
-            setConfirmClear(false);
-            act('clear');
-          }}
-        />
-      )}
-
-      {undoObjects && (
-        <ConfirmModal
-          title="Enable for objects?"
-          message={`Building "Undo" is disabled for the following objects:\n\n${undoObjects.join(
-            '\n',
-          )}\n\nEnable "Undo" for these objects?`}
-          confirmLabel="Yes"
-          cancelLabel="No"
-          onCancel={() => setUndoObjects(null)}
-          onConfirm={() => {
-            const names = undoObjects;
-            setUndoObjects(null);
-            act('enableUndoForObjects', { objects: names });
-          }}
-        />
-      )}
-
-      <div className="builder__footer">
-        <span>
-          {slots.length ? `picked: ${slots.join(' ')}` : 'nothing picked — buttons arm a wizard'}
-        </span>
-        <span data-testid="builder-sculpt">
-          {sculpt?.active
-            ? `sculpting: strain ${sculpt.strain.toFixed(2)} · ${sculpt.cycles} cycles/frame`
-            : state?.settings.sculpting
-              ? 'sculpting: starting…'
-              : ''}
-        </span>
-        <span>{state ? `${state.objects.length} object(s)` : ''}</span>
-      </div>
-    </div>
+    </FloatingWindow>
   );
 }
 
@@ -1015,7 +1055,14 @@ function ConfirmModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  return (
+  // `.builder__modal` is `position: fixed; inset: 0` — a full-viewport scrim.
+  // The Builder now lives inside FloatingWindow, whose `.flwin`/`.flwin__body`
+  // are `overflow: hidden`/`auto`, and an overflow ancestor CLIPS even a
+  // fixed-positioned descendant — so left in place the confirmation would be
+  // painted (and hit-tested) only within the small, right-anchored window and
+  // is invisible/unclickable wherever the window doesn't cover the centre.
+  // Portal it to <body> so it escapes the clip and covers the screen as before.
+  const modal = (
     <div className="builder__modal" role="alertdialog" aria-label={title}>
       <div className="builder__modal-box modern:rounded-lg modern:border modern:border-line modern:bg-pm-panel modern:text-pm-text">
         <div className="builder__modal-title modern:text-pm-text-bright">{title}</div>
@@ -1031,6 +1078,7 @@ function ConfirmModal({
       </div>
     </div>
   );
+  return typeof document === 'undefined' ? modal : createPortal(modal, document.body);
 }
 
 /**

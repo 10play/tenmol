@@ -32,7 +32,8 @@ import {
   COMPUTE_NS,
   type SasaRelativeResult,
 } from '@tenmol/protocol/topics/compute';
-import { Button, Checkbox, TextInput } from '../../ui';
+import { Button, Checkbox, TextInput, FloatingWindow } from '../../ui';
+import { closePanel } from '../../shell/panelHooks';
 import './compute.css';
 
 type Row = {
@@ -217,126 +218,137 @@ export function ComputePanel() {
   );
 
   return (
-    <div className="compute modern:bg-pm-panel modern:text-pm-text">
-      <div className="compute__title modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line">
-        Compute
-      </div>
-
-      <div className="compute__sel">
-        <label htmlFor="cp-sel">Selection</label>
-        <TextInput
-          id="cp-sel"
-          type="text"
-          value={selection}
-          onChange={(e) => setSelection(e.target.value)}
-          spellCheck={false}
-        />
-      </div>
-
-      <table className="compute__table">
-        <tbody>
-          {METRICS.map((m) => {
-            const row = results[m.id];
-            const off = m.kind === 'unsupported';
-            const extra = paramsOf(m).filter((p) => p.kind !== 'selection');
-            return (
-              <tr key={m.id} className={off ? 'is-off' : undefined}>
-                <td>
-                  <Button
-                    variant="bare"
-                    type="button"
-                    className={`compute__btn${m.kind === 'destructive' ? ' is-danger' : ''}`}
-                    disabled={off || busy !== null}
-                    title={off ? m.unsupportedReason : m.source}
-                    onClick={() => press(m)}
-                  >
-                    {busy === m.id ? '…' : m.label}
-                  </Button>
-                  {m.note !== undefined && <div className="compute__note-inline">{m.note}</div>}
-                  {extra.length > 0 && (
-                    <div className="compute__args">
-                      {extra.map((p) => (
-                        <ParamField
-                          key={p.name}
-                          metricId={m.id}
-                          param={p}
-                          value={forms[m.id]?.[p.name]}
-                          onChange={setField}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </td>
-                <td className={`compute__val${row?.error ? ' is-error' : ''}`}>
-                  {off ? (
-                    <span className="compute__off" title={m.unsupportedReason}>
-                      unavailable
-                    </span>
-                  ) : (
-                    (row?.text ?? '')
-                  )}
-                  {row?.table && <SasaTable result={row.table} />}
-                  {row?.diagnostics && row.diagnostics.length > 0 && (
-                    <details
-                      className="compute__diag modern:text-pm-text-dim"
-                      data-diagnostics={m.id}
-                      open
-                    >
-                      <summary className="modern:text-pm-text-dim">
-                        what PyMOL reported ({row.diagnostics.length}{' '}
-                        {row.diagnostics.length === 1 ? 'line' : 'lines'})
-                      </summary>
-                      <pre className="compute__diaglines">{row.diagnostics.join('\n')}</pre>
-                    </details>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      {confirming !== null && (
-        <div
-          className="compute__confirm"
-          role="alertdialog"
-          aria-label="confirm destructive action"
-        >
-          <p className="compute__warn">{confirming.warning}</p>
-          <div className="compute__confirm-actions">
-            <Button
-              variant="bare"
-              type="button"
-              className="compute__btn"
-              onClick={() => setConfirming(null)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="bare"
-              type="button"
-              className="compute__btn is-danger"
-              onClick={() => void execute(confirming)}
-            >
-              {/*
-               * Not every warned helper deletes atoms. `protein_vacuum_esp`
-               * really does modify the structure; `b2vdw` and the SASA shim
-               * overwrite an atom property. Saying "modify structure" for
-               * those would overstate it, and a warning nobody believes is a
-               * warning nobody reads.
-               */}
-              {confirming.kind === 'destructive' ? 'Modify structure and run' : 'Overwrite and run'}
-            </Button>
-          </div>
+    <FloatingWindow
+      title="Compute"
+      ariaLabel="Compute"
+      onClose={() => closePanel('compute')}
+      persistKey="compute"
+      defaultWidth={420}
+      defaultHeight={520}
+      minWidth={320}
+      minHeight={320}
+      anchor="right"
+      data-testid="compute-window"
+    >
+      <div className="compute modern:text-pm-text">
+        <div className="compute__sel">
+          <label htmlFor="cp-sel">Selection</label>
+          <TextInput
+            id="cp-sel"
+            type="text"
+            value={selection}
+            onChange={(e) => setSelection(e.target.value)}
+            spellCheck={false}
+          />
         </div>
-      )}
 
-      <p className="compute__note">
-        Whatever PyMOL printed while a helper ran is captured next to that helper&rsquo;s result, as
-        well as going to the console. Results use each helper&rsquo;s own units; a failure is shown
-        here rather than only in the feedback pane.
-      </p>
-    </div>
+        <table className="compute__table">
+          <tbody>
+            {METRICS.map((m) => {
+              const row = results[m.id];
+              const off = m.kind === 'unsupported';
+              const extra = paramsOf(m).filter((p) => p.kind !== 'selection');
+              return (
+                <tr key={m.id} className={off ? 'is-off' : undefined}>
+                  <td>
+                    <Button
+                      variant="bare"
+                      type="button"
+                      className={`compute__btn${m.kind === 'destructive' ? ' is-danger' : ''}`}
+                      disabled={off || busy !== null}
+                      title={off ? m.unsupportedReason : m.source}
+                      onClick={() => press(m)}
+                    >
+                      {busy === m.id ? '…' : m.label}
+                    </Button>
+                    {m.note !== undefined && <div className="compute__note-inline">{m.note}</div>}
+                    {extra.length > 0 && (
+                      <div className="compute__args">
+                        {extra.map((p) => (
+                          <ParamField
+                            key={p.name}
+                            metricId={m.id}
+                            param={p}
+                            value={forms[m.id]?.[p.name]}
+                            onChange={setField}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className={`compute__val${row?.error ? ' is-error' : ''}`}>
+                    {off ? (
+                      <span className="compute__off" title={m.unsupportedReason}>
+                        unavailable
+                      </span>
+                    ) : (
+                      (row?.text ?? '')
+                    )}
+                    {row?.table && <SasaTable result={row.table} />}
+                    {row?.diagnostics && row.diagnostics.length > 0 && (
+                      <details
+                        className="compute__diag modern:text-pm-text-dim"
+                        data-diagnostics={m.id}
+                        open
+                      >
+                        <summary className="modern:text-pm-text-dim">
+                          what PyMOL reported ({row.diagnostics.length}{' '}
+                          {row.diagnostics.length === 1 ? 'line' : 'lines'})
+                        </summary>
+                        <pre className="compute__diaglines">{row.diagnostics.join('\n')}</pre>
+                      </details>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {confirming !== null && (
+          <div
+            className="compute__confirm"
+            role="alertdialog"
+            aria-label="confirm destructive action"
+          >
+            <p className="compute__warn">{confirming.warning}</p>
+            <div className="compute__confirm-actions">
+              <Button
+                variant="bare"
+                type="button"
+                className="compute__btn"
+                onClick={() => setConfirming(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="bare"
+                type="button"
+                className="compute__btn is-danger"
+                onClick={() => void execute(confirming)}
+              >
+                {/*
+                 * Not every warned helper deletes atoms. `protein_vacuum_esp`
+                 * really does modify the structure; `b2vdw` and the SASA shim
+                 * overwrite an atom property. Saying "modify structure" for
+                 * those would overstate it, and a warning nobody believes is a
+                 * warning nobody reads.
+                 */}
+                {confirming.kind === 'destructive'
+                  ? 'Modify structure and run'
+                  : 'Overwrite and run'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <p className="compute__note">
+          Whatever PyMOL printed while a helper ran is captured next to that helper&rsquo;s result,
+          as well as going to the console. Results use each helper&rsquo;s own units; a failure is
+          shown here rather than only in the feedback pane.
+        </p>
+      </div>
+    </FloatingWindow>
   );
 }
 
