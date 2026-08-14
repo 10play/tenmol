@@ -1,0 +1,24 @@
+{
+  "id": "color__nobelium", "feature": "nobelium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color nobelium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","nobelium"],"label":"nobelium palette index"},
+    {"call":["get_color_tuple","nobelium"],"label":"nobelium rgb tuple","tol":1e-6},
+    {"call":["count_atoms","color nobelium"],"label":"atoms colored nobelium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    5377,
+    [
+      0.7411764860153198,
+      0.05098039284348488,
+      0.529411792755127
+    ],
+    1,
+    1
+  ]
+}

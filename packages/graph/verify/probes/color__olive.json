@@ -1,0 +1,24 @@
+{
+  "id": "color__olive", "feature": "olive", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color olive, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","olive"],"label":"olive RGB tuple","tol":1e-6},
+    {"call":["get_color_index","olive"],"label":"olive palette index"},
+    {"call":["count_atoms","color olive"],"label":"atoms colored olive"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.7699999809265137,
+      0.699999988079071,
+      0
+    ],
+    18,
+    1,
+    1
+  ]
+}

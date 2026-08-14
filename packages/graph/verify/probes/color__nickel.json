@@ -1,0 +1,24 @@
+{
+  "id": "color__nickel", "feature": "nickel", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color nickel, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","nickel"],"label":"nickel RGB tuple","tol":1e-6},
+    {"call":["get_color_index","nickel"],"label":"nickel palette index"},
+    {"call":["count_atoms","color nickel"],"label":"atoms colored nickel"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.3137255012989044,
+      0.8156862854957581,
+      0.3137255012989044
+    ],
+    5303,
+    1,
+    1
+  ]
+}
