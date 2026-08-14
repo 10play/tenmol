@@ -1,0 +1,22 @@
+{
+  "id": "color__hafnium", "feature": "hafnium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color hafnium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color hafnium"],"label":"atoms colored hafnium"},
+    {"call":["get_color_index","hafnium"],"label":"hafnium palette index"},
+    {"call":["get_color_tuple","hafnium"],"label":"hafnium rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5347,
+    [
+      0.3019607961177826,
+      0.7607843279838562,
+      1
+    ]
+  ]
+}

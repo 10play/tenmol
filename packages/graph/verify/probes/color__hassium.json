@@ -1,0 +1,22 @@
+{
+  "id": "color__hassium", "feature": "hassium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color hassium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","hassium"],"label":"hassium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color hassium"],"label":"atoms colored hassium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.9019607901573181,
+      0,
+      0.18039216101169586
+    ],
+    1,
+    1
+  ]
+}
