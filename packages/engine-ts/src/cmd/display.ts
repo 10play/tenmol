@@ -177,10 +177,15 @@ export function registerDisplay(ctx: RegistrarCtx): void {
   /* -------------------------- get_color_indices ------------------------- */
 
   ctx.command('get_color_indices', (args, kwargs): Json => {
-    // `all` includes runtime/extended colours; our table already returns every
-    // known name, so the flag only affects ordering intent — we return all.
-    void (args[0] ?? kwargs.all);
-    return colorNames().map((name) => [name, getColorIndex(name)] as [string, number]);
+    // PyMOL: mode 1 (all=0) returns only "named" colours — those whose name
+    // contains NO digit (ColorGetStatus == 1, skipping the generated ramps like
+    // br0-9, grey00-99, the s/r/c/w/o spectra); mode 2 (all=1) returns the full
+    // table. Indices are the real full-table positions either way.
+    const all = Number(args[0] ?? kwargs.all ?? 0);
+    const pairs = colorNames().map(
+      (name) => [name, getColorIndex(name)] as [string, number],
+    );
+    return all ? pairs : pairs.filter(([name]) => !/[0-9]/.test(name));
   });
 
   /* -------------------------------- space ------------------------------- */

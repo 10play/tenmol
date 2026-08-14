@@ -1,0 +1,21 @@
+{
+  "id": "command__get_colorection",
+  "feature": "get_colorection",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom pa1"},
+    {"do": "pseudoatom pa2"},
+    {"do": "color red, pa1"},
+    {"do": "color blue, pa2"},
+    {"call": ["get_colorection", "cc"]}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "color red"], "label": "pa1 still red after snapshot"},
+    {"call": ["count_atoms", "color blue"], "label": "pa2 still blue after snapshot"},
+    {"call": ["count_atoms", "all"], "label": "atom count unchanged by snapshot"},
+    {"call": ["get_color_index", "red"], "label": "red palette index"}
+  ],
+  "expected": [1, 1, 2, 4],
+  "tol": 0
+}

@@ -720,6 +720,12 @@ export class Engine {
     h('get', (args) => (ex.getSetting(str(args[0])) ?? null) as Json);
     h('get_title', () => '');
     h('set_title', () => null);
+    // `cmd.get_drag_object_name()` — the name of the object currently under
+    // interactive drag (editor move) mode. The editor's drag subsystem is not
+    // ported, so nothing is ever the drag target; real PyMOL returns an empty
+    // string when no object is being dragged (querying.py:84), which is the only
+    // observable state here.
+    h('get_drag_object_name', () => '');
     h('matrix_reset', () => null);
     h('get_object_color_index', () => 0);
     h('get_object_matrix', (args) => {

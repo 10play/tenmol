@@ -371,6 +371,19 @@ export function registerEditing(ctx: RegistrarCtx): void {
     return null;
   });
 
+  /* -------------------------- get_editor_scheme -------------------------- */
+  // get_editor_scheme() — the molecular editor's current interaction scheme as
+  // an integer code (editing.py:1125 -> Editor.cpp EditorGetScheme):
+  //   EDITOR_SCHEME_OBJ  = 1  (no active pick)
+  //   EDITOR_SCHEME_FRAG = 2  (editor active — an atom/bond is picked)
+  //   EDITOR_SCHEME_DRAG = 3  (mid-drag; no headless analogue in this port)
+  // The editor is "active" (FRAG) exactly when a non-empty `pk1` pick exists, as
+  // `edit`/`unpick` create/clear it (Editor.cpp EditorActive == I->Active).
+  ctx.command('get_editor_scheme', (): Json => {
+    const active = ex.hasSelection('pk1') && ex.atomsMatching('pk1').length > 0;
+    return active ? 2 : 1;
+  });
+
   /* ------------------------------ uniquify ------------------------------- */
   // uniquify(identifier, selection, reference='', ...) — make the identifier
   // (chain/segi/…) of `selection` unique w.r.t. `reference` (default the

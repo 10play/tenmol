@@ -1,0 +1,16 @@
+{
+  "id": "command__get_color_index",
+  "feature": "get_color_index",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [],
+  "checks": [
+    { "call": ["get_color_index", "red"], "label": "index of red" },
+    { "call": ["get_color_index", "green"], "label": "index of green" },
+    { "call": ["get_color_index", "blue"], "label": "index of blue" },
+    { "call": ["get_color_index", "yellow"], "label": "index of yellow" },
+    { "call": ["get_color_index", "white"], "label": "index of white" }
+  ],
+  "tol": 0.001,
+  "expected": [4, 3, 2, 6, 0]
+}

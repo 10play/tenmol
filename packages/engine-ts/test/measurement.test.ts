@@ -6,7 +6,8 @@
  * conventions (`packages/engine/layer0/Vector.cpp`).
  */
 import { describe, expect, it } from 'vitest';
-import type { Json } from '@tenmol/protocol';
+import type { Json, WireNdarray } from '@tenmol/protocol';
+import { decodeCoords } from '@tenmol/protocol';
 import { Executive } from '../src/exec/executive';
 import { parsePdb } from '../src/model/pdb';
 import { registerMeasurement } from '../src/cmd/measurement';
@@ -168,16 +169,16 @@ describe('get_atom_coords / get_coords', () => {
     expect(asArr(call('get_atom_coords', 'name CX'))).toEqual([1, 1, 0]);
   });
 
-  it('get_coords returns a row per atom in selection order', () => {
+  it('get_coords returns an N×3 float32 ndarray in selection order', () => {
     const { call } = setup([{ name: 'g', text: GEOM }]);
-    const rows = call('get_coords', 'g') as number[][];
-    expect(rows).toEqual([
-      [0, 0, 0],
-      [1, 0, 0],
-      [1, 1, 0],
-      [1, 1, 1],
-      [1, 1, -1],
-    ]);
+    // API-only: real PyMOL returns a numpy float32 array, serialized over the
+    // bridge as a base64 `__ndarray__` (packages/bridge/tenmol_bridge/codec.py).
+    // Verified against the oracle via packages/graph/verify probe command__get_coords.
+    const nd = call('get_coords', 'g') as unknown as WireNdarray;
+    expect(nd.__ndarray__).toBe(true);
+    expect(nd.shape).toEqual([5, 3]);
+    expect(nd.dtype).toBe('float32');
+    expect(Array.from(decodeCoords(nd))).toEqual([0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, -1]);
   });
 });
 

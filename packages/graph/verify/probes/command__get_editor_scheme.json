@@ -1,0 +1,14 @@
+{
+  "id": "command__get_editor_scheme", "feature": "get_editor_scheme", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"edit first ala"}
+  ],
+  "checks": [
+    {"call":["get_editor_scheme"],"label":"editor scheme integer code after entering edit mode"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2
+  ]
+}

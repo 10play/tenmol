@@ -18,6 +18,7 @@
  */
 
 import type { Json } from '@tenmol/protocol';
+import { encodeCoords } from '@tenmol/protocol';
 import type { ObjectMolecule } from '../model/molecule';
 import type { UniverseAtom } from '../select/selector';
 import type { RegistrarCtx } from './registrar';
@@ -206,7 +207,12 @@ export function registerMeasurement(ctx: RegistrarCtx): void {
     const sel = str(arg(args, kwargs, 0, 'selection'), 'all');
     const state = oneState(num(arg(args, kwargs, 1, 'state'), 0));
     const matched = ex.atomsMatching(sel);
-    return matched.map((ua) => coordAt(ua, state) as unknown as Json);
+    // API-only: real PyMOL returns an N×3 numpy float32 array (None for an empty
+    // selection). Over the bridge that array is serialized as a base64
+    // `__ndarray__` (packages/bridge/tenmol_bridge/codec.py); match that wire
+    // shape here rather than returning a plain nested JS array.
+    if (matched.length === 0) return null;
+    return encodeCoords(matched.map((ua) => coordAt(ua, state))) as unknown as Json;
   });
 
   ctx.command('get_extent', (args, kwargs): Json => {

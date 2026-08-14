@@ -12,6 +12,7 @@
  * `ctx.executive`; `ctx.publish()` after coordinate/state mutations.
  */
 import type { Json } from '@tenmol/protocol';
+import { encodeCoords } from '@tenmol/protocol';
 import type { RegistrarCtx } from './registrar';
 
 function toNum(v: unknown, dflt: number): number {
@@ -145,19 +146,22 @@ export function registerXform(ctx: RegistrarCtx): void {
 
   /* ------------------------------ get_coordset --------------------------- */
 
-  // get_coordset(name, state=1, copy=1) — coordinates of a state as [x,y,z]
-  // triples. Always a fresh copy here, so `copy` is accepted but immaterial.
+  // get_coordset(name, state=1, copy=1) — the object's coordinate set as an
+  // N×3 numpy float32 array. Over the bridge real PyMOL serializes that as a
+  // base64 `__ndarray__` (packages/bridge/tenmol_bridge/codec.py); match that
+  // wire shape rather than returning a plain nested JS array. `copy` is always
+  // a fresh copy here, so it is accepted but immaterial.
   ctx.command('get_coordset', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
     const state = toNum(args[1] ?? kwargs['state'], 1) || 1;
     const mol = ex.molecule(name);
-    if (!mol) return [];
-    const out: number[][] = [];
+    if (!mol) return null;
+    const out: Array<readonly [number, number, number]> = [];
     for (let i = 0; i < mol.natom; i++) {
       const [x, y, z] = mol.coord(i, state);
       out.push([x, y, z]);
     }
-    return out;
+    return encodeCoords(out) as unknown as Json;
   });
 
   /* ----------------------------- load_coordset --------------------------- */

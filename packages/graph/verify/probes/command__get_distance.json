@@ -1,0 +1,20 @@
+{
+  "id": "command__get_distance",
+  "feature": "get_distance",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" }
+  ],
+  "checks": [
+    { "call": ["get_distance", "name N", "name C"], "label": "N-C distance", "tol": 1e-3 },
+    { "call": ["get_distance", "name N", "name CA"], "label": "N-CA distance", "tol": 1e-3 },
+    { "call": ["get_distance", "name CA", "name CB"], "label": "CA-CB distance", "tol": 1e-3 }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2.447319984436035,
+    1.4599355459213257,
+    1.538316249847412
+  ]
+}

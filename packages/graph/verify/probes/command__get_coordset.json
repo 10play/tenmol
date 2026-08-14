@@ -1,0 +1,25 @@
+{
+  "id": "command__get_coordset",
+  "feature": "get_coordset",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, pos=[1.5, -2.25, 3.75]" },
+    { "do": "pseudoatom m, pos=[0.0, 1.0, 2.0]" }
+  ],
+  "checks": [
+    { "call": ["get_coordset", "m"], "label": "coordinate set of object m, state 1" },
+    { "call": ["count_atoms", "m"], "label": "atom count in object m" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    {
+      "__ndarray__": true,
+      "shape": [2, 3],
+      "dtype": "float32",
+      "encoding": "base64",
+      "data": "AADAPwAAEMAAAHBAAAAAAAAAgD8AAABA"
+    },
+    2
+  ]
+}
