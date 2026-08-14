@@ -199,9 +199,13 @@ describe('current-state getters', () => {
     expect(await b.call('get_object_state', ['nope'])).toBe(1);
   });
 
-  it('get_selection_state is 0 (all/current)', async () => {
+  it('get_selection_state is the shared object state (1 for single-state objects)', async () => {
+    // Mirrors real PyMOL: maps get_object_state over the selection's objects and
+    // returns the sole shared state; a single-state object reads 1, and an empty
+    // selection (no objects touched) also returns 1. Verified against the oracle.
     const b = await boot();
-    expect(await b.call('get_selection_state', ['chain A'])).toBe(0);
+    expect(await b.call('get_selection_state', ['chain A'])).toBe(1);
+    expect(await b.call('get_selection_state', ['none'])).toBe(1);
   });
 });
 

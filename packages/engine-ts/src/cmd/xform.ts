@@ -193,10 +193,19 @@ export function registerXform(ctx: RegistrarCtx): void {
 
   /* --------------------------- get_selection_state ----------------------- */
 
-  // get_selection_state(selection) — the state a selection resolves to. Named
-  // selections here are not state-bound, so this is always 0 (== all/current),
-  // matching PyMOL's "state 0" convention.
-  ctx.command('get_selection_state', (): Json => 0);
+  // get_selection_state(selection) — the single effective object state shared by
+  // all objects the selection touches. Mirrors PyMOL: map get_object_state over
+  // get_object_list('(' + selection + ')'), returning the sole state if they all
+  // agree, 1 if no objects are touched, or raising if they differ.
+  ctx.command('get_selection_state', (args, kwargs): Json => {
+    const selection = str(args[0] ?? kwargs['selection']);
+    const names = ex.getObjectList(`(${selection})`);
+    const states = new Set<number>();
+    for (const name of names) states.add(toNum(ctx.call('get_object_state', [name]), 1));
+    if (states.size === 0) return 1;
+    if (states.size !== 1) throw new Error('Selection spans multiple object states');
+    return states.values().next().value as number;
+  });
 
   /* ------------------------------- set_frame ----------------------------- */
 

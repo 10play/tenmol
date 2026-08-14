@@ -1,0 +1,21 @@
+{
+  "id": "command__get_setting_int",
+  "feature": "get_setting_int",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "set sphere_quality, 2" },
+    { "do": "set ray_trace_mode, 3" },
+    { "do": "set cartoon_transparency, 1, ala" },
+    { "do": "set orthoscopic, 1" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "sphere_quality"], "label": "sphere_quality global int" },
+    { "call": ["get_setting_int", "ray_trace_mode"], "label": "ray_trace_mode global int" },
+    { "call": ["get_setting_int", "cartoon_transparency", "ala"], "label": "cartoon_transparency on object coerced to int" },
+    { "call": ["get_setting_int", "orthoscopic"], "label": "boolean setting coerced to int (on -> 1)" }
+  ],
+  "tol": 1e-3,
+  "expected": [2, 3, 1, 1]
+}

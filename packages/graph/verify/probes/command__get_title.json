@@ -1,0 +1,16 @@
+{
+  "id": "command__get_title",
+  "feature": "get_title",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom m"},
+    {"call": ["set_title", "m", 1, "frame one"]}
+  ],
+  "checks": [
+    {"call": ["get_title", "m", 1], "label": "title of state 1"},
+    {"call": ["get_title", "m", 2], "label": "title of empty state 2"}
+  ],
+  "tol": 1e-3,
+  "expected": ["frame one", null]
+}

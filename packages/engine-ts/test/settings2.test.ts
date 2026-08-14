@@ -188,9 +188,20 @@ describe('settings2: view extras', () => {
     expect(h.call('reference')).toBeNull();
   });
 
-  it('get_setting_legacy returns the current global value or null', () => {
+  it('get_setting_legacy is an exact alias of get_setting_float', () => {
+    // `modules/pymol/api.py`: `get_setting_float as get_setting_legacy`. It
+    // reads a setting as a float and honours the per-object `object` argument,
+    // returning the same value get_setting_float would (verified vs real PyMOL).
     const h = makeHarness();
     expect(h.call('get_setting_legacy', ['sphere_scale'])).toBe(1.0);
-    expect(h.call('get_setting_legacy', ['nonexistent_setting'])).toBeNull();
+    // Per-object override resolves like get_setting_float, not the global.
+    h.call('set', ['sphere_scale', 0.25, 'ala']);
+    expect(h.call('get_setting_legacy', ['sphere_scale', 'ala'])).toBe(
+      h.call('get_setting_float', ['sphere_scale', 'ala']),
+    );
+    // Unknown setting matches get_setting_float exactly (both 0 in this port).
+    expect(h.call('get_setting_legacy', ['nonexistent_setting'])).toBe(
+      h.call('get_setting_float', ['nonexistent_setting']),
+    );
   });
 });

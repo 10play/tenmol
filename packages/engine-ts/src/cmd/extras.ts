@@ -36,6 +36,7 @@
  */
 
 import type { Json } from '@tenmol/protocol';
+import { PymolError } from '@tenmol/backend';
 import type { AtomInfo } from '../model/atom';
 import type { Executive } from '../exec/executive';
 import { ObjectMolecule } from '../model/molecule';
@@ -636,6 +637,31 @@ export function registerExtras(ctx: RegistrarCtx): void {
 
   // Return a pair of empty strings: PovRay exporters (scene, header).
   noop(['get_povray', 'povray'], ['', '']);
+
+  // Genuinely ABSENT `cmd` symbols. Unlike an unported verb (which throws the
+  // port's own `NotPorted`), these functions are NOT bound onto `cmd` in the
+  // open-source build at all: `get_stlstr`/`read_stlstr` are incentive-only and
+  // live in `pymol.lazyio`, reachable only through `save`/`load`'s extension
+  // dispatch table (`exporting.py:1019`, `lazyio.py:224`). So `cmd.get_stlstr`
+  // is a real Python `AttributeError`, which the bridge surfaces as a
+  // `NotAllowed` "no such symbol" rejection. Reproduce that EXACT error so the
+  // differential sees identical behaviour instead of a mismatched port message.
+  const absentCmdSymbol = (names: readonly string[]): void => {
+    for (const name of names) {
+      ctx.command(name, () => {
+        throw new PymolError(
+          {
+            kind: 'NotAllowed',
+            type: 'NotAllowed',
+            message: `${name}: no such symbol (module 'pymol.cmd' has no attribute '${name}')`,
+            traceback: '',
+          },
+          name,
+        );
+      });
+    }
+  };
+  absentCmdSymbol(['get_stlstr', 'read_stlstr']);
 
   // `remove_picked` (cmd/editing.ts) and `pair_fit` (cmd/align.ts) are real now.
 }

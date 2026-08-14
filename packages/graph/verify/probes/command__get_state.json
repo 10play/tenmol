@@ -1,0 +1,14 @@
+{
+  "id": "command__get_state",
+  "feature": "get_state",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"}
+  ],
+  "checks": [
+    {"call": ["get_state"], "label": "current display state, 1-based"}
+  ],
+  "tol": 1e-3,
+  "expected": [1]
+}

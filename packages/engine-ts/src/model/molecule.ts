@@ -38,6 +38,10 @@ export class ObjectMolecule {
   readonly atoms: AtomInfo[] = [];
   /** One Float32Array (natom*3) per state; `states[0]` is state 1. */
   readonly states: Float32Array[] = [];
+  /** Per-state title strings (`CoordSet::Name`); `titles[0]` is state 1. A slot
+   *  is `undefined` when no title was ever attached to that state. Written by
+   *  `set_title`, read by `get_title`. */
+  readonly titles: (string | undefined)[] = [];
   /** Undirected bonds: 0-based atom-index pair, plus an optional bond order
    *  (1 single, 2 double, 3 triple, 4 aromatic); absent order ⇒ single. */
   readonly bonds: Array<[number, number, number?]> = [];

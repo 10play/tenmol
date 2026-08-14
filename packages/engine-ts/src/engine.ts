@@ -613,7 +613,7 @@ export class Engine {
     h('get_setting', (args) => ex.getSetting(str(args[0])) ?? null);
     h('get_setting_float', (args) => ex.getSettingFloat(str(args[0])));
     h('get_setting_int', (args) => Math.trunc(ex.getSettingFloat(str(args[0]))));
-    h('get_setting_boolean', (args) => (ex.getSettingFloat(str(args[0])) !== 0 ? 1 : 0));
+    h('get_setting_boolean', (args) => ex.getSettingFloat(str(args[0])) !== 0);
 
     // `cmd.get_viewport()` — the scene rectangle in pixels (width, height). The
     // Mode-G viewport polls this to size its GL scissor/viewport.
