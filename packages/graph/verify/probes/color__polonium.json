@@ -1,0 +1,24 @@
+{
+  "id": "color__polonium", "feature": "polonium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color polonium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","polonium"],"label":"polonium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","polonium"],"label":"polonium palette index"},
+    {"call":["count_atoms","color polonium"],"label":"atoms colored polonium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.6705882549285889,
+      0.3607843220233917,
+      0
+    ],
+    5359,
+    1,
+    1
+  ]
+}

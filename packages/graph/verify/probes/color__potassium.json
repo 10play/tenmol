@@ -1,0 +1,22 @@
+{
+  "id": "color__potassium", "feature": "potassium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color potassium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color potassium"],"label":"atoms colored potassium"},
+    {"call":["get_color_index","potassium"],"label":"potassium palette index"},
+    {"call":["get_color_tuple","potassium"],"label":"potassium rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5294,
+    [
+      0.5607843399047852,
+      0.2509803771972656,
+      0.8313725590705872
+    ]
+  ]
+}

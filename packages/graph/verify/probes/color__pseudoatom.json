@@ -1,0 +1,24 @@
+{
+  "id": "color__pseudoatom", "feature": "pseudoatom", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color pseudoatom, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","pseudoatom"],"label":"pseudoatom RGB tuple","tol":1e-6},
+    {"call":["get_color_index","pseudoatom"],"label":"pseudoatom palette index"},
+    {"call":["count_atoms","color pseudoatom"],"label":"atoms colored pseudoatom"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.8999999761581421,
+      0.8999999761581421,
+      0.8999999761581421
+    ],
+    5387,
+    1,
+    1
+  ]
+}
