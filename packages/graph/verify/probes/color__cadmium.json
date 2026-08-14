@@ -1,0 +1,22 @@
+{
+  "id": "color__cadmium", "feature": "cadmium", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color cadmium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color cadmium"],"label":"atoms colored cadmium"},
+    {"call":["get_color_index","cadmium"],"label":"cadmium palette index"},
+    {"call":["get_color_tuple","cadmium"],"label":"cadmium RGB tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5323,
+    [
+      1,
+      0.8509804010391235,
+      0.5607843399047852
+    ]
+  ]
+}

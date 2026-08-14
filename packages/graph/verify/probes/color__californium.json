@@ -1,0 +1,22 @@
+{
+  "id": "color__californium", "feature": "californium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color californium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","californium"],"label":"californium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color californium"],"label":"atoms colored californium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.6313725709915161,
+      0.21176470816135406,
+      0.8313725590705872
+    ],
+    1,
+    1
+  ]
+}
