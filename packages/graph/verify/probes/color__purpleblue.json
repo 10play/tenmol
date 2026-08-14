@@ -1,0 +1,22 @@
+{
+  "id": "color__purpleblue", "feature": "purpleblue", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color purpleblue, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color purpleblue"],"label":"atoms colored purpleblue"},
+    {"call":["get_color_index","purpleblue"],"label":"purpleblue palette index"},
+    {"call":["get_color_tuple","purpleblue"],"label":"purpleblue rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    16,
+    [
+      0.5,
+      0,
+      1
+    ]
+  ]
+}

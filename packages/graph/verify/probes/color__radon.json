@@ -1,0 +1,22 @@
+{
+  "id": "color__radon", "feature": "radon", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color radon, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color radon"],"label":"atoms colored radon"},
+    {"call":["get_color_index","radon"],"label":"radon palette index"},
+    {"call":["get_color_tuple","radon"],"label":"radon RGB tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5361,
+    [
+      0.25882354378700256,
+      0.5098039507865906,
+      0.5882353186607361
+    ]
+  ]
+}

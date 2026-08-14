@@ -1,0 +1,22 @@
+{
+  "id": "color__raspberry", "feature": "raspberry", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color raspberry, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color raspberry"],"label":"atoms colored raspberry"},
+    {"call":["get_color_index","raspberry"],"label":"raspberry palette index"},
+    {"call":["get_color_tuple","raspberry"],"label":"raspberry rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5268,
+    [
+      0.699999988079071,
+      0.30000001192092896,
+      0.4000000059604645
+    ]
+  ]
+}
