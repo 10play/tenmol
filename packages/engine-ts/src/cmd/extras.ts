@@ -521,7 +521,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'edit_keys',
       'drag',
       'release',
-      'unpick',
+      // `unpick` is real — see cmd/editing.ts (clears the pk* selections).
       // `fab` (peptide) is real — editor.ts; `fnab` (nucleic) — cmd/nucleic.ts.
       'h_fix',
       // movie frame-table edits (movie store lives in the engine)

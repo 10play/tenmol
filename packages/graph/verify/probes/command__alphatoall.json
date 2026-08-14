@@ -1,0 +1,21 @@
+{
+  "id": "command__alphatoall",
+  "feature": "alphatoall",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "alter all, b=0.0" },
+    { "do": "alter name CA, b=50.0" },
+    { "do": "alphatoall all, b" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "b > 49 and not hydro"], "label": "heavy atoms carrying the CA b=50 after alphatoall" },
+    { "call": ["count_atoms", "not hydro"], "label": "heavy-atom count of the residue (baseline)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    5,
+    5
+  ]
+}

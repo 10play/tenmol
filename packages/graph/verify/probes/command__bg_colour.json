@@ -1,0 +1,17 @@
+{
+  "id": "command__bg_colour", "feature": "bg_colour", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"bg_colour white"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","bg_rgb"],"label":"bg_rgb text after bg_colour white"},
+    {"call":["get_setting_int","bg_rgb"],"label":"bg_rgb int after bg_colour white"},
+    {"call":["get_color_index","white"],"label":"white palette index"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    "white",
+    0,
+    0
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "command__bg_color", "feature": "bg_color", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"bg_color red"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","bg_rgb"],"label":"bg_rgb index after bg_color red"},
+    {"call":["get_color_index","red"],"label":"red palette index (expected to equal bg_rgb)"},
+    {"call":["get_color_index","white"],"label":"white palette index (sanity)"}
+  ],
+  "expected": [4, 4, 0],
+  "tol": 0
+}

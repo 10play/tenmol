@@ -1,0 +1,23 @@
+{
+  "id": "command__alter", "feature": "alter", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"alter all, b=55.0"},
+    {"do":"alter all, chain='B'"},
+    {"do":"alter all, resn='XXX'"},
+    {"do":"sort"}
+  ],
+  "checks": [
+    {"call":["count_atoms","b>50"],"label":"atoms with altered b-factor"},
+    {"call":["count_atoms","chain B"],"label":"atoms with altered chain"},
+    {"call":["count_atoms","resn XXX"],"label":"atoms with altered resn"},
+    {"call":["count_atoms","all"],"label":"total atoms unchanged"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    10,
+    10,
+    10
+  ]
+}

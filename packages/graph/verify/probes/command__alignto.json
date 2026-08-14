@@ -1,0 +1,22 @@
+{
+  "id": "command__alignto",
+  "feature": "alignto",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "create mob, ala" },
+    { "do": "rotate x, 30, mob" },
+    { "do": "translate [10,2,-3], mob" },
+    { "do": "alignto ala, method=align" }
+  ],
+  "checks": [
+    { "call": ["rms_cur", "mob", "ala"], "label": "rms between mob and ala after alignto (0 => mob superposed onto target)", "tol": 0.05 },
+    { "call": ["count_atoms", "mob"], "label": "mobile atom count intact" }
+  ],
+  "tol": 0.05,
+  "expected": [
+    0,
+    10
+  ]
+}

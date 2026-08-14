@@ -29,7 +29,7 @@ import {
 import { Executive } from './exec/executive';
 import { repBit } from './model/atom';
 import type { ObjectMolecule } from './model/molecule';
-import { getColorIndex, getColorTuple } from './exec/color';
+import { getColorIndex, getColorTuple, COLOR_SETTINGS, colorSettingText } from './exec/color';
 import { parsePdb } from './model/pdb';
 import { buildLibraryFragment } from './model/fragments';
 import { REP_BUILDERS, RENDERABLE_REPS, isRenderableRep } from './geometry/registry';
@@ -75,6 +75,28 @@ function isPythonImport(line: string): boolean {
   const stripped = line.trim().replace(/^\//, '');
   if (line.trim().startsWith('@')) return true; // `@script` include
   return splitCommands(stripped).some((c) => /^(from|import)\s/.test(c.trim()));
+}
+
+/**
+ * Read a command-script file synchronously, or `null` when no filesystem is
+ * reachable (the browser). The `@file.pml` include (`parser.py:403-441`) reads
+ * the file off disk; under Node — where the differential and app-server run —
+ * we reach the real `fs` through `process.getBuiltinModule` so the include
+ * behaves like PyMOL's, while a browser bundle (no `process`) simply gets
+ * `null` and reports the include as unsupported.
+ */
+function readScriptFile(filename: string): string | null {
+  const proc = (globalThis as { process?: { getBuiltinModule?: (id: string) => unknown } }).process;
+  const getBuiltin = proc?.getBuiltinModule;
+  if (typeof getBuiltin !== 'function') return null;
+  try {
+    const fs = getBuiltin.call(proc, 'node:fs') as {
+      readFileSync(path: string, enc: string): string;
+    };
+    return fs.readFileSync(filename, 'utf8');
+  } catch {
+    return null;
+  }
 }
 
 export class Engine {
@@ -182,11 +204,12 @@ export class Engine {
   }
 
   do(line: string): void {
-    // `@file.pml` runs a script file — there is no filesystem in the browser, so
-    // report it honestly rather than mis-evaluating it as JavaScript.
+    // `@file.pml` inline-includes and executes a command script (`parser.py:403`).
+    // Under Node the file is read and each line replayed through `do`; in the
+    // browser (no filesystem) it is reported honestly rather than mis-run as JS.
     if (line.trim().startsWith('@')) {
       this.appendFeedback(`tenmol>${line}`);
-      this.appendFeedback(' @script files are not supported in the browser console');
+      this.includeScript(line.trim().slice(1).trim());
       return;
     }
 
@@ -198,9 +221,9 @@ export class Engine {
       this.appendFeedback(`tenmol>${line}`);
       for (const { keyword, args, kwargs } of commands) {
         // A `@script` include anywhere in a compound line (`sele x; @a.pml`)
-        // is reported, not silently dropped, and not mis-run as a command.
+        // nests one parser layer instead of being mis-run as a command.
         if (keyword.startsWith('@')) {
-          this.appendFeedback(' @script files are not supported in the browser console');
+          this.includeScript(keyword.slice(1).trim());
           continue;
         }
         if (!this.isCommandWord(keyword)) continue;
@@ -222,6 +245,25 @@ export class Engine {
     // and a bare line works too (PyMOL treats a bare non-command line as code).
     this.appendFeedback(`tenmol>${line}`);
     this.runJs(line.trim().replace(/^\//, ''));
+  }
+
+  /**
+   * Execute a `@`-included command script (`parser.py:403-441`): open the file,
+   * nest one parser layer, and replay each line through `do`. Blank lines and
+   * `#` comments are skipped, matching PyMOL's command-file parser. Without a
+   * filesystem (browser) the include is reported as unsupported.
+   */
+  private includeScript(filename: string): void {
+    const text = readScriptFile(filename);
+    if (text === null) {
+      this.appendFeedback(' @script files are not supported in the browser console');
+      return;
+    }
+    for (const raw of text.split(/\r?\n/)) {
+      const stripped = raw.trim();
+      if (stripped === '' || stripped.startsWith('#')) continue;
+      this.do(raw);
+    }
   }
 
   /* ----------------------------- JS console --------------------------- */
@@ -667,7 +709,11 @@ export class Engine {
     h('get_vis', () => ({}) as unknown as Json);
     h('get_setting_updates', () => []);
     h('get_setting_text', (args) => {
-      const v = ex.getSetting(str(args[0]));
+      const name = str(args[0]);
+      const v = ex.getSetting(name);
+      // Colour-typed settings read back as a colour NAME, not the raw index —
+      // `SettingGetTextPtr`'s `cSetting_color` branch (`Setting.cpp`).
+      if (COLOR_SETTINGS.has(name)) return colorSettingText(v);
       return v === undefined ? '' : String(v);
     });
     h('get_setting_tuple', (args) => [ex.getSetting(str(args[0])) ?? 0]);

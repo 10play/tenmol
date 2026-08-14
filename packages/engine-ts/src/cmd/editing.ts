@@ -258,13 +258,83 @@ export function registerEditing(ctx: RegistrarCtx): void {
   // edit(selection1, selection2=None, ...) — pick atom(s)/a bond for editing by
   // defining the `pk1` (and, with a second selection, `pk2`) named selections
   // that the remove_picked/torsion family consume (editing.py:1080).
+  //
+  // When two bonded atoms in the same object are picked, PyMOL's editor enters
+  // "bond mode" and subdivides the molecule into the drag helper selections
+  // `pkbond`, `_pkbase1`/`_pkfrag1`, `_pkbase2`/`_pkfrag2` and `pkmol`
+  // (Editor.cpp EditorActivate -> Selector.cpp SelectorSubdivide). `unpick`
+  // clears the `pk*` selections but leaves the `_pk*` fragment selections.
+
+  /** Reachable set from `start` over bonds, never crossing into `block`. */
+  const walkFragment = (mol: ObjectMolecule, start: number, block: number): Set<number> => {
+    const adj: number[][] = Array.from({ length: mol.natom }, () => []);
+    for (const [a, b] of mol.bonds) {
+      adj[a]!.push(b);
+      adj[b]!.push(a);
+    }
+    const seen = new Set<number>([start]);
+    const stack = [start];
+    while (stack.length > 0) {
+      const x = stack.pop()!;
+      for (const y of adj[x] ?? []) {
+        if (y === block || seen.has(y)) continue;
+        seen.add(y);
+        stack.push(y);
+      }
+    }
+    return seen;
+  };
+
+  /** Delete the editor's `pk*`-prefixed helper selections (not the `_pk*` ones). */
+  const clearPickSelections = (): void => {
+    for (const n of ex.selectionNames()) if (n.startsWith('pk')) ex.delete(n);
+  };
+  /** Delete every editor selection, `pk*` and `_pk*` alike. */
+  const clearEditorSelections = (): void => {
+    for (const n of ex.selectionNames()) {
+      if (n.startsWith('pk') || n.startsWith('_pk')) ex.delete(n);
+    }
+  };
+
   ctx.command('edit', (args, kwargs): Json => {
+    // Rebuild from scratch so re-editing yields the selections in creation order.
+    clearEditorSelections();
     const s1 = sel(pick(args, kwargs, 0, 'selection1'));
     ex.select('pk1', s1);
     const s2raw = pick(args, kwargs, 1, 'selection2');
     const s2 = s2raw == null ? '' : ctx.str(s2raw, '');
     if (s2 && s2.toLowerCase() !== 'none') ex.select('pk2', s2);
-    else ex.delete('pk2');
+
+    // Bond mode: exactly one atom each, same object, and actually bonded.
+    const p1 = ex.atomsMatching('pk1');
+    const p2 = ex.hasSelection('pk2') ? ex.atomsMatching('pk2') : [];
+    if (p1.length === 1 && p2.length === 1 && p1[0]!.objName === p2[0]!.objName) {
+      const a1 = p1[0]!;
+      const a2 = p2[0]!;
+      const mol = ex.molecule(a1.objName);
+      if (mol && hasBond(mol, a1.index, a2.index)) {
+        const byIndex = new Map<number, (typeof p1)[number]>();
+        for (const ua of ex.atomsMatching(mol.name)) byIndex.set(ua.index, ua);
+        const pick2 = (frag: Set<number>) => [...frag].map((i) => byIndex.get(i)!).filter(Boolean);
+        const frag1 = walkFragment(mol, a1.index, a2.index);
+        const frag2 = walkFragment(mol, a2.index, a1.index);
+        ex.selectAtomList('pkbond', [a1, a2]);
+        ex.selectAtomList('_pkbase1', [a1]);
+        ex.selectAtomList('_pkfrag1', pick2(frag1));
+        ex.selectAtomList('_pkbase2', [a2]);
+        ex.selectAtomList('_pkfrag2', pick2(frag2));
+        ex.selectAtomList('pkmol', pick2(new Set([...frag1, ...frag2])));
+      }
+    }
+    ctx.publish();
+    return null;
+  });
+
+  /* ------------------------------- unpick -------------------------------- */
+  // unpick() — clear the `pk*` picking selections (editing.py:991 -> Editor.cpp
+  // EditorInactivate). The `_pkbase*`/`_pkfrag*` fragment selections persist.
+  ctx.command('unpick', (): Json => {
+    clearPickSelections();
     ctx.publish();
     return null;
   });

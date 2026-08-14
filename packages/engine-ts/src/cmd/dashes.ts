@@ -41,12 +41,22 @@ export function registerDashes(ctx: RegistrarCtx): void {
     return Number.isFinite(n) ? n : d;
   };
 
+  // Default name for an unlabelled measurement: PyMOL bumps the shared
+  // `dist_counter` setting and formats `"%s%02.0f"` (querying.py distance/angle/
+  // dihedral). distance -> dist01, angle -> angle01, dihedral -> dihedral01, all
+  // drawing from the same counter.
+  const nextMeasureName = (prefix: string): string => {
+    const cnt = Math.trunc(ex.getSettingFloat('dist_counter')) + 1;
+    ex.set('dist_counter', cnt);
+    return `${prefix}${String(cnt).padStart(2, '0')}`;
+  };
+
   // distance(name, selection1, selection2, cutoff=-1, mode=0, state=0, ...)
   ctx.command('distance', (args, kwargs) => {
     let name = ctx.str(kwargs.name ?? args[0]);
-    if (name === '' || name === 'None') name = ex.uniqueName('dist');
-    const sel1 = ctx.str(kwargs.selection1 ?? args[1], 'all') || 'all';
-    const sel2raw = ctx.str(kwargs.selection2 ?? args[2], '');
+    if (name === '' || name === 'None') name = nextMeasureName('dist');
+    const sel1 = ctx.str(kwargs.selection1 ?? args[1], 'pk1') || 'pk1';
+    const sel2raw = ctx.str(kwargs.selection2 ?? args[2], 'pk2');
     const cutoff = num(kwargs.cutoff ?? args[3], -1);
     const state = num(kwargs.state ?? args[5], 0);
     const c1 = coordsOf(sel1, state);
@@ -72,11 +82,11 @@ export function registerDashes(ctx: RegistrarCtx): void {
   // angle(name, s1, s2, s3, state=0, ...)
   ctx.command('angle', (args, kwargs) => {
     let name = ctx.str(kwargs.name ?? args[0]);
-    if (name === '' || name === 'None') name = ex.uniqueName('angle');
+    if (name === '' || name === 'None') name = nextMeasureName('angle');
     const state = num(kwargs.state ?? args[4], 0);
-    const a = one(ctx.str(kwargs.selection1 ?? args[1], 'all'), state);
-    const b = one(ctx.str(kwargs.selection2 ?? args[2], 'all'), state);
-    const c = one(ctx.str(kwargs.selection3 ?? args[3], 'all'), state);
+    const a = one(ctx.str(kwargs.selection1 ?? args[1], 'pk1'), state);
+    const b = one(ctx.str(kwargs.selection2 ?? args[2], 'pk2'), state);
+    const c = one(ctx.str(kwargs.selection3 ?? args[3], 'pk3'), state);
     if (!a || !b || !c) return null;
     const m = makeAngle(name, a, b, c, dashColor(kwargs));
     ex.addMeasurement(m);
@@ -87,16 +97,32 @@ export function registerDashes(ctx: RegistrarCtx): void {
   // dihedral(name, s1, s2, s3, s4, state=0, ...)
   ctx.command('dihedral', (args, kwargs) => {
     let name = ctx.str(kwargs.name ?? args[0]);
-    if (name === '' || name === 'None') name = ex.uniqueName('dihedral');
+    if (name === '' || name === 'None') name = nextMeasureName('dihedral');
     const state = num(kwargs.state ?? args[5], 0);
-    const a = one(ctx.str(kwargs.selection1 ?? args[1], 'all'), state);
-    const b = one(ctx.str(kwargs.selection2 ?? args[2], 'all'), state);
-    const c = one(ctx.str(kwargs.selection3 ?? args[3], 'all'), state);
-    const d = one(ctx.str(kwargs.selection4 ?? args[4], 'all'), state);
+    const a = one(ctx.str(kwargs.selection1 ?? args[1], 'pk1'), state);
+    const b = one(ctx.str(kwargs.selection2 ?? args[2], 'pk2'), state);
+    const c = one(ctx.str(kwargs.selection3 ?? args[3], 'pk3'), state);
+    const d = one(ctx.str(kwargs.selection4 ?? args[4], 'pk4'), state);
     if (!a || !b || !c || !d) return null;
     const m = makeDihedral(name, a, b, c, d, dashColor(kwargs));
     ex.addMeasurement(m);
     ctx.publish();
     return m.value;
+  });
+
+  // auto_measure() — inspect the current pk1..pk4 picks and create the matching
+  // distance / angle / dihedral, then clear the picks (querying.py:27).
+  ctx.command('auto_measure', () => {
+    const sels = new Set(ex.selectionNames());
+    if (sels.has('pk1') && sels.has('pk2')) {
+      if (sels.has('pk3')) {
+        if (sels.has('pk4')) ctx.call('dihedral', []);
+        else ctx.call('angle', []);
+      } else {
+        ctx.call('distance', []);
+      }
+    }
+    ctx.call('unpick', []);
+    return null;
   });
 }

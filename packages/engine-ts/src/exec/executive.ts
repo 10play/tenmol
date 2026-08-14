@@ -206,6 +206,19 @@ export class Executive {
     return matched.length;
   }
 
+  /** Store a named selection from an explicit atom list — the editor's
+   *  `SelectorEmbedSelection` path (`Selector.cpp`), used by `edit`'s bond-mode
+   *  subdivide to create the `_pkbase*`/`_pkfrag*`/`pkbond`/`pkmol` selections. */
+  selectAtomList(name: string, atoms: readonly UniverseAtom[]): number {
+    this.selections.set(name, new Set(atoms.map((ua) => atomKey(ua.objName, ua.atom))));
+    return atoms.length;
+  }
+
+  /** Names of the currently defined named selections, in creation order. */
+  selectionNames(): string[] {
+    return [...this.selections.keys()];
+  }
+
   hasSelection(name: string): boolean {
     return this.selections.has(name);
   }

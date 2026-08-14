@@ -1,0 +1,24 @@
+{
+  "id": "color__zirconium", "feature": "zirconium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color zirconium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","zirconium"],"label":"zirconium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","zirconium"],"label":"zirconium palette index"},
+    {"call":["count_atoms","color zirconium"],"label":"atoms colored zirconium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.5803921818733215,
+      0.8784313797950745,
+      0.8784313797950745
+    ],
+    5315,
+    1,
+    1
+  ]
+}

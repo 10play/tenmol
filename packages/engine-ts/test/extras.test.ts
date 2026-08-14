@@ -68,10 +68,10 @@ describe('extras — residual command sweep', () => {
       'transparency', 'stereo', 'edit_mode',
       // no-ops (representative sample across every batch). `load` is no longer
       // here — it is a real handler in cmd/fileio.ts (see load.test.ts); likewise
-      // `edit`/`remove_picked` moved to cmd/editing.ts, `fab` to cmd/editor.ts,
-      // and the superposition family (intra_rms/alignto/extra_fit/cealign/
-      // usalign/pair_fit) to cmd/align.ts (see parity-*.test.ts).
-      'save', 'fetch', 'log', 'unpick', // ray/draw/png are real now (cmd/render.ts)
+      // `edit`/`remove_picked`/`unpick` moved to cmd/editing.ts, `fab` to
+      // cmd/editor.ts, and the superposition family (intra_rms/alignto/extra_fit/
+      // cealign/usalign/pair_fit) to cmd/align.ts (see parity-*.test.ts).
+      'save', 'fetch', 'log', // ray/draw/png are real now (cmd/render.ts)
       'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
       'alias', 'assign_stereo',
       'get_mtl_obj', 'get_povray', 'povray',

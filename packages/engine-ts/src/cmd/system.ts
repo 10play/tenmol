@@ -136,6 +136,12 @@ export function registerSystem(ctx: RegistrarCtx): void {
 
   /* --------------------------- movie / frame --------------------------- */
 
+  // `cmd.get_frame()` — the current display frame (1-based). engine.ts installs
+  // a fixed `() => 1` stub for the idle/empty session; registered here it tracks
+  // the live movie cursor so `frame`/`forward`/`backward`/`rewind` are
+  // observable (this registrar runs after the builtin, so it wins).
+  ctx.command('get_frame', () => movie.current);
+
   // `cmd.frame(frame)` — set the current display frame (1-based, clamped).
   // Returns the resulting frame (see module note on observability).
   ctx.command('frame', (args) => {

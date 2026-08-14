@@ -302,10 +302,14 @@ const PALETTE: ReadonlyArray<readonly [string, RGB]> = buildPalette();
 
 const NAME_TO_INDEX = new Map<string, number>();
 const INDEX_TO_RGB = new Map<number, RGB>();
+const INDEX_TO_NAME = new Map<number, string>();
 for (let i = 0; i < PALETTE.length; i++) {
   const [name, rgb] = PALETTE[i]!;
   NAME_TO_INDEX.set(name, i);
   INDEX_TO_RGB.set(i, rgb);
+  // First name registered for an index wins, so aliases (`grey`/`gray`) resolve
+  // back to their canonical spelling — matching PyMOL's `ColorGetName`.
+  if (!INDEX_TO_NAME.has(i)) INDEX_TO_NAME.set(i, name);
 }
 
 /** Next index for a runtime-defined colour (`cmd.set_color`). */
@@ -321,6 +325,7 @@ export function setColor(name: string, rgb: RGB): number {
   const idx = existing ?? nextColorIndex++;
   NAME_TO_INDEX.set(key, idx);
   INDEX_TO_RGB.set(idx, [rgb[0], rgb[1], rgb[2]]);
+  if (!INDEX_TO_NAME.has(idx)) INDEX_TO_NAME.set(idx, key);
   return idx;
 }
 
@@ -370,6 +375,69 @@ export function getColorTuple(index: number): RGB | null {
 /** RGB for a colour index, defaulting to grey for an out-of-table index. */
 export function rgbForIndex(index: number): RGB {
   return INDEX_TO_RGB.get(index) ?? [0.5, 0.5, 0.5];
+}
+
+/**
+ * `ColorGetName(G, color)` — the canonical name for a colour index, or `null`
+ * for an index with no palette entry. Used to render colour-typed settings
+ * (e.g. `bg_rgb`) as text: `get_setting_text('bg_rgb')` → `"white"`, not `"0"`.
+ */
+export function colorNameForIndex(index: number): string | null {
+  return INDEX_TO_NAME.get(index) ?? null;
+}
+
+/**
+ * Colour-typed settings (`REC_c` in `packages/engine/layer1/SettingInfo.h`).
+ * They store a colour INDEX but read back as a colour NAME through
+ * `get_setting_text` — real PyMOL's `SettingGetTextPtr` runs the `cSetting_color`
+ * branch and returns `ColorGetName`, so `bg_rgb` set to white reads `"white"`.
+ */
+export const COLOR_SETTINGS: ReadonlySet<string> = new Set([
+  'bg_rgb',
+  'label_color',
+  'surface_color',
+  'mesh_color',
+  'sphere_color',
+  'dot_color',
+  'ribbon_color',
+  'cartoon_color',
+  'ray_interior_color',
+  'cartoon_highlight_color',
+  'seq_view_color',
+  'stick_color',
+  'cartoon_ring_color',
+  'cartoon_ladder_color',
+  'cartoon_nucleic_acid_color',
+  'label_outline_color',
+  'seq_view_unaligned_color',
+  'seq_view_fill_color',
+  'seq_view_label_color',
+  'line_color',
+  'surface_negative_color',
+  'mesh_negative_color',
+  'ray_trace_color',
+  'ellipsoid_color',
+  'dash_color',
+  'angle_color',
+  'dihedral_color',
+  'stick_ball_color',
+  'volume_color',
+  'bg_rgb_top',
+  'bg_rgb_bottom',
+  'label_connector_color',
+  'label_bg_color',
+  'cell_color',
+]);
+
+/**
+ * Render a colour-typed setting's stored value as text, mirroring PyMOL's
+ * `SettingGetTextPtr` `cSetting_color` branch: a stored colour index reads back
+ * as its colour NAME. Falls back to the raw string for a non-palette index.
+ */
+export function colorSettingText(value: number | string | undefined): string {
+  const idx = value === undefined ? -1 : Number(value);
+  if (Number.isFinite(idx)) return colorNameForIndex(idx) ?? String(value ?? '');
+  return String(value ?? '');
 }
 
 export function colorNames(): string[] {
