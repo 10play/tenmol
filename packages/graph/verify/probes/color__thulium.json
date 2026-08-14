@@ -1,0 +1,24 @@
+{
+  "id": "color__thulium", "feature": "thulium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color thulium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","thulium"],"label":"thulium palette index"},
+    {"call":["get_color_tuple","thulium"],"label":"thulium rgb tuple","tol":1e-6},
+    {"call":["count_atoms","color thulium"],"label":"atoms colored thulium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    5344,
+    [
+      0,
+      0.8313725590705872,
+      0.32156863808631897
+    ],
+    1,
+    1
+  ]
+}

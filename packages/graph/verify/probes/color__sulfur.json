@@ -1,0 +1,22 @@
+{
+  "id": "color__sulfur", "feature": "sulfur", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color sulfur, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color sulfur"],"label":"atoms colored sulfur"},
+    {"call":["get_color_index","sulfur"],"label":"sulfur palette index"},
+    {"call":["get_color_tuple","sulfur"],"label":"sulfur RGB tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    31,
+    [
+      0.8999999761581421,
+      0.7749999761581421,
+      0.25
+    ]
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__tv_blue", "feature": "tv_blue", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color tv_blue, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color tv_blue"],"label":"atoms colored tv_blue"},
+    {"call":["get_color_index","tv_blue"],"label":"tv_blue palette index"},
+    {"call":["get_color_tuple","tv_blue"],"label":"tv_blue rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    34,
+    [
+      0.30000001192092896,
+      0.30000001192092896,
+      1
+    ]
+  ]
+}
