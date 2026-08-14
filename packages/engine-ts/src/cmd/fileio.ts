@@ -476,7 +476,18 @@ export function registerFileio(ctx: RegistrarCtx): void {
   // a bare path is read off disk and its format taken from the extension, exactly
   // as PyMOL's `load` does; in the browser (no filesystem) the web app passes file
   // contents here, and a bare path that cannot be read is reported plainly.
-  ctx.command('load', (args, kwargs) => {
+  ctx.command('load', (rawArgs, rawKwargs) => {
+    // The `do` parser keeps every comma token positional (see cmd/parser.ts),
+    // so an inline `key=value` (e.g. `load file, d, discrete=1`) arrives as a
+    // positional string. Split those into real kwargs here — load has a fixed
+    // signature, so it is unambiguous (unlike select/alter expressions).
+    const kwargs: Record<string, unknown> = { ...rawKwargs };
+    const args: unknown[] = [];
+    for (const a of rawArgs) {
+      const m = typeof a === 'string' ? /^([A-Za-z_]\w*)=(.*)$/.exec(a) : null;
+      if (m) kwargs[m[1]!] = m[2];
+      else args.push(a);
+    }
     let content = ctx.str(pick(args, kwargs, 0, 'filename'), '');
     const objArg = ctx.str(pick(args, kwargs, 1, 'object'), '');
     const fmtArg = ctx.str(pick(args, kwargs, 3, 'format'), '').toLowerCase();
@@ -503,7 +514,12 @@ export function registerFileio(ctx: RegistrarCtx): void {
       throw new Error('load: could not determine the structure format of the given content');
     }
     const name = ex.uniqueName(objArg || 'obj');
-    ex.addMolecule(parseByFormat(format, content, name));
+    const mol = parseByFormat(format, content, name);
+    // PyMOL's `discrete` flag (positional 5, default -1 = "auto"): when the
+    // caller asks for discrete=1 the object records DiscreteFlag, observable
+    // via count_discrete. Negative/absent leaves it non-discrete.
+    if (Number(ctx.str(pick(args, kwargs, 5, 'discrete'), '-1')) > 0) mol.discrete = true;
+    ex.addMolecule(mol);
     ctx.publish();
     return name;
   });

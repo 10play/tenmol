@@ -46,8 +46,13 @@ export class Executive {
   private readonly objects = new Map<string, ObjectMolecule>();
   /** Measurement objects (distance/angle/dihedral), rendered as dashes. */
   private readonly measures = new Map<string, MeasurementObject>();
-  /** name -> stable atom identities (see selector `atomKey`). */
-  private readonly selections = new Map<string, Set<string>>();
+  /**
+   * name -> stable atom identities (see selector `atomKey`) plus the selection's
+   * enabled/visible flag. PyMOL tracks each named selection's enabled state
+   * (the pink indicator dots); `deselect` disables the visible ones and
+   * `get_names('selections', enabled_only=1)` reports only the enabled set.
+   */
+  private readonly selections = new Map<string, { keys: Set<string>; enabled: boolean }>();
   private readonly settings = new Map<string, number | string>(Object.entries(DEFAULT_SETTINGS));
   /**
    * Bumped on every `set()`. The engine's geometry memoization (F1) folds this
@@ -62,7 +67,7 @@ export class Executive {
 
   readonly selectorContext: SelectorContext = {
     objects: () => this.order.map((n) => this.objects.get(n)!).filter(Boolean),
-    namedSelection: (name) => this.selections.get(name),
+    namedSelection: (name) => this.selections.get(name)?.keys,
   };
 
   /* ------------------------------ objects ----------------------------- */
@@ -112,7 +117,10 @@ export class Executive {
       if (enabledOnly && !(this.objects.get(n)?.enabled ?? this.measures.get(n)?.enabled ?? this.gadgets.get(n)?.enabled)) return false;
       return true;
     });
-    const sels = [...this.selections.keys()].filter((n) => !(n.startsWith('_') && type.startsWith('public')));
+    const sels = [...this.selections.entries()]
+      .filter(([n]) => !(n.startsWith('_') && type.startsWith('public')))
+      .filter(([, s]) => !enabledOnly || s.enabled)
+      .map(([n]) => n);
     switch (type) {
       case 'objects':
         return objs;
@@ -202,15 +210,33 @@ export class Executive {
   select(name: string, sel: string): number {
     const matched = selectAtoms(sel, this.selectorContext);
     const keys = new Set(matched.map((ua) => atomKey(ua.objName, ua.atom)));
-    this.selections.set(name, keys);
+    // `select` enables the selection by default (enable=-1), showing its dots.
+    this.selections.set(name, { keys, enabled: true });
     return matched.length;
+  }
+
+  /** `deselect` — disable every currently enabled named selection, clearing the
+   *  selection indicator dots without deleting the selections themselves
+   *  (`selecting.py` `def deselect`). Returns the number disabled. */
+  deselect(): number {
+    let n = 0;
+    for (const s of this.selections.values()) {
+      if (s.enabled) {
+        s.enabled = false;
+        n++;
+      }
+    }
+    return n;
   }
 
   /** Store a named selection from an explicit atom list — the editor's
    *  `SelectorEmbedSelection` path (`Selector.cpp`), used by `edit`'s bond-mode
    *  subdivide to create the `_pkbase*`/`_pkfrag*`/`pkbond`/`pkmol` selections. */
   selectAtomList(name: string, atoms: readonly UniverseAtom[]): number {
-    this.selections.set(name, new Set(atoms.map((ua) => atomKey(ua.objName, ua.atom))));
+    this.selections.set(name, {
+      keys: new Set(atoms.map((ua) => atomKey(ua.objName, ua.atom))),
+      enabled: true,
+    });
     return atoms.length;
   }
 

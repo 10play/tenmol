@@ -1,0 +1,23 @@
+{
+  "id": "command__create",
+  "feature": "create",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"call": ["create", "sub", "ala and name CA+CB"]}
+  ],
+  "checks": [
+    {"call": ["get_names"], "label": "object list now has source + created object"},
+    {"call": ["count_atoms", "sub"], "label": "created object has only selected atoms"},
+    {"call": ["count_atoms", "ala"], "label": "source object untouched (create does not extract)"},
+    {"call": ["get_distance", "sub and name CA", "ala and name CA"], "label": "created CA superimposes on source CA", "tol": 0.001}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["ala", "sub"],
+    2,
+    10,
+    0
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "command__deprotect",
+  "feature": "deprotect",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, pos=[5, 6, 7]" },
+    { "do": "protect (all)" },
+    { "do": "deprotect (all)" },
+    { "do": "translate [10, 0, 0], (all), -1, 0" }
+  ],
+  "checks": [
+    { "call": ["get_atom_coords", "all"], "label": "deprotected atom moved by translate (protect would have pinned it)" },
+    { "call": ["count_atoms", "all"], "label": "atom present" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [15, 6, 7],
+    1
+  ]
+}

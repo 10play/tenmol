@@ -12,7 +12,6 @@
  * `ctx.executive`; `ctx.publish()` after coordinate/state mutations.
  */
 import type { Json } from '@tenmol/protocol';
-import type { ObjectMolecule } from '../model/molecule';
 import type { RegistrarCtx } from './registrar';
 
 function toNum(v: unknown, dflt: number): number {
@@ -72,13 +71,6 @@ function mat4mul(a: number[], b: number[]): number[] {
   }
   return out;
 }
-
-/**
- * Per-object "discrete" flag maintained outside {@link ObjectMolecule} (which
- * has no such field). Keyed by object identity so it survives without touching
- * the shared model; observable through the `count_discrete` getter below.
- */
-const DISCRETE = new WeakSet<ObjectMolecule>();
 
 export function registerXform(ctx: RegistrarCtx): void {
   const ex = ctx.executive;
@@ -218,8 +210,7 @@ export function registerXform(ctx: RegistrarCtx): void {
     const flag = toBool(args[1] ?? kwargs['discrete'], true);
     const mol = ex.molecule(name);
     if (!mol) return 0;
-    if (flag) DISCRETE.add(mol);
-    else DISCRETE.delete(mol);
+    mol.discrete = flag;
     return 1;
   });
 
@@ -232,7 +223,7 @@ export function registerXform(ctx: RegistrarCtx): void {
     let n = 0;
     for (const nm of names) {
       const m = ex.molecule(nm);
-      if (m && DISCRETE.has(m)) n++;
+      if (m && m.discrete) n++;
     }
     return n;
   });

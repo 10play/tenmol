@@ -1,0 +1,15 @@
+{
+  "id": "command__curve_new", "feature": "curve_new", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"curve_new mycurve"}
+  ],
+  "checks": [
+    {"call":["get_names"],"label":"object names after curve_new"},
+    {"call":["get_names","objects"],"label":"objects list after curve_new"}
+  ],
+  "tol": 0,
+  "expected": [
+    ["mycurve"],
+    ["mycurve"]
+  ]
+}

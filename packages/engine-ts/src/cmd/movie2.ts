@@ -339,11 +339,16 @@ export function registerMovie2(ctx: RegistrarCtx): void {
     return [view.get()];
   };
 
-  // curve_new(name, coords=None) — define a camera curve from control views.
-  // With no coords, seed it with the current view as a single control point.
+  // curve_new(name, curve_type='bezier'/coords=None) — create a curve object.
+  // Real PyMOL (creating.py) auto-names an empty name via get_unused_name("Curve")
+  // and registers a first-class ObjectCurve so it shows up in get_names. We also
+  // seed the camera-curve control views (from the current view) for move_on_curve.
   ctx.command('curve_new', (args, kwargs): Json => {
-    const name = ctx.str(pick(args, kwargs, 0, 'name'), 'curve');
+    const raw = ctx.str(pick(args, kwargs, 0, 'name'), '');
+    const name = raw !== '' ? raw : ctx.executive.uniqueName('Curve');
+    ctx.executive.registerGadget(name, 'object:curve');
     curves.set(name, parseControls(pick(args, kwargs, 1, 'coords')));
+    ctx.publish();
     return name;
   });
 

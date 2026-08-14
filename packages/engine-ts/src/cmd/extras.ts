@@ -275,6 +275,9 @@ export function registerExtras(ctx: RegistrarCtx): void {
     const spec = str(args[1] ?? kwargs['states'], '');
     const mol = ex.molecule(name);
     if (!mol || spec === '') return 0;
+    // PyMOL's ExecutiveDeleteStates refuses discrete objects (each state may
+    // carry a distinct atom set), leaving their states untouched.
+    if (mol.discrete) return 0;
     const drop = parseStateSpec(spec, mol.nstate);
     if (drop.size === 0) return 0;
     const kept = mol.states.filter((_s, i) => !drop.has(i + 1));
@@ -321,6 +324,8 @@ export function registerExtras(ctx: RegistrarCtx): void {
   ctx.command('join_states', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
     const selection = str(args[1] ?? kwargs['selection'], 'all') || 'all';
+    // mode 0 builds a discrete object (states may differ); modes 1-3 don't.
+    const mode = toNum(args[2] ?? kwargs['mode'], 2);
     if (name === '') return 0;
     // Distinct source objects, in executive order.
     const wanted = new Set(ex.atomsMatching(selection).map((ua) => ua.objName));
@@ -328,6 +333,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
     if (sources.length === 0) return 0;
     const template = sources[0]!;
     const nm = new ObjectMolecule(ex.uniqueName(name));
+    if (mode === 0) nm.discrete = true;
     template.atoms.forEach((a, k) => nm.atoms.push({ ...a, id: k + 1 }));
     for (const [i, j] of template.bonds) nm.bonds.push([i, j]);
     for (const src of sources) {

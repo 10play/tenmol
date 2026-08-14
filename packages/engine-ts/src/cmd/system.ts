@@ -6,14 +6,14 @@
  * `mtoggle`). Registers its `cmd.*` handlers via the {@link RegistrarCtx}.
  *
  * PORTING NOTES / LIMITS
- * - `get_frame`, `count_frames`, `get_movie_playing` are FIXED stubs defined in
- *   engine.ts (`() => 1 / 0 / 0`) and are intentionally NOT redefined here. The
- *   real movie state lives in this module's single global {@link movie}
- *   (PyMOL keeps one movie per session). So the mutating commands below return
- *   their result (e.g. the resulting frame, the frame count, the play flag) to
- *   make the state observable — in real PyMOL `frame()`/`mplay()` return None
- *   and you would read `get_frame()`/`get_movie_playing()`; here those getters
- *   are stubs, so returning the value is how a caller (and the tests) observe it.
+ * - `get_frame`/`count_frames` are FIXED stubs defined in engine.ts
+ *   (`() => 1 / 0`) but are REDEFINED here (this registrar runs after the
+ *   builtin, so it wins) to track the live movie. `get_movie_playing` is left as
+ *   its engine.ts stub. The real movie state lives in this module's single
+ *   global {@link movie} (PyMOL keeps one movie per session). The mutating
+ *   commands below also return their result (e.g. the resulting frame, the play
+ *   flag) to make the state observable — in real PyMOL `frame()`/`mplay()`
+ *   return None and you would read `get_frame()`/`get_movie_playing()`.
  * - `reinitialize` resets the objects, selections, camera view and the movie.
  *   PyMOL also resets the settings table and colour table on a full
  *   reinitialize; the Executive keeps those in a PRIVATE map / colour table with
@@ -84,11 +84,22 @@ function parseMovieSpec(spec: string): number[] {
   return out;
 }
 
-/** Highest addressable frame: the movie length, else the first object's states. */
+/** Highest addressable frame: the movie length, else the first object's states.
+ * Never below 1 — there is always a frame 1 to display, even in an empty scene. */
 function frameCeiling(ctx: RegistrarCtx): number {
   if (movie.frames.length > 0) return movie.frames.length;
   const nstate = ctx.executive.moleculesInOrder()[0]?.nstate ?? 1;
   return Math.max(1, nstate);
+}
+
+/** `count_frames`/`MovieGetLength`: the defined movie length, else the object
+ * state count — and 0 for an empty session (no movie, no objects), matching
+ * real PyMOL. Distinct from {@link frameCeiling}, which never drops below 1. */
+function movieLength(ctx: RegistrarCtx): number {
+  if (movie.frames.length > 0) return movie.frames.length;
+  const mols = ctx.executive.moleculesInOrder();
+  if (mols.length === 0) return 0;
+  return Math.max(...mols.map((m) => m.nstate ?? 1));
 }
 
 function clampFrame(ctx: RegistrarCtx, n: number): number {
@@ -144,6 +155,12 @@ export function registerSystem(ctx: RegistrarCtx): void {
   // the live movie cursor so `frame`/`forward`/`backward`/`rewind` are
   // observable (this registrar runs after the builtin, so it wins).
   ctx.command('get_frame', () => movie.current);
+
+  // `cmd.count_frames()` — the number of frames in the movie. engine.ts installs
+  // a fixed `() => 0` builtin; registered here (after the builtin, so it wins) it
+  // reports the live movie length. Mirrors PyMOL's `MovieGetLength`: the defined
+  // frame count when an `mset` mapping exists, otherwise the object state count.
+  ctx.command('count_frames', () => movieLength(ctx));
 
   // `cmd.frame(frame)` — set the current display frame (1-based, clamped).
   // Returns the resulting frame (see module note on observability).

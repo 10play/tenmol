@@ -1,0 +1,19 @@
+{
+  "id": "command__delete_states",
+  "feature": "delete_states",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala, m1"},
+    {"do": "fragment ala, m2"},
+    {"do": "fragment ala, m3"},
+    {"do": "join_states multi, (m1 or m2 or m3), 0"},
+    {"do": "delete_states multi, 2-3"}
+  ],
+  "checks": [
+    {"call": ["count_states", "multi"], "label": "multi retains only state 1 after deleting states 2-3"},
+    {"call": ["count_states", "m1"], "label": "unrelated object m1 is untouched"}
+  ],
+  "tol": 1e-3,
+  "expected": [3, 1]
+}

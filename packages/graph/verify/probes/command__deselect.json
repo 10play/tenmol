@@ -1,0 +1,19 @@
+{
+  "id": "command__deselect", "feature": "deselect", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"select mysel, elem C"},
+    {"do":"deselect"}
+  ],
+  "checks": [
+    {"call":["get_names","selections",0],"label":"named selections still exist after deselect"},
+    {"call":["get_names","selections",1],"label":"enabled selections after deselect (should be empty)"},
+    {"call":["count_atoms","mysel"],"label":"atoms still addressable via selection name"}
+  ],
+  "tol": 0,
+  "expected": [
+    ["mysel"],
+    [],
+    3
+  ]
+}

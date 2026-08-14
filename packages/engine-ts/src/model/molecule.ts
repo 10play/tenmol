@@ -53,6 +53,10 @@ export class ObjectMolecule {
   cell?: CrystalCell;
   /** Space-group symbol from `CRYST1` (e.g. `'P 21 21 21'`), or `undefined`. */
   spacegroup?: string;
+  /** PyMOL's `DiscreteFlag`: set when the object was loaded/created with
+   *  `discrete=1` (each state may carry a distinct atom set). Observable via
+   *  `count_discrete`; toggled by `set_discrete`. */
+  discrete = false;
 
   constructor(readonly name: string) {}
 

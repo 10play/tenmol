@@ -1,0 +1,25 @@
+{
+  "id": "command__delete", "feature": "delete", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"pseudoatom p2"},
+    {"do":"select mysel, all"},
+    {"do":"delete p1"},
+    {"do":"delete mysel"}
+  ],
+  "checks": [
+    {"call":["count_atoms","p2"],"label":"surviving object p2 retains its atom"},
+    {"call":["count_atoms","all"],"label":"only p2 remains overall after deleting p1"},
+    {"call":["get_names","objects"],"label":"object list has only p2 (p1 deleted)"},
+    {"call":["get_names","selections"],"label":"no named selections remain (mysel deleted)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    1,
+    [
+      "p2"
+    ],
+    []
+  ]
+}
