@@ -77,6 +77,16 @@
     position: relative;
     flex: 1 1 auto;
     overflow: auto;
+    /*
+     * Reserve the scrollbar gutter so the bar appearing or disappearing never
+     * reflows the body. A dense panel whose content hovers around the body
+     * height (the builder does) would otherwise toggle its scrollbar as rows
+     * come and go, and each toggle narrows the content and re-wraps every button
+     * row — which reads to a headless click as a target that never holds still,
+     * hanging Playwright's actionability wait. Reserving the gutter keeps the
+     * content width constant whether or not the bar is shown.
+     */
+    scrollbar-gutter: stable;
     padding: 6px;
     min-height: 0;
   }

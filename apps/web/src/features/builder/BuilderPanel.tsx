@@ -294,7 +294,17 @@ export function BuilderPanel() {
       onClose={() => setOpen(false)}
       persistKey="builder"
       defaultWidth={560}
-      defaultHeight={440}
+      // The builder is a DENSE panel: three tab pages over three always-visible
+      // action rows, and an armed wizard strip appends more. Its natural content
+      // is ~430–520px depending on mouse mode and whether a wizard is showing.
+      // A default height near that number leaves the `overflow:auto` body
+      // hovering at its scrollbar threshold, where one extra row toggles the
+      // scrollbar on and off every render — which reads to a headless click as a
+      // perpetually-moving target and hangs actionability. Open tall enough that
+      // the whole panel fits without a scrollbar, the way the Qt dock and the
+      // old `max-height: calc(100% - 60px)` popup did; the user can still shrink
+      // it, and small viewports maximise.
+      defaultHeight={620}
       minWidth={360}
       minHeight={260}
       data-testid="builder-window"
