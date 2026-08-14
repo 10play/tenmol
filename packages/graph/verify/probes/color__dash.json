@@ -1,0 +1,25 @@
+{
+  "id": "color__dash", "feature": "dash", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"pseudoatom p2"},
+    {"do":"color dash, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","dash"],"label":"dash palette index"},
+    {"call":["get_color_tuple","dash"],"label":"dash RGB tuple","tol":1e-3},
+    {"call":["count_atoms","color dash"],"label":"atoms colored dash"},
+    {"call":["count_atoms","p1 or p2"],"label":"total atoms"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    7,
+    [
+      1,
+      1,
+      0
+    ],
+    1,
+    2
+  ]
+}

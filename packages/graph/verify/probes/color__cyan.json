@@ -1,0 +1,22 @@
+{
+  "id": "color__cyan", "feature": "cyan", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color cyan, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color cyan"],"label":"atoms colored cyan"},
+    {"call":["get_color_index","cyan"],"label":"cyan palette index"},
+    {"call":["get_color_tuple","cyan"],"label":"cyan rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5,
+    [
+      0,
+      1,
+      1
+    ]
+  ]
+}
