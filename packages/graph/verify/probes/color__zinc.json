@@ -1,0 +1,24 @@
+{
+  "id": "color__zinc", "feature": "zinc", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color zinc, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","zinc"],"label":"zinc RGB tuple","tol":1e-6},
+    {"call":["get_color_index","zinc"],"label":"zinc palette index"},
+    {"call":["count_atoms","color zinc"],"label":"atoms colored zinc"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.4901960790157318,
+      0.5019607543945312,
+      0.6901960968971252
+    ],
+    5305,
+    1,
+    1
+  ]
+}

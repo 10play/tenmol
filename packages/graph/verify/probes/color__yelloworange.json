@@ -1,0 +1,22 @@
+{
+  "id": "color__yelloworange", "feature": "yelloworange", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color yelloworange, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","yelloworange"],"label":"yelloworange RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color yelloworange"],"label":"atoms colored yelloworange"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      1,
+      0.8700000047683716,
+      0.3700000047683716
+    ],
+    1,
+    1
+  ]
+}

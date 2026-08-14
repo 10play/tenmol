@@ -1,0 +1,17 @@
+{
+  "id": "color__violet",
+  "feature": "violet",
+  "kind": "color",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "color violet, ala" }
+  ],
+  "checks": [
+    { "call": ["get_color_index", "violet"], "label": "violet color index" },
+    { "call": ["get_color_tuple", "violet"], "label": "violet RGB tuple" },
+    { "call": ["count_atoms", "ala"], "label": "atom count colored" }
+  ],
+  "tol": 1e-3,
+  "expected": [53, [1, 0.5, 1], 10]
+}

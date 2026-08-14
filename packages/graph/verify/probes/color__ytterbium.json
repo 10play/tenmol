@@ -1,0 +1,24 @@
+{
+  "id": "color__ytterbium", "feature": "ytterbium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color ytterbium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","ytterbium"],"label":"ytterbium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","ytterbium"],"label":"ytterbium palette index"},
+    {"call":["count_atoms","color ytterbium"],"label":"atoms colored ytterbium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0,
+      0.7490196228027344,
+      0.21960784494876862
+    ],
+    5345,
+    1,
+    1
+  ]
+}

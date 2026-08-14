@@ -1,0 +1,22 @@
+{
+  "id": "color__wheat", "feature": "wheat", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color wheat, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color wheat"],"label":"atoms colored wheat"},
+    {"call":["get_color_index","wheat"],"label":"wheat palette index"},
+    {"call":["get_color_tuple","wheat"],"label":"wheat rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    52,
+    [
+      0.9900000095367432,
+      0.8199999928474426,
+      0.6499999761581421
+    ]
+  ]
+}
