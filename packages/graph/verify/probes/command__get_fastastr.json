@@ -1,0 +1,17 @@
+{
+  "id": "command__get_fastastr", "feature": "get_fastastr", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call":["get_fastastr","m and chain A"],"label":"FASTA of chain A"},
+    {"call":["get_fastastr","m and chain A and resi 1-5"],"label":"FASTA of first residues"},
+    {"call":["count_atoms","m and chain A and name CA"],"label":"CA atoms in chain A"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ">m_A\nNDYFRADSRTPDEVRRSGGLIPRGQDEAYERGTPININLYDHARGTTGNTRYNDGYVSTTTTLRQAHLLG\nQNMLGGYNEYYIYVVAAAPNLFDVNGVLGRYSPYPSENEYAALGGIPLSQIIGWYRVSFGAIEGGMHRNR\nDYRRDLFRGLSAAPNEDGYRIAGFPDGFPAWEEVPWREFAPNSCLP\n",
+    ">m_A\nNDYFR\n",
+    186
+  ]
+}

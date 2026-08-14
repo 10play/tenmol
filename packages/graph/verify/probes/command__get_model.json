@@ -1,0 +1,62 @@
+{
+  "id": "command__get_model",
+  "feature": "get_model",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "pseudoatom m, pos=[1.5, -2.25, 3.75], name=PS1, resn=PSD, resi=7, chain=Z, elem=C, b=4.5, q=0.25, vdw=1.7"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_model",
+        "m"
+      ],
+      "label": "full chempy Indexed model for one pseudoatom"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    {
+      "__model__": "Indexed",
+      "atom": [
+        {
+          "index": 1,
+          "id": 0,
+          "name": "PS1",
+          "symbol": "C",
+          "resn": "PSD",
+          "resi": "7",
+          "resi_number": 7,
+          "chain": "Z",
+          "segi": "PSDO",
+          "alt": "",
+          "ss": "",
+          "b": 4.5,
+          "q": 0.25,
+          "vdw": 1.7000000476837158,
+          "elec_radius": 0,
+          "partial_charge": 0,
+          "formal_charge": 0,
+          "numeric_type": 0,
+          "text_type": "??",
+          "coord": [
+            1.5,
+            -2.25,
+            3.75
+          ],
+          "hetatm": 1,
+          "flags": 536870912,
+          "stereo": 0
+        }
+      ],
+      "bond": [],
+      "molecule": {
+        "title": "untitled",
+        "comments": ""
+      }
+    }
+  ]
+}

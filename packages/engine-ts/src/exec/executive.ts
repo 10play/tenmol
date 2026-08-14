@@ -135,6 +135,18 @@ export class Executive {
     }
   }
 
+  /**
+   * `get_object_list(sel)` — the molecule-object names covered by a selection,
+   * i.e. the objects that contain at least one matched atom, in object order.
+   * Mirrors `ExecutiveGetObjectMoleculeVLA` (only ObjectMolecules qualify, not
+   * measurements/gadgets), unlike `get_names` which is scoped by type.
+   */
+  getObjectList(sel: string): string[] {
+    if (!sel) return [];
+    const covered = new Set(selectAtoms(sel, this.selectorContext).map((ua) => ua.objName));
+    return this.order.filter((n) => this.objects.has(n) && covered.has(n));
+  }
+
   /* ------------------------------- delete ----------------------------- */
 
   delete(pattern: string): void {

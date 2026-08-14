@@ -1,0 +1,19 @@
+{
+  "id": "command__get_object_matrix",
+  "feature": "get_object_matrix",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "call": ["transform_object", "ala", [2, 0, 0, 5, 0, 3, 0, 6, 0, 0, 4, 7, 0, 0, 0, 1], 1, 0, "", 1] }
+  ],
+  "checks": [
+    { "call": ["get_object_matrix", "ala", 1], "label": "object matrix (incl_ttt default) after transform_object" },
+    { "call": ["get_object_matrix", "ala", 1, 0], "label": "object matrix with incl_ttt=0" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [2, 0, 0, 5, 0, 3, 0, 6, 0, 0, 4, 7, 0, 0, 0, 1],
+    [2, 0, 0, 5, 0, 3, 0, 6, 0, 0, 4, 7, 0, 0, 0, 1]
+  ]
+}

@@ -29,6 +29,7 @@ import {
 import { Executive } from './exec/executive';
 import { repBit } from './model/atom';
 import type { ObjectMolecule } from './model/molecule';
+import { classifyMolecule, cAtomFlag_class_mask } from './model/classify';
 import { getColorIndex, getColorTuple, COLOR_SETTINGS, colorSettingText } from './exec/color';
 import { parsePdb } from './model/pdb';
 import { buildLibraryFragment } from './model/fragments';
@@ -696,16 +697,23 @@ export class Engine {
       sceneCurrent: null,
       settings: {},
     }));
-    h('get_object_list', () => ex.getNames('objects'));
-    h('get_names_of_type', () => []);
-    h('get_type', (args) => {
-      const name = str(args[0], '');
+    h('get_object_list', (args) => ex.getObjectList(str(args[0], '(all)')));
+    const getType = (name: string): string => {
       if (ex.measurement(name)) return 'object:measurement';
       const g = ex.gadget(name);
       if (g) return g.kind;
       const mol = ex.molecule(name);
       return (mol?.kind as string | undefined) ?? 'object:molecule';
+    };
+    // `get_names_of_type(type, public=1)` — the pure-Python wrapper (querying.py):
+    // enumerate `public_objects` (or `objects` when public=0) and keep the names
+    // whose `get_type` equals the requested type string.
+    h('get_names_of_type', (args) => {
+      const type = str(args[0], '');
+      const publicOnly = args[1] === undefined ? true : Boolean(Number(args[1]));
+      return ex.getNames(publicOnly ? 'public_objects' : 'objects').filter((n) => getType(n) === type);
     });
+    h('get_type', (args) => getType(str(args[0], '')));
     h('get_vis', () => ({}) as unknown as Json);
     h('get_setting_updates', () => []);
     h('get_setting_text', (args) => {
@@ -727,7 +735,18 @@ export class Engine {
     // observable state here.
     h('get_drag_object_name', () => '');
     h('matrix_reset', () => null);
-    h('get_object_color_index', () => 0);
+    // `cmd.get_object_color_index(name)` — `ExecutiveGetObjectColorIndex`
+    // (layer3/Executive.cpp): return the object's `Color` index, or -1 when no
+    // object of that name exists. A fresh object's `Color` defaults to 0
+    // (PyMOLObject.h:79 `int Color = 0;`); `set_object_color` stores the real
+    // index (tracked by the display registrar's `get_object_color`, which uses
+    // -1 as its "unset" sentinel — mapped back to the 0 default here).
+    h('get_object_color_index', (args) => {
+      const name = str(args[0], '');
+      if (!ex.molecule(name)) return -1;
+      const stored = Number(this.call('get_object_color', [name]));
+      return stored < 0 ? 0 : stored;
+    });
     h('get_object_matrix', (args) => {
       const mol = ex.molecule(str(args[0], ''));
       return (mol?.objectMatrix ?? [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]) as Json;
@@ -884,22 +903,62 @@ export class Engine {
 
   private getModel(sel: string): Json {
     const matched = this.executive.atomsMatching(sel);
-    const atoms = matched.map((ua) => {
+    // Class flags (organic/polymer/solvent/…) are assigned per residue over the
+    // FULL object, exactly like PyMOL classifies during a selector-table update
+    // (`SelectorClassifyAtoms`); cache one pass per object we touch.
+    const classCache = new Map<string, number[]>();
+    const classOf = (objName: string): number[] => {
+      let m = classCache.get(objName);
+      if (!m) {
+        const mol = this.executive.molecule(objName);
+        m = mol ? classifyMolecule(mol) : [];
+        classCache.set(objName, m);
+      }
+      return m;
+    };
+    const atoms = matched.map((ua, i) => {
       const mol = this.executive.molecule(ua.objName)!;
       const [x, y, z] = mol.coord(ua.index, 1);
-      return {
-        name: ua.atom.name,
-        resn: ua.atom.resn,
-        resi: ua.atom.resi,
-        chain: ua.atom.chain,
-        elem: ua.atom.elem,
+      const a = ua.atom;
+      // Coordinates are already float32 (stored in a Float32Array); round the
+      // remaining floats the same way, since PyMOL stores them as C `float` and
+      // `cmd.get_model` hands back float32-rounded values.
+      const classMask = classOf(ua.objName)[ua.index] ?? 0;
+      const flags = ((a.flags ?? 0) & cAtomFlag_class_mask) | classMask;
+      const atom: Record<string, Json> = {
+        // chempy Atom, in the field set `CoordSetAtomToChemPyAtom` populates
+        // (`packages/engine/layer2/CoordSet.cpp:1057`) as serialised by the
+        // bridge codec (`packages/bridge/tenmol_bridge/codec.py`).
+        index: i + 1,
+        id: a.id,
+        name: a.name,
+        symbol: a.elem,
+        resn: a.resn,
+        resi: a.resi,
+        resi_number: a.resv,
+        chain: a.chain,
+        segi: a.segi,
+        alt: a.alt,
+        ss: a.ss,
+        b: Math.fround(a.b),
+        q: Math.fround(a.q),
+        vdw: Math.fround(mol.vdw(ua.index)),
+        elec_radius: 0,
+        partial_charge: Math.fround(a.partialCharge ?? 0),
+        formal_charge: a.formalCharge ?? 0,
+        numeric_type: a.customType ?? 0,
+        text_type: '??',
         coord: [x, y, z],
-        // PyMOL's chempy Atom exposes these; default to neutral when unassigned.
-        formal_charge: ua.atom.formalCharge ?? 0,
-        partial_charge: ua.atom.partialCharge ?? 0,
-        label: ua.atom.label ?? '',
-        u_aniso: ua.atom.u ? Array.from(ua.atom.u) : undefined,
+        hetatm: a.hetatm ? 1 : 0,
+        flags,
+        stereo: 0,
       };
+      // `u_aniso`/`label` are only present when the atom carries them — chempy's
+      // codec whitelist has no `label`, but the port surfaces a set one for the
+      // Properties panel and the label parity test.
+      if (a.u) atom.u_aniso = Array.from(a.u);
+      if (a.label) atom.label = a.label;
+      return atom;
     });
     // Bonds among the matched atoms, reindexed to the model's atom order
     // (chempy `get_bonds`: (atm1, atm2, order)).
@@ -919,7 +978,16 @@ export class Engine {
         bonds.push({ index: [ia, ib], order: order ?? 1 });
       }
     }
-    return { atom: atoms, bond: bonds } as unknown as Json;
+    // The full chempy `Indexed` shape the bridge codec emits: a `__model__`
+    // tag, the atom/bond lists, and the `Molecule` header (title/comments). An
+    // untitled object reports the chempy Molecule default title.
+    const title = this.call('get_title', [this.executive.moleculesInOrder()[0]?.name ?? '']);
+    return {
+      __model__: 'Indexed',
+      atom: atoms,
+      bond: bonds,
+      molecule: { title: (typeof title === 'string' && title) || 'untitled', comments: '' },
+    } as unknown as Json;
   }
 
   /* --------------------------- publishing ----------------------------- */

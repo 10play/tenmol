@@ -1,0 +1,14 @@
+{
+  "id": "command__get_movie_locked", "feature": "get_movie_locked", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "m"], "kwargs": {"pos": [0, 0, 0]}},
+    {"do": "mset 1 x10"}
+  ],
+  "checks": [
+    {"call": ["get_movie_locked"], "label": "movie lock flag in steady state (expect 0/not locked)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    0
+  ]
+}

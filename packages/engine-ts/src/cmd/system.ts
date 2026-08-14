@@ -8,8 +8,9 @@
  * PORTING NOTES / LIMITS
  * - `get_frame`/`count_frames` are FIXED stubs defined in engine.ts
  *   (`() => 1 / 0`) but are REDEFINED here (this registrar runs after the
- *   builtin, so it wins) to track the live movie. `get_movie_playing` is left as
- *   its engine.ts stub. The real movie state lives in this module's single
+ *   builtin, so it wins) to track the live movie. `get_movie_playing` is
+ *   likewise REDEFINED here to report the live play flag. The real movie state
+ *   lives in this module's single
  *   global {@link movie} (PyMOL keeps one movie per session). The mutating
  *   commands below also return their result (e.g. the resulting frame, the play
  *   flag) to make the state observable — in real PyMOL `frame()`/`mplay()`
@@ -162,6 +163,24 @@ export function registerSystem(ctx: RegistrarCtx): void {
   // frame count when an `mset` mapping exists, otherwise the object state count.
   ctx.command('count_frames', () => movieLength(ctx));
 
+  // `cmd.get_movie_length(quiet=1, images=-1)` — the number of frames EXPLICITLY
+  // defined by `mset`, NOT including implicit molecular states (that is what
+  // distinguishes it from `count_frames`). Mirrors C `MovieGetLength`: the raw
+  // value is `NFrame` when a movie is defined, else `-NImage` (the cached
+  // rendered-image count, always 0 here — no GL/frame cache). The Python wrapper
+  // folds that sign into the reported count via `images`: -1 (default) reports
+  // `-r` when negative, 0 reports 0 when negative, 1 reports 0 when positive.
+  ctx.command('get_movie_length', (_args, kwargs) => {
+    let r = movie.frames.length; // NFrame>0 -> NFrame; else -NImage == 0
+    const images = Number(kwargs?.images ?? -1);
+    if (r < 0) {
+      if (images === 0) r = 0;
+      else if (images < 0) r = -r;
+    }
+    if (images === 1 && r > 0) r = 0;
+    return r;
+  });
+
   // `cmd.frame(frame)` — set the current display frame (1-based, clamped).
   // Returns the resulting frame (see module note on observability).
   ctx.command('frame', (args) => {
@@ -224,8 +243,14 @@ export function registerSystem(ctx: RegistrarCtx): void {
     return null;
   });
 
-  // Play flag. Getter (`get_movie_playing`) is a stub in engine.ts; these return
-  // the resulting flag so it is observable.
+  // `cmd.get_movie_playing()` — whether the movie is currently playing back.
+  // engine.ts installs a fixed `() => 0` builtin; registered here (after the
+  // builtin, so it wins) it reports the live play flag toggled by
+  // `mplay`/`mstop`/`mtoggle`. Mirrors PyMOL's `MoviePlaying`.
+  ctx.command('get_movie_playing', () => (movie.playing ? 1 : 0));
+
+  // Play flag. `mplay`/`mstop`/`mtoggle` toggle it and also return the resulting
+  // flag so the state is observable alongside `get_movie_playing`.
   ctx.command('mplay', () => {
     movie.playing = true;
     return 1;

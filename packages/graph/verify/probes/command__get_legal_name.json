@@ -1,0 +1,21 @@
+{
+  "id": "command__get_legal_name", "feature": "get_legal_name", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"}
+  ],
+  "checks": [
+    {"call":["get_legal_name","foo bar baz"],"label":"spaces -> underscores"},
+    {"call":["get_legal_name","ok_name"],"label":"legal name unchanged"},
+    {"call":["get_legal_name","a b*c"],"label":"space and star -> underscores"},
+    {"call":["get_legal_name","my file (1).pdb"],"label":"collapse sequential/keep dot"},
+    {"call":["get_legal_name","*foo"],"label":"strip leading nonprintable"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    "foo_bar_baz",
+    "ok_name",
+    "a_b_c",
+    "my_file_1_.pdb",
+    "foo"
+  ]
+}

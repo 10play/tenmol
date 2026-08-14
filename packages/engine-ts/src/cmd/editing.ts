@@ -674,8 +674,11 @@ export function registerEditing(ctx: RegistrarCtx): void {
     }
     if (mol.states.length === 0) mol.states.push(new Float32Array(0));
 
+    // PyMOL assigns a created atom `id = AtomCounter++` (0-based per object) on
+    // merge (`ObjectMolecule.cpp:2494`), so the first pseudoatom in a fresh
+    // object has id 0 — the value `cmd.get_model` reports.
     const atom: AtomInfo = {
-      id: mol.atoms.length + 1,
+      id: mol.atoms.length,
       name: ctx.str(kw.name, '') || 'PS1',
       resn: ctx.str(kw.resn, '') || 'PSD',
       resi: ctx.str(kw.resi, '') || '1',
@@ -691,6 +694,13 @@ export function registerEditing(ctx: RegistrarCtx): void {
       ss: '',
       visRep: defaultVisRep(),
     };
+    // `vdw`: an explicit override is kept (chempy Atom.vdw), matching
+    // `ObjectMoleculeAddPseudoatom` (`ObjectMolecule2.cpp:308`). Absent ⇒ the
+    // element's default radius fills in at read time.
+    if (kw.vdw !== undefined && kw.vdw !== '') {
+      const v = num(kw.vdw, -1);
+      if (v >= 0) atom.vdwRadius = v;
+    }
     mol.atoms.push(atom);
 
     // Extend every state's coordinate set by the new atom's position.

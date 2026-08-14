@@ -1,0 +1,17 @@
+{
+  "id": "command__get_names_of_type",
+  "feature": "get_names_of_type",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "pseudoatom pa"},
+    {"do": "select mysel, ala"}
+  ],
+  "checks": [
+    {"call": ["get_names_of_type", "object:molecule"], "label": "molecule objects only (ala,pa) — not the selection"},
+    {"call": ["get_names_of_type", "object:map"], "label": "no map objects present -> []"}
+  ],
+  "tol": 1e-3,
+  "expected": [["ala", "pa"], []]
+}
