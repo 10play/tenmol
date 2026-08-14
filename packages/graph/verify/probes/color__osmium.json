@@ -1,0 +1,24 @@
+{
+  "id": "color__osmium", "feature": "osmium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color osmium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","osmium"],"label":"osmium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","osmium"],"label":"osmium palette index"},
+    {"call":["count_atoms","color osmium"],"label":"atoms colored osmium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.14901961386203766,
+      0.4000000059604645,
+      0.5882353186607361
+    ],
+    5351,
+    1,
+    1
+  ]
+}
