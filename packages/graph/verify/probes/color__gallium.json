@@ -1,0 +1,24 @@
+{
+  "id": "color__gallium", "feature": "gallium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color gallium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","gallium"],"label":"gallium palette index"},
+    {"call":["get_color_tuple","gallium"],"label":"gallium rgb tuple","tol":1e-6},
+    {"call":["count_atoms","color gallium"],"label":"atoms colored gallium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    5306,
+    [
+      0.7607843279838562,
+      0.5607843399047852,
+      0.5607843399047852
+    ],
+    1,
+    1
+  ]
+}

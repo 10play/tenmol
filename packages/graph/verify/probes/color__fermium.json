@@ -1,0 +1,23 @@
+{
+  "id": "color__fermium",
+  "feature": "fermium",
+  "kind": "color",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "color fermium" }
+  ],
+  "checks": [
+    { "call": ["get_color_index", "fermium"], "label": "color index of fermium" },
+    { "call": ["get_color_tuple", "fermium"], "label": "rgb tuple of fermium" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    5375,
+    [
+      0.7019608020782471,
+      0.12156862765550613,
+      0.729411780834198
+    ]
+  ]
+}

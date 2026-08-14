@@ -1,0 +1,22 @@
+{
+  "id": "color__fluorine", "feature": "fluorine", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color fluorine, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","fluorine"],"label":"fluorine RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color fluorine"],"label":"atoms colored fluorine"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.7019608020782471,
+      1,
+      1
+    ],
+    1,
+    1
+  ]
+}

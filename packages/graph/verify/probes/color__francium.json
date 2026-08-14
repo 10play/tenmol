@@ -1,0 +1,22 @@
+{
+  "id": "color__francium", "feature": "francium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color francium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","francium"],"label":"francium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color francium"],"label":"atoms colored francium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.25882354378700256,
+      0,
+      0.4000000059604645
+    ],
+    1,
+    1
+  ]
+}

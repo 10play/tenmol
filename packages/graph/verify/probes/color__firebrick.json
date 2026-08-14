@@ -1,0 +1,25 @@
+{
+  "id": "color__firebrick",
+  "feature": "firebrick",
+  "kind": "named-color",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "color firebrick"}
+  ],
+  "checks": [
+    {"call": ["get_color_tuple", "firebrick"], "label": "firebrick RGB tuple"},
+    {"call": ["get_color_index", "firebrick"], "label": "firebrick color index"},
+    {"call": ["count_atoms", "color firebrick"], "label": "atoms colored firebrick"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      0.6980000138282776,
+      0.12999999523162842,
+      0.12999999523162842
+    ],
+    49,
+    10
+  ]
+}
