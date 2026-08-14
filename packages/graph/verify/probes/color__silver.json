@@ -1,0 +1,22 @@
+{
+  "id": "color__silver", "feature": "silver", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color silver, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color silver"],"label":"atoms colored silver"},
+    {"call":["get_color_index","silver"],"label":"silver palette index"},
+    {"call":["get_color_tuple","silver"],"label":"silver rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5322,
+    [
+      0.7529411911964417,
+      0.7529411911964417,
+      0.7529411911964417
+    ]
+  ]
+}

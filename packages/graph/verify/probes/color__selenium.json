@@ -1,0 +1,24 @@
+{
+  "id": "color__selenium", "feature": "selenium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color selenium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","selenium"],"label":"selenium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","selenium"],"label":"selenium palette index"},
+    {"call":["count_atoms","color selenium"],"label":"atoms colored selenium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      1,
+      0.6313725709915161,
+      0
+    ],
+    5309,
+    1,
+    1
+  ]
+}

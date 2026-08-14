@@ -1,0 +1,22 @@
+{
+  "id": "color__sodium", "feature": "sodium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color sodium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color sodium"],"label":"atoms colored sodium"},
+    {"call":["get_color_index","sodium"],"label":"sodium palette index"},
+    {"call":["get_color_tuple","sodium"],"label":"sodium rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5287,
+    [
+      0.6705882549285889,
+      0.3607843220233917,
+      0.9490196108818054
+    ]
+  ]
+}

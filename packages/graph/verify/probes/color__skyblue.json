@@ -1,0 +1,25 @@
+{
+  "id": "color__skyblue", "feature": "skyblue", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"pseudoatom p2"},
+    {"do":"color skyblue, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","skyblue"],"label":"skyblue palette index"},
+    {"call":["get_color_tuple","skyblue"],"label":"skyblue RGB tuple","tol":1e-3},
+    {"call":["count_atoms","color skyblue"],"label":"atoms colored skyblue"},
+    {"call":["count_atoms","p1 or p2"],"label":"total atoms"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    5277,
+    [
+      0.20000000298023224,
+      0.5,
+      0.800000011920929
+    ],
+    1,
+    2
+  ]
+}
