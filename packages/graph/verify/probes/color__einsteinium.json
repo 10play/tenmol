@@ -1,0 +1,22 @@
+{
+  "id": "color__einsteinium", "feature": "einsteinium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color einsteinium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","einsteinium"],"label":"einsteinium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color einsteinium"],"label":"atoms colored einsteinium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.7019608020782471,
+      0.12156862765550613,
+      0.8313725590705872
+    ],
+    1,
+    1
+  ]
+}

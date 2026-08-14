@@ -1,0 +1,22 @@
+{
+  "id": "color__deepteal", "feature": "deepteal", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color deepteal, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color deepteal"],"label":"atoms colored deepteal"},
+    {"call":["get_color_index","deepteal"],"label":"deepteal palette index"},
+    {"call":["get_color_tuple","deepteal"],"label":"deepteal rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5262,
+    [
+      0.10000000149011612,
+      0.6000000238418579,
+      0.6000000238418579
+    ]
+  ]
+}

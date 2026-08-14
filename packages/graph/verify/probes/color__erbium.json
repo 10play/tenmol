@@ -1,0 +1,22 @@
+{
+  "id": "color__erbium", "feature": "erbium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color erbium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","erbium"],"label":"erbium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color erbium"],"label":"atoms colored erbium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0,
+      0.9019607901573181,
+      0.4588235318660736
+    ],
+    1,
+    1
+  ]
+}
