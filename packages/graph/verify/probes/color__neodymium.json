@@ -1,0 +1,22 @@
+{
+  "id": "color__neodymium", "feature": "neodymium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color neodymium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","neodymium"],"label":"neodymium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color neodymium"],"label":"atoms colored neodymium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.7803921699523926,
+      1,
+      0.7803921699523926
+    ],
+    1,
+    1
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "color__mendelevium", "feature": "mendelevium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color mendelevium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","mendelevium"],"label":"mendelevium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","mendelevium"],"label":"mendelevium palette index"},
+    {"call":["count_atoms","color mendelevium"],"label":"atoms colored mendelevium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.7019608020782471,
+      0.05098039284348488,
+      0.6509804129600525
+    ],
+    5376,
+    1,
+    1
+  ]
+}
