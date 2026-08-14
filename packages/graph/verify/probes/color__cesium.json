@@ -1,0 +1,22 @@
+{
+  "id": "color__cesium", "feature": "cesium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color cesium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color cesium"],"label":"atoms colored cesium"},
+    {"call":["get_color_index","cesium"],"label":"cesium palette index"},
+    {"call":["get_color_tuple","cesium"],"label":"cesium rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5330,
+    [
+      0.34117648005485535,
+      0.09019608050584793,
+      0.5607843399047852
+    ]
+  ]
+}

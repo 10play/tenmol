@@ -1,0 +1,24 @@
+{
+  "id": "color__cobalt", "feature": "cobalt", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color cobalt, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","cobalt"],"label":"cobalt RGB tuple","tol":1e-6},
+    {"call":["get_color_index","cobalt"],"label":"cobalt palette index"},
+    {"call":["count_atoms","color cobalt"],"label":"atoms colored cobalt"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.9411764740943909,
+      0.5647059082984924,
+      0.6274510025978088
+    ],
+    5302,
+    1,
+    1
+  ]
+}

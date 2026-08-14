@@ -1,0 +1,25 @@
+{
+  "id": "color__chartreuse", "feature": "chartreuse", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"pseudoatom p2"},
+    {"do":"color chartreuse, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","chartreuse"],"label":"chartreuse palette index"},
+    {"call":["get_color_tuple","chartreuse"],"label":"chartreuse RGB tuple","tol":1e-3},
+    {"call":["count_atoms","color chartreuse"],"label":"atoms colored chartreuse"},
+    {"call":["count_atoms","p1 or p2"],"label":"total atoms"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    14,
+    [
+      0.5,
+      1,
+      0
+    ],
+    1,
+    2
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__chlorine", "feature": "chlorine", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color chlorine, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color chlorine"],"label":"atoms colored chlorine"},
+    {"call":["get_color_index","chlorine"],"label":"chlorine palette index"},
+    {"call":["get_color_tuple","chlorine"],"label":"chlorine rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5292,
+    [
+      0.12156862765550613,
+      0.9411764740943909,
+      0.12156862765550613
+    ]
+  ]
+}
