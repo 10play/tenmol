@@ -1,0 +1,24 @@
+{
+  "id": "color__rubidium", "feature": "rubidium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color rubidium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","rubidium"],"label":"rubidium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","rubidium"],"label":"rubidium palette index"},
+    {"call":["count_atoms","color rubidium"],"label":"atoms colored rubidium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.43921568989753723,
+      0.18039216101169586,
+      0.6901960968971252
+    ],
+    5312,
+    1,
+    1
+  ]
+}

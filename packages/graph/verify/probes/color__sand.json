@@ -1,0 +1,25 @@
+{
+  "id": "color__sand",
+  "feature": "sand",
+  "kind": "color",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "color sand"}
+  ],
+  "checks": [
+    {"call": ["get_color_index", "sand"], "label": "color index of sand"},
+    {"call": ["get_color_tuple", "sand"], "label": "rgb tuple of sand"},
+    {"call": ["count_atoms", "color sand"], "label": "atoms colored sand"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    5269,
+    [
+      0.7200000286102295,
+      0.550000011920929,
+      0.30000001192092896
+    ],
+    10
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__scandium", "feature": "scandium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color scandium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","scandium"],"label":"scandium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color scandium"],"label":"atoms colored scandium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.9019607901573181,
+      0.9019607901573181,
+      0.9019607901573181
+    ],
+    1,
+    1
+  ]
+}

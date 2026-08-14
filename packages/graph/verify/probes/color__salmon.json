@@ -1,0 +1,22 @@
+{
+  "id": "color__salmon", "feature": "salmon", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color salmon, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","salmon"],"label":"salmon RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color salmon"],"label":"atoms colored salmon"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      1,
+      0.6000000238418579,
+      0.6000000238418579
+    ],
+    1,
+    1
+  ]
+}
