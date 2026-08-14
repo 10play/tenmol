@@ -1,0 +1,3002 @@
+[
+ {
+  "name": "edit_light",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "editor",
+  "summary": "Which light source (index) is manipulated while in edit-light mode.",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#editor"
+ },
+ {
+  "name": "editor_auto_dihedral",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "editor",
+  "summary": "Auto-adjust the dependent dihedral when editing torsions.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#editor"
+ },
+ {
+  "name": "editor_auto_measure",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "editor",
+  "summary": "Automatically create a measurement for the atoms being edited.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#editor"
+ },
+ {
+  "name": "editor_auto_origin",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "editor",
+  "summary": "Recenter the rotation origin on the current editor selection.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#editor"
+ },
+ {
+  "name": "editor_bond_cycle_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "editor",
+  "summary": ">0 includes aromatic when cycling bond order with the builder.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#editor"
+ },
+ {
+  "name": "editor_label_fragments",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "editor",
+  "summary": "Label atoms of freshly built/attached fragments.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#editor"
+ },
+ {
+  "name": "ellipsoid_color",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "ellipsoid",
+  "summary": "Colour of ADP ellipsoids (-1 = use atom colour).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#ellipsoid"
+ },
+ {
+  "name": "ellipsoid_probability",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "ellipsoid",
+  "summary": "Probability level (0\u20131) defining the ellipsoid surface (0.5 \u2248 50%).",
+  "signature": "",
+  "default": "0.5",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#ellipsoid"
+ },
+ {
+  "name": "ellipsoid_quality",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "ellipsoid",
+  "summary": "Tessellation subdivision level of the ellipsoid mesh.",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#ellipsoid"
+ },
+ {
+  "name": "ellipsoid_scale",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "ellipsoid",
+  "summary": "Uniform scale factor applied to ellipsoid radii.",
+  "signature": "",
+  "default": "1.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#ellipsoid"
+ },
+ {
+  "name": "ellipsoid_transparency",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "ellipsoid",
+  "summary": "Transparency (0=opaque, 1=invisible) of ellipsoids.",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#ellipsoid"
+ },
+ {
+  "name": "fast_idle",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "performance",
+  "summary": "Fast idle timeout (1/100 s) before dropping to slow idle.",
+  "signature": "",
+  "default": "10000.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#performance"
+ },
+ {
+  "name": "hash_max",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "performance",
+  "summary": "Spatial-hash grid capacity for neighbour searches.",
+  "signature": "",
+  "default": "100",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#performance"
+ },
+ {
+  "name": "idle_delay",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "performance",
+  "summary": "Seconds of inactivity before entering idle animation.",
+  "signature": "",
+  "default": "1.5",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#performance"
+ },
+ {
+  "name": "keep_alive",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "performance",
+  "summary": "Keep the render loop running even when idle.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#performance"
+ },
+ {
+  "name": "max_threads",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "performance",
+  "summary": "Maximum worker threads for parallel tasks.",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#performance"
+ },
+ {
+  "name": "max_ups",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "performance",
+  "summary": "Cap on updates-per-second of the main loop (0 = uncapped).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#performance"
+ },
+ {
+  "name": "no_idle",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "performance",
+  "summary": "Delay (1/500 s) before any idle processing starts.",
+  "signature": "",
+  "default": "2000.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#performance"
+ },
+ {
+  "name": "normal_workaround",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "performance",
+  "summary": "Enable a surface-normal driver workaround.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#performance"
+ },
+ {
+  "name": "nvidia_bugs",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "performance",
+  "summary": "Enable NVIDIA driver bug workarounds.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#performance"
+ },
+ {
+  "name": "fetch_host",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "fetch",
+  "summary": "Remote host/alias used by `fetch` (e.g. 'pdb').",
+  "signature": "",
+  "default": "pdb",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#fetch"
+ },
+ {
+  "name": "fetch_path",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "fetch",
+  "summary": "Local directory where `fetch` saves downloaded files.",
+  "signature": "",
+  "default": ".",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#fetch"
+ },
+ {
+  "name": "fetch_type_default",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "fetch",
+  "summary": "Default file type fetched when unspecified (e.g. 'cif').",
+  "signature": "",
+  "default": "cif",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#fetch"
+ },
+ {
+  "name": "field_of_view",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "camera-display",
+  "summary": "Vertical camera field of view in degrees (perspective).",
+  "signature": "",
+  "default": "20.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#camera-display"
+ },
+ {
+  "name": "fog",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "camera-display",
+  "summary": "Depth-cue fog strength multiplier (1=normal).",
+  "signature": "",
+  "default": "1.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#camera-display"
+ },
+ {
+  "name": "fog_start",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "camera-display",
+  "summary": "Front position (0\u20131 of the slab) where fog begins.",
+  "signature": "",
+  "default": "0.45",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#camera-display"
+ },
+ {
+  "name": "gamma",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "camera-display",
+  "summary": "Display gamma correction applied to the rendered image.",
+  "signature": "",
+  "default": "1.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#camera-display"
+ },
+ {
+  "name": "opaque_background",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "camera-display",
+  "summary": "Force an opaque background (0 allows alpha/transparent PNG).",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#camera-display"
+ },
+ {
+  "name": "fit_iterations",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "fitting-alignment",
+  "summary": "Max iterations for outlier-rejecting refinement in `fit`/`align`.",
+  "signature": "",
+  "default": "1000",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#fitting-alignment"
+ },
+ {
+  "name": "fit_kabsch",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "fitting-alignment",
+  "summary": "Use the Kabsch algorithm for the least-squares fit.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#fitting-alignment"
+ },
+ {
+  "name": "fit_tolerance",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "fitting-alignment",
+  "summary": "RMS convergence tolerance for the fit refinement loop.",
+  "signature": "",
+  "default": "0.0000001",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#fitting-alignment"
+ },
+ {
+  "name": "matrix_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "fitting-alignment",
+  "summary": "How object matrices combine (-1 legacy / 0 history / 1 coord-mod ...).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#fitting-alignment"
+ },
+ {
+  "name": "float_labels",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Draw labels floating above geometry (depth-independent).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_anchor",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Atom name used to anchor a residue's label (e.g. 'CA').",
+  "signature": "",
+  "default": "CA",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_angle_digits",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Decimal digits for angle labels (-1 = use label_digits).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_bg_color",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Label background box colour (-1 = none).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_bg_outline",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Draw an outline around the label background box.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_bg_transparency",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Transparency of the label background box.",
+  "signature": "",
+  "default": ".6",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_color",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Label text colour (-6 = 'front' default).",
+  "signature": "",
+  "default": "-6",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_connector",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Draw a connector line from label to its anchor atom.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_connector_color",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Colour of the label connector line (-6 = front).",
+  "signature": "",
+  "default": "-6",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_connector_ext_length",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Extension length of the connector beyond the label.",
+  "signature": "",
+  "default": "2.5",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_connector_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Connector routing style (0\u20134).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_connector_width",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Line width of the label connector.",
+  "signature": "",
+  "default": "2.",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_digits",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Default decimal digits shown in numeric labels.",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_dihedral_digits",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Decimal digits for dihedral labels (-1 = use label_digits).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_distance_digits",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Decimal digits for distance labels (-1 = use label_digits).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_font_id",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Font index used to render labels.",
+  "signature": "",
+  "default": "5",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_multiline_justification",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Horizontal justification of multiline labels.",
+  "signature": "",
+  "default": "1.",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_multiline_spacing",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Line-spacing factor for multiline labels.",
+  "signature": "",
+  "default": "1.2",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_outline_color",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Outline colour for label glyphs (-1 = none).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_padding",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Padding [x,y,z] around label text within its box.",
+  "signature": "",
+  "default": "[0.2, 0.2, 0.0]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_placement_offset",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Additional [x,y,z] offset applied to label placement.",
+  "signature": "",
+  "default": "[0., 0., 0.]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_position",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Label position offset [x,y,z] relative to the anchor atom.",
+  "signature": "",
+  "default": "[0.0, 0.0, 1.75]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_relative_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Interpret label_position relative to screen/atom (0\u20132).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_screen_point",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Fixed screen anchor point [x,y,z] for the label.",
+  "signature": "",
+  "default": "[0., 0., 0.]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_shadow_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Whether labels cast/receive shadows in ray tracing.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_size",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Label text size (points; negative = world units).",
+  "signature": "",
+  "default": "14.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "label_z_target",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "label",
+  "summary": "Z-target mode used when depth-placing labels.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#label"
+ },
+ {
+  "name": "frame",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Current movie frame number.",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "movie_animate_by_frame",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Animate by frame rather than by state.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "movie_auto_interpolate",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Auto-interpolate camera between movie keyframes.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "movie_auto_store",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Auto-store frames into the movie cache (-1 = auto).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "movie_delay",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Delay between movie frames (ms) when not fps-driven.",
+  "signature": "",
+  "default": "30.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "movie_fps",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Target movie playback frame rate.",
+  "signature": "",
+  "default": "30.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "movie_loop",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Loop the movie on reaching the end.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "movie_panel",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Show the movie timeline panel.",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "movie_panel_row_height",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Row height (px) of the movie panel.",
+  "signature": "",
+  "default": "15",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "movie_quality",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Encoding quality for exported movies (0\u2013100).",
+  "signature": "",
+  "default": "90",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "movie_rock",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "movie",
+  "summary": "Rocking motion mode for the movie (-1 = off).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#movie"
+ },
+ {
+  "name": "gaussian_b_adjust",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "gaussian",
+  "summary": "B-factor offset added when building Gaussian maps.",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#gaussian"
+ },
+ {
+  "name": "gaussian_b_floor",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "gaussian",
+  "summary": "Minimum B-factor clamp for Gaussian map generation.",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#gaussian"
+ },
+ {
+  "name": "gaussian_resolution",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "gaussian",
+  "summary": "Effective resolution of generated Gaussian maps.",
+  "signature": "",
+  "default": "2.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#gaussian"
+ },
+ {
+  "name": "geometry_export_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "file-io",
+  "summary": "Mode/format used when exporting geometry.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#file-io"
+ },
+ {
+  "name": "image_copy_always",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "file-io",
+  "summary": "Always copy rendered images to the clipboard.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#file-io"
+ },
+ {
+  "name": "image_dots_per_inch",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "file-io",
+  "summary": "DPI metadata written into exported images (0 = none).",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#file-io"
+ },
+ {
+  "name": "load_atom_props_default",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "file-io",
+  "summary": "Atom properties auto-loaded by default ('*' = all).",
+  "signature": "",
+  "default": "*",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#file-io"
+ },
+ {
+  "name": "load_object_props_default",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "file-io",
+  "summary": "Object properties auto-loaded by default ('*' = all).",
+  "signature": "",
+  "default": "*",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#file-io"
+ },
+ {
+  "name": "moe_separate_chains",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "file-io",
+  "summary": "Split MOE-imported structures into separate chains (-1 auto).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#file-io"
+ },
+ {
+  "name": "multiplex",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "file-io",
+  "summary": "Load multi-model files as separate objects (-1 auto).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#file-io"
+ },
+ {
+  "name": "gradient_max_length",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "gradient",
+  "summary": "Maximum length of a traced gradient line.",
+  "signature": "",
+  "default": "100.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#gradient"
+ },
+ {
+  "name": "gradient_min_length",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "gradient",
+  "summary": "Minimum length before a gradient line is kept.",
+  "signature": "",
+  "default": "2.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#gradient"
+ },
+ {
+  "name": "gradient_min_slope",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "gradient",
+  "summary": "Minimum field slope to continue tracing.",
+  "signature": "",
+  "default": "0.00001",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#gradient"
+ },
+ {
+  "name": "gradient_normal_min_dot",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "gradient",
+  "summary": "Min normal dot-product to continue a gradient trace.",
+  "signature": "",
+  "default": "0.70",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#gradient"
+ },
+ {
+  "name": "gradient_spacing",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "gradient",
+  "summary": "Grid spacing (in voxels) between seeded gradient lines.",
+  "signature": "",
+  "default": "3",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#gradient"
+ },
+ {
+  "name": "gradient_step_size",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "gradient",
+  "summary": "Integration step size along a gradient line.",
+  "signature": "",
+  "default": "0.25",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#gradient"
+ },
+ {
+  "name": "gradient_symmetry",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "gradient",
+  "summary": "Symmetry constraint applied to gradient tracing.",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#gradient"
+ },
+ {
+  "name": "grid_max",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "grid",
+  "summary": "Maximum number of grid slots (-1 = auto).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#grid"
+ },
+ {
+  "name": "grid_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "grid",
+  "summary": "Grid layout mode (0 off, 1 by object, 2 by state, 3 by object+state).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#grid"
+ },
+ {
+  "name": "grid_slot",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "grid",
+  "summary": "Explicit grid slot assignment for an object (-1 = auto).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#grid"
+ },
+ {
+  "name": "group_arrow_prefix",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "group",
+  "summary": "Prefix group children with an arrow glyph in the panel.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#group"
+ },
+ {
+  "name": "group_auto_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "group",
+  "summary": "Auto-group objects by name prefix (0/1/2).",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#group"
+ },
+ {
+  "name": "group_full_member_names",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "group",
+  "summary": "Use fully-qualified member names within groups.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#group"
+ },
+ {
+  "name": "h_bond_cone",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "h-bond",
+  "summary": "Angular cone (deg) tolerated around the ideal H-bond.",
+  "signature": "",
+  "default": "180.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#h-bond"
+ },
+ {
+  "name": "h_bond_cutoff_center",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "h-bond",
+  "summary": "Ideal donor\u2013acceptor distance (\u00c5) at cone centre.",
+  "signature": "",
+  "default": "3.6",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#h-bond"
+ },
+ {
+  "name": "h_bond_cutoff_edge",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "h-bond",
+  "summary": "Maximum donor\u2013acceptor distance (\u00c5) at cone edge.",
+  "signature": "",
+  "default": "3.2",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#h-bond"
+ },
+ {
+  "name": "h_bond_exclusion",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "h-bond",
+  "summary": "Min bonds separating atoms to allow an H-bond.",
+  "signature": "",
+  "default": "3",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#h-bond"
+ },
+ {
+  "name": "h_bond_from_proton",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "h-bond",
+  "summary": "Measure the H-bond angle from the proton position.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#h-bond"
+ },
+ {
+  "name": "h_bond_max_angle",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "h-bond",
+  "summary": "Maximum deviation angle (deg) for a valid H-bond.",
+  "signature": "",
+  "default": "63.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#h-bond"
+ },
+ {
+  "name": "h_bond_power_a",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "h-bond",
+  "summary": "Exponent A in the H-bond distance/angle potential.",
+  "signature": "",
+  "default": "1.6",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#h-bond"
+ },
+ {
+  "name": "h_bond_power_b",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "h-bond",
+  "summary": "Exponent B in the H-bond distance/angle potential.",
+  "signature": "",
+  "default": "5.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#h-bond"
+ },
+ {
+  "name": "half_bonds",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "bonds-display",
+  "summary": "Split bonds at midpoint into two atom-coloured halves.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#bonds-display"
+ },
+ {
+  "name": "hide_long_bonds",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "bonds-display",
+  "summary": "Do not draw bonds longer than the expected length.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#bonds-display"
+ },
+ {
+  "name": "halogen_bond_as_acceptor_max_acceptor_angle",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "halogen-bond",
+  "summary": "Max acceptor angle when halogen is acceptor.",
+  "signature": "",
+  "default": "170.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#halogen-bond"
+ },
+ {
+  "name": "halogen_bond_as_acceptor_min_acceptor_angle",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "halogen-bond",
+  "summary": "Min acceptor angle when halogen is acceptor.",
+  "signature": "",
+  "default": "90.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#halogen-bond"
+ },
+ {
+  "name": "halogen_bond_as_acceptor_min_donor_angle",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "halogen-bond",
+  "summary": "Min donor angle when halogen is acceptor.",
+  "signature": "",
+  "default": "120.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#halogen-bond"
+ },
+ {
+  "name": "halogen_bond_as_donor_min_acceptor_angle",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "halogen-bond",
+  "summary": "Min acceptor angle when halogen is donor.",
+  "signature": "",
+  "default": "90.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#halogen-bond"
+ },
+ {
+  "name": "halogen_bond_as_donor_min_donor_angle",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "halogen-bond",
+  "summary": "Min donor angle when halogen is donor.",
+  "signature": "",
+  "default": "140.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#halogen-bond"
+ },
+ {
+  "name": "halogen_bond_distance",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "halogen-bond",
+  "summary": "Max halogen-bond distance (\u00c5).",
+  "signature": "",
+  "default": "3.5",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#halogen-bond"
+ },
+ {
+  "name": "heavy_neighbor_cutoff",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "proximity",
+  "summary": "Distance cutoff for heavy-atom neighbour inference.",
+  "signature": "",
+  "default": "3.5",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#proximity"
+ },
+ {
+  "name": "neighbor_cutoff",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "proximity",
+  "summary": "General distance cutoff for neighbour/bond inference.",
+  "signature": "",
+  "default": "3.5",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#proximity"
+ },
+ {
+  "name": "hide_underscore_names",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "selecting",
+  "summary": "Hide objects/selections whose names start with '_'.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#selecting"
+ },
+ {
+  "name": "ignore_case",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "selecting",
+  "summary": "Case-insensitive matching of names/identifiers in selections.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#selecting"
+ },
+ {
+  "name": "ignore_case_chain",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "selecting",
+  "summary": "Case-insensitive matching specifically for chain IDs.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#selecting"
+ },
+ {
+  "name": "ignore_pdb_segi",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "selecting",
+  "summary": "Ignore the PDB segment identifier on import.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#selecting"
+ },
+ {
+  "name": "internal_feedback",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "internal-gui",
+  "summary": "Number of feedback text lines shown in the viewport.",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#internal-gui"
+ },
+ {
+  "name": "internal_gui",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "internal-gui",
+  "summary": "Show the internal (in-viewport) object menu panel.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#internal-gui"
+ },
+ {
+  "name": "internal_gui_control_size",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "internal-gui",
+  "summary": "Size (px) of internal GUI control rows.",
+  "signature": "",
+  "default": "18",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#internal-gui"
+ },
+ {
+  "name": "internal_gui_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "internal-gui",
+  "summary": "Internal GUI rendering mode.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#internal-gui"
+ },
+ {
+  "name": "internal_gui_name_color_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "internal-gui",
+  "summary": "How object names are colourised in the panel (0\u20132).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#internal-gui"
+ },
+ {
+  "name": "internal_gui_width",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "internal-gui",
+  "summary": "Width (px) of the internal GUI panel.",
+  "signature": "",
+  "default": "220",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#internal-gui"
+ },
+ {
+  "name": "internal_prompt",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "internal-gui",
+  "summary": "Show the internal command prompt line.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#internal-gui"
+ },
+ {
+  "name": "isomesh_auto_state",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Auto-track the current state for `isomesh` maps.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_as_cylinders",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Render mesh edges as shader cylinders.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_carve_cutoff",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Distance cutoff for carving mesh around a selection.",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_carve_selection",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Selection used to carve (keep-near) the mesh.",
+  "signature": "",
+  "default": "\"\" (empty)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_carve_state",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "State used for the mesh carve selection.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_clear_cutoff",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Distance cutoff for clearing mesh near a selection.",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_clear_selection",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Selection used to clear (remove-near) the mesh.",
+  "signature": "",
+  "default": "\"\" (empty)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_clear_state",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "State used for the mesh clear selection.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_color",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Mesh colour (-1 = use object/atom colour).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_cutoff",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Density/contour cutoff for the mesh isosurface.",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_grid_max",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Maximum grid dimension when generating the mesh.",
+  "signature": "",
+  "default": "80",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_lighting",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Apply lighting/shading to mesh lines.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Mesh generation mode (0 = by flag default).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_negative_color",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Colour for the negative contour of a signed map.",
+  "signature": "",
+  "default": "red",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_negative_visible",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Show the negative contour of a signed map.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_normals",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Compute vertex normals for the mesh.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_quality",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Mesh tessellation quality level.",
+  "signature": "",
+  "default": "2",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_radius",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Mesh line radius (0 = use mesh_width pixels).",
+  "signature": "",
+  "default": "0.000",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_skip",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Skip factor to decimate mesh lines.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_solvent",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Generate a solvent-excluded mesh surface.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_type",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Mesh type (0 isomesh lines / 1 dots).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_use_shader",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Use the GLSL shader path for meshes.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "mesh_width",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Mesh line width in pixels.",
+  "signature": "",
+  "default": "1.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "min_mesh_spacing",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mesh",
+  "summary": "Minimum grid spacing allowed when meshing.",
+  "signature": "",
+  "default": "0.6",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mesh"
+ },
+ {
+  "name": "isosurface_algorithm",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "map-io",
+  "summary": "Marching-cubes variant used for isosurfaces (0\u20132).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#map-io"
+ },
+ {
+  "name": "map_auto_expand_sym",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "map-io",
+  "summary": "Auto-expand map by crystal symmetry on load.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#map-io"
+ },
+ {
+  "name": "normalize_ccp4_maps",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "map-io",
+  "summary": "Normalise CCP4/MRC maps to sigma units on load.",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#map-io"
+ },
+ {
+  "name": "normalize_grd_maps",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "map-io",
+  "summary": "Normalise GRD maps on load.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#map-io"
+ },
+ {
+  "name": "normalize_o_maps",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "map-io",
+  "summary": "Normalise O/DSN6 maps on load.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#map-io"
+ },
+ {
+  "name": "legacy_mouse_zoom",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mouse",
+  "summary": "Use pre-1.x mouse-zoom direction/behaviour.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mouse"
+ },
+ {
+  "name": "mouse_grid",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mouse",
+  "summary": "Show the mouse-mode grid/config overlay.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#mouse"
+ },
+ {
+  "name": "mouse_limit",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mouse",
+  "summary": "Clamp on virtual-trackball rotation magnitude.",
+  "signature": "",
+  "default": "100.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mouse"
+ },
+ {
+  "name": "mouse_restart_movie_delay",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mouse",
+  "summary": "Delay before a click restarts a stopped movie.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mouse"
+ },
+ {
+  "name": "mouse_scale",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mouse",
+  "summary": "Sensitivity scale for mouse rotation/translation.",
+  "signature": "",
+  "default": "1.3",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mouse"
+ },
+ {
+  "name": "mouse_selection_mode",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mouse",
+  "summary": "Picking granularity (atom/residue/chain/... level).",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#mouse"
+ },
+ {
+  "name": "mouse_wheel_scale",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mouse",
+  "summary": "Zoom step per mouse-wheel notch.",
+  "signature": "",
+  "default": "0.5",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mouse"
+ },
+ {
+  "name": "mouse_z_scale",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "mouse",
+  "summary": "Sensitivity of z-axis (clip/translate) mouse motion.",
+  "signature": "",
+  "default": "1.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#mouse"
+ },
+ {
+  "name": "light",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "lighting",
+  "summary": "Direction vector of the primary directional light.",
+  "signature": "",
+  "default": "[-0.4, -0.4, -1.0]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#lighting"
+ },
+ {
+  "name": "light2",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "lighting",
+  "summary": "Direction vector of light source 2.",
+  "signature": "",
+  "default": "[-0.55, -0.7, 0.15]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#lighting"
+ },
+ {
+  "name": "light3",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "lighting",
+  "summary": "Direction vector of light source 3.",
+  "signature": "",
+  "default": "[0.3, -0.6, -0.2]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#lighting"
+ },
+ {
+  "name": "light4",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "lighting",
+  "summary": "Direction vector of light source 4.",
+  "signature": "",
+  "default": "[-1.2, 0.3, -0.2]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#lighting"
+ },
+ {
+  "name": "light5",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "lighting",
+  "summary": "Direction vector of light source 5.",
+  "signature": "",
+  "default": "[0.3, 0.6, -0.75]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#lighting"
+ },
+ {
+  "name": "light6",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "lighting",
+  "summary": "Direction vector of light source 6.",
+  "signature": "",
+  "default": "[-0.3, 0.5, 0.0]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#lighting"
+ },
+ {
+  "name": "light7",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "lighting",
+  "summary": "Direction vector of light source 7.",
+  "signature": "",
+  "default": "[0.9, -0.1, -0.15]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#lighting"
+ },
+ {
+  "name": "light8",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "lighting",
+  "summary": "Direction vector of light source 8.",
+  "signature": "",
+  "default": "[1.3, 2.0, 0.8]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#lighting"
+ },
+ {
+  "name": "light9",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "lighting",
+  "summary": "Direction vector of light source 9.",
+  "signature": "",
+  "default": "[-1.7, -0.5, 1.2]",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#lighting"
+ },
+ {
+  "name": "light_count",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "lighting",
+  "summary": "Number of active lights (1 ambient + directed; 1\u201310).",
+  "signature": "",
+  "default": "2",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#lighting"
+ },
+ {
+  "name": "line_as_cylinders",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "line",
+  "summary": "Render wireframe lines as shader cylinders.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#line"
+ },
+ {
+  "name": "line_color",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "line",
+  "summary": "Line/wireframe colour (-1 = use atom colour).",
+  "signature": "",
+  "default": "-1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#line"
+ },
+ {
+  "name": "line_radius",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "line",
+  "summary": "Cylinder radius when lines are drawn as cylinders (0 = flat).",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#line"
+ },
+ {
+  "name": "line_smooth",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "line",
+  "summary": "Enable GL line antialiasing/smoothing.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#line"
+ },
+ {
+  "name": "line_stick_helper",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "line",
+  "summary": "Assist line drawing where lines meet sticks.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#line"
+ },
+ {
+  "name": "line_use_shader",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "line",
+  "summary": "Use the GLSL shader path for lines.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#line"
+ },
+ {
+  "name": "line_width",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "line",
+  "summary": "Wireframe line width in pixels (<1.5 keeps SGI AA).",
+  "signature": "",
+  "default": "1.49",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#line"
+ },
+ {
+  "name": "log_box_selections",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "logging",
+  "summary": "Log box (drag) selections to the log file.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#logging"
+ },
+ {
+  "name": "log_conformations",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "logging",
+  "summary": "Log conformational edits to the log file.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#logging"
+ },
+ {
+  "name": "logging",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "logging",
+  "summary": "Logging mode/verbosity (0 off, 1 .pml, 2 .py).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#logging"
+ },
+ {
+  "name": "motion_bias",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "motion",
+  "summary": "Bias of keyframe interpolation easing (-1 = default).",
+  "signature": "",
+  "default": "-1.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#motion"
+ },
+ {
+  "name": "motion_hand",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "motion",
+  "summary": "Handedness/direction of rocking motion.",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#motion"
+ },
+ {
+  "name": "motion_linear",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "motion",
+  "summary": "Blend toward linear interpolation (0\u20131).",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#motion"
+ },
+ {
+  "name": "motion_power",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "motion",
+  "summary": "Easing power applied to motion interpolation.",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#motion"
+ },
+ {
+  "name": "motion_simple",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "motion",
+  "summary": "Use simplified (linear) motion interpolation.",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#motion"
+ },
+ {
+  "name": "nb_spheres_quality",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "nb-spheres",
+  "summary": "Tessellation quality of nonbonded spheres (0\u2013max).",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#nb-spheres"
+ },
+ {
+  "name": "nb_spheres_size",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "nb-spheres",
+  "summary": "Radius of nonbonded spheres.",
+  "signature": "",
+  "default": "0.25",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#nb-spheres"
+ },
+ {
+  "name": "nb_spheres_use_shader",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "nb-spheres",
+  "summary": "Use the shader path for nonbonded spheres (0\u20132).",
+  "signature": "",
+  "default": "1",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#nb-spheres"
+ },
+ {
+  "name": "nonbonded_as_cylinders",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "nonbonded",
+  "summary": "Render nonbonded crosses as shader cylinders.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#nonbonded"
+ },
+ {
+  "name": "nonbonded_size",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "nonbonded",
+  "summary": "Size of the nonbonded cross representation.",
+  "signature": "",
+  "default": "0.25",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "implemented",
+  "doc": "packages/graph/features/settings/_batch-01.md#nonbonded"
+ },
+ {
+  "name": "nonbonded_transparency",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "nonbonded",
+  "summary": "Transparency of nonbonded crosses.",
+  "signature": "",
+  "default": "0.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#nonbonded"
+ },
+ {
+  "name": "nonbonded_use_shader",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "nonbonded",
+  "summary": "Use the shader path for the nonbonded representation.",
+  "signature": "",
+  "default": "on (1)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "unknown",
+  "doc": "packages/graph/features/settings/_batch-01.md#nonbonded"
+ },
+ {
+  "name": "openvr_cut_laser",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "openvr",
+  "summary": "Enable the cut laser for the VR molecule picker.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "internal",
+  "doc": "packages/graph/features/settings/_batch-01.md#openvr"
+ },
+ {
+  "name": "openvr_disable_clipping",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "openvr",
+  "summary": "Disable near/far clipping in VR.",
+  "signature": "",
+  "default": "off (0)",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "internal",
+  "doc": "packages/graph/features/settings/_batch-01.md#openvr"
+ },
+ {
+  "name": "openvr_far_plane",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "openvr",
+  "summary": "Far clipping plane distance in VR.",
+  "signature": "",
+  "default": "100.",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "internal",
+  "doc": "packages/graph/features/settings/_batch-01.md#openvr"
+ },
+ {
+  "name": "openvr_gui_alpha",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "openvr",
+  "summary": "Opacity of the VR GUI overlay (0\u20131).",
+  "signature": "",
+  "default": "1.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "internal",
+  "doc": "packages/graph/features/settings/_batch-01.md#openvr"
+ },
+ {
+  "name": "openvr_gui_back_alpha",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "openvr",
+  "summary": "Opacity of the VR GUI backing panel.",
+  "signature": "",
+  "default": "0.75",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "internal",
+  "doc": "packages/graph/features/settings/_batch-01.md#openvr"
+ },
+ {
+  "name": "openvr_gui_back_color",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "openvr",
+  "summary": "Grey level of the VR GUI backing panel.",
+  "signature": "",
+  "default": "0.2",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "internal",
+  "doc": "packages/graph/features/settings/_batch-01.md#openvr"
+ },
+ {
+  "name": "openvr_gui_distance",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "openvr",
+  "summary": "Distance the VR GUI floats from the viewer.",
+  "signature": "",
+  "default": "1.5",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "internal",
+  "doc": "packages/graph/features/settings/_batch-01.md#openvr"
+ },
+ {
+  "name": "openvr_gui_fov",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "openvr",
+  "summary": "Field of view of the VR GUI overlay (0\u201389 deg).",
+  "signature": "",
+  "default": "35.0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "internal",
+  "doc": "packages/graph/features/settings/_batch-01.md#openvr"
+ },
+ {
+  "name": "openvr_gui_overlay",
+  "kind": "setting",
+  "category": "settings",
+  "subcategory": "openvr",
+  "summary": "VR GUI overlay mode (0 off, 1 on, 2 laser-triggered).",
+  "signature": "",
+  "default": "0",
+  "sourceRefs": [
+   "packages/engine/layer1/SettingInfo.h",
+   "docs/api-reference/settings.mdx"
+  ],
+  "parityStatus": "internal",
+  "doc": "packages/graph/features/settings/_batch-01.md#openvr"
+ }
+]
