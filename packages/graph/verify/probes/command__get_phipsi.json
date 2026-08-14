@@ -1,0 +1,18 @@
+{
+  "id": "command__get_phipsi",
+  "feature": "get_phipsi",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load ${REPO}/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["get_phipsi", "m and resi 10 and name CA"], "label": "phipsi resi 10 CA", "tol": 1e-2},
+    {"call": ["get_phipsi", "m and resi 20 and name CA"], "label": "phipsi resi 20 CA", "tol": 1e-2}
+  ],
+  "tol": 1e-2,
+  "expected": [
+    {},
+    {}
+  ]
+}

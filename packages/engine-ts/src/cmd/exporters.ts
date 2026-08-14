@@ -99,6 +99,199 @@ function coordFmt(v: number): string {
   return padL(v.toFixed(3), 8);
 }
 
+/**
+ * Canonical atom-ordering priority (`AtomInfoAssignParameters`, layer2/
+ * AtomInfo.cpp) for the default `pdb_standard_order = on`. Lower sorts first:
+ * backbone N(1) CA(2) C(3) O(4) then side-chain by Greek letter, with the
+ * unconventional-name escape hatch (priority 1000) when the name doesn't start
+ * with its element symbol. PyMOL stores atoms in this order at load, so the PDB
+ * exporter reproduces it here rather than emitting file order.
+ */
+function atomPriority(name: string, elem: string): number {
+  // Skip leading digits, keeping at least one trailing character.
+  let i = 0;
+  while (i < name.length - 1 && name[i]! >= '0' && name[i]! <= '9') i++;
+  const n = name.slice(i);
+  const c0 = (n[0] ?? '').toUpperCase();
+  const c1 = (n[1] ?? '').toUpperCase();
+  const e0 = (elem[0] ?? '').toUpperCase();
+  if (c0 !== e0) return 1000; // unconventional atom name — no assignment
+
+  // Greek-letter position -> priority, for N/C/O/S heavy atoms.
+  const greek: Record<string, number> = {
+    B: 6, G: 7, D: 8, E: 9, Z: 10, H: 11, I: 12, J: 13, K: 14, L: 15, M: 16, N: 17,
+  };
+  // Numeric-suffix handling shared by the digit case (matches the C loop that
+  // reads digits after the first char, with `P` and `*`/`'` escapes, +300).
+  const digitBranch = (): number => {
+    let pri = 0;
+    for (let k = 1; k < n.length; k++) {
+      const ch = n[k]!;
+      if (ch === 'P') { pri -= 200; break; }
+      if (ch === '*' || ch === "'") { pri = -100 - pri; break; }
+      if (ch < '0' || ch > '9') break;
+      pri = pri * 10 + (ch.charCodeAt(0) - 48);
+    }
+    return pri + 300;
+  };
+
+  switch (c0) {
+    case 'N':
+    case 'C':
+    case 'O':
+    case 'S':
+      if (c1 === '') {
+        if (c0 === 'N') return 1;
+        if (c0 === 'C') return 3;
+        if (c0 === 'O') return 4;
+        return 1000;
+      }
+      if (c1 === 'A') return c0 === 'C' ? 2 : 5;
+      if (c1 in greek) return greek[c1]!;
+      // case 'X' has no `break` in the C source: it falls through into the
+      // digit branch, so `OXT` etc. are ultimately scored by digitBranch().
+      if (c1 === 'X' || (c1 >= '0' && c1 <= '9')) return digitBranch();
+      return 500;
+    case 'P':
+      return 20;
+    case 'D':
+    case 'H': {
+      // Hydrogens/deuteriums sort last (1000+).
+      if (c1 === '') return 1001;
+      if (c1 === 'A' || c1 === 'B') return 1003;
+      const hgreek: Record<string, number> = {
+        G: 1004, D: 1005, E: 1006, Z: 1007, H: 1008, I: 1009, J: 1010, K: 1011,
+        L: 1012, M: 1013, N: 1002,
+      };
+      if (c1 in hgreek) return hgreek[c1]!;
+      if (c1 === 'X') return 1999;
+      if (c1 >= '0' && c1 <= '9') {
+        let pri = 1020;
+        for (let k = 1; k < n.length; k++) {
+          const ch = n[k]!;
+          if (ch < '0' || ch > '9') break;
+          pri = pri * 10 + (ch.charCodeAt(0) - 48);
+        }
+        return pri + 25;
+      }
+      return 1500;
+    }
+    default:
+      return 1000;
+  }
+}
+
+/** Case-insensitive word comparison returning sign, mirroring `WordCompare`. */
+function wordCmp(a: string, b: string): number {
+  const x = a.toUpperCase();
+  const y = b.toUpperCase();
+  return x < y ? -1 : x > y ? 1 : 0;
+}
+
+/** `AtomInfoNameCompare`: strip a single leading digit, compare, tie-break on
+ *  the full name (so `1HB` sorts near `HB`, and `ND2` < `OD1`). */
+function nameCmp(a: string, b: string): number {
+  const n1 = /^[0-9]/.test(a) ? a.slice(1) : a;
+  const n2 = /^[0-9]/.test(b) ? b.slice(1) : b;
+  const c = wordCmp(n1, n2);
+  return c !== 0 ? c : wordCmp(a, b);
+}
+
+/**
+ * `AtomInfoCompare` (defaults) restricted to a single object: segi, chain,
+ * hetatm, resv, inscode, resn, priority, name, alt, then rank (load order) as
+ * the stable tie-break. Reproduces PyMOL's stored/exported atom order.
+ */
+function atomOrderCmp(
+  a: { atom: AtomInfo; index: number },
+  b: { atom: AtomInfo; index: number },
+): number {
+  const x = a.atom;
+  const y = b.atom;
+  let c = wordCmp(x.segi, y.segi);
+  if (c) return c;
+  c = wordCmp(x.chain, y.chain);
+  if (c) return c;
+  if (x.hetatm !== y.hetatm) return x.hetatm ? 1 : -1;
+  if (x.resv !== y.resv) return x.resv < y.resv ? -1 : 1;
+  const ia = inscodeOf(x.resi);
+  const ib = inscodeOf(y.resi);
+  if (ia !== ib) return ia < ib ? -1 : 1;
+  c = wordCmp(x.resn, y.resn);
+  if (c) return c;
+  const pa = atomPriority(x.name, x.elem);
+  const pb = atomPriority(y.name, y.elem);
+  if (pa !== pb) return pa < pb ? -1 : 1;
+  c = nameCmp(x.name, y.name);
+  if (c) return c;
+  const aa = x.alt || '';
+  const ab = y.alt || '';
+  if (aa !== ab) return aa < ab ? -1 : 1;
+  return a.index - b.index; // rank: original load order
+}
+
+/** Standard PDB residues that carry a fixed formal charge on a named atom
+ *  (`assign_pdb_known_residue`, ObjectMolecule2.cpp). PyMOL assigns these at
+ *  load; the exporter reproduces the observable `formalCharge`. */
+function knownFormalCharge(resn: string, name: string): number | undefined {
+  const r = resn.toUpperCase();
+  const n = name.toUpperCase();
+  if (n === 'OXT') return -1; // C-terminal carboxylate of any protein residue
+  switch (r) {
+    case 'ASP':
+    case 'ASPM':
+      if (n === 'OD2') return -1;
+      break;
+    case 'GLU':
+    case 'GLUM':
+      if (n === 'OE2') return -1;
+      break;
+    case 'ARG':
+    case 'ARGP':
+      if (n === 'NH1') return 1;
+      if (n === 'NH2') return 0;
+      break;
+    case 'LYS':
+    case 'LYSP':
+      if (n === 'NZ') return 1;
+      break;
+    case 'HIP':
+    case 'HISH':
+    case 'HISP':
+      if (n === 'ND1') return 1;
+      break;
+    default:
+      break;
+  }
+  // Nucleotide phosphate: the pro-R oxygen carries -1 (O2P / OP2).
+  if ((n === 'O2P' || n === 'OP2') && isNucleicResn(r)) return -1;
+  return undefined;
+}
+
+const NUCLEIC_RESN = new Set([
+  'A', 'C', 'G', 'U', 'I', 'T',
+  'DA', 'DC', 'DG', 'DT', 'DU',
+  'ADE', 'CYT', 'GUA', 'URA', 'THY',
+]);
+function isNucleicResn(resn: string): boolean {
+  return NUCLEIC_RESN.has(resn.toUpperCase());
+}
+
+/** Formal charge for a PDB atom: the known-residue assignment wins (PyMOL's
+ *  chemistry overrides file values); otherwise the atom's own `formalCharge`. */
+function pdbFormalCharge(atom: AtomInfo): number {
+  const known = knownFormalCharge(atom.resn, atom.name);
+  return known !== undefined ? known : atom.formalCharge ?? 0;
+}
+
+/** PDB cols 79-80 charge field: `"1-"`, `"2+"`, … or blank (`pdb_formal_charges`
+ *  format from `CoordSetAtomToPDBStrVLA`). */
+function chargeField(charge: number): string {
+  if (charge > 0 && charge < 10) return `${charge}+`;
+  if (charge < 0 && charge > -10) return `${-charge}-`;
+  return '  ';
+}
+
 function pdbAtomLine(atom: AtomInfo, xyz: readonly [number, number, number], serial: number): string {
   const rec = atom.hetatm ? 'HETATM' : 'ATOM  ';
   const s = serial > 99999 ? 99999 : serial;
@@ -121,7 +314,28 @@ function pdbAtomLine(atom: AtomInfo, xyz: readonly [number, number, number], ser
     '      ' +
     padR(atom.segi.slice(0, 4), 4) +
     padL(atom.elem, 2) +
-    '  '
+    padL(chargeField(pdbFormalCharge(atom)), 2)
+  );
+}
+
+/** CRYST1 record (`writeCryst1`) for a molecule with a unit cell, else `''`. */
+function cryst1Line(mol: ObjectMolecule): string {
+  const cell = mol.cell;
+  if (!cell) return '';
+  const f = (v: number, w: number, d: number): string => padL(v.toFixed(d), w);
+  const sg = padR((mol.spacegroup ?? 'P 1').slice(0, 11), 11);
+  const z = padL(String(mol.pdbZValue ?? 1), 4);
+  return (
+    'CRYST1' +
+    f(cell.a, 9, 3) +
+    f(cell.b, 9, 3) +
+    f(cell.c, 9, 3) +
+    f(cell.alpha, 7, 2) +
+    f(cell.beta, 7, 2) +
+    f(cell.gamma, 7, 2) +
+    ' ' +
+    sg +
+    z
   );
 }
 
@@ -313,7 +527,17 @@ export function registerExporters(ctx: RegistrarCtx): void {
 
   function getPdbstr(sel: string, state: number): string {
     const st = state > 0 ? state : 1;
+    const groups = grouped(sel);
     const lines: string[] = [];
+    // writeCryst1 is emitted once at the top from the first object that carries
+    // a unit cell (MoleculeExporterPDB::writeCryst1, called at the first coord set).
+    for (const grp of groups) {
+      const c1 = cryst1Line(grp.mol);
+      if (c1) {
+        lines.push(c1);
+        break;
+      }
+    }
     let serial = 1;
     let preTer: AtomInfo | null = null;
     const writeTer = (ai: AtomInfo | null): void => {
@@ -321,8 +545,10 @@ export function registerExporters(ctx: RegistrarCtx): void {
       if (preTer && !(a && a.chain === preTer.chain)) lines.push('TER   ');
       preTer = a;
     };
-    for (const grp of grouped(sel)) {
-      for (const { index, atom } of grp.atoms) {
+    for (const grp of groups) {
+      // PyMOL stores atoms in canonical order and exports in that order.
+      const atoms = [...grp.atoms].sort(atomOrderCmp);
+      for (const { index, atom } of atoms) {
         writeTer(atom);
         lines.push(pdbAtomLine(atom, grp.mol.coord(index, st), serial));
         serial++;

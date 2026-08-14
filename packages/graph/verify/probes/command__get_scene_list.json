@@ -1,0 +1,17 @@
+{
+  "id": "command__get_scene_list",
+  "feature": "get_scene_list",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "scene F1, store" },
+    { "do": "scene F2, store" },
+    { "do": "scene F3, store" }
+  ],
+  "checks": [
+    { "call": ["get_scene_list"], "label": "ordered stored scene names" }
+  ],
+  "tol": 1e-3,
+  "expected": [["F1", "F2", "F3"]]
+}

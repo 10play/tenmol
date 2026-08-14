@@ -1,0 +1,25 @@
+{
+  "id": "command__get_object_settings",
+  "feature": "get_object_settings",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "set sphere_scale, 2.0, ala" }
+  ],
+  "checks": [
+    { "call": ["get_object_settings", "ala"], "label": "object-level setting overrides on ala" },
+    { "call": ["get_setting_float", "sphere_scale", "ala"], "label": "sphere_scale override value on ala" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      [
+        155,
+        3,
+        2
+      ]
+    ],
+    2
+  ]
+}

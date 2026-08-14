@@ -1,0 +1,16 @@
+{
+  "id": "command__get_scene_message", "feature": "get_scene_message", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"scene F1, store, message=hello scene caption"}
+  ],
+  "checks": [
+    {"call":["get_scene_message","F1"],"label":"message stored with scene F1"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    "hello scene caption",
+    1
+  ]
+}

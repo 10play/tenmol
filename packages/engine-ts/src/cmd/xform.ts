@@ -3,9 +3,10 @@
  * get_object_state, get_selection_state, set_state_order, get_coordset,
  * load_coordset, set_discrete (+ its count_discrete getter path).
  *
- * `set_object_ttt` is intentionally NOT registered: the viewport has no TTT
- * (per-object matrix) support and `get_object_ttt` is a fixed `null` stub, so an
- * honest `NotPorted` is preferable to a lying no-op.
+ * `set_object_ttt` is intentionally NOT registered: an honest `NotPorted` is
+ * preferable to a lying no-op. The TTT (transient display) matrix itself is
+ * modelled just enough for `translate object=…` to write it and
+ * `get_object_ttt` to read it back (see {@link registerTransforms}).
  *
  * Registers through the shared {@link RegistrarCtx}. Compose real verbs via
  * `ctx.call(...)` (`frame`, `load_coords`, `get_frame`); mutate model state via

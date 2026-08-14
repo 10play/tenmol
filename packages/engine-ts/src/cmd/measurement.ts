@@ -301,6 +301,25 @@ export function registerMeasurement(ctx: RegistrarCtx): void {
     }
     return out as unknown as Json;
   });
+
+  /* ---------------------------- get_phipsi ---------------------------- */
+  // PyMOL's `cmd.get_phipsi` returns a dict keyed by the `(object, index)`
+  // tuple (1-based atom index) mapping each backbone CA to its `(phi, psi)`
+  // pair — NOT a bare `[phi, psi]` list. Only residues whose full backbone
+  // (prev-C, N, CA, C, next-N) resolves get an entry, so chain termini are
+  // omitted and an empty selection yields `{}`. Uses the same connectivity-based
+  // dihedral engine as `phi_psi` (a port of `SelectorGetPhiPsi`).
+  ctx.command('get_phipsi', (args, kwargs): Json => {
+    const sel = str(arg(args, kwargs, 0, 'selection'), '(name CA)');
+    const state = oneState(num(arg(args, kwargs, 1, 'state'), -1));
+    const out: Record<string, [number, number]> = {};
+    for (const ua of ex.atomsMatching(sel)) {
+      if (ua.atom.name !== 'CA') continue;
+      const pp = phiPsiForCA(molOf(ua), ua.index, state);
+      if (pp) out[`${ua.objName},${ua.index + 1}`] = pp;
+    }
+    return out as unknown as Json;
+  });
 }
 
 /* --------------------------- phi/psi engine -------------------------- */

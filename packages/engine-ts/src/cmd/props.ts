@@ -91,9 +91,10 @@ export function registerProps(ctx: RegistrarCtx): void {
     return v === undefined ? null : v;
   });
 
-  // cmd.get_property_list(selection_or_object, state) — the [name, value] pairs
-  // of a single object's properties (the first object the argument touches),
-  // in the order they were first set. Empty list when the object has none.
+  // cmd.get_property_list(object, state) — the property NAMES of a single
+  // object's properties (the first object the argument touches), in the order
+  // they were first set. Empty list when the object has none. Real PyMOL's
+  // C layer returns the list of names (propname=None means "return all").
   ctx.command('get_property_list', (args, kwargs): Json => {
     const sel = str(args[0] ?? kwargs['object'] ?? kwargs['selection'] ?? '(all)', '(all)');
     const objs = objectsFor(sel);
@@ -101,9 +102,7 @@ export function registerProps(ctx: RegistrarCtx): void {
     if (!mol) return [];
     const m = objectProps.get(mol);
     if (!m) return [];
-    const out: Array<[string, PropValue]> = [];
-    for (const [k, v] of m) out.push([k, v]);
-    return out;
+    return [...m.keys()];
   });
 
   /* ---------------------------- atom properties --------------------------- */

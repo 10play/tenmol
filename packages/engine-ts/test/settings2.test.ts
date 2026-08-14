@@ -93,17 +93,21 @@ describe('settings2: per-object settings', () => {
     expect(n).toBe(1);
     // Global stays at its default — per-object override is separate.
     expect(h.ex.getSettingFloat('sphere_scale')).toBe(1.0);
-    expect(h.call('get_object_settings', ['m'])).toEqual({ sphere_scale: 0.7 });
+    // PyMOL's get_object_settings serializes the object-level setting handle as
+    // a list of [index, type, value] tuples (SettingAsPyList). sphere_scale is
+    // index 155, type 3 (cSetting_float). Verified against real PyMOL.
+    expect(h.call('get_object_settings', ['m'])).toEqual([[155, 3, 0.7]]);
 
     const removed = h.call('unset', ['sphere_scale', 'm']);
     expect(removed).toBe(1);
-    expect(h.call('get_object_settings', ['m'])).toEqual({});
+    expect(h.call('get_object_settings', ['m'])).toBeNull();
   });
 
-  it('returns an empty object for an object with no overrides', () => {
+  it('returns null for an object with no overrides', () => {
     const h = makeHarness();
-    expect(h.call('get_object_settings', ['m'])).toEqual({});
-    expect(h.call('get_object_settings', ['nope'])).toEqual({});
+    // No settings handle -> C-layer null -> Python None. Verified against real PyMOL.
+    expect(h.call('get_object_settings', ['m'])).toBeNull();
+    expect(h.call('get_object_settings', ['nope'])).toBeNull();
   });
 });
 

@@ -377,6 +377,25 @@ export function registerAlign(ctx: RegistrarCtx): void {
   const str = ctx.str;
 
   /**
+   * Materialised alignment objects, keyed by name. Each value is the raw
+   * alignment: a list of columns, each column a list of `[objectName, index]`
+   * pairs (`index` is PyMOL's 1-based atom index). `align`/`super`/… populate
+   * this when called with `object=<name>`; `get_raw_alignment` reads it back.
+   */
+  const rawAlignments = new Map<string, Array<Array<[string, number]>>>();
+
+  /** Object load-order rank, so a column's members come out in the same order
+   *  real PyMOL lists them (by the alignment's object order). */
+  const loadRank = (name: string): number => {
+    let i = 0;
+    for (const mol of ctx.executive.moleculesInOrder()) {
+      if (mol.name === name) return i;
+      i++;
+    }
+    return i;
+  };
+
+  /**
    * Shared paired-selection gather for `fit` / `rms_cur` / `rms`. Pairs atoms by
    * IDENTITY — (segi, chain, resn, resi, name, alt) — matching PyMOL's default
    * `matchmaker=0`, so storage order is irrelevant (a reversed copy still pairs).
@@ -529,6 +548,8 @@ export function registerAlign(ctx: RegistrarCtx): void {
     const mob: Vec3[] = [];
     const tgt: Vec3[] = [];
     const mobMols = new Set<string>();
+    // Per-column atom pairing for the alignment object (if object= is given).
+    const columns: Array<Array<[string, number]>> = [];
     let nRes = 0;
     for (const [i, j] of pairs) {
       const mAtoms = mobRes.get(resKeyOf(mobCA[i] as UniverseAtom));
@@ -544,12 +565,22 @@ export function registerAlign(ctx: RegistrarCtx): void {
         mobMols.add(mua.objName);
         mob.push(mMol.coord(mua.index, state));
         tgt.push(tMol.coord(tua.index, state));
+        // Column members are PyMOL 1-based indices, ordered by object load order.
+        const col: Array<[string, number]> = [
+          [mua.objName, mua.index + 1],
+          [tua.objName, tua.index + 1],
+        ];
+        col.sort((a, b) => loadRank(a[0]) - loadRank(b[0]));
+        columns.push(col);
         paired = true;
       }
       if (paired) nRes++;
     }
     const n = mob.length;
     if (n === 0) return [0, 0, 0, 0, 0, 0, 0];
+
+    const objectName = str(pick(args, kwargs, 7, 'object'), '');
+    if (objectName) rawAlignments.set(objectName, columns);
 
     const rmsdPre = rmsPaired(mob, tgt);
     const sup = superpose(mob, tgt);
@@ -833,6 +864,12 @@ export function registerAlign(ctx: RegistrarCtx): void {
   });
 
   /* --------------------------- get_raw_alignment ------------------------- */
-  // get_raw_alignment(name) — the per-atom alignment map; a `[]` stub here.
-  ctx.command('get_raw_alignment', (): Json => []);
+  // get_raw_alignment(name, active_only=0) — the per-atom alignment relations of
+  // an alignment object, as a list of columns of (object, index) tuples. Reads
+  // back whatever `align`/`super`/… recorded when called with object=<name>.
+  ctx.command('get_raw_alignment', (args, kwargs): Json => {
+    const name = str(pick(args, kwargs, 0, 'name'), '');
+    const cols = name ? rawAlignments.get(name) : undefined;
+    return (cols ?? []) as unknown as Json;
+  });
 }

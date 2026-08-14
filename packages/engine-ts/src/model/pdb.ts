@@ -97,6 +97,10 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
         mol.cell = { a, b, c, alpha, beta, gamma };
         const sg = col(line, 56, 66).trim();
         mol.spacegroup = sg || 'P 1';
+        // PyMOL reads Z from a 3-char field (cols 67-69), so `…30` -> 3; a
+        // missing/blank value defaults to 1 (ObjectMolecule2.cpp PDBZValue).
+        const z = parseInt(col(line, 67, 69).trim(), 10);
+        mol.pdbZValue = Number.isFinite(z) ? z : 1;
       }
       continue;
     }

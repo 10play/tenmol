@@ -1,0 +1,32 @@
+{
+  "id": "command__get_pdbstr",
+  "feature": "get_pdbstr",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_pdbstr",
+        "m and chain A and resi 1 and name CA"
+      ],
+      "label": "PDB string of a single CA atom"
+    },
+    {
+      "call": [
+        "get_pdbstr",
+        "m and chain A and resi 1-2"
+      ],
+      "label": "PDB string of first two residues"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    "CRYST1  105.700  105.700  171.600  90.00  90.00 120.00 P 31 2 1      3\nATOM      1  CA  ASN A   1      39.248  28.780   6.904  1.00 38.74           C  \nTER   \nEND\n",
+    "CRYST1  105.700  105.700  171.600  90.00  90.00 120.00 P 31 2 1      3\nATOM      1  N   ASN A   1      40.722  28.540   6.801  1.00 41.59           N  \nATOM      2  CA  ASN A   1      39.248  28.780   6.904  1.00 38.74           C  \nATOM      3  C   ASN A   1      38.626  27.770   7.838  1.00 31.76           C  \nATOM      4  O   ASN A   1      39.145  26.661   7.992  1.00 33.58           O  \nATOM      5  CB  ASN A   1      38.574  28.636   5.536  1.00 50.07           C  \nATOM      6  CG  ASN A   1      38.434  29.951   4.818  1.00 58.04           C  \nATOM      7  ND2 ASN A   1      37.457  30.043   3.911  1.00 61.34           N  \nATOM      8  OD1 ASN A   1      39.205  30.887   5.078  1.00 65.46           O  \nATOM      9  N   ASP A   2      37.514  28.158   8.446  1.00 23.88           N  \nATOM     10  CA  ASP A   2      36.787  27.299   9.357  1.00 20.60           C  \nATOM     11  C   ASP A   2      35.388  27.303   8.847  1.00 18.02           C  \nATOM     12  O   ASP A   2      34.923  28.298   8.323  1.00 16.99           O  \nATOM     13  CB  ASP A   2      36.740  27.879  10.772  1.00 28.43           C  \nATOM     14  CG  ASP A   2      38.040  27.721  11.535  1.00 32.58           C  \nATOM     15  OD1 ASP A   2      39.044  27.224  10.967  1.00 35.32           O  \nATOM     16  OD2 ASP A   2      38.046  28.103  12.729  1.00 37.85           O1-\nTER   \nEND\n"
+  ]
+}

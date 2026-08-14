@@ -65,6 +65,40 @@ const KNOWN_KEYWORDS = new Set([
 type Handler = (args: unknown[], kwargs: Record<string, unknown>) => Json;
 
 /**
+ * Natural string order — `strlessnat` (layer0/Util2.cpp), used by
+ * `scene_order ..., sort=1`: digit runs compare numerically so "F2" precedes
+ * "F10".
+ */
+function naturalCompare(a: string, b: string): number {
+  const ta = a.match(/\d+|\D+/g) ?? [];
+  const tb = b.match(/\d+|\D+/g) ?? [];
+  const n = Math.min(ta.length, tb.length);
+  for (let i = 0; i < n; i++) {
+    const xa = ta[i] ?? '';
+    const xb = tb[i] ?? '';
+    const da = /^\d/.test(xa);
+    const db = /^\d/.test(xb);
+    if (da && db) {
+      const diff = Number(xa) - Number(xb);
+      if (diff !== 0) return diff;
+    } else if (xa !== xb) {
+      return xa < xb ? -1 : 1;
+    }
+  }
+  return ta.length - tb.length;
+}
+
+/** One stored scene in the bin (`MovieScene`, layer3/MovieScene.h). */
+interface SceneEntry {
+  /** The stored 18-float camera view, or null when `view` was not stored. */
+  view: number[] | null;
+  /** The wizard message shown on recall ('' when none). */
+  message: string;
+  /** The stored movie frame index (1-based). */
+  frame: number;
+}
+
+/**
  * A Python line the port cannot and should not run: the app's feature panels
  * install their bridge-side helpers with lines like
  * `/import tenmol_bridge.panels.settings as _s;_s.install()`, sent every poll.
@@ -122,6 +156,17 @@ export class Engine {
   // Named camera views — `cmd.view(key, 'store'|'recall'|'clear')`. PyMOL keeps
   // these as 18-float entries in a Python dict; the port mirrors that.
   private readonly views = new Map<string, number[]>();
+
+  // The scene bin — `cmd.scene(key, action, …)`. Mirrors `CMovieScenes`
+  // (layer3/MovieScene.cpp): an ORDERED list of scene keys plus a dict of the
+  // stored state per key. The port stores the observable slice PyMOL captures
+  // for a scene — the camera view, the wizard message and the movie frame —
+  // and manages the ordering exactly as `MovieSceneOrder`/`MovieSceneStore`/
+  // `MovieSceneRename` do, so `get_scene_list` reports the bin in bin order.
+  private readonly sceneOrder: string[] = [];
+  private readonly sceneDict = new Map<string, SceneEntry>();
+  // The auto-numbering counter behind `getUniqueKey()` (scene key "new").
+  private sceneCounter = 1;
 
   constructor() {
     this.register();
@@ -670,8 +715,13 @@ export class Engine {
     // settings) rendering CLEANLY on the local engine instead of showing a red
     // "not ported" error for every idle poll. These are reads only; nothing is
     // pretending to implement a feature.
-    h('get_scene_list', () => []);
+    // `cmd.get_scene_list()` -> `_cmd.get_scene_order` -> `MovieSceneGetOrder`
+    // (layer3/MovieScene.cpp): the scene bin's keys, in bin order.
+    h('get_scene_list', () => [...this.sceneOrder]);
     h('get_scene_dict', () => ({}) as unknown as Json);
+    // `cmd.get_scene_message(name)` -> `MovieSceneGetMessage`: the stored
+    // wizard message, or '' when the scene is unknown / has no message.
+    h('get_scene_message', (args) => this.sceneDict.get(str(args[0], ''))?.message ?? '');
     h('get_frame', () => 1);
     h('get_state', () => 1);
     h('count_frames', () => 0);
@@ -790,7 +840,10 @@ export class Engine {
         'view',
       );
     });
-    h('scene', () => null);
+    // `cmd.scene(key, action, …)` — store/recall/reorder the scene bin.
+    // Ported from `MovieSceneFunc` (layer3/MovieScene.cpp) plus the argument
+    // canonicalisation in `viewing.scene` (modules/pymol/viewing.py).
+    h('scene', (args, kwargs) => this.runScene(args, kwargs));
     h('wizards.catalog', () => []);
     // NOTE: only stub a symbol when the EMPTY shape is known. wizards.probe /
     // wizards.snapshot return rich objects a feature dereferences; a wrong-shape
@@ -824,6 +877,277 @@ export class Engine {
       str: (v, d = '') => str(v, d),
     };
     for (const register of ALL_REGISTRARS) register(ctx);
+  }
+
+  /* ------------------------------- scenes -------------------------------- */
+
+  /** The `scene_current_name` setting, as a plain string ('' when unset). */
+  private sceneCurrentName(): string {
+    const v = this.executive.getSetting('scene_current_name');
+    return v === undefined ? '' : String(v);
+  }
+
+  /** Set `scene_current_name` so the value is observable via `get_setting_text`. */
+  private setSceneCurrentName(name: string): void {
+    this.executive.set('scene_current_name', name);
+  }
+
+  /** `CMovieScenes::getUniqueKey()` — the next free "%03d" scene key. */
+  private uniqueSceneKey(): string {
+    for (;;) {
+      const key = String(this.sceneCounter).padStart(3, '0');
+      if (!this.sceneDict.has(key)) return key;
+      this.sceneCounter++;
+    }
+  }
+
+  /**
+   * `MovieSceneStore` — create/overwrite scene `key`, appending it to the order
+   * when new. Empty/"new" key auto-numbers. Returns the resolved key.
+   */
+  private sceneStore(key: string, message: string, storeView: boolean): string {
+    if (key === '' || key === 'new') {
+      key = this.uniqueSceneKey();
+      this.sceneOrder.push(key);
+    } else if (!this.sceneDict.has(key)) {
+      this.sceneOrder.push(key);
+    }
+    this.setSceneCurrentName(key);
+    this.sceneDict.set(key, {
+      view: storeView ? this.executive.view.get() : null,
+      message,
+      frame: 1,
+    });
+    return key;
+  }
+
+  /** `MovieSceneRecall` — restore the stored view; false if `key` is unknown. */
+  private sceneRecall(key: string, recallView: boolean): boolean {
+    const scene = this.sceneDict.get(key);
+    if (!scene) return false;
+    this.setSceneCurrentName(key);
+    if (recallView && scene.view) {
+      this.executive.view.set(scene.view);
+      this.emitView();
+    }
+    return true;
+  }
+
+  /**
+   * `MovieSceneRename` — rename `name` to `newName`, or (empty `newName`)
+   * delete it. `name === '*'` clears the whole bin. Updates `scene_current_name`.
+   */
+  private sceneRename(name: string, newName: string): void {
+    if (name === '*') {
+      this.sceneOrder.length = 0;
+      this.sceneDict.clear();
+      return;
+    }
+    if (newName && name === newName) return;
+    const scene = this.sceneDict.get(name);
+    if (!scene) throw this.sceneError(`${name} could not be found.`);
+    this.sceneDict.delete(name);
+    const idx = this.sceneOrder.indexOf(name);
+    if (newName) {
+      this.sceneDict.set(newName, scene);
+      // Overwriting an existing key drops its old slot before renaming.
+      const oldNew = this.sceneOrder.indexOf(newName);
+      if (idx >= 0) this.sceneOrder[idx] = newName;
+      if (oldNew >= 0 && oldNew !== idx) this.sceneOrder.splice(oldNew, 1);
+    } else if (idx >= 0) {
+      this.sceneOrder.splice(idx, 1);
+    }
+    if (name === this.sceneCurrentName()) this.setSceneCurrentName(newName);
+  }
+
+  /**
+   * `MovieSceneOrder` — move `names` to `location` (top|current|bottom),
+   * optionally natural-sorting them first. `names === '*'` reorders the whole
+   * bin (only meaningful with `sort`).
+   */
+  private sceneOrderMove(names: string[], sort: boolean, location: string): void {
+    let list = names;
+    const isAll = list.length === 1 && list[0] === '*';
+    if (isAll) {
+      list = [...this.sceneOrder];
+    } else {
+      for (const name of list) {
+        if (!this.sceneDict.has(name)) throw this.sceneError(`Scene '${name}' is not defined.`);
+      }
+    }
+    if (list.length === 0) return;
+    if (sort) list = [...list].sort(naturalCompare);
+
+    let newOrder: string[];
+    if (isAll) {
+      newOrder = list;
+    } else {
+      const set = new Set(list);
+      if (set.size !== list.length) throw this.sceneError('Duplicated keys.');
+      const loc = (location || 'current')[0];
+      newOrder = [];
+      if (loc === 't') newOrder.push(...list);
+      for (const name of this.sceneOrder) {
+        if (!set.has(name)) newOrder.push(name);
+        else if (loc === 'c' && name === list[0]) newOrder.push(...list);
+      }
+      if (loc === 'b') newOrder.push(...list);
+    }
+    this.sceneOrder.length = 0;
+    this.sceneOrder.push(...newOrder);
+  }
+
+  /** `MovieSceneGetNextKey` — next/previous key relative to `scene_current_name`. */
+  private sceneNextKey(next: boolean): string {
+    const current = this.sceneCurrentName();
+    const loop = this.executive.getSetting('scene_loop');
+    // Default scene_loop is on (SettingInfo.h); an empty current always loops.
+    let sceneLoop = loop === undefined ? true : Number(loop) !== 0;
+    if (!current) sceneLoop = true;
+    const order = this.sceneOrder;
+    let i = order.indexOf(current);
+    if (next) {
+      if (i >= 0 && i < order.length - 1) i += 1;
+      else if (sceneLoop) i = 0;
+      else return '';
+    } else {
+      if (i > 0) i -= 1;
+      else if (sceneLoop) i = order.length - 1;
+      else return '';
+    }
+    return order[i] ?? '';
+  }
+
+  /** `MovieSceneOrderBeforeAfter` — move the current scene next to `key`. */
+  private sceneOrderBeforeAfter(key: string, before: boolean): void {
+    let location: string | undefined;
+    const key2 = this.sceneCurrentName();
+    let anchor = key;
+    if (before) {
+      const it = this.sceneOrder.indexOf(key);
+      if (it === 0) {
+        location = 'top';
+        anchor = '';
+      } else if (it > 0) {
+        anchor = this.sceneOrder[it - 1] ?? '';
+      }
+    }
+    const names = [anchor, key2].filter((n) => n !== '');
+    this.sceneOrderMove(names, false, location ?? 'current');
+  }
+
+  private sceneError(message: string): PymolError {
+    return new PymolError(
+      { kind: 'CmdException', type: 'CmdException', message, traceback: '' },
+      'scene',
+    );
+  }
+
+  /**
+   * `cmd.scene` — the argument canonicalisation from `viewing.scene` followed by
+   * the action dispatch in `MovieSceneFunc`.
+   */
+  private runScene(args: unknown[], kwargs: Record<string, unknown>): Json {
+    const str = (v: unknown, d = ''): string => (v === undefined || v === null ? d : String(v));
+
+    // The console parser keeps every comma-separated token positional (it cannot
+    // safely split `=` in general — see cmd/parser.ts). PyMOL's Python arg binder
+    // does interpret a `name=value` token as a keyword argument against the
+    // command's signature, so `scene F1, store, message=hi` binds `message`. We
+    // reproduce that here: peel `name=value` tokens whose name is a known scene
+    // parameter out of the positional list and into kwargs. Only the first `=`
+    // splits, so a value may itself contain `=`.
+    const SCENE_PARAMS = new Set([
+      'key', 'action', 'message', 'view', 'color', 'active',
+      'rep', 'frame', 'animate', 'new_key', 'hand', 'quiet', 'sele',
+    ]);
+    const pos: unknown[] = [];
+    const kw: Record<string, unknown> = { ...kwargs };
+    for (const a of args) {
+      if (typeof a === 'string') {
+        const eq = a.indexOf('=');
+        if (eq > 0) {
+          const name = a.slice(0, eq).trim();
+          if (SCENE_PARAMS.has(name)) {
+            kw[name] = a.slice(eq + 1);
+            continue;
+          }
+        }
+      }
+      pos.push(a);
+    }
+
+    let key = str(pos[0] ?? kw['key'], 'auto') || 'auto';
+    let action = (str(pos[1] ?? kw['action'], 'recall') || 'recall').toLowerCase();
+    const rawMsg = pos[2] ?? kw['message'];
+    const message = rawMsg === undefined || rawMsg === null ? '' : str(rawMsg);
+    const newKey = str(kw['new_key'] ?? pos[9] ?? '', '');
+    const storeView = Number(pos[3] ?? kw['view'] ?? 1) !== 0;
+
+    // viewing.scene canonicalisation.
+    if (key === 'auto' && action === 'recall') action = 'next';
+    if (action === 'clear') action = 'delete';
+    else if (action === 'append' || action === 'update') action = 'store';
+
+    // MovieSceneFunc: insert_before / insert_after -> store + reorder.
+    let beforeafter = 0;
+    let prevName = '';
+    if (action.startsWith('insert_')) {
+      prevName = this.sceneCurrentName();
+      if (prevName) beforeafter = action[7] === 'b' ? 1 : 2;
+      action = 'store';
+    }
+
+    if (action === 'next' || action === 'previous') {
+      if (this.sceneOrder.length === 0) throw this.sceneError('No scenes');
+      key = this.sceneNextKey(action[0] === 'n');
+      action = 'recall';
+    } else if (action === 'start') {
+      if (this.sceneOrder.length === 0) throw this.sceneError('No scenes');
+      key = this.sceneOrder[0] ?? '';
+      action = 'recall';
+    } else if (key === 'auto') {
+      key = this.sceneCurrentName();
+    }
+
+    switch (action) {
+      case 'recall': {
+        if (key === '*') break; // print-order only; no state change
+        if (!key) {
+          // empty key -> blank the current scene name (blank-screen recall)
+          this.setSceneCurrentName('');
+        } else if (!this.sceneRecall(key, storeView)) {
+          throw this.sceneError(`Scene ${key} is not defined.`);
+        }
+        break;
+      }
+      case 'store': {
+        this.sceneStore(key, message, storeView);
+        if (beforeafter) this.sceneOrderBeforeAfter(prevName, beforeafter === 1);
+        break;
+      }
+      case 'delete':
+        this.sceneRename(key, '');
+        break;
+      case 'rename':
+        this.sceneRename(key, newKey);
+        break;
+      case 'order':
+        this.sceneOrderMove(key.split(/\s+/).filter(Boolean), false, 'current');
+        break;
+      case 'sort':
+        this.sceneOrderMove(key.split(/\s+/).filter(Boolean), true, 'current');
+        break;
+      case 'first':
+        this.sceneOrderMove(key.split(/\s+/).filter(Boolean), false, 'top');
+        break;
+      default:
+        break;
+    }
+
+    // Trigger GUI updates (scene buttons) exactly as the C function does.
+    this.executive.set('scenes_changed', 1);
+    return null;
   }
 
   /**

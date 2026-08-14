@@ -1,0 +1,19 @@
+{
+  "id": "command__get_object_ttt",
+  "feature": "get_object_ttt",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "call": ["translate", [10, 20, 30]], "kwargs": { "object": "ala", "camera": 0 } }
+  ],
+  "checks": [
+    { "call": ["get_object_ttt", "ala"], "label": "TTT matrix after object translate" },
+    { "call": ["get_object_ttt", "nope"], "label": "TTT of nonexistent object is None" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1, 0, 0, 10, 0, 1, 0, 20, 0, 0, 1, 30, 0, 0, 0, 1],
+    null
+  ]
+}

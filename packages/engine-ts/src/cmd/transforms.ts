@@ -72,6 +72,11 @@ function transpose3(m: Mat3): Mat3 {
   ];
 }
 
+/** Row-major homogeneous 4×4 identity as a flat 16-list. */
+function identity44(): number[] {
+  return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+}
+
 /* ------------------------------ arg parsing ------------------------------ */
 
 /** Positional arg `i`, falling back to the named kwarg. */
@@ -233,12 +238,38 @@ export function registerTransforms(ctx: RegistrarCtx): void {
     const sel = ctx.str(pick(args, kwargs, 1, 'selection'), 'all') || 'all';
     const state = num(pick(args, kwargs, 2, 'state'), 0);
     const camera = flag(pick(args, kwargs, 3, 'camera'), true);
+    const objectRaw = pick(args, kwargs, 4, 'object');
+    const object = objectRaw == null ? '' : ctx.str(objectRaw);
     const v = view.get();
     // camera=1 (default): the vector is in camera space; map it to model space.
     const vec = camera ? transform3(transpose3(v.slice(0, 9)), vecRaw) : vecRaw;
+    // object set (object_mode=0): the selection is ignored; instead of moving the
+    // atoms, PyMOL updates the object's TTT display matrix (ObjectTranslateTTT).
+    if (object) {
+      const mol = ctx.executive.molecule(object);
+      if (!mol) return null;
+      if (!mol.ttt) mol.ttt = identity44();
+      mol.ttt[3]! += vec[0];
+      mol.ttt[7]! += vec[1];
+      mol.ttt[11]! += vec[2];
+      ctx.publish();
+      return null;
+    }
     applyCoords(sel, state, (p) => [p[0] + vec[0], p[1] + vec[1], p[2] + vec[2]]);
     ctx.publish();
     return null;
+  });
+
+  /* --------------------------- get_object_ttt --------------------------- */
+  // get_object_ttt(object, quiet=1) — return the object's TTT (transient)
+  // display matrix as a flat row-major 16-list, or null when no TTT is set
+  // (PyMOL's TTTFlag false) or the object is unknown. Ports ObjectGetTTT with
+  // state=-1 (the only state real PyMOL supports here).
+  ctx.command('get_object_ttt', (args, kwargs): Json => {
+    const name = ctx.str(pick(args, kwargs, 0, 'object'));
+    const mol = ctx.executive.molecule(name);
+    if (!mol || !mol.ttt) return null;
+    return mol.ttt.slice() as Json;
   });
 
   /* ------------------------------- center ------------------------------- */

@@ -1,0 +1,16 @@
+{
+  "id": "command__get_property_list",
+  "feature": "get_property_list",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "set_property prop_a, alpha, ala" },
+    { "do": "set_property prop_b, beta, ala" }
+  ],
+  "checks": [
+    { "call": ["get_property_list", "ala"], "label": "all object-level properties of ala", "expected": ["prop_a", "prop_b"] },
+    { "call": ["get_property", "prop_a", "ala"], "label": "single property read-back prop_a", "expected": "alpha" }
+  ],
+  "tol": 1e-3
+}

@@ -69,7 +69,8 @@ describe('props: object properties', () => {
     h.call('set_property', ['author', 'ada', 'm']);
     h.call('set_property', ['author', 'grace', 'm']);
     expect(h.call('get_property', ['author', 'm'])).toBe('grace');
-    expect(h.call('get_property_list', ['m'])).toEqual([['author', 'grace']]);
+    // Real PyMOL's get_property_list returns just the property NAMES.
+    expect(h.call('get_property_list', ['m'])).toEqual(['author']);
   });
 
   it('returns null for an absent property and an unknown object', () => {
@@ -79,14 +80,12 @@ describe('props: object properties', () => {
     expect(h.call('get_property', ['author', 'nope'])).toBeNull();
   });
 
-  it('get_property_list returns [name, value] pairs in insertion order', () => {
+  it('get_property_list returns property names in insertion order', () => {
     const h = makeHarness();
     h.call('set_property', ['author', 'ada', 'm']);
     h.call('set_property', ['year', 1843, 'm']);
-    expect(h.call('get_property_list', ['m'])).toEqual([
-      ['author', 'ada'],
-      ['year', 1843],
-    ]);
+    // Real PyMOL's get_property_list returns just the property NAMES.
+    expect(h.call('get_property_list', ['m'])).toEqual(['author', 'year']);
     // No properties on a fresh object -> empty list.
     const h2 = makeHarness('empty');
     expect(h2.call('get_property_list', ['empty'])).toEqual([]);

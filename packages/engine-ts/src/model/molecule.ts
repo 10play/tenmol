@@ -46,6 +46,12 @@ export class ObjectMolecule {
   /** Row-major homogeneous 4×4 recorded by `transform_object` (PyMOL's object
    *  state matrix); absent ⇒ identity. Read by `get_object_matrix`. */
   objectMatrix?: number[];
+  /** PyMOL's TTT (transient) 4×4 display matrix — the transform applied by
+   *  camera/mouse manipulation before the object matrix. Stored row-major with
+   *  the translation in the 4th column (indices 3/7/11), matching PyMOL's
+   *  `CObject::TTT`. Absent ⇒ no TTT set (`TTTFlag` false). Written by
+   *  `translate object=…`; read by `get_object_ttt`. */
+  ttt?: number[];
   /**
    * Unit-cell parameters from `CRYST1`, or `undefined` when the file carried no
    * crystal record. Read by the symmetry commands (`get_symmetry`, `symexp`).
@@ -53,6 +59,11 @@ export class ObjectMolecule {
   cell?: CrystalCell;
   /** Space-group symbol from `CRYST1` (e.g. `'P 21 21 21'`), or `undefined`. */
   spacegroup?: string;
+  /** `CRYST1` Z-value (`CSymmetry::PDBZValue`) — molecules per unit cell. PyMOL
+   *  reads it from a 3-char field (cols 67-69) so a `…30` record yields `3`
+   *  (`ObjectMolecule2.cpp` `ncopy(cc, p, 3)`). Re-emitted by the PDB exporter's
+   *  CRYST1 line; absent ⇒ PyMOL's default of `1`. */
+  pdbZValue?: number;
   /** Biological-assembly ids from the mmCIF `_pdbx_struct_assembly.id` array
    *  (e.g. `['1', '2']`), or `undefined` when the file carried no such data.
    *  Read by `get_assembly_ids`. */

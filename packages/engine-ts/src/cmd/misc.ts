@@ -23,8 +23,6 @@ import type { UniverseAtom } from '../select/selector';
 import type { RegistrarCtx } from './registrar';
 import { sphereForDensity } from '../geometry/sphere_data';
 
-type Vec3 = [number, number, number];
-
 /** PyMOL `solvent_radius` default (Å). */
 const DEFAULT_PROBE = 1.4;
 
@@ -32,13 +30,6 @@ const DEFAULT_PROBE = 1.4;
 const CATOMFLAG_EXFOLIATE = 0x01000000;
 /** PyMOL atom flag that removes an atom from the occluder set. */
 const CATOMFLAG_IGNORE = 0x02000000;
-
-/**
- * Sample-point count per atom sphere. Higher = smoother area fractions. A lone
- * atom is 100% exposed regardless of N (fraction is exactly 1), so this only
- * affects partially-buried atoms; 400 gives a stable estimate.
- */
-const N_POINTS = 400;
 
 /* ------------------------------ small helpers ---------------------------- */
 
@@ -59,76 +50,6 @@ function oneState(state: number): number {
   return state > 0 ? state : 1;
 }
 
-/**
- * N points on the unit sphere via the Fibonacci lattice — deterministic and
- * near-uniform, so the exposed fraction is a stable Monte-Carlo-free estimate.
- */
-function fibonacciSphere(n: number): Vec3[] {
-  const pts: Vec3[] = [];
-  const golden = Math.PI * (3 - Math.sqrt(5)); // golden angle
-  for (let k = 0; k < n; k++) {
-    const y = 1 - ((k + 0.5) / n) * 2; // 1 -> -1
-    const r = Math.sqrt(Math.max(0, 1 - y * y));
-    const theta = golden * k;
-    pts.push([Math.cos(theta) * r, y, Math.sin(theta) * r]);
-  }
-  return pts;
-}
-
-/**
- * Per-atom solvent-accessible surface area for a set of atoms, in input order.
- *
- * Each atom `i` is a sphere of radius `Ri = vdw_i + probe`. We tile it with
- * {@link fibonacciSphere} points and count those NOT buried inside any other
- * atom's expanded sphere (`dist(point, Cj) < Rj`); the exposed fraction times
- * the full sphere area `4π·Ri²` is the atom's contribution. Burial context is
- * the same atom set (PyMOL's caveat: include neighbours in the selection).
- */
-function perAtomArea(
-  centers: Vec3[],
-  radii: number[],
-  unit: Vec3[],
-): number[] {
-  const n = centers.length;
-  const areas = new Array<number>(n).fill(0);
-  for (let i = 0; i < n; i++) {
-    const ci = centers[i]!;
-    const ri = radii[i]!;
-    // Only atoms whose spheres can overlap atom i's sphere can bury its points.
-    const neigh: number[] = [];
-    for (let j = 0; j < n; j++) {
-      if (j === i) continue;
-      const cj = centers[j]!;
-      const dx = ci[0] - cj[0];
-      const dy = ci[1] - cj[1];
-      const dz = ci[2] - cj[2];
-      const reach = ri + radii[j]!;
-      if (dx * dx + dy * dy + dz * dz < reach * reach) neigh.push(j);
-    }
-    let exposed = 0;
-    for (const u of unit) {
-      const px = ci[0] + u[0] * ri;
-      const py = ci[1] + u[1] * ri;
-      const pz = ci[2] + u[2] * ri;
-      let buried = false;
-      for (const j of neigh) {
-        const cj = centers[j]!;
-        const rj = radii[j]!;
-        const dx = px - cj[0];
-        const dy = py - cj[1];
-        const dz = pz - cj[2];
-        if (dx * dx + dy * dy + dz * dz < rj * rj) {
-          buried = true;
-          break;
-        }
-      }
-      if (!buried) exposed++;
-    }
-    areas[i] = (exposed / unit.length) * 4 * Math.PI * ri * ri;
-  }
-  return areas;
-}
-
 /* -------------------------------- registrar ------------------------------ */
 
 export function registerMisc(ctx: RegistrarCtx): void {
@@ -138,29 +59,6 @@ export function registerMisc(ctx: RegistrarCtx): void {
   const probeRadius = (): number => ex.getSettingFloat('solvent_radius') || DEFAULT_PROBE;
 
   const molOf = (ua: UniverseAtom): ObjectMolecule => ex.molecule(ua.objName)!;
-
-  /**
-   * Gather selection atoms plus their SASA-sphere geometry (centre + vdw+probe).
-   * Returns the matched atoms in selection order alongside parallel arrays.
-   */
-  const gatherAreaInputs = (
-    sel: string,
-    state: number,
-  ): { matched: UniverseAtom[]; areas: number[] } => {
-    const matched = ex.atomsMatching(sel);
-    const probe = probeRadius();
-    const s = oneState(state);
-    const centers: Vec3[] = [];
-    const radii: number[] = [];
-    for (const ua of matched) {
-      const mol = molOf(ua);
-      centers.push(mol.coord(ua.index, s));
-      radii.push(mol.vdw(ua.index) + probe);
-    }
-    const unit = fibonacciSphere(N_POINTS);
-    const areas = perAtomArea(centers, radii, unit);
-    return { matched, areas };
-  };
 
   // ---- get_area ----------------------------------------------------------
   // Faithful port of PyMOL's `ExecutiveGetArea` + `RepDotDoNew(cRepDotAreaType)`
@@ -277,42 +175,210 @@ export function registerMisc(ctx: RegistrarCtx): void {
   });
 
   // ---- get_sasa_relative -------------------------------------------------
-  // Per-residue relative SASA = area IN CONTEXT / area of the residue IN
-  // ISOLATION (its own atoms as the only occluders), altered into `var`
-  // (default 'b'). A lone, fully-exposed residue therefore reports 1.0.
+  // Faithful port of util.get_sasa_relative (packages/engine/modules/pymol/
+  // util.py). Per-residue relative SASA = the residue's area IN CONTEXT (the
+  // whole object occludes) divided by its area in a TRIPEPTIDE — that residue
+  // with only its two bonded sequence neighbours (`byres … extend 1`) as the
+  // occlusion context. The 0.0–1.0 ratio is altered into `var` (default 'b')
+  // for every atom of the residue. `dot_solvent` is forced on for the duration.
+  //
+  // Per-atom areas use the SAME single-precision geodesic-dot machinery as the
+  // `get_area` command above, evaluated against an arbitrary occluder set so
+  // the tripeptide reference can be measured in isolation.
+  const areasFor = (
+    mol: ObjectMolecule,
+    state: number,
+    computeIdx: Iterable<number>,
+    occluderIdx: number[],
+  ): Map<number, number> => {
+    const f = Math.fround;
+    const solvRad = ex.getSettingFloat('dot_solvent') !== 0 ? f(probeRadius()) : 0;
+    const density = ex.getSettingFloat('dot_density') || 2;
+    const sphere = sphereForDensity(density);
+    const dotX = sphere.dot.map((d) => f(d[0]));
+    const dotY = sphere.dot.map((d) => f(d[1]));
+    const dotZ = sphere.dot.map((d) => f(d[2]));
+    const s = oneState(state);
+    const flagOf = (i: number): number => {
+      const a = mol.atoms[i]!;
+      return a.flags ?? (a.hetatm ? CATOMFLAG_IGNORE : 0);
+    };
+
+    // Occluder shells (indexed by position in occluderIdx).
+    const m = occluderIdx.length;
+    const cx = new Float32Array(m);
+    const cy = new Float32Array(m);
+    const cz = new Float32Array(m);
+    const rad = new Float32Array(m);
+    const oflag = new Int32Array(m);
+    for (let k = 0; k < m; k++) {
+      const i = occluderIdx[k]!;
+      const c = mol.coord(i, s);
+      cx[k] = c[0];
+      cy[k] = c[1];
+      cz[k] = c[2];
+      rad[k] = f(mol.vdw(i) + solvRad);
+      oflag[k] = flagOf(i);
+    }
+
+    const out = new Map<number, number>();
+    for (const i of computeIdx) {
+      if ((flagOf(i) & (CATOMFLAG_EXFOLIATE | CATOMFLAG_IGNORE)) !== 0) {
+        out.set(i, 0);
+        continue;
+      }
+      const ri = f(mol.vdw(i) + solvRad);
+      const c = mol.coord(i, s);
+      const ox = c[0];
+      const oy = c[1];
+      const oz = c[2];
+      // Occluders whose spheres can bury a dot on atom i's shell (reach ri+rk).
+      const neigh: number[] = [];
+      for (let k = 0; k < m; k++) {
+        if (occluderIdx[k] === i) continue;
+        if ((oflag[k]! & CATOMFLAG_IGNORE) !== 0) continue;
+        const dx = ox - cx[k]!;
+        const dy = oy - cy[k]!;
+        const dz = oz - cz[k]!;
+        const reach = ri + rad[k]!;
+        if (dx * dx + dy * dy + dz * dz <= reach * reach) neigh.push(k);
+      }
+      const ri2 = f(ri * ri);
+      let atomArea = 0;
+      for (let b = 0; b < dotX.length; b++) {
+        const px = f(ox + f(ri * dotX[b]!));
+        const py = f(oy + f(ri * dotY[b]!));
+        const pz = f(oz + f(ri * dotZ[b]!));
+        let buried = false;
+        for (const k of neigh) {
+          const dx = f(px - cx[k]!);
+          const dy = f(py - cy[k]!);
+          const dz = f(pz - cz[k]!);
+          const rk = rad[k]!;
+          if (f(f(f(dx * dx) + f(dy * dy)) + f(dz * dz)) <= f(rk * rk)) {
+            buried = true;
+            break;
+          }
+        }
+        if (!buried) atomArea += ri2 * sphere.area[b]!;
+      }
+      out.set(i, atomArea);
+    }
+    return out;
+  };
+
   ctx.command('get_sasa_relative', (args, kwargs) => {
     const sel = sel0(pick(args, kwargs, 0, 'selection'));
     const state = num(pick(args, kwargs, 1, 'state'), 0);
-    const varName = ctx.str(kwargs.var ?? kwargs.vis, 'b') || 'b';
-    const { matched, areas: contextAreas } = gatherAreaInputs(sel, state);
+    const varName = ctx.str(pick(args, kwargs, 3, 'var'), 'b') || 'b';
+    const subsele = ctx.str(kwargs.subsele, 'all') || 'all';
 
-    // Group matched atoms into residues (object|segi|chain|resi).
-    const byRes = new Map<string, number[]>();
-    matched.forEach((ua, i) => {
-      const a = ua.atom;
-      const key = `${ua.objName}/${a.segi}/${a.chain}/${a.resi}`;
-      let g = byRes.get(key);
-      if (!g) byRes.set(key, (g = []));
-      g.push(i);
-    });
+    const matched = ex.atomsMatching(sel);
+    if (matched.length === 0) return {} as Json;
+
+    // subsele restricts which atoms contribute area (e.g. "sidechain"). Build a
+    // membership set keyed by object|index; default "all" includes everything.
+    const subKey = (objName: string, idx: number): string => `${objName}|${idx}`;
+    const subSet = new Set<string>();
+    for (const ua of ex.atomsMatching(subsele)) subSet.add(subKey(ua.objName, ua.index));
+    const inSub = (objName: string, idx: number): boolean => subSet.has(subKey(objName, idx));
+
+    // PyMOL forces dot_solvent on for the whole computation, then restores it.
+    const savedDotSolvent = ex.getSetting('dot_solvent');
+    ex.set('dot_solvent', 1);
 
     const out: Record<string, number> = {};
-    for (const [key, idxs] of byRes) {
-      const contextSum = idxs.reduce((s, i) => s + contextAreas[i]!, 0);
-      const ua0 = matched[idxs[0]!]!;
-      const a0 = ua0.atom;
-      let resSel = `${ua0.objName} and resi ${a0.resi}`;
-      if (a0.chain) resSel += ` and chain ${a0.chain}`;
-      if (a0.segi) resSel += ` and segi ${a0.segi}`;
-      const { areas: isoAreas } = gatherAreaInputs(resSel, state);
-      const isoSum = isoAreas.reduce((s, x) => s + x, 0);
-      const ratio = isoSum > 0 ? contextSum / isoSum : 0;
-      out[key] = ratio;
-      for (const i of idxs) {
-        const a = matched[i]!.atom as unknown as Record<string, unknown>;
-        a[varName] = ratio;
+    try {
+      // Group selected atoms by object, then by residue (segi|chain|resi — the
+      // same key PyMOL uses for `resarea` and `byres`).
+      const byObject = new Map<string, UniverseAtom[]>();
+      for (const ua of matched) {
+        let g = byObject.get(ua.objName);
+        if (!g) byObject.set(ua.objName, (g = []));
+        g.push(ua);
       }
+
+      for (const [objName, uas] of byObject) {
+        const mol = ex.molecule(objName);
+        if (!mol) continue;
+        const n = mol.natom;
+        const allIdx = Array.from({ length: n }, (_v, i) => i);
+
+        // Residue groups for the WHOLE object (needed for `byres` of the
+        // tripeptide, which can reach neighbours outside `sel`).
+        const resKeyOf = (i: number): string => {
+          const a = mol.atoms[i]!;
+          return `${a.segi}|${a.chain}|${a.resi}`;
+        };
+        const resAtoms = new Map<string, number[]>();
+        for (let i = 0; i < n; i++) {
+          const rk = resKeyOf(i);
+          let g = resAtoms.get(rk);
+          if (!g) resAtoms.set(rk, (g = []));
+          g.push(i);
+        }
+
+        // Bond adjacency for `extend 1`.
+        const adj: number[][] = Array.from({ length: n }, () => []);
+        for (const [i, j] of mol.bonds) {
+          if (i < n && j < n) {
+            adj[i]!.push(j);
+            adj[j]!.push(i);
+          }
+        }
+
+        // Context areas: each selected atom occluded by the whole object.
+        const selIdx = uas.map((ua) => ua.index);
+        const contextArea = areasFor(mol, state, selIdx, allIdx);
+
+        // Residues present in this object's part of the selection, with the
+        // selected atoms that belong to each.
+        const selByRes = new Map<string, number[]>();
+        for (const idx of selIdx) {
+          const rk = resKeyOf(idx);
+          let g = selByRes.get(rk);
+          if (!g) selByRes.set(rk, (g = []));
+          g.push(idx);
+        }
+
+        for (const [rk, resSel] of selByRes) {
+          const resAll = resAtoms.get(rk) ?? resSel;
+          // Context sum over subsele atoms of the residue.
+          let contextSum = 0;
+          for (const idx of resSel) {
+            if (inSub(objName, idx)) contextSum += contextArea.get(idx) ?? 0;
+          }
+
+          // Tripeptide = byres(residue extend 1): the residue plus every residue
+          // bonded to it. Compute the residue's area with only those as context.
+          const extended = new Set<number>(resAll);
+          for (const idx of resAll) for (const j of adj[idx]!) extended.add(j);
+          const tri = new Set<number>();
+          for (const idx of extended) for (const j of resAtoms.get(resKeyOf(idx)) ?? []) tri.add(j);
+          const triIdx = [...tri];
+          const exposedArea = areasFor(mol, state, resAll, triIdx);
+          let exposedSum = 0;
+          for (const idx of resAll) {
+            if (inSub(objName, idx)) exposedSum += exposedArea.get(idx) ?? 0;
+          }
+
+          const ratio = exposedSum > 0 ? contextSum / exposedSum : contextSum;
+          // Public dict key mirrors PyMOL's (model, segi, chain, resi) tuple as a
+          // readable "object/segi/chain/resi" string.
+          const a0 = mol.atoms[resSel[0]!]!;
+          out[`${objName}/${a0.segi}/${a0.chain}/${a0.resi}`] = ratio;
+          // alter var = ratio for EVERY selected atom of the residue.
+          for (const idx of resSel) {
+            const a = mol.atoms[idx]! as unknown as Record<string, unknown>;
+            a[varName] = ratio;
+          }
+        }
+      }
+    } finally {
+      if (savedDotSolvent === undefined) ex.set('dot_solvent', 0);
+      else ex.set('dot_solvent', savedDotSolvent);
     }
+
     ctx.publish();
     return out as Json;
   });

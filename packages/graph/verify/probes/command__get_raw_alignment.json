@@ -1,0 +1,199 @@
+{
+  "id": "command__get_raw_alignment",
+  "feature": "get_raw_alignment",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_pdbstr",
+        "ATOM      1  N  ALA A   1       0.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA ALA A   1       1.000   0.000   0.000  1.00  0.00           C\nATOM      3  C  ALA A   1       2.000   1.000   0.000  1.00  0.00           C\nATOM      4  O  ALA A   1       2.000   2.000   0.000  1.00  0.00           O\nATOM      5  CB ALA A   1       1.000  -1.000   1.000  1.00  0.00           C\nATOM      6  N  ALA A   2       3.000   1.000   0.000  1.00  0.00           N\nATOM      7  CA ALA A   2       4.000   0.000   0.000  1.00  0.00           C\nATOM      8  C  ALA A   2       5.000   1.000   0.000  1.00  0.00           C\nATOM      9  O  ALA A   2       5.000   2.000   0.000  1.00  0.00           O\nATOM     10  CB ALA A   2       4.000  -1.000   1.000  1.00  0.00           C\nATOM     11  N  ALA A   3       6.000   1.000   0.000  1.00  0.00           N\nATOM     12  CA ALA A   3       7.000   0.000   1.000  1.00  0.00           C\nATOM     13  C  ALA A   3       8.000   1.000   1.000  1.00  0.00           C\nATOM     14  O  ALA A   3       8.000   2.000   1.000  1.00  0.00           O\nATOM     15  CB ALA A   3       7.000  -1.000   2.000  1.00  0.00           C\nEND",
+        "t"
+      ]
+    },
+    {
+      "call": [
+        "create",
+        "mob",
+        "t"
+      ]
+    },
+    {
+      "do": "rotate x, 30, mob"
+    },
+    {
+      "call": [
+        "align",
+        "mob",
+        "t"
+      ],
+      "kwargs": {
+        "object": "aln"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_raw_alignment",
+        "aln"
+      ],
+      "label": "raw per-atom alignment columns of (object,index) tuples"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    [
+      [
+        [
+          "t",
+          1
+        ],
+        [
+          "mob",
+          1
+        ]
+      ],
+      [
+        [
+          "t",
+          2
+        ],
+        [
+          "mob",
+          2
+        ]
+      ],
+      [
+        [
+          "t",
+          3
+        ],
+        [
+          "mob",
+          3
+        ]
+      ],
+      [
+        [
+          "t",
+          4
+        ],
+        [
+          "mob",
+          4
+        ]
+      ],
+      [
+        [
+          "t",
+          5
+        ],
+        [
+          "mob",
+          5
+        ]
+      ],
+      [
+        [
+          "t",
+          6
+        ],
+        [
+          "mob",
+          6
+        ]
+      ],
+      [
+        [
+          "t",
+          7
+        ],
+        [
+          "mob",
+          7
+        ]
+      ],
+      [
+        [
+          "t",
+          8
+        ],
+        [
+          "mob",
+          8
+        ]
+      ],
+      [
+        [
+          "t",
+          9
+        ],
+        [
+          "mob",
+          9
+        ]
+      ],
+      [
+        [
+          "t",
+          10
+        ],
+        [
+          "mob",
+          10
+        ]
+      ],
+      [
+        [
+          "t",
+          11
+        ],
+        [
+          "mob",
+          11
+        ]
+      ],
+      [
+        [
+          "t",
+          12
+        ],
+        [
+          "mob",
+          12
+        ]
+      ],
+      [
+        [
+          "t",
+          13
+        ],
+        [
+          "mob",
+          13
+        ]
+      ],
+      [
+        [
+          "t",
+          14
+        ],
+        [
+          "mob",
+          14
+        ]
+      ],
+      [
+        [
+          "t",
+          15
+        ],
+        [
+          "mob",
+          15
+        ]
+      ]
+    ]
+  ]
+}

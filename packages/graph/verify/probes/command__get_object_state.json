@@ -1,0 +1,19 @@
+{
+  "id": "command__get_object_state",
+  "feature": "get_object_state",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "pseudoatom pa" }
+  ],
+  "checks": [
+    { "call": ["get_object_state", "ala"], "label": "effective state of single-state fragment ala" },
+    { "call": ["get_object_state", "pa"], "label": "effective state of single-state pseudoatom pa" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    1
+  ]
+}

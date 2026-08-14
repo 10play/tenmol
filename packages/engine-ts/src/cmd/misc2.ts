@@ -1,5 +1,5 @@
 /**
- * More flat verbs: preset aliases (pretty/simple/technical/publication), label2, get_phipsi, dirty/dirty_wizard, finish_object, and the colorection (named colour-selection) set.
+ * More flat verbs: preset aliases (pretty/simple/technical/publication), label2, dirty/dirty_wizard, finish_object, and the colorection (named colour-selection) set.
  *
  * Registers through the shared {@link RegistrarCtx}. Compose real verbs via
  * `ctx.call(...)`; simple state via `ctx.executive`; `ctx.publish()` after
@@ -48,12 +48,6 @@ export function registerMisc2(ctx: RegistrarCtx): void {
   /* -------------------------------- label2 ------------------------------ */
   // A variant spelling of `label`; forward args + kwargs to the real verb.
   ctx.command('label2', (args, kwargs): Json => ctx.call('label', args, kwargs));
-
-  /* ------------------------------ get_phipsi ---------------------------- */
-  // Forward to the ported backbone-dihedral helper and return its result.
-  ctx.command('get_phipsi', (args): Json =>
-    ctx.call('util.phipsi', [str(args[0], 'all') || 'all']),
-  );
 
   /* ------------------- dirty / dirty_wizard / finish_object ------------- */
   // PyMOL's `dirty` flags the scene for redraw; the engine re-emits by
