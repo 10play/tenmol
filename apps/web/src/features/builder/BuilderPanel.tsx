@@ -150,14 +150,31 @@ export function BuilderPanel() {
    * console do not come back through `builder_action`, and there is no editor
    * push topic in this wave, so the panel polls — slowly, because every read is
    * a lock-taking `get_names`/`iterate` on the engine thread.
+   *
+   * TWO GUARDS, both about that lock. A `builder_state` read can take longer
+   * than the 250 ms tick on a slow/headless engine; firing the next tick anyway
+   * stacks reads on the single engine thread, and a button press (`grow` etc.)
+   * then queues BEHIND that backlog and lands seconds later — long enough that a
+   * freshly-armed wizard misses the window a caller waits for it in. So (1) never
+   * let a poll overlap itself — skip the tick while one read is still out; and
+   * (2) don't poll while an action is in flight, so the action owns the thread
+   * and its reply (the authoritative new state) is never racing a stale read.
    */
+  const busyRef = useRef(busy);
+  busyRef.current = busy;
   useEffect(() => {
     if (!open) return;
+    let inFlight = false;
     const timer = window.setInterval(() => {
+      if (inFlight || busyRef.current) return;
+      inFlight = true;
       controller
         .refresh()
         .then(apply)
-        .catch(() => undefined);
+        .catch(() => undefined)
+        .finally(() => {
+          inFlight = false;
+        });
     }, 250);
     return () => window.clearInterval(timer);
   }, [open, controller, apply]);
@@ -293,6 +310,12 @@ export function BuilderPanel() {
       title="Builder"
       ariaLabel="Builder"
       onClose={() => setOpen(false)}
+      // Anchor LEFT: the wizard panel WP-16 renders for an armed builder wizard
+      // (`features/wizards`) lives on the right edge, and a right-anchored
+      // builder would sit on top of it — hiding the very "Create As New
+      // Object" / "Done" controls the armed wizard needs. The left gutter keeps
+      // both reachable and still clears the scene centre.
+      anchor="left"
       persistKey="builder"
       defaultWidth={560}
       // The builder is a DENSE panel: three tab pages over three always-visible
