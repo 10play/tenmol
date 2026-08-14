@@ -215,6 +215,15 @@ export function SettingsPanel() {
 
       {open && (
         <FloatingWindow
+          // One <FloatingWindow> serves all three variants, but they are
+          // logically distinct windows with their OWN geometry: `open` can go
+          // straight from one truthy value to another (Edit All… while the
+          // Setting menu is open is 'menu' -> 'table', never through null), and
+          // without a changing key React would keep the same instance and its
+          // one-shot geometry — so the table would inherit the menu's 380px
+          // width and then persist it under `settings-table`. Keying on `open`
+          // remounts per variant, so each reads its own default/persisted rect.
+          key={open}
           title={
             open === 'menu'
               ? which

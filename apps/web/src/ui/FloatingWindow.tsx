@@ -232,7 +232,11 @@ export function FloatingWindow({
       const startY = down.clientY;
       let latest = geom;
       const move = (e: PointerEvent) => {
-        const pos = clampPosition(geom.x + (e.clientX - startX), geom.y + (e.clientY - startY), geom.width);
+        const pos = clampPosition(
+          geom.x + (e.clientX - startX),
+          geom.y + (e.clientY - startY),
+          geom.width,
+        );
         latest = { ...geom, x: pos.x, y: pos.y };
         setGeom(latest);
       };
@@ -291,11 +295,10 @@ export function FloatingWindow({
     [onClose],
   );
 
-  // When maximised the media query owns geometry; drop the inline left/top so
-  // it doesn't fight `inset: 8px !important`, but keep the width for the shade.
-  const style = small
-    ? { zIndex: z }
-    : { left: geom.x, top: geom.y, width: geom.width, zIndex: z };
+  // When maximised the media query owns geometry (`inset: 8px !important` and
+  // `width: auto !important`), so pass only the z-index and let CSS place and
+  // size the window; the inline left/top/width would just be overridden.
+  const style = small ? { zIndex: z } : { left: geom.x, top: geom.y, width: geom.width, zIndex: z };
 
   return (
     <div

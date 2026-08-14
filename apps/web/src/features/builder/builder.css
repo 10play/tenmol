@@ -31,18 +31,6 @@
     font-size: 11px;
   }
 
-  .builder__title {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border-bottom: 1px solid var(--line, #3a3a3a);
-    padding-bottom: 4px;
-  }
-
-  .builder__title-text {
-    font-weight: 600;
-  }
-
   .builder__spacer {
     flex: 1;
   }
@@ -58,15 +46,6 @@
   .builder__note {
     opacity: 0.6;
     font-size: 10px;
-  }
-
-  .builder__close {
-    background: none;
-    border: none;
-    color: inherit;
-    cursor: pointer;
-    font-size: 15px;
-    line-height: 1;
   }
 
   .builder__error {
