@@ -1,0 +1,22 @@
+{
+  "id": "color__lonepair", "feature": "lonepair", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color lonepair, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color lonepair"],"label":"atoms colored lonepair"},
+    {"call":["get_color_index","lonepair"],"label":"lonepair palette index"},
+    {"call":["get_color_tuple","lonepair"],"label":"lonepair rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5386,
+    [
+      0.5,
+      0.5,
+      0.5
+    ]
+  ]
+}

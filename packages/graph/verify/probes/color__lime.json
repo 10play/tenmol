@@ -1,0 +1,25 @@
+{
+  "id": "color__lime", "feature": "lime", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"pseudoatom p2"},
+    {"do":"color lime, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","lime"],"label":"lime palette index"},
+    {"call":["get_color_tuple","lime"],"label":"lime RGB tuple","tol":1e-3},
+    {"call":["count_atoms","color lime"],"label":"atoms colored lime"},
+    {"call":["count_atoms","p1 or p2"],"label":"total atoms"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    [
+      0.5,
+      1,
+      0.5
+    ],
+    1,
+    2
+  ]
+}

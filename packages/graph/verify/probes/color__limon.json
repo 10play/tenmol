@@ -1,0 +1,22 @@
+{
+  "id": "color__limon", "feature": "limon", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color limon, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","limon"],"label":"limon RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color limon"],"label":"atoms colored limon"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.75,
+      1,
+      0.25
+    ],
+    1,
+    1
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__lithium", "feature": "lithium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color lithium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color lithium"],"label":"atoms colored lithium"},
+    {"call":["get_color_index","lithium"],"label":"lithium palette index"},
+    {"call":["get_color_tuple","lithium"],"label":"lithium rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5282,
+    [
+      0.800000011920929,
+      0.5019607543945312,
+      1
+    ]
+  ]
+}
