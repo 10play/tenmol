@@ -32,6 +32,47 @@ import './settings.css';
 
 type Window = 'menu' | 'table' | 'lighting';
 
+/**
+ * Per-variant window geometry. The three settings surfaces are logically
+ * distinct windows, so each keeps its OWN `persistKey` — moving or resizing the
+ * table must not drag the menu and lighting panels along with it — and its own
+ * size. The Setting menu is a narrow column (Qt's `.setwin[data-window='menu']`
+ * was 380px); the table and lighting panels want the full width. Keys match
+ * `FloatingWindow` prop names so this spreads straight in.
+ */
+const WINDOW_GEOMETRY: Record<
+  Window,
+  {
+    persistKey: string;
+    defaultWidth: number;
+    defaultHeight: number;
+    minWidth: number;
+    minHeight: number;
+  }
+> = {
+  menu: {
+    persistKey: 'settings-menu',
+    defaultWidth: 380,
+    defaultHeight: 560,
+    minWidth: 300,
+    minHeight: 320,
+  },
+  table: {
+    persistKey: 'settings-table',
+    defaultWidth: 620,
+    defaultHeight: 560,
+    minWidth: 400,
+    minHeight: 400,
+  },
+  lighting: {
+    persistKey: 'settings-lighting',
+    defaultWidth: 620,
+    defaultHeight: 560,
+    minWidth: 400,
+    minHeight: 400,
+  },
+};
+
 /** The settings overlay: Setting menu, advanced settings table, lighting panel, and launcher. */
 export function SettingsPanel() {
   const session = useSession();
@@ -126,8 +167,7 @@ export function SettingsPanel() {
       },
       write,
       run,
-      hook: (name: string) =>
-        UNAVAILABLE_HOOKS[name] ? undefined : runtime.hooks[name],
+      hook: (name: string) => (UNAVAILABLE_HOOKS[name] ? undefined : runtime.hooks[name]),
       hookNote: (name: string) => {
         const impossible = UNAVAILABLE_HOOKS[name];
         if (impossible) return `${name}: ${impossible}`;
@@ -183,12 +223,8 @@ export function SettingsPanel() {
                 : 'Lighting Settings'
           }
           onClose={() => setOpen(null)}
-          persistKey="settings"
-          defaultWidth={620}
-          defaultHeight={520}
-          minWidth={400}
-          minHeight={320}
           anchor="right"
+          {...WINDOW_GEOMETRY[open]}
           data-testid="settings-window"
           className="modern:bg-pm-panel modern:text-pm-text modern:border-line"
         >
@@ -202,17 +238,13 @@ export function SettingsPanel() {
             ) : open === 'menu' ? (
               <>
                 {/*
-                  * ONE renderer, four menus. `_gui.py`'s Setting, Display,
-                  * Mouse and Scene menus are the four that are (almost)
-                  * entirely check/radio over settings, and the whole point of
-                  * `get_menudata` is that nothing about them is special-cased
-                  * per menu — so the picker changes the DATA, not the code.
-                  */}
-                <div
-                  className="setmenu__tabs modern:border-line"
-                  role="tablist"
-                  aria-label="menu"
-                >
+                 * ONE renderer, four menus. `_gui.py`'s Setting, Display,
+                 * Mouse and Scene menus are the four that are (almost)
+                 * entirely check/radio over settings, and the whole point of
+                 * `get_menudata` is that nothing about them is special-cased
+                 * per menu — so the picker changes the DATA, not the code.
+                 */}
+                <div className="setmenu__tabs modern:border-line" role="tablist" aria-label="menu">
                   {PANEL_MENUS.map((name) => (
                     <button
                       key={name}
