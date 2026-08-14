@@ -137,11 +137,19 @@ including porting a whole missing subsystem, but stay within this feature's scop
    deep-dive doc). Keep the surrounding code style.
 4. Re-run the differential (up to ${MAX_FIX_ROUNDS} rounds total):
 ${RUN_DIFF(f.id)}
-5. When ok === true: write the COMMITTED probe packages/graph/verify/probes/${f.id}.json (your probe +
-   "expected": <diff.expected>), then:
+5. When ok === true, GATE the whole engine before you claim success — your edit must not break
+   anything else in engine-ts (a previous batch's regression is how bugs ship). Run BOTH:
+     cd ${REPO} && node node_modules/typescript/bin/tsc -p packages/engine-ts/tsconfig.json
+     cd ${REPO} && node node_modules/vitest/vitest.mjs run packages/engine-ts 2>&1 | tail -5
+   If typecheck errors OR any unit test fails: FIX it before proceeding. If a now-failing test
+   encoded the OLD (wrong) engine-ts behaviour that your fix corrects to match real PyMOL, verify the
+   correct value against the oracle (a tiny probe) and update that test to the correct value with a
+   comment. Do NOT mark fixed while typecheck or the unit suite is red.
+6. Once the gate is GREEN: write the COMMITTED probe packages/graph/verify/probes/${f.id}.json (your
+   probe + "expected": <diff.expected>), then:
      node packages/graph/verify/mark.mjs ${f.id} --state fixed --probe packages/graph/verify/probes/${f.id}.json --note "<what you changed>"
    Return outcome "fixed" with filesChanged.
-6. If after ${MAX_FIX_ROUNDS} rounds it still diverges (or the fix is out of scope), STOP editing, revert
+7. If after ${MAX_FIX_ROUNDS} rounds it still diverges (or the fix is out of scope), STOP editing, revert
    any half-baked changes that break other things, write a scoped report to
    packages/graph/verify/reports/${f.id}.md (what diverges, root cause, what a full fix needs), then:
      node packages/graph/verify/mark.mjs ${f.id} --state blocked --reason "<one line>"

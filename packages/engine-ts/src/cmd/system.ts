@@ -190,6 +190,14 @@ export function registerSystem(ctx: RegistrarCtx): void {
     return movie.current;
   });
 
+  // `cmd.ending()` — jump to the last movie frame (PyMOL's set_frame mode 6).
+  ctx.command('ending', () => {
+    movie.current = frameCeiling(ctx);
+    movie.playing = false;
+    ctx.emitView();
+    return movie.current;
+  });
+
   // `cmd.mset(specification)` — define the movie frame->state mapping.
   // Returns the number of frames defined.
   ctx.command('mset', (args) => {

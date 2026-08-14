@@ -1,0 +1,24 @@
+{
+  "id": "command__dss",
+  "feature": "dss",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "alter m, ss='X'"},
+    {"do": "dss m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "m and ss H"], "label": "helix atoms after dss"},
+    {"call": ["count_atoms", "m and ss S"], "label": "strand atoms after dss"},
+    {"call": ["count_atoms", "m and ss X"], "label": "unassigned-X atoms remaining after dss"},
+    {"call": ["count_atoms", "m and name CA"], "label": "CA atom count sanity"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    231,
+    211,
+    4972,
+    712
+  ]
+}

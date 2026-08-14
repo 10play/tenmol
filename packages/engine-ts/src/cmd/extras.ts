@@ -183,6 +183,49 @@ function rmsdToRef(ex: Executive, uas: UA[], s: number): number {
   return n === 0 ? 0 : Math.sqrt(sum / n);
 }
 
+/* -------------------------------------------------------------------------
+ * Mouse-ring editing switch (packages/engine/modules/pymol/controlling.py).
+ *
+ * PyMOL keeps a "mouse ring" — an ordered list of mouse configurations that
+ * `button_mode` indexes into. The engine models only the default `three_button`
+ * ring: [viewing, editing]. `edit_mode`/`drag` flip `button_mode` (and the
+ * mirrored `button_mode_name`) between those two entries, exactly as
+ * `controlling.py`'s `edit_mode` -> `mouse(action=...)` chain does.
+ * ------------------------------------------------------------------------- */
+
+const THREE_BUTTON_RING = ['three_button_viewing', 'three_button_editing'] as const;
+const MODE_NAME: Readonly<Record<string, string>> = {
+  three_button_viewing: '3-Button Viewing',
+  three_button_editing: '3-Button Editing',
+};
+
+/** Select a mouse mode by name — mirrors `mouse(action in mouse_ring)`. */
+function setMouseMode(ex: Executive, mode: string): void {
+  const bm = (THREE_BUTTON_RING as readonly string[]).indexOf(mode);
+  if (bm < 0) return;
+  ex.set('button_mode', bm);
+  ex.set('button_mode_name', MODE_NAME[mode] ?? mode);
+}
+
+/**
+ * Switch the mouse into (or out of) editing mode — the `edit_mode` body from
+ * controlling.py. With the default three-button ring, active switches
+ * `button_mode` 0 -> 1 (viewing -> editing); inactive switches it back.
+ */
+function applyEditMouseMode(ex: Executive, active: boolean): void {
+  const bm = Math.trunc(Number(ex.getSetting('button_mode') ?? 0));
+  if (bm < 0 || bm >= THREE_BUTTON_RING.length) return;
+  const mode: string | undefined = THREE_BUTTON_RING[bm];
+  if (mode === undefined) return;
+  if (active) {
+    if (mode.startsWith('three_button') && mode !== 'three_button_editing') {
+      setMouseMode(ex, 'three_button_editing');
+    }
+  } else if (mode.startsWith('three_button') && mode !== 'three_button_viewing') {
+    setMouseMode(ex, 'three_button_viewing');
+  }
+}
+
 /* -------------------------------- registrar ------------------------------- */
 
 export function registerExtras(ctx: RegistrarCtx): void {
@@ -486,10 +529,27 @@ export function registerExtras(ctx: RegistrarCtx): void {
     return null;
   });
 
-  /* edit_mode — record the editor-mode on/off state as a setting. */
+  /* edit_mode — switch the mouse into editing mode (controlling.py:edit_mode).
+     Records the on/off state as a setting AND flips button_mode within the
+     current mouse ring, the way PyMOL's edit_mode -> mouse() chain does. */
   ctx.command('edit_mode', (args, kwargs): Json => {
     const active = toBool(args[0] ?? kwargs['active'], true);
     ex.set('edit_mode', active ? 1 : 0);
+    applyEditMouseMode(ex, active);
+    return null;
+  });
+
+  /* drag — activate interactive dragging of a selection's coordinates
+     (editing.py:drag). The interactive mouse-drag itself needs a live GL/picking
+     loop we do not model, but the observable side effect ports cleanly: a
+     non-empty selection defaults edit=1, which switches the mouse ring into
+     editing mode (button_mode 0 -> 1); an empty selection forces edit=0 and
+     leaves the ring untouched. */
+  ctx.command('drag', (args, kwargs): Json => {
+    const selection = str(args[0] ?? kwargs['selection'], '');
+    let edit = toBool(args[2] ?? kwargs['edit'], true);
+    if (selection === '') edit = false;
+    if (edit) applyEditMouseMode(ex, true);
     return null;
   });
 
@@ -525,7 +585,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // interaction / editor picking (no live picking model here).
       // `edit` (pk1/pk2) is real — see cmd/editing.ts.
       'edit_keys',
-      'drag',
+      // `drag` is real now — see the handler above (mouse-ring editing switch).
       'release',
       // `unpick` is real — see cmd/editing.ts (clears the pk* selections).
       // `fab` (peptide) is real — editor.ts; `fnab` (nucleic) — cmd/nucleic.ts.

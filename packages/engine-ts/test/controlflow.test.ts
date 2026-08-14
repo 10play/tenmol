@@ -158,9 +158,11 @@ describe('controlflow: sandboxed no-ops never touch the real system', () => {
     expect(call('system', 'rm -rf /')).toBeNull();
   });
 
-  it('sync/abort/accept/ending/splash/update/rebuild_all/api are inert nulls', () => {
+  // `ending` moved to system.ts (it now jumps to the last movie frame rather
+  // than being an inert no-op), so it is no longer registered by controlflow.
+  it('sync/abort/accept/splash/update/rebuild_all/api are inert nulls', () => {
     const { call } = harness();
-    for (const cmd of ['sync', 'abort', 'accept', 'ending', 'splash', 'update', 'rebuild_all', 'api']) {
+    for (const cmd of ['sync', 'abort', 'accept', 'splash', 'update', 'rebuild_all', 'api']) {
       expect(call(cmd)).toBeNull();
     }
   });

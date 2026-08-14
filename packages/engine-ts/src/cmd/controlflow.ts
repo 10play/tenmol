@@ -201,7 +201,8 @@ export function registerControlflow(ctx: RegistrarCtx): void {
   ctx.command('sync', () => null);
   ctx.command('abort', () => null);
   ctx.command('accept', () => null);
-  ctx.command('ending', () => null);
+  // `ending` (jump to last movie frame) is registered in system.ts where the
+  // movie/frame state lives.
   ctx.command('splash', () => null);
   ctx.command('update', () => null);
   ctx.command('rebuild_all', () => null);

@@ -1,0 +1,21 @@
+{
+  "id": "command__enable",
+  "feature": "enable",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom m1"},
+    {"do": "pseudoatom m2"},
+    {"do": "disable"},
+    {"call": ["enable", "m1"]}
+  ],
+  "checks": [
+    {"call": ["get_names", "objects", 1], "label": "enabled-only objects after enable m1"},
+    {"call": ["get_names", "objects", 0], "label": "all objects present regardless of enable state"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["m1"],
+    ["m1", "m2"]
+  ]
+}
