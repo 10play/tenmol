@@ -1,0 +1,22 @@
+{
+  "id": "color__antimony", "feature": "antimony", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color antimony, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color antimony"],"label":"atoms colored antimony"},
+    {"call":["get_color_index","antimony"],"label":"antimony palette index"},
+    {"call":["get_color_tuple","antimony"],"label":"antimony RGB tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5326,
+    [
+      0.6196078658103943,
+      0.38823530077934265,
+      0.7098039388656616
+    ]
+  ]
+}

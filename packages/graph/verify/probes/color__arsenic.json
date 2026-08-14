@@ -1,0 +1,22 @@
+{
+  "id": "color__arsenic", "feature": "arsenic", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color arsenic, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color arsenic"],"label":"atoms colored arsenic"},
+    {"call":["get_color_index","arsenic"],"label":"arsenic palette index"},
+    {"call":["get_color_tuple","arsenic"],"label":"arsenic RGB tuple","tol":1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5308,
+    [
+      0.7411764860153198,
+      0.5019607543945312,
+      0.8901960849761963
+    ]
+  ]
+}

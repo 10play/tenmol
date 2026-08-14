@@ -569,7 +569,17 @@ export class Engine {
 
     h('get_color_index', (args) => getColorIndex(str(args[0])));
     h('get_color_tuple', (args) => {
-      const t = getColorTuple(Number(args[0]));
+      // Accept a colour name OR an index (real PyMOL's `get_color_tuple`
+      // resolves a name via `get_color_index` first — querying.py).
+      const arg = args[0];
+      let idx: number;
+      if (typeof arg === 'number') {
+        idx = arg;
+      } else {
+        const s = str(arg);
+        idx = s !== '' && Number.isFinite(Number(s)) ? Number(s) : getColorIndex(s);
+      }
+      const t = idx < 0 ? null : getColorTuple(idx);
       return t ? [t[0], t[1], t[2]] : null;
     });
 

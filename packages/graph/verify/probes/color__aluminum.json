@@ -1,0 +1,22 @@
+{
+  "id": "color__aluminum", "feature": "aluminum", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color aluminum, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color aluminum"],"label":"atoms colored aluminum"},
+    {"call":["get_color_index","aluminum"],"label":"aluminum palette index"},
+    {"call":["get_color_tuple","aluminum"],"label":"aluminum rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5289,
+    [
+      0.7490196228027344,
+      0.6509804129600525,
+      0.6509804129600525
+    ]
+  ]
+}

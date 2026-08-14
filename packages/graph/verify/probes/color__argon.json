@@ -1,0 +1,22 @@
+{
+  "id": "color__argon", "feature": "argon", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color argon, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color argon"],"label":"atoms colored argon"},
+    {"call":["get_color_index","argon"],"label":"argon palette index"},
+    {"call":["get_color_tuple","argon"],"label":"argon RGB tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5293,
+    [
+      0.5019607543945312,
+      0.8196078538894653,
+      0.8901960849761963
+    ]
+  ]
+}
