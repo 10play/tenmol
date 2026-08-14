@@ -28,6 +28,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type {
   BuilderActionKind,
   BuilderPickMode,
@@ -1031,7 +1032,14 @@ function ConfirmModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  return (
+  // `.builder__modal` is `position: fixed; inset: 0` — a full-viewport scrim.
+  // The Builder now lives inside FloatingWindow, whose `.flwin`/`.flwin__body`
+  // are `overflow: hidden`/`auto`, and an overflow ancestor CLIPS even a
+  // fixed-positioned descendant — so left in place the confirmation would be
+  // painted (and hit-tested) only within the small, right-anchored window and
+  // is invisible/unclickable wherever the window doesn't cover the centre.
+  // Portal it to <body> so it escapes the clip and covers the screen as before.
+  const modal = (
     <div className="builder__modal" role="alertdialog" aria-label={title}>
       <div className="builder__modal-box modern:rounded-lg modern:border modern:border-line modern:bg-pm-panel modern:text-pm-text">
         <div className="builder__modal-title modern:text-pm-text-bright">{title}</div>
@@ -1047,6 +1055,7 @@ function ConfirmModal({
       </div>
     </div>
   );
+  return typeof document === 'undefined' ? modal : createPortal(modal, document.body);
 }
 
 /**
