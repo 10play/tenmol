@@ -1,0 +1,14 @@
+{
+  "id": "command__get_area", "feature": "get_area", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set dot_solvent, 0"},
+    {"do": "set dot_density, 3"}
+  ],
+  "checks": [
+    {"call": ["get_area", "chain A and resi 1-5"], "label": "SES area (dot_solvent off) of chain A resi 1-5", "tol": 0.1},
+    {"call": ["get_area", "chain A and resi 10"], "label": "SES area of a single residue", "tol": 0.1}
+  ],
+  "tol": 1e-3,
+  "expected": [625.5899047851562, 87.21734619140625]
+}

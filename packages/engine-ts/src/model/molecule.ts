@@ -53,6 +53,10 @@ export class ObjectMolecule {
   cell?: CrystalCell;
   /** Space-group symbol from `CRYST1` (e.g. `'P 21 21 21'`), or `undefined`. */
   spacegroup?: string;
+  /** Biological-assembly ids from the mmCIF `_pdbx_struct_assembly.id` array
+   *  (e.g. `['1', '2']`), or `undefined` when the file carried no such data.
+   *  Read by `get_assembly_ids`. */
+  assemblyIds?: string[];
   /** PyMOL's `DiscreteFlag`: set when the object was loaded/created with
    *  `discrete=1` (each state may carry a distinct atom set). Observable via
    *  `count_discrete`; toggled by `set_discrete`. */

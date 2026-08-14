@@ -1,0 +1,18 @@
+{
+  "id": "command__get_chains",
+  "feature": "get_chains",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["get_chains", "m"], "label": "chains of full object"},
+    {"call": ["get_chains", "(all)"], "label": "chains of all"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["", "A", "C", "D", "E", "F", "G", "H"],
+    ["", "A", "C", "D", "E", "F", "G", "H"]
+  ]
+}

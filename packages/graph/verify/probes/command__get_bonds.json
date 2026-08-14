@@ -1,0 +1,22 @@
+{
+  "id": "command__get_bonds",
+  "feature": "get_bonds",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, name=AA, pos=[0,0,0]" },
+    { "do": "pseudoatom m, name=BB, pos=[1.5,0,0]" },
+    { "do": "pseudoatom m, name=CC, pos=[3.0,0,0]" },
+    { "do": "bond (m and name AA), (m and name BB)" },
+    { "do": "bond (m and name BB), (m and name CC)" }
+  ],
+  "checks": [
+    { "call": ["get_bonds", "m"], "label": "(atm1,atm2,order) tuples for all bonds in m" },
+    { "call": ["get_bonds", "m and (name AA+BB)"], "label": "bonds within the AA/BB sub-selection" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [[0, 1, 1], [1, 2, 1]],
+    [[0, 1, 1]]
+  ]
+}

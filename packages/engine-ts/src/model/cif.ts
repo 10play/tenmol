@@ -67,6 +67,57 @@ function tokenize(line: string): string[] {
   return out;
 }
 
+/**
+ * Read the values of one mmCIF tag (`category.key`, e.g.
+ * `_pdbx_struct_assembly.id`) as a list of strings, honouring both the scalar
+ * form (`_tag  value` on one line) and the `loop_` form (the tag as one column
+ * of a multi-row table). Missing/`.`/`?` placeholders are dropped. Returns
+ * `undefined` when the tag never appears — mirroring PyMOL's `cif_get_array`,
+ * which the `get_assembly_ids` command reads.
+ */
+function readCifArray(lines: string[], tag: string): string[] | undefined {
+  let found = false;
+  const out: string[] = [];
+  for (let li = 0; li < lines.length; li++) {
+    if (lines[li]!.trim() !== 'loop_') continue;
+    // Collect the header tags immediately following `loop_`.
+    const tags: string[] = [];
+    let j = li + 1;
+    for (; j < lines.length; j++) {
+      const t = lines[j]!.trim();
+      if (t.startsWith('_')) tags.push(t);
+      else break;
+    }
+    const col = tags.indexOf(tag);
+    if (col < 0) continue;
+    // This loop carries the tag: read its column from every data row.
+    found = true;
+    const ncol = tags.length;
+    for (let di = j; di < lines.length; di++) {
+      const raw = lines[di]!;
+      if (endsLoopData(raw.trim())) break;
+      const row = tokenize(raw);
+      if (row.length < ncol) continue;
+      const v = clean(row[col]);
+      if (v !== '') out.push(v);
+    }
+    return out;
+  }
+  // No loop carried it — try the scalar `_tag value` form.
+  for (const line of lines) {
+    const t = line.trim();
+    if (t === tag || t.startsWith(tag + ' ') || t.startsWith(tag + '\t')) {
+      const toks = tokenize(t);
+      if (toks[0] === tag) {
+        found = true;
+        const v = clean(toks[1]);
+        if (v !== '') out.push(v);
+      }
+    }
+  }
+  return found ? out : undefined;
+}
+
 /** True once a line ends the run of data rows following a `loop_` header. */
 function endsLoopData(trimmed: string): boolean {
   return (
@@ -227,6 +278,11 @@ export function parseCif(text: string, name: string): ObjectMolecule {
     const sg = clean(scalars.get('_symmetry.space_group_name_H-M'));
     mol.spacegroup = sg || 'P 1';
   }
+
+  // --- Biological-assembly ids (`_pdbx_struct_assembly.id`), read back by
+  //     `get_assembly_ids`. Absent category ⇒ leave undefined. ---
+  const assemblyIds = readCifArray(lines, '_pdbx_struct_assembly.id');
+  if (assemblyIds !== undefined) mol.assemblyIds = assemblyIds;
 
   // --- Distance-based connectivity (mmCIF `_atom_site` carries no bonds). ---
   connectByDistance(mol);

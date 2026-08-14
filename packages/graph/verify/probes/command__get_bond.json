@@ -1,0 +1,22 @@
+{
+  "id": "command__get_bond",
+  "feature": "get_bond",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, name=AA, pos=[0,0,0]" },
+    { "do": "pseudoatom m, name=BB, pos=[1.5,0,0]" },
+    { "do": "pseudoatom m, name=CC, pos=[3.0,0,0]" },
+    { "do": "bond (m and name AA), (m and name BB)" },
+    { "do": "bond (m and name BB), (m and name CC)" }
+  ],
+  "checks": [
+    { "call": ["get_bond", "stick_radius", "m"], "label": "per-bond stick_radius for all bonds in m (selection2 defaults to selection1)" },
+    { "call": ["get_bond", "line_width", "m and name AA+BB", "m and name BB+CC"], "label": "per-bond line_width between two selections" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [ [ "m", [ [ 1, 2, null ], [ 2, 3, null ] ] ] ],
+    [ [ "m", [ [ 1, 2, null ], [ 2, 3, null ] ] ] ]
+  ]
+}

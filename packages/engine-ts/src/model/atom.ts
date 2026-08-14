@@ -63,6 +63,12 @@ export interface AtomInfo {
    * `flag N` selector. Absent ⇒ no flags set.
    */
   flags?: number;
+  /**
+   * Internal atom-typing index (PyMOL `AtomInfoType.customType`). Assigned by
+   * upstream typing passes and read by the experimental `get_bond_print` debug
+   * dump; unassigned atoms are `-1` (the upstream default). Absent ⇒ -1.
+   */
+  customType?: number;
 }
 
 /** `1 << rep` — the visRep bit for a representation. */

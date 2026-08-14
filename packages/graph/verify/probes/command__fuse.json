@@ -1,0 +1,18 @@
+{
+  "id": "command__fuse",
+  "feature": "fuse",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom src, name=AA, pos=[0,0,0]" },
+    { "do": "pseudoatom dst, name=BB, pos=[3,0,0]" },
+    { "do": "fuse (src and name AA), (dst and name BB)" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "dst"], "label": "target object grows after fuse merges source into it" },
+    { "call": ["count_atoms", "all"], "label": "total atoms across all objects after fuse" },
+    { "call": ["count_atoms", "neighbor (dst and name BB)"], "label": "bond formed onto the target atom" }
+  ],
+  "tol": 1e-3,
+  "expected": [2, 3, 1]
+}

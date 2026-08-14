@@ -21,11 +21,17 @@ import type { Json } from '@tenmol/protocol';
 import type { ObjectMolecule } from '../model/molecule';
 import type { UniverseAtom } from '../select/selector';
 import type { RegistrarCtx } from './registrar';
+import { sphereForDensity } from '../geometry/sphere_data';
 
 type Vec3 = [number, number, number];
 
 /** PyMOL `solvent_radius` default (Å). */
 const DEFAULT_PROBE = 1.4;
+
+/** PyMOL atom flags that exclude an atom from its own dot surface. */
+const CATOMFLAG_EXFOLIATE = 0x01000000;
+/** PyMOL atom flag that removes an atom from the occluder set. */
+const CATOMFLAG_IGNORE = 0x02000000;
 
 /**
  * Sample-point count per atom sphere. Higher = smoother area fractions. A lone
@@ -157,15 +163,114 @@ export function registerMisc(ctx: RegistrarCtx): void {
   };
 
   // ---- get_area ----------------------------------------------------------
+  // Faithful port of PyMOL's `ExecutiveGetArea` + `RepDotDoNew(cRepDotAreaType)`
+  // (Executive.cpp / RepDot.cpp). The surface is computed over the WHOLE object
+  // that the selection touches (occlusion context), then only the dots owned by
+  // selected atoms are summed. Each atom's sphere radius is `vdw` (+ solvent
+  // radius when `dot_solvent` is on); dots are PyMOL's exact geodesic
+  // tessellation for `dot_density`, and each exposed dot contributes
+  // `radius² · sphere.area[b]` (Å²). Selection must lie within a single object.
   ctx.command('get_area', (args, kwargs) => {
     const sel = sel0(pick(args, kwargs, 0, 'selection'));
-    const state = num(pick(args, kwargs, 1, 'state'), 0);
+    const state = num(pick(args, kwargs, 1, 'state'), 1);
     const loadB = num(pick(args, kwargs, 2, 'load_b'), 0) !== 0;
-    const { matched, areas } = gatherAreaInputs(sel, state);
+    const matched = ex.atomsMatching(sel);
+    if (matched.length === 0) return 0;
+
+    // Single-object requirement (PyMOL: SelectorGetSingleObjectMolecule).
+    const objName = matched[0]!.objName;
+    if (matched.some((ua) => ua.objName !== objName)) {
+      throw new Error('get_area: selection must be within a single object');
+    }
+    const mol = ex.molecule(objName);
+    if (!mol) return 0;
+    const s = oneState(state);
+
+    // PyMOL runs the dot geometry and occlusion tests in single-precision, so
+    // near-boundary dots must be classified the same way — do the decision-path
+    // arithmetic in float32 (Math.fround) to match which dots survive.
+    const f = Math.fround;
+    const solvRad = ex.getSettingFloat('dot_solvent') !== 0 ? f(probeRadius()) : 0;
+    const density = ex.getSettingFloat('dot_density') || 2;
+    const sphere = sphereForDensity(density);
+    // Sphere directions are float32 literals in PyMOL's SphereData.h.
+    const dotX = sphere.dot.map((d) => f(d[0]));
+    const dotY = sphere.dot.map((d) => f(d[1]));
+    const dotZ = sphere.dot.map((d) => f(d[2]));
+
+    // Occluder shells: every atom of the object (minus flag-ignored ones). A dot
+    // is buried if it falls within another atom's `vdw + solvent` sphere.
+    const n = mol.natom;
+    const cx = new Float32Array(n);
+    const cy = new Float32Array(n);
+    const cz = new Float32Array(n);
+    const rad = new Float32Array(n); // vdw + solvent (occluder reach)
+    // Effective modeling flags. PyMOL's readers default HETATM atoms (e.g.
+    // waters) to `cAtomFlag_ignore` unless the atom carries explicit flags
+    // (ObjectMolecule.cpp), and area mode culls by flag: ignore-flagged atoms
+    // neither generate dots nor occlude. Mirror that here.
+    const eff = new Int32Array(n);
+    for (let i = 0; i < n; i++) {
+      const c = mol.coord(i, s);
+      cx[i] = c[0];
+      cy[i] = c[1];
+      cz[i] = c[2];
+      rad[i] = f(mol.vdw(i) + solvRad);
+      const a = mol.atoms[i]!;
+      eff[i] = a.flags ?? (a.hetatm ? CATOMFLAG_IGNORE : 0);
+    }
+
+    // Which local indices are members of the selection (contribute area).
+    const selected = new Set<number>(matched.map((ua) => ua.index));
+
+    if (loadB) {
+      // Zero the b-factor of every selected atom first (PyMOL OMOP_SetB).
+      for (const i of selected) mol.atoms[i]!.b = 0;
+    }
+
     let total = 0;
-    for (let i = 0; i < matched.length; i++) {
-      total += areas[i]!;
-      if (loadB) matched[i]!.atom.b = areas[i]!;
+    for (const i of selected) {
+      const ai = mol.atoms[i]!;
+      // Area mode forces dot_hydrogens on but honours the exfoliate/ignore flags.
+      if ((eff[i]! & (CATOMFLAG_EXFOLIATE | CATOMFLAG_IGNORE)) !== 0) continue;
+      const ri = rad[i]!;
+      const ox = cx[i]!;
+      const oy = cy[i]!;
+      const oz = cz[i]!;
+      // Neighbours whose spheres can bury a dot on atom i's shell (reach ri+rj).
+      const neigh: number[] = [];
+      for (let j = 0; j < n; j++) {
+        if (j === i) continue;
+        if ((eff[j]! & CATOMFLAG_IGNORE) !== 0) continue;
+        const dx = ox - cx[j]!;
+        const dy = oy - cy[j]!;
+        const dz = oz - cz[j]!;
+        const reach = ri + rad[j]!;
+        if (dx * dx + dy * dy + dz * dz <= reach * reach) neigh.push(j);
+      }
+      const ri2 = f(ri * ri);
+      let atomArea = 0;
+      for (let b = 0; b < dotX.length; b++) {
+        // Dot on atom i's shell (PyMOL: v0 + vdw * sp->dot, all float32).
+        const px = f(ox + f(ri * dotX[b]!));
+        const py = f(oy + f(ri * dotY[b]!));
+        const pz = f(oz + f(ri * dotZ[b]!));
+        let buried = false;
+        for (const j of neigh) {
+          // within3f, in float32: (dx² + dy²) + dz² <= dist².
+          const dx = f(px - cx[j]!);
+          const dy = f(py - cy[j]!);
+          const dz = f(pz - cz[j]!);
+          const rj = rad[j]!;
+          if (f(f(f(dx * dx) + f(dy * dy)) + f(dz * dz)) <= f(rj * rj)) {
+            buried = true;
+            break;
+          }
+        }
+        if (!buried) atomArea += ri2 * sphere.area[b]!;
+      }
+      total += atomArea;
+      if (loadB) ai.b += atomArea;
     }
     if (loadB) ctx.publish();
     return total;
@@ -244,39 +349,149 @@ export function registerMisc(ctx: RegistrarCtx): void {
   });
 
   // ---- get_bonds / get_bond ---------------------------------------------
-  /** The internal bonds of a selection as `[obj, i1based, j1based]` triples. */
-  const bondsInSelection = (sel: string): Array<[string, number, number]> => {
-    const matched = ex.atomsMatching(sel);
-    const byObj = new Map<string, Set<number>>();
-    for (const ua of matched) {
-      let set = byObj.get(ua.objName);
-      if (!set) {
-        set = new Set<number>();
-        byObj.set(ua.objName, set);
-      }
-      set.add(ua.index);
-    }
-    const out: Array<[string, number, number]> = [];
-    for (const [objName, idxSet] of byObj) {
-      const mol = ex.molecule(objName);
-      if (!mol) continue;
-      for (const [i, j] of mol.bonds) {
-        if (idxSet.has(i) && idxSet.has(j)) out.push([objName, i + 1, j + 1]);
-      }
-    }
-    return out;
-  };
-
+  // get_bonds(selection='(all)', state=-1)
+  // Returns `(atm1, atm2, order)` tuples where atm1/atm2 are 0-based indices
+  // that ENUMERATE THE ATOMS WITHIN THE SELECTION (not the `index` property),
+  // matching real PyMOL / `cmd.get_model().bond`. Atoms are enumerated per
+  // object in ascending atom-index order; `order` is the bond order (1 single,
+  // 2 double, …), defaulting to 1 when the loader recorded none.
   ctx.command('get_bonds', (args, kwargs) => {
     const sel = sel0(pick(args, kwargs, 0, 'selection'));
-    return bondsInSelection(sel).map(([, i, j]) => [i, j]) as Json;
+    const byObj = new Map<string, Set<number>>();
+    for (const ua of ex.atomsMatching(sel)) {
+      let set = byObj.get(ua.objName);
+      if (!set) byObj.set(ua.objName, (set = new Set<number>()));
+      set.add(ua.index);
+    }
+    const out: Array<[number, number, number]> = [];
+    let base = 0;
+    for (const [objName, idxSet] of byObj) {
+      // Local 0-based index = position within the selection, per object in
+      // ascending atom-index order (get_model enumeration order).
+      const sorted = [...idxSet].sort((a, b) => a - b);
+      const local = new Map<number, number>();
+      sorted.forEach((gi, k) => local.set(gi, base + k));
+      const mol = ex.molecule(objName);
+      if (mol) {
+        for (const [i, j, order] of mol.bonds) {
+          if (idxSet.has(i) && idxSet.has(j)) {
+            out.push([local.get(i)!, local.get(j)!, order ?? 1]);
+          }
+        }
+      }
+      base += sorted.length;
+    }
+    return out as Json;
   });
 
+  /** Atoms of a selection grouped by object → set of 0-based atom indices. */
+  const idxByObject = (sel: string): Map<string, Set<number>> => {
+    const byObj = new Map<string, Set<number>>();
+    for (const ua of ex.atomsMatching(sel)) {
+      let set = byObj.get(ua.objName);
+      if (!set) byObj.set(ua.objName, (set = new Set<number>()));
+      set.add(ua.index);
+    }
+    return byObj;
+  };
+
+  // get_bond(name, selection1, selection2=None, state=0, updates=1, quiet=1)
+  // Returns per-object `[model, [[idx1, idx2, value], ...]]` for every bond
+  // that spans selection1 and selection2 (selection2 defaults to selection1).
+  // `value` is the per-bond override of the named setting, or null when unset.
+  // Per-bond settings are not yet stored, so values are always null (matching
+  // real PyMOL when nothing has been set via set_bond).
   ctx.command('get_bond', (args, kwargs) => {
-    const sel = sel0(pick(args, kwargs, 0, 'selection'));
-    const bonds = bondsInSelection(sel);
-    const first = bonds[0];
-    return first ? ([first[1], first[2]] as Json) : null;
+    const sel1 = sel0(pick(args, kwargs, 1, 'selection1'));
+    const sel2raw = pick(args, kwargs, 2, 'selection2');
+    const sel2 =
+      sel2raw !== undefined && sel2raw !== null && sel2raw !== ''
+        ? sel0(sel2raw)
+        : sel1;
+    const idx1 = idxByObject(sel1);
+    const idx2 = idxByObject(sel2);
+    const out: Json[] = [];
+    for (const [objName, set1] of idx1) {
+      const set2 = idx2.get(objName);
+      if (!set2) continue;
+      const mol = ex.molecule(objName);
+      if (!mol) continue;
+      const vlist: Json[] = [];
+      for (const [i, j] of mol.bonds) {
+        if ((set1.has(i) && set2.has(j)) || (set1.has(j) && set2.has(i))) {
+          vlist.push([i + 1, j + 1, null]);
+        }
+      }
+      if (vlist.length) out.push([objName, vlist]);
+    }
+    return out as Json;
+  });
+
+  // ---- get_bond_print ----------------------------------------------------
+  // Experimental/debug helper. Faithful port of `ObjectMoleculeGetBondPrint`
+  // (ObjectMolecule.cpp): a 3D int histogram `result[at1][at2][dist]` over
+  // customType pairs and bond-path distance, dims
+  // `[max_type+1][max_type+1][max_bond+1]`. For each atom `a` with
+  // `customType == at1` in `[0, max_type]`, a BFS out to `max_bond` bonds
+  // (ObjectMoleculeGetBondPaths) reaches every atom `i` at distance `c`; when
+  // its `customType == at2` is in range, `result[at1][at2][c]++`. `customType`
+  // is `-1` (unassigned) for freshly built/loaded objects — it is only set by
+  // internal typing passes not exposed by this slice — so the dump is all
+  // zeros, exactly as real PyMOL reports for a plain `fragment`/loaded object.
+  // A non-molecule (or missing) name yields None, like ExecutiveGetBondPrint.
+  ctx.command('get_bond_print', (args, kwargs) => {
+    const objName = ctx.str(pick(args, kwargs, 0, 'obj'));
+    const maxBond = Math.trunc(num(pick(args, kwargs, 1, 'max_bond'), 0));
+    const maxType = Math.trunc(num(pick(args, kwargs, 2, 'max_type'), 0));
+    const mol = ex.molecule(objName);
+    if (!mol) return null;
+
+    const nType = maxType + 1;
+    const nDist = maxBond + 1;
+    const result: number[][][] = Array.from({ length: nType }, () =>
+      Array.from({ length: nType }, () => new Array<number>(nDist).fill(0)),
+    );
+
+    const n = mol.atoms.length;
+    const customType = (i: number): number => mol.atoms[i]!.customType ?? -1;
+
+    // Undirected adjacency for the bond-path BFS.
+    const adj: number[][] = Array.from({ length: n }, () => []);
+    for (const [i, j] of mol.bonds) {
+      if (i >= 0 && i < n && j >= 0 && j < n) {
+        adj[i]!.push(j);
+        adj[j]!.push(i);
+      }
+    }
+
+    const dist = new Array<number>(n).fill(-1);
+    for (let a = 0; a < n; a++) {
+      const at1 = customType(a);
+      if (at1 < 0 || at1 > maxType) continue;
+      // BFS bond distances from `a` out to `maxBond` bonds.
+      dist.fill(-1);
+      const list: number[] = [a];
+      dist[a] = 0;
+      let cur = 0;
+      for (let bCnt = 1; bCnt <= maxBond; bCnt++) {
+        let nCur = list.length - cur;
+        if (nCur === 0) break;
+        while (nCur-- > 0) {
+          const a1 = list[cur++]!;
+          for (const a2 of adj[a1]!) {
+            if (dist[a2]! < 0) {
+              dist[a2] = bCnt;
+              list.push(a2);
+            }
+          }
+        }
+      }
+      for (const i of list) {
+        const at2 = customType(i);
+        if (at2 >= 0 && at2 <= maxType) result[at1]![at2]![dist[i]!]!++;
+      }
+    }
+    return result as Json;
   });
 
   // ---- index -------------------------------------------------------------

@@ -187,8 +187,15 @@ export function registerSymmetry(ctx: RegistrarCtx): void {
     return 1;
   });
 
-  /** `cmd.get_assembly_ids(...)` — biological-assembly ids (unsupported: []). */
-  ctx.command('get_assembly_ids', (): Json => []);
+  /**
+   * `cmd.get_assembly_ids(name)` — the biological-assembly ids parsed from the
+   * object's mmCIF `_pdbx_struct_assembly.id` array, or `[]` when the object has
+   * none (or was not loaded from mmCIF). Mirrors PyMOL's `cif_get_array` read.
+   */
+  ctx.command('get_assembly_ids', (args): Json => {
+    const mol = resolveMolecule(ex, ctx.str(args[0]));
+    return mol?.assemblyIds ?? [];
+  });
 
   /**
    * `cmd.symexp(prefix, object, selection, cutoff, segi=0)` — generate every

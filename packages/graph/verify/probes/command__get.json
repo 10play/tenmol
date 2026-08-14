@@ -1,0 +1,22 @@
+{
+  "id": "command__get", "feature": "get", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set sphere_scale, 2.5"},
+    {"do":"set cartoon_transparency, 0.4"},
+    {"do":"set sphere_scale, 0.8, ala"}
+  ],
+  "checks": [
+    {"call":["get","sphere_scale"],"label":"global setting value after set"},
+    {"call":["get","cartoon_transparency"],"label":"global float setting value"},
+    {"call":["get","sphere_scale","ala"],"label":"per-object setting value"},
+    {"call":["get","line_width"],"label":"default setting value unset"}
+  ],
+  "expected": [
+    "2.50000",
+    "0.40000",
+    "0.80000",
+    "1.49000"
+  ],
+  "tol": 1e-3
+}

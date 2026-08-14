@@ -755,16 +755,112 @@ export function registerBuilder(ctx: RegistrarCtx): void {
   });
 
   /* --------------------------------- fuse -------------------------------- */
-  // fuse(selection1='pk1', selection2='pk2', mode=0) — join two atoms of the same
-  // object with a bond (a minimal port of PyMOL's join-by-bond). Returns bonds
-  // added. Cross-object fusion is a documented no-op (bonds are intra-object).
+  // fuse(selection1='pk1', selection2='pk2', mode=0, recolor=1, move=1) — join
+  // two objects into one. PyMOL's `ExecutiveFuse`/`ObjectMoleculeFuse` copies the
+  // WHOLE object holding `selection1` (the source) into the object holding
+  // `selection2` (the target), then — unless `mode==3` — forms a bond between the
+  // target atom and the copy of the source atom, moving the copy into a bonding
+  // position first (`move`). The source object is left untouched, so the atom
+  // total grows by the source's atom count. Returns 1 on success.
   ctx.command('fuse', (args, kwargs): Json => {
-    const t1 = firstAtom(sel(pick(args, kwargs, 0, 'selection1'), 'pk1'));
-    const t2 = firstAtom(sel(pick(args, kwargs, 1, 'selection2'), 'pk2'));
-    if (!t1 || !t2 || t1.objName !== t2.objName || t1.index === t2.index) return 0;
-    const mol = ex.molecule(t1.objName);
-    if (!mol || hasBond(mol, t1.index, t2.index)) return 0;
-    mol.bonds.push(t1.index < t2.index ? [t1.index, t2.index] : [t2.index, t1.index]);
+    const mode = Math.trunc(num(pick(args, kwargs, 2, 'mode'), 0));
+    const recolor = num(pick(args, kwargs, 3, 'recolor'), 1) !== 0;
+    const move = num(pick(args, kwargs, 4, 'move'), 1) !== 0;
+    const s1 = firstAtom(sel(pick(args, kwargs, 0, 'selection1'), 'pk1')); // source
+    const s2 = firstAtom(sel(pick(args, kwargs, 1, 'selection2'), 'pk2')); // target
+    if (!s1 || !s2) return 0;
+
+    // Same object: PyMOL's ExecutiveFuse requires two *different* objects (it
+    // bails when obj0 == obj1). The port keeps a minimal intra-object bond here
+    // for backward compatibility with callers that lean on it.
+    if (s1.objName === s2.objName) {
+      if (s1.index === s2.index) return 0;
+      const mol = ex.molecule(s1.objName);
+      if (!mol || hasBond(mol, s1.index, s2.index)) return 0;
+      mol.bonds.push(s1.index < s2.index ? [s1.index, s2.index] : [s2.index, s1.index]);
+      ctx.publish();
+      return 1;
+    }
+
+    // Cross-object fuse: copy every atom of the source object into the target.
+    const srcMol = ex.molecule(s1.objName);
+    const dstMol = ex.molecule(s2.objName);
+    if (!srcMol || !dstMol || srcMol.natom === 0) return 0;
+
+    const createBond = mode !== 3;
+    const base = dstMol.natom; // first copied index within the target
+    const targetIdx = s2.index; // anchor atom in the target
+    const srcAnchorCopy = base + s1.index; // copy of the source anchor in the target
+
+    // Translation that moves the source copy so its anchor atom sits at bonding
+    // distance from the target anchor along the target→source direction.
+    let dx = 0;
+    let dy = 0;
+    let dz = 0;
+    if (createBond && move) {
+      const tp = dstMol.coord(targetIdx, 1);
+      const sp = srcMol.coord(s1.index, 1);
+      const bl = covalent(dstMol.atoms[targetIdx]!.elem) + covalent(srcMol.atoms[s1.index]!.elem);
+      let ux = sp[0] - tp[0];
+      let uy = sp[1] - tp[1];
+      let uz = sp[2] - tp[2];
+      const ul = Math.hypot(ux, uy, uz);
+      if (ul < 1e-6) {
+        ux = 1;
+        uy = 0;
+        uz = 0;
+      } else {
+        ux /= ul;
+        uy /= ul;
+        uz /= ul;
+      }
+      dx = tp[0] + ux * bl - sp[0];
+      dy = tp[1] + uy * bl - sp[1];
+      dz = tp[2] + uz * bl - sp[2];
+    }
+
+    // Copy the atom table (recolor carbons to the target atom's colour when asked).
+    const dstColor = dstMol.atoms[targetIdx]!.color;
+    for (let i = 0; i < srcMol.natom; i++) {
+      const sa = srcMol.atoms[i]!;
+      const copy: AtomInfo = { ...sa, id: base + i + 1 };
+      if (recolor && canonicalElement(sa.elem) === 'C') copy.color = dstColor;
+      dstMol.atoms.push(copy);
+    }
+
+    // Copy coordinates into every target state, applying the move translation.
+    if (dstMol.states.length === 0) dstMol.states.push(new Float32Array(base * 3));
+    const nNew = srcMol.natom;
+    for (let st = 0; st < dstMol.states.length; st++) {
+      const old = dstMol.states[st]!;
+      const out = new Float32Array(old.length + nNew * 3);
+      out.set(old, 0);
+      const ss = srcMol.states[st] ?? srcMol.states[0];
+      for (let k = 0; k < nNew; k++) {
+        out[old.length + k * 3] = (ss?.[k * 3] ?? 0) + dx;
+        out[old.length + k * 3 + 1] = (ss?.[k * 3 + 1] ?? 0) + dy;
+        out[old.length + k * 3 + 2] = (ss?.[k * 3 + 2] ?? 0) + dz;
+      }
+      dstMol.states[st] = out;
+    }
+
+    // Copy the source's internal bonds (shifted into the target's index space),
+    // preserving their orders.
+    for (const [a, b] of srcMol.bonds) {
+      const na = base + a;
+      const nb = base + b;
+      dstMol.bonds.push(na < nb ? [na, nb] : [nb, na]);
+      const ord = getBondOrder(srcMol, a, b);
+      if (ord !== 1) setBondOrder(dstMol, na, nb, ord);
+    }
+
+    // Form the linking bond between the target atom and the source anchor's copy.
+    if (createBond && !hasBond(dstMol, targetIdx, srcAnchorCopy)) {
+      dstMol.bonds.push(
+        targetIdx < srcAnchorCopy ? [targetIdx, srcAnchorCopy] : [srcAnchorCopy, targetIdx],
+      );
+    }
+
     ctx.publish();
     return 1;
   });
