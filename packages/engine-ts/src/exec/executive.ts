@@ -53,6 +53,13 @@ export class Executive {
    * `get_names('selections', enabled_only=1)` reports only the enabled set.
    */
   private readonly selections = new Map<string, { keys: Set<string>; enabled: boolean }>();
+  /**
+   * Group membership: group name -> its direct member object names. A group is a
+   * named container (parked in `order` so it shows in get_names) that is not a
+   * molecule; using it as a selection spans all its members' atoms. Mutated by
+   * the `objects` command subsystem via {@link groups}.
+   */
+  private readonly groupMembership = new Map<string, Set<string>>();
   private readonly settings = new Map<string, number | string>(Object.entries(DEFAULT_SETTINGS));
   /**
    * Bumped on every `set()`. The engine's geometry memoization (F1) folds this
@@ -63,12 +70,57 @@ export class Executive {
   private settingsVersion = 0;
   readonly view = new ViewState();
 
+  /**
+   * The screen viewport size in pixels, reported by `cmd.get_viewport` and set
+   * by `cmd.viewport` / a client `reshape` (`viewing.py:1459`). Shared here so
+   * the setter (`viewport`, in the settings2 subsystem) and the reader
+   * (`get_viewport`, on the Engine) agree on ONE source of truth. Defaults match
+   * PyMOL's compiled window size.
+   */
+  private viewportWidth = 640;
+  private viewportHeight = 480;
+
+  /** The current viewport size as `[width, height]`. */
+  getViewport(): [number, number] {
+    return [this.viewportWidth, this.viewportHeight];
+  }
+
+  /**
+   * Resize the viewport. Mirrors `_cmd.viewport`: a non-positive dimension
+   * leaves that axis unchanged (PyMOL's `viewport(-1, -1)` is a no-op query).
+   */
+  setViewport(width: number, height: number): void {
+    if (Number.isFinite(width) && width > 0) this.viewportWidth = Math.trunc(width);
+    if (Number.isFinite(height) && height > 0) this.viewportHeight = Math.trunc(height);
+  }
+
   /* ----------------------------- context ----------------------------- */
 
   readonly selectorContext: SelectorContext = {
     objects: () => this.order.map((n) => this.objects.get(n)!).filter(Boolean),
     namedSelection: (name) => this.selections.get(name)?.keys,
+    groupMembers: (name) => this.flattenGroup(name),
   };
+
+  /**
+   * Transitively flatten a group into the set of molecule-object names it holds,
+   * so a group name used as a selection matches all its members' atoms. Nested
+   * groups are expanded; a cycle is broken by the `seen` guard. Returns
+   * `undefined` when `name` is not a group.
+   */
+  private flattenGroup(name: string, seen = new Set<string>()): Set<string> | undefined {
+    const direct = this.groupMembership.get(name);
+    if (!direct) return undefined;
+    if (seen.has(name)) return new Set();
+    seen.add(name);
+    const out = new Set<string>();
+    for (const m of direct) {
+      const nested = this.flattenGroup(m, seen);
+      if (nested) for (const n of nested) out.add(n);
+      else out.add(m);
+    }
+    return out;
+  }
 
   /* ------------------------------ objects ----------------------------- */
 
@@ -163,6 +215,28 @@ export class Executive {
       if (i >= 0) this.order.splice(i, 1);
     }
     this.selections.delete(pattern);
+    this.groupMembership.delete(pattern);
+  }
+
+  /* ------------------------------- groups ----------------------------- */
+
+  /** Direct member object names of a group, or `undefined` if `name` is not a
+   *  group. Creating/removing membership is done by the `group` command. */
+  groupDirectMembers(name: string): Set<string> | undefined {
+    return this.groupMembership.get(name);
+  }
+
+  /** Ensure a group's membership record exists and return it (does not park the
+   *  name in `order` — the command registers the group gadget for that). */
+  ensureGroup(name: string): Set<string> {
+    let s = this.groupMembership.get(name);
+    if (!s) this.groupMembership.set(name, (s = new Set()));
+    return s;
+  }
+
+  /** Forget a group's membership record (leaves member objects untouched). */
+  dropGroupMembership(name: string): void {
+    this.groupMembership.delete(name);
   }
 
   /* ------------------------------ gadgets ----------------------------- */

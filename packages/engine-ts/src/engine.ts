@@ -147,11 +147,9 @@ export class Engine {
   private lastX = 0;
   private lastY = 0;
 
-  // Last reshaped viewport size, answered by `get_viewport`. The Mode-G client
-  // polls this to size its GL scene rectangle; without it the scene defaults to
-  // 1x1 and nothing is visible.
-  private width = 640;
-  private height = 480;
+  // The viewport size (answered by `get_viewport`, set by `cmd.viewport` and
+  // `reshape`) lives on the executive so the setter and reader share one source
+  // of truth — the Mode-G client polls it to size its GL scene rectangle.
 
   // Named camera views — `cmd.view(key, 'store'|'recall'|'clear')`. PyMOL keeps
   // these as 18-float entries in a Python dict; the port mirrors that.
@@ -497,10 +495,11 @@ export class Engine {
         }
         return null;
       }
-      case 'reshape':
-        this.width = msg.width ?? this.width;
-        this.height = msg.height ?? this.height;
-        return { width: this.width, height: this.height };
+      case 'reshape': {
+        this.executive.setViewport(msg.width ?? -1, msg.height ?? -1);
+        const [width, height] = this.executive.getViewport();
+        return { width, height };
+      }
       default:
         return null;
     }
@@ -616,8 +615,10 @@ export class Engine {
     h('get_setting_boolean', (args) => ex.getSettingFloat(str(args[0])) !== 0);
 
     // `cmd.get_viewport()` — the scene rectangle in pixels (width, height). The
-    // Mode-G viewport polls this to size its GL scissor/viewport.
-    h('get_viewport', () => [this.width, this.height]);
+    // Mode-G viewport polls this to size its GL scissor/viewport. Reads the size
+    // the `viewport` command (settings2 subsystem) and `reshape` both write into
+    // the executive, so the setter and this reader share ONE source of truth.
+    h('get_viewport', () => ex.getViewport());
 
     // `_bridge.pull_geometry(object, repName, state)` — the Mode-G PULL path.
     // The viewport requests a rep; we push the frame out of band (like the
@@ -634,8 +635,9 @@ export class Engine {
     // rendered PNG is then read back with `cmd.png(prior)` for the dialog preview
     // / save / clipboard. Returns null, exactly like the bridge symbol.
     const bridgeRender = (args: unknown[], shadows: boolean): Json => {
-      const w = Math.round(Number(args[0]) || 0) || this.width;
-      const h2 = Math.round(Number(args[1]) || 0) || this.height;
+      const [vw, vh] = ex.getViewport();
+      const w = Math.round(Number(args[0]) || 0) || vw;
+      const h2 = Math.round(Number(args[1]) || 0) || vh;
       setLastImage(ex, renderRayImage(ex, w, h2, shadows, resolveAntialias(-1)));
       return null;
     };
@@ -753,7 +755,11 @@ export class Engine {
       const g = ex.gadget(name);
       if (g) return g.kind;
       const mol = ex.molecule(name);
-      return (mol?.kind as string | undefined) ?? 'object:molecule';
+      if (mol) return mol.kind as string;
+      // A defined named selection (not an object) reports as 'selection'
+      // (ExecutiveGetType: object lookup fails, selection lookup succeeds).
+      if (ex.hasSelection(name)) return 'selection';
+      return 'object:molecule';
     };
     // `get_names_of_type(type, public=1)` — the pure-Python wrapper (querying.py):
     // enumerate `public_objects` (or `objects` when public=0) and keep the names
@@ -804,7 +810,20 @@ export class Engine {
     h('get_object_ttt', () => null);
     h('get_progress', () => -1);
     h('get_idle', () => 0);
-    h('get_version', () => ['tenmol-engine-ts', 0, 0, '', '', '']);
+    // `cmd.get_version()` (`layer4/Cmd.cpp:CmdGetVersion`) returns the compiled-in
+    // version tuple `(text, double, int, build_date, git_sha, svn_rev)`. The
+    // text/double/int come from `layer0/Version.h`
+    // (`_PyMOL_VERSION`, `_PyMOL_VERSION_int`, `double = int / 1e6`); the build
+    // date (unix ts) and git sha are baked in at build time. The port mirrors the
+    // reference PyMOL build it is verified against.
+    h('get_version', () => [
+      '3.2.0a',
+      3000000 / 1000000,
+      3000000,
+      1786014386,
+      'c030472fa9f5ad96994bf3e4d4277b3862057897',
+      0,
+    ]);
     h('get_renderer', () => ['tenmol-engine-ts (WebGL2)', 'browser', '']);
     // `cmd.view(key, action, animate)` — named camera views. The views panel
     // lists them by a deliberately-failing recall and parsing the error's

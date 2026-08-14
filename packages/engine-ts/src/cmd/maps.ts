@@ -168,20 +168,48 @@ export function registerMaps(ctx: RegistrarCtx): void {
   /* ------------------------- get_volume_histogram ------------------------ */
 
   ctx.command('get_volume_histogram', (args, kwargs): Json => {
+    // PyMOL (querying.py:62) returns a flat list of length `bins + 4`:
+    //   [min, max, mean, stdev, h0 .. h(bins-1)]
+    // `range` defaults to (0., 0.) which means "use the full data range".
     const name = toStr(args[0] ?? kwargs.name);
     const bins = Math.max(1, Math.floor(toNum(args[1] ?? kwargs.bins, 64)));
     const m = maps.get(name);
     if (!m) throw new Error(`get_volume_histogram: no map named '${name}'`);
-    let lo = Infinity;
-    let hi = -Infinity;
+
+    // Data min/max, mean and (population) standard deviation.
+    let dmin = Infinity;
+    let dmax = -Infinity;
+    let sum = 0;
+    let sumSq = 0;
+    const n = m.data.length;
     for (const v of m.data) {
-      if (v < lo) lo = v;
-      if (v > hi) hi = v;
+      if (v < dmin) dmin = v;
+      if (v > dmax) dmax = v;
+      sum += v;
+      sumSq += v * v;
     }
-    if (!Number.isFinite(lo)) {
-      lo = 0;
-      hi = 0;
+    if (!Number.isFinite(dmin)) {
+      dmin = 0;
+      dmax = 0;
     }
+    const mean = n > 0 ? sum / n : 0;
+    const variance = n > 0 ? Math.max(0, sumSq / n - mean * mean) : 0;
+    const stdev = Math.sqrt(variance);
+
+    // Histogram range: explicit `range` arg (unless it is the (0,0) sentinel),
+    // otherwise the full data range.
+    const rng = (args[2] ?? kwargs.range) as unknown;
+    let lo = dmin;
+    let hi = dmax;
+    if (Array.isArray(rng) && rng.length >= 2) {
+      const r0 = Number(rng[0]);
+      const r1 = Number(rng[1]);
+      if (Number.isFinite(r0) && Number.isFinite(r1) && !(r0 === 0 && r1 === 0)) {
+        lo = r0;
+        hi = r1;
+      }
+    }
+
     const counts = new Array<number>(bins).fill(0);
     const span = hi - lo;
     for (const v of m.data) {
@@ -190,7 +218,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
       if (b >= bins) b = bins - 1;
       counts[b] = (counts[b] ?? 0) + 1;
     }
-    return [lo, hi, ...counts];
+    return [dmin, dmax, mean, stdev, ...counts];
   });
 
   /* ------------------------------- isolevel ------------------------------ */

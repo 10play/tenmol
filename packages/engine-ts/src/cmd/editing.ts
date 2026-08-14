@@ -483,19 +483,83 @@ export function registerEditing(ctx: RegistrarCtx): void {
   });
 
   /* ----------------------------- group / ungroup ------------------------- */
-  // group(name, members='', action='auto') — create/extend a group object
-  // (creating.py). We register a first-class group gadget so get_names lists it
-  // and get_type reports 'object:group'; membership is not modelled deeply.
+  // group(name, members='', action='auto') — create/update a group object
+  // (creating.py). The group is registered as a first-class gadget so get_names
+  // lists it and get_type reports 'object:group', and its membership is tracked
+  // on the executive so the group name used as a selection spans all its
+  // members' atoms (creating.py NOTES; matched by the selector's group expansion).
   ctx.command('group', (args, kwargs): Json => {
-    const name = ctx.str(pick(args, kwargs, 0, 'name'), '');
+    let name = ctx.str(pick(args, kwargs, 0, 'name'), '');
+    const members = ctx.str(pick(args, kwargs, 1, 'members'), '').trim();
+    let action = ctx.str(pick(args, kwargs, 2, 'action'), 'auto') || 'auto';
     if (name === '') return 0;
-    ex.registerGadget(name, 'object:group');
+    if (name === 'all') name = '*'; // creating.py remaps the reserved name
+    const memberNames = members ? members.split(/\s+/).filter((s) => s.length > 0) : [];
+    // auto: add when members are given, else toggle an existing group, else add.
+    // 'toggle' only affects panel expansion (no observable atom state), so it is
+    // a no-op here beyond ensuring the group exists.
+    if (action === 'auto') {
+      action = memberNames.length > 0 || !(ex.gadget(name)?.kind === 'object:group') ? 'add' : 'toggle';
+    } else if (action === 'ungroup') {
+      // Deprecated alias — the `ungroup` command is preferred (creating.py).
+      action = 'remove';
+    }
+    switch (action) {
+      case 'add': {
+        ex.registerGadget(name, 'object:group');
+        const set = ex.ensureGroup(name);
+        for (const m of memberNames) set.add(m);
+        break;
+      }
+      case 'remove': {
+        const set = ex.groupDirectMembers(name);
+        if (set) for (const m of memberNames) set.delete(m);
+        break;
+      }
+      case 'empty': {
+        ex.groupDirectMembers(name)?.clear();
+        break;
+      }
+      case 'purge': {
+        // Remove all members and delete the member objects.
+        const set = ex.groupDirectMembers(name);
+        if (set) {
+          for (const m of [...set]) ex.delete(m);
+          set.clear();
+        }
+        break;
+      }
+      case 'excise': {
+        // Delete the member objects and the group itself.
+        const set = ex.groupDirectMembers(name);
+        if (set) for (const m of [...set]) ex.delete(m);
+        ex.delete(name);
+        break;
+      }
+      default:
+        // open / close / toggle / raise — panel-display actions with no atom
+        // state; ensure the group exists so it is observable.
+        ex.registerGadget(name, 'object:group');
+        ex.ensureGroup(name);
+        break;
+    }
     ctx.publish();
     return name;
   });
   ctx.command('ungroup', (args, kwargs): Json => {
-    const members = ctx.str(pick(args, kwargs, 0, 'members'), '');
-    if (members !== '' && ex.gadget(members)?.kind === 'object:group') ex.delete(members);
+    // ungroup(members) — return the named object(s) to the top level, i.e. drop
+    // them from whichever group contains them (creating.py). Passing a group
+    // name empties+removes that group.
+    const members = ctx.str(pick(args, kwargs, 0, 'members'), '').trim();
+    if (members === '') return null;
+    for (const m of members.split(/\s+/).filter((s) => s.length > 0)) {
+      if (ex.gadget(m)?.kind === 'object:group') {
+        ex.delete(m); // dropping the group container also clears its membership
+      } else {
+        // Remove this object from any group that contains it.
+        for (const g of ex.getNames('objects')) ex.groupDirectMembers(g)?.delete(m);
+      }
+    }
     ctx.publish();
     return null;
   });

@@ -1,0 +1,17 @@
+{
+  "id": "command__get_unused_name", "feature": "get_unused_name", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"}
+  ],
+  "checks": [
+    {"call":["get_unused_name","tmp"],"label":"free prefix -> numbered (tmp01)"},
+    {"call":["get_unused_name","ala"],"label":"taken prefix -> next number (ala01)"},
+    {"call":["get_unused_name","foo",0],"label":"alwaysnumber=0, free prefix -> bare (foo)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    "tmp01",
+    "ala01",
+    "foo"
+  ]
+}

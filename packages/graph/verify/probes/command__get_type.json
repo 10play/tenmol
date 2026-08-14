@@ -1,0 +1,16 @@
+{
+  "id": "command__get_type", "feature": "get_type", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"select mysel, elem C"}
+  ],
+  "checks": [
+    {"call":["get_type","ala"],"label":"type of a molecule object"},
+    {"call":["get_type","mysel"],"label":"type of a named selection"}
+  ],
+  "tol": 0,
+  "expected": [
+    "object:molecule",
+    "selection"
+  ]
+}

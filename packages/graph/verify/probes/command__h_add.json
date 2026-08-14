@@ -1,0 +1,18 @@
+{
+  "id": "command__h_add",
+  "feature": "h_add",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "remove hydro"},
+    {"do": "h_add"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "elem H"], "label": "hydrogens present after h_add"},
+    {"call": ["count_atoms", "all"], "label": "total atoms after h_add"},
+    {"call": ["count_atoms", "elem C"], "label": "heavy carbons unchanged"}
+  ],
+  "tol": 1e-3,
+  "expected": [7, 12, 3]
+}

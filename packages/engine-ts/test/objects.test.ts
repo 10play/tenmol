@@ -276,9 +276,12 @@ describe('objects: split_chains', () => {
 describe('objects: name helpers & misc', () => {
   it('get_unused_name returns a free name', () => {
     const { call } = setup();
-    expect(call('get_unused_name', ['m'])).toBe('m_1'); // 'm' taken
-    expect(call('get_unused_name', ['fresh'])).toBe('fresh');
-    expect(call('get_unused_name', [])).toBe('obj');
+    // Real PyMOL (ExecutiveGetUnusedName): alwaysnumber defaults to 1, so a
+    // 2-digit number is always appended (verified against the oracle).
+    expect(call('get_unused_name', ['m'])).toBe('m01'); // 'm' taken -> m01
+    expect(call('get_unused_name', ['fresh'])).toBe('fresh01');
+    expect(call('get_unused_name', [])).toBe('tmp01'); // default prefix 'tmp'
+    expect(call('get_unused_name', ['fresh', 0])).toBe('fresh'); // alwaysnumber=0, free
   });
 
   it('get_legal_name sanitises problem characters', () => {

@@ -97,9 +97,14 @@ describe('get_volume_histogram', () => {
     const { call } = harness();
     call('map_new', 'g', 'gaussian', 0.5);
     const hist = call('get_volume_histogram', 'g', 64) as number[];
-    const [lo, hi, ...counts] = hist;
+    // PyMOL (querying.py:62) returns [min, max, mean, stdev, h0..h(bins-1)],
+    // a flat list of length bins + 4.
+    const [lo, hi, mean, stdev, ...counts] = hist;
     expect(counts.length).toBe(64);
     expect(lo!).toBeLessThan(hi!);
+    expect(mean!).toBeGreaterThanOrEqual(lo!);
+    expect(mean!).toBeLessThanOrEqual(hi!);
+    expect(stdev!).toBeGreaterThanOrEqual(0);
     const total = counts.reduce((a, b) => a + b, 0);
     expect(total).toBe(DIMS[0] * DIMS[1] * DIMS[2]); // 637
   });

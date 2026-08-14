@@ -1,0 +1,19 @@
+{
+  "id": "command__h_fill",
+  "feature": "h_fill",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "remove (ala and elem H)" },
+    { "do": "edit (ala and name CB)" },
+    { "do": "h_fill" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "ala and elem H and (neighbor name CB)"], "label": "picked CB refilled with its 3 hydrogens" },
+    { "call": ["count_atoms", "ala and elem H"], "label": "only the picked atom was filled (total H)" },
+    { "call": ["count_atoms", "ala and name CB"], "label": "picked CB heavy atom intact" }
+  ],
+  "tol": 1e-3,
+  "expected": [3, 3, 1]
+}

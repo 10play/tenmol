@@ -33,6 +33,12 @@ export interface SelectorContext {
   objects(): ObjectMolecule[];
   /** A previously stored named selection -> the stable atom identities it holds. */
   namedSelection(name: string): Set<string> | undefined;
+  /**
+   * If `name` is a group object, the set of molecule-object names it transitively
+   * contains (nested groups flattened); `undefined` when `name` is not a group.
+   * Used so a group name spans all its members' atoms when used as a selection.
+   */
+  groupMembers?(name: string): Set<string> | undefined;
 }
 
 /** Stable identity of an atom across edits: object name + PyMOL atom id. The
@@ -827,6 +833,9 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
     case 'ref': {
       const sel = env.ctx.namedSelection(node.name);
       if (sel) return filter((ua) => sel.has(atomKey(ua.objName, ua.atom)));
+      // A group name used as a selection spans all atoms of its member objects.
+      const members = env.ctx.groupMembers?.(node.name);
+      if (members) return filter((ua) => members.has(ua.objName));
       return filter((ua) => ua.objName === node.name);
     }
     case 'not': {
