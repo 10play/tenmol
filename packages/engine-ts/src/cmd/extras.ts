@@ -575,7 +575,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'load_png',
       'load_traj',
       'save',
-      'fetch',
+      // `fetch` is real now — see cmd/fileio.ts (loads the cached/local file).
       // `ray`/`draw`/`png` are real now — see cmd/render.ts.
       // logging to disk
       'log',

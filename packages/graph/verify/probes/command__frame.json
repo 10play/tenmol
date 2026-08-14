@@ -1,0 +1,20 @@
+{
+  "id": "command__frame",
+  "feature": "frame",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "mset 1 x10" },
+    { "do": "frame 4" }
+  ],
+  "checks": [
+    { "call": ["get_frame"], "label": "current frame after frame 4" },
+    { "call": ["count_frames"], "label": "movie length from mset 1 x10" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    4,
+    10
+  ]
+}

@@ -8,6 +8,7 @@
  * `AtomInfoGetAlignedPDBAtomName` so `parsePdb(get_pdbstr(...))` round-trips.
  */
 
+import type { Json } from '@tenmol/protocol';
 import type { AtomInfo } from '../model/atom';
 import { defaultVisRep } from '../model/atom';
 import { canonicalElement } from '../model/element';
@@ -522,6 +523,127 @@ export function registerFileio(ctx: RegistrarCtx): void {
     ex.addMolecule(mol);
     ctx.publish();
     return name;
+  });
+
+  /**
+   * `fetch` — download a structure/map/component by accession code and load it
+   * (`importing.py:_fetch`/`_multifetch`). The network download itself is not
+   * modelled here (no HTTP in the differential/headless runner), but PyMOL's
+   * `_fetch` first checks whether the target file already exists under `path`
+   * and, if so, skips the download and just `load`s it. That cached-file path is
+   * fully observable and is what we port: build the same `nameFmt` filename in
+   * `path`, and if it is present on disk, hand it to `load`. A missing file (the
+   * would-be network case) reports the same error PyMOL does and returns null.
+   */
+  ctx.command('fetch', (rawArgs, rawKwargs) => {
+    // Inline `key=value` positionals (from the `do` parser) → real kwargs.
+    const kwargs: Record<string, unknown> = { ...rawKwargs };
+    const args: unknown[] = [];
+    for (const a of rawArgs) {
+      const m = typeof a === 'string' ? /^([A-Za-z_]\w*)=(.*)$/.exec(a) : null;
+      if (m) kwargs[m[1]!] = m[2];
+      else args.push(a);
+    }
+
+    const code = ctx.str(pick(args, kwargs, 0, 'code'), '');
+    const name = ctx.str(pick(args, kwargs, 1, 'name'), '').trim();
+    const state = asInt(pick(args, kwargs, 2, 'state'), 0);
+    let discrete = asInt(pick(args, kwargs, 4, 'discrete'), -1);
+    const typeArg = ctx.str(pick(args, kwargs, 7, 'type'), '').toLowerCase();
+    let path = ctx.str(pick(args, kwargs, 9, 'path'), '');
+    const fileArg = pick(args, kwargs, 10, 'file');
+
+    // Blank path resets to the `fetch_path` setting, else '.' (Setting.cpp:644).
+    if (path === '') {
+      const fp = ex.getSetting('fetch_path');
+      path = fp === undefined || fp === '' ? '.' : String(fp);
+    }
+
+    const codeList = code.split(/\s+/).filter((s) => s !== '');
+    // Multiple codes into one named object default to discrete (_multifetch).
+    if (name !== '' && codeList.length > 1 && discrete < 0) discrete = 1;
+
+    let result: Json = null;
+    for (let objCode of codeList) {
+      let type = typeArg;
+      let objName = name;
+
+      if (type === '') {
+        if (objCode.length > 1 && objCode.length < 4) {
+          type = 'cc';
+        } else {
+          const ftd = ex.getSetting('fetch_type_default');
+          type = ftd === undefined || ftd === '' ? 'cif' : String(ftd);
+        }
+      }
+
+      // EMD-3489 / emd_3489 / CID_/SID_ prefixes select the type + object name.
+      const prefix = objCode.slice(0, 3).toUpperCase();
+      const sep = objCode[3];
+      if ((sep === '_' || sep === '-') && (prefix === 'CID' || prefix === 'SID' || prefix === 'EMD')) {
+        if (objName === '') objName = objCode;
+        type = prefix.toLowerCase();
+        objCode = objCode.slice(4);
+      }
+
+      if (objName === '') {
+        objName = objCode;
+        if (type.endsWith('fofc')) objName += '_' + type;
+        else if (type === 'emd') objName = 'emd_' + objCode;
+      }
+
+      // 5+ char structure codes carry a trailing chain, stripped then post-filtered.
+      let chain = '';
+      if (
+        objCode.length > 4 &&
+        (type === 'pdb' || type === 'cif' || type === 'mmtf' || type === 'bcif') &&
+        objCode[0]! >= '1' &&
+        objCode[0]! <= '9'
+      ) {
+        chain = objCode.slice(4);
+        objCode = objCode.slice(0, 4);
+        if (chain[0] === '.' || chain[0] === '_' || chain[0] === '-' || chain[0] === ':') {
+          chain = chain.slice(1);
+        }
+      }
+
+      // The download-name pattern (`_fetch` nameFmt); `cc` keeps original case.
+      let nameFmt = '{code}.{type}';
+      if (type === 'fofc' || type === '2fofc') nameFmt = '{code}_{type}.ccp4';
+      else if (type === 'emd') nameFmt = '{type}_{code}.ccp4';
+      else if (type === 'cid' || type === 'sid') nameFmt = '{type}_{code}.sdf';
+      else if (type === 'cc') nameFmt = '{code}.cif';
+      const dlCode = type === 'cc' ? objCode : objCode.toLowerCase();
+      const fileName = nameFmt.replace('{code}', dlCode).replace('{type}', type);
+
+      const fullPath =
+        typeof fileArg === 'string' && fileArg !== '' && fileArg !== '1' && fileArg !== 'auto'
+          ? fileArg
+          : path.replace(/[/\\]+$/, '') + '/' + fileName;
+
+      // PyMOL only proceeds past download when the file exists on disk.
+      if (readDiskFile(fullPath) === null) {
+        // The network fetch we cannot perform headless — report + skip this code.
+        result = null;
+        continue;
+      }
+
+      const loaded = ctx.call('load', [fullPath, objName, state], { discrete });
+      result = loaded;
+
+      if (chain !== '' && typeof loaded === 'string') {
+        const kept = asInt(ctx.call('count_atoms', [`${loaded} & chain ${chain}`]), 0);
+        if (kept === 0) {
+          ctx.call('delete', [loaded]);
+          throw new Error('no such chain: ' + chain);
+        }
+        ctx.call('remove', [`${loaded} & not chain ${chain}`]);
+        result = loaded;
+      }
+    }
+
+    ctx.publish();
+    return result;
   });
 
   /** Register a `read_<fmt>str(text, name)` convenience verb for a parser. */

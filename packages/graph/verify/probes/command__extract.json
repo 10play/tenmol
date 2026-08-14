@@ -1,0 +1,25 @@
+{
+  "id": "command__extract",
+  "feature": "extract",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"call": ["extract", "lig", "m and resi 1"]}
+  ],
+  "checks": [
+    {"call": ["get_names"], "label": "object list has source + extracted object"},
+    {"call": ["count_atoms", "lig"], "label": "extracted object holds the selected atoms"},
+    {"call": ["count_atoms", "m and resi 1"], "label": "source lost the extracted atoms"},
+    {"call": ["count_atoms", "m"], "label": "source atom count reduced by extracted atoms"},
+    {"call": ["count_atoms", "lig or m"], "label": "total atoms conserved across both objects"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["m", "lig"],
+    29,
+    0,
+    5655,
+    5684
+  ]
+}

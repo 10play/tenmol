@@ -92,6 +92,7 @@ type PropKey =
   | 'alt'
   | 'color'
   | 'rep'
+  | 'flag'
   | 'ss';
 type KeywordKey =
   | 'hetatm'
@@ -128,6 +129,8 @@ const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
   altloc: 'alt',
   color: 'color',
   rep: 'rep',
+  flag: 'flag',
+  'f.': 'flag',
   ss: 'ss',
 };
 
@@ -538,6 +541,12 @@ function matchProp(node: Extract<Node, { t: 'prop' }>, ua: UniverseAtom): boolea
       return node.values.some((v) => {
         const id = REP_BY_NAME.get(v.toLowerCase());
         return id !== undefined && (a.visRep & (1 << id)) !== 0;
+      });
+    case 'flag':
+      // `flag N` matches atoms whose modeling-flags bitmask has bit N set.
+      return node.values.some((v) => {
+        const n = Number(v);
+        return Number.isInteger(n) && n >= 0 && n < 32 && ((a.flags ?? 0) & (1 << n)) !== 0;
       });
     case 'ss':
       // 'H' helix, 'S' strand; 'L' (or empty) is loop/unassigned.

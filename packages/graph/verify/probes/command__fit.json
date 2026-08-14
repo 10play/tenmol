@@ -1,0 +1,80 @@
+{
+  "id": "command__fit",
+  "feature": "fit",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_pdbstr",
+        "ATOM      1  N  ALA A   1       0.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA ALA A   1       1.000   0.000   0.000  1.00  0.00           C\nATOM      3  C  ALA A   1       2.000   1.000   0.000  1.00  0.00           C\nATOM      4  O  ALA A   1       2.000   2.000   0.000  1.00  0.00           O\nATOM      5  CB ALA A   1       1.000  -1.000   1.000  1.00  0.00           C\nATOM      6  N  ALA A   2       3.000   1.000   0.000  1.00  0.00           N\nATOM      7  CA ALA A   2       4.000   0.000   0.000  1.00  0.00           C\nATOM      8  C  ALA A   2       5.000   1.000   0.000  1.00  0.00           C\nATOM      9  O  ALA A   2       5.000   2.000   0.000  1.00  0.00           O\nATOM     10  CB ALA A   2       4.000  -1.000   1.000  1.00  0.00           C\nATOM     11  N  ALA A   3       6.000   1.000   0.000  1.00  0.00           N\nATOM     12  CA ALA A   3       7.000   0.000   1.000  1.00  0.00           C\nATOM     13  C  ALA A   3       8.000   1.000   1.000  1.00  0.00           C\nATOM     14  O  ALA A   3       8.000   2.000   1.000  1.00  0.00           O\nATOM     15  CB ALA A   3       7.000  -1.000   2.000  1.00  0.00           C\nEND",
+        "t"
+      ]
+    },
+    {
+      "call": [
+        "create",
+        "mob",
+        "t"
+      ]
+    },
+    {
+      "do": "rotate x, 57, mob"
+    },
+    {
+      "do": "translate [10, -4, 6], mob"
+    },
+    {
+      "call": [
+        "fit",
+        "mob",
+        "t"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_distance",
+        "mob and name CA and resi 1",
+        "t and name CA and resi 1"
+      ],
+      "label": "fitted mobile CA1 superposes onto target",
+      "tol": 0.02
+    },
+    {
+      "call": [
+        "get_distance",
+        "mob and name CB and resi 3",
+        "t and name CB and resi 3"
+      ],
+      "label": "matched CB3 superposes onto target",
+      "tol": 0.02
+    },
+    {
+      "call": [
+        "get_distance",
+        "mob and name O and resi 2",
+        "t and name O and resi 2"
+      ],
+      "label": "backbone O2 superposes onto target",
+      "tol": 0.02
+    },
+    {
+      "call": [
+        "get_distance",
+        "mob and name CA and resi 1",
+        "mob and name CB and resi 1"
+      ],
+      "label": "internal CA-CB bond preserved (rigid-body fit)",
+      "tol": 0.02
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    2.811545414260763e-7,
+    1.7881393432617188e-7,
+    2.4027400513659813e-7,
+    1.4142132997512817
+  ]
+}

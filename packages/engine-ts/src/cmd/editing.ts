@@ -106,6 +106,38 @@ function dihedral(p1: Vec3, p2: Vec3, p3: Vec3, p4: Vec3): number {
 /** An atom carrying the editor's per-atom `protected` flag (PyMOL `flag 6`). */
 type Protectable = AtomInfo & { protected?: boolean };
 
+/* ------------------------------ flag command ----------------------------- */
+
+/** An atom whose modeling-flags bitmask the `flag` command mutates. */
+type Flaggable = AtomInfo & { flags?: number };
+
+/** Reserved flag names → bit number (PyMOL `editing.py` `flag_dict`). */
+const FLAG_DICT: Readonly<Record<string, number>> = {
+  focus: 0, free: 1, restrain: 2, fix: 3, exclude: 4, study: 5,
+  exfoliate: 24, ignore: 25, no_smooth: 26,
+};
+
+/** Flag actions → code (PyMOL `flag_action_dict`). */
+const FLAG_ACTIONS: Readonly<Record<string, number>> = { reset: 0, set: 1, clear: 2 };
+
+/**
+ * Resolve a `flag` argument to a bit number: an integer literal, an exact flag
+ * name, or a unique prefix of one (PyMOL's `Shortcut`). Returns undefined for an
+ * unknown/ambiguous name.
+ */
+function resolveFlag(v: unknown): number | undefined {
+  const s = String(v ?? '').trim();
+  if (s === '') return undefined;
+  if (/^\d+$/.test(s)) {
+    const n = parseInt(s, 10);
+    return n >= 0 && n < 32 ? n : undefined;
+  }
+  const key = s.toLowerCase();
+  if (key in FLAG_DICT) return FLAG_DICT[key];
+  const hits = Object.keys(FLAG_DICT).filter((k) => k.startsWith(key));
+  return hits.length === 1 ? FLAG_DICT[hits[0]!] : undefined;
+}
+
 /* -------------------------- alter_state expr ----------------------------- */
 
 /** Atom fields exposed as bare read-only variables in the `alter_state` body. */
@@ -489,6 +521,43 @@ export function registerEditing(ctx: RegistrarCtx): void {
   ctx.command('deprotect', (args, kwargs): Json =>
     setProtected(sel(pick(args, kwargs, 0, 'selection')), false),
   );
+
+  /* -------------------------------- flag --------------------------------- */
+  // flag(flag, selection, action='reset', quiet=1) — set/clear a numbered atom
+  // flag over a selection (editing.py `flag`). `reset` (default) sets the flag
+  // inside the selection and clears it everywhere else; `set`/`clear` leave
+  // non-selected atoms untouched. The `flag N` selector reads the resulting
+  // bitmask. Returns the number of atoms whose flag bit changed.
+  ctx.command('flag', (args, kwargs): Json => {
+    const flagNum = resolveFlag(pick(args, kwargs, 0, 'flag'));
+    if (flagNum === undefined) return 0;
+    const selection = sel(pick(args, kwargs, 1, 'selection'));
+    const action = FLAG_ACTIONS[ctx.str(pick(args, kwargs, 2, 'action'), 'reset').toLowerCase()] ?? 0;
+    const bit = 1 << flagNum;
+
+    // Which (object, local-index) pairs the selection covers.
+    const inSel = new Set<string>();
+    for (const ua of ex.atomsMatching(selection)) inSel.add(`${ua.objName} ${ua.index}`);
+
+    let changed = 0;
+    for (const mol of ex.moleculesInOrder()) {
+      for (let i = 0; i < mol.atoms.length; i++) {
+        const a = mol.atoms[i] as Flaggable;
+        const cur = a.flags ?? 0;
+        const hit = inSel.has(`${mol.name} ${i}`);
+        let next = cur;
+        if (action === 0) next = hit ? cur | bit : cur & ~bit; // reset
+        else if (action === 1) { if (hit) next = cur | bit; }   // set
+        else if (hit) next = cur & ~bit;                        // clear
+        if (next !== cur) {
+          a.flags = next;
+          changed++;
+        }
+      }
+    }
+    if (changed > 0) ctx.publish();
+    return changed;
+  });
 
   /* ------------------------------ alter_state ---------------------------- */
   // alter_state(state, selection, expression, ...) — run a JS expression per

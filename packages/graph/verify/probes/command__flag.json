@@ -1,0 +1,15 @@
+{
+  "id": "command__flag", "feature": "flag", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"flag fix, name CA"},
+    {"do":"flag free, name N+C, set"}
+  ],
+  "checks": [
+    {"call":["count_atoms","flag 3"],"label":"atoms with fix flag (3)"},
+    {"call":["count_atoms","flag 1"],"label":"atoms with free flag (1)"},
+    {"call":["count_atoms","name CA"],"label":"sanity: CA present"}
+  ],
+  "tol": 1e-3,
+  "expected": [1, 2, 1]
+}

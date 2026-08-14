@@ -56,6 +56,13 @@ export interface AtomInfo {
    * rep is shown for this atom. Ported from the `visRep` int in `AtomInfoType`.
    */
   visRep: number;
+  /**
+   * Modeling flags bitmask (PyMOL `AtomInfoType.flags`). Bit `1 << n` set means
+   * the atom carries flag `n` — e.g. focus 0, free 1, restrain 2, fix 3,
+   * exclude 4, study 5, ignore 25. Set by the `flag` command and read by the
+   * `flag N` selector. Absent ⇒ no flags set.
+   */
+  flags?: number;
 }
 
 /** `1 << rep` — the visRep bit for a representation. */

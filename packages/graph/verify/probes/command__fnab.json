@@ -1,0 +1,24 @@
+{
+  "id": "command__fnab",
+  "feature": "fnab",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "call": ["fnab", "AT"], "kwargs": { "name": "mydna", "mode": "DNA", "form": "B", "dbl_helix": 1 } }
+  ],
+  "checks": [
+    { "call": ["get_names", "objects"], "label": "object created" },
+    { "call": ["count_atoms", "elem P"], "label": "backbone phosphates (1 per nucleotide)" },
+    { "call": ["count_atoms", "elem N"], "label": "base nitrogens (A=5,T=2 per strand)" },
+    { "call": ["get_chains", "mydna"], "label": "chains built (double helix -> A,B)" },
+    { "call": ["count_atoms", "chain B and elem P"], "label": "complement strand phosphates" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["mydna"],
+    4,
+    14,
+    ["A", "B"],
+    2
+  ]
+}
