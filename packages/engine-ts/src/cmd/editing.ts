@@ -502,10 +502,10 @@ export function registerEditing(ctx: RegistrarCtx): void {
     const atom: AtomInfo = {
       id: mol.atoms.length + 1,
       name: ctx.str(kwargs.name, '') || 'PS1',
-      resn: ctx.str(kwargs.resn, '') || 'PSDO',
+      resn: ctx.str(kwargs.resn, '') || 'PSD',
       resi: ctx.str(kwargs.resi, '') || '1',
       resv: num(kwargs.resi, 1),
-      chain: ctx.str(kwargs.chain, ''),
+      chain: ctx.str(kwargs.chain, '') || 'P',
       segi: ctx.str(kwargs.segi, '') || 'PSDO',
       alt: '',
       elem: ctx.str(kwargs.elem, '') || 'PS',

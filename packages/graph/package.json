@@ -17,6 +17,14 @@
   },
   "scripts": {
     "build:manifest": "node scripts/assemble-manifest.mjs",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "verify:seed": "node verify/seed.mjs",
+    "verify:status": "node verify/status.mjs"
+  },
+  "devDependencies": {
+    "@tenmol/backend": "workspace:*",
+    "@tenmol/client": "workspace:*",
+    "@tenmol/engine-ts": "workspace:*",
+    "ws": "^8.18.0"
   }
 }

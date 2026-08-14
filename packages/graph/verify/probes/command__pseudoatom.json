@@ -1,0 +1,15 @@
+{
+  "id": "command__pseudoatom", "feature": "pseudoatom", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "myps"], "kwargs": {"pos": [1, 2, 3]}}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "myps"], "label": "object created with one pseudoatom"},
+    {"call": ["count_atoms", "name PS1"], "label": "default atom name PS1"},
+    {"call": ["count_atoms", "resn PSD"], "label": "default resn PSD"},
+    {"call": ["count_atoms", "chain P"], "label": "default chain P"},
+    {"call": ["count_atoms", "elem PS"], "label": "default element PS"}
+  ],
+  "tol": 0,
+  "expected": [1, 1, 1, 1, 1]
+}

@@ -9,8 +9,10 @@
  * this is enough for `fragment ala` and friends to load and render.
  */
 
-import type { ObjectMolecule } from './molecule';
+import { ObjectMolecule } from './molecule';
+import { defaultVisRep } from './atom';
 import { parsePdb } from './pdb';
+import { getAminoAcidFragment, resolveAminoAcidCode } from './aa-fragments';
 
 interface FragAtom {
   name: string;
@@ -121,4 +123,43 @@ export function buildFragment(name: string, object: string): ObjectMolecule | nu
   const atoms = FRAGMENTS[name.toLowerCase()];
   if (!atoms) return null;
   return parsePdb(toPdb(atoms, name), object);
+}
+
+/**
+ * Build the {@link ObjectMolecule} for `cmd.fragment(name)` from the real
+ * chempy fragment library (`aa-fragments.json`) — complete residues with
+ * hydrogens and explicit bonds, matching real PyMOL's `data/chempy/fragments`
+ * pickles atom-for-atom (e.g. `fragment ala` → 10 atoms). Falls back to the
+ * heavy-atom-only {@link buildFragment} table for any name the amino-acid
+ * library does not carry. Returns `null` when the fragment is unknown.
+ */
+export function buildLibraryFragment(name: string, object: string): ObjectMolecule | null {
+  const frag = getAminoAcidFragment(name);
+  if (!frag) return buildFragment(name, object);
+  const resn = resolveAminoAcidCode(name) ?? name.toUpperCase();
+  const mol = new ObjectMolecule(object);
+  const coords: number[] = [];
+  frag.atoms.forEach((fa, i) => {
+    mol.atoms.push({
+      id: i + 1,
+      name: fa.name,
+      resn,
+      resi: '1',
+      resv: 1,
+      chain: '',
+      segi: '',
+      alt: '',
+      elem: fa.elem,
+      hetatm: false,
+      b: 0,
+      q: 1,
+      color: 0,
+      ss: '',
+      visRep: defaultVisRep(),
+    });
+    coords.push(fa.x, fa.y, fa.z);
+  });
+  mol.states.push(Float32Array.from(coords));
+  for (const [i, j] of frag.bonds) mol.bonds.push(i < j ? [i, j] : [j, i]);
+  return mol;
 }

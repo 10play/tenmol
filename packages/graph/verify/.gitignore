@@ -1,0 +1,6 @@
+# Runtime ledger + reports are LOCAL durable state (re-seedable from manifest.json,
+# and the committed probes/ are the real record of completed work). Not committed.
+status/
+reports/
+.work/
+*.tmp

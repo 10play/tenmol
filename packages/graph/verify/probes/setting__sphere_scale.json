@@ -1,0 +1,18 @@
+{
+  "id": "setting__sphere_scale", "feature": "sphere_scale", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"as spheres"},
+    {"do":"set sphere_scale, 2.5"},
+    {"do":"set sphere_scale, 0.25, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","sphere_scale"],"label":"global sphere_scale after set"},
+    {"call":["get_setting_float","sphere_scale","ala"],"label":"per-object sphere_scale override"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2.5,
+    0.25
+  ]
+}

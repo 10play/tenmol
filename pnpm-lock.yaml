@@ -269,7 +269,20 @@ importers:
         specifier: workspace:*
         version: link:../protocol
 
-  packages/graph: {}
+  packages/graph:
+    devDependencies:
+      '@tenmol/backend':
+        specifier: workspace:*
+        version: link:../backend
+      '@tenmol/client':
+        specifier: workspace:*
+        version: link:../client
+      '@tenmol/engine-ts':
+        specifier: workspace:*
+        version: link:../engine-ts
+      ws:
+        specifier: ^8.18.0
+        version: 8.21.1
 
   packages/protocol: {}
 

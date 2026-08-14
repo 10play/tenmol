@@ -1,0 +1,19 @@
+{
+  "id": "selection__byres", "feature": "byres", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"call":["pseudoatom","m"],"kwargs":{"name":"A1","resi":"1","chain":"X"}},
+    {"call":["pseudoatom","m"],"kwargs":{"name":"A2","resi":"1","chain":"X"}},
+    {"call":["pseudoatom","m"],"kwargs":{"name":"A3","resi":"1","chain":"X"}},
+    {"call":["pseudoatom","m"],"kwargs":{"name":"B1","resi":"2","chain":"X"}},
+    {"call":["pseudoatom","m"],"kwargs":{"name":"B2","resi":"2","chain":"X"}}
+  ],
+  "checks": [
+    {"call":["count_atoms","name A1"],"label":"single seed atom in residue 1"},
+    {"call":["count_atoms","byres (name A1)"],"label":"byres expands seed to all of residue 1"},
+    {"call":["count_atoms","resi 1"],"label":"residue-1 reference count"},
+    {"call":["count_atoms","byres (name B1)"],"label":"byres over seed in residue 2"},
+    {"call":["count_atoms","byres (name A1 or name B1)"],"label":"byres over seeds in both residues = all atoms"}
+  ],
+  "expected": [1, 3, 3, 2, 5],
+  "tol": 0
+}

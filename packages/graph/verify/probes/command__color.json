@@ -1,0 +1,18 @@
+{
+  "id": "command__color", "feature": "color", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"pseudoatom p2"},
+    {"do":"color blue, p1"},
+    {"do":"color red, p2"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color blue"],"label":"atoms colored blue"},
+    {"call":["count_atoms","color red"],"label":"atoms colored red"},
+    {"call":["count_atoms","color green"],"label":"atoms colored green (none)"},
+    {"call":["get_color_index","blue"],"label":"blue palette index"},
+    {"call":["get_color_index","red"],"label":"red palette index"}
+  ],
+  "expected": [1, 1, 0, 2, 4],
+  "tol": 0
+}

@@ -19,6 +19,9 @@ const IGNORES = [
   '**/.turbo/**',
   '**/generated/**',
   '**/*.d.ts',
+  // Workflow scripts run in the multi-agent Workflow runtime (injected globals like
+  // agent()/parallel()/phase(), top-level await/return) — not standard ESM, never linted.
+  '**/*.workflow.js',
   // bootstrap work areas (venv, vendored C++ headers) - never source
   '**/.venv/**',
   '.deps/**',

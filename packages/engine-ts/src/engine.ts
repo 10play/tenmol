@@ -31,7 +31,7 @@ import { repBit } from './model/atom';
 import type { ObjectMolecule } from './model/molecule';
 import { getColorIndex, getColorTuple } from './exec/color';
 import { parsePdb } from './model/pdb';
-import { buildFragment } from './model/fragments';
+import { buildLibraryFragment } from './model/fragments';
 import { REP_BUILDERS, RENDERABLE_REPS, isRenderableRep } from './geometry/registry';
 import { buildMeasurementFrame } from './exec/measurement';
 import { parseCommand, splitCommands } from './cmd/parser';
@@ -578,7 +578,7 @@ export class Engine {
       const name = str(args[0]);
       const requested = str(args[1] ?? kwargs['object']) || name;
       const objName = ex.uniqueName(requested || name || 'obj');
-      const mol = buildFragment(name, objName);
+      const mol = buildLibraryFragment(name, objName);
       if (!mol) {
         throw new PymolError(
           {
