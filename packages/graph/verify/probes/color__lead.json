@@ -1,0 +1,24 @@
+{
+  "id": "color__lead", "feature": "lead", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color lead, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","lead"],"label":"lead RGB tuple","tol":1e-6},
+    {"call":["get_color_index","lead"],"label":"lead palette index"},
+    {"call":["count_atoms","color lead"],"label":"atoms colored lead"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.34117648005485535,
+      0.3490196168422699,
+      0.3803921639919281
+    ],
+    5357,
+    1,
+    1
+  ]
+}

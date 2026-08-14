@@ -1,0 +1,24 @@
+{
+  "id": "color__lawrencium", "feature": "lawrencium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color lawrencium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","lawrencium"],"label":"lawrencium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","lawrencium"],"label":"lawrencium palette index"},
+    {"call":["count_atoms","color lawrencium"],"label":"atoms colored lawrencium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.7803921699523926,
+      0,
+      0.4000000059604645
+    ],
+    5378,
+    1,
+    1
+  ]
+}

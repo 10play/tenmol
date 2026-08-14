@@ -1,0 +1,22 @@
+{
+  "id": "color__lightblue", "feature": "lightblue", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color lightblue, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","lightblue"],"label":"lightblue RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color lightblue"],"label":"atoms colored lightblue"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.75,
+      0.75,
+      1
+    ],
+    1,
+    1
+  ]
+}

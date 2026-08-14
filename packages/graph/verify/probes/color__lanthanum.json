@@ -1,0 +1,22 @@
+{
+  "id": "color__lanthanum", "feature": "lanthanum", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color lanthanum, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","lanthanum"],"label":"lanthanum RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color lanthanum"],"label":"atoms colored lanthanum"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.43921568989753723,
+      0.8313725590705872,
+      1
+    ],
+    1,
+    1
+  ]
+}

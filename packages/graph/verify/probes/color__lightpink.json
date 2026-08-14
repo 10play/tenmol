@@ -1,0 +1,24 @@
+{
+  "id": "color__lightpink", "feature": "lightpink", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color lightpink, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","lightpink"],"label":"lightpink palette index"},
+    {"call":["get_color_tuple","lightpink"],"label":"lightpink rgb tuple","tol":1e-6},
+    {"call":["count_atoms","color lightpink"],"label":"atoms colored lightpink"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    5274,
+    [
+      1,
+      0.75,
+      0.8700000047683716
+    ],
+    1,
+    1
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__lightorange", "feature": "lightorange", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color lightorange, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color lightorange"],"label":"atoms colored lightorange"},
+    {"call":["get_color_index","lightorange"],"label":"lightorange palette index"},
+    {"call":["get_color_tuple","lightorange"],"label":"lightorange rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5264,
+    [
+      1,
+      0.800000011920929,
+      0.5
+    ]
+  ]
+}
