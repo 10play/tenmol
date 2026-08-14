@@ -1,0 +1,22 @@
+{
+  "id": "color__helium", "feature": "helium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color helium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color helium"],"label":"atoms colored helium"},
+    {"call":["get_color_index","helium"],"label":"helium palette index"},
+    {"call":["get_color_tuple","helium"],"label":"helium rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5281,
+    [
+      0.8509804010391235,
+      1,
+      1
+    ]
+  ]
+}

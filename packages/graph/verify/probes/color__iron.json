@@ -1,0 +1,24 @@
+{
+  "id": "color__iron", "feature": "iron", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color iron, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","iron"],"label":"iron RGB tuple","tol":1e-6},
+    {"call":["get_color_index","iron"],"label":"iron palette index"},
+    {"call":["count_atoms","color iron"],"label":"atoms colored iron"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.8784313797950745,
+      0.4000000059604645,
+      0.20000000298023224
+    ],
+    5301,
+    1,
+    1
+  ]
+}

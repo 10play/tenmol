@@ -1,0 +1,22 @@
+{
+  "id": "color__iridium", "feature": "iridium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color iridium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","iridium"],"label":"iridium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color iridium"],"label":"atoms colored iridium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.09019608050584793,
+      0.3294117748737335,
+      0.529411792755127
+    ],
+    1,
+    1
+  ]
+}

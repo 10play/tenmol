@@ -1,0 +1,22 @@
+{
+  "id": "color__iodine", "feature": "iodine", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color iodine, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","iodine"],"label":"iodine RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color iodine"],"label":"atoms colored iodine"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.5803921818733215,
+      0,
+      0.5803921818733215
+    ],
+    1,
+    1
+  ]
+}
