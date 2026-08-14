@@ -1,0 +1,22 @@
+{
+  "id": "color__bismuth", "feature": "bismuth", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color bismuth, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color bismuth"],"label":"atoms colored bismuth"},
+    {"call":["get_color_index","bismuth"],"label":"bismuth palette index"},
+    {"call":["get_color_tuple","bismuth"],"label":"bismuth RGB tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5358,
+    [
+      0.6196078658103943,
+      0.30980393290519714,
+      0.7098039388656616
+    ]
+  ]
+}

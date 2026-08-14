@@ -1,0 +1,22 @@
+{
+  "id": "color__beryllium", "feature": "beryllium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color beryllium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","beryllium"],"label":"beryllium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color beryllium"],"label":"atoms colored beryllium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.7607843279838562,
+      1,
+      0
+    ],
+    1,
+    1
+  ]
+}

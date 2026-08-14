@@ -1,0 +1,22 @@
+{
+  "id": "color__black", "feature": "black", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color black, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","black"],"label":"black RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color black"],"label":"atoms colored black"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0,
+      0,
+      0
+    ],
+    1,
+    1
+  ]
+}
