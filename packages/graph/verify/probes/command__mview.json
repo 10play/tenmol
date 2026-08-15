@@ -1,0 +1,65 @@
+{
+  "id": "command__mview",
+  "feature": "mview",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "mset 1 x10"
+    },
+    {
+      "do": "mview store, 1"
+    },
+    {
+      "do": "turn y, 90"
+    },
+    {
+      "do": "mview store, 10"
+    },
+    {
+      "do": "mview interpolate"
+    },
+    {
+      "do": "frame 5"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_view"
+      ],
+      "label": "camera interpolated at mid movie frame",
+      "tol": 0.001
+    },
+    {
+      "call": [
+        "get_frame"
+      ],
+      "label": "current movie frame"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    [
+      0.7862973213195801,
+      0,
+      -0.6178483366966248,
+      0,
+      1,
+      0,
+      0.6178483366966248,
+      0,
+      0.7862973213195801,
+      0,
+      0,
+      -50,
+      0,
+      0,
+      0,
+      40,
+      100,
+      -20
+    ],
+    5
+  ]
+}

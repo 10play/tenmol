@@ -44,6 +44,56 @@ function isPolymer(a: AtomInfo): boolean {
   return !a.hetatm && !SOLVENT_RESN.has(a.resn.toUpperCase());
 }
 
+/**
+ * Write text to a file synchronously, or throw when no filesystem is reachable
+ * (the browser). Under Node — where the differential and app-server run — this
+ * reaches the real `fs` through `process.getBuiltinModule`, mirroring the disk
+ * access `load` uses on the read side (see `fileio.ts` `readDiskFile`). This is
+ * what lets `save`/`multifilesave` actually produce files on disk.
+ */
+function writeDiskFile(path: string, contents: string, append = false): void {
+  const proc = (globalThis as { process?: { getBuiltinModule?: (id: string) => unknown } }).process;
+  const getBuiltin = proc?.getBuiltinModule;
+  if (typeof getBuiltin !== 'function') {
+    throw new Error('save: no filesystem available in this environment');
+  }
+  const fs = getBuiltin.call(proc, 'node:fs') as {
+    writeFileSync(p: string, data: string): void;
+    appendFileSync(p: string, data: string): void;
+  };
+  if (append) fs.appendFileSync(path, contents);
+  else fs.writeFileSync(path, contents);
+}
+
+/**
+ * Guess a molecular file format token from a filename extension, mirroring the
+ * subset of `importing.py` `filename_to_format` that the string exporters here
+ * support. Falls back to `'pdb'`.
+ */
+function formatFromFilename(filename: string): string {
+  const m = filename.toLowerCase().match(/\.([a-z0-9]+)$/);
+  const ext = m ? m[1]! : '';
+  switch (ext) {
+    case 'cif':
+    case 'mmcif':
+      return 'cif';
+    case 'xyz':
+      return 'xyz';
+    case 'fasta':
+      return 'fasta';
+    case 'mol':
+      return 'mol';
+    case 'sdf':
+      return 'sdf';
+    case 'mol2':
+      return 'mol2';
+    case 'ent':
+    case 'pdb':
+    default:
+      return 'pdb';
+  }
+}
+
 /** Right-justify into `width` (never truncates). */
 function padL(s: string, width: number): string {
   return s.length >= width ? s : ' '.repeat(width - s.length) + s;
@@ -350,6 +400,82 @@ function asInt(v: unknown, dflt: number): number {
   if (v === undefined || v === null || v === '') return dflt;
   const n = typeof v === 'number' ? v : parseInt(String(v), 10);
   return Number.isFinite(n) ? n : dflt;
+}
+
+/* ---- Python str.format() subset (for multifilenamegen) --------------- */
+
+/** One parsed replacement field or literal run of a format string. */
+interface FmtSeg {
+  /** Literal text preceding the field (with `{{`/`}}` already unescaped). */
+  literal: string;
+  /** Field name (`''` for a positional `{}`), or `null` for a trailing run. */
+  field: string | null;
+  /** Format spec after `:` (e.g. `03d`), or `''`. */
+  spec: string;
+}
+
+/**
+ * Port of `string.Formatter().parse(fmt)` — split a Python format string into
+ * (literal, field_name, format_spec) segments. Only the grammar
+ * `multifilenamegen` needs (named/empty fields, simple specs, `{{`/`}}`
+ * escapes) is supported.
+ */
+function parsePyFormat(fmt: string): FmtSeg[] {
+  const out: FmtSeg[] = [];
+  let literal = '';
+  let i = 0;
+  while (i < fmt.length) {
+    const c = fmt[i]!;
+    if (c === '{') {
+      if (fmt[i + 1] === '{') {
+        literal += '{';
+        i += 2;
+        continue;
+      }
+      // Read up to the matching '}'.
+      const end = fmt.indexOf('}', i + 1);
+      if (end < 0) throw new Error("Single '{' encountered in format string");
+      const body = fmt.slice(i + 1, end);
+      const colon = body.indexOf(':');
+      const field = colon < 0 ? body : body.slice(0, colon);
+      const spec = colon < 0 ? '' : body.slice(colon + 1);
+      out.push({ literal, field, spec });
+      literal = '';
+      i = end + 1;
+      continue;
+    }
+    if (c === '}') {
+      if (fmt[i + 1] === '}') {
+        literal += '}';
+        i += 2;
+        continue;
+      }
+      throw new Error("Single '}' encountered in format string");
+    }
+    literal += c;
+    i += 1;
+  }
+  if (literal.length > 0) out.push({ literal, field: null, spec: '' });
+  return out;
+}
+
+/** Zero-pad an integer to a Python `0<width>d`/`0<width>` spec (sign-aware). */
+function applyIntSpec(value: number, spec: string): string {
+  const m = spec.match(/^0(\d+)d?$/);
+  const neg = value < 0;
+  let digits = String(Math.abs(Math.trunc(value)));
+  if (m) {
+    const width = parseInt(m[1]!, 10);
+    const total = digits.length + (neg ? 1 : 0);
+    if (total < width) digits = '0'.repeat(width - total) + digits;
+  }
+  return (neg ? '-' : '') + digits;
+}
+
+/** Render one value against a format spec, mirroring `format(value, spec)`. */
+function formatValue(value: string | number, spec: string): string {
+  if (typeof value === 'number') return applyIntSpec(value, spec);
+  return String(value);
 }
 
 /** The settings this lightweight session captures (Executive has no enumerator). */
@@ -842,18 +968,121 @@ export function registerExporters(ctx: RegistrarCtx): void {
   }
 
   ctx.command('multisave', (args, kwargs) => {
-    // multisave(filename, pattern='all', state=0, ...) — pattern is the selection.
+    // multisave(filename, pattern='all', state=-1, append=0, format='', quiet=1)
+    // — writes a multi-entry file to disk (one HEADER/CRYST block per object) so
+    // reloading splits it back into separate objects (exporting.py:604-657). The
+    // pattern is the atom selection; the write itself is the observable side
+    // effect (PyMOL returns DEFAULT_SUCCESS, not the string).
+    const filename = ctx.str(pick(args, kwargs, 0, 'filename'), '');
     const sel = ctx.str(pick(args, kwargs, 1, 'pattern'), 'all') || 'all';
     const state = asInt(pick(args, kwargs, 2, 'state'), 0);
-    return multiPdb(sel, state);
+    const append = asInt(pick(args, kwargs, 3, 'append'), 0) !== 0;
+    const fmtArg = ctx.str(pick(args, kwargs, 4, 'format'), '').toLowerCase();
+
+    // Zipped output is rejected; .pmo is explicitly unsupported (exporting.py:635-642).
+    if (/\.(gz|bz2)$/i.test(filename)) {
+      throw new Error(`${filename.replace(/.*\./, '')} not supported with multisave`);
+    }
+    const format = fmtArg || formatFromFilename(filename);
+    if (format === 'pmo') throw new Error('pmo format not supported anymore');
+    if (format !== 'pdb' && format !== 'cif') {
+      throw new Error(`${format} format not supported with multisave`);
+    }
+
+    const contents = multiPdb(sel, state);
+    writeDiskFile(filename, contents, append);
+    return null;
   });
 
+  /**
+   * Expand a placeholder filename template into the concrete
+   * `(filename, selection, state)` triples `multifilesave` would write, one per
+   * object/state. Port of the generator in exporting.py:735-781 (same
+   * `{name}`/`{state}`/`{title}`/`{num}`/`{}` grammar).
+   */
+  function multiFilenameGen(
+    filename: string,
+    selection: string,
+    state: number,
+  ): Array<[string, string, number]> {
+    const segs = parsePyFormat(filename);
+    const fmtKeys = segs.map((s) => s.field).filter((f): f is string => f !== null);
+    const nindexed = fmtKeys.filter((f) => f === '').length;
+    const multiobject = nindexed > 0 || fmtKeys.includes('name') || fmtKeys.includes('num');
+    const multistate = nindexed > 1 || fmtKeys.includes('state') || fmtKeys.includes('title');
+    if (!(multiobject || multistate)) {
+      throw new Error('need one or more of {name}, {num}, {state}, {title}');
+    }
+
+    const odata: Array<[string, string, number]> = [];
+    for (const oname of ex.getObjectList(selection)) {
+      const osele = `(${selection}) & ?${oname}`;
+      let first = state;
+      let last = state;
+      if (multistate) {
+        if (state < 0) {
+          first = last = asInt(ctx.call('get_object_state', [oname]), 1);
+        }
+        if (first === 0) {
+          first = 1;
+          last = asInt(ctx.call('count_states', ['%' + oname]), 1);
+        }
+      }
+      for (let ostate = first; ostate <= last; ostate++) odata.push([oname, osele, ostate]);
+    }
+
+    // Zero-pad widths for {state} and {num} (exporting.py pads them by rewriting
+    // the field spec before formatting).
+    const swidth = odata.length ? String(Math.max(...odata.map((v) => v[2]))).length : 1;
+    const nwidth = String(odata.length).length;
+
+    const triples: Array<[string, string, number]> = [];
+    odata.forEach(([oname, osele, ostate], idx) => {
+      const num = idx + 1;
+      const title = multistate ? ex.molecule(oname)?.titles[ostate - 1] ?? '' : '';
+      const named: Record<string, string | number> = { name: oname, state: ostate, num, title };
+      const positional: Array<string | number> = [oname, ostate];
+      let auto = 0;
+      let fname = '';
+      for (const seg of segs) {
+        fname += seg.literal;
+        if (seg.field === null) continue;
+        let value: string | number;
+        if (seg.field === '') value = positional[auto++] ?? '';
+        else if (/^\d+$/.test(seg.field)) value = positional[parseInt(seg.field, 10)] ?? '';
+        else value = named[seg.field] ?? '';
+        let spec = seg.spec;
+        if (!spec && seg.field === 'state') spec = `0${swidth}`;
+        if (!spec && seg.field === 'num') spec = `0${nwidth}`;
+        fname += formatValue(value, spec);
+      }
+      triples.push([fname, osele, ostate]);
+    });
+    return triples;
+  }
+
   ctx.command('multifilesave', (args, kwargs) => {
-    // multifilesave(filename, selection='all', state=0, ...).
+    // multifilesave(filename, selection='*', state=-1, format='', ...) — for a
+    // selection spanning multiple objects/states, write one file per object/state
+    // using the placeholder-templated filename (exporting.py:707-732). Each triple
+    // is written via the same format string exporters that `save` uses.
+    const filename = ctx.str(pick(args, kwargs, 0, 'filename'), '');
     const sel =
-      ctx.str(pick(args, kwargs, 1, 'selection') ?? pick(args, kwargs, 1, 'pattern'), 'all') || 'all';
-    const state = asInt(pick(args, kwargs, 2, 'state'), 0);
-    return multiPdb(sel, state);
+      ctx.str(pick(args, kwargs, 1, 'selection') ?? pick(args, kwargs, 1, 'pattern'), '*') || '*';
+    const state = asInt(pick(args, kwargs, 2, 'state'), -1);
+    const fmtArg = ctx.str(pick(args, kwargs, 3, 'format'), '').toLowerCase();
+    for (const [fname, osele, ostate] of multiFilenameGen(filename, sel, state)) {
+      const format = fmtArg || formatFromFilename(fname);
+      writeDiskFile(fname, getStr(format, osele, ostate));
+    }
+    return null;
+  });
+
+  ctx.command('multifilenamegen', (args, kwargs) => {
+    const filename = ctx.str(pick(args, kwargs, 0, 'filename'), '');
+    const selection = ctx.str(pick(args, kwargs, 1, 'selection'), '');
+    const state = asInt(pick(args, kwargs, 2, 'state'), -1);
+    return multiFilenameGen(filename, selection, state) as unknown as Json;
   });
 
   ctx.command('get_session', () => getSession() as unknown as Json);

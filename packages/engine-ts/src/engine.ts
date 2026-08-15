@@ -682,8 +682,8 @@ export class Engine {
       return null;
     });
     h('orient', (args) => {
-      const sphere = ex.selectionSphere(str(args[0], 'all') || 'all');
-      if (sphere) ex.view.zoomToSphere(sphere.center, sphere.radius, Number(args[1] ?? 0));
+      const info = ex.orientInfo(str(args[0], 'all') || 'all');
+      if (info) ex.view.orientTo(info.moment, info.center, info.radius);
       this.emitView();
       return null;
     });

@@ -1,0 +1,24 @@
+{
+  "id": "command__orient", "feature": "orient", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p, pos=[10,10,0]"},
+    {"do":"pseudoatom p, pos=[-10,-10,0]"},
+    {"do":"pseudoatom p, pos=[2,-2,0]"},
+    {"do":"pseudoatom p, pos=[-2,2,0]"},
+    {"do":"orient p"}
+  ],
+  "checks": [
+    {"call":["get_view"],"label":"view after orient of a diagonal cluster (principal axis rotated to X)","tol":1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      0.7071068286895752, -0.7071068286895752, -6.181723932741079e-8,
+      0.7071068286895752, 0.7071068286895752, -6.181723932741079e-8,
+      8.742277657347586e-8, 0, 1,
+      0, 0, -56.71281814575195,
+      0, 0, 0,
+      44.71281814575195, 68.71281433105469, -20
+    ]
+  ]
+}

@@ -483,29 +483,34 @@ export function registerExtras(ctx: RegistrarCtx): void {
     return mol.natom;
   });
 
-  /* overlap — total VDW overlap (sum of ri+rj-d over clashing pairs). */
+  /* overlap — steric-clash metric: sum of [(VDWi + VDWj + adjust) - d]/2 over
+     pairs whose distance is below their combined VDW radii (+adjust). Ports
+     SelectorSumVDWOverlap (layer3/Selector.cpp): sumVDW = vi + vj + adjust and,
+     when dist < sumVDW, result += (sumVDW - dist)/2. querying.py passes
+     state1/state2 as separate 0-based coordinate states. */
   ctx.command('overlap', (args, kwargs): Json => {
     const sel1 = str(args[0] ?? kwargs['selection1'], 'all') || 'all';
     const sel2 = str(args[1] ?? kwargs['selection2'], 'all') || 'all';
-    const state = toNum(args[2] ?? kwargs['state'], 1) || 1;
-    const adjust = toNum(args[3] ?? kwargs['adjust'], 0);
+    const state1 = toNum(args[2] ?? kwargs['state1'], 1) || 1;
+    const state2 = toNum(args[3] ?? kwargs['state2'], 1) || 1;
+    const adjust = toNum(args[4] ?? kwargs['adjust'], 0);
     const a = ex.atomsMatching(sel1) as UA[];
     const b = ex.atomsMatching(sel2) as UA[];
     let total = 0;
     for (const ua of a) {
       const ma = ex.molecule(ua.objName);
       if (!ma) continue;
-      const [ax, ay, az] = ma.coord(ua.index, state);
+      const [ax, ay, az] = ma.coord(ua.index, state1);
       const ra = ma.vdw(ua.index);
       for (const ub of b) {
         if (ub.objName === ua.objName && ub.index === ua.index) continue;
         const mb = ex.molecule(ub.objName);
         if (!mb) continue;
-        const [bx, by, bz] = mb.coord(ub.index, state);
+        const [bx, by, bz] = mb.coord(ub.index, state2);
         const rb = mb.vdw(ub.index);
         const d = Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2 + (az - bz) ** 2);
-        const ov = ra + rb - d - adjust;
-        if (ov > 0) total += ov;
+        const sumVDW = ra + rb + adjust;
+        if (d < sumVDW) total += (sumVDW - d) / 2;
       }
     }
     return total;

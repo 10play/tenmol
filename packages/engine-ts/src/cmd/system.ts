@@ -74,6 +74,20 @@ function runFrameCommand(ctx: RegistrarCtx): void {
 }
 
 /**
+ * Apply the movie camera to the scene for the current frame (PyMOL's
+ * `MovieDoFrame` -> `SceneMoveViewElem`). `get_movie_view` interpolates the
+ * stored `mview` key frames on demand; when no key frames exist it returns the
+ * live view unchanged, so this is a no-op in the common (no-movie-camera) case.
+ * Called after every frame cursor change so `get_view` reflects the movie.
+ */
+function applyMovieView(ctx: RegistrarCtx): void {
+  const v = ctx.call('get_movie_view', [movie.current]);
+  if (Array.isArray(v) && v.length === 18) {
+    ctx.executive.view.set(v as number[]);
+  }
+}
+
+/**
  * Parse a PyMOL `mset` frame specification into a list of states (1-based).
  *
  * Grammar (space-separated tokens, evaluated left to right against a running
@@ -218,6 +232,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
   ctx.command('frame', (args) => {
     const n = Number(ctx.str(args[0], '1'));
     movie.current = clampFrame(ctx, Number.isFinite(n) ? n : 1);
+    applyMovieView(ctx);
     ctx.emitView();
     runFrameCommand(ctx);
     return movie.current;
@@ -225,6 +240,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
 
   ctx.command('forward', () => {
     movie.current = clampFrame(ctx, movie.current + 1);
+    applyMovieView(ctx);
     ctx.emitView();
     runFrameCommand(ctx);
     return movie.current;
@@ -232,6 +248,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
 
   ctx.command('backward', () => {
     movie.current = clampFrame(ctx, movie.current - 1);
+    applyMovieView(ctx);
     ctx.emitView();
     runFrameCommand(ctx);
     return movie.current;
@@ -240,6 +257,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
   ctx.command('rewind', () => {
     movie.current = 1;
     movie.playing = false;
+    applyMovieView(ctx);
     ctx.emitView();
     runFrameCommand(ctx);
     return movie.current;
@@ -249,6 +267,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
   ctx.command('ending', () => {
     movie.current = frameCeiling(ctx);
     movie.playing = false;
+    applyMovieView(ctx);
     ctx.emitView();
     runFrameCommand(ctx);
     return movie.current;
@@ -259,6 +278,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
   // clamp+1 turns into the 1-based cursor (e.g. a 60-frame movie -> frame 31).
   ctx.command('middle', () => {
     movie.current = clampFrame(ctx, Math.floor(frameCeiling(ctx) / 2) + 1);
+    applyMovieView(ctx);
     ctx.emitView();
     runFrameCommand(ctx);
     return movie.current;

@@ -233,8 +233,10 @@ describe('center / origin', () => {
     t.call('origin', ['all']);
     const v = t.view();
     expectVec(v, 12, [1, 2, 3]);
-    // identity rotation => camDelta == delta == centroid; Pos -= centroid.
-    expectVec(v, 9, [-1, -2, -43]);
+    // identity rotation => camDelta == delta == centroid; SceneOriginSet
+    // (preserve=1) does Pos += R*(origin-oldOrigin), so Pos += centroid.
+    // Verified against real PyMOL (origin position=... shifts Pos by +delta).
+    expectVec(v, 9, [1, 2, -37]);
   });
 });
 

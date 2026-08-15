@@ -1,0 +1,19 @@
+{
+  "id": "command__mstop",
+  "feature": "mstop",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "mset 1 x10" },
+    { "do": "mplay" },
+    { "do": "mstop" }
+  ],
+  "checks": [
+    { "call": ["get_movie_playing"], "label": "movie playing after mstop" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    0
+  ]
+}

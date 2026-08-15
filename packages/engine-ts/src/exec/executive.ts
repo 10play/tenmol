@@ -470,4 +470,54 @@ export class Executive {
   atomsMatching(sel: string): UniverseAtom[] {
     return selectAtoms(sel, this.selectorContext);
   }
+
+  /**
+   * Data `orient` needs: the unweighted moment-of-inertia tensor about the
+   * selection centroid (`ExecutiveGetMoment`, layer3/Executive.cpp) plus the
+   * window-zoom framing PyMOL applies afterwards (`ExecutiveWindowZoom`): the
+   * bounding-box centre and half of the largest box dimension (floored to
+   * `MAX_VDW`). Returns `null` when the selection has no atoms.
+   */
+  orientInfo(
+    sel: string,
+  ): { moment: [number, number, number, number, number, number]; center: [number, number, number]; radius: number } | null {
+    const matched = selectAtoms(sel, this.selectorContext);
+    if (matched.length === 0) return null;
+    const pts: [number, number, number][] = [];
+    let cx = 0, cy = 0, cz = 0;
+    const min: [number, number, number] = [Infinity, Infinity, Infinity];
+    const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+    for (const ua of matched) {
+      const mol = this.objects.get(ua.objName)!;
+      const [x, y, z] = mol.coord(ua.index, 1);
+      pts.push([x, y, z]);
+      cx += x; cy += y; cz += z;
+      min[0] = Math.min(min[0], x); max[0] = Math.max(max[0], x);
+      min[1] = Math.min(min[1], y); max[1] = Math.max(max[1], y);
+      min[2] = Math.min(min[2], z); max[2] = Math.max(max[2], z);
+    }
+    const n = pts.length;
+    cx /= n; cy /= n; cz /= n;
+    // Moment of inertia tensor (unweighted) about the centroid:
+    //   d[i][i] = sum(|r|^2 - r_i^2),  d[i][j] = -sum(r_i r_j).
+    let xx = 0, yy = 0, zz = 0, xy = 0, xz = 0, yz = 0;
+    for (const [px, py, pz] of pts) {
+      const vx = px - cx, vy = py - cy, vz = pz - cz;
+      const r2 = vx * vx + vy * vy + vz * vz;
+      xx += r2 - vx * vx;
+      yy += r2 - vy * vy;
+      zz += r2 - vz * vz;
+      xy += -vx * vy;
+      xz += -vx * vz;
+      yz += -vy * vz;
+    }
+    // Window-zoom framing: box centre + half the largest box dimension.
+    const center: [number, number, number] = [
+      (min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2,
+    ];
+    const MAX_VDW = 2.5;
+    let radius = Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) / 2;
+    if (radius < MAX_VDW) radius = MAX_VDW;
+    return { moment: [xx, yy, zz, xy, xz, yz], center, radius };
+  }
 }

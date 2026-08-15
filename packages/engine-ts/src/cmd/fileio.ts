@@ -654,6 +654,49 @@ export function registerFileio(ctx: RegistrarCtx): void {
 
   /* ------------------------------ load / read_*str ------------------------ */
 
+  /**
+   * The object name PyMOL reads from a PDB `HEADER` record: the four-letter code
+   * in columns 63-66 if present, else the plain classification name in columns
+   * 7-50 (ObjectMolecule2.cpp:2039-2047 — the "MERCK" fallback). `multisave`
+   * writes `HEADER    <objname>`, so the plain-name branch recovers the name.
+   */
+  function pdbHeaderName(line: string): string {
+    const code = line.slice(62, 66).trim();
+    if (code) return code;
+    return line.slice(6, 50).trim();
+  }
+
+  /**
+   * Split a multi-entry PDB (2+ HEADER-delimited objects, as `multisave` writes)
+   * into per-object blocks. Returns null for a single-object file so the normal
+   * single-molecule path (honouring the passed object name) is used. Mirrors
+   * PyMOL's `next_pdb`: a HEADER after atoms have been seen starts a new object.
+   */
+  function splitMultiObjectPdb(text: string): Array<{ name: string; block: string }> | null {
+    type Entry = { name: string; lines: string[]; hasAtom: boolean };
+    const entries: Entry[] = [];
+    let cur: Entry | null = null;
+    for (const line of text.split(/\r?\n/)) {
+      if (/^HEADER/.test(line)) {
+        if (cur && cur.hasAtom) {
+          entries.push(cur);
+          cur = null;
+        }
+        if (!cur) cur = { name: pdbHeaderName(line), lines: [], hasAtom: false };
+        else cur.name = pdbHeaderName(line);
+        cur.lines.push(line);
+        continue;
+      }
+      if (!cur) cur = { name: '', lines: [], hasAtom: false };
+      cur.lines.push(line);
+      if (/^(ATOM |HETATM)/.test(line)) cur.hasAtom = true;
+    }
+    if (cur && cur.hasAtom) entries.push(cur);
+    const withAtoms = entries.filter((e) => e.hasAtom);
+    if (withAtoms.length < 2) return null;
+    return withAtoms.map((e) => ({ name: e.name, block: e.lines.join('\n') }));
+  }
+
   /** Parse structured text of a known format into an {@link ObjectMolecule}. */
   function parseByFormat(format: string, text: string, name: string): ObjectMolecule {
     switch (format) {
@@ -763,6 +806,25 @@ export function registerFileio(ctx: RegistrarCtx): void {
     if (format === '') {
       throw new Error('load: could not determine the structure format of the given content');
     }
+
+    // Multi-entry PDB (multiple HEADER blocks, as written by `multisave`): PyMOL
+    // splits it into one object per HEADER, each named from its own HEADER record,
+    // ignoring the passed `object` name (ObjectMolecule2.cpp `next_pdb` /
+    // `get_multi_object_status`). Only kicks in for 2+ HEADER-delimited entries.
+    if (format === 'pdb' || format === 'ent') {
+      const entries = splitMultiObjectPdb(content);
+      if (entries) {
+        const names: string[] = [];
+        for (const entry of entries) {
+          const oname = ex.uniqueName(entry.name || 'obj');
+          ex.addMolecule(parsePdb(entry.block, oname));
+          names.push(oname);
+        }
+        ctx.publish();
+        return names[names.length - 1] ?? null;
+      }
+    }
+
     const name = ex.uniqueName(objArg || 'obj');
     const mol = parseByFormat(format, content, name);
     // PyMOL's `discrete` flag (positional 5, default -1 = "auto"): when the

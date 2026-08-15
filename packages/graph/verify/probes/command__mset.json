@@ -1,0 +1,16 @@
+{
+  "id": "command__mset",
+  "feature": "mset",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m" },
+    { "do": "mset 1 x30 1 -15 15 x30 15 -1" }
+  ],
+  "checks": [
+    { "call": ["count_frames"], "label": "movie frames from full mini-language spec (N/xN/-N ramp) total 90" },
+    { "call": ["get_movie_length"], "label": "explicitly-defined movie length is 90" }
+  ],
+  "tol": 1e-3,
+  "expected": [90, 90]
+}

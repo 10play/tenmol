@@ -113,9 +113,15 @@ describe('mview / get_movie_view', () => {
     const mid = getView([15], {}) as number[];
     expect(mid).toHaveLength(18);
 
-    // Position channel (indices 9-11) is linear: halfway between the endpoints.
-    // Frame 15 is (15-1)/(30-1) = 14/29 of the way, not exactly half.
-    const t = (15 - 1) / (30 - 1);
+    // The raw frame fraction (15-1)/(30-1) = 14/29 is eased through PyMOL's
+    // default movie curve (power=1.4, parabolic) before being applied to every
+    // channel — real PyMOL does NOT lerp straight between key frames
+    // (ViewElemInterpolate, layer1/View.cpp). Both position AND rotation ride
+    // the SAME eased fraction.
+    const raw = (15 - 1) / (30 - 1);
+    // power=1.4, parabolic, bias=1: raw < 0.5 -> pow(raw*2, 1.4)*0.5
+    const t = Math.pow(raw * 2, 1.4) * 0.5;
+    // Position channel (indices 9-11) is linear in the eased fraction.
     expect(mid[9]!).toBeCloseTo(0 + (30 - 0) * t, 5);
     expect(mid[10]!).toBeCloseTo(0 + (60 - 0) * t, 5);
     expect(mid[11]!).toBeCloseTo(-40 + (-90 - -40) * t, 5);

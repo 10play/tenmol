@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Executive } from '../src/exec/executive';
 import { parsePdb } from '../src/model/pdb';
 import { registerSystem } from '../src/cmd/system';
+import { registerMovie2 } from '../src/cmd/movie2';
 import type { CommandHandler } from '../src/cmd/registrar';
 
 /* ------------------------------------------------------------------------ */
@@ -36,6 +37,14 @@ function harness(pdb = PDB3): Harness {
   let emits = 0;
   const ctx = {
     command: (n: string, f: CommandHandler) => void handlers.set(n, f),
+    // Dispatch through the registered handlers, the same cross-registrar seam the
+    // real engine provides. `frame`/`forward`/… call `get_movie_view` to apply
+    // the movie camera, so it must be resolvable here.
+    call: (name: string, args: readonly unknown[] = [], kwargs: Record<string, unknown> = {}) => {
+      const h = handlers.get(name);
+      if (!h) throw new Error(`no handler '${name}'`);
+      return h(args as unknown[], kwargs);
+    },
     executive: ex,
     publish() {
       publishes++;
@@ -45,6 +54,8 @@ function harness(pdb = PDB3): Harness {
     },
     str: (v: unknown, d = '') => (v == null ? d : String(v)),
   };
+  // Register movie2 first so `get_movie_view` exists for the frame commands.
+  registerMovie2(ctx);
   registerSystem(ctx);
   return {
     ex,

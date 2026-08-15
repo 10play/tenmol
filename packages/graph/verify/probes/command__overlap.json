@@ -1,0 +1,20 @@
+{
+  "id": "command__overlap",
+  "feature": "overlap",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom o1, pos=[0,0,0], vdw=1.5"},
+    {"do": "pseudoatom o2, pos=[2,0,0], vdw=1.5"},
+    {"do": "pseudoatom o3, pos=[20,0,0], vdw=1.5"}
+  ],
+  "checks": [
+    {"call": ["overlap", "o1", "o2"], "label": "overlapping pair d=2 r1+r2=3", "tol": 1e-3},
+    {"call": ["overlap", "o1", "o3"], "label": "non-overlapping pair -> 0", "tol": 1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    0.5,
+    0
+  ]
+}

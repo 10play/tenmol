@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Executive } from '../src/exec/executive';
 import { parsePdb } from '../src/model/pdb';
 import { registerExporters } from '../src/cmd/exporters';
@@ -232,7 +235,16 @@ describe('multisave / multifilesave', () => {
       'END',
     ].join('\n'), 'lig'));
     const h = harness(ex);
-    const out = h.call('multisave', ['out.pdb', 'all']) as string;
+    // multisave writes the multi-entry file to disk (PyMOL returns success, not
+    // the string) — read it back to inspect the per-object HEADER/END blocks.
+    const msdir = mkdtempSync(join(tmpdir(), 'tenmol-ms-'));
+    let out: string;
+    try {
+      h.call('multisave', [join(msdir, 'out.pdb'), 'all']);
+      out = readFileSync(join(msdir, 'out.pdb'), 'utf8');
+    } finally {
+      rmSync(msdir, { recursive: true, force: true });
+    }
     // Two objects -> two END records.
     expect(out.split('\n').filter((l) => l === 'END').length).toBe(2);
     // Each block parses back independently to the right atom counts.
@@ -240,8 +252,20 @@ describe('multisave / multifilesave', () => {
     expect(blocks.length).toBe(2);
     expect(parsePdb(blocks[0]! + 'END\n', 'a').natom).toBe(8);
     expect(parsePdb(blocks[1]! + 'END\n', 'b').natom).toBe(1);
-    // multifilesave produces the same concatenation.
-    expect(h.call('multifilesave', ['out.pdb', 'all'])).toBe(out);
+    // multifilesave writes ONE FILE PER OBJECT via a placeholder-templated
+    // filename (exporting.py:707-732) — unlike multisave it does not return a
+    // concatenated string. A template with no placeholder is an error (matching
+    // real PyMOL's `need one or more of {name}, {num}, {state}, {title}`), and a
+    // `{name}` template emits a per-object file that parses back independently.
+    expect(() => h.call('multifilesave', ['out.pdb', 'all'])).toThrow(/name.*num.*state.*title/);
+    const dir = mkdtempSync(join(tmpdir(), 'tenmol-mfs-'));
+    try {
+      h.call('multifilesave', [join(dir, '{name}.pdb'), 'all']);
+      expect(parsePdb(readFileSync(join(dir, 'lig.pdb'), 'utf8'), 'lig').natom).toBe(1);
+      expect(parsePdb(readFileSync(join(dir, 'm.pdb'), 'utf8'), 'm').natom).toBe(8);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

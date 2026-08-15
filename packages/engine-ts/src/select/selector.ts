@@ -437,8 +437,11 @@ class Parser {
       const spec = this.next();
       return this.buildProp(key, spec);
     }
-    // Otherwise a bare reference: object name or named selection.
-    return { t: 'ref', name: t };
+    // Otherwise a bare reference: object name or named selection. A leading `?`
+    // marks the name as optional — `?name` resolves to the named object/selection
+    // if it exists and to the empty set otherwise (no error), which is exactly how
+    // a plain unknown `ref` already behaves here, so we just strip the prefix.
+    return { t: 'ref', name: t.startsWith('?') ? t.slice(1) : t };
   }
 
   private buildProp(key: PropKey, spec: string): Node {

@@ -1,0 +1,20 @@
+{
+  "id": "command__multifilenamegen",
+  "feature": "multifilenamegen",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom p1"},
+    {"do": "pseudoatom p2"}
+  ],
+  "checks": [
+    {"call": ["multifilenamegen", "/tmp/{name}.pdb", "all", -1], "label": "triples for {name} template over 2 objects"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      ["/tmp/p1.pdb", "(all) & ?p1", -1],
+      ["/tmp/p2.pdb", "(all) & ?p2", -1]
+    ]
+  ]
+}

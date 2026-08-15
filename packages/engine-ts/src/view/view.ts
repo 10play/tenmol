@@ -26,6 +26,9 @@ export type View18 = number[];
 /** `cSetting_field_of_view` default (`packages/engine/layer1/SettingInfo.h`). */
 export const DEFAULT_FOV = 20;
 
+/** `MAX_VDW` (`packages/engine/layer0/Base.h`) — the zoom-radius floor. */
+const MAX_VDW = 2.5;
+
 /** The default view PyMOL shows for an empty scene: identity rotation, */
 /** perspective fov, origin at 0, a nominal camera distance. */
 export function defaultView(): View18 {
@@ -71,6 +74,84 @@ function mul3(a: Mat3, b: Mat3): Mat3 {
     }
   }
   return out;
+}
+
+/** One row of a column-major 3x3 (row `r` across the three columns). */
+function rowOf(m: Mat3, r: number): [number, number, number] {
+  return [m[r]!, m[3 + r]!, m[6 + r]!];
+}
+
+function dot3(a: readonly number[], b: readonly number[]): number {
+  return a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
+}
+
+function cross3(a: readonly number[], b: readonly number[]): [number, number, number] {
+  return [
+    a[1]! * b[2]! - a[2]! * b[1]!,
+    a[2]! * b[0]! - a[0]! * b[2]!,
+    a[0]! * b[1]! - a[1]! * b[0]!,
+  ];
+}
+
+/**
+ * Eigen-decomposition of a symmetric 3x3 (given as [xx,yy,zz,xy,xz,yz]) by
+ * cyclic Jacobi rotation. Returns the eigenvalues and unit eigenvectors sorted
+ * in ascending eigenvalue order — matching `MatrixEigensolveC33d`
+ * (`packages/engine/layer0/Matrix.cpp`), whose JAMA symmetric solver yields
+ * ascending eigenvalues.
+ */
+function symEigen3(
+  sym: readonly [number, number, number, number, number, number],
+): { values: [number, number, number]; vectors: [[number, number, number], [number, number, number], [number, number, number]] } {
+  const [xx, yy, zz, xy, xz, yz] = sym;
+  const a = [xx, xy, xz, xy, yy, yz, xz, yz, zz]; // row-major working matrix
+  const v = [1, 0, 0, 0, 1, 0, 0, 0, 1]; // accumulated eigenvectors (columns)
+  for (let sweep = 0; sweep < 50; sweep++) {
+    let p = 0, q = 1, max = Math.abs(a[1]!);
+    if (Math.abs(a[2]!) > max) { max = Math.abs(a[2]!); p = 0; q = 2; }
+    if (Math.abs(a[5]!) > max) { max = Math.abs(a[5]!); p = 1; q = 2; }
+    if (max < 1e-14) break;
+    const app = a[p * 3 + p]!;
+    const aqq = a[q * 3 + q]!;
+    const apq = a[p * 3 + q]!;
+    const phi = 0.5 * Math.atan2(2 * apq, aqq - app);
+    const c = Math.cos(phi);
+    const s = Math.sin(phi);
+    for (let k = 0; k < 3; k++) {
+      const akp = a[k * 3 + p]!;
+      const akq = a[k * 3 + q]!;
+      a[k * 3 + p] = c * akp - s * akq;
+      a[k * 3 + q] = s * akp + c * akq;
+    }
+    for (let k = 0; k < 3; k++) {
+      const apk = a[p * 3 + k]!;
+      const aqk = a[q * 3 + k]!;
+      a[p * 3 + k] = c * apk - s * aqk;
+      a[q * 3 + k] = s * apk + c * aqk;
+    }
+    for (let k = 0; k < 3; k++) {
+      const vkp = v[k * 3 + p]!;
+      const vkq = v[k * 3 + q]!;
+      v[k * 3 + p] = c * vkp - s * vkq;
+      v[k * 3 + q] = s * vkp + c * vkq;
+    }
+  }
+  // Eigenvector j is column j of `v` (row-major storage).
+  const cols: [number, number, number][] = [
+    [v[0]!, v[3]!, v[6]!],
+    [v[1]!, v[4]!, v[7]!],
+    [v[2]!, v[5]!, v[8]!],
+  ];
+  const vals: [number, number, number] = [a[0]!, a[4]!, a[8]!];
+  const order = [0, 1, 2].sort((i, j) => vals[i]! - vals[j]!);
+  const norm = (u: [number, number, number]): [number, number, number] => {
+    const n = Math.hypot(u[0], u[1], u[2]) || 1;
+    return [u[0] / n, u[1] / n, u[2] / n];
+  };
+  return {
+    values: [vals[order[0]!]!, vals[order[1]!]!, vals[order[2]!]!],
+    vectors: [norm(cols[order[0]!]!), norm(cols[order[1]!]!), norm(cols[order[2]!]!)],
+  };
 }
 
 /** Rotation about a unit axis by `deg` degrees, column-major (Rodrigues). */
@@ -129,9 +210,77 @@ export class ViewState {
     this.view[16] = dist + r;
   }
 
-  /** `cmd.orient` — align the view's principal axes to the coordinate spread. */
-  orientTo(rot: Mat3, center: [number, number, number], radius: number, buffer = 0): void {
+  /**
+   * `cmd.orient` (`ExecutiveOrient`, layer3/Executive.cpp) — align the
+   * selection's principal components with the XYZ axes, then frame it.
+   *
+   * `moment` is the unweighted moment-of-inertia tensor [xx,yy,zz,xy,xz,yz]
+   * about the centroid; `center`/`radius` are the window-zoom framing. The
+   * model->camera rotation is built from the eigenvectors (smallest moment ->
+   * camera X), made right-handed, then nudged by the least-perturbation 180°
+   * flips PyMOL uses to pick the orientation closest to the current view.
+   */
+  orientTo(
+    moment: readonly [number, number, number, number, number, number],
+    center: [number, number, number],
+    radius: number,
+  ): void {
+    const old = rotOf(this.view);
+    const { values: egval, vectors: evec } = symEigen3(moment);
+
+    // Fill the rotation so its rows are the eigenvectors (column-major storage):
+    // rot[c*3 + i] = evec[i][c]. Then rot * evec[i] = camera axis i.
+    let rot: Mat3 = [
+      evec[0][0], evec[1][0], evec[2][0],
+      evec[0][1], evec[1][1], evec[2][1],
+      evec[0][2], evec[1][2], evec[2][2],
+    ];
+
+    // Ensure a right-handed matrix: flip the third eigenvector row if needed.
+    const r0 = rowOf(rot, 0);
+    const r1 = rowOf(rot, 1);
+    const r2 = rowOf(rot, 2);
+    if (dot3(cross3(r0, r1), r2) < 0) {
+      rot[2] = -rot[2]!; rot[5] = -rot[5]!; rot[8] = -rot[8]!;
+    }
+
+    // Eigenvalue-ordering swaps (dead for the ascending order symEigen3
+    // returns, but kept for fidelity with ExecutiveOrient).
+    const [e0, e1, e2] = egval;
+    if (e0 < e2 && e2 < e1) rot = mul3(axisAngle('x', 90), rot);
+    else if (e1 < e0 && e0 < e2) rot = mul3(axisAngle('z', 90), rot);
+    else if (e1 < e2 && e2 < e0) rot = mul3(axisAngle('z', 90), mul3(axisAngle('y', 90), rot));
+    else if (e2 < e1 && e1 < e0) rot = mul3(axisAngle('y', 90), rot);
+    else if (e2 < e0 && e0 < e1) rot = mul3(axisAngle('x', 90), mul3(axisAngle('y', 90), rot));
+
+    // Choose the orientation with the least perturbation from the current view.
+    const x = dot3(rowOf(old, 0), rowOf(rot, 0));
+    const y = dot3(rowOf(old, 1), rowOf(rot, 1));
+    const z = dot3(rowOf(old, 2), rowOf(rot, 2));
+    if (x > 0 && y < 0 && z < 0) rot = mul3(axisAngle('x', 180), rot);
+    else if (x < 0 && y > 0 && z < 0) rot = mul3(axisAngle('y', 180), rot);
+    else if (x < 0 && y < 0 && z > 0) rot = mul3(axisAngle('z', 180), rot);
+
     writeRot(this.view, rot);
-    this.zoomToSphere(center, radius, buffer);
+    this.windowSphere(center, radius);
+  }
+
+  /**
+   * `SceneWindowSphere` (`packages/engine/layer1/Scene.cpp`) — dolly the camera
+   * so a sphere of `radius` about `center` fills the field of view, bracketing
+   * the clipping slab at ±1.2·radius. `center` becomes the rotation origin, so
+   * the camera-space offset is zero and only the Z distance changes.
+   */
+  private windowSphere(center: [number, number, number], radius: number): void {
+    const r = Math.max(radius, MAX_VDW);
+    const dist = r / Math.tan((DEFAULT_FOV * Math.PI) / 360);
+    this.view[12] = center[0];
+    this.view[13] = center[1];
+    this.view[14] = center[2];
+    this.view[9] = 0;
+    this.view[10] = 0;
+    this.view[11] = -dist;
+    this.view[15] = dist - r * 1.2;
+    this.view[16] = dist + r * 1.2;
   }
 }

@@ -148,6 +148,40 @@ function slerp(a: Quat, b: Quat, t: number): Quat {
 }
 
 /**
+ * PyMOL's key-frame easing curve (`ViewElemInterpolate`, layer1/View.cpp): map
+ * the raw linear fraction `fxn` in [0,1] through the movie `power`/`bias` easing
+ * so a stored camera does not simply lerp between key frames but eases in/out.
+ *
+ * Defaults match cmd.mview with no explicit power/bias: `power = 1.4`,
+ * `parabolic = true` (a smooth S-curve), `bias = 1` (symmetric). A NEGATIVE
+ * power selects the "circular" easing variant (parabolic = false); |power| is
+ * used as the exponent. `bias != 1` skews the curve toward one end.
+ */
+function easeFraction(fxn: number, power = 1.4, bias = 1): number {
+  let parabolic = true;
+  if (power < 0) {
+    parabolic = false;
+    power = -power;
+  }
+  if (bias <= 0) bias = 1;
+  if (bias !== 1) {
+    fxn = 1 - Math.pow(1 - Math.pow(fxn, bias), 1 / bias);
+  }
+  if (power !== 1 || !parabolic) {
+    if (fxn < 0.5) {
+      if (!parabolic) fxn = (1 - Math.cos(Math.PI * fxn)) * 0.5; // circular
+      fxn = Math.pow(fxn * 2, power) * 0.5; // parabolic
+    } else if (fxn > 0.5) {
+      fxn = 1 - fxn;
+      if (!parabolic) fxn = (1 - Math.cos(Math.PI * fxn)) * 0.5;
+      fxn = Math.pow(fxn * 2, power) * 0.5;
+      fxn = 1 - fxn;
+    }
+  }
+  return fxn;
+}
+
+/**
  * Interpolate between two 18-float views: SLERP the rotation (0-8), linearly
  * interpolate origin/position/clip/fov (9-17).
  */
@@ -188,7 +222,9 @@ export function registerMovie2(ctx: RegistrarCtx): void {
       }
     }
     if (f1 === f0) return cameraKeys.get(f0)!.slice();
-    const t = (frame - f0) / (f1 - f0);
+    // PyMOL eases the linear frame fraction through the movie power/bias curve
+    // (default power 1.4) rather than lerping straight between key frames.
+    const t = easeFraction((frame - f0) / (f1 - f0));
     return interpView(cameraKeys.get(f0)!, cameraKeys.get(f1)!, t);
   };
 
