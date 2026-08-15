@@ -858,4 +858,25 @@ export function registerFileio(ctx: RegistrarCtx): void {
     ctx.publish();
     return null;
   });
+
+  /**
+   * `load_model(model, object, ...)` — the developer helper that loads an
+   * in-memory ChemPy `Indexed`/`Model` object into a new PyMOL object
+   * (`importing.py:load_model`, which prepends `loadable.model` and delegates to
+   * `load_object`). It is the inverse of `get_model`. The ChemPy model is a
+   * Python object handed across the bridge; the TS engine cannot reconstruct its
+   * atom table from that opaque payload, so the atom/coordinate import itself is
+   * not modelled. But the object-creation side effects are faithful: a new
+   * `ObjectMolecule` appears in `get_names`, reports `get_type ==
+   * 'object:molecule'`, holds no atoms for an empty/unmodelled model, and PyMOL's
+   * keyword-collision name legalization is applied. Mirrors `load_object`
+   * returning `None`.
+   */
+  ctx.command('load_model', (args, kwargs): Json => {
+    const rawName = ctx.str(pick(args, kwargs, 1, 'object'), 'model') || 'model';
+    const name = legalizeObjectName(rawName);
+    ex.addMolecule(new ObjectMolecule(name));
+    ctx.publish();
+    return null;
+  });
 }

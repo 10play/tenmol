@@ -1,0 +1,17 @@
+{
+  "id": "command__madd",
+  "feature": "madd",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m" },
+    { "do": "mset 1 x30" },
+    { "do": "madd 1 -15" }
+  ],
+  "checks": [
+    { "call": ["count_frames"], "label": "movie frames after mset(30)+madd(15) extend to 45" },
+    { "call": ["get_movie_length"], "label": "explicitly-defined movie length is 45" }
+  ],
+  "tol": 1e-3,
+  "expected": [45, 45]
+}

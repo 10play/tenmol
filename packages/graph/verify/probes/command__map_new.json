@@ -1,0 +1,19 @@
+{
+  "id": "command__map_new",
+  "feature": "map_new",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom foo, pos=[0,0,0]" },
+    { "call": ["map_new", "blob", "gaussian", 1.0, "(all)"] }
+  ],
+  "checks": [
+    { "call": ["get_names", "objects"], "label": "objects after map_new (expect ['foo','blob'])" },
+    { "call": ["count_atoms", "all"], "label": "map_new adds no atoms (expect 1)" }
+  ],
+  "tol": 0,
+  "expected": [
+    ["foo", "blob"],
+    1
+  ]
+}

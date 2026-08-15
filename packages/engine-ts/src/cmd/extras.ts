@@ -36,11 +36,27 @@
  */
 
 import type { Json } from '@tenmol/protocol';
+import { incentiveOnly } from '@tenmol/protocol';
 import { PymolError } from '@tenmol/backend';
 import type { AtomInfo } from '../model/atom';
 import type { Executive } from '../exec/executive';
 import { ObjectMolecule } from '../model/molecule';
 import type { RegistrarCtx } from './registrar';
+
+/**
+ * `importing.load_mtz` — reflection-file import that builds fofc/2fofc (or a
+ * single named) map object. It is an incentive-only feature: in Open-Source
+ * PyMOL the function immediately raises `IncentiveOnlyException()`
+ * (importing.py:1511). The message mirrors Python's
+ * `str(IncentiveOnlyException)` verbatim — the `IncentiveOnlyException.__init__`
+ * default (`"<funcname>" is not available in Open-Source PyMOL`, __init__.py:491)
+ * plus the trailing "Please visit http://pymol.org …" block, and the leading
+ * `<label>: ` prefix from `CmdException.__str__` — so the differential matches.
+ */
+const LOAD_MTZ_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "load_mtz" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
 
 function toNum(v: unknown, dflt: number): number {
   if (v == null || v === '') return dflt;
@@ -232,6 +248,14 @@ function applyEditMouseMode(ex: Executive, active: boolean): void {
 export function registerExtras(ctx: RegistrarCtx): void {
   const ex = ctx.executive;
   const str = ctx.str;
+
+  /* ========================= INCENTIVE-ONLY ============================= */
+  // `load_mtz` is a licensed (incentive) feature: Open-Source PyMOL raises
+  // `IncentiveOnlyException()` instead of loading maps. Reproduce that exact
+  // rejection so the differential matches real PyMOL.
+  ctx.command('load_mtz', (): Json => {
+    throw new PymolError(incentiveOnly('load_mtz', LOAD_MTZ_INCENTIVE_ONLY), 'load_mtz');
+  });
 
   /* ============================ REAL handlers ============================ */
 
@@ -575,8 +599,8 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // `load` is real (cmd/fileio.ts) — it parses structured content by format.
       'loadall',
       // `load_embedded` is real now — see cmd/fileio.ts (embed-block loader).
-      'load_model',
-      'load_mtz',
+      // `load_model` is real now — see cmd/fileio.ts (ChemPy-model importer).
+      // `load_mtz` is incentive-only — registered separately below (throws).
       'load_png',
       'load_traj',
       'save',

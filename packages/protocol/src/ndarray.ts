@@ -83,6 +83,42 @@ export function decodeNdarray(value: WireNdarray): {
   return { data: decoded, shape: [...value.shape] };
 }
 
+/**
+ * Encode a flat numeric buffer as a `WireNdarray`, mirroring the bridge's
+ * `_encode_ndarray` (`packages/bridge/tenmol_bridge/codec.py`): row-major,
+ * base64 of the raw little-endian bytes. This is the encode counterpart of
+ * `decodeNdarray`, so a round-trip is byte-identical to what real PyMOL puts on
+ * the wire for `cmd.get_coords` / `cmd.get_coordset` (a materialized numpy
+ * `float32` array). Only `float32` is emitted today — the coordinate path.
+ */
+export function encodeNdarray(values: ArrayLike<number>, shape: number[]): WireNdarray {
+  const count = shape.reduce((a, b) => a * b, 1);
+  const floats = new Float32Array(count);
+  for (let i = 0; i < count; i++) floats[i] = values[i] ?? 0;
+  const bytes = new Uint8Array(floats.buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i] ?? 0);
+  return {
+    __ndarray__: true,
+    shape: [...shape],
+    dtype: 'float32',
+    encoding: 'base64',
+    data: btoa(binary),
+  };
+}
+
+/** Encode `[x,y,z]` triples as an `[n,3]` float32 `WireNdarray`. */
+export function encodeCoords(coords: ReadonlyArray<readonly [number, number, number]>): WireNdarray {
+  const flat = new Float32Array(coords.length * 3);
+  for (let i = 0; i < coords.length; i++) {
+    const c = coords[i] as readonly [number, number, number];
+    flat[i * 3] = c[0];
+    flat[i * 3 + 1] = c[1];
+    flat[i * 3 + 2] = c[2];
+  }
+  return encodeNdarray(flat, [coords.length, 3]);
+}
+
 /** Coordinates as `[x,y,z]` triples. Throws if the shape is not `[n, 3]`. */
 export function decodeCoords(value: WireNdarray): Float32Array {
   if (value.shape.length !== 2 || value.shape[1] !== 3) {

@@ -30,4 +30,5 @@ export * from './errors';
 export * from './envelope';
 export * from './codec';
 export * from './geometry';
+export * from './ndarray';
 export * from './topics';
