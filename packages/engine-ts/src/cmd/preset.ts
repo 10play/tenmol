@@ -273,12 +273,19 @@ export function registerPreset(ctx: RegistrarCtx): void {
 
   const publication = (selection: string, solv: boolean): void => {
     pretty(selection, solv);
-    // Settings are global in the slice, so apply the publication overrides directly.
-    soft('set', ['cartoon_smooth_loops', 1]);
-    soft('set', ['cartoon_highlight_color', 'grey50']);
-    soft('set', ['cartoon_fancy_helices', 1]);
-    soft('set', ['cartoon_flat_sheets', 1]);
-    soft('set', ['cartoon_side_chain_helper', 0]);
+    // PyMOL's `publication` then re-applies cartoon overrides scoped to the
+    // resolved object via `cmd.set(name, value, selection)` (preset.py:334). For
+    // these cartoon *flag* settings a selection-scoped `set` is a PER-ATOM
+    // operation, and cartoon_smooth_loops / _fancy_helices / _flat_sheets /
+    // _side_chain_helper / _highlight_color are NOT per-atom-capable (only the
+    // `*_color`/`transparency` family is — see setting.py's `set` NOTES), so
+    // PyMOL silently ignores them: the object- and global-level values are left
+    // untouched at pretty's defaults. Verified against real PyMOL — after
+    // `publication m`, get_setting_int(<cartoon flag>, "m") reads the global
+    // default (0/0/1/0/-1), not the override, and get_object_settings("m") is
+    // null. So publication is observably identical to pretty for state; the
+    // overrides are per-atom no-ops. (Previously these were applied GLOBALLY,
+    // which diverged: the reads then returned 1/1/grey50.)
   };
 
   /* ------------------------------- default ------------------------------ */

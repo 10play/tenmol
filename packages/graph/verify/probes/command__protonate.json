@@ -1,0 +1,18 @@
+{
+  "id": "command__protonate",
+  "feature": "protonate",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "remove hydro"},
+    {"do": "protonate all, pH=7.4"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "elem H"], "label": "hydrogens present after protonate"},
+    {"call": ["count_atoms", "all"], "label": "total atoms after protonate"},
+    {"call": ["count_atoms", "elem C"], "label": "heavy carbons unchanged"}
+  ],
+  "tol": 1e-3,
+  "expected": [7, 12, 3]
+}

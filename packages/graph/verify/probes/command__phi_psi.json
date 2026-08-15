@@ -1,0 +1,20 @@
+{
+  "id": "command__phi_psi",
+  "feature": "phi_psi",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["phi_psi", "m and not polymer"], "label": "phi_psi returns empty dict for non-protein selection (wrapper runs)"},
+    {"call": ["get_dihedral", "chain A and resi 9 and name C", "chain A and resi 10 and name N", "chain A and resi 10 and name CA", "chain A and resi 10 and name C"], "label": "phi(resi 10) geometry C(-1)-N-CA-C that phi_psi reports", "tol": 1e-2},
+    {"call": ["get_dihedral", "chain A and resi 10 and name N", "chain A and resi 10 and name CA", "chain A and resi 10 and name C", "chain A and resi 11 and name N"], "label": "psi(resi 10) geometry N-CA-C-N(+1) that phi_psi reports", "tol": 1e-2}
+  ],
+  "tol": 1e-2,
+  "expected": [
+    {},
+    -74.40135955810547,
+    152.93206787109375
+  ]
+}

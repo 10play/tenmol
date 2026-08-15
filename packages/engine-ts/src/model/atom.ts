@@ -71,6 +71,13 @@ export interface AtomInfo {
    */
   masked?: boolean;
   /**
+   * Protected flag (PyMOL `AtomInfoType.protekted`). Set by the `protect`
+   * command and cleared by `deprotect`; read by the `protected` selection
+   * keyword. Protected atoms are held immobile during editing transforms
+   * (torsion, drag, sculpt). Absent ⇒ not protected.
+   */
+  protected?: boolean;
+  /**
    * Internal atom-typing index (PyMOL `AtomInfoType.customType`). Assigned by
    * upstream typing passes and read by the experimental `get_bond_print` debug
    * dump; unassigned atoms are `-1` (the upstream default). Absent ⇒ -1.

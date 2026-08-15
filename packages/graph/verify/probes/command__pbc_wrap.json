@@ -1,0 +1,16 @@
+{
+  "id": "command__pbc_wrap",
+  "feature": "pbc_wrap",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "trj"], "kwargs": {"pos": [25.0, 5.0, 5.0]}},
+    {"call": ["set_symmetry", "trj", 10.0, 10.0, 10.0, 90, 90, 90, "P1"]},
+    {"call": ["pbc_wrap", "trj"], "kwargs": {"center": [5.0, 5.0, 5.0]}}
+  ],
+  "checks": [
+    {"call": ["get_atom_coords", "trj"], "label": "coords after pbc_wrap into 10A box centered at 5,5,5"}
+  ],
+  "tol": 1e-3,
+  "expected": [[5, 5, 5]]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "command__pair_fit",
+  "feature": "pair_fit",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_pdbstr",
+        "ATOM      1  N  ALA A   1       0.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA ALA A   1       1.000   0.000   0.000  1.00  0.00           C\nATOM      3  C  ALA A   1       2.000   1.000   0.000  1.00  0.00           C\nATOM      4  O  ALA A   1       2.000   2.000   0.000  1.00  0.00           O\nATOM      5  CB ALA A   1       1.000  -1.000   1.000  1.00  0.00           C\nATOM      6  N  ALA A   2       3.000   1.000   0.000  1.00  0.00           N\nATOM      7  CA ALA A   2       4.000   0.000   0.000  1.00  0.00           C\nATOM      8  C  ALA A   2       5.000   1.000   0.000  1.00  0.00           C\nATOM      9  O  ALA A   2       5.000   2.000   0.000  1.00  0.00           O\nATOM     10  CB ALA A   2       4.000  -1.000   1.000  1.00  0.00           C\nATOM     11  N  ALA A   3       6.000   1.000   0.000  1.00  0.00           N\nATOM     12  CA ALA A   3       7.000   0.000   1.000  1.00  0.00           C\nATOM     13  C  ALA A   3       8.000   1.000   1.000  1.00  0.00           C\nATOM     14  O  ALA A   3       8.000   2.000   1.000  1.00  0.00           O\nATOM     15  CB ALA A   3       7.000  -1.000   2.000  1.00  0.00           C\nEND",
+        "t"
+      ]
+    },
+    {
+      "call": [
+        "create",
+        "mob",
+        "t"
+      ]
+    },
+    {
+      "do": "rotate x, 57, mob"
+    },
+    {
+      "do": "translate [10, -4, 6], mob"
+    },
+    {
+      "call": [
+        "pair_fit",
+        "mob and name CA",
+        "t and name CA",
+        "mob and name CB",
+        "t and name CB",
+        "mob and name N",
+        "t and name N"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_distance",
+        "mob and name CA and resi 2",
+        "t and name CA and resi 2"
+      ],
+      "label": "paired CA2 superposes onto target after pair_fit",
+      "tol": 0.02
+    },
+    {
+      "call": [
+        "get_distance",
+        "mob and name CB and resi 3",
+        "t and name CB and resi 3"
+      ],
+      "label": "paired CB3 superposes onto target",
+      "tol": 0.02
+    },
+    {
+      "call": [
+        "get_distance",
+        "mob and name O and resi 1",
+        "t and name O and resi 1"
+      ],
+      "label": "unpaired backbone O1 carried onto target (rigid body)",
+      "tol": 0.02
+    },
+    {
+      "call": [
+        "get_distance",
+        "mob and name CA and resi 1",
+        "mob and name CB and resi 1"
+      ],
+      "label": "internal CA-CB bond preserved (rigid-body fit)",
+      "tol": 0.02
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    2.666641876203357e-7,
+    0,
+    2.4575624024691933e-7,
+    1.4142132997512817
+  ]
+}

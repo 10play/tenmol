@@ -58,6 +58,15 @@ const LOAD_MTZ_INCENTIVE_ONLY =
   '    Please visit http://pymol.org if you are interested in the\n' +
   '    full featured "Incentive PyMOL" version.\n';
 
+// `querying.pi_interactions` (querying.py:545) likewise raises
+// `IncentiveOnlyException()` in Open-Source PyMOL — the detection logic ships
+// only with Incentive PyMOL. Same verbatim `str(IncentiveOnlyException)` shape
+// as LOAD_MTZ_INCENTIVE_ONLY, with the function's own name.
+const PI_INTERACTIONS_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "pi_interactions" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
+
 function toNum(v: unknown, dflt: number): number {
   if (v == null || v === '') return dflt;
   const n = Number(v);
@@ -274,6 +283,16 @@ export function registerExtras(ctx: RegistrarCtx): void {
     throw new PymolError(incentiveOnly('load_mtz', LOAD_MTZ_INCENTIVE_ONLY), 'load_mtz');
   });
 
+  // `pi_interactions` is also incentive-only: Open-Source PyMOL raises
+  // `IncentiveOnlyException()` immediately (querying.py:545) rather than
+  // computing pi-pi / pi-cation contacts. Reproduce that exact rejection.
+  ctx.command('pi_interactions', (): Json => {
+    throw new PymolError(
+      incentiveOnly('pi_interactions', PI_INTERACTIONS_INCENTIVE_ONLY),
+      'pi_interactions',
+    );
+  });
+
   /* ============================ REAL handlers ============================ */
 
   /* alphatoall — copy per-residue properties from the CA atom to every atom of
@@ -354,6 +373,23 @@ export function registerExtras(ctx: RegistrarCtx): void {
     let n = 0;
     for (const ua of uas) if (ua.atom.masked === true) n++;
     return n;
+  });
+
+  /* protect / deprotect — the per-atom "protected" flag stored on
+     AtomInfo.protected; read by the `protected` selection keyword. Protected
+     atoms are held immobile during editing transforms (torsion, drag, sculpt);
+     it never affects selection or display. */
+  ctx.command('protect', (args, kwargs): Json => {
+    const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
+    const uas = ex.atomsMatching(selection) as UA[];
+    for (const ua of uas) ua.atom.protected = true;
+    return uas.length;
+  });
+  ctx.command('deprotect', (args, kwargs): Json => {
+    const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
+    const uas = ex.atomsMatching(selection) as UA[];
+    for (const ua of uas) ua.atom.protected = false;
+    return uas.length;
   });
 
   /* delete_states — drop states matching a spec from an object. */
@@ -684,15 +720,13 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'assign_stereo',
       'text_type',
       'unset_deep',
-      'pbc_wrap',
-      'pbc_unwrap',
     ],
     null,
   );
 
   // Return an empty dict: analysis verbs producing a name->value mapping.
   // `cealign`/`usalign` are real now — see cmd/align.ts.
-  noop(['pi_interactions', 'stereochemistry'], {});
+  noop(['stereochemistry'], {});
 
   // Return an empty string: text-export getters.
   noop(['get_mtl_obj'], '');

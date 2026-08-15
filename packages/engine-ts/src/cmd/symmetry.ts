@@ -146,6 +146,34 @@ function cloneAtom(a: AtomInfo): AtomInfo {
   return { ...a, visRep: a.visRep };
 }
 
+/** Connected components of a molecule's bond graph; isolated atoms are singleton
+ * molecules. Mirrors PyMOL's `ObjectMoleculeGetMolMappingMap`. */
+function molGroups(mol: ObjectMolecule): number[][] {
+  const parent = Array.from({ length: mol.natom }, (_, i) => i);
+  const find = (x: number): number => {
+    let r = x;
+    while (parent[r] !== r) r = parent[r]!;
+    while (parent[x] !== r) {
+      const n = parent[x]!;
+      parent[x] = r;
+      x = n;
+    }
+    return r;
+  };
+  for (const [bi, bj] of mol.bonds) parent[find(bi)] = find(bj);
+  const byRoot = new Map<number, number[]>();
+  for (let i = 0; i < mol.natom; i++) {
+    const r = find(i);
+    let g = byRoot.get(r);
+    if (!g) {
+      g = [];
+      byRoot.set(r, g);
+    }
+    g.push(i);
+  }
+  return [...byRoot.values()];
+}
+
 /* ------------------------------- registrar ------------------------------- */
 
 export function registerSymmetry(ctx: RegistrarCtx): void {
@@ -330,5 +358,209 @@ export function registerSymmetry(ctx: RegistrarCtx): void {
 
     if (created.length > 0) ctx.publish();
     return created;
+  });
+
+  /**
+   * `cmd.pbc_unwrap(oname, bymol=1)` — unwrap periodic-boundary trajectories so
+   * that atoms/molecules stop jumping across the box between frames. Ports the C
+   * `ObjectMoleculePBCUnwrap` (layer2/ObjectMolecule3.cpp).
+   *
+   * Each state is converted to fractional coordinates; from the second frame on,
+   * every atom (or, with `bymol=1`, every whole molecule via its fractional
+   * centre) is shifted by the integer lattice vector nearest to its displacement
+   * from the previous — already-unwrapped — frame, so the trajectory becomes
+   * continuous. Coordinates are then converted back to real space.
+   */
+  ctx.command('pbc_unwrap', (args): Json => {
+    const oname = ctx.str(args[0]);
+    const bymol = args[1] === undefined ? true : Number(args[1]) !== 0;
+    const mol = ex.molecule(oname);
+    if (!mol) return 0;
+    if (!mol.cell || mol.nstate === 0) return oname;
+
+    const M = orthoMatrix(mol.cell);
+    const Minv = inverse(M);
+
+    // Fractional copy of every state (Float32 storage mirrors PyMOL's float
+    // CoordSet, so the round-trip rounding matches).
+    const frac: Float32Array[] = mol.states.map((set) => {
+      const out = new Float32Array(set.length);
+      for (let i = 0; i < mol.natom; i++) {
+        const o = i * 3;
+        const f = apply(Minv, [set[o] ?? 0, set[o + 1] ?? 0, set[o + 2] ?? 0]);
+        out[o] = f[0];
+        out[o + 1] = f[1];
+        out[o + 2] = f[2];
+      }
+      return out;
+    });
+
+    // Molecule grouping: connected components of the bond graph (isolated atoms
+    // are singleton molecules), matching ObjectMoleculeGetMolMappingMap.
+    const groups: number[][] = [];
+    if (bymol) {
+      const parent = Array.from({ length: mol.natom }, (_, i) => i);
+      const find = (x: number): number => {
+        let r = x;
+        while (parent[r] !== r) r = parent[r]!;
+        while (parent[x] !== r) {
+          const n = parent[x]!;
+          parent[x] = r;
+          x = n;
+        }
+        return r;
+      };
+      for (const [bi, bj] of mol.bonds) {
+        parent[find(bi)] = find(bj);
+      }
+      const byRoot = new Map<number, number[]>();
+      for (let i = 0; i < mol.natom; i++) {
+        const r = find(i);
+        let g = byRoot.get(r);
+        if (!g) {
+          g = [];
+          byRoot.set(r, g);
+        }
+        g.push(i);
+      }
+      for (const g of byRoot.values()) groups.push(g);
+    }
+
+    let prev: Float32Array | null = null;
+    for (let s = 0; s < frac.length; s++) {
+      const curr = frac[s]!;
+      if (prev) {
+        if (bymol) {
+          for (const g of groups) {
+            const cPrev = [0, 0, 0];
+            const cCurr = [0, 0, 0];
+            for (const atm of g) {
+              const o = atm * 3;
+              for (let k = 0; k < 3; k++) {
+                cPrev[k]! += prev[o + k] ?? 0;
+                cCurr[k]! += curr[o + k] ?? 0;
+              }
+            }
+            const offset = [0, 0, 0];
+            for (let k = 0; k < 3; k++) {
+              offset[k] = Math.round(cCurr[k]! / g.length - cPrev[k]! / g.length);
+            }
+            for (const atm of g) {
+              const o = atm * 3;
+              for (let k = 0; k < 3; k++) curr[o + k] = (curr[o + k] ?? 0) - offset[k]!;
+            }
+          }
+        } else {
+          for (let i = 0; i < mol.natom; i++) {
+            const o = i * 3;
+            for (let k = 0; k < 3; k++) {
+              curr[o + k] = (curr[o + k] ?? 0) - Math.round((curr[o + k] ?? 0) - (prev[o + k] ?? 0));
+            }
+          }
+        }
+      }
+      prev = curr;
+    }
+
+    // Convert back to real space, writing into the object's coordinate states.
+    for (let s = 0; s < frac.length; s++) {
+      const f = frac[s]!;
+      const set = mol.states[s]!;
+      for (let i = 0; i < mol.natom; i++) {
+        const o = i * 3;
+        const r = apply(M, [f[o] ?? 0, f[o + 1] ?? 0, f[o + 2] ?? 0]);
+        set[o] = r[0];
+        set[o + 1] = r[1];
+        set[o + 2] = r[2];
+      }
+    }
+
+    ctx.publish();
+    return oname;
+  });
+
+  /**
+   * `cmd.pbc_wrap(oname, center=None)` — wrap molecules by whole lattice vectors
+   * back into the periodic (PBC) box centred at `center`. Ports the C
+   * `ObjectMoleculePBCWrap` (layer2/ObjectMolecule3.cpp).
+   *
+   * Each state is converted to fractional coordinates; every whole molecule
+   * (connected bond component) is shifted by the integer lattice vector nearest
+   * to the displacement of its fractional centre from `center`, so its centre
+   * lands inside the primary cell. `center` defaults to the coordinate average of
+   * the first state. Coordinates are then converted back to real space.
+   */
+  ctx.command('pbc_wrap', (args, kwargs): Json => {
+    const oname = ctx.str(args[0]);
+    const mol = ex.molecule(oname);
+    if (!mol) return 0;
+    if (!mol.cell || mol.nstate === 0) return oname;
+
+    const M = orthoMatrix(mol.cell);
+    const Minv = inverse(M);
+    const groups = molGroups(mol);
+
+    // Center in model (real) space: the explicit arg, else the coordinate
+    // average of the first state (computed once, as in the C code).
+    const centerArg = args[1] ?? kwargs.center;
+    let center: Vec3;
+    if (Array.isArray(centerArg) && centerArg.length >= 3) {
+      center = [Number(centerArg[0]), Number(centerArg[1]), Number(centerArg[2])];
+    } else {
+      const set0 = mol.states[0]!;
+      const sum: Vec3 = [0, 0, 0];
+      for (let i = 0; i < mol.natom; i++) {
+        const o = i * 3;
+        sum[0] += set0[o] ?? 0;
+        sum[1] += set0[o + 1] ?? 0;
+        sum[2] += set0[o + 2] ?? 0;
+      }
+      const n = mol.natom || 1;
+      center = [sum[0] / n, sum[1] / n, sum[2] / n];
+    }
+    // Center in fractional coordinates.
+    const centerFrac = apply(Minv, center);
+
+    for (let s = 0; s < mol.nstate; s++) {
+      const set = mol.states[s]!;
+
+      // Fractional copy (Float32 storage mirrors PyMOL's float CoordSet).
+      const frac = new Float32Array(set.length);
+      for (let i = 0; i < mol.natom; i++) {
+        const o = i * 3;
+        const f = apply(Minv, [set[o] ?? 0, set[o + 1] ?? 0, set[o + 2] ?? 0]);
+        frac[o] = f[0];
+        frac[o + 1] = f[1];
+        frac[o + 2] = f[2];
+      }
+
+      for (const g of groups) {
+        const cen = [0, 0, 0];
+        for (const atm of g) {
+          const o = atm * 3;
+          for (let k = 0; k < 3; k++) cen[k]! += frac[o + k] ?? 0;
+        }
+        const offset = [0, 0, 0];
+        for (let k = 0; k < 3; k++) {
+          offset[k] = Math.round(cen[k]! / g.length - centerFrac[k]!);
+        }
+        for (const atm of g) {
+          const o = atm * 3;
+          for (let k = 0; k < 3; k++) frac[o + k] = (frac[o + k] ?? 0) - offset[k]!;
+        }
+      }
+
+      // Convert back to real space in place.
+      for (let i = 0; i < mol.natom; i++) {
+        const o = i * 3;
+        const r = apply(M, [frac[o] ?? 0, frac[o + 1] ?? 0, frac[o + 2] ?? 0]);
+        set[o] = r[0];
+        set[o + 1] = r[1];
+        set[o + 2] = r[2];
+      }
+    }
+
+    ctx.publish();
+    return oname;
   });
 }

@@ -1,0 +1,19 @@
+{
+  "id": "command__pretty",
+  "feature": "pretty",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "call": ["pretty", "m"] }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "rep cartoon"], "label": "atoms shown as cartoon" },
+    { "call": ["get_setting_int", "cartoon_highlight_color", "m"], "label": "cartoon_highlight_color on m" },
+    { "call": ["get_setting_int", "cartoon_fancy_helices", "m"], "label": "cartoon_fancy_helices on m" },
+    { "call": ["get_setting_int", "cartoon_flat_sheets", "m"], "label": "cartoon_flat_sheets on m" },
+    { "call": ["get_setting_int", "cartoon_side_chain_helper", "m"], "label": "cartoon_side_chain_helper on m" }
+  ],
+  "tol": 1e-3,
+  "expected": [5684, -1, 0, 1, 0]
+}

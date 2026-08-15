@@ -1,0 +1,22 @@
+{
+  "id": "command__pi_interactions",
+  "feature": "pi_interactions",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom ps, pos=[0,0,0]" }
+  ],
+  "checks": [
+    { "call": ["pi_interactions", "pipi", "all", "all"], "label": "pi_interactions return value" },
+    { "call": ["get_names", "objects"], "label": "object list after pi_interactions" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    {
+      "__error": " Incentive-Only-Error: \"pi_interactions\" is not available in Open-Source PyMOL\n\n    Please visit http://pymol.org if you are interested in the\n    full featured \"Incentive PyMOL\" version.\n"
+    },
+    [
+      "ps"
+    ]
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "command__ramp_new",
+  "feature": "ramp_new",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom foo, pos=[0,0,0]" },
+    { "call": ["ramp_new", "r1", "foo", [3.0, 6.0], ["red", "blue"]] }
+  ],
+  "checks": [
+    { "call": ["get_names", "objects"], "label": "objects after ramp_new (expect ['foo','r1'])" },
+    { "call": ["count_atoms", "all"], "label": "ramp_new adds no atoms (expect 1)" }
+  ],
+  "tol": 0,
+  "expected": [
+    ["foo", "r1"],
+    1
+  ]
+}
