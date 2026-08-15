@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS: Readonly<Record<string, number | string>> = {
   line_width: 1.49, // packages/engine/layer1/SettingInfo.h (under 1.5 for SGI antialiasing)
   field_of_view: 20,
   orthoscopic: 0,
+  sculpt_line_weight: 1.0, // packages/engine/layer1/SettingInfo.h (0x010 linearity restraint)
   // Mouse-config panel reads these; PyMOL's fresh-session defaults.
   button_mode: 0,
   button_mode_name: '3-Button Viewing',

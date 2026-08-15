@@ -1,0 +1,21 @@
+{
+  "id": "feature__builtin-spectrum-palettes",
+  "feature": "builtin-spectrum-palettes",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom p1"},
+    {"do": "pseudoatom p2"},
+    {"do": "pseudoatom p3"},
+    {"do": "spectrum count, rainbow"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "all"], "label": "total atoms"},
+    {"call": ["count_atoms", "color o107"], "label": "rainbow first endpoint = o-band slot 107"},
+    {"call": ["count_atoms", "color o500"], "label": "rainbow mid = o-band slot 500"},
+    {"call": ["count_atoms", "color o893"], "label": "rainbow last endpoint = o-band slot 893"},
+    {"call": ["get_color_index", "o107"], "label": "rainbow o-family band color registered"}
+  ],
+  "tol": 0,
+  "expected": [3, 1, 1, 0, 4363]
+}

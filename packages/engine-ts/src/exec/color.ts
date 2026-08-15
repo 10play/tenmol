@@ -358,11 +358,54 @@ export const ELEMENT_COLOR: Readonly<Record<string, string>> = {
 };
 
 /**
- * `cmd.get_color_index(name)` — resolve a colour name to its table index, or
- * `-1` when unknown (PyMOL returns -1 for an unknown colour name).
+ * The special negative colour indices (`packages/engine/layer1/Color.h`). These
+ * are resolved by name in `ColorGetIndex` (`Color.cpp:711`) and are part of the
+ * single flat integer namespace all colour references share. `auto` (-2) /
+ * `current` (-3) are intentionally omitted: real PyMOL resolves them through
+ * `ColorGetNext`/`ColorGetCurrent` (the auto-colour cycle), not to the raw
+ * sentinel, so leaving them to fall through to the name lookup avoids returning
+ * a wrong-but-quiet value here.
+ */
+const SPECIAL_COLOR_INDEX: Readonly<Record<string, number>> = {
+  default: -1, // cColorDefault
+  atomic: -4, // cColorAtomic
+  object: -5, // cColorObject
+  front: -6, // cColorFront
+  back: -7, // cColorBack
+};
+
+/** `0x40000000` — the high bits that tag an inline 24-bit RGB colour (TRGB). */
+const TRGB_BITS = 0x40000000;
+
+/**
+ * `cmd.get_color_index(name)` — resolve a colour reference to its table index,
+ * mirroring `ColorGetIndex` (`packages/engine/layer1/Color.cpp:661`): a raw
+ * numeric index, a `0xRRGGBB` inline TRGB literal, one of the special words
+ * (`default`/`atomic`/`object`/`front`/`back`), or a named-table entry. Returns
+ * `-1` when unknown (PyMOL's `cColorDefault`, also its unknown-name sentinel).
  */
 export function getColorIndex(name: string): number {
-  const idx = NAME_TO_INDEX.get(name.trim().toLowerCase());
+  const key = name.trim().toLowerCase();
+
+  // Pure numeric string -> a raw index into the flat table, or a special.
+  if (/^-?[0-9]+$/.test(key)) {
+    const i = Number(key);
+    if (i >= 0 && i < nextColorIndex) return i;
+    if (i === -1 || i === -4 || i === -5 || i === -6 || i === -7) return i;
+    if ((i & TRGB_BITS) !== 0) return i;
+  }
+
+  // `0xRRGGBB` explicit hex -> packed inline TRGB colour (transparency in the
+  // top 6 bits), exactly as `ColorGetIndex` computes it.
+  if (key.startsWith('0x')) {
+    const v = parseInt(key.slice(2), 16);
+    if (Number.isFinite(v)) return TRGB_BITS | (v & 0x00ffffff) | ((v >> 2) & 0x3f000000);
+  }
+
+  const special = SPECIAL_COLOR_INDEX[key];
+  if (special !== undefined) return special;
+
+  const idx = NAME_TO_INDEX.get(key);
   return idx === undefined ? -1 : idx;
 }
 

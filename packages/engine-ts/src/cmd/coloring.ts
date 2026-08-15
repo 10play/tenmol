@@ -382,14 +382,20 @@ function enumeratedValue(expr: string, atom: AtomInfo): string {
 }
 
 /* --------------------------------------------------------------------------
- * Chain-colour cycle (util.cbc). Names from util.py `_color_cycle`, restricted
- * to colours present in the ported table so each resolves to a real index.
+ * Chain-colour cycle (util.cbc). The exact 40-entry `_color_cycle` from
+ * util.py (mirror of layer1/Color.cpp's AutoColor), by name — every name is
+ * present in the ported colour table and resolves to its real PyMOL index
+ * (e.g. lightmagenta -> 154), so `c % 40` matches `_color_cycle[c % 40]`.
  * ------------------------------------------------------------------------ */
 
 const CHAIN_COLOR_CYCLE = [
-  'carbon', 'cyan', 'magenta', 'yellow', 'salmon', 'slate', 'orange',
-  'green', 'teal', 'pink', 'marine', 'forest', 'violet', 'wheat', 'purple',
-  'limon', 'firebrick', 'deepblue', 'gray', 'red',
+  'carbon', 'cyan', 'lightmagenta', 'yellow', 'salmon', 'hydrogen', 'slate',
+  'orange', 'lime', 'deepteal', 'hotpink', 'yelloworange', 'violetpurple',
+  'grey70', 'marine', 'olive', 'smudge', 'teal', 'dirtyviolet', 'wheat',
+  'deepsalmon', 'lightpink', 'aquamarine', 'paleyellow', 'limegreen',
+  'skyblue', 'warmpink', 'limon', 'violet', 'bluewhite', 'greencyan',
+  'sand', 'forest', 'lightteal', 'darksalmon', 'splitpea', 'raspberry',
+  'grey50', 'deepblue', 'brown',
 ];
 
 /** Resolve a colour name to an index, defining it from `rgb` if not present. */

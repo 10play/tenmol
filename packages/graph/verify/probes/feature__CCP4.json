@@ -1,0 +1,20 @@
+{
+  "id": "feature__CCP4",
+  "feature": "CCP4",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/testing/data/emd_1155.ccp4, dmap, format=ccp4" }
+  ],
+  "checks": [
+    { "call": ["get_names", "objects"], "label": "CCP4 file registered as a map object 'dmap'" },
+    { "call": ["get_type", "dmap"], "label": "loaded object reports object:map" },
+    { "call": ["count_atoms", "all"], "label": "a density map holds no atoms" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["dmap"],
+    "object:map",
+    0
+  ]
+}

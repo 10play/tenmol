@@ -1,0 +1,16 @@
+{
+  "id": "feature__colour-index-integer-space", "feature": "colour-index-integer-space", "kind": "feature", "probeKind": "state",
+  "ops": [
+    {"do":"space rgb"},
+    {"call":["set_color", "myextcol", [255, 128, 0]]}
+  ],
+  "checks": [
+    {"call":["get_color_index","yellow"],"label":"named colour resolves to frozen index"},
+    {"call":["get_color_index","default"],"label":"special word 'default' -> negative index -1"},
+    {"call":["get_color_index","atomic"],"label":"special word 'atomic' -> negative index -4"},
+    {"call":["get_color_index","myextcol"],"label":"set_color appends new positive slot at next free index"},
+    {"call":["get_color_tuple","myextcol"],"label":"0-255 range auto-scaled on the new slot","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [6, -1, -4, 5388, [1, 0.501960813999176, 0]]
+}

@@ -20,7 +20,7 @@
 import type { Json } from '@tenmol/protocol';
 import { Rep, REP_NAMES } from '@tenmol/protocol';
 import { repBit } from '../model/atom';
-import { COLOR_SETTINGS, colorSettingText, REP_COLOR_SETTING_DEFAULTS } from '../exec/color';
+import { COLOR_SETTINGS, colorSettingText, getColorIndex, REP_COLOR_SETTING_DEFAULTS } from '../exec/color';
 import { SETTING_INDEX_TYPE } from './setting-catalog';
 import type { RegistrarCtx } from './registrar';
 
@@ -55,6 +55,7 @@ const SETTING_DEFAULTS: Readonly<Record<string, number | string>> = {
   valence: 0,
   ray_trace_mode: 0,
   antialias: 1,
+  sculpt_line_weight: 1.0,
 };
 
 /**
@@ -105,6 +106,22 @@ function coerceValue(raw: unknown, str: RegistrarCtx['str']): number | string {
   return Number.isNaN(n) ? str(raw) : n;
 }
 
+/**
+ * `set` coercion for colour-typed settings (`REC_c`). PyMOL stores a colour
+ * INDEX, not a name: `SettingSetFromString`'s `cSetting_color` branch runs the
+ * value through `ColorGetIndex` (`layer1/Setting.cpp`), so `set cartoon_color,
+ * red` stores `4`. A bare numeric index passes through; an unknown colour name
+ * is left verbatim (matches PyMOL's text fallback for non-palette values).
+ */
+function coerceSettingValue(name: string, raw: unknown, str: RegistrarCtx['str']): number | string {
+  const v = coerceValue(raw, str);
+  if (typeof v === 'string' && COLOR_SETTINGS.has(name)) {
+    const idx = getColorIndex(v);
+    if (idx >= 0) return idx;
+  }
+  return v;
+}
+
 export function registerSettings2(ctx: RegistrarCtx): void {
   const ex = ctx.executive;
   const str = ctx.str;
@@ -146,7 +163,7 @@ export function registerSettings2(ctx: RegistrarCtx): void {
   // settings). Registered after the built-in, so this handler wins.
   ctx.command('set', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
-    const value = coerceValue(args[1] ?? kwargs['value'] ?? 1, str);
+    const value = coerceSettingValue(name, args[1] ?? kwargs['value'] ?? 1, str);
     const sel = str(args[2] ?? kwargs['selection'] ?? '');
     if (!name) return 0;
     if (sel) {

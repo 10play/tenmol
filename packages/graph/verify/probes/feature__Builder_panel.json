@@ -1,0 +1,19 @@
+{
+  "id": "feature__Builder_panel",
+  "feature": "Builder panel",
+  "kind": "state",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "alter m, formal_charge=0"},
+    {"do": "alter (m and resi 1 and elem N), formal_charge=1"},
+    {"do": "alter (m and resi 2 and elem O), formal_charge=-1"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "m and fc.>0"], "label": "charge +1 button set formal_charge on N of resi 1"},
+    {"call": ["count_atoms", "m and fc.<0"], "label": "charge -1 button set formal_charge on O of resi 2"},
+    {"call": ["count_atoms", "m and resi 1 and elem N"], "label": "target atom bookkeeping"}
+  ],
+  "tol": 1e-3,
+  "expected": [7, 9, 7]
+}
