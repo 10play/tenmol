@@ -122,6 +122,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
   // have no public reset path (see module note) and are left as-is.
   ctx.command('reinitialize', () => {
     ex.delete('all');
+    ex.clearEmbedded();
     ex.view.set(DEFAULT_VIEW);
     movie.frames = [];
     movie.current = 1;

@@ -247,7 +247,40 @@ export class Engine {
     return KNOWN_KEYWORDS.has(kw) || this.handlers.has(kw);
   }
 
+  // An open `embed` block's closing sentinel + destination key (parser.py). While
+  // set, every incoming line is RAW embedded data, not a command, until the
+  // sentinel line closes the block.
+  private embedSentinel: string | null = null;
+  private embedKey: string | null = null;
+
   do(line: string): void {
+    // While an `embed` block is open, capture lines verbatim until the sentinel
+    // (`parser.py` `parse_embed`): the block's raw text becomes a loadable object
+    // via `load_embedded`, so it must bypass command/JS parsing entirely.
+    if (this.embedSentinel !== null) {
+      if (line.trim() === this.embedSentinel) {
+        this.embedSentinel = null;
+        this.embedKey = null;
+      } else if (this.embedKey !== null) {
+        this.executive.appendEmbeddedLine(this.embedKey, line.replace(/\s+$/, '') + '\n');
+      }
+      return;
+    }
+
+    // `embed key, format [, sentinel]` opens an embedded-data block (`parser.py`
+    // EMBED keyword): register it and start capturing subsequent lines.
+    const trimmed = line.trim();
+    if (/^embed(\s|$)/.test(trimmed)) {
+      const rest = trimmed.slice('embed'.length).trim();
+      const parts = rest.length ? rest.split(',').map((s) => s.trim()) : [];
+      const key = parts[0] || this.executive.embedDefaultKey || 'embedded';
+      const format = parts[1] || 'pdb';
+      this.embedSentinel = parts[2] || 'embed end';
+      this.embedKey = key;
+      this.executive.setEmbedded(key, format);
+      return;
+    }
+
     // `@file.pml` inline-includes and executes a command script (`parser.py:403`).
     // Under Node the file is read and each line replayed through `do`; in the
     // browser (no filesystem) it is reported honestly rather than mis-run as JS.
@@ -303,9 +336,15 @@ export class Engine {
       this.appendFeedback(' @script files are not supported in the browser console');
       return;
     }
+    // The parser's default embed key is the script's basename sans extension
+    // (`parser.py:get_default_key`), so a bare `embed`/`load_embedded` resolves.
+    const base = filename.replace(/^.*[/\\]/, '').replace(/\.[^.]*$/, '');
+    if (base) this.executive.embedDefaultKey = base;
     for (const raw of text.split(/\r?\n/)) {
       const stripped = raw.trim();
-      if (stripped === '' || stripped.startsWith('#')) continue;
+      // Blank/`#` lines are skipped by the command parser — but INSIDE an open
+      // embed block every line is raw data, so pass them straight through.
+      if (this.embedSentinel === null && (stripped === '' || stripped.startsWith('#'))) continue;
       this.do(raw);
     }
   }

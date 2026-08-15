@@ -574,7 +574,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // file & network I/O (need a filesystem / parser / network we lack here).
       // `load` is real (cmd/fileio.ts) — it parses structured content by format.
       'loadall',
-      'load_embedded',
+      // `load_embedded` is real now — see cmd/fileio.ts (embed-block loader).
       'load_model',
       'load_mtz',
       'load_png',

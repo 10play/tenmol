@@ -1,0 +1,15 @@
+{
+  "id": "command__load_embedded",
+  "feature": "load_embedded",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "@/home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/graph/verify/.work/embed_test.p1m" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "wats"], "label": "atoms in embedded object" },
+    { "call": ["count_atoms", "all"], "label": "total atoms loaded" }
+  ],
+  "tol": 0.001,
+  "expected": [2, 2]
+}

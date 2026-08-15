@@ -33,7 +33,11 @@ const ignore = (p: Promise<unknown>): Promise<unknown> => p.catch(() => null);
 
 describe('parity: provably-impossible-in-a-browser (xfail)', () => {
   // NOTE: `ray` graduated out of this set — a real headless CPU ray tracer now
-  // renders it (cmd/render.ts); see parity-render.test.ts. 6 items remain.
+  // renders it (cmd/render.ts); see parity-render.test.ts. `load_callback` also
+  // graduated: its OBJECT-creation side effect (an object:callback in get_names)
+  // is a synchronous, observable state change even though the per-frame Python
+  // draw callback itself cannot fire in a browser — so it is a real passing test
+  // below, not an xfail. 5 items remain.
 
   // (2) volume + slice RENDERING -> volumetric 3-D-texture raymarch.
   // WHY IMPOSSIBLE: `volume` (creating.py, line 577) and `slice_new`
@@ -66,16 +70,21 @@ describe('parity: provably-impossible-in-a-browser (xfail)', () => {
   });
 
   // (4) callback -> a Python draw callback object.
-  // WHY IMPOSSIBLE: `load_callback` (importing.py, line 291) stores a Python
-  // object whose __call__ issues OpenGL draw commands each frame. A JS engine
-  // has no Python interpreter and the verb is unregistered (NotPorted), so no
-  // object:callback is ever created — the gap docs mark callback "not applicable".
-  it.fails('load_callback: a Python draw-callback object appears in get_names', async () => {
+  // NOTE: `load_callback` (importing.py, line 291) stores a Python object whose
+  // __call__ issues OpenGL draw commands each frame. The per-frame draw callback
+  // itself cannot fire in a browser (no Python interpreter, no live GL redraw
+  // loop) — but the OBJECT-creation side effect is a synchronous, observable
+  // state change: real PyMOL (even headless) registers an object:callback under
+  // the given name, and so does the port (cmd/fileio.ts:load_callback), so this
+  // is a genuine passing test — verified against the oracle.
+  it('load_callback: a callback object appears in get_names', async () => {
     const b = await boot();
     // A callback list [callable, name]; PyMOL builds an object:callback from it.
     await ignore(b.call('load_callback', [() => null, 'cb']));
     const names = (await b.call('get_names', ['objects'])) as string[];
     expect(names).toContain('cb');
+    // …and it reports the object:callback type, like real PyMOL's ObjectCallback.
+    expect(await b.call('get_type', ['cb'])).toBe('object:callback');
   });
 
   // (5) load from a filesystem PATH and fetch from the PDB.

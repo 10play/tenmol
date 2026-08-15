@@ -167,13 +167,23 @@ export function registerXform(ctx: RegistrarCtx): void {
 
   /* ----------------------------- load_coordset --------------------------- */
 
-  // load_coordset(coords, object, state=1) — the inverse of get_coordset. The
+  // load_coordset(coords, object, state=0) — the inverse of get_coordset. The
   // object name is itself a selection matching all its atoms, so this forwards
   // to the real `load_coords` (which writes coords[i] into the i-th atom).
+  // PyMOL passes `int(state)-1` to the C layer, where a negative (i.e. the
+  // default state=0) means "append a new coordset". We mirror that: state 0
+  // grows the object by one state seeded from the last one, then writes into it.
   ctx.command('load_coordset', (args, kwargs): Json => {
     const coords = args[0] ?? kwargs['coords'];
     const object = str(args[1] ?? kwargs['object']);
-    const state = toNum(args[2] ?? kwargs['state'], 1) || 1;
+    let state = toNum(args[2] ?? kwargs['state'], 0);
+    const mol = ex.molecule(object);
+    if (!mol) return 0;
+    if (state <= 0) {
+      const last = mol.states[mol.states.length - 1];
+      mol.states.push(last ? new Float32Array(last) : new Float32Array(mol.natom * 3));
+      state = mol.states.length;
+    }
     return ctx.call('load_coords', [coords, object, state]);
   });
 

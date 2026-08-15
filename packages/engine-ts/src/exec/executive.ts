@@ -122,6 +122,39 @@ export class Executive {
     return out;
   }
 
+  /* ------------------------------- embed ------------------------------ */
+  /**
+   * Inline data blocks captured by the `embed`/`load_embedded` script mechanism
+   * (`parser.py` `embed_dict` + `importing.py:load_embedded`). An `embed key,
+   * format` block accumulates its raw lines here until the sentinel closes it;
+   * `load_embedded key` later concatenates the lines and hands them to `load`.
+   * Keyed by block name -> `{ format, lines }`.
+   */
+  private readonly embedDict = new Map<string, { format: string; lines: string[] }>();
+  /** Default embed key: the current script's basename (parser `get_default_key`). */
+  embedDefaultKey = '';
+
+  /** Open (or reset) an embed block; subsequent lines append via {@link appendEmbeddedLine}. */
+  setEmbedded(key: string, format: string): void {
+    this.embedDict.set(key, { format, lines: [] });
+  }
+
+  /** Append one raw line (newline-terminated) to an open embed block. */
+  appendEmbeddedLine(key: string, line: string): void {
+    this.embedDict.get(key)?.lines.push(line);
+  }
+
+  /** Fetch a captured embed block by key (parser `get_embedded`). */
+  getEmbedded(key: string): { format: string; lines: string[] } | undefined {
+    return this.embedDict.get(key);
+  }
+
+  /** Drop all captured embed blocks (session reset). */
+  clearEmbedded(): void {
+    this.embedDict.clear();
+    this.embedDefaultKey = '';
+  }
+
   /* ------------------------------ objects ----------------------------- */
 
   addMolecule(mol: ObjectMolecule): void {

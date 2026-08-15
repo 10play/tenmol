@@ -1,0 +1,17 @@
+{
+  "id": "command__isosurface", "feature": "isosurface", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"map_new mymap, gaussian, 1.0, m"},
+    {"do":"isosurface mysurf, mymap, 1.0"}
+  ],
+  "checks": [
+    {"call":["get_names","objects"],"label":"objects after isosurface (m, mymap, mysurf)"},
+    {"call":["count_atoms","all"],"label":"isosurface adds no atoms"}
+  ],
+  "tol": 0,
+  "expected": [
+    ["m", "mymap", "mysurf"],
+    5684
+  ]
+}

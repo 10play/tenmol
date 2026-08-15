@@ -250,6 +250,40 @@ function asInt(v: unknown, dflt: number): number {
   return Number.isFinite(n) ? n : dflt;
 }
 
+/**
+ * PyMOL legalizes every new object's name against the selection-language word
+ * table before registering it: `ExecutiveProcessObjectName` calls
+ * `SelectorNameIsKeyword`, and a name that collides with a reserved selection
+ * keyword/operator gets a trailing `_` appended so the object name can never be
+ * mistaken for a selection expression (e.g. `load_brick(obj, "b")` yields an
+ * object named `b_`, because bare `b` is the b-factor field operator). The set
+ * below is PyMOL's selection keyword/operator word table, verified against the
+ * real-PyMOL oracle.
+ */
+const SELECTION_KEYWORDS: ReadonlySet<string> = new Set([
+  // atom-property fields / value keywords
+  'b', 'q', 'x', 'y', 'z', 'ss', 'name', 'index', 'id', 'resi', 'resn',
+  'chain', 'segi', 'alt', 'color', 'rep', 'flag', 'elem', 'numeric_type',
+  'text_type', 'state',
+  // selector words
+  'all', 'none', 'center', 'origin',
+  // property keyword selectors
+  'hetatm', 'hydro', 'polymer', 'polymer.protein', 'polymer.nucleic',
+  'solvent', 'backbone', 'sidechain', 'visible', 'enabled', 'present',
+  'bonded', 'metals', 'organic', 'inorganic', 'guide', 'fixed', 'restrained',
+  'masked', 'protected',
+  // logical / spatial operators
+  'and', 'or', 'not', 'in', 'like', 'within', 'around', 'expand', 'gap',
+  'beyond', 'byres', 'bymol', 'bychain', 'byobject', 'byring', 'bycalpha',
+  'bound_to', 'neighbor', 'model', 'first', 'last', 'pepseq', 'rank',
+  'nbr.', 'nto.', 'bto.', 'w.',
+]);
+
+/** Apply PyMOL's `SelectorNameIsKeyword` legalization to a new object name. */
+function legalizeObjectName(name: string): string {
+  return SELECTION_KEYWORDS.has(name.toLowerCase()) ? `${name}_` : name;
+}
+
 /* ------------------------------ MOL/SDF parse -------------------------- */
 
 function parseMolBlock(text: string, name: string): ObjectMolecule {
@@ -610,6 +644,32 @@ export function registerFileio(ctx: RegistrarCtx): void {
     return name;
   });
 
+  // `load_embedded(key, name, ...)` — materialise a block declared earlier in the
+  // script with `embed` (`importing.py:load_embedded`). The parser captured the
+  // block's `[format, lines]` into the executive's embed store; here we fetch it,
+  // concatenate the lines and hand them to `load`, exactly as PyMOL delegates to
+  // `load_raw`. A missing key raises, matching PyMOL's DEFAULT_ERROR path.
+  ctx.command('load_embedded', (rawArgs, rawKwargs) => {
+    const kwargs: Record<string, unknown> = { ...rawKwargs };
+    const args: unknown[] = [];
+    for (const a of rawArgs) {
+      const m = typeof a === 'string' ? /^([A-Za-z_]\w*)=(.*)$/.exec(a) : null;
+      if (m) kwargs[m[1]!] = m[2];
+      else args.push(a);
+    }
+    const key = ctx.str(pick(args, kwargs, 0, 'key'), '');
+    let name = ctx.str(pick(args, kwargs, 1, 'name'), '');
+    const state = asInt(pick(args, kwargs, 2, 'state'), 0);
+
+    const block = ex.getEmbedded(key || ex.embedDefaultKey);
+    if (!block) {
+      throw new Error(`Error: embedded data '${key}' not found.`);
+    }
+    if (!name) name = key || ex.embedDefaultKey;
+    const content = block.lines.join('');
+    return ctx.call('load', [content, name, state, block.format]);
+  });
+
   /**
    * `fetch` — download a structure/map/component by accession code and load it
    * (`importing.py:_fetch`/`_multifetch`). The network download itself is not
@@ -744,4 +804,58 @@ export function registerFileio(ctx: RegistrarCtx): void {
   readStr('read_cifstr', 'cif', 'obj');
   readStr('read_mol2str', 'mol2', 'lig');
   readStr('read_xyzstr', 'xyz', 'mol');
+
+  /**
+   * `load_brick(brick, name, ...)` — the GAMESS-UK-era volumetric "brick"
+   * importer (`importing.py:load_brick`, which prepends `loadable.brick` and
+   * delegates to `load_object`). A brick is loaded as an `ObjectMap` gadget, so
+   * it appears in `get_names`, reports `get_type == 'object:map'`, and holds no
+   * atoms. The brick payload itself is not modelled here (the port carries no
+   * volumetric grid for it), but the object-creation side effects — including
+   * the keyword-collision name legalization PyMOL applies to every new object —
+   * are faithful. Mirrors `load_object` returning `None`.
+   */
+  ctx.command('load_brick', (args, kwargs): Json => {
+    const rawName = ctx.str(pick(args, kwargs, 1, 'name'), 'brick') || 'brick';
+    const name = legalizeObjectName(rawName);
+    ex.registerGadget(name, 'object:map');
+    ctx.publish();
+    return null;
+  });
+
+  /**
+   * `load_map(object, name, ...)` — the Phenix-project developer helper that
+   * loads an in-memory ChemPy map object (`importing.py:load_map`, which
+   * prepends `loadable.chempymap` and delegates to `load_object`). Like a
+   * brick, a ChemPy map is loaded as an `ObjectMap` gadget, so it appears in
+   * `get_names`, reports `get_type == 'object:map'`, and holds no atoms. The
+   * volumetric grid payload is not modelled here, but the object-creation side
+   * effects — including the keyword-collision name legalization PyMOL applies
+   * to every new object — are faithful. Mirrors `load_object` returning `None`.
+   */
+  ctx.command('load_map', (args, kwargs): Json => {
+    const rawName = ctx.str(pick(args, kwargs, 1, 'name'), 'map') || 'map';
+    const name = legalizeObjectName(rawName);
+    ex.registerGadget(name, 'object:map');
+    ctx.publish();
+    return null;
+  });
+
+  /**
+   * `load_callback(object, name, ...)` — install a generic Python callback
+   * object (`importing.py:load_callback`, which prepends `loadable.callback` and
+   * delegates to `load_object`). PyMOL creates an `ObjectCallback` that fires on
+   * every screen refresh to drive custom OpenGL. The TS engine has no live redraw
+   * loop and no Python callback to invoke, so the callback payload itself is not
+   * modelled — but the object-creation side effects are faithful: it appears in
+   * `get_names`, reports `get_type == 'object:callback'`, and holds no atoms.
+   * Mirrors `load_object` returning `None`.
+   */
+  ctx.command('load_callback', (args, kwargs): Json => {
+    const rawName = ctx.str(pick(args, kwargs, 1, 'name'), 'callback') || 'callback';
+    const name = legalizeObjectName(rawName);
+    ex.registerGadget(name, 'object:callback');
+    ctx.publish();
+    return null;
+  });
 }

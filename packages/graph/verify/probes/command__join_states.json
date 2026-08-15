@@ -1,0 +1,20 @@
+{
+  "id": "command__join_states",
+  "feature": "join_states",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "create ala2, ala" },
+    { "call": ["join_states", "multi", "(ala or ala2)"], "kwargs": { "mode": 2 } }
+  ],
+  "checks": [
+    { "call": ["count_states", "multi"], "label": "multi-state object has one state per source object" },
+    { "call": ["count_atoms", "multi"], "label": "joined object atom count (intersection of shared topology)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2,
+    10
+  ]
+}

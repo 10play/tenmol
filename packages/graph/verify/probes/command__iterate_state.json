@@ -1,0 +1,18 @@
+{
+  "id": "command__iterate_state", "feature": "iterate_state", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "m"], "kwargs": {"pos": [1, 2, 3]}},
+    {"call": ["pseudoatom", "m"], "kwargs": {"pos": [4, 5, 6]}}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "all"], "label": "baseline atom count"},
+    {"call": ["iterate_state", 1, "all", "x"], "label": "iterate_state returns atoms iterated (x in scope, state 1)"},
+    {"call": ["iterate_state", 1, "all", "x+y+z"], "label": "x, y, z all in scope for state 1"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2,
+    2,
+    2
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "command__load_map",
+  "feature": "load_map",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "call": ["load_map", null, "density"] }
+  ],
+  "checks": [
+    { "call": ["get_names", "objects"], "label": "objects after load_map (expect ['density'])" },
+    { "call": ["count_atoms", "all"], "label": "load_map adds no atoms" }
+  ],
+  "tol": 0,
+  "expected": [
+    ["density"],
+    0
+  ]
+}

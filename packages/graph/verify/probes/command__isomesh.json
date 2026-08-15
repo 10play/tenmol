@@ -1,0 +1,17 @@
+{
+  "id": "command__isomesh", "feature": "isomesh", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"map_new mymap, gaussian, 1.0, m"},
+    {"do":"isomesh mymesh, mymap, 1.0"}
+  ],
+  "checks": [
+    {"call":["get_names","objects"],"label":"objects after isomesh (m, mymap, mymesh)"},
+    {"call":["count_atoms","all"],"label":"isomesh adds no atoms"}
+  ],
+  "tol": 0,
+  "expected": [
+    ["m", "mymap", "mymesh"],
+    5684
+  ]
+}
