@@ -1,0 +1,18 @@
+{
+  "id": "command__unmask",
+  "feature": "unmask",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "mask all"},
+    {"do": "unmask ala"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "masked"], "label": "atoms still masked after unmask"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    0
+  ]
+}

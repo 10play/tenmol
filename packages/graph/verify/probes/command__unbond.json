@@ -1,0 +1,24 @@
+{
+  "id": "command__unbond",
+  "feature": "unbond",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, name=AA, pos=[0,0,0]" },
+    { "do": "pseudoatom m, name=BB, pos=[1.5,0,0]" },
+    { "do": "bond (m and name AA), (m and name BB)" },
+    { "call": ["count_atoms", "neighbor (m and name AA)"], "comment": "1 while bonded" },
+    { "do": "unbond (m and name AA), (m and name BB)" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "neighbor (m and name AA)"], "label": "atoms bonded to AA after unbond" },
+    { "call": ["count_atoms", "neighbor (m and name BB)"], "label": "atoms bonded to BB after unbond" },
+    { "call": ["count_atoms", "bound_to (m and name AA)"], "label": "bound_to AA after unbond" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    0,
+    0,
+    0
+  ]
+}

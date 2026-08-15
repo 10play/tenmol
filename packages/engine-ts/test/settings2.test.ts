@@ -137,23 +137,42 @@ describe('settings2: toggle', () => {
 });
 
 describe('settings2: bond settings', () => {
-  it('set_bond counts the CA-CB bond and unset_bond removes it', () => {
+  // Read the per-bond override of a single bond spanning two selections,
+  // directly off the executive store (get_bond lives in a different subsystem
+  // not registered by this harness).
+  const bondValue = (h: Harness, name: string, sel1: string, sel2: string): number | string | undefined => {
+    const a = new Set(h.ex.atomsMatching(sel1).map((u) => u.index));
+    const b = new Set(h.ex.atomsMatching(sel2).map((u) => u.index));
+    const mol = h.ex.molecule('m')!;
+    for (const [i, j] of mol.bonds) {
+      if ((a.has(i) && b.has(j)) || (a.has(j) && b.has(i))) return h.ex.getBondSetting(name, 'm', i, j);
+    }
+    return undefined;
+  };
+
+  it('set_bond overrides the CA-CB bond and unset_bond removes it', () => {
     const h = makeHarness();
     // In ALA, CA (idx1) is distance-bonded to CB (idx4); GLY has no CB.
-    const n = h.call('set_bond', ['stick_radius', '0.5', 'name CA', 'name CB']);
-    expect(n).toBe(1);
-    // Idempotent selection order does not create duplicates.
-    const removed = h.call('unset_bond', ['stick_radius', 'name CB', 'name CA']);
-    expect(removed).toBe(1);
-    // Nothing left to remove.
-    expect(h.call('unset_bond', ['stick_radius', 'name CA', 'name CB'])).toBe(0);
+    // Real PyMOL's set_bond/unset_bond return None (the count is not surfaced
+    // to Python); the effect is observed on the stored per-bond override.
+    expect(h.call('set_bond', ['stick_radius', '0.5', 'name CA', 'name CB'])).toBeNull();
+    expect(bondValue(h, 'stick_radius', 'name CA', 'name CB')).toBe(0.5);
+    // Idempotent selection order does not create duplicates; unset clears it.
+    expect(h.call('unset_bond', ['stick_radius', 'name CB', 'name CA'])).toBeNull();
+    expect(bondValue(h, 'stick_radius', 'name CA', 'name CB')).toBeUndefined();
+    // Nothing left to remove — still None.
+    expect(h.call('unset_bond', ['stick_radius', 'name CA', 'name CB'])).toBeNull();
   });
 
-  it('set_bond over the backbone marks each consecutive bond once', () => {
+  it('set_bond over the backbone marks each consecutive bond', () => {
     const h = makeHarness();
     // Within-ALA backbone bonds among {N,CA,C}: N-CA and CA-C => 2 bonds.
-    const n = h.call('set_bond', ['stick_radius', '0.4', 'name N+CA+C and chain A', 'name N+CA+C and chain A']);
-    expect(n).toBe(2);
+    // set_bond returns None; each bond carries the override.
+    expect(
+      h.call('set_bond', ['stick_radius', '0.4', 'name N+CA+C and chain A', 'name N+CA+C and chain A']),
+    ).toBeNull();
+    expect(bondValue(h, 'stick_radius', 'name N', 'name CA')).toBe(0.4);
+    expect(bondValue(h, 'stick_radius', 'name CA', 'name C')).toBe(0.4);
   });
 });
 

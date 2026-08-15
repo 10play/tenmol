@@ -97,9 +97,10 @@ describe('add_bond', () => {
     const mol = ex.molecule('m')!;
     expect(mol.bonds.length).toBe(0);
 
-    // 1-based indices, order 2.
+    // 1-based indices, order 2. The order is stored on the bond tuple's third
+    // element (kept in sync with the side table) so get_bonds observes it.
     expect(h.get('add_bond')!(['m', 1, 2, 2], {})).toBe(1);
-    expect(mol.bonds).toEqual([[0, 1]]);
+    expect(mol.bonds).toEqual([[0, 1, 2]]);
     expect(getBondOrder(mol, 0, 1)).toBe(2);
 
     // Second call is a no-op (bond already present).
@@ -221,7 +222,9 @@ describe('valence', () => {
     const mol = ex.molecule('m')!;
     expect(mol.bonds.length).toBe(0);
     h.get('valence')!([2, 'index 1', 'index 2'], {});
-    expect(mol.bonds).toEqual([[0, 1]]);
+    // Order 2 is recorded on the bond tuple (third element) as well as the
+    // side table, so get_bonds/exporters report it — matches real PyMOL.
+    expect(mol.bonds).toEqual([[0, 1, 2]]);
     expect(getBondOrder(mol, 0, 1)).toBe(2);
   });
 });

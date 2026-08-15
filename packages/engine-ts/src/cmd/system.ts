@@ -1,7 +1,8 @@
 /**
  * The `system` command subsystem: session lifecycle (`reinitialize`), the
  * virtual/no-op OS shims (`cd`/`pwd`/`ls`/`mem`/`sync`/`splash`/`help`/`api`,
- * `undo`/`redo`/`update`), and the movie/frame basics (`frame`, `forward`,
+ * `undo`/`redo`), the coordinate-transfer verb (`update`), and the movie/frame
+ * basics (`frame`, `forward`,
  * `backward`, `rewind`, `mset`/`madd`/`mappend`, `mclear`, `mplay`/`mstop`/
  * `mtoggle`). Registers its `cmd.*` handlers via the {@link RegistrarCtx}.
  *
@@ -20,7 +21,124 @@
  *   reinitialize; the Executive keeps those in a PRIVATE map / colour table with
  *   no public reset path, so they are left untouched here (documented limit).
  */
+import type { UniverseAtom } from '../select/selector';
 import type { RegistrarCtx } from './registrar';
+
+/**
+ * `AtomInfoMatch` key for `matchmaker=1` (match each pair on atom info): PyMOL
+ * compares resv, chain, name, resn, inscode and alt. `resi` carries the
+ * insertion code on top of `resv`, so keying on it covers both.
+ */
+function atomInfoKey(ua: UniverseAtom): string {
+  const a = ua.atom;
+  return `${a.resv}|${a.chain}|${a.name}|${a.resn}|${a.resi}|${a.segi}|${a.alt}`;
+}
+
+/**
+ * `cmd.update(target, source, target_state, source_state, matchmaker, quiet)` —
+ * port of `SelectorUpdateCmd` (`layer3/Selector.cpp`). For each SOURCE atom it
+ * finds the matching TARGET atom and overwrites the target's coordinates with
+ * the source's, leaving topology/identity untouched.
+ *
+ * Matchmaker modes (as in PyMOL): 0 = pair by selection order; 1 = pair on atom
+ * info (default); 2 = pair by atom id; 4 = pair by atom index. Same-object pairs
+ * always match on identical atom index, as in the C code. Modes fall back to the
+ * atom-info predicate when unsupported here.
+ *
+ * States follow the C semantics: passed as `state-1`, so 0 means "all states"
+ * (-1). If exactly one side is all-states it is set to the other; when both are
+ * concrete a single state pair is copied, otherwise states pair up 1:1.
+ */
+function runUpdate(
+  ctx: RegistrarCtx,
+  targetSel: string,
+  sourceSel: string,
+  targetState: number,
+  sourceState: number,
+  matchmaker: number,
+): void {
+  const targetUAs = ctx.executive.atomsMatching(targetSel); // c0
+  const sourceUAs = ctx.executive.atomsMatching(sourceSel); // c1
+  const c0 = targetUAs.length;
+  const c1 = sourceUAs.length;
+  if (c0 < 1 || c1 < 1) return; // "No coordinates updated."
+
+  let sta0 = targetState - 1;
+  let sta1 = sourceState - 1;
+  // Either both or none must be "all states" (-1).
+  if (sta0 !== sta1) {
+    if (sta0 === -1) sta0 = sta1;
+    else if (sta1 === -1) sta1 = sta0;
+  }
+
+  // Predicate pairing a source atom `sa` with a candidate target atom `ta`.
+  const infoKey = (ua: UniverseAtom): string => atomInfoKey(ua);
+  const matches = (ta: UniverseAtom, sa: UniverseAtom): boolean => {
+    if (ta.objName === sa.objName) return ta.index === sa.index;
+    switch (matchmaker) {
+      case 2:
+        return ta.atom.id === sa.atom.id;
+      case 4:
+        return ta.index === sa.index;
+      default: // 1 (and unsupported modes) -> atom info
+        return infoKey(ta) === infoKey(sa);
+    }
+  };
+
+  const touched = new Set<string>();
+  let b = 0; // rolling cursor into the target list (PyMOL's N^2/best-case-N scan)
+  for (let a = 0; a < c1; a++) {
+    const sa = sourceUAs[a] as UniverseAtom;
+    let target: UniverseAtom | null = null;
+    if (matchmaker === 0) {
+      // Assume identical storage order, one for one.
+      if (b < c0) {
+        target = targetUAs[b] as UniverseAtom;
+        b++;
+      }
+    } else {
+      const bStart = b;
+      for (;;) {
+        const ta = targetUAs[b] as UniverseAtom;
+        if (matches(ta, sa)) {
+          target = ta;
+          break;
+        }
+        b++;
+        if (b >= c0) b = 0;
+        if (b === bStart) break;
+      }
+    }
+    if (!target) continue;
+
+    const sMol = ctx.executive.molecule(sa.objName);
+    const tMol = ctx.executive.molecule(target.objName);
+    if (!sMol || !tMol) continue;
+
+    // State pairs to copy: concrete state -> that one; all-states (-1) -> 1:1.
+    const statePairs: Array<[number, number]> = [];
+    if (sta0 === -1 || sta1 === -1) {
+      const n = Math.min(tMol.nstate, sMol.nstate);
+      for (let k = 0; k < n; k++) statePairs.push([k, k]);
+    } else {
+      statePairs.push([sta0, sta1]);
+    }
+
+    for (const [ti, si] of statePairs) {
+      const tset = tMol.states[ti];
+      const sset = sMol.states[si];
+      if (!tset || !sset) continue;
+      const so = sa.index * 3;
+      const to = target.index * 3;
+      if (so + 2 >= sset.length || to + 2 >= tset.length) continue;
+      tset[to] = sset[so] as number;
+      tset[to + 1] = sset[so + 1] as number;
+      tset[to + 2] = sset[so + 2] as number;
+      touched.add(target.objName);
+    }
+  }
+  if (touched.size > 0) ctx.publish();
+}
 
 /**
  * PyMOL's fresh-session camera (identity rotation, perspective fov, camera at
@@ -200,11 +318,29 @@ export function registerSystem(ctx: RegistrarCtx): void {
   ctx.command('help', () => null);
   ctx.command('api', () => null);
 
-  // Undo/redo/update are not ported behaviourally (no edit history / no
-  // deferred geometry refresh); they are inert but succeed.
+  // Undo/redo are not ported behaviourally (no edit history); inert but succeed.
   ctx.command('undo', () => null);
   ctx.command('redo', () => null);
-  ctx.command('update', () => null);
+
+  // `cmd.update(target, source, target_state=0, source_state=0, matchmaker=1,
+  // quiet=1)` — transfer coordinates from `source` atoms onto matching `target`
+  // atoms (ports `SelectorUpdateCmd`). Only coordinates move; topology, names
+  // and settings of the target are untouched.
+  ctx.command('update', (args, kwargs) => {
+    const target = ctx.str(args[0] ?? kwargs['target'], '');
+    const source = ctx.str(args[1] ?? kwargs['source'], '');
+    const toInt = (v: unknown, dflt: number): number => {
+      const n = Number(ctx.str(v, String(dflt)));
+      return Number.isFinite(n) ? Math.trunc(n) : dflt;
+    };
+    const targetState = toInt(args[2] ?? kwargs['target_state'], 0);
+    const sourceState = toInt(args[3] ?? kwargs['source_state'], 0);
+    const matchmaker = toInt(args[4] ?? kwargs['matchmaker'], 1);
+    if (target && source) {
+      runUpdate(ctx, target, source, targetState, sourceState, matchmaker);
+    }
+    return null;
+  });
 
   /* --------------------------- movie / frame --------------------------- */
 

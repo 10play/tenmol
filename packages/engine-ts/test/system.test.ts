@@ -110,10 +110,33 @@ describe('system: virtual/no-op OS shims', () => {
     }
   });
 
-  it('undo/redo/update are inert nulls', () => {
+  it('undo/redo are inert nulls', () => {
     const { call } = harness();
     expect(call('undo')).toBeNull();
     expect(call('redo')).toBeNull();
+  });
+
+  // `update` is a real coordinate-transfer port (SelectorUpdateCmd): it returns
+  // null like PyMOL but overwrites the target's coordinates with the matching
+  // source atoms'. A no-op (still null) when either selection is empty.
+  it('update transfers source coordinates onto matching target atoms', () => {
+    const { ex, call } = harness(PDB3);
+    // A second object with the SAME atom (C/ALA/A/1) but a shifted coordinate;
+    // matchmaker=1 pairs the two by atom info across the objects.
+    ex.addMolecule(
+      parsePdb(
+        [
+          'ATOM      1  C   ALA A   1       7.000   8.000   9.000  1.00  0.00           C',
+          '',
+        ].join('\n'),
+        'n',
+      ),
+    );
+    expect(call('update', 'm', 'n')).toBeNull();
+    // Target 'm' (state 1) now carries 'n's coordinate; 'n' is unchanged.
+    expect(ex.molecule('m')!.coord(0, 1)).toEqual([7, 8, 9]);
+    expect(ex.molecule('n')!.coord(0, 1)).toEqual([7, 8, 9]);
+    // Empty selections are an inert null (no coordinates updated).
     expect(call('update')).toBeNull();
   });
 });

@@ -130,14 +130,23 @@ const covalent = (elem: string): number => COVALENT[canonicalElement(elem)] ?? D
 const bondOrders = new WeakMap<ObjectMolecule, Map<string, number>>();
 const bondKey = (i: number, j: number): string => (i < j ? `${i}:${j}` : `${j}:${i}`);
 
-/** The order of bond `i–j` (0-based indices); defaults to 1 (single). */
+/** The order of bond `i–j` (0-based indices); defaults to 1 (single). The side
+ *  table is authoritative; fall back to the order stored on the bond tuple's
+ *  third element (as MOL/MOL2 loaders record it) so loaded orders are seen. */
 export function getBondOrder(mol: ObjectMolecule, i: number, j: number): number {
-  return bondOrders.get(mol)?.get(bondKey(i, j)) ?? 1;
+  const fromTable = bondOrders.get(mol)?.get(bondKey(i, j));
+  if (fromTable !== undefined) return fromTable;
+  const bond = mol.bonds.find(([a, b]) => (a === i && b === j) || (a === j && b === i));
+  return bond?.[2] ?? 1;
 }
 export function setBondOrder(mol: ObjectMolecule, i: number, j: number, order: number): void {
   let m = bondOrders.get(mol);
   if (!m) bondOrders.set(mol, (m = new Map()));
   m.set(bondKey(i, j), order);
+  // Keep the bond tuple's stored order in sync so readers that inspect the
+  // tuple directly (get_bonds, exporters, get_model) observe the new order.
+  const bond = mol.bonds.find(([a, b]) => (a === i && b === j) || (a === j && b === i));
+  if (bond) bond[2] = order;
 }
 
 /** Per-atom valence overrides (PyMOL `set_geometry`), keyed by stable atom id so

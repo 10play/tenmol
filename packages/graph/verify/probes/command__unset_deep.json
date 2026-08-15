@@ -1,0 +1,18 @@
+{
+  "id": "command__unset_deep",
+  "feature": "unset_deep",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "set sphere_scale, 2.5, ala"},
+    {"do": "set cartoon_transparency, 0.7, ala"},
+    {"do": "unset_deep , ala"}
+  ],
+  "checks": [
+    {"call": ["get_setting_float", "sphere_scale", "ala"], "label": "sphere_scale on ala after unset_deep (default 1.0)"},
+    {"call": ["get_setting_float", "cartoon_transparency", "ala"], "label": "cartoon_transparency on ala after unset_deep (default 0.0)"}
+  ],
+  "tol": 1e-3,
+  "expected": [1, 0]
+}

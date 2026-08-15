@@ -1,0 +1,17 @@
+{
+  "id": "command__ungroup", "feature": "ungroup", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom pa1"},
+    {"do":"pseudoatom pa2"},
+    {"do":"pseudoatom pa3"},
+    {"do":"group grp, pa1 pa2 pa3"},
+    {"do":"ungroup pa1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","grp"],"label":"group spans only remaining members after ungroup"},
+    {"call":["count_atoms","pa1"],"label":"ungrouped member survives at top level"},
+    {"call":["get_names","objects"],"label":"object names still include all objects plus the group"}
+  ],
+  "tol": 1e-3,
+  "expected": [2, 1, ["pa1", "pa2", "pa3", "grp"]]
+}

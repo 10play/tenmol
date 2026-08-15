@@ -641,11 +641,18 @@ export function registerAlign(ctx: RegistrarCtx): void {
   ctx.command('usalign', (args, kwargs): Json => {
     const mobileSel = str(pick(args, kwargs, 0, 'mobile'), '');
     const targetSel = str(pick(args, kwargs, 1, 'target'), '');
-    const p = caPairsByOrder(mobileSel, targetSel, 1);
+    const state = Math.max(1, Math.trunc(num(pick(args, kwargs, 2, 'mobile_state'), 1)) || 1);
+    const transform = Math.trunc(num(pick(args, kwargs, 5, 'transform'), 1));
+    const p = caPairsByOrder(mobileSel, targetSel, state);
     if (p.n === 0) {
       return { tm_score_target: 0, tm_score_mobile: 0, RMSD: 0, alignment_length: 0, seq_identity: 0 };
     }
     const sup = superpose(p.mob, p.tgt);
+    // transform=1 (default): carry the mobile object(s) onto the target.
+    if (transform) {
+      applySuperposition(objectsFrom(ctx, p.mobMols), state, sup);
+      ctx.publish();
+    }
     const d0 = (L: number): number => Math.max(0.5, 1.24 * Math.cbrt(Math.max(L - 15, 0)) - 1.8);
     const d0t = d0(p.Ltgt);
     const d0m = d0(p.Lmob);

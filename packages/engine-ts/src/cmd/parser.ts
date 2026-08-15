@@ -93,12 +93,16 @@ export function parseCommand(command: string): ParsedCommand {
   // Every comma-separated token is POSITIONAL. `key=value` is deliberately NOT
   // split into kwargs — see the `kwargs` doc above: `=` is valid selection and
   // `alter`/`iterate` expression syntax, so splitting it corrupts those args.
+  // An INTERIOR empty token is a meaningful positional placeholder — PyMOL's
+  // `unset_deep , ala` passes settings='' with object='ala'. Preserve those, but
+  // strip a run of TRAILING empties (a dangling comma) so `color red,` still
+  // defaults its selection instead of forcing it to the empty string.
   const args: string[] = [];
   if (rest !== '') {
     for (const raw of splitTopLevel(rest, ',')) {
-      const token = raw.trim();
-      if (token !== '') args.push(unquote(token));
+      args.push(unquote(raw.trim()));
     }
+    while (args.length > 0 && args[args.length - 1] === '') args.pop();
   }
   return { keyword, args, kwargs: {} };
 }

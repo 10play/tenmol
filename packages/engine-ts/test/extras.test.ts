@@ -83,11 +83,12 @@ describe('extras — residual command sweep', () => {
     for (const name of claimed) {
       expect(handlers.has(name), `missing handler: ${name}`).toBe(true);
     }
-    // ~57 verbs registered overall (was >60 before `middle` moved to
+    // ~56 verbs registered overall (was >60 before `middle` moved to
     // cmd/system.ts as the real movie set_frame mode 3, and `minsert` moved to
     // cmd/system.ts as the real movie frame-insert; then `pbc_unwrap` and
-    // `pbc_wrap` moved to cmd/symmetry.ts as real PBC-trajectory handlers).
-    expect(handlers.size).toBeGreaterThanOrEqual(57);
+    // `pbc_wrap` moved to cmd/symmetry.ts as real PBC-trajectory handlers; then
+    // `unset_deep` moved to cmd/settings2.ts as the real bulk setting reset).
+    expect(handlers.size).toBeGreaterThanOrEqual(56);
   });
 
   /* --------------------------- REAL behaviours --------------------------- */

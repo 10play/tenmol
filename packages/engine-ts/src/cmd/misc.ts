@@ -464,10 +464,10 @@ export function registerMisc(ctx: RegistrarCtx): void {
   // get_bond(name, selection1, selection2=None, state=0, updates=1, quiet=1)
   // Returns per-object `[model, [[idx1, idx2, value], ...]]` for every bond
   // that spans selection1 and selection2 (selection2 defaults to selection1).
-  // `value` is the per-bond override of the named setting, or null when unset.
-  // Per-bond settings are not yet stored, so values are always null (matching
-  // real PyMOL when nothing has been set via set_bond).
+  // `value` is the per-bond override of the named setting (stored on the
+  // executive by `set_bond`), or null when no override is present.
   ctx.command('get_bond', (args, kwargs) => {
+    const name = ctx.str(pick(args, kwargs, 0, 'name'));
     const sel1 = sel0(pick(args, kwargs, 1, 'selection1'));
     const sel2raw = pick(args, kwargs, 2, 'selection2');
     const sel2 =
@@ -485,7 +485,8 @@ export function registerMisc(ctx: RegistrarCtx): void {
       const vlist: Json[] = [];
       for (const [i, j] of mol.bonds) {
         if ((set1.has(i) && set2.has(j)) || (set1.has(j) && set2.has(i))) {
-          vlist.push([i + 1, j + 1, null]);
+          const v = ex.getBondSetting(name, objName, i, j);
+          vlist.push([i + 1, j + 1, v === undefined ? null : v]);
         }
       }
       if (vlist.length) out.push([objName, vlist]);

@@ -496,6 +496,59 @@ export class Executive {
     return this.settings.get(name);
   }
 
+  /* ---------------------------- per-bond settings --------------------------- */
+
+  /**
+   * Per-bond setting overrides (`ExecutiveSetBondSetting`), keyed by
+   * `${settingName}\n${objName}\n${lo}-${hi}` where lo/hi are the two 0-based
+   * atom indices of the bond. PyMOL stores these on each bond record; we keep a
+   * parallel store on the executive so both the writers (`set_bond`/
+   * `unset_bond`) and the reader (`get_bond`) share one source of truth.
+   */
+  private readonly bondSettings = new Map<string, number | string>();
+
+  private static bondSettingKey(name: string, obj: string, i: number, j: number): string {
+    return `${name}\n${obj}\n${Math.min(i, j)}-${Math.max(i, j)}`;
+  }
+
+  setBondSetting(name: string, obj: string, i: number, j: number, value: number | string): void {
+    this.bondSettings.set(Executive.bondSettingKey(name, obj, i, j), value);
+    this.settingsVersion++;
+  }
+
+  /** Remove a per-bond override; returns true when one was present. */
+  unsetBondSetting(name: string, obj: string, i: number, j: number): boolean {
+    const removed = this.bondSettings.delete(Executive.bondSettingKey(name, obj, i, j));
+    if (removed) this.settingsVersion++;
+    return removed;
+  }
+
+  getBondSetting(name: string, obj: string, i: number, j: number): number | string | undefined {
+    return this.bondSettings.get(Executive.bondSettingKey(name, obj, i, j));
+  }
+
+  /**
+   * Bulk-remove per-bond overrides for `obj` (`cmd.unset_deep`'s bond level).
+   * When `name` is given only that setting's bonds are cleared; otherwise every
+   * bond override on the object goes. Returns the number of overrides removed.
+   */
+  clearBondSettings(obj: string, name?: string): number {
+    let n = 0;
+    // Keys are `${settingName}\n${objName}\n${lo}-${hi}`.
+    for (const key of this.bondSettings.keys()) {
+      const nl = key.indexOf('\n');
+      const keyName = key.slice(0, nl);
+      const rest = key.slice(nl + 1);
+      const keyObj = rest.slice(0, rest.indexOf('\n'));
+      if (keyObj !== obj) continue;
+      if (name !== undefined && keyName !== name) continue;
+      this.bondSettings.delete(key);
+      n++;
+    }
+    if (n > 0) this.settingsVersion++;
+    return n;
+  }
+
   /* --------------------------- colour space --------------------------- */
 
   /**

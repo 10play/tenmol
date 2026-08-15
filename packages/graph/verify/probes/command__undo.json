@@ -1,0 +1,28 @@
+{
+  "id": "command__undo",
+  "feature": "undo",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "call": ["pseudoatom", "p"], "kwargs": { "pos": [0, 0, 0] } },
+    { "do": "edit p" },
+    { "do": "translate [5, 0, 0], p" },
+    { "call": ["undo"] }
+  ],
+  "checks": [
+    {
+      "call": ["get_atom_coords", "p"],
+      "label": "undo does NOT roll back scripted translate; coord stays at [5,0,0]",
+      "tol": 0.001
+    },
+    {
+      "call": ["count_atoms", "p"],
+      "label": "atom still present after undo"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    [5, 0, 0],
+    1
+  ]
+}

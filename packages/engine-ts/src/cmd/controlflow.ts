@@ -25,16 +25,17 @@
  *   (`.py`/`.pym`) scripts have no interpreter in this port, so they stay inert.
  * - `spawn` / `system` — in the browser there is no filesystem or shell, so
  *   these return `null` WITHOUT executing anything (they do not throw).
- * - `sync` / `abort` / `accept` / `ending` / `splash` / `update` /
- *   `rebuild_all` — session lifecycle / render-refresh signals with nothing to
- *   drive locally; they succeed inertly (`null`).
+ * - `sync` / `abort` / `accept` / `ending` / `splash` / `rebuild_all` —
+ *   session lifecycle / render-refresh signals with nothing to drive locally;
+ *   they succeed inertly (`null`).
  * - `api` — returns `null`.
  *
  * NOTE ON OWNERSHIP: several of these names (`undo`, `redo`, `sync`, `splash`,
- * `update`, `api`) are also registered as bare stubs by the `system` subsystem.
- * This registrar runs LAST (`ALL_REGISTRARS`), so its handlers win; they match
- * the inert `system` stubs. `get_version` is a FIXED stub in engine.ts and is
- * intentionally NOT redefined.
+ * `api`) are also registered as bare stubs by the `system` subsystem. This
+ * registrar runs LAST (`ALL_REGISTRARS`), so its handlers win; they match the
+ * inert `system` stubs. `update` is owned solely by the `system` subsystem
+ * (a real behavioural port) and is NOT re-stubbed here. `get_version` is a
+ * FIXED stub in engine.ts and is intentionally NOT redefined.
  */
 import type { RegistrarCtx } from './registrar';
 import type { Json } from '@tenmol/protocol';
@@ -129,7 +130,8 @@ export function registerControlflow(ctx: RegistrarCtx): void {
   // `ending` (jump to last movie frame) is registered in system.ts where the
   // movie/frame state lives.
   ctx.command('splash', () => null);
-  ctx.command('update', () => null);
+  // `update` (coordinate transfer) is registered in system.ts, which owns a real
+  // behavioural port; it is intentionally NOT re-stubbed here.
   ctx.command('rebuild_all', () => null);
   ctx.command('api', () => null);
 

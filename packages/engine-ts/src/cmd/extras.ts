@@ -766,7 +766,8 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // chemistry/typing we do not model
       'assign_stereo',
       'text_type',
-      'unset_deep',
+      // `unset_deep` is real now — see cmd/settings2.ts (bulk-clears per-object
+      // and per-bond setting overrides for the matched objects).
     ],
     null,
   );
