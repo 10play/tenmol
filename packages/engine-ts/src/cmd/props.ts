@@ -10,8 +10,9 @@
  *   - object-level: a WeakMap keyed by the {@link ObjectMolecule} instance, so a
  *     deleted object's properties are collectable and never leak across a
  *     `delete`+reload that reuses a name.
- *   - atom-level: a Map keyed by the atom's stable identity (object name + PyMOL
- *     atom id, exactly the selector's {@link atomKey}).
+ *   - atom-level: stored directly on the {@link AtomInfo} record (its
+ *     `properties` map), so the same store is reachable from `iterate`/`alter`
+ *     through the `p` object and travels with the atom.
  *
  * Property values are string / number / boolean, stored verbatim (PyMOL does not
  * coerce them). The console hands everything in as strings; a caller passing a
@@ -20,7 +21,6 @@
 
 import type { Json } from '@tenmol/protocol';
 import type { ObjectMolecule } from '../model/molecule';
-import { atomKey } from '../select/selector';
 import type { RegistrarCtx } from './registrar';
 
 /** A property value: the JSON scalars PyMOL admits for custom properties. */
@@ -38,8 +38,6 @@ export function registerProps(ctx: RegistrarCtx): void {
 
   /** object -> (property name -> value). */
   const objectProps = new WeakMap<ObjectMolecule, Map<string, PropValue>>();
-  /** `${objName}|${atomId}` -> (property name -> value). */
-  const atomProps = new Map<string, Map<string, PropValue>>();
 
   /** The property map for `mol`, created on first write. */
   const objMap = (mol: ObjectMolecule): Map<string, PropValue> => {
@@ -116,10 +114,8 @@ export function registerProps(ctx: RegistrarCtx): void {
     const sel = str(args[2] ?? kwargs['selection'] ?? '(all)', '(all)');
     const matched = ex.atomsMatching(sel);
     for (const ua of matched) {
-      const key = atomKey(ua.objName, ua.atom);
-      let m = atomProps.get(key);
-      if (!m) atomProps.set(key, (m = new Map()));
-      m.set(name, value);
+      const a = ua.atom;
+      (a.properties ??= {})[name] = value;
     }
     if (matched.length > 0) ctx.publish();
     return matched.length;
@@ -133,8 +129,7 @@ export function registerProps(ctx: RegistrarCtx): void {
     const sel = str(args[1] ?? kwargs['selection'] ?? '(all)', '(all)');
     const out: Array<PropValue | null> = [];
     for (const ua of ex.atomsMatching(sel)) {
-      const m = atomProps.get(atomKey(ua.objName, ua.atom));
-      const v = m?.get(name);
+      const v = ua.atom.properties?.[name];
       out.push(v === undefined ? null : v);
     }
     return out;

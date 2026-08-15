@@ -359,6 +359,56 @@ export class Executive {
     return atoms.length;
   }
 
+  /**
+   * `cmd.select_list(name, object, id_list, state, mode)` — API-only selection
+   * of atoms within a SINGLE object by an explicit list of numeric identifiers,
+   * bypassing the selection-language parser. Mirrors
+   * `ExecutiveSelectList` (`layer3/Executive.cpp`): `mode` chooses the identifier
+   * semantics — `index` (1-based atom offset), `id` (the atom's stored ID) or
+   * `rank` (0-based load order). Returns the number of atoms selected.
+   *
+   * `state` limits the selection to atoms that have coordinates in that state
+   * (`-1` = current, `0` = ignore); the port's coordsets always cover every
+   * atom, so this only ever matters for out-of-range states. Index mode never
+   * consults coordinates, matching upstream.
+   */
+  selectList(
+    name: string,
+    object: string,
+    idList: readonly number[],
+    state: number,
+    mode: 'index' | 'id' | 'rank',
+  ): number {
+    const mol = this.objects.get(object);
+    if (!mol) throw new SelectionError(`select_list: object not found '${object}'`);
+
+    const keys = new Set<string>();
+    const wanted = new Set(idList.map((v) => Math.trunc(Number(v))));
+
+    if (mode === 'index') {
+      // 1-based index -> 0-based atom offset; out-of-range values are ignored.
+      for (const v of wanted) {
+        const atm = v - 1;
+        const atom = mol.atoms[atm];
+        if (atom) keys.add(atomKey(object, atom));
+      }
+    } else {
+      // `id` matches the stored atom id (1-based load order in the port); `rank`
+      // matches the 0-based load-order position. Optionally state-filtered.
+      const filterState = state > 0 ? state : 0;
+      for (let atm = 0; atm < mol.atoms.length; atm++) {
+        const atom = mol.atoms[atm]!;
+        const idValue = mode === 'id' ? atom.id : atm;
+        if (!wanted.has(idValue)) continue;
+        if (filterState > 0 && !mol.states[filterState - 1]) continue;
+        keys.add(atomKey(object, atom));
+      }
+    }
+
+    this.selections.set(name, { keys, enabled: true });
+    return keys.size;
+  }
+
   /** Names of the currently defined named selections, in creation order. */
   selectionNames(): string[] {
     return [...this.selections.keys()];

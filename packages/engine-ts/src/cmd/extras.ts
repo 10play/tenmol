@@ -694,7 +694,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // `mdo` is real now — see cmd/system.ts (binds/replays generalized frame commands).
       'mmove',
       // `minsert` is real now — see cmd/system.ts (splices blank frames into the movie table).
-      'scene_order',
+      // `scene_order` is real now — see engine.ts (reorders the scene bin).
       // maps / volumes / slices (need a map object model)
       // `map_set` is real — see cmd/maps.ts (elementwise map arithmetic).
       'slice_new',

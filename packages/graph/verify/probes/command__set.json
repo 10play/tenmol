@@ -1,0 +1,26 @@
+{
+  "id": "command__set",
+  "feature": "set",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "set line_width, 3" },
+    { "do": "set sphere_scale, 0.5" },
+    { "do": "set orthoscopic" },
+    { "do": "set cartoon_transparency, 0.25, ala" }
+  ],
+  "checks": [
+    { "call": ["get_setting_float", "line_width"], "label": "global line_width == 3" },
+    { "call": ["get_setting_float", "sphere_scale"], "label": "global sphere_scale == 0.5" },
+    { "call": ["get_setting_boolean", "orthoscopic"], "label": "orthoscopic toggled on (1)" },
+    { "call": ["get_setting_float", "cartoon_transparency", "ala"], "label": "per-object cartoon_transparency == 0.25" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    3,
+    0.5,
+    true,
+    0.25
+  ]
+}

@@ -89,6 +89,22 @@ function naturalCompare(a: string, b: string): number {
   return ta.length - tb.length;
 }
 
+/**
+ * Coerce a `scene_order` `sort` argument the way `viewing.scene_order` does:
+ * numbers pass through, but a string is resolved through PyMOL's `boolean_sc`
+ * shortcut (`yes`/`no`/`true`/`false`/`on`/`off`/`1`/`0`).
+ */
+function sceneBoolean(v: unknown): boolean {
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'number') return v !== 0;
+  const s = String(v ?? '').trim().toLowerCase();
+  if (s === '') return false;
+  if (/^-?\d+$/.test(s)) return Number(s) !== 0;
+  if (s === 'off') return false; // disambiguate the `o…` prefix (on vs off)
+  const c = s[0];
+  return c === 'y' || c === 't' || c === 'o' || c === '1';
+}
+
 /** One stored scene in the bin (`MovieScene`, layer3/MovieScene.h). */
 interface SceneEntry {
   /** The stored 18-float camera view, or null when `view` was not stored. */
@@ -616,6 +632,24 @@ export class Engine {
       return n;
     });
 
+    // `cmd.select_list(name, object, id_list, state=0, mode='id', quiet=1)` —
+    // API-only selection of one object's atoms by an explicit id/index/rank list.
+    h('select_list', (args, kwargs) => {
+      const name = str(args[0] ?? kwargs['name']);
+      const object = str(args[1] ?? kwargs['object']);
+      const raw = (args[2] ?? kwargs['id_list']) as unknown;
+      const idList = Array.isArray(raw) ? raw.map((v) => Number(v)) : [];
+      const state = Number(args[3] ?? kwargs['state'] ?? 0);
+      const modeRaw = str(args[4] ?? kwargs['mode'] ?? 'id') || 'id';
+      const mode = modeRaw as 'index' | 'id' | 'rank';
+      if (mode !== 'index' && mode !== 'id' && mode !== 'rank') {
+        throw new SelectionError(`select_list: invalid identifier type '${modeRaw}'`);
+      }
+      const n = ex.selectList(name, object, idList, state, mode);
+      this.emitObjects();
+      return n;
+    });
+
     h('delete', (args) => {
       ex.delete(str(args[0], 'all') || 'all');
       this.publish();
@@ -1071,6 +1105,11 @@ export class Engine {
     // Ported from `MovieSceneFunc` (layer3/MovieScene.cpp) plus the argument
     // canonicalisation in `viewing.scene` (modules/pymol/viewing.py).
     h('scene', (args, kwargs) => this.runScene(args, kwargs));
+    // `cmd.scene_order(names, sort, location)` — reorder the scene bin. Mirrors
+    // the argument canonicalisation in `viewing.scene_order` (a string `names`
+    // splits on whitespace, `sort` accepts boolean-like words, `location` is a
+    // top/current/bottom shortcut) feeding `MovieSceneOrder`.
+    h('scene_order', (args, kwargs) => this.runSceneOrder(args, kwargs));
     h('wizards.catalog', () => []);
     // NOTE: only stub a symbol when the EMPTY shape is known. wizards.probe /
     // wizards.snapshot return rich objects a feature dereferences; a wrong-shape
@@ -1222,6 +1261,28 @@ export class Engine {
     }
     this.sceneOrder.length = 0;
     this.sceneOrder.push(...newOrder);
+  }
+
+  /**
+   * `cmd.scene_order` — the argument canonicalisation from `viewing.scene_order`
+   * (a string `names` splits on whitespace, `sort` accepts boolean-like words,
+   * `location` resolves through the top/current/bottom shortcut) feeding
+   * `MovieSceneOrder`.
+   */
+  private runSceneOrder(args: unknown[], kwargs: Record<string, unknown>): Json {
+    const str = (v: unknown, d = ''): string => (v === undefined || v === null ? d : String(v));
+
+    const rawNames = args[0] ?? kwargs['names'];
+    let names: string[];
+    if (Array.isArray(rawNames)) names = rawNames.map((n) => String(n));
+    else names = str(rawNames, '').split(/\s+/).filter(Boolean);
+
+    const rawSort = args[1] ?? kwargs['sort'] ?? 0;
+    const location = str(args[2] ?? kwargs['location'], 'current') || 'current';
+
+    this.sceneOrderMove(names, sceneBoolean(rawSort), location);
+    this.executive.set('scenes_changed', 1);
+    return null;
   }
 
   /** `MovieSceneGetNextKey` — next/previous key relative to `scene_current_name`. */

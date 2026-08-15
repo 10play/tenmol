@@ -83,6 +83,13 @@ export interface AtomInfo {
    * dump; unassigned atoms are `-1` (the upstream default). Absent ⇒ -1.
    */
   customType?: number;
+  /**
+   * Custom atom-level properties (PyMOL's per-atom `Property` list in
+   * `layer2/AtomInfo.h`). Set via `cmd.set_atom_property` and reached in
+   * `iterate`/`alter` through the `p` object (e.g. `p.myprop`). Absent ⇒ no
+   * properties set.
+   */
+  properties?: Record<string, string | number | boolean>;
 }
 
 /** `1 << rep` — the visRep bit for a representation. */

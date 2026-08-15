@@ -1,0 +1,19 @@
+{
+  "id": "command__set_atom_property",
+  "feature": "set_atom_property",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "alter all, b=0" },
+    { "do": "set_atom_property myprop, 42, elem C" },
+    { "do": "alter elem C, b=p.myprop" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "elem C"], "label": "baseline carbon atom count" },
+    { "call": ["count_atoms", "b=42"], "label": "p.myprop (=42) copied into b on carbons — proves property is set and reachable via p" },
+    { "call": ["count_atoms", "b=0"], "label": "non-carbon atoms untouched (property not set there)" }
+  ],
+  "tol": 1e-3,
+  "expected": [3405, 3405, 2279]
+}

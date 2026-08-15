@@ -1,0 +1,20 @@
+{
+  "id": "command__select", "feature": "select", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"select mysel, elem C"}
+  ],
+  "checks": [
+    {"call":["count_atoms","mysel"],"label":"atoms in named selection mysel (carbons)"},
+    {"call":["count_atoms","elem C"],"label":"carbons matched directly"},
+    {"call":["count_atoms","mysel and elem N"],"label":"nitrogens within carbon selection (should be 0)"},
+    {"call":["count_atoms","all"],"label":"total atoms in fragment"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    3,
+    3,
+    0,
+    10
+  ]
+}
