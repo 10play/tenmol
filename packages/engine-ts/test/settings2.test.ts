@@ -2,7 +2,7 @@
  * Tests for the `settings2` subsystem (packages/engine-ts/src/cmd/settings2.ts):
  * `set` (global + per-object), `unset`, `toggle`, `set_bond`/`unset_bond`,
  * `get_object_settings`, `get_setting_legacy`, `get_clip`, `viewport`,
- * `window`, `full_screen`, `reference`.
+ * `window`, `full_screen`.
  *
  * Isolated: builds a RegistrarCtx over a bare Executive so no other in-progress
  * subsystem is pulled in. Expected values are derived by hand from PyMOL's
@@ -180,12 +180,14 @@ describe('settings2: view extras', () => {
     expect(h.call('viewport', [-1, 720])).toEqual([800, 720]);
   });
 
-  it('window / full_screen / reference are no-ops returning null', () => {
+  it('window / full_screen are no-ops returning null', () => {
     const h = makeHarness();
     expect(h.call('window', ['hide'])).toBeNull();
     expect(h.call('full_screen', [1])).toBeNull();
     expect(h.call('full_screen', [-1])).toBeNull();
-    expect(h.call('reference')).toBeNull();
+    // `reference` is no longer a settings2 no-op: it moved to the `editing`
+    // subsystem as a real per-atom reference-state command (store/recall/
+    // validate/swap), verified against real PyMOL by the oracle differential.
   });
 
   it('get_setting_legacy is an exact alias of get_setting_float', () => {

@@ -792,6 +792,76 @@ export function registerEditing(ctx: RegistrarCtx): void {
     return objName;
   });
 
+  /* ------------------------------ reference ------------------------------ */
+  // reference(action='validate', selection='(all)', state=0, quiet=1) — manage a
+  // per-atom "reference" coordinate baseline (PyMOL `ExecutiveReference` ->
+  // `OMOP_Reference*` in ObjectMolecule.cpp). Actions resolve through the
+  // shortcut table (store=1, recall=2, validate=3, swap=4):
+  //   store    copy the current coords into each atom's reference slot;
+  //   recall   write a stored slot back onto the current coords;
+  //   validate fill only *unspecified* slots from the current coords;
+  //   swap     exchange the stored slot with the current coords.
+  // `state` is 1-based; PyMOL passes `state-1` down, so 0 => -1 => all states.
+  // Returns the number of atom/state slots touched (PyMOL's `op.i2`).
+  const REF_ACTIONS: Readonly<Record<string, number>> = {
+    store: 1, recall: 2, validate: 3, swap: 4,
+  };
+  const resolveRefAction = (v: unknown): number => {
+    const s = String(v ?? '').trim().toLowerCase();
+    if (s === '') return 3; // default 'validate'
+    if (/^\d+$/.test(s)) return parseInt(s, 10);
+    if (s in REF_ACTIONS) return REF_ACTIONS[s]!;
+    const hits = Object.keys(REF_ACTIONS).filter((k) => k.startsWith(s));
+    return hits.length === 1 ? REF_ACTIONS[hits[0]!]! : 3;
+  };
+  ctx.command('reference', (args, kwargs): Json => {
+    const action = resolveRefAction(pick(args, kwargs, 0, 'action'));
+    const selection = sel(pick(args, kwargs, 1, 'selection'), '(all)');
+    const cState = num(pick(args, kwargs, 2, 'state'), 0) - 1;
+    let count = 0;
+    let moved = false;
+    for (const [objName, idxs] of byObject(selection)) {
+      const mol = ex.molecule(objName);
+      if (!mol) continue;
+      for (let b = 0; b < mol.states.length; b++) {
+        if (!(b === cState || cState < 0)) continue;
+        const set = mol.states[b];
+        if (!set) continue;
+        let refs = mol.refPos[b];
+        if (!refs) mol.refPos[b] = refs = new Map();
+        for (const i of idxs) {
+          const o = i * 3;
+          const rp = refs.get(i);
+          switch (action) {
+            case 1: // store
+              refs.set(i, [set[o] ?? 0, set[o + 1] ?? 0, set[o + 2] ?? 0]);
+              break;
+            case 2: // recall
+              if (rp) {
+                set[o] = rp[0]; set[o + 1] = rp[1]; set[o + 2] = rp[2];
+                moved = true;
+              }
+              break;
+            case 3: // validate
+              if (!rp) refs.set(i, [set[o] ?? 0, set[o + 1] ?? 0, set[o + 2] ?? 0]);
+              break;
+            case 4: // swap
+              if (rp) {
+                const cur: Vec3 = [set[o] ?? 0, set[o + 1] ?? 0, set[o + 2] ?? 0];
+                set[o] = rp[0]; set[o + 1] = rp[1]; set[o + 2] = rp[2];
+                refs.set(i, cur);
+                moved = true;
+              }
+              break;
+          }
+          count++;
+        }
+      }
+    }
+    if (moved) ctx.publish();
+    return count;
+  });
+
   /* ----------------------------- set_dihedral ---------------------------- */
   // set_dihedral(atom1, atom2, atom3, atom4, angle, state=0) — rotate the atom3
   // side of the atom2-atom3 bond about that axis so the dihedral equals `angle`.

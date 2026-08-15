@@ -1,0 +1,17 @@
+{
+  "id": "command__remove",
+  "feature": "remove",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "remove m and chain A"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "m"], "label": "atoms remaining in object after remove"},
+    {"call": ["count_atoms", "m and chain A"], "label": "removed chain A now empty"},
+    {"call": ["count_atoms", "all"], "label": "total atoms remaining"}
+  ],
+  "tol": 1e-3,
+  "expected": [4205, 0, 4205]
+}

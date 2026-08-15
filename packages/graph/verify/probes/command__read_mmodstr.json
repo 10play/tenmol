@@ -1,0 +1,61 @@
+{
+  "id": "command__read_mmodstr",
+  "feature": "read_mmodstr",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_mmodstr",
+        "     7  gly\n  34     2 1     5 1     0 0     0 0     0 0     0 0   -1.195000    0.201000   -0.206000    22G   38  0.00000  0.00000 GLY   N\n   3     1 1     3 1     6 1     7 1     0 0     0 0    0.230000    0.318000   -0.502000    22G    2  0.00000  0.00000 GLY   CA\n   7     2 1     4 2     0 0     0 0     0 0     0 0    1.059000   -0.390000    0.542000    22G    2  0.00000  0.00000 GLY   C\n  15     3 2     0 0     0 0     0 0     0 0     0 0    0.545000   -0.975000    1.499000    22G   75  0.00000  0.00000 GLY   O\n  44     1 1     0 0     0 0     0 0     0 0     0 0   -1.558000   -0.333000    0.660000    22G   21  0.00000  0.00000 GLY   H\n  41     2 1     0 0     0 0     0 0     0 0     0 0    0.482000    1.337000   -0.514000    22G   21  0.00000  0.00000 GLY  3HA\n  41     2 1     0 0     0 0     0 0     0 0     0 0    0.434000   -0.159000   -1.479000    22G   21  0.00000  0.00000 GLY   HA\n",
+        "m1"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "count_atoms",
+        "m1"
+      ],
+      "label": "total atoms parsed from mmod string"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "m1 and elem C"
+      ],
+      "label": "carbon atoms"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "m1 and elem O"
+      ],
+      "label": "oxygen atoms"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "m1 and elem H"
+      ],
+      "label": "hydrogen atoms"
+    },
+    {
+      "call": [
+        "get_names"
+      ],
+      "label": "object created"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    7,
+    2,
+    1,
+    3,
+    [
+      "m1"
+    ]
+  ]
+}

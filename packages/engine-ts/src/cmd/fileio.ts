@@ -502,6 +502,112 @@ function parseMolBlock(text: string, name: string): ObjectMolecule {
   return mol;
 }
 
+/* ------------------------------- MMOD parse --------------------------- */
+
+/**
+ * Element from a MacroModel atom type (`customType`), reproducing the type→elem
+ * ladder in `ObjectMoleculeMMDStr2CoordSet` (ObjectMolecule.cpp): MacroModel
+ * atom types are grouped into contiguous ranges per element. Types above 63 get
+ * no element (empty), matching PyMOL's `ai->elem[0] = 0`.
+ */
+function mmodElem(t: number): string {
+  if (t <= 14) return 'C';
+  if (t <= 23) return 'O';
+  if (t <= 40) return 'N';
+  if (t <= 48) return 'H';
+  if (t <= 52) return 'S';
+  if (t <= 53) return 'P';
+  if (t <= 55) return 'B';
+  if (t <= 56) return 'F';
+  if (t <= 57) return 'Cl';
+  if (t <= 58) return 'Br';
+  if (t <= 59) return 'I';
+  if (t <= 60) return 'Si';
+  if (t <= 61) return 'Du';
+  if (t <= 62) return 'Z0';
+  if (t <= 63) return 'Lp';
+  return '';
+}
+
+/**
+ * Parse a MacroModel (`.mmod`) structure block into an {@link ObjectMolecule},
+ * mirroring `ObjectMoleculeMMDStr2CoordSet` (ObjectMolecule.cpp). The header line
+ * holds the atom count (cols 0-5) then a title; each atom record is a
+ * fixed-column line: atom type (cols 0-3), six 8-char bond pairs
+ * `<partner> <order>` (cols 4-51), x/y/z (12 cols each, cols 52-87), resi
+ * (cols 89-93), chain (col 95), partial charge (cols 100-108), resn (cols
+ * 119-121), and atom name (cols 124-127). A bond is recorded once, from the
+ * lower-indexed atom (`a < partner-1`). Every atom is flagged het, as PyMOL does.
+ */
+function parseMmod(text: string, name: string): ObjectMolecule {
+  const lines = text.split(/\r?\n/);
+  const header = lines[0] ?? '';
+  let nAtom = parseInt(header.slice(0, 6), 10);
+  if (!Number.isFinite(nAtom) || nAtom < 0) nAtom = 0;
+
+  const mol = new ObjectMolecule(name);
+  const coords: number[] = [];
+
+  for (let a = 0; a < nAtom; a++) {
+    const l = lines[1 + a] ?? '';
+    const customType = parseInt(l.slice(0, 4), 10) || 0;
+    const rawElem = mmodElem(customType);
+    const elem = rawElem === '' ? '' : canonicalElement(rawElem);
+
+    // Six 8-char bond fields, each "<partner> <order>" (1-based partner index).
+    for (let c = 0; c < 6; c++) {
+      const field = l.slice(4 + c * 8, 4 + c * 8 + 8).trim();
+      if (field === '') continue;
+      const toks = field.split(/\s+/);
+      const bPart = parseInt(toks[0] ?? '', 10);
+      const bOrder = parseInt(toks[1] ?? '', 10);
+      if (!Number.isFinite(bPart) || !Number.isFinite(bOrder)) continue;
+      if (bPart === 0 || bOrder === 0) break; // 0-partner terminates the list
+      if (a < bPart - 1) mol.bonds.push([a, bPart - 1, bOrder]);
+    }
+
+    let x = parseFloat(l.slice(52, 64));
+    let y = parseFloat(l.slice(64, 76));
+    let z = parseFloat(l.slice(76, 88));
+    if (!Number.isFinite(x)) x = 0;
+    if (!Number.isFinite(y)) y = 0;
+    if (!Number.isFinite(z)) z = 0;
+    coords.push(x, y, z);
+
+    const resiRaw = l.slice(89, 94).trim();
+    const resv = parseInt(resiRaw, 10);
+    const chain = l.slice(95, 96).trim();
+    const resn = l.slice(119, 122).trim();
+    let nm = l.slice(124, 128).trim();
+    if (nm === '') nm = `${rawElem}${String(a + 1).padStart(2, '0')}`;
+    let pc = parseFloat(l.slice(100, 109));
+    if (!Number.isFinite(pc)) pc = 0;
+
+    const atom: AtomInfo = {
+      id: a + 1,
+      name: nm,
+      resn,
+      resi: resiRaw || '',
+      resv: Number.isFinite(resv) ? resv : 0,
+      chain,
+      segi: '',
+      alt: '',
+      elem,
+      hetatm: true,
+      b: 0,
+      q: 1,
+      partialCharge: pc,
+      customType,
+      color: 0,
+      ss: '',
+      visRep: defaultVisRep(),
+    };
+    mol.atoms.push(atom);
+  }
+  mol.states.push(Float32Array.from(coords));
+  return mol;
+}
+
 /* ------------------------------- registrar ---------------------------- */
 
 export function registerFileio(ctx: RegistrarCtx): void {
@@ -639,6 +745,20 @@ export function registerFileio(ctx: RegistrarCtx): void {
     const molstr = ctx.str(pick(args, kwargs, 0, 'molstr'), '');
     const name = ex.uniqueName(ctx.str(pick(args, kwargs, 1, 'name'), 'mol') || 'mol');
     ex.addMolecule(parseMolBlock(molstr, name));
+    ctx.publish();
+    return name;
+  });
+
+  // `read_mmodstr(content, name, state=0, quiet=1, zoom=-1)` — load a MacroModel
+  // structure from an in-memory string (importing.py:read_mmodstr → _cmd.load with
+  // loadable.mmodstr, finish=1, discrete=1). No temp file; unlike load it takes the
+  // content directly and never sniffs.
+  ctx.command('read_mmodstr', (args, kwargs) => {
+    const content = ctx.str(pick(args, kwargs, 0, 'content'), '');
+    const name = ex.uniqueName(ctx.str(pick(args, kwargs, 1, 'name'), 'mmod') || 'mmod');
+    const mol = parseMmod(content, name);
+    mol.discrete = true; // read_mmodstr hardcodes discrete=1
+    ex.addMolecule(mol);
     ctx.publish();
     return name;
   });

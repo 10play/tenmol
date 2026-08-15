@@ -45,6 +45,12 @@ export class ObjectMolecule {
   /** Undirected bonds: 0-based atom-index pair, plus an optional bond order
    *  (1 single, 2 double, 3 triple, 4 aromatic); absent order ⇒ single. */
   readonly bonds: Array<[number, number, number?]> = [];
+  /** Per-state reference coordinates (PyMOL `CoordSet::RefPos`). Outer index is
+   *  the state index (0-based, parallel to {@link states}); the inner map keys
+   *  are atom indices and its presence marks a slot "specified". Managed by the
+   *  `reference` command (store/recall/validate/swap). Absent slots ⇒ no
+   *  reference stored for that atom. */
+  readonly refPos: Array<Map<number, [number, number, number]>> = [];
   /** Whether the object is enabled (shown) in the executive. */
   enabled = true;
   /** Row-major homogeneous 4×4 recorded by `transform_object` (PyMOL's object

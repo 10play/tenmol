@@ -1,0 +1,24 @@
+{
+  "id": "command__redo",
+  "feature": "redo",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "push_undo m" },
+    { "do": "translate [10, 0, 0], m" },
+    { "do": "undo" },
+    { "do": "redo" }
+  ],
+  "checks": [
+    { "call": ["get_atom_coords", "m and index 1"], "label": "atom1 coord after push_undo+translate+undo+redo" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      29.099000930786133,
+      9.697999954223633,
+      -13.097000122070312
+    ]
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "command__rebond",
+  "feature": "rebond",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "rebond m" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "neighbor (m and chain D and resi 2 and name CA)"], "label": "atoms bonded to ALA-2 CA after rebond (N,C,CB)" },
+    { "call": ["count_atoms", "neighbor (m and chain D and resi 2 and name CB)"], "label": "atoms bonded to ALA-2 CB after rebond (CA only)" },
+    { "call": ["count_atoms", "neighbor (m and chain D and resi 2 and name O)"], "label": "atoms bonded to ALA-2 O after rebond (C only)" },
+    { "call": ["count_atoms", "neighbor (m and chain D and resi 1 and name CA)"], "label": "atoms bonded to GLY-1 CA after rebond (N,C)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    3,
+    1,
+    1,
+    2
+  ]
+}

@@ -500,6 +500,105 @@ export function registerMaps(ctx: RegistrarCtx): void {
     if (!o) throw new Error(`get_isosurface_stats: no object named '${name}'`);
     return { verts: o.verts.length / 3, tris: o.indices.length / 3 };
   });
+
+  /* ----------------------------- read_xplorstr --------------------------- */
+
+  // `read_xplorstr(xplor, name, state=0, finish=1, discrete=0, quiet=1, zoom=-1)`
+  // — API-only loader that reads an XPLOR ASCII map straight from a Python string
+  // (importing.py:read_xplorstr → _cmd.load with loadable.xplorstr). No temp file
+  // and no format sniffing. Mirrors `_cmd.load` which returns None, so this
+  // returns null (unlike the read_*str molecule loaders which return the name).
+  ctx.command('read_xplorstr', (args, kwargs): Json => {
+    const xplor = toStr(args[0] ?? kwargs.xplor);
+    const name = toStr(args[1] ?? kwargs.name) || 'map';
+    const m = parseXplor(xplor, name);
+    maps.set(name, m);
+    ex.registerGadget(name, 'object:map');
+    ctx.publish();
+    return null;
+  });
+}
+
+/* ------------------------------ XPLOR parser ----------------------------- */
+
+/**
+ * Parse an XPLOR ASCII electron-density map (`layer2/ObjectMap.cpp:ObjectMapXPLORStrToMap`).
+ * Layout:
+ *   <blank line>
+ *   NTITLE                             (int)
+ *   NTITLE title lines
+ *   NA AMIN AMAX  NB BMIN BMAX  NC CMIN CMAX   (9 ints — grid + index ranges)
+ *   A B C ALPHA BETA GAMMA             (6 floats — unit cell)
+ *   ZYX
+ *   for each C section (kc = CMIN..CMAX):
+ *     <section index>                  (int)
+ *     (AMAX-AMIN+1)*(BMAX-BMIN+1) floats, A fastest then B, 6 per line
+ *   -9999
+ *   <average> <sigma>
+ * Values are stored A-fastest, then B, then C, matching {@link idx}. The unit
+ * cell is treated as orthorhombic (spacing = axis/N); non-90° cells would need a
+ * skew matrix the VolMap grid does not model.
+ */
+function parseXplor(text: string, name: string): VolMap {
+  // Flatten to whitespace-separated tokens, but keep the ZYX marker findable.
+  const lines = text.split(/\r?\n/);
+  let li = 0;
+  const nextNonEmpty = (): string => {
+    while (li < lines.length && lines[li]!.trim() === '') li++;
+    return li < lines.length ? lines[li++]! : '';
+  };
+
+  const ntitle = parseInt(nextNonEmpty().trim(), 10);
+  if (!Number.isFinite(ntitle)) throw new Error('read_xplorstr: bad title count');
+  for (let i = 0; i < ntitle; i++) li++; // skip title lines (may be blank)
+
+  const gridTok = (lines[li++] ?? '').trim().split(/\s+/).map(Number);
+  if (gridTok.length < 9 || gridTok.some((v) => !Number.isFinite(v))) {
+    throw new Error('read_xplorstr: bad grid header');
+  }
+  const [na, amin, amax, nb, bmin, bmax, nc, cmin, cmax] = gridTok as number[];
+
+  const cellTok = (lines[li++] ?? '').trim().split(/\s+/).map(Number);
+  if (cellTok.length < 6 || cellTok.some((v) => !Number.isFinite(v))) {
+    throw new Error('read_xplorstr: bad unit-cell line');
+  }
+  const [ca, cb, cc] = cellTok as number[];
+
+  // The "ZYX" ordering marker.
+  const marker = (lines[li++] ?? '').trim().toUpperCase();
+  if (marker !== 'ZYX') throw new Error(`read_xplorstr: expected ZYX, got '${marker}'`);
+
+  const nx = amax! - amin! + 1;
+  const ny = bmax! - bmin! + 1;
+  const nz = cmax! - cmin! + 1;
+  const dims: Vec3 = [nx, ny, nz];
+  const data = new Float32Array(nx * ny * nz);
+
+  // Remaining tokens are the per-section index headers interleaved with data.
+  const rest: number[] = [];
+  for (; li < lines.length; li++) {
+    const t = lines[li]!.trim();
+    if (t === '') continue;
+    for (const s of t.split(/\s+/)) {
+      const n = Number(s);
+      if (Number.isFinite(n)) rest.push(n);
+    }
+  }
+  const perSection = nx * ny;
+  let ri = 0;
+  for (let z = 0; z < nz; z++) {
+    ri++; // section index header (one integer per section)
+    for (let s = 0; s < perSection; s++) {
+      const x = s % nx;
+      const y = Math.floor(s / nx);
+      data[idx(dims, x, y, z)] = rest[ri++] ?? 0;
+    }
+  }
+  // A trailing `-9999` sentinel and the average/sigma pair follow; ignored.
+
+  const spacing: Vec3 = [ca! / na!, cb! / nb!, cc! / nc!];
+  const origin: Vec3 = [amin! * spacing[0], bmin! * spacing[1], cmin! * spacing[2]];
+  return { name, origin, spacing, dims, data, levels: [] };
 }
 
 /* ---------------------------- grid resampling ---------------------------- */
