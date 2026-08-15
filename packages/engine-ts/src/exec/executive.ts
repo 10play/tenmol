@@ -48,6 +48,17 @@ const DEFAULT_SETTINGS: Readonly<Record<string, number | string>> = {
   field_of_view: 20,
   orthoscopic: 0,
   sculpt_line_weight: 1.0, // packages/engine/layer1/SettingInfo.h (0x010 linearity restraint)
+  sculpt_plan_weight: 1.0, // packages/engine/layer1/SettingInfo.h:255 (0x008 planarity restraint)
+  // 0x200 cSculptMin minimum-distance restraint term (packages/engine/layer1/SettingInfo.h:493-496).
+  sculpt_min_scale: 0.975,
+  sculpt_min_weight: 0.75,
+  sculpt_min_min: 4.0,
+  sculpt_min_max: 12.0,
+  // 0x100 cSculptTri 1-4 distance ('triangle') restraint term (packages/engine/layer1/SettingInfo.h:581-584).
+  sculpt_tri_scale: 1.025,
+  sculpt_tri_weight: 1.0,
+  sculpt_tri_min: 2,
+  sculpt_tri_max: 18,
   // Mouse-config panel reads these; PyMOL's fresh-session defaults.
   button_mode: 0,
   button_mode_name: '3-Button Viewing',
@@ -291,17 +302,27 @@ export class Executive {
   // isomesh/gradient meshes. Their geometry lives in the command modules; the
   // executive only tracks name/kind so get_names lists them and get_type reports
   // the right 'object:map'/'object:ramp'/'object:mesh'/'object:surface' kind.
-  private readonly gadgets = new Map<string, { name: string; kind: string; enabled: boolean }>();
+  private readonly gadgets = new Map<
+    string,
+    { name: string; kind: string; enabled: boolean; extent?: [[number, number, number], [number, number, number]] }
+  >();
 
-  registerGadget(name: string, kind: string): void {
+  registerGadget(name: string, kind: string, extent?: [[number, number, number], [number, number, number]]): void {
     if (!this.objects.has(name) && !this.measures.has(name) && !this.gadgets.has(name)) {
       this.order.push(name);
     }
-    this.gadgets.set(name, { name, kind, enabled: true });
+    this.gadgets.set(name, { name, kind, enabled: true, extent });
   }
 
   gadget(name: string): { name: string; kind: string; enabled: boolean } | undefined {
     return this.gadgets.get(name);
+  }
+
+  /** Bounding box of a non-molecule object (e.g. a map grid), if one is
+   *  recorded — used by `get_extent`/zoom when a selection names a gadget rather
+   *  than atoms (`ExecutiveGetExtent` consults ObjectMap::GetExtent upstream). */
+  gadgetExtent(name: string): [[number, number, number], [number, number, number]] | undefined {
+    return this.gadgets.get(name)?.extent;
   }
 
   /** Rename an object, measurement or gadget (PyMOL `set_name`). Returns true on

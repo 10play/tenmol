@@ -219,7 +219,13 @@ export function registerMeasurement(ctx: RegistrarCtx): void {
     const sel = str(arg(args, kwargs, 0, 'selection'), 'all');
     const state = num(arg(args, kwargs, 1, 'state'), 0);
     const matched = ex.atomsMatching(sel);
-    if (matched.length === 0) return null;
+    if (matched.length === 0) {
+      // A map/gadget object has no atoms but does have a grid bounding box
+      // (ExecutiveGetExtent consults ObjectMap::GetExtent). Named directly, its
+      // recorded extent is returned.
+      const gext = ex.gadgetExtent(sel);
+      return gext ? [gext[0], gext[1]] : null;
+    }
     const min: Vec3 = [Infinity, Infinity, Infinity];
     const max: Vec3 = [-Infinity, -Infinity, -Infinity];
     for (const ua of matched) {

@@ -1,0 +1,54 @@
+{
+  "id": "feature__DX",
+  "feature": "DX",
+  "kind": "maps-volumes",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/testing/data/mapaligned.dx, dxmap, format=dx"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_names",
+        "objects"
+      ],
+      "label": "objects after loading DX map (expect ['dxmap'])"
+    },
+    {
+      "call": [
+        "get_type",
+        "dxmap"
+      ],
+      "label": "type of loaded DX object (expect object:map)"
+    },
+    {
+      "call": [
+        "get_extent",
+        "dxmap"
+      ],
+      "label": "grid extent of DX map (origin 1,2,3 + deltas)",
+      "tol": 0.001
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    [
+      "dxmap"
+    ],
+    "object:map",
+    [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        5,
+        7,
+        9
+      ]
+    ]
+  ]
+}

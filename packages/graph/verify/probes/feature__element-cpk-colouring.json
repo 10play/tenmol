@@ -1,0 +1,18 @@
+{
+  "id": "feature__element-cpk-colouring",
+  "feature": "element-cpk-colouring",
+  "kind": "coloring",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "util.cbag" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "m and elem C and color carbon"], "label": "carbons kept green (carbon colour)" },
+    { "call": ["count_atoms", "m and not elem C and color atomic"], "label": "non-carbons carry the special atomic colour" },
+    { "call": ["count_atoms", "m and elem N and color nitrogen"], "label": "nitrogens resolved to nitrogen colour" },
+    { "call": ["count_atoms", "m and not elem C"], "label": "total non-carbon atoms (sanity)" }
+  ],
+  "tol": 1e-3,
+  "expected": [3405, 0, 956, 2279]
+}

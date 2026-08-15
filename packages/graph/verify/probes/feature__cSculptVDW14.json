@@ -1,0 +1,20 @@
+{
+  "id": "feature__cSculptVDW14",
+  "feature": "cSculptVDW14",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "sculpt_field_mask"], "label": "default sculpt_field_mask 0x1FF has cSculptVDW14 (0x040) bit set" },
+    { "call": ["get_setting_float", "sculpt_vdw_weight14"], "label": "default 1-4 vdw repulsion weight" },
+    { "call": ["get_setting_float", "sculpt_vdw_scale14"], "label": "default 1-4 vdw scale" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    511,
+    0.2,
+    0.9
+  ]
+}

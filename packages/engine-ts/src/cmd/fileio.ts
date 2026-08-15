@@ -883,6 +883,10 @@ export function registerFileio(ctx: RegistrarCtx): void {
       case 'mrc':
       case 'map':
         return 'ccp4';
+      case 'dx':
+      case 'dxbin':
+        // `.dxbin` maps to format 'dx' upstream (importing.py:104-105).
+        return 'dx';
       default:
         return '';
     }
@@ -930,6 +934,20 @@ export function registerFileio(ctx: RegistrarCtx): void {
     // ObjectMapCCP4StrToMap rather than any molecule parser (importing.py:load).
     if (content !== '' && !/\r?\n/.test(content)) {
       const mapFmt = mapFormatFromExtension(fmtArg) || mapFormatFromExtension(content);
+      if (mapFmt === 'dx') {
+        // OpenDX/APBS is an ASCII grid: read it as text and hand it to the DX
+        // parser (importing.py `load` → loadable.dx → ObjectMapDXStrToMap).
+        const dxText = readDiskFile(content);
+        if (dxText !== null) {
+          const mapName = ex.uniqueName(objArg || filenameToObjectname(content));
+          ctx.call('load_dxmap', [mapName, dxText]);
+          return mapName;
+        }
+        throw new Error(
+          `load: cannot read map '${content}' — the browser has no filesystem; ` +
+            `pass file contents (or drop the file) with a format`,
+        );
+      }
       if (mapFmt) {
         const bytes = readDiskBytes(content);
         if (bytes) {
@@ -964,6 +982,15 @@ export function registerFileio(ctx: RegistrarCtx): void {
     const format = fmtArg || sniffFormat(content) || extFormat;
     if (format === '') {
       throw new Error('load: could not determine the structure format of the given content');
+    }
+
+    // OpenDX/APBS density passed as inline text (e.g. `load_raw`, or a dropped
+    // file body): route the ASCII grid to the DX parser rather than a molecule
+    // parser (path-based `.dx` was already handled by the map branch above).
+    if (format === 'dx') {
+      const mapName = ex.uniqueName(objArg || filenameToObjectname(content));
+      ctx.call('load_dxmap', [mapName, content]);
+      return mapName;
     }
 
     // Multi-entry PDB (multiple HEADER blocks, as written by `multisave`): PyMOL

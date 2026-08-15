@@ -1,0 +1,18 @@
+{
+  "id": "feature__join",
+  "feature": "join",
+  "kind": "editing-building",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom pa1, pos=[0,0,0]"},
+    {"do": "pseudoatom pa2, pos=[3,0,0]"},
+    {"do": "create merged, (pa1 or pa2)"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "merged"], "label": "merged object holds both atoms"},
+    {"call": ["count_atoms", "pa1"], "label": "source pa1 preserved"},
+    {"call": ["count_atoms", "pa2"], "label": "source pa2 preserved"}
+  ],
+  "tol": 1e-3,
+  "expected": [2, 1, 1]
+}

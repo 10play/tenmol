@@ -1,0 +1,19 @@
+{
+  "id": "feature__cSculptTri",
+  "feature": "cSculptTri",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set sculpt_field_mask, 256"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","sculpt_field_mask"],"label":"sculpt_field_mask isolates cSculptTri bit 0x100"},
+    {"call":["get_setting_float","sculpt_tri_weight"],"label":"cSculptTri weight default 1.0","tol":1e-3},
+    {"call":["get_setting_float","sculpt_tri_scale"],"label":"cSculptTri distance-target scale default 1.025","tol":1e-3},
+    {"call":["get_setting_int","sculpt_tri_min"],"label":"cSculptTri min seq separation default 2"},
+    {"call":["get_setting_int","sculpt_tri_max"],"label":"cSculptTri max seq separation default 18"}
+  ],
+  "tol": 1e-3,
+  "expected": [256, 1, 1.025, 2, 18]
+}

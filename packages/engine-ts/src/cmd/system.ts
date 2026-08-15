@@ -437,23 +437,51 @@ export function registerSystem(ctx: RegistrarCtx): void {
     return movie.current;
   });
 
-  // `cmd.mset(specification)` — define the movie frame->state mapping.
-  // Returns the number of frames defined.
+  // Splice a parsed movie specification into the frame table at `startFrom`
+  // (0-based). Mirrors C `MovieAppendSequence`: `startFrom < 0` appends at the
+  // current end; the frame table is truncated to `startFrom` (padded with state
+  // 1 if the spec starts past the end) and the parsed states appended. When the
+  // resulting length would be 0 the movie is cleared entirely. Generalized frame
+  // commands (`mdo`) at or beyond `startFrom` are dropped — the C side frees
+  // Movie->Cmd for the rebuilt tail — while earlier ones are preserved.
+  const appendSequence = (spec: string, startFrom: number): void => {
+    const parsed = parseMovieSpec(spec);
+    const start = startFrom < 0 ? movie.frames.length : startFrom;
+    if (start + parsed.length === 0) {
+      movie.frames = [];
+    } else {
+      const kept = movie.frames.slice(0, start);
+      while (kept.length < start) kept.push(1);
+      movie.frames = parsed.length === 0 ? kept : kept.concat(parsed);
+    }
+    // Drop frame commands for the rebuilt tail (1-based keys > `start`).
+    for (const key of [...movie.commands.keys()]) {
+      if (key > start) movie.commands.delete(key);
+    }
+  };
+
+  // `cmd.mset(specification, frame=1)` — define the movie frame->state mapping.
+  // `frame` is the 1-based frame to start writing at (PyMOL default 1, i.e.
+  // rebuild from the beginning); `frame<=0` appends at the current end (this is
+  // how `madd` reuses `mset`). Returns the number of frames defined. Redefining
+  // the movie clears the rebuilt tail's generalized frame commands (moving.py
+  // mdo NOTES: "Redefinition of the movie clears any existing mdo statements").
   ctx.command('mset', (args) => {
-    movie.frames = parseMovieSpec(ctx.str(args[0], ''));
-    // Redefining the movie clears any existing generalized frame commands
-    // (moving.py mdo NOTES: "Redefinition of the movie clears any existing mdo
-    // statements") — the C side frees Movie->Cmd when the frame table is rebuilt.
-    movie.commands.clear();
+    const frameArg = args.length > 1 ? Number(ctx.str(args[1], '1')) : 1;
+    const startFrom = Number.isFinite(frameArg) ? Math.trunc(frameArg) - 1 : 0;
+    appendSequence(ctx.str(args[0], ''), startFrom);
     movie.current = clampFrame(ctx, movie.current);
     ctx.publish();
     return movie.frames.length;
   });
 
-  // `cmd.madd(specification)` — extend the movie frame->state mapping in place.
-  // Returns the new total. Takes a movie SPEC (like `mset`), not a frame/command.
+  // `cmd.madd(specification, frame=0)` — extend the movie frame->state mapping.
+  // moving.py: `madd(spec, frame, freeze) -> mset(spec, frame, freeze)`, so a
+  // frame of 0 appends at the end. Returns the new total.
   const append = (args: unknown[]): number => {
-    movie.frames.push(...parseMovieSpec(ctx.str(args[0], '')));
+    const frameArg = args.length > 1 ? Number(ctx.str(args[1], '0')) : 0;
+    const startFrom = Number.isFinite(frameArg) ? Math.trunc(frameArg) - 1 : -1;
+    appendSequence(ctx.str(args[0], ''), startFrom);
     ctx.publish();
     return movie.frames.length;
   };

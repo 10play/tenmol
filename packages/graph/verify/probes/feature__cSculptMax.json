@@ -1,0 +1,16 @@
+{
+  "id": "feature__cSculptMax",
+  "feature": "cSculptMax",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    { "do": "set sculpt_field_mask, 1024" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "sculpt_field_mask"], "label": "sculpt_field_mask holds cSculptMax bit (0x400=1024)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1024
+  ]
+}

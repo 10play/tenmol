@@ -59,6 +59,30 @@ const SETTING_DEFAULTS: Readonly<Record<string, number | string>> = {
 };
 
 /**
+ * Compiled-in defaults for sculpt settings that PyMOL ships with a non-zero
+ * default (`layer1/SettingInfo.h`). Unlike most numeric settings — which default
+ * to `0` and so read back as `0` when never set — these carry a real default the
+ * C layer returns from `SettingGet_f`/`SettingGet_i` even with no override, so
+ * `get_setting_float`/`get_setting_int` must report it. Consulted by
+ * `resolveSetting` when the store has no explicit value (mirrors
+ * `REP_COLOR_SETTING_DEFAULTS`).
+ */
+const SCULPT_SETTING_DEFAULTS: Readonly<Record<string, number>> = {
+  sculpt_pyra_weight: 1.0,
+  sculpt_pyra_inv_weight: 10.0,
+  sculpt_tors_weight: 0.05,
+  sculpt_tors_tolerance: 0.05,
+  // 1-4 van-der-Waals repulsion term (cSculptVDW14, 0x040): weight scales the
+  // force, scale14 is the fraction of the summed vdw radii used as the 1-4 clash
+  // target (`SettingInfo.h:249,251`).
+  sculpt_vdw_weight14: 0.2,
+  sculpt_vdw_scale14: 0.9,
+  // Bitmask of active restraint terms; default 0x1FF selects bond, angle, pyra,
+  // plan, line, vdw (0x020), vdw14, tors and tri (`cSculpt*` in ObjectMolecule).
+  sculpt_field_mask: 0x1ff,
+};
+
+/**
  * Setting names whose value formats as an integer / boolean when read as text
  * (`layer1/SettingInfo.h` `REC_i` / `REC_b`). `SettingGetTextPtr`
  * (`layer1/Setting.cpp`) prints booleans as `on`/`off`, ints with `%d`, and
@@ -381,6 +405,10 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     // default (`-1`/`-6`), not a bare `0` — matches PyMOL after `color_deep`.
     if (Object.prototype.hasOwnProperty.call(REP_COLOR_SETTING_DEFAULTS, name)) {
       return REP_COLOR_SETTING_DEFAULTS[name];
+    }
+    // Sculpt term-weight settings with a non-zero compiled default.
+    if (Object.prototype.hasOwnProperty.call(SCULPT_SETTING_DEFAULTS, name)) {
+      return SCULPT_SETTING_DEFAULTS[name];
     }
     return undefined;
   };

@@ -56,14 +56,18 @@ describe('movie.get_movie_fps', () => {
 describe('movie.add_blank', () => {
   it('builds duration*fps blank frames', async () => {
     const backend = await booted();
-    // fps defaults to 30, so 1s -> 30 frames, 2s -> 60 frames.
+    // fps defaults to 30, so 1s -> 30 frames.
     await backend.call('movie.add_blank', [1]);
     expect(await movieLength(backend)).toBe(30);
+    // add_blank APPENDS at get_movie_length()+1 (start=0 default), so a second
+    // 2s clip splices 60 frames after the first 30 -> 90 total. (Verified
+    // against real PyMOL via the movie-programs oracle probe; the previous
+    // expectation of 60 encoded the old mset that ignored `start` and replaced.)
     await backend.call('movie.add_blank', [2]);
-    expect(await movieLength(backend)).toBe(60);
+    expect(await movieLength(backend)).toBe(90);
     // Zero duration adds nothing.
     await backend.call('movie.add_blank', [0]);
-    expect(await movieLength(backend)).toBe(60);
+    expect(await movieLength(backend)).toBe(90);
   });
 });
 

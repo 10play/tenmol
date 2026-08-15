@@ -1,0 +1,16 @@
+{
+  "id": "feature__cSculptTors",
+  "feature": "cSculptTors",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    { "do": "set sculpt_field_mask, 128" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "sculpt_field_mask"], "label": "cSculptTors bit (0x080=128) isolated as active mask" },
+    { "call": ["get_setting_float", "sculpt_tors_weight"], "label": "torsion restraint weight default" },
+    { "call": ["get_setting_float", "sculpt_tors_tolerance"], "label": "torsion angular tolerance default" }
+  ],
+  "tol": 1e-3,
+  "expected": [128, 0.05, 0.05]
+}

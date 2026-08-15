@@ -73,6 +73,23 @@ export function registerMaps(ctx: RegistrarCtx): void {
   const maps = new Map<string, VolMap>();
   const isoObjects = new Map<string, IsoObject>();
 
+  /** Grid bounding box: `[origin, origin + spacing*(dims-1)]` — the corner-to-
+   *  corner extent PyMOL records on an ObjectMapState (ObjectMap.cpp: ExtentMin/
+   *  ExtentMax = Origin + Grid*Min/Max). Used by `get_extent`/zoom on a map. */
+  const mapExtent = (m: VolMap): [Vec3, Vec3] => [
+    [m.origin[0], m.origin[1], m.origin[2]],
+    [
+      m.origin[0] + m.spacing[0] * (m.dims[0] - 1),
+      m.origin[1] + m.spacing[1] * (m.dims[1] - 1),
+      m.origin[2] + m.spacing[2] * (m.dims[2] - 1),
+    ],
+  ];
+  /** Store a map grid and register it as an `object:map` gadget with its extent. */
+  const putMap = (m: VolMap): void => {
+    maps.set(m.name, m);
+    ex.registerGadget(m.name, 'object:map', mapExtent(m));
+  };
+
   /* ------------------------------- map_new ------------------------------- */
 
   ctx.command('map_new', (args, kwargs): Json => {
@@ -152,8 +169,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
       }
     }
 
-    maps.set(name, { name, origin, spacing, dims, data, levels: [] });
-    ex.registerGadget(name, 'object:map');
+    putMap({ name, origin, spacing, dims, data, levels: [] });
     ctx.publish();
     return name;
   });
@@ -426,7 +442,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
       }
     }
 
-    maps.set(name, {
+    putMap({
       name,
       origin: [...base.origin],
       spacing: [...base.spacing],
@@ -434,7 +450,6 @@ export function registerMaps(ctx: RegistrarCtx): void {
       data: out,
       levels: [],
     });
-    ex.registerGadget(name, 'object:map');
     void zoom;
     ctx.publish();
     return name;
@@ -560,8 +575,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
     const xplor = toStr(args[0] ?? kwargs.xplor);
     const name = toStr(args[1] ?? kwargs.name) || 'map';
     const m = parseXplor(xplor, name);
-    maps.set(name, m);
-    ex.registerGadget(name, 'object:map');
+    putMap(m);
     ctx.publish();
     return null;
   });
@@ -577,8 +591,22 @@ export function registerMaps(ctx: RegistrarCtx): void {
     const name = toStr(args[0] ?? kwargs.name);
     const bytes = (args[1] ?? kwargs.bytes) as Uint8Array;
     const m = parseCcp4(bytes, name);
-    maps.set(name, m);
-    ex.registerGadget(name, 'object:map');
+    putMap(m);
+    ctx.publish();
+    return name;
+  });
+
+  /* ------------------------------ load_dxmap ----------------------------- */
+
+  // Internal seam used by `cmd.load` to bring an OpenDX/APBS ASCII grid map
+  // (importing.py `load` → `loadable.dx` → ObjectMapDXStrToMap). The public
+  // `load` reads the file text off disk and delegates here so the parsed grid
+  // lands in the same store the iso*/volume commands read.
+  ctx.command('load_dxmap', (args, kwargs): Json => {
+    const name = toStr(args[0] ?? kwargs.name);
+    const text = toStr(args[1] ?? kwargs.text);
+    const m = parseDx(text, name);
+    putMap(m);
     ctx.publish();
     return name;
   });
@@ -663,6 +691,116 @@ function parseXplor(text: string, name: string): VolMap {
 
   const spacing: Vec3 = [ca! / na!, cb! / nb!, cc! / nc!];
   const origin: Vec3 = [amin! * spacing[0], bmin! * spacing[1], cmin! * spacing[2]];
+  return { name, origin, spacing, dims, data, levels: [] };
+}
+
+/* -------------------------------- DX parser ------------------------------ */
+
+/**
+ * Parse an OpenDX / APBS ASCII grid map
+ * (`layer2/ObjectMap.cpp:ObjectMapDXStrToMap`). Layout:
+ *   # comment lines (ignored)
+ *   object 1 class gridpositions counts NX NY NZ
+ *   origin  OX OY OZ
+ *   delta   d00 d01 d02
+ *   delta   d10 d11 d12
+ *   delta   d20 d21 d22
+ *   object 2 class gridconnections counts …        (ignored)
+ *   object 3 class array type double rank 0 items N data follows
+ *   v0 v1 v2 …                                      (N ASCII floats)
+ * Data is ordered with the LAST axis (z / NZ) varying fastest, then y, then x
+ * (the `a`→`b`→`c` nesting in the C loop). Only the axis-aligned (diagonal
+ * delta) case is modelled — `spacing = diag(delta)` — matching PyMOL's
+ * `is_diagonalf` branch; a skewed delta matrix would need the map skew transform
+ * the orthorhombic VolMap does not carry. Binary/gzip DX are not supported here.
+ */
+function parseDx(text: string, name: string): VolMap {
+  if (text.charCodeAt(0) === 0x1f && text.charCodeAt(1) === 0x8b) {
+    throw new Error('load: gzipped DX data not supported');
+  }
+  const lines = text.split(/\r?\n/);
+  let nx = 0;
+  let ny = 0;
+  let nz = 0;
+  const origin: Vec3 = [0, 0, 0];
+  const deltas: number[][] = [];
+  let li = 0;
+  let gotCounts = false;
+  let gotOrigin = false;
+
+  for (; li < lines.length; li++) {
+    const raw = lines[li]!;
+    const t = raw.trim();
+    if (t === '' || t.startsWith('#')) continue;
+    const low = t.toLowerCase();
+
+    if (!gotCounts) {
+      // `object 1 class gridpositions counts NX NY NZ`
+      const m = /gridpositions\s+counts\s+(\S+)\s+(\S+)\s+(\S+)/i.exec(t);
+      if (m) {
+        nx = parseInt(m[1]!, 10);
+        ny = parseInt(m[2]!, 10);
+        nz = parseInt(m[3]!, 10);
+        gotCounts = true;
+      }
+      continue;
+    }
+    if (!gotOrigin) {
+      if (low.startsWith('origin')) {
+        const p = t.split(/\s+/).slice(1).map(Number);
+        origin[0] = p[0] ?? 0;
+        origin[1] = p[1] ?? 0;
+        origin[2] = p[2] ?? 0;
+        gotOrigin = true;
+      }
+      continue;
+    }
+    if (low.startsWith('delta')) {
+      const p = t.split(/\s+/).slice(1).map(Number);
+      deltas.push([p[0] ?? 0, p[1] ?? 0, p[2] ?? 0]);
+      continue;
+    }
+    if (deltas.length >= 3) break; // header done; data-declaration/data follows
+  }
+
+  if (!gotCounts) throw new Error("load: DX missing 'object 1 class gridpositions counts'");
+  if (!Number.isFinite(nx) || !Number.isFinite(ny) || !Number.isFinite(nz)) {
+    throw new Error('load: DX bad grid counts');
+  }
+  if (deltas.length < 3) throw new Error("load: DX missing 'delta' vectors");
+
+  // Axis-aligned spacing is the diagonal of the delta matrix.
+  const spacing: Vec3 = [deltas[0]![0]!, deltas[1]![1]!, deltas[2]![2]!];
+  const dims: Vec3 = [nx, ny, nz];
+  const nItems = nx * ny * nz;
+
+  // Collect the remaining numeric tokens as the data payload. A line starting
+  // with `object`/`attribute`/`component`/`#` is metadata; everything else that
+  // parses as numbers is data (the `data follows` line ends the object header).
+  const vals: number[] = [];
+  for (; li < lines.length && vals.length < nItems; li++) {
+    const t = lines[li]!.trim();
+    if (t === '' || t.startsWith('#')) continue;
+    const low = t.toLowerCase();
+    if (low.startsWith('object') || low.startsWith('attribute') || low.startsWith('component')) {
+      continue;
+    }
+    for (const s of t.split(/\s+/)) {
+      const n = Number(s);
+      if (Number.isFinite(n)) vals.push(n);
+    }
+  }
+
+  const data = new Float32Array(nItems);
+  // DX stores z fastest, then y, then x (loop a-outer, b, c-inner).
+  let p = 0;
+  for (let a = 0; a < nx; a++) {
+    for (let b = 0; b < ny; b++) {
+      for (let c = 0; c < nz; c++) {
+        data[idx(dims, a, b, c)] = vals[p++] ?? 0;
+      }
+    }
+  }
   return { name, origin, spacing, dims, data, levels: [] };
 }
 

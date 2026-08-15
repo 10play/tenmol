@@ -1,0 +1,24 @@
+{
+  "id": "feature__cSculptMin",
+  "feature": "cSculptMin",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    { "do": "set sculpt_field_mask, 1023" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "sculpt_field_mask"], "label": "sculpt_field_mask holds the 0x200 min-distance bit (0x1FF|0x200=1023)" },
+    { "call": ["get_setting_float", "sculpt_min_weight"], "label": "sculpt_min_weight default (0.75)" },
+    { "call": ["get_setting_float", "sculpt_min_scale"], "label": "sculpt_min_scale default (0.975)" },
+    { "call": ["get_setting_float", "sculpt_min_min"], "label": "sculpt_min_min default (4.0)" },
+    { "call": ["get_setting_float", "sculpt_min_max"], "label": "sculpt_min_max default (12.0)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1023,
+    0.75,
+    0.975,
+    4,
+    12
+  ]
+}
