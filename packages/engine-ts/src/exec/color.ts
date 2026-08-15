@@ -12,6 +12,8 @@
  * exact values; the differential suite gates colour parity on them.
  */
 
+import { CMYK_TABLE_B64 } from './cmyk_table';
+
 export type RGB = readonly [number, number, number];
 
 /** Mutable RGB used while generating ramp colours. */
@@ -375,6 +377,216 @@ export function getColorTuple(index: number): RGB | null {
 /** RGB for a colour index, defaulting to grey for an out-of-table index. */
 export function rgbForIndex(index: number): RGB {
   return INDEX_TO_RGB.get(index) ?? [0.5, 0.5, 0.5];
+}
+
+/* --------------------------- colour space (`space`) --------------------- */
+/**
+ * The `space` command's colour-lookup table (LUT), ported from
+ * `ColorTableLoad` / `lookup_color` in `packages/engine/layer1/Color.cpp`.
+ *
+ * `space cmyk|pymol|greyscale` loads a 64x64x64 colour table; every palette
+ * colour is then re-mapped through it (`ColorGet` returns the LUT colour when
+ * `clamp_colors` is on, which is the default), so `get_color_tuple` reports the
+ * print/video-safe RGB instead of the raw palette value. `space rgb` (or an
+ * empty argument) clears the table. A non-unit `gamma` applies PyMOL's
+ * floating-point gamma correction on top.
+ */
+
+/** A decoded colour table: 3 bytes (R,G,B) per grid entry, flat index
+ *  `(r6<<12)|(g6<<6)|b6`, matching PyMOL's `CColor::ColorTable`. */
+export type ColorTable = Uint8Array;
+
+/** Portable base64 → bytes (`atob` exists in Node ≥16 and every browser). */
+function base64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+let CMYK_TABLE: ColorTable | undefined;
+/** The CMYK LUT, decoded from the embedded `cmyk.png` asset on first use. */
+function cmykTable(): ColorTable {
+  if (CMYK_TABLE === undefined) CMYK_TABLE = base64ToBytes(CMYK_TABLE_B64);
+  return CMYK_TABLE;
+}
+
+/**
+ * Generate the `greyscale` table (the `!strcmp(fname, "greyscale")` branch of
+ * `ColorTableLoad`): each grid entry maps to the average of its R/G/B.
+ */
+function greyscaleTable(): ColorTable {
+  const t = new Uint8Array(512 * 512 * 3);
+  let r = 0,
+    g = 0,
+    b = 0;
+  for (let i = 0; i < 512 * 512; i++) {
+    const rc = ((r + g + b) / 3) | 0;
+    t[i * 3] = rc;
+    t[i * 3 + 1] = rc;
+    t[i * 3 + 2] = rc;
+    b += 4;
+    if (!(0xff & b)) {
+      b = 0;
+      g += 4;
+      if (!(0xff & g)) {
+        g = 0;
+        r += 4;
+      }
+    }
+  }
+  return t;
+}
+
+/**
+ * Generate the `pymol` table (the `!strcmp(fname, "pymol")` branch of
+ * `ColorTableLoad`): tames over-saturated colours for video/YUV. The clamp
+ * limits are the compiled defaults of the `pymol_space_max_*`/`min_factor`
+ * settings (`layer1/SettingInfo.h`).
+ */
+function pymolTable(): ColorTable {
+  const redMax = 0.95,
+    greenMax = 0.75,
+    blueMax = 0.97,
+    minFactor = 0.15;
+  const t = new Uint8Array(512 * 512 * 3);
+  let r = 0,
+    g = 0,
+    b = 0;
+  for (let i = 0; i < 512 * 512; i++) {
+    let rc = r,
+      gc = g,
+      bc = b;
+    if (r >= g && r >= b) {
+      if (rc > 255 * redMax) {
+        rc = (redMax * 255) | 0;
+        bc = r === 0 ? bc : ((bc * rc) / r) | 0;
+        gc = r === 0 ? gc : ((gc * rc) / r) | 0;
+      }
+    } else if (g >= b && g >= r) {
+      if (gc > 255 * greenMax) {
+        gc = (greenMax * 255) | 0;
+        bc = g === 0 ? bc : ((bc * gc) / g) | 0;
+        rc = g === 0 ? rc : ((rc * gc) / g) | 0;
+      }
+    } else if (b >= g && b >= r) {
+      if (bc > 255 * blueMax) {
+        bc = (blueMax * 255) | 0;
+        gc = b === 0 ? gc : ((gc * bc) / b) | 0;
+        rc = b === 0 ? rc : ((rc * bc) / b) | 0;
+      }
+    }
+    const rf = (minFactor * rc + 0.49999) | 0;
+    const gf = (minFactor * gc + 0.49999) | 0;
+    const bf = (minFactor * bc + 0.49999) | 0;
+    if (rc < gf) rc = gf;
+    if (bc < gf) bc = gf;
+    if (rc < bf) rc = bf;
+    if (gc < bf) gc = bf;
+    if (gc < rf) gc = rf;
+    if (bc < rf) bc = rf;
+    if (rc > 255) rc = 255;
+    if (bc > 255) bc = 255;
+    if (gc > 255) gc = 255;
+    t[i * 3] = rc;
+    t[i * 3 + 1] = gc;
+    t[i * 3 + 2] = bc;
+    b += 4;
+    if (!(0xff & b)) {
+      b = 0;
+      g += 4;
+      if (!(0xff & g)) {
+        g = 0;
+        r += 4;
+      }
+    }
+  }
+  return t;
+}
+
+/**
+ * Resolve a `space` name to its LUT, or `null` for the default RGB space (an
+ * empty string, `rgb`, or any unrecognised palette). Mirrors PyMOL's
+ * `space_dict`: `cmyk` loads the bundled table, `pymol`/`greyscale` are
+ * generated.
+ */
+export function buildColorTable(space: string): ColorTable | null {
+  switch (space.trim().toLowerCase()) {
+    case 'cmyk':
+      return cmykTable();
+    case 'pymol':
+      return pymolTable();
+    case 'greyscale':
+      return greyscaleTable();
+    default:
+      return null;
+  }
+}
+
+/**
+ * Port of `lookup_color` (`layer1/Color.cpp`): trilinear interpolation of an
+ * input RGB through a colour `table`, plus the optional `gamma` correction.
+ * A `null` table with `gamma === 1` is the identity. Input/output are 0..1.
+ */
+export function lookupColor(table: ColorTable | null, gamma: number, inp: RGB): RGB {
+  const out: RGB3 = [inp[0], inp[1], inp[2]];
+  if (table) {
+    const r = ((255 * inp[0] + 0.5) | 0) & 0xff;
+    const g = ((255 * inp[1] + 0.5) | 0) & 0xff;
+    const b = ((255 * inp[2] + 0.5) | 0) & 0xff;
+    const rr = r & 0x3,
+      gr = g & 0x3,
+      br = b & 0x3;
+    const r6 = r >> 2,
+      g6 = g >> 2,
+      b6 = b >> 2;
+    const frm1x = rr / 4,
+      fgm1 = gr / 4,
+      fbm1 = br / 4;
+    const fr = 1 - frm1x,
+      fg = 1 - fgm1,
+      fb = 1 - fbm1;
+    let rct = 0.4999,
+      gct = 0.4999,
+      bct = 0.4999;
+    for (let x = 0; x < 2; x++) {
+      const ra = Math.min(r6 + x, 63);
+      for (let y = 0; y < 2; y++) {
+        const ga = Math.min(g6 + y, 63);
+        for (let z = 0; z < 2; z++) {
+          const ba = Math.min(b6 + z, 63);
+          const e = ((ra << 12) + (ga << 6) + ba) * 3;
+          const w = (x ? frm1x : fr) * (y ? fgm1 : fg) * (z ? fbm1 : fb);
+          rct += w * table[e]!;
+          gct += w * table[e + 1]!;
+          bct += w * table[e + 2]!;
+        }
+      }
+    }
+    if (r6 >= 63) rct += rr;
+    if (g6 >= 63) gct += gr;
+    if (b6 >= 63) bct += br;
+    if (rct <= 2) rct = 0; // keep black black
+    if (gct <= 2) gct = 0;
+    if (bct <= 2) bct = 0;
+    out[0] = rct / 255;
+    out[1] = gct / 255;
+    out[2] = bct / 255;
+  }
+  if (gamma !== 1 && gamma > 1e-4) {
+    const invGamma = 1 / gamma;
+    const inAvg = (out[0] + out[1] + out[2]) / 3;
+    if (inAvg >= 1e-4) {
+      const sig = Math.pow(inAvg, invGamma) / inAvg;
+      out[0] *= sig;
+      out[1] *= sig;
+      out[2] *= sig;
+    }
+  }
+  if (out[0] > 1) out[0] = 1;
+  if (out[1] > 1) out[1] = 1;
+  if (out[2] > 1) out[2] = 1;
+  return out;
 }
 
 /**

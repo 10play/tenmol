@@ -164,6 +164,8 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
       base.push(stored);
       const result = fn(...base);
       if (opts.writeBack) {
+        const prevResi = a.resi;
+        const prevResv = a.resv;
         for (let k = 0; k < ATOM_FIELDS.length; k++) {
           const field = ATOM_FIELDS[k]!;
           const raw = result[k];
@@ -175,6 +177,16 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
                      field === 'alt' || field === 'elem') {
             rec[field] = String(raw);
           }
+        }
+        // `resi` and `resv` are two views of one property in PyMOL (P.cpp
+        // ATOM_PROP_RESI/RESV): writing `resi` reparses `resv`+inscode, and
+        // writing `resv` regenerates the `resi` text. Reconcile whichever one
+        // the expression touched so canonical sorting (which keys on `resv`)
+        // and range selections stay consistent. `resi` wins if both changed.
+        if (a.resi !== prevResi) {
+          a.resv = parseInt(a.resi, 10) || 0;
+        } else if (a.resv !== prevResv) {
+          a.resi = String(a.resv);
         }
         // Charges are appended after ATOM_FIELDS in the returned tuple; map the
         // snake_case body names back to the camelCase AtomInfo keys.

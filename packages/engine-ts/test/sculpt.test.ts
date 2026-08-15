@@ -210,7 +210,10 @@ describe('smooth (temporal, across states)', () => {
     const before = t.mol().coord(0, 2)[0]; // deviated middle state = 1
     expect(before).toBeCloseTo(1, 5);
 
-    t.call('smooth', ['all', 1, 5]);
+    // window=3 (must be <= number of states): real PyMOL's ExecutiveSmooth
+    // no-ops when the window is larger than the frame count, so a window of 5
+    // over 3 states would leave the coordinates untouched.
+    t.call('smooth', ['all', 1, 3]);
 
     const after = t.mol().coord(0, 2)[0];
     // Box-average of (0,1,0) -> ~1/3: the deviation from the line (0) shrinks.

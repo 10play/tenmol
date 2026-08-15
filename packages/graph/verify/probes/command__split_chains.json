@@ -1,0 +1,23 @@
+{
+  "id": "command__split_chains",
+  "feature": "split_chains",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "split_chains m"}
+  ],
+  "checks": [
+    {"call": ["get_names", "objects"], "label": "objects list includes per-chain split objects (m_A..m_H)"},
+    {"call": ["count_atoms", "m_A"], "label": "chain A object has chain A atoms"},
+    {"call": ["count_atoms", "m_C"], "label": "chain C object has chain C atoms"},
+    {"call": ["count_atoms", "m"], "label": "original object retained after split"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["m", "m_", "m_A", "m_C", "m_D", "m_E", "m_F", "m_G", "m_H"],
+    1479,
+    290,
+    5684
+  ]
+}

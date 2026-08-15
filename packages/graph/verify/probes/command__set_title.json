@@ -1,0 +1,20 @@
+{
+  "id": "command__set_title",
+  "feature": "set_title",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom m"},
+    {"call": ["set_title", "m", 1, "E = -1234.5 kcal/mol"]},
+    {"call": ["set_title", "m", 1, "E = -1230.1 kcal/mol"]}
+  ],
+  "checks": [
+    {"call": ["get_title", "m", 1], "label": "title of state 1 after overwrite"},
+    {"call": ["get_title", "m", 2], "label": "title of unset state 2"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    "E = -1230.1 kcal/mol",
+    null
+  ]
+}

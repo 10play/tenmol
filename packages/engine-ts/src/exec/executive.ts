@@ -7,7 +7,7 @@
 import { Rep, REP_NAMES } from '@tenmol/protocol';
 import { repBit } from '../model/atom';
 import type { ObjectMolecule } from '../model/molecule';
-import { getColorIndex } from './color';
+import { getColorIndex, buildColorTable, lookupColor, type ColorTable, type RGB } from './color';
 import type { MeasurementObject } from './measurement';
 import {
   atomKey,
@@ -494,6 +494,46 @@ export class Executive {
 
   getSetting(name: string): number | string | undefined {
     return this.settings.get(name);
+  }
+
+  /* --------------------------- colour space --------------------------- */
+
+  /**
+   * The `space` command's state: the active palette name and its resolved LUT
+   * plus the gamma factor. `space rgb`/`''` clears the table; `cmyk`/`pymol`/
+   * `greyscale` load one (see {@link buildColorTable}). Persists across
+   * `reinitialize`, mirroring PyMOL (the colour table has no public reset path).
+   */
+  private colorSpaceName = 'rgb';
+  private colorSpaceGamma = 1;
+  private colorSpaceTable: ColorTable | null = null;
+
+  /** Apply `space <name>, <gamma>` — resolve and store the LUT. */
+  setColorSpace(space: string, gamma: number): void {
+    const name = (space.trim().toLowerCase() || 'rgb') as string;
+    this.colorSpaceName = name;
+    this.colorSpaceGamma = Number.isFinite(gamma) ? gamma : 1;
+    this.colorSpaceTable = buildColorTable(name);
+  }
+
+  /** The active colour-space name (`cmd.get_color_space`). */
+  getColorSpaceName(): string {
+    return this.colorSpaceName;
+  }
+
+  /** True when a LUT or a non-unit gamma is in effect (PyMOL's `LUTActive`). */
+  colorLutActive(): boolean {
+    return this.colorSpaceTable !== null || this.colorSpaceGamma !== 1;
+  }
+
+  /**
+   * Remap an RGB triple through the active colour space, as PyMOL's `ColorGet`
+   * does when returning a colour with `clamp_colors` on (the default). A no-op
+   * when no space is active.
+   */
+  spaceColor(rgb: RGB): RGB {
+    if (!this.colorLutActive()) return rgb;
+    return lookupColor(this.colorSpaceTable, this.colorSpaceGamma, rgb);
   }
 
   /* ---------------------------- auto colour --------------------------- */

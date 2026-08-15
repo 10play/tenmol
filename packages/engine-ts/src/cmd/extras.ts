@@ -11,7 +11,7 @@
  *
  *   - REAL   — a correct behaviour computed from the executive/model:
  *              alphatoall, mse2met, mask/unmask/get_mask, delete_states,
- *              split_states, join_states, copy_to, extract, overlap,
+ *              split_states, join_states, spheroid, copy_to, extract, overlap,
  *              intra_rms/intra_rms_cur, look_at, refresh, transparency,
  *              stereo, edit_mode.
  *
@@ -410,6 +410,53 @@ export function registerExtras(ctx: RegistrarCtx): void {
     return removed;
   });
 
+  /* spheroid — average trajectory-state groups into ellipsoid-approximation
+     states, collapsing the state count. Ports the observable-state half of
+     ObjectMoleculeCreateSpheroid (layer2/ObjectMolecule.cpp): consecutive
+     coordinate sets are grouped `average` at a time (average < 1 ⇒ all states
+     in one group), each group's frame-0 coordinates are replaced by the
+     per-atom mean over the group, the trailing group states are dropped, and
+     NCSet becomes the number of groups. The per-spoke Spheroid/SpheroidNormal
+     surface (used only by the sphere renderer) is not modelled here since it
+     produces no state observable through the public API. */
+  ctx.command('spheroid', (args, kwargs): Json => {
+    const name = str(args[0] ?? kwargs['object'], '');
+    const mol = ex.molecule(name);
+    if (!mol || mol.nstate === 0) return null;
+    // average < 1 folds the whole trajectory into a single spheroid state.
+    let average = Math.trunc(toNum(args[1] ?? kwargs['average'], 0));
+    if (average < 1) average = mol.nstate;
+    const natom = mol.natom;
+    // Snapshot the source coordinate sets (skipping empty slots, as the C loop
+    // only advances its group counter on non-null CoordSets).
+    const src = mol.states.filter((s): s is Float32Array => s != null);
+    const grouped: Float32Array[] = [];
+    for (let i = 0; i < src.length; i += average) {
+      const group = src.slice(i, i + average);
+      const out = new Float32Array(natom * 3);
+      const counts = new Int32Array(natom);
+      for (const st of group) {
+        for (let o = 0; o < natom * 3; o++) out[o] = out[o]! + (st[o] ?? 0);
+        for (let a = 0; a < natom; a++) counts[a] = counts[a]! + 1;
+      }
+      for (let a = 0; a < natom; a++) {
+        const c = counts[a]!;
+        if (c) {
+          out[a * 3] = out[a * 3]! / c;
+          out[a * 3 + 1] = out[a * 3 + 1]! / c;
+          out[a * 3 + 2] = out[a * 3 + 2]! / c;
+        }
+      }
+      grouped.push(out);
+    }
+    mol.states.splice(0, mol.states.length, ...grouped);
+    // Keep the per-state parallel arrays no longer than the surviving states.
+    if (mol.titles.length > grouped.length) mol.titles.length = grouped.length;
+    if (mol.refPos.length > grouped.length) mol.refPos.length = grouped.length;
+    ctx.publish();
+    return grouped.length;
+  });
+
   /* split_states — one new single-state object per source state. */
   ctx.command('split_states', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['object']);
@@ -697,10 +744,10 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // `scene_order` is real now — see engine.ts (reorders the scene bin).
       // maps / volumes / slices (need a map object model)
       // `map_set` is real — see cmd/maps.ts (elementwise map arithmetic).
-      'slice_new',
+      // `slice_new` is real now — see cmd/maps.ts (registers an object:slice gadget).
       'volume',
       'volume_panel',
-      'spheroid',
+      // `spheroid` is real now — see below (averages state groups + collapses NCSet).
       'vdw_fit',
       // misc app / render controls with no state to observe
       'cls',

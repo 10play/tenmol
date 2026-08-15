@@ -812,7 +812,11 @@ export class Engine {
         idx = s !== '' && Number.isFinite(Number(s)) ? Number(s) : getColorIndex(s);
       }
       const t = idx < 0 ? null : getColorTuple(idx);
-      return t ? [t[0], t[1], t[2]] : null;
+      if (!t) return null;
+      // Re-map through the active colour space (`space cmyk|pymol|…`), matching
+      // PyMOL's `ColorGet` returning the LUT colour when `clamp_colors` is on.
+      const s = ex.spaceColor(t);
+      return [s[0], s[1], s[2]];
     });
 
     // `cmd.fragment(name, object)` — load a built-in fragment and frame it.

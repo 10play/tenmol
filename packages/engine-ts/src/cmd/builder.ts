@@ -23,6 +23,7 @@ import { defaultVisRep } from '../model/atom';
 import { canonicalElement } from '../model/element';
 import type { ObjectMolecule } from '../model/molecule';
 import { templateBondOrder } from '../model/residue-bonds';
+import { sortAtomsInPlace } from '../model/atomsort';
 import type { RegistrarCtx } from './registrar';
 
 /* ------------------------------ arg helpers ------------------------------ */
@@ -917,10 +918,23 @@ export function registerBuilder(ctx: RegistrarCtx): void {
   /* --------------------------- fix_chemistry / sort ---------------------- */
   // fix_chemistry(selection1, selection2) — PyMOL repairs valences/charges at the
   // interface of two selections. This port has no partial-charge model, so it is
-  // a no-op that reports success. sort() reorders atoms within residues; this
-  // port keeps load order, so it is a documented no-op.
+  // a no-op that reports success.
   ctx.command('fix_chemistry', (): Json => 0);
-  ctx.command('sort', (): Json => null);
+
+  // sort(object='') — re-sort atoms into PyMOL's canonical order
+  // (ObjectMoleculeSort). Needed after `alter` changes naming properties (resi,
+  // chain, name, ...) without moving atoms in the internal list. Empty object
+  // name re-sorts every molecule.
+  ctx.command('sort', (args, kwargs): Json => {
+    const objName = ctx.str(pick(args, kwargs, 0, 'object'), '');
+    const targets = objName ? [ex.molecule(objName)] : ex.moleculesInOrder();
+    for (const mol of targets) {
+      if (!mol) continue;
+      sortAtomsInPlace(mol);
+    }
+    ctx.publish();
+    return null;
+  });
 }
 
 /* -------------------------- distance connectivity ------------------------ */

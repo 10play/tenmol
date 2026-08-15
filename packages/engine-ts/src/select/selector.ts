@@ -72,7 +72,7 @@ type Node =
   | { t: 'bychain'; a: Node }
   | { t: 'first'; a: Node }
   | { t: 'last'; a: Node }
-  | { t: 'neighbor'; a: Node }
+  | { t: 'neighbor'; a: Node; includeSelf?: boolean }
   // Proximity operators. `within` returns everything within `dist` of `a`;
   // `binwithin`/`nearto`/`beyond` are the binary forms `A op N of B`.
   | { t: 'within'; dist: number; a: Node }
@@ -332,9 +332,16 @@ class Parser {
       this.next();
       return { t: 'last', a: this.parseNot() };
     }
-    if (this.isOp(t, 'neighbor', 'neighbour', 'bound_to', 'nbr.')) {
+    if (this.isOp(t, 'neighbor', 'neighbour', 'nbr.')) {
       this.next();
       return { t: 'neighbor', a: this.parseNot() };
+    }
+    // `bound_to` (bto.) is like `neighbor` but does NOT exclude the input
+    // selection: members of the selection that are bonded to other members are
+    // kept (e.g. disulfide SG..SG pairs). PyMOL's SELE_BONs vs SELE_NGHs.
+    if (this.isOp(t, 'bound_to', 'bto.')) {
+      this.next();
+      return { t: 'neighbor', a: this.parseNot(), includeSelf: true };
     }
     // Prefix proximity forms `<op> N of <sel>` (implicit left operand = all).
     if (this.isOp(t, 'within', 'w.')) {
@@ -907,10 +914,12 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
     case 'bychain':
       return expandGroups(evalSet(node.a, env), (i) => env.byChain.get(chainKey(env.universe[i]!)) ?? []);
     case 'neighbor': {
-      // Atoms directly bonded to the selection, excluding the selection itself.
+      // Atoms directly bonded to the selection. `neighbor`/`nbr.` excludes the
+      // selection itself; `bound_to`/`bto.` (includeSelf) keeps members of the
+      // selection that are bonded to another member (e.g. disulfide SG..SG).
       const a = evalSet(node.a, env);
       const s = new Set<number>();
-      for (const i of a) for (const j of env.adj[i] ?? []) if (!a.has(j)) s.add(j);
+      for (const i of a) for (const j of env.adj[i] ?? []) if (node.includeSelf || !a.has(j)) s.add(j);
       return s;
     }
     case 'within':

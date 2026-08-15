@@ -492,6 +492,24 @@ export function registerMaps(ctx: RegistrarCtx): void {
   ctx.command('isosurface', (args, kwargs): Json => buildIso('surface', args, kwargs));
   ctx.command('isodot', (args, kwargs): Json => buildIso('dot', args, kwargs));
 
+  /* ------------------------------- slice_new ----------------------------- */
+
+  // `slice_new(name, map, state=1, source_state=0)` — creates a 2-D slice
+  // (cutting-plane) object through a map, colored by a ramp (creating.py:680 →
+  // ExecutiveSliceNew / ObjectSlice). The slice references a map by name and
+  // holds no atoms; here we track it as a gadget so it appears in get_names and
+  // reports `get_type == 'object:slice'`. PyMOL raises if the map is missing.
+  ctx.command('slice_new', (args, kwargs): Json => {
+    const name = toStr(args[0] ?? kwargs.name);
+    const mapName = toStr(args[1] ?? kwargs.map);
+    if (mapName && !maps.get(mapName)) {
+      throw new Error(`slice_new: no map named '${mapName}'`);
+    }
+    ex.registerGadget(name, 'object:slice');
+    ctx.publish();
+    return null;
+  });
+
   /* -------------------------- get_isosurface_stats ----------------------- */
 
   ctx.command('get_isosurface_stats', (args, kwargs): Json => {

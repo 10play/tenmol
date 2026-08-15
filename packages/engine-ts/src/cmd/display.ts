@@ -190,11 +190,15 @@ export function registerDisplay(ctx: RegistrarCtx): void {
 
   ctx.command('space', (args, kwargs): Json => {
     const space = (str(args[0] ?? kwargs.space, 'rgb') || 'rgb').toLowerCase();
+    const gamma = Number(args[1] ?? kwargs.gamma ?? 1);
     ex.set('color_space', space);
+    // Load the colour-space LUT so palette colours re-map through it (the
+    // `space` command's observable effect on `get_color_tuple`).
+    ex.setColorSpace(space, Number.isFinite(gamma) ? gamma : 1);
     ctx.publish();
     return null;
   });
-  ctx.command('get_color_space', (): Json => String(ex.getSetting('color_space') ?? 'rgb'));
+  ctx.command('get_color_space', (): Json => ex.getColorSpaceName());
 
   /* ------------------------------ desaturate ---------------------------- */
 
