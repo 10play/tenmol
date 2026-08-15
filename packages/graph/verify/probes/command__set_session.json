@@ -1,0 +1,19 @@
+{
+  "id": "command__set_session",
+  "feature": "set_session",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load ${REPO}/packages/engine/test/dat/1tii.pdb, m" },
+    { "call": ["set_session", {}] }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "all"], "label": "atoms after restoring empty session (scene replaced)" },
+    { "call": ["get_names"], "label": "object list after restoring empty session" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    0,
+    []
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "command__set_name",
+  "feature": "set_name",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"call": ["set_name", "ala", "renamed"]}
+  ],
+  "checks": [
+    {"call": ["get_names"], "label": "object list shows new name, old name gone"},
+    {"call": ["count_atoms", "renamed"], "label": "atoms accessible under new name"},
+    {"call": ["count_atoms", "renamed and name CA"], "label": "atom-level selection works under new name"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["renamed"],
+    10,
+    1
+  ]
+}

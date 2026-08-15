@@ -1,0 +1,25 @@
+{
+  "id": "command__set_state_order",
+  "feature": "set_state_order",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "multi"], "kwargs": {"pos": [0, 0, 1]}},
+    {"call": ["pseudoatom", "p2"], "kwargs": {"pos": [0, 0, 2]}},
+    {"call": ["pseudoatom", "p3"], "kwargs": {"pos": [0, 0, 3]}},
+    {"do": "create multi, p2, 1, 2"},
+    {"do": "create multi, p3, 1, 3"},
+    {"call": ["set_state_order", "multi", [3, 2, 1]]}
+  ],
+  "checks": [
+    {"call": ["get_coordset", "multi", 1], "label": "state 1 after reverse (was state 3, z=3)"},
+    {"call": ["get_coordset", "multi", 3], "label": "state 3 after reverse (was state 1, z=1)"},
+    {"call": ["count_states", "multi"], "label": "state count unchanged (3)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    {"__ndarray__": true, "shape": [1, 3], "dtype": "float32", "encoding": "base64", "data": "AAAAAAAAAAAAAEBA"},
+    {"__ndarray__": true, "shape": [1, 3], "dtype": "float32", "encoding": "base64", "data": "AAAAAAAAAAAAAIA/"},
+    3
+  ]
+}

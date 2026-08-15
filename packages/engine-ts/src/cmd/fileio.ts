@@ -937,7 +937,9 @@ export function registerFileio(ctx: RegistrarCtx): void {
         const names: string[] = [];
         for (const entry of entries) {
           const oname = ex.uniqueName(entry.name || 'obj');
-          ex.addMolecule(parsePdb(entry.block, oname));
+          const m = parsePdb(entry.block, oname);
+          ex.addMolecule(m);
+          ex.autoColorObject(m);
           names.push(oname);
         }
         ctx.publish();
@@ -952,6 +954,7 @@ export function registerFileio(ctx: RegistrarCtx): void {
     // via count_discrete. Negative/absent leaves it non-discrete.
     if (Number(ctx.str(pick(args, kwargs, 5, 'discrete'), '-1')) > 0) mol.discrete = true;
     ex.addMolecule(mol);
+    ex.autoColorObject(mol);
     ctx.publish();
     return name;
   });

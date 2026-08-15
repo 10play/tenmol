@@ -26,6 +26,19 @@ for (const [id, name] of Object.entries(REP_NAMES)) REP_BY_NAME.set(name, Number
 REP_BY_NAME.set('wire', Rep.Line);
 REP_BY_NAME.set('dot', Rep.Dot);
 
+/**
+ * The `auto_color` cycle — PyMOL assigns each freshly loaded molecular object
+ * the next colour index in this list as its object colour (`ColorGetNext`, driven
+ * by `ExecutiveManageObject` when the `auto_color` setting is on, the default).
+ * Verbatim from `modules/pymol/util.py` `_color_cycle` (carbon, cyan, …); the
+ * indices are the registered colour-table positions (see `exec/color.ts`).
+ */
+const AUTO_COLOR_CYCLE: readonly number[] = [
+  26, 5, 154, 6, 9, 29, 11, 13, 10, 5262, 12, 36, 5271, 124, 17, 18, 5270, 20,
+  5272, 52, 5258, 5274, 5257, 5256, 15, 5277, 5279, 5276, 53, 5278, 5275, 5269,
+  22, 5266, 5280, 5267, 5268, 104, 23, 51,
+];
+
 /** Default global settings the slice reads (`packages/engine/layer1/SettingInfo.h`). */
 const DEFAULT_SETTINGS: Readonly<Record<string, number | string>> = {
   sphere_scale: 1.0,
@@ -481,6 +494,28 @@ export class Executive {
 
   getSetting(name: string): number | string | undefined {
     return this.settings.get(name);
+  }
+
+  /* ---------------------------- auto colour --------------------------- */
+
+  /** Next slot in {@link AUTO_COLOR_CYCLE} (`ColorGetNext` cursor). */
+  private autoColorNext = 0;
+
+  /**
+   * Assign a freshly loaded molecular object its object colour from the
+   * `auto_color` cycle — PyMOL's `ExecutiveManageObject` behaviour when the
+   * `auto_color` setting is on (the default). Called by the structure-loading
+   * verbs (`load`, `load_model`, `read_pdbstr`, `fragment`); NOT by
+   * `pseudoatom`, which leaves its object colour unset (reported as `0`). A
+   * no-op when `auto_color` is explicitly off or the object already carries an
+   * explicit colour.
+   */
+  autoColorObject(mol: ObjectMolecule): void {
+    const s = this.settings.get('auto_color');
+    const on = s === undefined ? true : Number(s) !== 0;
+    if (!on || mol.color >= 0) return;
+    mol.color = AUTO_COLOR_CYCLE[this.autoColorNext % AUTO_COLOR_CYCLE.length]!;
+    this.autoColorNext++;
   }
 
   getSettingFloat(name: string): number {

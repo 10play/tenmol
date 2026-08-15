@@ -75,18 +75,24 @@ const cross = (a: V, b: V): V => [
   a[0] * b[1] - a[1] * b[0],
 ];
 const dot = (a: V, b: V): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const nrm = (a: V): V => {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
-  return [a[0] / l, a[1] / l, a[2] / l];
-};
+// Signed dihedral in cmd.get_dihedral's convention (PyMOL get_dihedral3f), which
+// is what set_dihedral targets — the textbook IUPAC atan2 form has the opposite
+// sign for this axis ordering, so we mirror get_dihedral3f here.
 function dihedral(p1: V, p2: V, p3: V, p4: V): number {
-  const b1 = sub(p2, p1);
-  const b2 = sub(p3, p2);
-  const b3 = sub(p4, p3);
-  const n1 = cross(b1, b2);
-  const n2 = cross(b2, b3);
-  const m1 = cross(n1, nrm(b2));
-  return (Math.atan2(dot(m1, n2), dot(n1, n2)) * 180) / Math.PI;
+  const d21 = sub(p3, p2);
+  const d01 = sub(p1, p2);
+  const d32 = sub(p4, p3);
+  const dd1 = cross(d21, d01);
+  const dd3 = cross(d21, d32);
+  const la = Math.hypot(dd1[0], dd1[1], dd1[2]);
+  const lb = Math.hypot(dd3[0], dd3[1], dd3[2]);
+  if (la < 1e-9 || lb < 1e-9) return 0;
+  let c = dot(dd1, dd3) / (la * lb);
+  c = Math.max(-1, Math.min(1, c));
+  let r = Math.acos(c);
+  const posD = cross(d21, dd1);
+  if (dot(dd3, posD) < 0) r = -r;
+  return (r * 180) / Math.PI;
 }
 
 /* ---------------------------------- bond -------------------------------- */
@@ -260,13 +266,14 @@ describe('set_dihedral', () => {
     const mol = ex.molecule('m')!;
     h.get('set_dihedral')!(['index 1', 'index 2', 'index 3', 'index 4', 90], {});
 
-    // a1, a2, a3 (upstream + on-axis) are untouched; a4 swung to (0,-3,3).
+    // a1, a2, a3 (upstream + on-axis) are untouched; a4 swung to (0,+3,3) — a
+    // +90 rotation about the atom2->atom3 axis in get_dihedral's convention.
     expect(mol.coord(0, 1)).toEqual([3, 0, 0]);
     expect(mol.coord(1, 1)).toEqual([0, 0, 0]);
     expect(mol.coord(2, 1)).toEqual([0, 0, 3]);
     const a4 = mol.coord(3, 1);
     expect(a4[0]).toBeCloseTo(0, 4);
-    expect(a4[1]).toBeCloseTo(-3, 4);
+    expect(a4[1]).toBeCloseTo(3, 4);
     expect(a4[2]).toBeCloseTo(3, 4);
 
     expect(dihedral(mol.coord(0, 1), mol.coord(1, 1), mol.coord(2, 1), mol.coord(3, 1)))

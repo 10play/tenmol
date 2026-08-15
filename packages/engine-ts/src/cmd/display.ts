@@ -41,8 +41,6 @@ import type { RegistrarCtx } from './registrar';
  * dedicated getter commands (the differential/UI reads these).
  * ------------------------------------------------------------------------ */
 
-/** Object-level colour index (`ObjectMolecule.Obj.Color`). */
-const OBJECT_COLOR = new WeakMap<ObjectMolecule, number>();
 /** Per-object `cartoon_type` subtype. */
 const CARTOON_TYPE = new WeakMap<ObjectMolecule, number>();
 
@@ -115,7 +113,7 @@ export function registerDisplay(ctx: RegistrarCtx): void {
     if (idx < 0) return -1;
     const mol = ex.molecule(name);
     if (!mol) return -1;
-    OBJECT_COLOR.set(mol, idx);
+    mol.color = idx;
     ctx.publish();
     return idx;
   });
@@ -125,7 +123,7 @@ export function registerDisplay(ctx: RegistrarCtx): void {
   ctx.command('get_object_color', (args): Json => {
     const mol = ex.molecule(str(args[0]));
     if (!mol) return -1;
-    return OBJECT_COLOR.get(mol) ?? -1;
+    return mol.color;
   });
 
   /* ------------------------------ color_deep ---------------------------- */
@@ -156,7 +154,7 @@ export function registerDisplay(ctx: RegistrarCtx): void {
     for (const ua of ex.atomsMatching(selection)) touched.add(ua.objName);
     for (const objName of touched) {
       const mol = ex.molecule(objName);
-      if (mol) OBJECT_COLOR.set(mol, idx);
+      if (mol) mol.color = idx;
     }
     ctx.publish();
     return count;

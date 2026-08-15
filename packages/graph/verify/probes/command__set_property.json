@@ -1,0 +1,22 @@
+{
+  "id": "command__set_property",
+  "feature": "set_property",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m" },
+    { "call": ["set_property", "myfloat", "1234", "m"], "kwargs": {"proptype": 3} },
+    { "call": ["set_property", "myint", "42", "m"] },
+    { "call": ["set_property", "mybool", "true", "m"] },
+    { "call": ["set_property", "mystr", "hello", "m"] }
+  ],
+  "checks": [
+    { "call": ["get_property", "myfloat", "m"], "label": "float property stored via proptype=3" },
+    { "call": ["get_property", "myint", "m"], "label": "int auto-detected from digits" },
+    { "call": ["get_property", "mybool", "m"], "label": "bool auto-detected from 'true'" },
+    { "call": ["get_property", "mystr", "m"], "label": "string stored" },
+    { "call": ["get_property", "missing", "m"], "label": "unset property returns None" }
+  ],
+  "tol": 1e-3,
+  "expected": [1234, 42, true, "hello", null]
+}

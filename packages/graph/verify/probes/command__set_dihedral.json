@@ -1,0 +1,17 @@
+{
+  "id": "command__set_dihedral",
+  "feature": "set_dihedral",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "call": ["set_dihedral", "name N", "name CA", "name C", "name O", 45] }
+  ],
+  "checks": [
+    { "call": ["get_dihedral", "name N", "name CA", "name C", "name O"], "label": "dihedral N-CA-C-O after set to 45", "tol": 0.01 }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    45.00014114379883
+  ]
+}

@@ -14,27 +14,119 @@
  *     `properties` map), so the same store is reachable from `iterate`/`alter`
  *     through the `p` object and travels with the atom.
  *
- * Property values are string / number / boolean, stored verbatim (PyMOL does not
- * coerce them). The console hands everything in as strings; a caller passing a
- * real number or boolean keeps that type.
+ * Property values are string / number / boolean. PyMOL *does* coerce them: the
+ * Python layer (`properties._typecast`) casts explicit `proptype`s, and for the
+ * default `proptype=-1` (auto) the C layer (`PropertySetromString`) sniffs a
+ * bare string into int → float → bool(true/yes/false/no) → string. This module
+ * mirrors that pipeline so `get_property` reads back the same typed value real
+ * PyMOL stores.
  */
 
 import type { Json } from '@tenmol/protocol';
 import type { ObjectMolecule } from '../model/molecule';
 import type { RegistrarCtx } from './registrar';
+import { getColorIndex } from '../exec/color';
 
 /** A property value: the JSON scalars PyMOL admits for custom properties. */
 type PropValue = string | number | boolean;
 
-/** Keep a value verbatim when it is already a scalar; else stringify it. */
-function coerceProp(raw: unknown, str: RegistrarCtx['str']): PropValue {
-  if (typeof raw === 'number' || typeof raw === 'boolean' || typeof raw === 'string') return raw;
-  return str(raw);
+/** `proptype` codes, matching `pymol.properties` (PROPERTY_*). */
+const PROP_AUTO = -1;
+const PROP_BOOL = 1;
+const PROP_INT = 2;
+const PROP_FLOAT = 3;
+const PROP_COLOR = 5;
+const PROP_STRING = 6;
+
+/** PyMOL's `cmd.boolean_dict` truthiness map (case-insensitive keys). */
+const BOOLEAN_DICT: Record<string, boolean> = {
+  '1': true, '0': false,
+  on: true, off: false,
+  yes: true, no: false,
+  true: true, false: false,
+};
+
+/**
+ * Sniff a bare string into int → float → bool → string, mirroring the C
+ * `PropertySetromString`: `sscanf("%i %c")` (whole-string integer), then
+ * `sscanf("%lf %c")` (whole-string float), then case-insensitive
+ * true/yes/false/no, else the string verbatim.
+ */
+function autoFromString(value: string): PropValue {
+  const t = value.trim();
+  if (/^[+-]?\d+$/.test(t)) {
+    const n = parseInt(t, 10);
+    if (Number.isSafeInteger(n)) return n;
+  }
+  if (/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(t)) {
+    const f = Number(t);
+    if (Number.isFinite(f)) return f;
+  }
+  const lc = t.toLowerCase();
+  if (lc === 'true' || lc === 'yes') return true;
+  if (lc === 'false' || lc === 'no') return false;
+  return value;
+}
+
+/**
+ * Coerce a raw `set_property`/`set_atom_property` value per `proptype`, matching
+ * `properties._typecast` + the C auto-sniff. `resolveColor` maps a color
+ * name/index string to its integer index for `proptype=5`.
+ */
+function typecastProp(
+  raw: unknown,
+  proptype: number,
+  str: RegistrarCtx['str'],
+  resolveColor: (v: unknown) => number,
+): PropValue {
+  switch (proptype) {
+    case PROP_FLOAT: {
+      const f = typeof raw === 'boolean' ? (raw ? 1 : 0) : Number(str(raw));
+      return Number.isFinite(f) ? f : 0;
+    }
+    case PROP_INT: {
+      const n = typeof raw === 'boolean' ? (raw ? 1 : 0) : parseInt(str(raw), 10);
+      return Number.isFinite(n) ? n : 0;
+    }
+    case PROP_BOOL: {
+      if (typeof raw === 'boolean') return raw;
+      if (typeof raw === 'number') return raw !== 0;
+      const lc = str(raw).toLowerCase();
+      if (lc === 'false') return false;
+      const mapped = BOOLEAN_DICT[lc];
+      return mapped === undefined ? true : mapped;
+    }
+    case PROP_STRING:
+      return str(raw);
+    case PROP_COLOR:
+      return resolveColor(raw);
+    case PROP_AUTO:
+    default:
+      // Auto: a non-string real number/bool keeps its type; a string is sniffed.
+      if (typeof raw === 'number' || typeof raw === 'boolean') return raw;
+      return autoFromString(str(raw));
+  }
 }
 
 export function registerProps(ctx: RegistrarCtx): void {
   const ex = ctx.executive;
   const str = ctx.str;
+
+  /** Read `proptype` from args/kwargs (default -1 = auto). */
+  const propType = (args: unknown[], kwargs: Record<string, unknown>, idx: number): number => {
+    const raw = args[idx] ?? kwargs['proptype'];
+    if (raw === undefined || raw === null || raw === '') return PROP_AUTO;
+    const n = typeof raw === 'number' ? raw : parseInt(str(raw), 10);
+    return Number.isFinite(n) ? n : PROP_AUTO;
+  };
+
+  /** Resolve a color name/index to its integer index (numeric strings pass through). */
+  const resolveColor = (v: unknown): number => {
+    if (typeof v === 'number') return v;
+    const s = str(v).trim();
+    if (/^[+-]?\d+$/.test(s)) return parseInt(s, 10);
+    return getColorIndex(s);
+  };
 
   /** object -> (property name -> value). */
   const objectProps = new WeakMap<ObjectMolecule, Map<string, PropValue>>();
@@ -70,7 +162,7 @@ export function registerProps(ctx: RegistrarCtx): void {
   ctx.command('set_property', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
     if (!name) return 0;
-    const value = coerceProp(args[1] ?? kwargs['value'], str);
+    const value = typecastProp(args[1] ?? kwargs['value'], propType(args, kwargs, 4), str, resolveColor);
     const sel = str(args[2] ?? kwargs['selection'] ?? kwargs['object'] ?? '(all)', '(all)');
     const objs = objectsFor(sel);
     for (const mol of objs) objMap(mol).set(name, value);
@@ -110,7 +202,7 @@ export function registerProps(ctx: RegistrarCtx): void {
   ctx.command('set_atom_property', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
     if (!name) return 0;
-    const value = coerceProp(args[1] ?? kwargs['value'], str);
+    const value = typecastProp(args[1] ?? kwargs['value'], propType(args, kwargs, 4), str, resolveColor);
     const sel = str(args[2] ?? kwargs['selection'] ?? '(all)', '(all)');
     const matched = ex.atomsMatching(sel);
     for (const ua of matched) {

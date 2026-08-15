@@ -1,0 +1,18 @@
+{
+  "id": "command__set_discrete",
+  "feature": "set_discrete",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "pseudoatom foo" },
+    { "do": "set_discrete ala, 1" }
+  ],
+  "checks": [
+    { "call": ["count_discrete", "ala"], "label": "ala flagged discrete" },
+    { "call": ["count_discrete", "foo"], "label": "foo not discrete" },
+    { "call": ["count_discrete", "all"], "label": "total discrete objects" }
+  ],
+  "tol": 1e-3,
+  "expected": [0, 0, 0]
+}

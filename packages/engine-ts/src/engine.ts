@@ -63,6 +63,22 @@ const KNOWN_KEYWORDS = new Set([
   'reset',
 ]);
 
+/**
+ * Registered `cmd` symbols that are API-only — callable as `cmd.<fn>(...)` but
+ * NOT PyMOL command-line keywords, so a typed `do("<fn> ...")` line must run as
+ * script (a no-op here), never dispatch the command. PyMOL's keyword table
+ * (`modules/pymol/keywords.py`) is the source of truth; `set_discrete` is absent
+ * from it (exposed only via `pymol.editing.set_discrete`), so `set_discrete ala,
+ * 1` at the console leaves the object untouched — matched here by excluding it
+ * from `isCommandWord` even though it is a registered handler.
+ *
+ * `set_object_color` is likewise API-only (`pymol.editing.set_object_color`,
+ * absent from `keywords.py`), so a console `set_object_color ala, marine` line
+ * runs as script and leaves the object colour untouched — the object keeps its
+ * `auto_color` cycle colour, not `marine`.
+ */
+const API_ONLY_SYMBOLS = new Set(['set_discrete', 'set_object_color']);
+
 type Handler = (args: unknown[], kwargs: Record<string, unknown>) => Json;
 
 /**
@@ -293,6 +309,7 @@ export class Engine {
    * JavaScript syntax error.
    */
   private isCommandWord(kw: string): boolean {
+    if (API_ONLY_SYMBOLS.has(kw)) return false;
     return KNOWN_KEYWORDS.has(kw) || this.handlers.has(kw);
   }
 
@@ -617,7 +634,9 @@ export class Engine {
       const pdb = str(args[0]);
       const requested = str(args[1] ?? kwargs['object']);
       const name = ex.uniqueName(requested || 'obj');
-      ex.addMolecule(parsePdb(pdb, name));
+      const mol = parsePdb(pdb, name);
+      ex.addMolecule(mol);
+      ex.autoColorObject(mol);
       this.publish();
       return name;
     });
@@ -814,6 +833,7 @@ export class Engine {
         );
       }
       ex.addMolecule(mol);
+      ex.autoColorObject(mol);
       const sphere = ex.selectionSphere(objName);
       if (sphere) ex.view.zoomToSphere(sphere.center, sphere.radius);
       this.publish();
@@ -853,6 +873,16 @@ export class Engine {
     // `cmd.get_scene_message(name)` -> `MovieSceneGetMessage`: the stored
     // wizard message, or '' when the scene is unknown / has no message.
     h('get_scene_message', (args) => this.sceneDict.get(str(args[0], ''))?.message ?? '');
+    // `cmd.set_scene_message(name, message)` -> `MovieSceneSetMessage`
+    // (layer3/MovieScene.cpp): store the wizard message on an existing scene.
+    // An unknown scene is an error ("<name> could not be found.").
+    h('set_scene_message', (args) => {
+      const name = str(args[0], '');
+      const scene = this.sceneDict.get(name);
+      if (!scene) throw this.sceneError(`${name} could not be found.`);
+      scene.message = str(args[1], '');
+      return null;
+    });
     h('get_frame', () => 1);
     h('get_state', () => 1);
     h('count_frames', () => 0);

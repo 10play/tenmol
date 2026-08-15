@@ -88,17 +88,29 @@ function rotateAbout(p: Vec3, pivot: Vec3, u: Vec3, deg: number): Vec3 {
   ];
 }
 
-/** IUPAC dihedral (degrees) of points p1-p2-p3-p4. */
+/**
+ * Signed dihedral (degrees) of p1-p2-p3-p4, using the SAME sign convention as
+ * `cmd.get_dihedral` (PyMOL's `get_dihedral3f`, layer0/Vector.cpp). This matters
+ * for `set_dihedral`: the target angle it is asked to reach is expressed in
+ * get_dihedral's convention, so the current value must be measured the same way
+ * or the result comes out negated. (The textbook IUPAC atan2 form has the
+ * opposite sign to get_dihedral3f for this axis ordering.)
+ */
 function dihedral(p1: Vec3, p2: Vec3, p3: Vec3, p4: Vec3): number {
-  const b1 = sub(p2, p1);
-  const b2 = sub(p3, p2);
-  const b3 = sub(p4, p3);
-  const n1 = cross(b1, b2);
-  const n2 = cross(b2, b3);
-  const m1 = cross(n1, norm(b2));
-  const x = dot(n1, n2);
-  const y = dot(m1, n2);
-  return (Math.atan2(y, x) * 180) / Math.PI;
+  const d21 = sub(p3, p2);
+  const d01 = sub(p1, p2);
+  const d32 = sub(p4, p3);
+  const dd1 = cross(d21, d01);
+  const dd3 = cross(d21, d32);
+  const la = Math.hypot(dd1[0], dd1[1], dd1[2]);
+  const lb = Math.hypot(dd3[0], dd3[1], dd3[2]);
+  if (la < 1e-9 || lb < 1e-9) return 0;
+  let c = dot(dd1, dd3) / (la * lb);
+  c = Math.max(-1, Math.min(1, c));
+  let result = Math.acos(c);
+  const posD = cross(d21, dd1);
+  if (dot(dd3, posD) < 0) result = -result;
+  return (result * 180) / Math.PI;
 }
 
 /* --------------------------- protected flag ------------------------------ */
@@ -747,6 +759,19 @@ export function registerEditing(ctx: RegistrarCtx): void {
     }
     if (mol.states.length === 0) mol.states.push(new Float32Array(0));
 
+    // Honor an explicit `state` (1-based). The Python wrapper passes `state-1`
+    // to the C layer; a specific (>=0) state grows the object to that many
+    // coordinate sets — `ObjectMoleculeAddPseudoatom` does
+    // `NCSet = state + 1` (`ObjectMolecule2.cpp:411`). The default
+    // (ALL_STATES=0) leaves the state count alone and adds to every existing
+    // state. New states copy the last state's atom coordinates so all states
+    // stay uniform in this non-discrete model.
+    const stateArg = Math.trunc(num(kw.state, 0));
+    if (stateArg >= 1) {
+      const template = mol.states[mol.states.length - 1] ?? new Float32Array(0);
+      while (mol.states.length < stateArg) mol.states.push(new Float32Array(template));
+    }
+
     // PyMOL assigns a created atom `id = AtomCounter++` (0-based per object) on
     // merge (`ObjectMolecule.cpp:2494`), so the first pseudoatom in a fresh
     // object has id 0 — the value `cmd.get_model` reports.
@@ -909,9 +934,10 @@ export function registerEditing(ctx: RegistrarCtx): void {
       }
     }
 
-    // Rotate about the axis from atom3 toward atom2 (so a positive delta raises
-    // the dihedral), pivoting on atom3 (which lies on the axis and stays put).
-    const axis = norm(sub(p2, p3));
+    // Rotate about the atom2->atom3 axis (so a positive delta raises the
+    // dihedral in get_dihedral's convention), pivoting on atom3 (which lies on
+    // the axis and stays put).
+    const axis = norm(sub(p3, p2));
     for (const i of side) {
       const o = i * 3;
       const q = rotateAbout([set[o]!, set[o + 1]!, set[o + 2]!], p3, axis, delta);

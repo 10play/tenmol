@@ -128,6 +128,17 @@ function parseMovieSpec(spec: string): number[] {
   return out;
 }
 
+/** `get_state`/`SceneGetState`: the current global state (1-based) that the
+ * display frame maps to. With an `mset` mapping the frame indexes the
+ * frame->state table; without one the state equals the frame. Never below 1. */
+function stateForFrame(): number {
+  if (movie.frames.length > 0) {
+    const s = movie.frames[movie.current - 1];
+    if (s !== undefined) return Math.max(1, s);
+  }
+  return Math.max(1, movie.current);
+}
+
 /** Highest addressable frame: the movie length, else the first object's states.
  * Never below 1 — there is always a frame 1 to display, even in an empty scene. */
 function frameCeiling(ctx: RegistrarCtx): number {
@@ -202,6 +213,12 @@ export function registerSystem(ctx: RegistrarCtx): void {
   // the live movie cursor so `frame`/`forward`/`backward`/`rewind` are
   // observable (this registrar runs after the builtin, so it wins).
   ctx.command('get_frame', () => movie.current);
+
+  // `cmd.get_state()` — the current display state (1-based). engine.ts installs
+  // a fixed `() => 1` stub; registered here (after the builtin, so it wins) it
+  // tracks the live frame cursor through the movie frame->state map, so
+  // `frame`/`set_frame` move the observable state as in real PyMOL.
+  ctx.command('get_state', () => stateForFrame());
 
   // `cmd.count_frames()` — the number of frames in the movie. engine.ts installs
   // a fixed `() => 0` builtin; registered here (after the builtin, so it wins) it

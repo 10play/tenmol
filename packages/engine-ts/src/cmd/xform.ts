@@ -3,10 +3,9 @@
  * get_object_state, get_selection_state, set_state_order, get_coordset,
  * load_coordset, set_discrete (+ its count_discrete getter path).
  *
- * `set_object_ttt` is intentionally NOT registered: an honest `NotPorted` is
- * preferable to a lying no-op. The TTT (transient display) matrix itself is
- * modelled just enough for `translate object=…` to write it and
- * `get_object_ttt` to read it back (see {@link registerTransforms}).
+ * `set_object_ttt` writes an object's TTT (transient display) matrix verbatim;
+ * the TTT matrix is also written by `translate object=…` and read back by
+ * `get_object_ttt` (see {@link registerTransforms}).
  *
  * Registers through the shared {@link RegistrarCtx}. Compose real verbs via
  * `ctx.call(...)` (`frame`, `load_coords`, `get_frame`); mutate model state via
@@ -125,6 +124,33 @@ export function registerXform(ctx: RegistrarCtx): void {
     }
     if (n > 0) ctx.publish();
     return matched.length;
+  });
+
+  /* ---------------------------- set_object_ttt --------------------------- */
+
+  // set_object_ttt(object, ttt, state=0, quiet=1, homogenous=0) — API-only verb
+  // that sets an object's TTT (view-transformation) matrix verbatim. Ports
+  // editing.set_object_ttt: `state` is UNUSED (TTT is not state-specific) and
+  // `homogenous=1` transposes the 3×3 and rewrites the last column to [0,0,0,1]
+  // (PyMOL flags this transform as misleadingly named / possibly incorrect, but
+  // we mirror it faithfully). Returns None/null, like real PyMOL.
+  ctx.command('set_object_ttt', (args, kwargs): Json => {
+    const name = str(args[0] ?? kwargs['object']);
+    let ttt = toMat16(args[1] ?? kwargs['ttt']);
+    const homogenous = toBool(args[4] ?? kwargs['homogenous'], false);
+    const mol = ex.molecule(name);
+    if (!mol) return null;
+    if (homogenous) {
+      ttt = [
+        ttt[0]!, ttt[4]!, ttt[8]!, 0.0,
+        ttt[1]!, ttt[5]!, ttt[9]!, 0.0,
+        ttt[2]!, ttt[6]!, ttt[10]!, 0.0,
+        ttt[3]!, ttt[7]!, ttt[11]!, 1.0,
+      ];
+    }
+    mol.ttt = ttt;
+    ctx.publish();
+    return null;
   });
 
   /* ---------------------------- set_state_order -------------------------- */

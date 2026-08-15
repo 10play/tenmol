@@ -1,0 +1,16 @@
+{
+  "id": "command__set_object_color",
+  "feature": "set_object_color",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "set_object_color ala, marine" }
+  ],
+  "checks": [
+    { "call": ["get_object_color_index", "ala"], "label": "object color index after set_object_color(ala, marine)" },
+    { "call": ["get_color_index", "marine"], "label": "index of the color name marine (sanity)" }
+  ],
+  "tol": 1e-3,
+  "expected": [26, 17]
+}

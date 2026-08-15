@@ -1,0 +1,18 @@
+{
+  "id": "command__set_object_ttt",
+  "feature": "set_object_ttt",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "call": ["pseudoatom", "m"] }
+  ],
+  "checks": [
+    { "call": ["set_object_ttt", "m", [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 5, 6, 7, 1]], "label": "set_object_ttt return value" },
+    { "call": ["get_object_ttt", "m"], "label": "TTT matrix after set_object_ttt" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    null,
+    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 5, 6, 7, 1]
+  ]
+}

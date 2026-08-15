@@ -53,6 +53,12 @@ export class ObjectMolecule {
   readonly refPos: Array<Map<number, [number, number, number]>> = [];
   /** Whether the object is enabled (shown) in the executive. */
   enabled = true;
+  /** Object-level colour index (PyMOL's `CObject::Color`). `-1` means "unset":
+   *  a fresh object with no explicit object colour, reported by
+   *  `get_object_color_index` as `0` (PyMOLObject.h default). Molecular loads set
+   *  it via the `auto_color` cycle (`Executive.autoColorObject`); `set_object_color`
+   *  / `color_deep` set it explicitly. */
+  color = -1;
   /** Row-major homogeneous 4×4 recorded by `transform_object` (PyMOL's object
    *  state matrix); absent ⇒ identity. Read by `get_object_matrix`. */
   objectMatrix?: number[];
