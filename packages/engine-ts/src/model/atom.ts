@@ -64,6 +64,13 @@ export interface AtomInfo {
    */
   flags?: number;
   /**
+   * Unpickable flag (PyMOL `AtomInfoType.masked`). Set by the `mask` command
+   * and cleared by `unmask`; read by the `masked` selection keyword. Only
+   * affects mouse pickability, never command-line selection or transforms.
+   * Absent ⇒ not masked.
+   */
+  masked?: boolean;
+  /**
    * Internal atom-typing index (PyMOL `AtomInfoType.customType`). Assigned by
    * upstream typing passes and read by the experimental `get_bond_print` debug
    * dump; unassigned atoms are `-1` (the upstream default). Absent ⇒ -1.

@@ -134,6 +134,38 @@ function readScriptFile(filename: string): string | null {
   }
 }
 
+/**
+ * Invert a row-major homogeneous 4×4 affine matrix (last row `0 0 0 1`), as
+ * PyMOL's `invert_special44d44d` does for `matrix_reset` mode 0. The rotational
+ * 3×3 block is inverted by cofactors and the translation carried through as
+ * `-R⁻¹·t`. Returns `null` for a singular (non-invertible) rotation block.
+ */
+function invertAffine44(m: number[]): number[] | null {
+  const a = m[0]!, b = m[1]!, c = m[2]!;
+  const d = m[4]!, e = m[5]!, f = m[6]!;
+  const g = m[8]!, h = m[9]!, i = m[10]!;
+  const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+  if (!Number.isFinite(det) || Math.abs(det) < 1e-12) return null;
+  const inv = 1 / det;
+  // R⁻¹ (row-major 3×3) via the transposed cofactor matrix.
+  const r00 = (e * i - f * h) * inv;
+  const r01 = (c * h - b * i) * inv;
+  const r02 = (b * f - c * e) * inv;
+  const r10 = (f * g - d * i) * inv;
+  const r11 = (a * i - c * g) * inv;
+  const r12 = (c * d - a * f) * inv;
+  const r20 = (d * h - e * g) * inv;
+  const r21 = (b * g - a * h) * inv;
+  const r22 = (a * e - b * d) * inv;
+  const tx = m[3]!, ty = m[7]!, tz = m[11]!;
+  return [
+    r00, r01, r02, -(r00 * tx + r01 * ty + r02 * tz),
+    r10, r11, r12, -(r10 * tx + r11 * ty + r12 * tz),
+    r20, r21, r22, -(r20 * tx + r21 * ty + r22 * tz),
+    0, 0, 0, 1,
+  ];
+}
+
 export class Engine {
   readonly executive = new Executive();
   readonly emitter = new TypedEmitter<BackendEvents>();
@@ -863,6 +895,119 @@ export class Engine {
       const mol = ex.molecule(str(args[0], ''));
       return (mol?.objectMatrix ?? [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]) as Json;
     });
+    // `cmd.matrix_copy(source, target, ...)` (`modules/pymol/editing.py:matrix_copy`)
+    // copies an object's transformation matrix onto another object — or, when the
+    // target is empty, composes the source object's matrix into the camera view
+    // and re-applies it via `set_view` (the view adopts the object's frame). Only
+    // the empty-target path has an observable side effect our state model can
+    // expose (`get_view`); the object-to-object path copies the stored state
+    // matrix. `matrix_transfer` is a legacy alias for the same command.
+    const matrixCopy = (args: unknown[], kwargs: Record<string, unknown>): Json => {
+      const sourceName = str(args[0] ?? kwargs['source_name'], '').trim();
+      const targetName = str(args[1] ?? kwargs['target_name'], '').trim();
+      const sourceMode = Number(args[2] ?? kwargs['source_mode'] ?? -1);
+      const targetMode = Number(args[3] ?? kwargs['target_mode'] ?? -1);
+      const sourceState = Number(args[4] ?? kwargs['source_state'] ?? 1);
+      if (targetName === '' && sourceName !== '') {
+        const mat = this.call('get_object_matrix', [sourceName, sourceState]) as number[];
+        const v = ex.view.get();
+        // Compose the row-major object matrix `mat` with the 18-float `view`,
+        // exactly as editing.py does (rotation ✕ view-rotation, plus the
+        // origin-corrected translation), then re-apply through set_view.
+        const nv = [
+          mat[0]! * v[0]! + mat[4]! * v[3]! + mat[8]! * v[6]!,
+          mat[0]! * v[1]! + mat[4]! * v[4]! + mat[8]! * v[7]!,
+          mat[0]! * v[2]! + mat[4]! * v[5]! + mat[8]! * v[8]!,
+          mat[1]! * v[0]! + mat[5]! * v[3]! + mat[9]! * v[6]!,
+          mat[1]! * v[1]! + mat[5]! * v[4]! + mat[9]! * v[7]!,
+          mat[1]! * v[2]! + mat[5]! * v[5]! + mat[9]! * v[8]!,
+          mat[2]! * v[0]! + mat[6]! * v[3]! + mat[10]! * v[6]!,
+          mat[2]! * v[1]! + mat[6]! * v[4]! + mat[10]! * v[7]!,
+          mat[2]! * v[2]! + mat[6]! * v[5]! + mat[10]! * v[8]!,
+          v[9]!,
+          v[10]!,
+          v[11]!,
+          mat[0]! * v[12]! + mat[1]! * v[13]! + mat[2]! * v[14]! -
+            mat[0]! * mat[3]! - mat[4]! * mat[7]! - mat[8]! * mat[11]!,
+          mat[4]! * v[12]! + mat[5]! * v[13]! + mat[6]! * v[14]! -
+            mat[1]! * mat[3]! - mat[5]! * mat[7]! - mat[9]! * mat[11]!,
+          mat[8]! * v[12]! + mat[9]! * v[13]! + mat[10]! * v[14]! -
+            mat[2]! * mat[3]! - mat[6]! * mat[7]! - mat[10]! * mat[11]!,
+          v[15]!,
+          v[16]!,
+          v[17]!,
+        ];
+        return this.call('set_view', [nv]);
+      }
+      // Object-to-object: copy the source's stored state matrix onto the target.
+      const srcMol = ex.molecule(sourceName);
+      const tgtMol = ex.molecule(targetName);
+      if (srcMol && tgtMol) {
+        tgtMol.objectMatrix = srcMol.objectMatrix ? srcMol.objectMatrix.slice() : undefined;
+        // `copy_ttt_too`: when both modes are auto (-1, the default), PyMOL also
+        // copies the object's TTT display matrix (`ExecutiveMatrixCopy2`), but
+        // only when the source actually has one — a missing source TTT never
+        // clears the target's. Mirror that so a TTT set by `translate object=`
+        // (or a movie/drag transform) transfers along with the state matrix.
+        if (sourceMode < 0 && targetMode < 0 && srcMol.ttt) {
+          tgtMol.ttt = srcMol.ttt.slice();
+        }
+        this.publish();
+      }
+      return null;
+    };
+    h('matrix_copy', matrixCopy);
+    h('matrix_transfer', matrixCopy);
+    // `cmd.matrix_reset(name, state=1, mode=-1, log=0, quiet=1)`
+    // (`modules/pymol/editing.py:matrix_reset` → `ExecutiveResetMatrix`). Undo a
+    // transform applied to an object. `mode` selects the target: 0 = the
+    // transformation baked into the coordinates (reversed by applying its
+    // inverse, which also left-combines the recorded matrix back to identity),
+    // 1 = the TTT display matrix, 2 = the state (object) matrix. mode=-1 falls
+    // back to the `matrix_mode` setting (or 0 when unset/negative), exactly as
+    // the C layer does.
+    const matrixReset = (args: unknown[], kwargs: Record<string, unknown>): Json => {
+      const name = str(args[0] ?? kwargs['name'], '').trim();
+      const state = Number(args[1] ?? kwargs['state'] ?? 1);
+      const log = Number(args[3] ?? kwargs['log'] ?? 0);
+      let mode = Number(args[2] ?? kwargs['mode'] ?? -1);
+      if (!Number.isFinite(mode) || mode < 0) {
+        const mm = Number(this.call('get_setting_int', ['matrix_mode']));
+        mode = Number.isFinite(mm) && mm >= 0 ? mm : 0;
+      }
+      const mol = ex.molecule(name);
+      if (!mol) {
+        throw new PymolError(
+          {
+            kind: 'CmdException',
+            type: 'CmdException',
+            message: 'No object found',
+            traceback: '',
+          },
+          'matrix_reset',
+        );
+      }
+      switch (mode) {
+        case 0: {
+          // Reverse the transform recorded into the coordinates by applying its
+          // inverse; transform_object left-combines it, so the stored matrix
+          // collapses back to identity (matching CoordSetRecordTxfApplied).
+          const inv = mol.objectMatrix ? invertAffine44(mol.objectMatrix) : null;
+          if (inv) this.call('transform_object', [name, inv, state, log, '', 1]);
+          break;
+        }
+        case 1:
+          mol.ttt = undefined;
+          this.publish();
+          break;
+        case 2:
+          mol.objectMatrix = undefined;
+          this.publish();
+          break;
+      }
+      return null;
+    };
+    h('matrix_reset', matrixReset);
     h('get_object_ttt', () => null);
     h('get_progress', () => -1);
     h('get_idle', () => 0);

@@ -73,7 +73,8 @@ describe('extras — residual command sweep', () => {
       // cmd/editor.ts, and the superposition family (intra_rms/alignto/extra_fit/
       // cealign/usalign/pair_fit) to cmd/align.ts (see parity-*.test.ts).
       'save', 'log', // ray/draw/png are real now (cmd/render.ts)
-      'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
+      // `map_set` moved to cmd/maps.ts (real elementwise map arithmetic).
+      'mcopy', 'volume', 'cls', 'cache', 'quit',
       'alias', 'assign_stereo',
       'get_mtl_obj', 'get_povray', 'povray',
     ];

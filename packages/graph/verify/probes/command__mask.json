@@ -1,0 +1,14 @@
+{
+  "id": "command__mask", "feature": "mask", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"mask name CA"}
+  ],
+  "checks": [
+    {"call":["count_atoms","masked"],"label":"atoms masked (unpickable) after mask name CA"},
+    {"call":["count_atoms","name CA"],"label":"sanity: mask does not affect command-line selection of CA"},
+    {"call":["count_atoms","all"],"label":"sanity: mask deletes nothing"}
+  ],
+  "tol": 1e-3,
+  "expected": [1, 1, 10]
+}

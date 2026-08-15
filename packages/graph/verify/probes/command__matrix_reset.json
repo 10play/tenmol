@@ -1,0 +1,18 @@
+{
+  "id": "command__matrix_reset",
+  "feature": "matrix_reset",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom m, pos=[1,2,3]"},
+    {"call": ["transform_object", "m", [2, 0, 0, 5, 0, 3, 0, 6, 0, 0, 4, 7, 0, 0, 0, 1], 1, 0, "", 1]},
+    {"do": "matrix_reset m, 1, 2"}
+  ],
+  "checks": [
+    {"call": ["get_object_matrix", "m", 1], "label": "state matrix after matrix_reset (expect identity)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+  ]
+}

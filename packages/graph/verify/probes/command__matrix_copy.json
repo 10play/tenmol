@@ -1,0 +1,19 @@
+{
+  "id": "command__matrix_copy",
+  "feature": "matrix_copy",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "call": ["transform_object", "ala", [2, 0, 0, 5, 0, 3, 0, 6, 0, 0, 4, 7, 0, 0, 0, 1], 1, 0, "", 1] },
+    { "call": ["set_view", [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50, 0, 0, 0, 40, 60, 0]] },
+    { "do": "matrix_copy ala" }
+  ],
+  "checks": [
+    { "call": ["get_view"], "label": "camera view after matrix_copy from ala (empty target composes object matrix into view)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, -50, -10, -18, -28, 40, 60, -20]
+  ]
+}

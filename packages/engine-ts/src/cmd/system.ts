@@ -40,9 +40,38 @@ interface MovieState {
   frames: number[];
   current: number;
   playing: boolean;
+  /**
+   * Generalized movie commands bound to a frame (PyMOL's `Movie->Cmd`), keyed by
+   * the 1-based display frame. Set by `mdo` (overwrite) / `mappend` (append) and
+   * replayed whenever that frame is displayed. Cleared by `mset`/`reinitialize`.
+   */
+  commands: Map<number, string>;
 }
 
-const movie: MovieState = { frames: [], current: 1, playing: false };
+const movie: MovieState = { frames: [], current: 1, playing: false, commands: new Map() };
+
+/** Re-entrancy guard so a frame command that itself changes the frame (or calls
+ * `refresh`) cannot recurse into its own replay. Mirrors PyMOL running a frame's
+ * generalized command exactly once per display update. */
+let runningFrameCommand = false;
+
+/**
+ * Replay the generalized movie command bound to the current display frame
+ * (PyMOL's `MovieDoFrameCommand`). Runs the stored command line through the
+ * console (`cmd.do`), so multi-command, `;`-separated text works exactly as a
+ * typed line would. A no-op when the frame has no command.
+ */
+function runFrameCommand(ctx: RegistrarCtx): void {
+  if (runningFrameCommand) return;
+  const command = movie.commands.get(movie.current);
+  if (!command) return;
+  runningFrameCommand = true;
+  try {
+    ctx.call('do', [command]);
+  } finally {
+    runningFrameCommand = false;
+  }
+}
 
 /**
  * Parse a PyMOL `mset` frame specification into a list of states (1-based).
@@ -114,6 +143,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
   movie.frames = [];
   movie.current = 1;
   movie.playing = false;
+  movie.commands.clear();
 
   /* ------------------------------ session ------------------------------ */
 
@@ -127,6 +157,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
     movie.frames = [];
     movie.current = 1;
     movie.playing = false;
+    movie.commands.clear();
     ctx.publish();
     return null;
   });
@@ -188,18 +219,21 @@ export function registerSystem(ctx: RegistrarCtx): void {
     const n = Number(ctx.str(args[0], '1'));
     movie.current = clampFrame(ctx, Number.isFinite(n) ? n : 1);
     ctx.emitView();
+    runFrameCommand(ctx);
     return movie.current;
   });
 
   ctx.command('forward', () => {
     movie.current = clampFrame(ctx, movie.current + 1);
     ctx.emitView();
+    runFrameCommand(ctx);
     return movie.current;
   });
 
   ctx.command('backward', () => {
     movie.current = clampFrame(ctx, movie.current - 1);
     ctx.emitView();
+    runFrameCommand(ctx);
     return movie.current;
   });
 
@@ -207,6 +241,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
     movie.current = 1;
     movie.playing = false;
     ctx.emitView();
+    runFrameCommand(ctx);
     return movie.current;
   });
 
@@ -215,6 +250,7 @@ export function registerSystem(ctx: RegistrarCtx): void {
     movie.current = frameCeiling(ctx);
     movie.playing = false;
     ctx.emitView();
+    runFrameCommand(ctx);
     return movie.current;
   });
 
@@ -222,27 +258,108 @@ export function registerSystem(ctx: RegistrarCtx): void {
   // Returns the number of frames defined.
   ctx.command('mset', (args) => {
     movie.frames = parseMovieSpec(ctx.str(args[0], ''));
+    // Redefining the movie clears any existing generalized frame commands
+    // (moving.py mdo NOTES: "Redefinition of the movie clears any existing mdo
+    // statements") — the C side frees Movie->Cmd when the frame table is rebuilt.
+    movie.commands.clear();
     movie.current = clampFrame(ctx, movie.current);
     ctx.publish();
     return movie.frames.length;
   });
 
-  // `cmd.madd` / `cmd.mappend` — extend the movie. Returns the new total.
+  // `cmd.madd(specification)` — extend the movie frame->state mapping in place.
+  // Returns the new total. Takes a movie SPEC (like `mset`), not a frame/command.
   const append = (args: unknown[]): number => {
     movie.frames.push(...parseMovieSpec(ctx.str(args[0], '')));
     ctx.publish();
     return movie.frames.length;
   };
   ctx.command('madd', append);
-  ctx.command('mappend', append);
 
-  // `cmd.mclear` — clear the movie (frames only; frame cursor is left).
-  ctx.command('mclear', () => {
-    movie.frames = [];
-    movie.current = clampFrame(ctx, movie.current);
-    ctx.publish();
+  // Bind a generalized command line to a movie frame. `append=false` overwrites
+  // (mdo), `append=true` layers onto the existing text (mappend). Frames outside
+  // the defined movie (`1..NFrame`) are ignored: PyMOL's C `MovieSetCommand`
+  // guards `frame < NFrame`, and moving.py notes that `mset` must define the
+  // movie before `mdo`/`mappend` "will have any effect". Mirrors
+  // `_cmd.mdo(frame-1, command, flag)`.
+  const bindFrameCommand = (frame: number, command: string, append: boolean): void => {
+    if (!Number.isFinite(frame) || frame < 1 || frame > movie.frames.length) return;
+    const key = Math.trunc(frame);
+    if (append) {
+      const prev = movie.commands.get(key);
+      // moving.py mappend passes ";"+command, so it concatenates onto the prior
+      // text; an empty/absent prior collapses the leading separator away.
+      movie.commands.set(key, prev ? `${prev};${command}` : command);
+    } else {
+      movie.commands.set(key, command);
+    }
+  };
+
+  // `cmd.mdo(frame, command)` — define (or REPLACE) the generalized command-line
+  // operations run whenever `frame` is played. moving.py -> `_cmd.mdo(frame-1,
+  // command, 0)`. Returns null, mirroring PyMOL.
+  ctx.command('mdo', (args, kwargs) => {
+    const frame = Number(ctx.str(args[0] ?? kwargs['frame'], '0'));
+    const command = ctx.str(args[1] ?? kwargs['command'], '');
+    bindFrameCommand(frame, command, false);
     return null;
   });
+
+  // `cmd.mappend(frame, command)` — associate ADDITIONAL command-line text with a
+  // movie frame (the additive counterpart of `mdo`). moving.py implements it as
+  // `_cmd.mdo(frame-1, ";"+command, 1)`: it layers generalized movie commands
+  // onto an existing frame without extending the movie or changing its length.
+  ctx.command('mappend', (args, kwargs) => {
+    const frame = Number(ctx.str(args[0] ?? kwargs['frame'], '0'));
+    const command = ctx.str(args[1] ?? kwargs['command'], '');
+    bindFrameCommand(frame, command, true);
+    return null;
+  });
+
+  // `cmd.mdelete(count=-1, frame=0, freeze=0, object='', quiet=1)` — remove a run
+  // of movie frames (camera views + object motions), shortening the timeline.
+  // Ports moving.py `mdelete` -> `_cmd.mmodify(mode=-1, ...)`: resolve the
+  // zero-based first frame and the run length exactly as Python does, then splice
+  // that run out of the frame->state table.
+  ctx.command('mdelete', (args, kwargs) => {
+    const toInt = (v: unknown, dflt: number): number => {
+      const n = Number(ctx.str(v, String(dflt)));
+      return Number.isFinite(n) ? Math.trunc(n) : dflt;
+    };
+    let count = toInt(args[0] ?? kwargs['count'], -1);
+    let frame = toInt(args[1] ?? kwargs['frame'], 0);
+    const object = ctx.str(args[3] ?? kwargs['object'], '');
+    const curLen = movieLength(ctx);
+    if (frame === 0) {
+      // 0 means the current frame (get_frame is 1-based).
+      frame = movie.current - 1;
+    } else if (frame < 0) {
+      frame = curLen + 1 + frame;
+      if (count > 0 && frame + count > curLen) frame = curLen - count;
+    } else {
+      frame -= 1;
+    }
+    if (count < 0) count = 1 + curLen - frame; // negative count -> delete to end
+    // An object-restricted delete touches that object's motions, not the global
+    // camera/movie frame table; there is no per-object motion model here.
+    if (object === '') {
+      const start = Math.max(0, Math.min(frame, movie.frames.length));
+      const n = Math.max(0, Math.min(count, movie.frames.length - start));
+      if (n > 0) {
+        movie.frames.splice(start, n);
+        movie.current = clampFrame(ctx, movie.current);
+        ctx.publish();
+      }
+    }
+    return null;
+  });
+
+  // `cmd.mclear` — `MovieClearImages`: free ONLY the cached rendered movie-frame
+  // images (the cache built when `cache_frames` is on). It does NOT touch the
+  // `mset` frame->state mapping, so `get_movie_length`/`count_frames` are
+  // unchanged. This engine has no GL/frame-image cache, so there is nothing to
+  // free — `mclear` is inert here (leaving `movie.frames` intact). Returns null.
+  ctx.command('mclear', () => null);
 
   // `cmd.get_movie_playing()` — whether the movie is currently playing back.
   // engine.ts installs a fixed `() => 0` builtin; registered here (after the

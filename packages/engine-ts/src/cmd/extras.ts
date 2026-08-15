@@ -105,14 +105,6 @@ interface UA {
 
 /* ------------------------------ atom-flag store --------------------------- */
 
-/**
- * Per-atom boolean flags this module maintains outside {@link AtomInfo} (which
- * has no flag field). Keyed by atom identity so the state is observable through
- * a getter without touching the shared atom record. `mask`/`unmask` set/clear
- * the "masked" (unpickable) flag; `get_mask` reads it back.
- */
-const MASKED = new WeakSet<AtomInfo>();
-
 /* -------------------------------- helpers --------------------------------- */
 
 /** Deep-copy `uas` into a fresh multi-state object, remapping bonds. */
@@ -341,24 +333,26 @@ export function registerExtras(ctx: RegistrarCtx): void {
     return changed;
   });
 
-  /* mask / unmask / get_mask — the per-atom "masked" (unpickable) flag. */
+  /* mask / unmask / get_mask — the per-atom "masked" (unpickable) flag stored on
+     AtomInfo.masked; read by the `masked` selection keyword. Only affects mouse
+     pickability, never command-line selection or transforms. */
   ctx.command('mask', (args, kwargs): Json => {
     const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
     const uas = ex.atomsMatching(selection) as UA[];
-    for (const ua of uas) MASKED.add(ua.atom);
+    for (const ua of uas) ua.atom.masked = true;
     return uas.length;
   });
   ctx.command('unmask', (args, kwargs): Json => {
     const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
     const uas = ex.atomsMatching(selection) as UA[];
-    for (const ua of uas) MASKED.delete(ua.atom);
+    for (const ua of uas) ua.atom.masked = false;
     return uas.length;
   });
   ctx.command('get_mask', (args, kwargs): Json => {
     const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
     const uas = ex.atomsMatching(selection) as UA[];
     let n = 0;
-    for (const ua of uas) if (MASKED.has(ua.atom)) n++;
+    for (const ua of uas) if (ua.atom.masked === true) n++;
     return n;
   });
 
@@ -669,13 +663,13 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'h_fix',
       // movie frame-table edits (movie store lives in the engine)
       'mcopy',
-      'mdelete',
+      // `mdelete` is real now — see cmd/system.ts (splices the movie frame table).
+      // `mdo` is real now — see cmd/system.ts (binds/replays generalized frame commands).
       'mmove',
-      'mdo',
       'minsert',
       'scene_order',
       // maps / volumes / slices (need a map object model)
-      'map_set',
+      // `map_set` is real — see cmd/maps.ts (elementwise map arithmetic).
       'slice_new',
       'volume',
       'volume_panel',
@@ -693,7 +687,8 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'feedback',
       'extend',
       'alias',
-      'matrix_copy',
+      // `matrix_copy`/`matrix_transfer` are real now — see the engine builtin
+      // (empty target composes the object matrix into the camera view).
       // chemistry/typing we do not model
       'assign_stereo',
       'text_type',

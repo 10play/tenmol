@@ -79,8 +79,8 @@ describe('system: reinitialize', () => {
     const { call } = harness();
     expect(call('mset', '1 x10')).toBe(10);
     call('reinitialize');
-    // After reinit the movie is empty: mclear-independent proof via mappend total.
-    expect(call('mappend', '1 1')).toBe(2);
+    // After reinit the movie is empty: mclear-independent proof via madd total.
+    expect(call('madd', '1 1')).toBe(2);
   });
 });
 
@@ -133,18 +133,33 @@ describe('system: mset frame-spec parsing', () => {
     expect(call('mset', '')).toBe(0);
   });
 
-  it('madd/mappend extend the current movie', () => {
+  it('madd extends the current movie', () => {
     const { call } = harness();
     expect(call('mset', '1 x2')).toBe(2);
     expect(call('madd', '2 x3')).toBe(5);
-    expect(call('mappend', '3')).toBe(6);
   });
 
-  it('mclear empties the movie', () => {
+  it('mappend(frame, command) layers movie commands without changing the length', () => {
+    // Real PyMOL `mappend` calls `_cmd.mdo(frame-1, ";"+command, 1)`: it attaches
+    // generalized movie commands to a frame (additive counterpart of mdo), it does
+    // NOT take a movie spec nor extend the frame table. `mdo` is inert here, so
+    // `mappend` is an inert null and leaves count_frames untouched.
+    const { call } = harness();
+    expect(call('mset', '1 x2')).toBe(2);
+    expect(call('mappend', '2', 'turn x, 5')).toBeNull();
+    expect(call('count_frames')).toBe(2);
+  });
+
+  it('mclear only frees the image cache; the mset movie is preserved', () => {
+    // Real PyMOL `mclear` == MovieClearImages: it frees the cached rendered
+    // frame images, NOT the mset frame->state mapping. Verified against the
+    // oracle (get_movie_length stays 10 after `mset 1 x10; mclear`). So the
+    // movie length is unchanged and madd appends onto the surviving frames.
     const { call } = harness();
     call('mset', '1 x5');
     expect(call('mclear')).toBeNull();
-    expect(call('mappend', '1')).toBe(1);
+    expect(call('count_frames')).toBe(5);
+    expect(call('madd', '1')).toBe(6);
   });
 });
 

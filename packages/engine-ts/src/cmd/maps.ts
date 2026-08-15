@@ -339,6 +339,107 @@ export function registerMaps(ctx: RegistrarCtx): void {
     return name;
   });
 
+  /* ------------------------------- map_set ------------------------------- */
+
+  // Operator names -> internal index (ObjectMap map arithmetic), matching
+  // PyMOL's `map_op_dict` in editing.py.
+  const MAP_OPS = [
+    'minimum',
+    'maximum',
+    'sum',
+    'average',
+    'difference',
+    'copy',
+    'unique',
+  ] as const;
+
+  /** Resolve an operator string via unique-prefix shortcut (PyMOL Shortcut). */
+  const resolveOp = (raw: string): string => {
+    const s = raw.toLowerCase();
+    if ((MAP_OPS as readonly string[]).includes(s)) return s;
+    const hits = MAP_OPS.filter((o) => o.startsWith(s));
+    if (hits.length === 1) return hits[0]!;
+    throw new Error(`map_set: Invalid operator '${raw}'.`);
+  };
+
+  ctx.command('map_set', (args, kwargs): Json => {
+    const name = toStr(args[0] ?? kwargs.name);
+    const operator = resolveOp(toStr(args[1] ?? kwargs.operator));
+    const operands = toStr(args[2] ?? kwargs.operands, '');
+    const zoom = toNum(args[5] ?? kwargs.zoom, 0);
+
+    const srcNames = operands.split(/\s+/).filter((s) => s.length > 0);
+    const sources = srcNames
+      .map((n) => maps.get(n))
+      .filter((m): m is VolMap => m != null);
+    if (sources.length === 0) {
+      throw new Error(`map_set: no valid source maps in '${operands}'.`);
+    }
+
+    // Result grid geometry follows the first source; only voxels that exist in
+    // every operand of a matching grid participate in a combine.
+    const base = sources[0]!;
+    const dims: Vec3 = [...base.dims];
+    const n = dims[0] * dims[1] * dims[2];
+    const out = new Float32Array(n);
+    const sameGrid = (m: VolMap): boolean =>
+      m.dims[0] === dims[0] && m.dims[1] === dims[1] && m.dims[2] === dims[2];
+    const combinable = sources.filter(sameGrid);
+
+    for (let i = 0; i < n; i++) {
+      switch (operator) {
+        case 'copy':
+        case 'unique':
+          out[i] = base.data[i] ?? 0;
+          break;
+        case 'minimum': {
+          let v = Infinity;
+          for (const m of combinable) v = Math.min(v, m.data[i] ?? 0);
+          out[i] = v;
+          break;
+        }
+        case 'maximum': {
+          let v = -Infinity;
+          for (const m of combinable) v = Math.max(v, m.data[i] ?? 0);
+          out[i] = v;
+          break;
+        }
+        case 'sum': {
+          let v = 0;
+          for (const m of combinable) v += m.data[i] ?? 0;
+          out[i] = v;
+          break;
+        }
+        case 'average': {
+          let v = 0;
+          for (const m of combinable) v += m.data[i] ?? 0;
+          out[i] = combinable.length > 0 ? v / combinable.length : 0;
+          break;
+        }
+        case 'difference': {
+          // First operand minus the sum of the rest.
+          let v = combinable[0]?.data[i] ?? 0;
+          for (let k = 1; k < combinable.length; k++) v -= combinable[k]!.data[i] ?? 0;
+          out[i] = v;
+          break;
+        }
+      }
+    }
+
+    maps.set(name, {
+      name,
+      origin: [...base.origin],
+      spacing: [...base.spacing],
+      dims,
+      data: out,
+      levels: [],
+    });
+    ex.registerGadget(name, 'object:map');
+    void zoom;
+    ctx.publish();
+    return name;
+  });
+
   /* --------------------- isomesh / isosurface / isodot ------------------- */
 
   const buildIso = (kind: IsoObject['kind'], args: unknown[], kwargs: Record<string, unknown>): Json => {

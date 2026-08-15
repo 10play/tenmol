@@ -1,0 +1,17 @@
+{
+  "id": "command__mappend",
+  "feature": "mappend",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "mset 1 x10" },
+    { "call": ["mappend", 2, "turn x, 5"] },
+    { "call": ["mappend", 2, "turn y, 5"] }
+  ],
+  "checks": [
+    { "call": ["count_frames"], "label": "mappend adds commands to a frame, not new frames -> count stays 10" },
+    { "call": ["get_movie_length"], "label": "defined movie length unchanged by mappend -> 10" }
+  ],
+  "tol": 1e-3,
+  "expected": [10, 10]
+}

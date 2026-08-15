@@ -113,7 +113,8 @@ type KeywordKey =
   | 'bonded'
   | 'donor'
   | 'acceptor'
-  | 'metals';
+  | 'metals'
+  | 'masked';
 
 const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
   name: 'name',
@@ -177,6 +178,7 @@ const KEYWORDS: Readonly<Record<string, KeywordKey>> = {
   donor: 'donor',
   acceptor: 'acceptor',
   metals: 'metals',
+  masked: 'masked',
 };
 
 /** Metal elements for the `metals` keyword (element heuristic). */
@@ -618,6 +620,9 @@ function matchKeyword(kw: KeywordKey, ua: UniverseAtom): boolean {
       return ACCEPTOR_ELEMENTS.has(a.elem);
     case 'metals':
       return METAL_ELEMENTS.has(a.elem);
+    case 'masked':
+      // Atoms flagged unpickable by `mask` (cleared by `unmask`).
+      return a.masked === true;
     case 'enabled':
     case 'bonded':
       // Handled in evalSet (need object/bond context); unreachable here.

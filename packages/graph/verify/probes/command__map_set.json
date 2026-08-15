@@ -1,0 +1,20 @@
+{
+  "id": "command__map_set",
+  "feature": "map_set",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "map_new m1, gaussian, 0.5, (all)" },
+    { "do": "map_set mcopy, copy, m1" }
+  ],
+  "checks": [
+    { "call": ["get_names", "objects"], "label": "objects after map_set copy (expect mcopy created)" },
+    { "call": ["get_type", "m1"], "label": "source map type is object:map" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["ala", "m1", "mcopy"],
+    "object:map"
+  ]
+}
