@@ -1,0 +1,21 @@
+{
+  "id": "command__translate_atom",
+  "feature": "translate_atom",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "call": ["translate_atom", "index 1 and m", 0.5, -1.5, 4.0] }
+  ],
+  "checks": [
+    { "call": ["get_atom_coords", "index 1 and m"], "label": "picked atom moved by vector" },
+    { "call": ["get_atom_coords", "index 2 and m"], "label": "neighbor atom unchanged" },
+    { "call": ["count_atoms", "m"], "label": "atom count unchanged" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [0.5, -1.5, 4],
+    [14.531999588012695, 19.246000289916992, 11.675000190734863],
+    5684
+  ]
+}

@@ -445,8 +445,14 @@ export function registerEditing(ctx: RegistrarCtx): void {
   });
 
   /* ------------------------------- torsion ------------------------------- */
-  // torsion(angle) — rotate the fragment on the pk2 side of the currently picked
+  // torsion(angle) — rotate the fragment on the pk1 side of the currently picked
   // bond (pk1–pk2) about that bond axis by `angle` degrees (editing.py:1135).
+  //
+  // Matches PyMOL's `EditorTorsion` (Editor.cpp:691): the rotated fragment is
+  // `_pkfrag1`, i.e. the atoms on the FIRST picked atom's (pk1) side of the bond
+  // ("The rotated fragment will correspond to the first atom specified when
+  // picking the bond"). The rotation axis is normalize(V0 - V1) (pointing from
+  // pk2 toward pk1) and the pivot is pk1's coordinate V0.
   ctx.command('torsion', (args, kwargs): Json => {
     const angle = (Number(pick(args, kwargs, 0, 'angle') ?? 0) || 0) * (Math.PI / 180);
     const p1u = ex.atomsMatching('pk1');
@@ -460,33 +466,34 @@ export function registerEditing(ctx: RegistrarCtx): void {
     const i1 = a1.index;
     const i2 = a2.index;
 
-    // Adjacency, then the pk2-side fragment: reachable from i2 without crossing
-    // the i1–i2 bond or ever entering i1.
+    // Adjacency, then the pk1-side fragment: reachable from i1 without crossing
+    // the i1–i2 bond or ever entering i2.
     const adj: number[][] = Array.from({ length: mol.natom }, () => []);
     for (const [a, b] of mol.bonds) {
       adj[a]!.push(b);
       adj[b]!.push(a);
     }
-    const frag = new Set<number>([i2]);
-    const stack = [i2];
+    const frag = new Set<number>([i1]);
+    const stack = [i1];
     while (stack.length > 0) {
       const x = stack.pop()!;
       for (const y of adj[x] ?? []) {
-        if (y === i1) continue; // never cross onto the pk1 side
+        if (y === i2) continue; // never cross onto the pk2 side
         if (!frag.has(y)) {
           frag.add(y);
           stack.push(y);
         }
       }
     }
-    frag.delete(i2); // on the rotation axis — unaffected
+    frag.delete(i1); // on the rotation axis — unaffected
 
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     for (const set of mol.states) {
       if (!set) continue;
+      // Pivot at pk1 (V0); axis points pk2 -> pk1 (normalize(V0 - V1)).
       const ox = set[i1 * 3]!, oy = set[i1 * 3 + 1]!, oz = set[i1 * 3 + 2]!;
-      let ux = set[i2 * 3]! - ox, uy = set[i2 * 3 + 1]! - oy, uz = set[i2 * 3 + 2]! - oz;
+      let ux = ox - set[i2 * 3]!, uy = oy - set[i2 * 3 + 1]!, uz = oz - set[i2 * 3 + 2]!;
       const len = Math.hypot(ux, uy, uz) || 1;
       ux /= len; uy /= len; uz /= len;
       for (const k of frag) {
@@ -692,8 +699,12 @@ export function registerEditing(ctx: RegistrarCtx): void {
   });
 
   /* ----------------------------- translate_atom -------------------------- */
-  // translate_atom(selection, v0, v1, v2, state=0) — shift the matched atoms'
-  // coordinates by (v0,v1,v2). state<=0 shifts every state. Returns the count.
+  // translate_atom(selection, v0, v1, v2, state=0, mode=0) — move the matched
+  // atoms with (v0,v1,v2). Mirrors PyMOL's CoordSetMoveAtom: mode=0 (default)
+  // SETS the coordinate to (v0,v1,v2) absolutely (copy3f); any non-zero mode
+  // ADDS the vector (add3f) — the relative form the interactive drag uses. As
+  // in PyMOL, the Python layer passes state-1 to the C core, so state=0 (the
+  // default) targets the first state, not every state. Returns the count.
   ctx.command('translate_atom', (args, kwargs): Json => {
     const selection = sel(pick(args, kwargs, 0, 'selection'));
     const vec: Vec3 = [
@@ -702,17 +713,24 @@ export function registerEditing(ctx: RegistrarCtx): void {
       num(pick(args, kwargs, 3, 'v2'), 0),
     ];
     const state = num(pick(args, kwargs, 4, 'state'), 0);
+    const mode = num(pick(args, kwargs, 5, 'mode'), 0);
     let count = 0;
     for (const [objName, idxs] of byObject(selection)) {
       const mol = ex.molecule(objName);
       if (!mol) continue;
-      const states = state > 0 ? [mol.states[state - 1]] : mol.states;
+      const states = state > 0 ? [mol.states[state - 1]] : [mol.states[0]];
       for (const set of states) {
         if (!set) continue;
         for (const i of idxs) {
-          set[i * 3] = (set[i * 3] ?? 0) + vec[0];
-          set[i * 3 + 1] = (set[i * 3 + 1] ?? 0) + vec[1];
-          set[i * 3 + 2] = (set[i * 3 + 2] ?? 0) + vec[2];
+          if (mode) {
+            set[i * 3] = (set[i * 3] ?? 0) + vec[0];
+            set[i * 3 + 1] = (set[i * 3 + 1] ?? 0) + vec[1];
+            set[i * 3 + 2] = (set[i * 3 + 2] ?? 0) + vec[2];
+          } else {
+            set[i * 3] = vec[0];
+            set[i * 3 + 1] = vec[1];
+            set[i * 3 + 2] = vec[2];
+          }
         }
       }
       count += idxs.length;

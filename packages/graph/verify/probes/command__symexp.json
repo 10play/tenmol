@@ -1,0 +1,76 @@
+{
+  "id": "command__symexp",
+  "feature": "symexp",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "pseudoatom",
+        "m"
+      ],
+      "kwargs": {
+        "pos": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "call": [
+        "set_symmetry",
+        "m",
+        20,
+        20,
+        20,
+        90,
+        90,
+        90,
+        "P212121"
+      ]
+    },
+    {
+      "call": [
+        "symexp",
+        "sym_",
+        "m",
+        "m",
+        12
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "count_atoms",
+        "all"
+      ],
+      "label": "total atoms (original + mates)"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "sym_*"
+      ],
+      "label": "atoms across mate objects via prefix wildcard"
+    },
+    {
+      "call": [
+        "get_names",
+        "objects"
+      ],
+      "label": "object names after symexp"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    3,
+    2,
+    [
+      "m",
+      "sym_03000000",
+      "sym_03000100"
+    ]
+  ]
+}

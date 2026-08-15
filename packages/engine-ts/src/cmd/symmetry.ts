@@ -94,6 +94,24 @@ function diag(x: number, y: number, z: number): Mat3 {
   return [x, 0, 0, 0, y, 0, 0, 0, z];
 }
 
+/** C `printf("%02d", n)`: zero-padded to a minimum width of 2, sign preserved
+ * (`0 -> "00"`, `1 -> "01"`, `-1 -> "-1"`). Used for symexp mate names. */
+function fmt02d(n: number): string {
+  const neg = n < 0;
+  let s = String(Math.abs(n));
+  while (s.length + (neg ? 1 : 0) < 2) s = '0' + s;
+  return (neg ? '-' : '') + s;
+}
+
+/** C `round`: round half away from zero (`0.5 -> 1`, `-0.5 -> -1`). JS
+ * `Math.round` rounds half toward +∞, so it can't be used for the negatives.
+ * A tiny epsilon absorbs the ~1e-16 error the numerical cell-matrix inverse
+ * leaves on exact half-integer ties (which PyMOL, orthogonalising with clean
+ * fractions, sees as an exact `.5`) so they still round outward. */
+function roundHalfAway(x: number): number {
+  return Math.sign(x) * Math.floor(Math.abs(x) + 0.5 + 1e-9);
+}
+
 const IDENTITY_OPS: SymOp[] = [{ R: I3, t: [0, 0, 0] }];
 
 const P21_OPS: SymOp[] = [
@@ -102,11 +120,13 @@ const P21_OPS: SymOp[] = [
   { R: diag(-1, 1, -1), t: [0, 0.5, 0] },
 ];
 
+// Operator order matches upstream PyMOL's `P 21 21 21` table (modules/pymol/
+// xray.py) so `symexp` labels each mate with the same operator index as PyMOL.
 const P212121_OPS: SymOp[] = [
-  { R: I3, t: [0, 0, 0] },
+  { R: I3, t: [0, 0, 0] }, // x, y, z
   { R: diag(-1, -1, 1), t: [0.5, 0, 0.5] }, // -x+1/2, -y, z+1/2
-  { R: diag(-1, 1, -1), t: [0, 0.5, 0.5] }, // -x, y+1/2, -z+1/2
   { R: diag(1, -1, -1), t: [0.5, 0.5, 0] }, // x+1/2, -y+1/2, -z
+  { R: diag(-1, 1, -1), t: [0, 0.5, 0.5] }, // -x, y+1/2, -z+1/2
 ];
 
 const P2_OPS: SymOp[] = [
@@ -249,10 +269,12 @@ export function registerSymmetry(ctx: RegistrarCtx): void {
     const colB: Vec3 = [M[1]!, M[4]!, M[7]!];
     const colC: Vec3 = [M[2]!, M[5]!, M[8]!];
 
-    // Selection Cartesian coordinates (state 1) and their fractional extent.
+    // Selection Cartesian coordinates (state 1), their fractional extent, and the
+    // fractional centroid (used to centre each operator's lattice-code numbering).
     const selCart: Vec3[] = [];
     const selFmin: Vec3 = [Infinity, Infinity, Infinity];
     const selFmax: Vec3 = [-Infinity, -Infinity, -Infinity];
+    const selFsum: Vec3 = [0, 0, 0];
     for (const ua of ex.atomsMatching(selection)) {
       const m = ex.molecule(ua.objName);
       if (!m) continue;
@@ -262,23 +284,38 @@ export function registerSymmetry(ctx: RegistrarCtx): void {
       for (let k = 0; k < 3; k++) {
         if (f[k]! < selFmin[k]!) selFmin[k] = f[k]!;
         if (f[k]! > selFmax[k]!) selFmax[k] = f[k]!;
+        selFsum[k]! += f[k]!;
       }
     }
     if (selCart.length === 0) return [];
+    const selFc: Vec3 = [selFsum[0] / selCart.length, selFsum[1] / selCart.length, selFsum[2] / selCart.length];
 
-    // Fractional coordinates of every object atom in state 1.
+    // Fractional coordinates of every object atom in state 1, plus their centroid.
     const objFrac: Vec3[] = [];
+    const objFsum: Vec3 = [0, 0, 0];
     for (let i = 0; i < mol.natom; i++) {
-      objFrac.push(apply(Minv, mol.coord(i, 1) as Vec3));
+      const f = apply(Minv, mol.coord(i, 1) as Vec3);
+      objFrac.push(f);
+      for (let k = 0; k < 3; k++) objFsum[k]! += f[k]!;
     }
+    const objFc: Vec3 = [objFsum[0] / mol.natom, objFsum[1] / mol.natom, objFsum[2] / mol.natom];
 
     const cf: Vec3 = [cutoff / mol.cell.a, cutoff / mol.cell.b, cutoff / mol.cell.c];
     const ops = operatorsFor(mol.spacegroup);
     const created: string[] = [];
-    let counter = 0;
 
     for (let oi = 0; oi < ops.length; oi++) {
       const op = ops[oi]!;
+      // Central lattice `L0` for this operator: the integer shift that brings the
+      // operator's transformed object centroid onto the selection centroid. PyMOL
+      // numbers each mate's lattice code relative to this centre, so its
+      // `prefix##` names read `L - L0` (round half away from zero, as C `round`).
+      const rc = apply(op.R, objFc);
+      const l0: Vec3 = [
+        roundHalfAway(selFc[0] - (rc[0]! + op.t[0])),
+        roundHalfAway(selFc[1] - (rc[1]! + op.t[1])),
+        roundHalfAway(selFc[2] - (rc[2]! + op.t[2])),
+      ];
       // Op-transformed fractional coords (before lattice translation) + extent.
       const tf: Vec3[] = [];
       const tfMin: Vec3 = [Infinity, Infinity, Infinity];
@@ -330,8 +367,12 @@ export function registerSymmetry(ctx: RegistrarCtx): void {
 
             // Materialise the mate: atoms + bonds + cell copied, coords
             // transformed for every state.
-            const name = ex.uniqueName(`${prefix}${String(counter).padStart(2, '0')}`);
-            counter++;
+            // Name mirrors PyMOL's ExecutiveSymExp: prefix + the symmetry-operator
+            // index and the lattice translation relative to this operator's centre
+            // (`L - L0`), each as `%02d`.
+            const name = ex.uniqueName(
+              `${prefix}${fmt02d(oi)}${fmt02d(i - l0[0])}${fmt02d(j - l0[1])}${fmt02d(k - l0[2])}`,
+            );
             const mate = new ObjectMolecule(name);
             for (const atom of mol.atoms) mate.atoms.push(cloneAtom(atom));
             for (const [bi, bj] of mol.bonds) mate.bonds.push([bi, bj]);

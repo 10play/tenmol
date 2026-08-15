@@ -60,6 +60,37 @@ function applyMat(set: Float32Array, o: number, m: number[]): void {
   set[o + 2] = m[8]! * x + m[9]! * y + m[10]! * z + m[11]!;
 }
 
+/**
+ * Convert a PyMOL-specific TTT matrix (row-major, with `ttt[12:15]` a
+ * pre-rotation translation and `ttt[3,7,11]` a post-rotation translation) into
+ * a standard homogeneous row-major 4×4. Ports PyMOL's `convertTTTfR44f`
+ * (layer0/Vector.cpp): the pre-translation is folded into the post-translation
+ * column so the result can be applied as a plain R44. This is what
+ * `ObjectMoleculeTransformSelection` does for `homogenous=0` inputs.
+ */
+function convertTTTtoR44(t: number[]): number[] {
+  const t12 = t[12]!, t13 = t[13]!, t14 = t[14]!;
+  return [
+    t[0]!, t[1]!, t[2]!,
+    t[0]! * t12 + t[1]! * t13 + t[2]! * t14 + t[3]!,
+    t[4]!, t[5]!, t[6]!,
+    t[4]! * t12 + t[5]! * t13 + t[6]! * t14 + t[7]!,
+    t[8]!, t[9]!, t[10]!,
+    t[8]! * t12 + t[9]! * t13 + t[10]! * t14 + t[11]!,
+    0, 0, 0, 1,
+  ];
+}
+
+/** Transpose a flat 16-element (column-major → row-major) 4×4 matrix. */
+function transposeMat16(m: number[]): number[] {
+  return [
+    m[0]!, m[4]!, m[8]!, m[12]!,
+    m[1]!, m[5]!, m[9]!, m[13]!,
+    m[2]!, m[6]!, m[10]!, m[14]!,
+    m[3]!, m[7]!, m[11]!, m[15]!,
+  ];
+}
+
 /** Row-major homogeneous 4×4 product a·b. */
 function mat4mul(a: number[], b: number[]): number[] {
   const out = new Array<number>(16).fill(0);
@@ -83,8 +114,16 @@ export function registerXform(ctx: RegistrarCtx): void {
   // an object's coordinates. state 0 == every state; state N == that state only.
   ctx.command('transform_object', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
-    const m = toMat16(args[1] ?? kwargs['matrix']);
+    let m = toMat16(args[1] ?? kwargs['matrix']);
     const state = toNum(args[2] ?? kwargs['state'], 0);
+    const homogenous = toBool(args[5] ?? kwargs['homogenous'], false);
+    const transpose = toBool(args[6] ?? kwargs['transpose'], false);
+    // Python layer transposes a column-major matrix into row-major first.
+    if (transpose) m = transposeMat16(m);
+    // transform_object always runs in the global frame; PyMOL converts a
+    // non-homogenous (TTT) matrix to a standard R44 before applying it, folding
+    // the matrix[12:15] pre-translation into the transform (convertTTTfR44f).
+    if (!homogenous) m = convertTTTtoR44(m);
     const mol = ex.molecule(name);
     if (!mol) return 0;
     const sets = state === 0 ? mol.states : [mol.states[state - 1]];
@@ -108,8 +147,15 @@ export function registerXform(ctx: RegistrarCtx): void {
   // the matched atoms (per-atom, in each object's own state arrays).
   ctx.command('transform_selection', (args, kwargs): Json => {
     const sel = str(args[0] ?? kwargs['selection'], 'all') || 'all';
-    const m = toMat16(args[1] ?? kwargs['matrix']);
+    let m = toMat16(args[1] ?? kwargs['matrix']);
     const state = toNum(args[2] ?? kwargs['state'], 0);
+    const homogenous = toBool(args[4] ?? kwargs['homogenous'], false);
+    const transpose = toBool(args[5] ?? kwargs['transpose'], false);
+    // Mirror editing.transform_selection: a column-major matrix is transposed to
+    // row-major first, then a non-homogenous (TTT) matrix has its matrix[12:15]
+    // pre-rotation translation folded into a standard R44 (convertTTTfR44f).
+    if (transpose) m = transposeMat16(m);
+    if (!homogenous) m = convertTTTtoR44(m);
     const matched = ex.atomsMatching(sel);
     let n = 0;
     for (const ua of matched) {

@@ -1,0 +1,17 @@
+{
+  "id": "command__translate",
+  "feature": "translate",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom p, pos=[1.0, 0.0, 0.0]" },
+    { "call": ["translate", [1.0, 2.0, 3.0], "p"], "kwargs": { "camera": 0 } }
+  ],
+  "checks": [
+    { "call": ["get_atom_coords", "p"], "label": "coords after translate [1,2,3] in model space" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [2, 2, 3]
+  ]
+}

@@ -162,8 +162,17 @@ describe('symexp', () => {
         '1,1,11', '1,1,-9',
       ]),
     );
-    // Mates are named prefix + zero-padded counter.
-    expect(names).toContain('sym00');
+    // Mates are named prefix + PyMOL's crystallographic code: the 2-digit
+    // symmetry-operator index (00 = identity here) followed by the three 2-digit
+    // lattice-translation codes, matching real PyMOL's `symexp` (verified against
+    // the oracle: e.g. the +x neighbour is `sym00010000`, the -y one `sym0000-100`).
+    expect(new Set(names)).toEqual(
+      new Set([
+        'sym00010000', 'sym00-10000',
+        'sym00000100', 'sym0000-100',
+        'sym00000001', 'sym000000-1',
+      ]),
+    );
   });
 
   it('P1: source copy (identity, zero translation) is excluded', () => {

@@ -1,0 +1,21 @@
+{
+  "id": "command__transform_object",
+  "feature": "transform_object",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom pA, pos=[1,2,3]"},
+    {"call": ["transform_object", "pA", [2, 0, 0, 5, 0, 3, 0, 6, 0, 0, 4, 7, 0, 0, 0, 1], 1, 0, "", 1]},
+    {"do": "pseudoatom pB, pos=[0,0,0]"},
+    {"call": ["transform_object", "pB", [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 5, 0, 0, 1], 1, 0, "", 0]}
+  ],
+  "checks": [
+    {"call": ["get_atom_coords", "pA"], "label": "pA coords after scale+translate (homogenous=1)"},
+    {"call": ["get_atom_coords", "pB"], "label": "pB coords after pre-translation (homogenous=0, matrix[12]=5 in X)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [7, 12, 19],
+    [5, 0, 0]
+  ]
+}

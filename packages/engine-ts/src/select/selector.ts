@@ -48,6 +48,18 @@ export function atomKey(objName: string, atom: AtomInfo): string {
   return `${objName}|${atom.id}`;
 }
 
+/** Compile a PyMOL object-name glob (`*` = any run, `?` = one char) into an
+ * anchored, case-sensitive RegExp. All other characters are matched literally. */
+function globToRegExp(pattern: string): RegExp {
+  let re = '^';
+  for (const ch of pattern) {
+    if (ch === '*') re += '.*';
+    else if (ch === '?') re += '.';
+    else re += ch.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+  }
+  return new RegExp(re + '$');
+}
+
 export class SelectionError extends Error {
   override name = 'SelectionError';
 }
@@ -78,6 +90,7 @@ type Node =
   | { t: 'within'; dist: number; a: Node }
   | { t: 'around'; dist: number; a: Node }
   | { t: 'expand'; dist: number; a: Node }
+  | { t: 'extend'; dist: number; a: Node }
   | { t: 'gap'; dist: number; a: Node }
   | { t: 'binwithin'; dist: number; a: Node; b: Node }
   | { t: 'nearto'; dist: number; a: Node; b: Node }
@@ -362,6 +375,12 @@ class Parser {
       this.expectOf('expand');
       return { t: 'expand', dist, a: this.parseNot() };
     }
+    if (this.isOp(t, 'extend', 'xt.')) {
+      this.next();
+      const dist = this.parseDist('extend');
+      this.expectOf('extend');
+      return { t: 'extend', dist, a: this.parseNot() };
+    }
     if (this.isOp(t, 'gap')) {
       this.next();
       const dist = this.parseDist('gap');
@@ -393,6 +412,9 @@ class Parser {
       } else if (this.isOp(t, 'expand')) {
         this.next();
         node = { t: 'expand', dist: this.parseDist('expand'), a: node };
+      } else if (this.isOp(t, 'extend', 'xt.')) {
+        this.next();
+        node = { t: 'extend', dist: this.parseDist('extend'), a: node };
       } else if (this.isOp(t, 'gap')) {
         this.next();
         node = { t: 'gap', dist: this.parseDist('gap'), a: node };
@@ -856,6 +878,13 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
       // A group name used as a selection spans all atoms of its member objects.
       const members = env.ctx.groupMembers?.(node.name);
       if (members) return filter((ua) => members.has(ua.objName));
+      // Object-name wildcard (`sym_*`, `prot?`): a bare reference containing a
+      // `*`/`?` glob matches every object whose name fits the pattern, as in
+      // PyMOL. Without a glob it stays an exact object-name match.
+      if (node.name.includes('*') || node.name.includes('?')) {
+        const re = globToRegExp(node.name);
+        return filter((ua) => re.test(ua.objName));
+      }
       return filter((ua) => ua.objName === node.name);
     }
     case 'not': {
@@ -937,6 +966,26 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
       const w = withinSet(node.dist, a, env);
       for (const i of a) w.add(i);
       return w;
+    }
+    case 'extend': {
+      // The selection grown outward by N bonds (breadth-first over the bond
+      // graph). Each round adds every atom bonded to a current member.
+      const s = new Set<number>(evalSet(node.a, env));
+      let frontier = [...s];
+      for (let step = 0; step < node.dist; step++) {
+        const next: number[] = [];
+        for (const i of frontier) {
+          for (const j of env.adj[i] ?? []) {
+            if (!s.has(j)) {
+              s.add(j);
+              next.push(j);
+            }
+          }
+        }
+        if (next.length === 0) break;
+        frontier = next;
+      }
+      return s;
     }
     case 'binwithin': {
       // Atoms in A that are within N of B.
