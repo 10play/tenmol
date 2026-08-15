@@ -1,0 +1,39 @@
+{
+  "id": "command__rms_cur",
+  "feature": "rms_cur",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_pdbstr",
+        "ATOM      1  N   ALA A   1       0.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA  ALA A   1       1.000   0.000   0.000  1.00  0.00           C\nATOM      3  C   ALA A   1       2.000   1.000   0.000  1.00  0.00           C\nEND",
+        "t"
+      ]
+    },
+    {
+      "call": ["create", "mob", "t"]
+    },
+    {
+      "do": "translate [3, 4, 0], mob"
+    }
+  ],
+  "checks": [
+    {
+      "call": ["rms_cur", "mob", "t"],
+      "label": "RMS with no fitting: every atom shifted by (3,4,0) -> RMS = 5.0",
+      "tol": 0.001
+    },
+    {
+      "call": ["get_distance", "mob and name CA and resi 1", "t and name CA and resi 1"],
+      "label": "mobile NOT moved by rms_cur (pure measurement) -> CA still 5.0 apart",
+      "tol": 0.001
+    },
+    {
+      "call": ["count_atoms", "mob"],
+      "label": "atom count preserved"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [5, 5, 3]
+}

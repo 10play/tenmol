@@ -466,6 +466,45 @@ export class Executive {
     return { center, radius };
   }
 
+  /**
+   * `cmd.reset` / `cmd.zoom`'s window-zoom framing (`ExecutiveWindowZoom` with
+   * the weighted extent, `packages/engine/layer3/Executive.cpp`). Unlike
+   * {@link selectionSphere} (a plain bounding sphere), PyMOL's window-zoom uses
+   * `ExecutiveGetExtent(..., weighted=true)`: the atom coordinate box is
+   * re-centred so it is symmetric about the *unweighted centre of mass* (the
+   * mean atom position), then the frame is the box centre (= the mean) and a
+   * radius of half the largest box dimension (floored to `MAX_VDW`). This is the
+   * origin `reset` restores.
+   */
+  windowZoomSphere(sel: string): { center: [number, number, number]; radius: number } | null {
+    const matched = selectAtoms(sel, this.selectorContext);
+    if (matched.length === 0) return null;
+    const min: [number, number, number] = [Infinity, Infinity, Infinity];
+    const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+    const sum: [number, number, number] = [0, 0, 0];
+    for (const ua of matched) {
+      const mol = this.objects.get(ua.objName)!;
+      const [x, y, z] = mol.coord(ua.index, 1);
+      min[0] = Math.min(min[0], x); max[0] = Math.max(max[0], x);
+      min[1] = Math.min(min[1], y); max[1] = Math.max(max[1], y);
+      min[2] = Math.min(min[2], z); max[2] = Math.max(max[2], z);
+      sum[0] += x; sum[1] += y; sum[2] += z;
+    }
+    const n = matched.length;
+    const mean: [number, number, number] = [sum[0] / n, sum[1] / n, sum[2] / n];
+    // Re-centre the box symmetrically about the weighted centre (mean), matching
+    // the `have_atoms_flag && weighted` loop in ExecutiveGetExtent. Each axis's
+    // half-width becomes fmx = max(mean-min, max-mean); the window-zoom radius is
+    // the largest such half-width (df[a]/2), floored to MAX_VDW.
+    const fmxX = Math.max(mean[0] - min[0], max[0] - mean[0]);
+    const fmxY = Math.max(mean[1] - min[1], max[1] - mean[1]);
+    const fmxZ = Math.max(mean[2] - min[2], max[2] - mean[2]);
+    let radius = Math.max(fmxX, fmxY, fmxZ);
+    const MAX_VDW = 2.5;
+    if (radius < MAX_VDW) radius = MAX_VDW;
+    return { center: mean, radius };
+  }
+
   /** All atoms matching a selection, for geometry/probe readout. */
   atomsMatching(sel: string): UniverseAtom[] {
     return selectAtoms(sel, this.selectorContext);

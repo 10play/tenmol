@@ -64,12 +64,30 @@ function harness(pdb: string): {
   const ex = new Executive();
   ex.addMolecule(parsePdb(pdb, 'm'));
   const handlers = new Map<string, CommandHandler>();
+  // Minimal settings store so setting-backed commands (e.g. `rock`, which mirrors
+  // ControlRock by toggling the global `rock` boolean setting) round-trip.
+  const settings = new Map<string, unknown>();
   const ctx = {
     command: (n: string, f: CommandHandler) => handlers.set(n, f),
     executive: ex,
     publish() {},
     emitView() {},
     str: (v: unknown, d = '') => (v == null ? d : String(v)),
+    call: (name: string, args: unknown[] = []) => {
+      if (name === 'set') {
+        settings.set(String(args[0]), args[1]);
+        return 1;
+      }
+      if (name === 'get_setting_boolean') {
+        const v = settings.get(String(args[0]));
+        return v === true || v === 1;
+      }
+      if (name === 'get_setting_int') {
+        const v = settings.get(String(args[0]));
+        return v === true ? 1 : v === false || v == null ? 0 : Number(v);
+      }
+      return null;
+    },
   };
   registerMovie2(ctx);
   return { handlers, ex };

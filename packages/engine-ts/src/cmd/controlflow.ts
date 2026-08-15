@@ -18,8 +18,13 @@
  *   `push_undo(sel); translate ...; undo` does NOT restore the pre-translate
  *   coordinates — the atoms stay translated. (Verified against real PyMOL via
  *   the differential oracle.) These three succeed inertly (`null`).
- * - `run` / `spawn` / `system` — in the browser there is no filesystem or shell,
- *   so these return `null` WITHOUT executing anything (they do not throw).
+ * - `run` — a `.pml` file IS executed: PyMOL's `run(file.pml)` delegates to
+ *   `cmd.load`, whose `pml` handler runs `cmd.do("_ @file")` (`importing.py:1625`),
+ *   so we replay the script through the console's `@`-include (under Node the
+ *   file is read and each line run; the browser reports it honestly). Python
+ *   (`.py`/`.pym`) scripts have no interpreter in this port, so they stay inert.
+ * - `spawn` / `system` — in the browser there is no filesystem or shell, so
+ *   these return `null` WITHOUT executing anything (they do not throw).
  * - `sync` / `abort` / `accept` / `ending` / `splash` / `update` /
  *   `rebuild_all` — session lifecycle / render-refresh signals with nothing to
  *   drive locally; they succeed inertly (`null`).
@@ -96,10 +101,24 @@ export function registerControlflow(ctx: RegistrarCtx): void {
     return 1;
   });
 
+  /* -------------------------------- run ------------------------------- */
+
+  // `cmd.run(filename, namespace=None)` — execute a script file. PyMOL routes a
+  // `.pml` file to `cmd.load`, whose `pml` loader runs `cmd.do("_ @file")`
+  // (`importing.py:1625`); we mirror that by replaying the script through the
+  // console's `@`-include (reads the file under Node, runs each line). Python
+  // (`.py`/`.pym`) scripts have no interpreter in this port and stay inert.
+  ctx.command('run', (args, kwargs) => {
+    const filename = pick(ctx, args, kwargs, 0, 'filename');
+    if (filename && /\.pml$/i.test(filename)) {
+      ctx.call('do', [`@${filename}`]);
+    }
+    return null;
+  });
+
   /* ----------------------- sandboxed no-ops (safe) -------------------- */
-  // No filesystem, shell or process in the browser: run/spawn/system return
-  // null WITHOUT executing anything, and never throw.
-  ctx.command('run', () => null);
+  // No filesystem, shell or process in the browser: spawn/system return null
+  // WITHOUT executing anything, and never throw.
   ctx.command('spawn', () => null);
   ctx.command('system', () => null);
 

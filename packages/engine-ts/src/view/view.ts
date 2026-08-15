@@ -192,6 +192,16 @@ export class ViewState {
   }
 
   /**
+   * `SceneResetMatrix` (`packages/engine/layer1/Scene.cpp`) — reset only the
+   * model->camera rotation to identity, leaving the origin, camera distance and
+   * clip planes untouched (the caller frames the scene separately via
+   * {@link windowSphere}). This is what `cmd.reset` runs before its window-zoom.
+   */
+  resetMatrix(): void {
+    writeRot(this.view, [1, 0, 0, 0, 1, 0, 0, 0, 1]);
+  }
+
+  /**
    * `cmd.zoom` — frame a bounding sphere. Sets the model-space origin to the
    * centre and the camera distance so the sphere (radius `r`, plus `buffer`)
    * fills the field of view; updates the clip planes to bracket it.
@@ -271,7 +281,7 @@ export class ViewState {
    * the clipping slab at ±1.2·radius. `center` becomes the rotation origin, so
    * the camera-space offset is zero and only the Z distance changes.
    */
-  private windowSphere(center: [number, number, number], radius: number): void {
+  windowSphere(center: [number, number, number], radius: number): void {
     const r = Math.max(radius, MAX_VDW);
     const dist = r / Math.tan((DEFAULT_FOV * Math.PI) / 360);
     this.view[12] = center[0];

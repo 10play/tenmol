@@ -1,0 +1,15 @@
+{
+  "id": "command__run",
+  "feature": "run",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "run /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/graph/verify/.work/command__run.script.pml" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "all"], "label": "atoms created by the run script" },
+    { "call": ["count_atoms", "probeobj"], "label": "atoms in the object the script built" }
+  ],
+  "tol": 1e-3,
+  "expected": [3, 3]
+}

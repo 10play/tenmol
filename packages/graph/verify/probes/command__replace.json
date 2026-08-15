@@ -1,0 +1,23 @@
+{
+  "id": "command__replace",
+  "feature": "replace",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "call": ["count_atoms", "elem N"], "comment": "1 backbone N before replace" },
+    { "do": "edit (ala and name CB)" },
+    { "do": "replace N, 3, 3" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "elem N"], "label": "nitrogens after replacing CB carbon with N" },
+    { "call": ["count_atoms", "elem C"], "label": "carbons remaining after CB replaced" },
+    { "call": ["count_atoms", "ala and name CB"], "label": "old CB name gone after replace" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2,
+    2,
+    0
+  ]
+}

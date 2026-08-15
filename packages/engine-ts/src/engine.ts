@@ -27,6 +27,7 @@ import {
   type ObjectRow,
 } from '@tenmol/protocol';
 import { Executive } from './exec/executive';
+import { defaultView } from './view/view';
 import { repBit } from './model/atom';
 import type { ObjectMolecule } from './model/molecule';
 import { classifyMolecule, cAtomFlag_class_mask } from './model/classify';
@@ -792,9 +793,15 @@ export class Engine {
     });
 
     h('reset', () => {
-      ex.view.set([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -40, 0, 0, 0, 20, 60, -20]);
-      const sphere = ex.selectionSphere('all');
-      if (sphere) ex.view.zoomToSphere(sphere.center, sphere.radius);
+      // `ExecutiveReset(all)` = `SceneResetMatrix` (rotation -> identity) then
+      // `ExecutiveWindowZoom(all)` (Executive.cpp). Window-zoom frames the
+      // WEIGHTED extent: origin at the centre of mass, radius = half the largest
+      // (recentred) box dimension, clip slab at ±1.2·radius — not a plain
+      // bounding sphere. See `windowZoomSphere` / `ViewState.windowSphere`.
+      ex.view.resetMatrix();
+      const sphere = ex.windowZoomSphere('all');
+      if (sphere) ex.view.windowSphere(sphere.center, sphere.radius);
+      else ex.view.set(defaultView());
       this.emitView();
       return null;
     });

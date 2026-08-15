@@ -1,0 +1,75 @@
+{
+  "id": "command__rms",
+  "feature": "rms",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_pdbstr",
+        "ATOM      1  N  ALA A   1       0.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA ALA A   1       1.000   0.000   0.000  1.00  0.00           C\nATOM      3  C  ALA A   1       2.000   1.000   0.000  1.00  0.00           C\nATOM      4  O  ALA A   1       2.000   2.000   0.000  1.00  0.00           O\nATOM      5  CB ALA A   1       1.000  -1.000   1.000  1.00  0.00           C\nATOM      6  N  ALA A   2       3.000   1.000   0.000  1.00  0.00           N\nATOM      7  CA ALA A   2       4.000   0.000   0.000  1.00  0.00           C\nATOM      8  C  ALA A   2       5.000   1.000   0.000  1.00  0.00           C\nATOM      9  O  ALA A   2       5.000   2.000   0.000  1.00  0.00           O\nATOM     10  CB ALA A   2       4.000  -1.000   1.000  1.00  0.00           C\nATOM     11  N  ALA A   3       6.000   1.000   0.000  1.00  0.00           N\nATOM     12  CA ALA A   3       7.000   0.000   1.000  1.00  0.00           C\nATOM     13  C  ALA A   3       8.000   1.000   1.000  1.00  0.00           C\nATOM     14  O  ALA A   3       8.000   2.000   1.000  1.00  0.00           O\nATOM     15  CB ALA A   3       7.000  -1.000   2.000  1.00  0.00           C\nEND",
+        "t"
+      ]
+    },
+    {
+      "call": [
+        "create",
+        "mob",
+        "t"
+      ]
+    },
+    {
+      "do": "translate [10, -4, 6], mob"
+    },
+    {
+      "call": [
+        "rms",
+        "mob",
+        "t"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "rms",
+        "mob",
+        "t"
+      ],
+      "label": "best-fit RMS of a rigid-body copy is ~0 (optimal superposition residual)",
+      "tol": 0.001
+    },
+    {
+      "call": [
+        "get_distance",
+        "mob and name CA and resi 1",
+        "t and name CA and resi 1"
+      ],
+      "label": "mob CA1 still displaced from target \u2014 rms did NOT transform the model",
+      "tol": 0.02
+    },
+    {
+      "call": [
+        "get_distance",
+        "mob and name CA and resi 1",
+        "mob and name CB and resi 1"
+      ],
+      "label": "internal CA-CB bond of mob preserved (coords untouched)",
+      "tol": 0.02
+    },
+    {
+      "call": [
+        "count_atoms",
+        "mob"
+      ],
+      "label": "atom count preserved after rms"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    0,
+    12.328827857971191,
+    1.4142135381698608,
+    15
+  ]
+}

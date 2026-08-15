@@ -1,0 +1,25 @@
+{
+  "id": "command__reset", "feature": "reset", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p, pos=[10,0,0]"},
+    {"do":"pseudoatom p, pos=[-10,0,0]"},
+    {"do":"pseudoatom p, pos=[0,6,0]"},
+    {"do":"turn x, 45"},
+    {"do":"turn y, 30"},
+    {"do":"reset"}
+  ],
+  "checks": [
+    {"call":["get_view"],"label":"view after reset (identity rotation, origin at COM, zoom to all)","tol":1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 1,
+      0, 0, -56.71281814575195,
+      0, 2, 0,
+      44.71281814575195, 68.71281433105469, -20
+    ]
+  ]
+}

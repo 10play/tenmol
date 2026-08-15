@@ -340,24 +340,41 @@ export function registerMovie2(ctx: RegistrarCtx): void {
   });
 
   /* ---- rocking (rock / get_rock_angle) ---- */
-  let rocking = false;
   // PyMOL's `sweep_angle` / `sweep_speed` defaults: a +/-15 deg sweep whose full
   // cycle spans `period` frames.
   const rockAmplitude = 15;
   const rockPeriod = 60;
 
-  // rock(mode=-1) — toggle (-1), or force on (1) / off (0). Returns the flag.
+  const isRocking = (): boolean => {
+    const v = ctx.call('get_setting_boolean', ['rock']);
+    return v === true || v === 1;
+  };
+
+  // rock(mode=-1) — toggle (-1), force on (1) / off (0), or query (-2) without
+  // change. Mirrors ControlRock (layer1/Control.cpp): the live-rock state lives
+  // in the global `rock` boolean setting. Returns the resulting flag.
   ctx.command('rock', (args, kwargs): Json => {
     const mode = frameOf(pick(args, kwargs, 0, 'mode'), -1);
-    if (mode < 0) rocking = !rocking;
-    else rocking = mode !== 0;
-    return rocking ? 1 : 0;
+    switch (mode) {
+      case -2:
+        break; // query only
+      case -1:
+        ctx.call('set', ['rock', isRocking() ? 0 : 1]);
+        break;
+      case 0:
+        ctx.call('set', ['rock', 0]);
+        break;
+      default:
+        ctx.call('set', ['rock', mode !== 0 ? 1 : 0]);
+        break;
+    }
+    return isRocking() ? 1 : 0;
   });
 
   // get_rock_angle(frame=0) -> the rocking turn angle (degrees) at `frame`;
   // zero when rocking is disabled.
   ctx.command('get_rock_angle', (args, kwargs): Json => {
-    if (!rocking) return 0;
+    if (!isRocking()) return 0;
     const frame = num(pick(args, kwargs, 0, 'frame'), 0);
     return rockAmplitude * Math.sin((2 * Math.PI * frame) / rockPeriod);
   });

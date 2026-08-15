@@ -1,0 +1,17 @@
+{
+  "id": "command__rotate",
+  "feature": "rotate",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom p, pos=[1.0, 0.0, 0.0]" },
+    { "call": ["rotate", "z", 90.0, "p"], "kwargs": { "camera": 0, "origin": [0.0, 0.0, 0.0] } }
+  ],
+  "checks": [
+    { "call": ["get_atom_coords", "p"], "label": "coords after 90deg z-rotation about origin (model space)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [6.123234262925839e-17, 1, 0]
+  ]
+}
