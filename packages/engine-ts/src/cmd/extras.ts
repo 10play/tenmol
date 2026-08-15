@@ -12,7 +12,7 @@
  *   - REAL   — a correct behaviour computed from the executive/model:
  *              alphatoall, mse2met, mask/unmask/get_mask, delete_states,
  *              split_states, join_states, copy_to, extract, overlap,
- *              intra_rms/intra_rms_cur, look_at, middle, refresh, transparency,
+ *              intra_rms/intra_rms_cur, look_at, refresh, transparency,
  *              stereo, edit_mode.
  *
  *   - DOCUMENTED NO-OP — for genuinely environment-bound verbs (disk/network
@@ -565,20 +565,6 @@ export function registerExtras(ctx: RegistrarCtx): void {
     return null;
   });
 
-  /* middle — recentre the rotation origin on the middle of all objects. */
-  ctx.command('middle', (): Json => {
-    const sphere = ex.selectionSphere('all');
-    if (sphere) {
-      const view = ex.view.get();
-      view[12] = sphere.center[0];
-      view[13] = sphere.center[1];
-      view[14] = sphere.center[2];
-      ex.view.set(view);
-      ctx.emitView();
-    }
-    return null;
-  });
-
   /* refresh — force a re-emit of the scene. */
   ctx.command('refresh', (): Json => {
     ctx.publish();
@@ -666,7 +652,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // `mdelete` is real now — see cmd/system.ts (splices the movie frame table).
       // `mdo` is real now — see cmd/system.ts (binds/replays generalized frame commands).
       'mmove',
-      'minsert',
+      // `minsert` is real now — see cmd/system.ts (splices blank frames into the movie table).
       'scene_order',
       // maps / volumes / slices (need a map object model)
       // `map_set` is real — see cmd/maps.ts (elementwise map arithmetic).

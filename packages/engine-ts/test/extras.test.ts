@@ -64,7 +64,9 @@ describe('extras — residual command sweep', () => {
       // real
       'alphatoall', 'mse2met', 'mask', 'unmask', 'get_mask', 'delete_states',
       'split_states', 'join_states', 'copy_to', 'extract', 'overlap',
-      'intra_rms_cur', 'look_at', 'middle', 'refresh',
+      // `middle` moved to cmd/system.ts (real movie set_frame mode 3 — jumps
+      // the playhead to the middle frame, not a camera recentre).
+      'intra_rms_cur', 'look_at', 'refresh',
       'transparency', 'stereo', 'edit_mode',
       // no-ops (representative sample across every batch). `load` is no longer
       // here — it is a real handler in cmd/fileio.ts (see load.test.ts); likewise
@@ -81,8 +83,10 @@ describe('extras — residual command sweep', () => {
     for (const name of claimed) {
       expect(handlers.has(name), `missing handler: ${name}`).toBe(true);
     }
-    // > 60 verbs registered overall.
-    expect(handlers.size).toBeGreaterThan(60);
+    // ~59 verbs registered overall (was >60 before `middle` moved to
+    // cmd/system.ts as the real movie set_frame mode 3, and `minsert` moved to
+    // cmd/system.ts as the real movie frame-insert).
+    expect(handlers.size).toBeGreaterThanOrEqual(59);
   });
 
   /* --------------------------- REAL behaviours --------------------------- */
@@ -191,8 +195,8 @@ describe('extras — residual command sweep', () => {
     expect(rms[1]).toBeGreaterThan(0); // models differ by +0.5 in x
   });
 
-  it('look_at aims the camera forward axis at the target; middle recentres', () => {
-    const { ex, call, stats } = setup();
+  it('look_at aims the camera forward axis at the target', () => {
+    const { ex, call } = setup();
     // Known camera: identity rotation, 50 units in front, origin at 0.
     ex.view.set([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50, 0, 0, 0, 40, 60, -20]);
     // Reorient the camera to face object 'm' (default mobile_obj='_Camera').
@@ -209,11 +213,8 @@ describe('extras — residual command sweep', () => {
     expect(Math.abs(camX)).toBeLessThan(1e-3);
     expect(Math.abs(camY)).toBeLessThan(1e-3);
     expect(camZ).toBeLessThan(0); // target in front of the camera
-    call('middle');
-    const view2 = ex.view.get();
-    // Middle recenters somewhere finite (the spread of all atoms).
-    expect(Number.isFinite(view2[12]!)).toBe(true);
-    expect(stats().viewEmits).toBeGreaterThanOrEqual(2);
+    // `middle` no longer lives here — it moved to cmd/system.ts as the real
+    // movie set_frame mode 3 (jump the playhead to the middle frame).
   });
 
   it('transparency / stereo / edit_mode land as observable settings', () => {

@@ -1,0 +1,17 @@
+{
+  "id": "command__mmove", "feature": "mmove", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "m"], "kwargs": {"pos": [0, 0, 0]}},
+    {"do": "mset 1 x10"},
+    {"do": "mmove 6, 1, 3"}
+  ],
+  "checks": [
+    {"call": ["count_frames"], "label": "movie frame count after mset 1 x10 then mmove 6,1,3 (move 3 frames)"},
+    {"call": ["get_movie_length"], "label": "explicitly defined movie length after mmove"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    10
+  ]
+}

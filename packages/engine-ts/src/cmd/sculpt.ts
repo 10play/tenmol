@@ -375,23 +375,34 @@ export function registerSculpt(ctx: RegistrarCtx): void {
   });
 
   /* ------------------------------- minimize ----------------------------- */
-  // minimize(selection='(all)', state=0, cycles=500) — clean geometry toward
-  // covalent-radius bond lengths and reference angles; returns the final energy.
-  const idealize = (args: unknown[], kwargs: Record<string, unknown>, dfltCycles: number): Json => {
+  // minimize(sele='', iter=500, grad=0.01, interval=50, _setup=1)
+  // Upstream `minimize` (experimenting.py:108) is a nonfunctional stub: it
+  // routes to `chempy.tinker.realtime`, which is NOT part of open-source
+  // PyMOL, so `realtime.setup()` never succeeds and the command leaves the
+  // coordinates untouched (printing "minimize: missing parameters"). Match
+  // that behaviour faithfully — a no-op that returns None — rather than the
+  // covalent idealiser (which belonged to `clean`, verified against the
+  // oracle: fragment-ala bonds stay at their deposited lengths after
+  // `minimize`).
+  ctx.command('minimize', (): Json => null);
+
+  /* -------------------------------- clean ------------------------------- */
+  // clean(selection, state=0, cycles=100) — open-source substitute for the
+  // MMFF94 `clean` (which raises IncentiveOnlyException upstream): idealise
+  // geometry toward covalent-radius bond lengths; returns the final energy.
+  ctx.command('clean', (args, kwargs): Json => {
     const sel = ctx.str(pick(args, kwargs, 0, 'selection'), 'all') || 'all';
     const mol = resolveObj(sel);
     if (!mol) return 0;
     const state = normState(num(pick(args, kwargs, 1, 'state'), 0), mol);
-    const cycles = Math.max(0, Math.round(num(pick(args, kwargs, 2, 'cycles'), dfltCycles)));
+    const cycles = Math.max(0, Math.round(num(pick(args, kwargs, 2, 'cycles'), 100)));
     const r = buildRestraints(mol, state, 'covalent');
     const x = readState(mol, state);
     const E = minimizeCoords(r, x, cycles);
     writeState(mol, state, x);
     ctx.publish();
     return E;
-  };
-  ctx.command('minimize', (args, kwargs): Json => idealize(args, kwargs, 500));
-  ctx.command('clean', (args, kwargs): Json => idealize(args, kwargs, 100));
+  });
 
   /* -------------------------------- smooth ------------------------------ */
   // smooth(selection='all', passes=1, window=5, first=1, last=0, ends=0)

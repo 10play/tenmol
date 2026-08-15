@@ -257,17 +257,19 @@ export function registerMovie2(ctx: RegistrarCtx): void {
       case 'store': {
         const frame = frameOf(pick(args, kwargs, 1, 'frame'), 0);
         matrixKeys.set(frame, toMat16(pick(args, kwargs, 2, 'matrix')));
-        return 1;
+        // Real PyMOL's cmd.mmatrix returns None for every action; the keyframe
+        // store is a side effect observed via get_movie_matrix, not the return.
+        return null;
       }
       case 'clear': {
         const rawFrame = pick(args, kwargs, 1, 'frame');
         if (rawFrame === undefined || rawFrame === null || rawFrame === '') matrixKeys.clear();
         else matrixKeys.delete(frameOf(rawFrame, 0));
-        return 1;
+        return null;
       }
       case 'reset':
         matrixKeys.clear();
-        return 1;
+        return null;
       default:
         return null;
     }
@@ -324,48 +326,96 @@ export function registerMovie2(ctx: RegistrarCtx): void {
     return rockAmplitude * Math.sin((2 * Math.PI * frame) / rockPeriod);
   });
 
-  /* ---- camera curves (curve_new / move_on_curve) ---- */
-  const curves = new Map<string, View18[]>();
+  /* ---- bezier curves (curve_new / move_on_curve) ---- */
+  // A curve object is a bezier spline: an ordered list of control points, each
+  // with an on-curve `control` position and two off-curve handles. This mirrors
+  // PyMOL's ObjectCurve / BezierSpline (layer0/Bezier.cpp, layer2/ObjectCurve.cpp).
+  type Vec3 = [number, number, number];
+  interface BezierPoint {
+    control: Vec3;
+    leftHandle: Vec3;
+    rightHandle: Vec3;
+  }
+  const curves = new Map<string, BezierPoint[]>();
 
-  /** Parse control views: an array of 18-float arrays, else the current view. */
-  const parseControls = (v: unknown): View18[] => {
-    if (Array.isArray(v) && v.length > 0 && Array.isArray(v[0])) {
-      const out: View18[] = [];
-      for (const row of v as unknown[]) {
-        if (Array.isArray(row) && row.length === 18) out.push(row.map((n) => Number(n)));
-      }
-      if (out.length > 0) return out;
-    }
-    return [view.get()];
+  // The default two-point spline PyMOL seeds a fresh curve with
+  // (BezierSpline::addBezierPoint, empty case).
+  const defaultBezierSpline = (): BezierPoint[] => [
+    { control: [0, 0, 0], leftHandle: [0, 0, 10], rightHandle: [0, 0, -10] },
+    { control: [10, 0, 0], leftHandle: [10, 0, -10], rightHandle: [10, 0, 10] },
+  ];
+
+  // Cubic bezier point for p0..p3 at local parameter `t` (GetBezierPoint).
+  const cubicBezier = (p0: Vec3, p1: Vec3, p2: Vec3, p3: Vec3, t: number): Vec3 => {
+    const mt = 1 - t;
+    const c0 = mt * mt * mt;
+    const c1 = 3 * mt * mt * t;
+    const c2 = 3 * mt * t * t;
+    const c3 = t * t * t;
+    return [
+      c0 * p0[0] + c1 * p1[0] + c2 * p2[0] + c3 * p3[0],
+      c0 * p0[1] + c1 * p1[1] + c2 * p2[1] + c3 * p3[1],
+      c0 * p0[2] + c1 * p1[2] + c2 * p2[2] + c3 * p3[2],
+    ];
   };
 
-  // curve_new(name, curve_type='bezier'/coords=None) — create a curve object.
-  // Real PyMOL (creating.py) auto-names an empty name via get_unused_name("Curve")
-  // and registers a first-class ObjectCurve so it shows up in get_names. We also
-  // seed the camera-curve control views (from the current view) for move_on_curve.
+  // Position at global parameter `t` in [0,1] along a spline. Ports
+  // BezierSpline::getIndexAndLocalT + getBezierPoint: the handle used from the
+  // start point is its RIGHT handle, and from the end point its LEFT handle.
+  const bezierPositionAt = (pts: BezierPoint[], globalT: number): Vec3 => {
+    const t = Math.max(0, Math.min(1, globalT));
+    const curveCount = pts.length - 1;
+    let index: number;
+    let localT: number;
+    if (t >= 1) {
+      index = pts.length - 2;
+      localT = 1;
+    } else {
+      const scaled = t * curveCount;
+      index = Math.floor(scaled);
+      localT = scaled - index;
+    }
+    const a = pts[index]!;
+    const b = pts[index + 1]!;
+    return cubicBezier(a.control, a.rightHandle, b.leftHandle, b.control, localT);
+  };
+
+  // curve_new(name='', curve_type='bezier') — create a curve object. Real PyMOL
+  // (creating.py) auto-names an empty name via get_unused_name("Curve") and
+  // registers a first-class ObjectCurve (so it shows up in get_names) seeded with
+  // the default bezier spline. Returns the object name.
   ctx.command('curve_new', (args, kwargs): Json => {
     const raw = ctx.str(pick(args, kwargs, 0, 'name'), '');
     const name = raw !== '' ? raw : ctx.executive.uniqueName('Curve');
     ctx.executive.registerGadget(name, 'object:curve');
-    curves.set(name, parseControls(pick(args, kwargs, 1, 'coords')));
+    curves.set(name, defaultBezierSpline());
     ctx.publish();
     return name;
   });
 
-  // move_on_curve(name, t=0) -> the view sampled at parameter t in [0,1] along
-  // the named curve (piecewise SLERP + linear between control views). Returns
-  // null for an unknown curve.
+  // move_on_curve(mobile_obj, curve_obj, t) — move an object along a curve.
+  // Ports ExecutiveMoveObjectOnCurve (layer3/Executive.cpp): evaluate the curve
+  // at `t`, then set the mobile object's TTT (transient display matrix) so its
+  // post-translation equals that position (the rotation is left untouched, or
+  // identity when no TTT was set yet). Observable via get_object_ttt /
+  // get_object_matrix(incl_ttt=1). Returns null (like PyMOL).
   ctx.command('move_on_curve', (args, kwargs): Json => {
-    const name = ctx.str(pick(args, kwargs, 0, 'name'), 'curve');
-    const controls = curves.get(name);
-    if (!controls || controls.length === 0) return null;
-    if (controls.length === 1) return controls[0]!.slice() as unknown as Json;
-    const t = Math.max(0, Math.min(1, num(pick(args, kwargs, 1, 't'), 0)));
-    const span = controls.length - 1;
-    const pos = t * span;
-    const seg = Math.min(span - 1, Math.floor(pos));
-    const local = pos - seg;
-    return interpView(controls[seg]!, controls[seg + 1]!, local) as unknown as Json;
+    const mobileName = ctx.str(pick(args, kwargs, 0, 'mobile_obj'), '');
+    const curveName = ctx.str(pick(args, kwargs, 1, 'curve_obj'), '');
+    const t = Math.max(0, Math.min(1, num(pick(args, kwargs, 2, 't'), 0)));
+    const pts = curves.get(curveName);
+    if (!pts || pts.length < 2) return null;
+    const mol = ctx.executive.molecule(mobileName);
+    if (!mol) return null;
+    const pos = bezierPositionAt(pts, t);
+    // TTT is a row-major 4x4 with the translation in the 4th column (3/7/11).
+    const ttt = mol.ttt ?? [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+    ttt[3] = pos[0];
+    ttt[7] = pos[1];
+    ttt[11] = pos[2];
+    mol.ttt = ttt;
+    ctx.publish();
+    return null;
   });
 
   /* ------------------------------- morph ------------------------------- */

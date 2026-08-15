@@ -1,0 +1,20 @@
+{
+  "id": "command__mmatrix",
+  "feature": "mmatrix",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" }
+  ],
+  "checks": [
+    { "call": ["mmatrix", "store"], "label": "mmatrix store return value" },
+    { "call": ["mmatrix", "recall"], "label": "mmatrix recall return value" },
+    { "call": ["mmatrix", "clear"], "label": "mmatrix clear return value" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    null,
+    null,
+    null
+  ]
+}

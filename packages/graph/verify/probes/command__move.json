@@ -1,0 +1,19 @@
+{
+  "id": "command__move",
+  "feature": "move",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "call": ["set_view", [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50, 0, 0, 0, 40, 60, -20]] },
+    { "do": "move x, 5" },
+    { "do": "move y, -3" },
+    { "do": "move z, 4" }
+  ],
+  "checks": [
+    { "call": ["get_view"], "label": "view after move x/y/z from fixed baseline (9-11 shifted, z carries clip planes 15-16)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -3, -46, 0, 0, 0, 36, 56, -20]
+  ]
+}

@@ -259,18 +259,24 @@ describe('mmatrix / curves / file-io stubs', () => {
     expect(mid[14]).toBeCloseTo(15, 6);
   });
 
-  it('curve_new + move_on_curve sample between control views', () => {
-    const { handlers } = harness(twoStatePdb());
+  it('curve_new + move_on_curve set the object TTT to the curve position', () => {
+    const { handlers, ex } = harness(twoStatePdb());
     const curveNew = handlers.get('curve_new')!;
     const moveOn = handlers.get('move_on_curve')!;
 
-    const a = zRotView(0, [0, 0, 0]);
-    const b = zRotView(0, [10, 0, 0]);
-    curveNew(['c', [a, b]], {});
-    const mid = moveOn(['c', 0.5], {}) as number[];
-    expect(mid[9]).toBeCloseTo(5, 6);
-    // Unknown curve -> null.
-    expect(moveOn(['missing'], {})).toBeNull();
+    curveNew(['c'], {});
+    // The default bezier spline evaluated at t=0.5 is (5, 0, -7.5) — verified
+    // against real PyMOL (cmd.move_on_curve then cmd.get_object_ttt). move_on_curve
+    // writes that into the mobile object's TTT translation (indices 3/7/11) and
+    // returns null (ExecutiveMoveObjectOnCurve).
+    expect(moveOn(['m', 'c', 0.5], {})).toBeNull();
+    const ttt = ex.molecule('m')!.ttt!;
+    expect(ttt[3]).toBeCloseTo(5, 6);
+    expect(ttt[7]).toBeCloseTo(0, 6);
+    expect(ttt[11]).toBeCloseTo(-7.5, 6);
+    // Unknown curve or unknown object -> null, no TTT change.
+    expect(moveOn(['m', 'missing', 0.5], {})).toBeNull();
+    expect(moveOn(['nope', 'c', 0.5], {})).toBeNull();
   });
 
   it('mpng / mdump are no-ops', () => {

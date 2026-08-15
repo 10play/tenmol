@@ -254,6 +254,16 @@ export function registerSystem(ctx: RegistrarCtx): void {
     return movie.current;
   });
 
+  // `cmd.middle()` — jump to the middle movie frame (PyMOL's set_frame mode 3).
+  // C `SceneSetFrame` computes `newFrame = NFrame / 2` (integer, 0-based), which
+  // clamp+1 turns into the 1-based cursor (e.g. a 60-frame movie -> frame 31).
+  ctx.command('middle', () => {
+    movie.current = clampFrame(ctx, Math.floor(frameCeiling(ctx) / 2) + 1);
+    ctx.emitView();
+    runFrameCommand(ctx);
+    return movie.current;
+  });
+
   // `cmd.mset(specification)` — define the movie frame->state mapping.
   // Returns the number of frames defined.
   ctx.command('mset', (args) => {
@@ -350,6 +360,40 @@ export function registerSystem(ctx: RegistrarCtx): void {
         movie.current = clampFrame(ctx, movie.current);
         ctx.publish();
       }
+    }
+    return null;
+  });
+
+  // `cmd.minsert(count, frame=0, freeze=0, object='', quiet=1)` — insert a run of
+  // blank frames into the movie (camera views + object motions), lengthening the
+  // timeline. Ports moving.py `minsert` -> `_cmd.mmodify(mode=1, ...)`: resolve
+  // the zero-based insertion point exactly as Python does, then splice `count`
+  // frames into the frame->state table before it. A blank frame holds the state
+  // shown at the insertion point (or the preceding frame), pausing there.
+  ctx.command('minsert', (args, kwargs) => {
+    const toInt = (v: unknown, dflt: number): number => {
+      const n = Number(ctx.str(v, String(dflt)));
+      return Number.isFinite(n) ? Math.trunc(n) : dflt;
+    };
+    const count = toInt(args[0] ?? kwargs['count'], 0);
+    let frame = toInt(args[1] ?? kwargs['frame'], 0);
+    const object = ctx.str(args[3] ?? kwargs['object'], '');
+    if (frame === 0) {
+      // 0 means the current frame (get_frame is 1-based).
+      frame = movie.current - 1;
+    } else {
+      frame -= 1;
+    }
+    // An object-restricted insert touches that object's motions, not the global
+    // camera/movie frame table; there is no per-object motion model here.
+    if (object === '' && count > 0) {
+      const start = Math.max(0, Math.min(frame, movie.frames.length));
+      // Blank frames hold the state at the insertion point, else the frame just
+      // before it, else state 1 for an empty movie.
+      const hold = movie.frames[start] ?? movie.frames[start - 1] ?? 1;
+      movie.frames.splice(start, 0, ...new Array<number>(count).fill(hold));
+      movie.current = clampFrame(ctx, movie.current);
+      ctx.publish();
     }
     return null;
   });

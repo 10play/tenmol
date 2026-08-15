@@ -1,0 +1,17 @@
+{
+  "id": "command__movie.produce",
+  "feature": "movie.produce",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "set opaque_background, 0"},
+    {"do": "fragment ala"},
+    {"call": ["movie.produce", "/tmp/claude-1000/tenmol_movie_probe.mpg"]}
+  ],
+  "checks": [
+    {"call": ["get_setting_int", "opaque_background"], "label": "mpeg produce leaves opaque_background untouched"},
+    {"call": ["count_atoms", "all"], "label": "structure intact after produce"}
+  ],
+  "tol": 1e-3,
+  "expected": [0, 10]
+}
