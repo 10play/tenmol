@@ -1085,6 +1085,39 @@ export function registerExporters(ctx: RegistrarCtx): void {
     return multiFilenameGen(filename, selection, state) as unknown as Json;
   });
 
+  ctx.command('save', (args, kwargs) => {
+    // save(filename, selection='(all)', state=-1, format='', ...) — write the
+    // executive to disk. PyMOL routes `.pse`/`.psw` to the pickled session
+    // (`_cmd.get_session`); every other extension goes through the format string
+    // exporters (exporting.py `save`). The write is the observable side effect,
+    // and PyMOL returns DEFAULT_SUCCESS rather than the content.
+    const filename = ctx.str(pick(args, kwargs, 0, 'filename'), '');
+    const sel = ctx.str(pick(args, kwargs, 1, 'selection'), 'all') || 'all';
+    const state = asInt(pick(args, kwargs, 2, 'state'), -1);
+    const fmtArg = ctx.str(pick(args, kwargs, 3, 'format'), '').toLowerCase();
+    const ext = (/\.([a-z0-9]+)\s*$/i.exec(filename.trim())?.[1] ?? '').toLowerCase();
+    const format = fmtArg || ext;
+
+    // Session formats capture the whole executive (objects + settings + camera),
+    // not a selection. Our on-disk shape is the JSON snapshot `get_session`
+    // produces — self-consistent for a save/load roundtrip within the port.
+    if (format === 'pse' || format === 'psw') {
+      writeDiskFile(filename, JSON.stringify(getSession()));
+      return null;
+    }
+
+    // Multi-object structure files (multiple HEADER/data blocks) — reuse the
+    // multisave writer so a reload splits them back into separate objects.
+    if ((format === 'pdb' || format === 'ent') && ex.getObjectList(sel).length > 1) {
+      writeDiskFile(filename, multiPdb(sel, state));
+      return null;
+    }
+
+    const outFmt = format === 'ent' ? 'pdb' : format;
+    writeDiskFile(filename, getStr(outFmt, sel, state));
+    return null;
+  });
+
   ctx.command('get_session', () => getSession() as unknown as Json);
 
   ctx.command('set_session', (args, kwargs) => {

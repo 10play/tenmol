@@ -1,0 +1,20 @@
+{
+  "id": "feature__scene-fkeys",
+  "feature": "scene-fkeys",
+  "kind": "state",
+  "probeKind": "state",
+  "ops": [
+    {"do": "set scene_animation, 0"},
+    {"do": "fragment ala"},
+    {"do": "scene F1, store"}
+  ],
+  "checks": [
+    {"call": ["get_scene_list"], "label": "scene F1 was stored"},
+    {"call": ["_special", 1, 0, 0], "label": "F1 special-key dispatches to scene recall (returns True)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["F1"],
+    true
+  ]
+}

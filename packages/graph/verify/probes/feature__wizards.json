@@ -1,0 +1,17 @@
+{
+  "id": "feature__wizards",
+  "feature": "wizards",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    { "do": "set mouse_selection_mode, 6" },
+    { "do": "wizard label" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "mouse_selection_mode"], "label": "mouse_selection_mode forced to 0 by Label wizard constructor" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    0
+  ]
+}

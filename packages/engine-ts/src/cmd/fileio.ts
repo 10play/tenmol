@@ -928,6 +928,23 @@ export function registerFileio(ctx: RegistrarCtx): void {
     const objArg = ctx.str(pick(args, kwargs, 1, 'object'), '');
     const fmtArg = ctx.str(pick(args, kwargs, 3, 'format'), '').toLowerCase();
 
+    // Native session files (.pse/.psw): restore the whole executive rather than
+    // parse a single object. PyMOL loads these through `_cmd.set_session`
+    // (importing.py `load` → loadable.pse). Our on-disk shape is the JSON
+    // snapshot `save` writes; hand its parsed contents to `set_session`.
+    const loadExt = (/\.([a-z0-9]+)\s*$/i.exec(content.trim())?.[1] ?? '').toLowerCase();
+    if ((fmtArg === 'pse' || fmtArg === 'psw' || loadExt === 'pse' || loadExt === 'psw') && !/\r?\n/.test(content)) {
+      const sessText = readDiskFile(content);
+      if (sessText === null) {
+        throw new Error(
+          `load: cannot read session '${content}' — the browser has no filesystem; ` +
+            `pass file contents (or drop the file) with a format`,
+        );
+      }
+      ctx.call('set_session', [JSON.parse(sessText)]);
+      return null;
+    }
+
     // Binary density maps (CCP4/MRC/MAP) are not structure files: read the raw
     // bytes off disk and hand them to the map subsystem, which parses the grid
     // and registers an ObjectMap. PyMOL routes these extensions to

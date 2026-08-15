@@ -40,7 +40,8 @@ describe('parity: provably-impossible-in-a-browser (xfail)', () => {
   // below, not an xfail. `volume`/`slice_new` likewise graduated: their
   // object-creation side effect (object:volume / object:slice in get_names) is a
   // synchronous, observable state change, only the pixel raymarch stays out of
-  // scope. 4 items remain.
+  // scope. `save` also graduated: under Node it writes the file to disk (a real
+  // observable side effect) — see the real passing test below. 3 xfail items remain.
 
   // (2) volume + slice RENDERING -> volumetric 3-D-texture raymarch.
   // WHY the pixel raymarch is impossible: `volume` (creating.py, line 577) and
@@ -107,17 +108,20 @@ describe('parity: provably-impossible-in-a-browser (xfail)', () => {
     expect(names).toContain('onpath'); // load-from-path would create this object
   });
 
-  // (6) save to disk (writes a file).
-  // WHY IMPOSSIBLE: `save` (exporting.py, line 784) writes a file to a path on
-  // disk. The browser engine has no filesystem — `save` is a documented no-op —
-  // so no file is ever written. (Content export exists only in-memory via
-  // get_str/get_pdbstr; it cannot touch the disk.)
-  it.fails('save: writes a structure file to a disk path', async () => {
+  // (6) save to disk (writes a file). GRADUATED: under Node (the differential and
+  // app-server, where a real filesystem is reachable via process.getBuiltinModule)
+  // `save` (cmd/exporters.ts) now writes the file exactly as real PyMOL does —
+  // .pse/.psw sessions plus the format-string structure exporters. The write is a
+  // synchronous, observable side effect, so this is a real passing test. Only a
+  // pure browser (no filesystem) still degrades it to a no-op, which is out of
+  // scope for the Node-based differential.
+  it('save: writes a structure file to a disk path', async () => {
     const b = await boot();
     const out = join(tmpdir(), `tenmol-parity-save-${Date.now()}.pdb`);
     if (existsSync(out)) rmSync(out);
-    await ignore(b.call('save', [out, 'all'])); // real PyMOL writes this file
+    await b.call('save', [out, 'all']);
     expect(existsSync(out)).toBe(true);
+    rmSync(out);
   });
 
   // (7) run / @script / spawn a Python script.

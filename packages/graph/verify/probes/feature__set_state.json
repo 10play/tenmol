@@ -1,0 +1,19 @@
+{
+  "id": "feature__set_state",
+  "feature": "set_state",
+  "kind": "state",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, pos=[0,0,0], state=1" },
+    { "do": "pseudoatom m, pos=[1,0,0], state=2" },
+    { "do": "pseudoatom m, pos=[2,0,0], state=3" },
+    { "call": ["set_frame", 2] }
+  ],
+  "checks": [
+    { "call": ["get_state"], "label": "state after set_frame 2 (frame moves global state cursor)" },
+    { "call": ["get_frame"], "label": "frame after set_frame 2" },
+    { "call": ["count_states", "m"], "label": "number of states in m" }
+  ],
+  "tol": 1e-3,
+  "expected": [2, 2, 3]
+}

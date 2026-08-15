@@ -1,0 +1,27 @@
+{
+  "id": "feature__sculpt_controls",
+  "feature": "sculpt controls",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"sculpt_activate ala"},
+    {"do":"set sculpting, 1"},
+    {"do":"set sculpt_field_mask, 391"},
+    {"do":"set sculpt_vdw_vis_mode, 1"},
+    {"do":"sculpt_iterate ala, 1, 3"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","sculpting"],"label":"sculpting enabled"},
+    {"call":["get_setting_int","sculpt_field_mask"],"label":"sculpt_field_mask restraint flags"},
+    {"call":["get_setting_int","sculpt_vdw_vis_mode"],"label":"sculpt_vdw_vis_mode (Bumps) enabled"},
+    {"call":["get_setting_int","sculpting_cycles"],"label":"sculpting_cycles default"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    391,
+    1,
+    10
+  ]
+}

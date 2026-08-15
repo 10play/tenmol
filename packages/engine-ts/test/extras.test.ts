@@ -74,7 +74,8 @@ describe('extras — residual command sweep', () => {
       // `edit`/`remove_picked`/`unpick` moved to cmd/editing.ts, `fab` to
       // cmd/editor.ts, and the superposition family (intra_rms/alignto/extra_fit/
       // cealign/usalign/pair_fit) to cmd/align.ts (see parity-*.test.ts).
-      'save', 'log', // ray/draw/png are real now (cmd/render.ts)
+      // `save` moved to cmd/exporters.ts (real .pse session + structure exporter).
+      'log', // ray/draw/png are real now (cmd/render.ts)
       // `map_set` moved to cmd/maps.ts (real elementwise map arithmetic).
       // `volume` moved to cmd/maps.ts (real object:volume gadget creator).
       'mcopy', 'cls', 'cache', 'quit',
@@ -89,8 +90,9 @@ describe('extras — residual command sweep', () => {
     // cmd/system.ts as the real movie frame-insert; then `pbc_unwrap` and
     // `pbc_wrap` moved to cmd/symmetry.ts as real PBC-trajectory handlers; then
     // `unset_deep` moved to cmd/settings2.ts as the real bulk setting reset;
-    // then `volume` moved to cmd/maps.ts as the real object:volume creator).
-    expect(handlers.size).toBeGreaterThanOrEqual(55);
+    // then `volume` moved to cmd/maps.ts as the real object:volume creator; then
+    // `save` moved to cmd/exporters.ts as the real .pse session/structure writer).
+    expect(handlers.size).toBeGreaterThanOrEqual(54);
   });
 
   /* --------------------------- REAL behaviours --------------------------- */
@@ -243,8 +245,9 @@ describe('extras — residual command sweep', () => {
   it('environment-bound verbs are safe no-ops with the right shape', () => {
     const { ex, call } = setup();
     const before = ex.molecule('m')!.natom;
-    // null-returning (`load` is a real verb now — cmd/fileio.ts, load.test.ts)
-    for (const v of ['save', 'quit', 'cache', 'cls', 'log']) {
+    // null-returning (`load` is a real verb now — cmd/fileio.ts, load.test.ts;
+    // `save` is a real verb now — cmd/exporters.ts, .pse session exporter)
+    for (const v of ['quit', 'cache', 'cls', 'log']) {
       expect(call(v), `${v} should return null`).toBeNull();
     }
     // shaped returns

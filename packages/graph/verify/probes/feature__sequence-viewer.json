@@ -1,0 +1,27 @@
+{
+  "id": "feature__sequence-viewer",
+  "feature": "sequence-viewer",
+  "kind": "state",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "set seq_view, 1" },
+    { "do": "set seq_view_format, 1" },
+    { "do": "set seq_view_label_mode, 1" }
+  ],
+  "checks": [
+    { "call": ["get_setting_boolean", "seq_view"], "label": "seq_view enabled (Seeker on)" },
+    { "call": ["get_setting_int", "seq_view_format"], "label": "seq_view_format = 1 (three-letter)" },
+    { "call": ["get_setting_int", "seq_view_label_mode"], "label": "seq_view_label_mode = 1" },
+    { "call": ["get_setting_int", "seq_view_location"], "label": "seq_view_location default 0 (top)" },
+    { "call": ["count_atoms", "ala"], "label": "structure loaded for the grid" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    true,
+    1,
+    1,
+    0,
+    10
+  ]
+}

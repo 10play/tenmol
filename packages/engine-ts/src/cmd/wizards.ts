@@ -44,6 +44,22 @@ const DEFAULT_PROMPTS: Readonly<Record<string, string[]>> = {
   distance: ['Pick two atoms to measure a distance.'],
 };
 
+/**
+ * Observable side effects a wizard runs from its Python `__init__`, keyed by
+ * launch name. PyMOL wizards are plain objects whose constructors mutate global
+ * engine state before the stack push (`packages/engine/modules/pymol/wizard/*.py`).
+ * Only the settings-level effects are reproducible through the public API here;
+ * each entry lists `[setting, value]` pairs applied via `cmd.set`.
+ *
+ *  - `label`  — `self.cmd.set('mouse_selection_mode', 0)` (label.py:34).
+ *
+ * (Non-settings effects such as `unpick`/`deselect` are not observable state
+ * and are intentionally omitted.)
+ */
+const WIZARD_CONSTRUCTOR_SETTINGS: Readonly<Record<string, ReadonlyArray<readonly [string, number]>>> = {
+  label: [['mouse_selection_mode', 0]],
+};
+
 /** Build a fresh wizard record of the given kind with its default prompt. */
 function makeWizard(name: string): Wizard {
   const prompt = DEFAULT_PROMPTS[name];
@@ -231,6 +247,13 @@ export function registerWizards(ctx: RegistrarCtx): void {
 
   const top = (): Wizard | undefined => (stack.length ? stack[stack.length - 1] : undefined);
 
+  /** Run a wizard's constructor-time settings side effects (see table above). */
+  const runConstructor = (name: string): void => {
+    const effects = WIZARD_CONSTRUCTOR_SETTINGS[name];
+    if (!effects) return;
+    for (const [setting, value] of effects) ctx.call('set', [setting, value]);
+  };
+
   /**
    * `cmd.wizard(name, ...)` — instantiate and push a wizard of kind `name`.
    * A falsy/omitted name clears the active wizard (PyMOL: `wizard()` with no
@@ -243,6 +266,7 @@ export function registerWizards(ctx: RegistrarCtx): void {
       stack.pop();
     } else {
       stack.push(makeWizard(name));
+      runConstructor(name);
     }
     const t = top();
     return t ? t.name : null;
@@ -279,6 +303,7 @@ export function registerWizards(ctx: RegistrarCtx): void {
     const t = top();
     if (t && t.name === oldName && newName) {
       stack[stack.length - 1] = makeWizard(newName);
+      runConstructor(newName);
     }
     return top()?.name ?? null;
   });
@@ -369,7 +394,10 @@ export function registerWizards(ctx: RegistrarCtx): void {
   }));
   ctx.command('wizards.launch', (args) => {
     const name = args[0] == null ? '' : String(args[0]);
-    if (name && name.toLowerCase() !== 'none') stack.push(makeWizard(name));
+    if (name && name.toLowerCase() !== 'none') {
+      stack.push(makeWizard(name));
+      runConstructor(name);
+    }
     return probe();
   });
   ctx.command('wizards.dismiss', (_args, kwargs) => {

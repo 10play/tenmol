@@ -32,7 +32,10 @@ describe('load — explicit format', () => {
   it('loads a MOL2 by explicit format', async () => {
     const b = await boot();
     await b.call('load', [read('ligs3d.mol2'), 'lig', 0, 'mol2']);
-    expect(await b.call('count_atoms', ['all'])).toBe(36);
+    // ligs3d.mol2 holds 10 MOLECULE blocks; PyMOL reads them all into one
+    // discrete multi-state object (verified against the real-PyMOL oracle:
+    // count_atoms=337, count_states=10, count_discrete=1).
+    expect(await b.call('count_atoms', ['all'])).toBe(337);
   });
 
   it('loads an XYZ by explicit format', async () => {
@@ -52,7 +55,9 @@ describe('load — format sniffing (no explicit format)', () => {
   it('sniffs MOL2 from the @<TRIPOS> marker', async () => {
     const b = await boot();
     await b.call('load', [read('ligs3d.mol2'), 'lig']);
-    expect(await b.call('count_atoms', ['all'])).toBe(36);
+    // All 10 MOLECULE blocks are read into one object (337 atoms total); see
+    // the explicit-format case above.
+    expect(await b.call('count_atoms', ['all'])).toBe(337);
   });
 
   it('rejects a bare path with an honest filesystem error', async () => {

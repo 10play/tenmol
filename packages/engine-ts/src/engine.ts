@@ -106,6 +106,56 @@ function naturalCompare(a: string, b: string): number {
 }
 
 /**
+ * GLUT special-key modifier names, indexed by the bitmask PyMOL passes to
+ * `_special` (`internal.modifier_keys`): 1=SHFT, 2=CTRL, 3=CTSH, 4=ALT.
+ */
+const MODIFIER_KEYS = ['', 'SHFT', 'CTRL', 'CTSH', 'ALT'];
+
+/**
+ * GLUT special key codes → key name (`internal.special_key_codes`): F1–F12 and
+ * the navigation/edit specials. The bare key name is what F-key scene/view
+ * lookups are keyed on.
+ */
+const SPECIAL_KEY_CODES: Record<number, string> = {
+  1: 'F1', 2: 'F2', 3: 'F3', 4: 'F4', 5: 'F5', 6: 'F6',
+  7: 'F7', 8: 'F8', 9: 'F9', 10: 'F10', 11: 'F11', 12: 'F12',
+  100: 'left', 101: 'up', 102: 'right', 103: 'down',
+  104: 'pgup', 105: 'pgdn', 106: 'home', 107: 'end', 108: 'insert',
+};
+
+/**
+ * A minimal port of `pymol.shortcut.Shortcut.interpret(query, mode=False)` for
+ * the F-key dispatch: returns the keyword list for an empty query, the matched
+ * keyword (exact or unique-abbreviation) for a hit, a list for an ambiguous
+ * prefix, or `undefined` (Python `None`) for no hit. `_special` only uses the
+ * single-string result, but the full three-way shape is ported for fidelity.
+ */
+function shortcutInterpret(keywords: readonly string[], query: string): string | string[] | undefined {
+  if (query === '') return [...keywords];
+  // Build the shortcut map exactly as `_optimize_symbols`/`_rebuild_finalize`:
+  // every proper prefix maps to its keyword, or to 0 (the collision sentinel)
+  // when two keywords share it; the full keyword always maps to itself.
+  const shortcut = new Map<string, string | 0>();
+  const set = (k: string, kw: string): void => {
+    shortcut.set(k, shortcut.has(k) ? 0 : kw);
+  };
+  for (const kw of keywords) {
+    for (let i = 1; i < kw.length; i++) set(kw.slice(0, i), kw);
+  }
+  for (const kw of keywords) shortcut.set(kw, kw);
+
+  const result = shortcut.get(query);
+  if (result === undefined) return undefined; // None
+  if (result) return result; // exact / unique (mode=False returns immediately)
+
+  // Collision sentinel (0): fall back to a prefix search over the keywords.
+  const unique = new Set<string>();
+  for (const w of keywords) if (w.startsWith(query)) unique.add(w);
+  if (unique.size === 0) return undefined;
+  return unique.size === 1 ? [...unique][0]! : [...unique];
+}
+
+/**
  * Coerce a `scene_order` `sort` argument the way `viewing.scene_order` does:
  * numbers pass through, but a string is resolved through PyMOL's `boolean_sc`
  * shortcut (`yes`/`no`/`true`/`false`/`on`/`off`/`1`/`0`).
@@ -1168,6 +1218,35 @@ export class Engine {
     // splits on whitespace, `sort` accepts boolean-like words, `location` is a
     // top/current/bottom shortcut) feeding `MovieSceneOrder`.
     h('scene_order', (args, kwargs) => this.runSceneOrder(args, kwargs));
+    // `internal._special(k, x, y, m=0)` — dispatch a GLUT special key (F1–F12,
+    // PgUp/PgDn, …). Real PyMOL first honours an explicit `set_key` mapping, then
+    // tries the key name against the scene list, then the named-view dictionary.
+    // Explicit `set_key` bindings are not ported (no `key_mappings` table), so we
+    // fall straight through to scenes then views, exactly as internal._special's
+    // scene/view loop does — returning True on the first hit, else False.
+    h('_special', (args) => {
+      const k = Math.trunc(Number(args[0]));
+      const m = Math.trunc(Number(args[3] ?? 0));
+      const base = SPECIAL_KEY_CODES[k];
+      if (base === undefined) return false;
+      if (m && MODIFIER_KEYS[m] === undefined) return false;
+      const key = m ? `${MODIFIER_KEYS[m]}-${base}` : base;
+      for (const [fn, keywords] of [
+        ['scene', [...this.sceneOrder]] as const,
+        ['view', [...this.views.keys()]] as const,
+      ]) {
+        if (keywords.includes(key)) {
+          this.call(fn, [key]);
+          return true;
+        }
+        const autocomp = shortcutInterpret(keywords, key + '-');
+        if (typeof autocomp === 'string') {
+          this.call(fn, [autocomp]);
+          return true;
+        }
+      }
+      return false;
+    });
     h('wizards.catalog', () => []);
     // NOTE: only stub a symbol when the EMPTY shape is known. wizards.probe /
     // wizards.snapshot return rich objects a feature dereferences; a wrong-shape

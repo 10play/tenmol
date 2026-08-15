@@ -80,6 +80,9 @@ const SCULPT_SETTING_DEFAULTS: Readonly<Record<string, number>> = {
   // Bitmask of active restraint terms; default 0x1FF selects bond, angle, pyra,
   // plan, line, vdw (0x020), vdw14, tors and tri (`cSculpt*` in ObjectMolecule).
   sculpt_field_mask: 0x1ff,
+  // Iterations run per `sculpt_iterate` update when a caller omits `cycles`;
+  // PyMOL ships a non-zero default (`SettingInfo.h:256` REC_i 171 = 10).
+  sculpting_cycles: 10,
 };
 
 /**

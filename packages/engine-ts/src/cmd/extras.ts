@@ -719,7 +719,8 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // `load_mtz` is incentive-only — registered separately below (throws).
       'load_png',
       // `load_traj` is real now — see cmd/fileio.ts (DCD trajectory importer).
-      'save',
+      // `save` is real now — see cmd/exporters.ts (writes .pse sessions + the
+      // format-string structure exporters to disk).
       // `fetch` is real now — see cmd/fileio.ts (loads the cached/local file).
       // `ray`/`draw`/`png` are real now — see cmd/render.ts.
       // logging to disk
