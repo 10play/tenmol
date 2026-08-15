@@ -1,0 +1,16 @@
+{
+  "id": "command__indicate",
+  "feature": "indicate",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "indicate name CA" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "indicate"], "label": "atoms in indicate selection after indicate name CA" },
+    { "call": ["count_atoms", "indicate and name CA"], "label": "indicate overlaps CA" }
+  ],
+  "tol": 1e-3,
+  "expected": [1, 1]
+}

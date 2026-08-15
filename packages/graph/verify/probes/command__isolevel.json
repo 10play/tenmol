@@ -1,0 +1,24 @@
+{
+  "id": "command__isolevel",
+  "feature": "isolevel",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "map_new mmm, gaussian, 1.0, m" },
+    { "do": "isomesh msh, mmm, 1.0" },
+    { "do": "isolevel msh, 2.5" }
+  ],
+  "checks": [
+    {
+      "call": ["isolevel", "msh"],
+      "kwargs": { "query": 1 },
+      "label": "queried contour level of iso object 'msh' after isolevel set it to 2.5",
+      "tol": 1e-3
+    }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2.5
+  ]
+}

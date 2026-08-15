@@ -271,23 +271,37 @@ describe('attach', () => {
 /* --------------------------------- invert ------------------------------- */
 
 describe('invert', () => {
-  it('swaps the two lightest substituents of the picked atom', () => {
-    // Central C bonded to N (heavy) and two H; invert swaps the two H positions.
+  it('rotates the free substituent 180° about the bisector of pk2/pk3, holding them fixed', () => {
+    // Matches PyMOL's EditorInvert: with pk1 the centre and pk2/pk3 the two
+    // immobile neighbours, every free fragment rotates 180° about the bisector
+    // of (pk1→pk2) and (pk1→pk3) through pk1. Here pk2=N at (1,1,0) and
+    // pk3=O at (1,-1,0) give a bisector along the x-axis, so the free H at
+    // (-1,0,1) reflects to (-1,0,-1) while N, O and the centre stay put.
     const rows: Array<[string, string, [number, number, number]]> = [
       ['C', 'C', [0, 0, 0]],
-      ['N', 'N', [1.5, 0, 0]],
-      ['H1', 'H', [-0.5, 1.0, 0]],
-      ['H2', 'H', [-0.5, -1.0, 0]],
+      ['N', 'N', [1, 1, 0]],
+      ['O', 'O', [1, -1, 0]],
+      ['H1', 'H', [-1, 0, 1]],
     ];
     const { ex, h } = setup(pdbOf(rows, [conect(1, 2), conect(1, 3), conect(1, 4)]));
     const mol = ex.molecule('m')!;
-    const before1 = mol.coord(2, 1);
-    const before2 = mol.coord(3, 1);
-    h.get('invert')!([], { selection: 'index 1' });
-    // The two hydrogens exchanged coordinates; N (heavier) stayed put.
-    expect(mol.coord(2, 1)).toEqual(before2);
-    expect(mol.coord(3, 1)).toEqual(before1);
-    expect(mol.coord(1, 1)).toEqual([1.5, 0, 0]);
+    const idxOf = (name: string): number => ex.atomsMatching(`name ${name}`)[0]!.index;
+    // invert() reads the editor picks pk1/pk2/pk3 (as `edit` would set them).
+    ex.select('pk1', 'name C');
+    ex.select('pk2', 'name N');
+    ex.select('pk3', 'name O');
+    const nBefore = mol.coord(idxOf('N'), 1);
+    const oBefore = mol.coord(idxOf('O'), 1);
+    const cBefore = mol.coord(idxOf('C'), 1);
+    h.get('invert')!([], {});
+    const h1 = mol.coord(idxOf('H1'), 1) as V;
+    expect(h1[0]).toBeCloseTo(-1, 6);
+    expect(h1[1]).toBeCloseTo(0, 6);
+    expect(h1[2]).toBeCloseTo(-1, 6);
+    // The immobile picks and the centre did not move.
+    expect(mol.coord(idxOf('N'), 1)).toEqual(nBefore);
+    expect(mol.coord(idxOf('O'), 1)).toEqual(oBefore);
+    expect(mol.coord(idxOf('C'), 1)).toEqual(cBefore);
   });
 });
 

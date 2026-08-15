@@ -166,14 +166,14 @@ function parseStateSpec(spec: string, maxState: number): Set<number> {
   return out;
 }
 
-/** RMSD over `uas` between state `s` and the reference state 1 (no superposition). */
-function rmsdToRef(ex: Executive, uas: UA[], s: number): number {
+/** RMSD over `uas` between state `s` and reference state `ref` (no superposition). */
+function rmsdToRef(ex: Executive, uas: UA[], s: number, ref: number): number {
   let sum = 0;
   let n = 0;
   for (const ua of uas) {
     const mol = ex.molecule(ua.objName);
     if (!mol || s > mol.nstate) continue;
-    const [ax, ay, az] = mol.coord(ua.index, 1);
+    const [ax, ay, az] = mol.coord(ua.index, ref);
     const [bx, by, bz] = mol.coord(ua.index, s);
     const dx = ax - bx;
     const dy = ay - by;
@@ -473,10 +473,14 @@ export function registerExtras(ctx: RegistrarCtx): void {
      The reference state reports -1.0, as PyMOL does. */
   const intraRmsCur = (args: unknown[], kwargs: Record<string, unknown>): Json => {
     const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
+    // Reference state (1-based); PyMOL's default state=0 resolves to state 1.
+    const ref = Math.max(1, Math.trunc(toNum(args[1] ?? kwargs['state'], 0)) || 1);
     const uas = ex.atomsMatching(selection) as UA[];
     const maxState = Math.max(1, ...uas.map((ua) => ex.molecule(ua.objName)?.nstate ?? 1));
     const out: number[] = [];
-    for (let s = 1; s <= maxState; s++) out.push(s === 1 ? -1.0 : rmsdToRef(ex, uas, s));
+    for (let s = 1; s <= maxState; s++) {
+      out.push(s === ref ? -1.0 : rmsdToRef(ex, uas, s, ref));
+    }
     return out;
   };
   ctx.command('intra_rms_cur', intraRmsCur);

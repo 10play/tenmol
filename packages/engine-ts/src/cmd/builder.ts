@@ -711,44 +711,75 @@ export function registerBuilder(ctx: RegistrarCtx): void {
   });
 
   /* --------------------------------- invert ------------------------------ */
-  // invert(selection='pk1') — invert the configuration at the picked atom by
-  // swapping the positions of two of its substituents (a chirality flip).
-  ctx.command('invert', (args, kwargs): Json => {
-    const target = firstAtom(sel(pick(args, kwargs, 0, 'selection'), 'pk1'));
+  // invert(quiet=1) — invert the stereochemistry at the picked atom `pk1`,
+  // holding the two attached atoms `pk2` and `pk3` immobile (Editor.cpp
+  // EditorInvert). PyMOL takes no selection argument: it reads the editor picks.
+  //
+  // Algorithm (Editor.cpp:608): with centre `v` = pk1, and the two immobile
+  // neighbours `v0` = pk2, `v1` = pk3, build the bisector axis
+  //   n = normalize( normalize(v-v0) + normalize(v-v1) )
+  // and rotate every "free" fragment (the atoms hanging off pk1 that are NOT
+  // bonded to pk2 or pk3) by 180° about that axis through `v`. Rotating by π
+  // about the bisector swaps the two free substituents' half-spaces — a rigid
+  // motion that inverts the chirality while leaving pk2/pk3 (and all bond
+  // lengths) untouched.
+  ctx.command('invert', (): Json => {
+    const target = firstAtom('pk1');
     if (!target) return null;
     const mol = ex.molecule(target.objName);
     if (!mol) return null;
-    const adj = buildAdjacency(mol);
-    const nbrs = adj[target.index]!;
-    if (nbrs.length < 2) return null;
-    // Prefer swapping the two lightest substituents (typically hydrogens).
-    const ranked = [...nbrs].sort(
-      (a, b) => valenceOf(mol.atoms[a]!.elem) - valenceOf(mol.atoms[b]!.elem),
-    );
-    const p = ranked[0]!;
-    const q = ranked[1]!;
+    const a2 = firstAtom('pk2');
+    const a3 = firstAtom('pk3');
+    // Both immobile picks must exist in the same object (EditorInvert requires
+    // pk1/pk2/pk3, all in one object, else it errors and does nothing).
+    if (!a2 || !a3) return null;
+    if (a2.objName !== target.objName || a3.objName !== target.objName) return null;
     const ci = target.index;
-    // Invert stereochemistry by swapping the two substituents' ANGULAR positions
-    // about the centre while preserving each bond length — a rigid reflection
-    // that never changes a bond length (editing.py invert holds atoms immobile).
+    const i2 = a2.index;
+    const i3 = a3.index;
+
+    const adj = buildAdjacency(mol);
+    // Free fragments: each neighbour of pk1 other than pk2/pk3 seeds a connected
+    // component reached without crossing back through pk1. Skip any component
+    // that contains pk2 or pk3 (a ring back to an immobile atom is not free).
+    const moved = new Set<number>();
+    for (const nb of adj[ci]!) {
+      if (nb === i2 || nb === i3) continue;
+      const seen = new Set<number>([nb]);
+      const stack = [nb];
+      let touchesImmobile = false;
+      while (stack.length > 0) {
+        const x = stack.pop()!;
+        if (x === i2 || x === i3) touchesImmobile = true;
+        for (const y of adj[x]!) {
+          if (y === ci || seen.has(y)) continue;
+          seen.add(y);
+          stack.push(y);
+        }
+      }
+      if (!touchesImmobile) for (const x of seen) moved.add(x);
+    }
+    if (moved.size === 0) return null;
+
     for (let s = 0; s < mol.states.length; s++) {
       const set = mol.states[s]!;
-      const cx = set[ci * 3] ?? 0, cy = set[ci * 3 + 1] ?? 0, cz = set[ci * 3 + 2] ?? 0;
-      const vp: [number, number, number] = [
-        (set[p * 3] ?? 0) - cx, (set[p * 3 + 1] ?? 0) - cy, (set[p * 3 + 2] ?? 0) - cz,
-      ];
-      const vq: [number, number, number] = [
-        (set[q * 3] ?? 0) - cx, (set[q * 3 + 1] ?? 0) - cy, (set[q * 3 + 2] ?? 0) - cz,
-      ];
-      const lp = Math.hypot(vp[0], vp[1], vp[2]) || 1;
-      const lq = Math.hypot(vq[0], vq[1], vq[2]) || 1;
-      // p takes q's direction at p's own length, and vice versa.
-      set[p * 3] = cx + (vq[0] / lq) * lp;
-      set[p * 3 + 1] = cy + (vq[1] / lq) * lp;
-      set[p * 3 + 2] = cz + (vq[2] / lq) * lp;
-      set[q * 3] = cx + (vp[0] / lp) * lq;
-      set[q * 3 + 1] = cy + (vp[1] / lp) * lq;
-      set[q * 3 + 2] = cz + (vp[2] / lp) * lq;
+      const v: Vec3 = [set[ci * 3] ?? 0, set[ci * 3 + 1] ?? 0, set[ci * 3 + 2] ?? 0];
+      const v0: Vec3 = [set[i2 * 3] ?? 0, set[i2 * 3 + 1] ?? 0, set[i2 * 3 + 2] ?? 0];
+      const v1: Vec3 = [set[i3 * 3] ?? 0, set[i3 * 3 + 1] ?? 0, set[i3 * 3 + 2] ?? 0];
+      const n0 = norm(sub(v, v0));
+      const n1 = norm(sub(v, v1));
+      const axis = norm(add(n0, n1));
+      // Rotate 180° about `axis` through `v`: R(p) = v + (2 (axis·d) axis − d),
+      // where d = p − v.
+      for (const idx of moved) {
+        const p: Vec3 = [set[idx * 3] ?? 0, set[idx * 3 + 1] ?? 0, set[idx * 3 + 2] ?? 0];
+        const d = sub(p, v);
+        const dot = axis[0] * d[0] + axis[1] * d[1] + axis[2] * d[2];
+        const r = sub(scale(axis, 2 * dot), d);
+        set[idx * 3] = v[0] + r[0];
+        set[idx * 3 + 1] = v[1] + r[1];
+        set[idx * 3 + 2] = v[2] + r[2];
+      }
     }
     ctx.publish();
     return null;

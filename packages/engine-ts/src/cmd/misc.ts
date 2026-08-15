@@ -569,11 +569,14 @@ export function registerMisc(ctx: RegistrarCtx): void {
   // ---- id_atom -----------------------------------------------------------
   ctx.command('id_atom', (args, kwargs) => {
     const sel = sel0(pick(args, kwargs, 0, 'selection'));
+    const mode = Number(pick(args, kwargs, 1, 'mode') ?? 0);
     const matched = ex.atomsMatching(sel);
     if (matched.length !== 1) {
       throw new Error(`id_atom: selection must contain exactly one atom (got ${matched.length})`);
     }
-    return matched[0]!.atom.id;
+    const ua = matched[0]!;
+    // mode 0 -> the id; mode 1 -> (object, id) tuple (identify semantics).
+    return (mode ? [ua.objName, ua.atom.id] : ua.atom.id) as Json;
   });
 
   // ---- indicate ----------------------------------------------------------

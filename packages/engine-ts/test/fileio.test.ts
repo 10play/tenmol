@@ -363,8 +363,12 @@ describe('load_coords', () => {
     expect(mol.coord(0, 1)).toEqual([1, 2, 3]);
     expect(mol.coord(1, 1)).toEqual([4, 5, 6]);
     expect(mol.coord(2, 1)).toEqual([7, 8, 9]);
-    // Untouched atom keeps its original coordinate.
-    expect(mol.coord(3, 1)[0]).toBeCloseTo(14.5, 3);
+    // Untouched atom keeps its original coordinate. Atoms are stored in PyMOL's
+    // canonical sorted order (`ObjectMoleculeSort` at load), so within GLY resi 2
+    // the backbone N (priority 1) precedes CA (priority 2): index 3 is GLY N
+    // (x=15.0) and index 4 is GLY CA (x=14.5).
+    expect(mol.coord(3, 1)[0]).toBeCloseTo(15.0, 3);
+    expect(mol.coord(4, 1)[0]).toBeCloseTo(14.5, 3);
     expect(h.published).toBe(before + 1);
   });
 });

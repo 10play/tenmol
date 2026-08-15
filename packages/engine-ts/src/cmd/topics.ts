@@ -22,6 +22,8 @@
  * `api.py`, so they are deliberately left unregistered.
  */
 
+import { PymolError } from '@tenmol/backend';
+import { incentiveOnly } from '@tenmol/protocol';
 import type { Json } from '@tenmol/protocol';
 import type { RegistrarCtx } from './registrar';
 
@@ -64,10 +66,18 @@ const SHOW_HELP_TEXT = `show_help command
     Print the online help for a command in the internal feedback window,
     exactly as typing "help <command>" at the PyMOL prompt would.`;
 
-/** `helping.help_setting` — per-setting documentation. */
-const HELP_SETTING_TEXT = `help_setting name
-
-    Print the documentation for a setting.`;
+/**
+ * `helping.help_setting` — per-setting documentation. In Open-Source PyMOL the
+ * documentation database is incentive-only, so the function raises
+ * `pymol.IncentiveOnlyException()` (helping.py:99) rather than printing text.
+ * The message here mirrors Python's `str(IncentiveOnlyException)` verbatim,
+ * including the leading-space `<label>: ` prefix from `CmdException.__str__`
+ * (`__init__.py:479`), so the differential sees identical behaviour.
+ */
+const HELP_SETTING_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "help_setting" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
 
 /** `keyboard.editing_ring` — the copy/cut/paste selection ring helper. */
 const EDITING_RING_TEXT = `editing_ring action
@@ -88,7 +98,12 @@ export function registerTopics(ctx: RegistrarCtx): void {
   // console shows something useful instead of a `NotPorted` error.
   ctx.command('commands', (): Json => COMMANDS_TEXT);
   ctx.command('show_help', (): Json => SHOW_HELP_TEXT);
-  ctx.command('help_setting', (): Json => HELP_SETTING_TEXT);
+  // `help_setting` is incentive-only in Open-Source PyMOL: it raises
+  // `IncentiveOnlyException()` instead of returning help text. Reproduce that
+  // exact rejection so the differential matches real PyMOL.
+  ctx.command('help_setting', (): Json => {
+    throw new PymolError(incentiveOnly('help_setting', HELP_SETTING_INCENTIVE_ONLY), 'help_setting');
+  });
   ctx.command('editing_ring', (): Json => EDITING_RING_TEXT);
 
   /* -------------------------------- check ------------------------------- */

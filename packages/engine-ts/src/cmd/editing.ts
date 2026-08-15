@@ -336,6 +336,15 @@ export function registerEditing(ctx: RegistrarCtx): void {
     const s2raw = pick(args, kwargs, 1, 'selection2');
     const s2 = s2raw == null ? '' : ctx.str(s2raw, '');
     if (s2 && s2.toLowerCase() !== 'none') ex.select('pk2', s2);
+    // Optional third/fourth picks (cEditorSele3/4): `invert` holds pk2 and pk3
+    // immobile, so `edit pk1, pk2, pk3` must define pk3 as its own atom pick
+    // (these are NOT the bond-mode fragment selections built below).
+    const s3raw = pick(args, kwargs, 2, 'selection3');
+    const s3 = s3raw == null ? '' : ctx.str(s3raw, '');
+    if (s3 && s3.toLowerCase() !== 'none') ex.select('pk3', s3);
+    const s4raw = pick(args, kwargs, 3, 'selection4');
+    const s4 = s4raw == null ? '' : ctx.str(s4raw, '');
+    if (s4 && s4.toLowerCase() !== 'none') ex.select('pk4', s4);
 
     // Bond mode: exactly one atom each, same object, and actually bonded.
     const p1 = ex.atomsMatching('pk1');

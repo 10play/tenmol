@@ -1,0 +1,16 @@
+{
+  "id": "command__id_atom",
+  "feature": "id_atom",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["id_atom", "chain D and resi 1 and name N"], "label": "first atom source id"},
+    {"call": ["id_atom", "chain A and resi 10 and name CA"], "label": "CA of chain A resi 10 source id"},
+    {"call": ["id_atom", "chain A and resi 10 and name CA", 1], "label": "mode=1 returns (object, id) tuple"}
+  ],
+  "expected": [1, 3787, ["m", 3787]],
+  "tol": 1e-3
+}

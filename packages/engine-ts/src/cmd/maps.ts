@@ -45,6 +45,8 @@ interface IsoObject {
   /** Triangle indices (empty for isodot). */
   indices: Uint32Array;
   kind: 'mesh' | 'surface' | 'dot';
+  /** Current contour level (settable/queryable via `isolevel`). */
+  level: number;
 }
 
 /* -------------------------------- helpers -------------------------------- */
@@ -225,10 +227,23 @@ export function registerMaps(ctx: RegistrarCtx): void {
 
   ctx.command('isolevel', (args, kwargs): Json => {
     const name = toStr(args[0] ?? kwargs.name);
-    const level = toNum(args[1] ?? kwargs.level, 1);
-    // `name` may name a map directly, or an iso object built from a map.
+    const query = toNum(args[3] ?? kwargs.query, 0);
+    // `isolevel` operates on the isodot/isomesh/isosurface object (matching
+    // real PyMOL, where the level lives on ObjectMesh/ObjectSurface). When
+    // `query` is truthy it reads the current level back; otherwise it sets it.
+    const iso = isoObjects.get(name);
+    if (iso) {
+      if (query) return iso.level;
+      const level = toNum(args[1] ?? kwargs.level, 1);
+      iso.level = level;
+      ctx.publish();
+      return level;
+    }
+    // Fall back to naming a map directly (records a level on the grid).
     const m = maps.get(name);
     if (m) {
+      if (query) return m.levels.length > 0 ? m.levels[m.levels.length - 1]! : 1;
+      const level = toNum(args[1] ?? kwargs.level, 1);
       m.levels.push(level);
       ctx.publish();
       return level;
@@ -353,6 +368,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
         verts: Float32Array.from(pts),
         indices: new Uint32Array(0),
         kind,
+        level,
       });
     } else {
       const { verts, indices } = marchingCubes(m, level);
@@ -361,6 +377,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
         verts,
         indices,
         kind,
+        level,
       });
     }
     const typeName =

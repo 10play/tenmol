@@ -178,7 +178,11 @@ describe('get_atom_coords / get_coords', () => {
     expect(nd.__ndarray__).toBe(true);
     expect(nd.shape).toEqual([5, 3]);
     expect(nd.dtype).toBe('float32');
-    expect(Array.from(decodeCoords(nd))).toEqual([0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, -1]);
+    // PyMOL sorts atoms into canonical order at load (`ObjectMoleculeSort`), so
+    // get_coords enumerates them in that stored order, NOT file order. For this
+    // fixture the order is CX, AX, BX, DX, EX (priority: CX beats the
+    // unconventional AX/BX/EX which sort by name, then DX). Oracle-verified.
+    expect(Array.from(decodeCoords(nd))).toEqual([1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, -1]);
   });
 });
 

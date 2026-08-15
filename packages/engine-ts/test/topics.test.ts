@@ -24,7 +24,7 @@ async function loaded(): Promise<LocalBackend> {
 describe('help / topic verbs', () => {
   it('return non-empty descriptive help text (never NotPorted)', async () => {
     const backend = await loaded();
-    for (const verb of ['commands', 'show_help', 'help_setting', 'editing_ring']) {
+    for (const verb of ['commands', 'show_help', 'editing_ring']) {
       const text = (await backend.call(verb, [])) as string;
       expect(typeof text).toBe('string');
       expect(text.trim().length).toBeGreaterThan(0);
@@ -33,6 +33,15 @@ describe('help / topic verbs', () => {
     const commands = (await backend.call('commands', [])) as string;
     expect(commands).toMatch(/COMMANDS/);
     expect(commands).toMatch(/color/);
+  });
+
+  it('help_setting raises IncentiveOnly, matching Open-Source PyMOL', async () => {
+    // Real PyMOL's `help_setting` is incentive-only (helping.py:99 raises
+    // `IncentiveOnlyException`); verified against the oracle differential.
+    const backend = await loaded();
+    await expect(backend.call('help_setting', ['cartoon_transparency'])).rejects.toThrow(
+      /Incentive-Only-Error: "help_setting" is not available in Open-Source PyMOL/,
+    );
   });
 });
 

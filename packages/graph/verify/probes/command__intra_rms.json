@@ -1,0 +1,76 @@
+{
+  "id": "command__intra_rms",
+  "feature": "intra_rms",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_pdbstr",
+        "MODEL        1\nATOM      1  N   ALA A   1       0.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA  ALA A   1       1.000   0.000   0.000  1.00  0.00           C\nATOM      3  C   ALA A   1       2.000   1.000   0.000  1.00  0.00           C\nATOM      4  O   ALA A   1       2.000   2.000   0.000  1.00  0.00           O\nATOM      5  CB  ALA A   1       1.000  -1.000   1.000  1.00  0.00           C\nENDMDL\nMODEL        2\nATOM      1  N   ALA A   1      -0.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA  ALA A   1      -0.000   1.000   0.000  1.00  0.00           C\nATOM      3  C   ALA A   1      -1.000   2.000   0.000  1.00  0.00           C\nATOM      4  O   ALA A   1      -2.000   2.000   0.000  1.00  0.00           O\nATOM      5  CB  ALA A   1       1.000   1.000   1.000  1.00  0.00           C\nENDMDL\nEND",
+        "m"
+      ]
+    },
+    {
+      "call": [
+        "intra_rms",
+        "m",
+        1
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "intra_rms",
+        "m",
+        1
+      ],
+      "label": "per-state best-fit RMS array (ref state sentinel, rigidly-rotated state 2 fits to ~0)",
+      "tol": 0.001
+    },
+    {
+      "call": [
+        "get_atom_coords",
+        "m and name CB",
+        2
+      ],
+      "label": "state 2 CB coords unchanged by intra_rms (non-destructive)",
+      "tol": 0.001
+    },
+    {
+      "call": [
+        "get_atom_coords",
+        "m and name C",
+        1
+      ],
+      "label": "state 1 C coords unchanged by intra_rms",
+      "tol": 0.001
+    },
+    {
+      "call": [
+        "count_atoms",
+        "m"
+      ],
+      "label": "atom count preserved"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    [
+      -1,
+      0
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      2,
+      1,
+      0
+    ],
+    5
+  ]
+}
