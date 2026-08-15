@@ -1,0 +1,12 @@
+{
+  "id": "command__load_raw", "feature": "load_raw", "kind": "command", "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {"call": ["load_raw", "ATOM      1  N   ALA A   1      11.104   6.134  -6.504  1.00  0.00           N\nATOM      2  CA  ALA A   1      11.639   6.071  -5.147  1.00  0.00           C\nATOM      3  C   ALA A   1      13.140   6.199  -5.194  1.00  0.00           C\nATOM      4  O   ALA A   1      13.730   6.640  -6.181  1.00  0.00           O\nATOM      5  CB  ALA A   1      11.006   7.187  -4.323  1.00  0.00           C\nEND\n", "pdb", "m"], "label": "load_raw call result"},
+    {"call": ["get_names"], "label": "object names after load_raw"},
+    {"call": ["count_atoms", "m"], "label": "total atoms loaded from raw content"},
+    {"call": ["count_atoms", "m and name CA"], "label": "CA atoms loaded from raw content"}
+  ],
+  "tol": 0,
+  "expected": [null, ["m"], 5, 1]
+}

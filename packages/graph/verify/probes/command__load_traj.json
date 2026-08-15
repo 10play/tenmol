@@ -1,0 +1,16 @@
+{
+  "id": "command__load_traj",
+  "feature": "load_traj",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/testing/data/sampletrajectory.pdb, traj"},
+    {"do": "load_traj /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/testing/data/sampletrajectory.dcd, traj"}
+  ],
+  "checks": [
+    {"call": ["count_states", "traj"], "label": "states after load_traj (topology=1 + trajectory frames)"},
+    {"call": ["count_atoms", "traj"], "label": "atom count of topology object stays constant"}
+  ],
+  "tol": 1e-3,
+  "expected": [10, 115]
+}

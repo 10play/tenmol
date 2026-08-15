@@ -43,6 +43,100 @@ function readDiskFile(path: string): string | null {
   }
 }
 
+/**
+ * Read a file synchronously off disk as raw bytes, or `null` when no filesystem
+ * is reachable (the browser). Binary counterpart of {@link readDiskFile}, used
+ * for trajectory formats (DCD) whose content is not valid UTF-8.
+ */
+function readDiskBytes(path: string): Uint8Array | null {
+  const proc = (globalThis as { process?: { getBuiltinModule?: (id: string) => unknown } }).process;
+  const getBuiltin = proc?.getBuiltinModule;
+  if (typeof getBuiltin !== 'function') return null;
+  try {
+    const fs = getBuiltin.call(proc, 'node:fs') as {
+      readFileSync(p: string): Uint8Array;
+    };
+    return fs.readFileSync(path);
+  } catch {
+    return null;
+  }
+}
+
+/** A parsed trajectory: one interleaved xyz Float32 frame per model state. */
+interface TrajFrames {
+  natom: number;
+  frames: Float32Array[];
+}
+
+/**
+ * Parse a CHARMM/X-PLOR DCD trajectory (the VMD `dcd` molfile plugin format).
+ * DCD is a stream of Fortran unformatted records — each `[int32 len][payload]
+ * [int32 len]`. Layout: a `CORD` header record (magic + 20 int32 control words),
+ * a title record, a single-int natom record, then per frame an optional unit-cell
+ * record (6 doubles, CHARMM only) followed by three coordinate records (natom
+ * float32 each: all X, then all Y, then all Z). Fixed-atom trajectories
+ * (`icntrl[8] != 0`) are not supported. Returns `null` if the bytes are not DCD.
+ */
+function parseDcd(bytes: Uint8Array): TrajFrames | null {
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  // Detect endianness from the first Fortran record length (header is 84 bytes).
+  let le = true;
+  if (dv.getInt32(0, true) === 84) le = true;
+  else if (dv.getInt32(0, false) === 84) le = false;
+  else return null;
+  if (String.fromCharCode(bytes[4]!, bytes[5]!, bytes[6]!, bytes[7]!) !== 'CORD') return null;
+
+  const icntrl: number[] = [];
+  for (let i = 0; i < 20; i++) icntrl.push(dv.getInt32(8 + i * 4, le));
+  const nfixed = icntrl[8]!;
+  if (nfixed !== 0) return null; // fixed-atom trajectories unsupported
+  const charmm = icntrl[19]! !== 0;
+  const hasCell = charmm && icntrl[10]! !== 0;
+
+  let o = 4 + 84 + 4; // past the header record (incl. trailing marker)
+  // Title record.
+  const titleLen = dv.getInt32(o, le);
+  o += 4 + titleLen + 4;
+  // NATOM record (single int).
+  const natomLen = dv.getInt32(o, le);
+  o += 4;
+  if (natomLen !== 4) return null;
+  const natom = dv.getInt32(o, le);
+  o += 4 + 4;
+
+  const readCoordBlock = (): Float32Array | null => {
+    if (o + 4 > bytes.byteLength) return null;
+    const len = dv.getInt32(o, le);
+    o += 4;
+    if (len !== natom * 4 || o + len + 4 > bytes.byteLength) return null;
+    const out = new Float32Array(natom);
+    for (let i = 0; i < natom; i++) out[i] = dv.getFloat32(o + i * 4, le);
+    o += len + 4;
+    return out;
+  };
+
+  const frames: Float32Array[] = [];
+  while (o < bytes.byteLength) {
+    if (hasCell) {
+      // Unit-cell record: 6 doubles (48 bytes) bracketed by Fortran markers.
+      const cellLen = dv.getInt32(o, le);
+      o += 4 + cellLen + 4;
+    }
+    const xs = readCoordBlock();
+    const ys = readCoordBlock();
+    const zs = readCoordBlock();
+    if (!xs || !ys || !zs) break;
+    const frame = new Float32Array(natom * 3);
+    for (let i = 0; i < natom; i++) {
+      frame[i * 3] = xs[i]!;
+      frame[i * 3 + 1] = ys[i]!;
+      frame[i * 3 + 2] = zs[i]!;
+    }
+    frames.push(frame);
+  }
+  return { natom, frames };
+}
+
 /** Residues treated as solvent (mirrors the selector's `SOLVENT_RESN`). */
 const SOLVENT_RESN = new Set(['HOH', 'WAT', 'H2O', 'TIP', 'SOL']);
 
@@ -248,6 +342,42 @@ function asInt(v: unknown, dflt: number): number {
   if (v === undefined || v === null || v === '') return dflt;
   const n = typeof v === 'number' ? v : parseInt(String(v), 10);
   return Number.isFinite(n) ? n : dflt;
+}
+
+/**
+ * Expand a shell-style glob (`glob.glob` on the exp_path in PyMOL's `loadall`),
+ * returning the matched paths. Under Node this reaches `fs.globSync` through
+ * `process.getBuiltinModule`; a browser bundle (no `process`) gets `[]`. Results
+ * are returned as `fs.globSync` yields them (already directory-ordered).
+ */
+function globFiles(pattern: string): string[] {
+  const proc = (globalThis as { process?: { getBuiltinModule?: (id: string) => unknown } }).process;
+  const getBuiltin = proc?.getBuiltinModule;
+  if (typeof getBuiltin !== 'function') return [];
+  try {
+    const fs = getBuiltin.call(proc, 'node:fs') as {
+      globSync?(p: string): string[];
+    };
+    if (typeof fs.globSync !== 'function') return [];
+    return fs.globSync(pattern);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * PyMOL's `filename_to_objectname` (importing.py): take a path's basename, drop a
+ * trailing `.gz`/`.bz2` compression suffix, then strip the final extension to get
+ * the object name (with no extension the whole name is kept), and legalise it.
+ */
+function filenameToObjectname(filename: string): string {
+  let base = filename.replace(/^.*[/\\]/, '');
+  const zipMatch = /\.(gz|bz2)$/i.exec(base);
+  if (zipMatch) base = base.slice(0, -zipMatch[0].length);
+  const dot = base.lastIndexOf('.');
+  const pre = dot > 0 ? base.slice(0, dot) : base;
+  // get_legal_name: replace characters PyMOL disallows in object names with '_'.
+  return pre.replace(/[\s'"();:]/g, '_');
 }
 
 /**
@@ -644,6 +774,51 @@ export function registerFileio(ctx: RegistrarCtx): void {
     return name;
   });
 
+  // `loadall(pattern, group='', quiet=1, **kwargs)` — expand a filesystem glob
+  // and `load` every match, optionally collecting the created objects into a
+  // group (`importing.py:loadall`). PyMOL runs `glob.glob(exp_path(pattern))`,
+  // loads each file (its object name coming from `filename_to_objectname` inside
+  // `load`), then — if `group` is set — groups the member names. An explicit
+  // `object=` kwarg would funnel every file into one object, so PyMOL warns and
+  // groups just that single name. Extra kwargs (state, discrete, …) forward to
+  // each `load`.
+  ctx.command('loadall', (rawArgs, rawKwargs) => {
+    const kwargs: Record<string, unknown> = { ...rawKwargs };
+    const args: unknown[] = [];
+    for (const a of rawArgs) {
+      const m = typeof a === 'string' ? /^([A-Za-z_]\w*)=(.*)$/.exec(a) : null;
+      if (m) kwargs[m[1]!] = m[2];
+      else args.push(a);
+    }
+    const pattern = ctx.str(pick(args, kwargs, 0, 'pattern'), '');
+    const group = ctx.str(pick(args, kwargs, 1, 'group'), '');
+    const objectKwarg = ctx.str(kwargs.object, '');
+    // Remaining kwargs (minus loadall's own params) forward to each `load`.
+    const forward: Record<string, unknown> = { ...kwargs };
+    delete forward.pattern;
+    delete forward.group;
+    delete forward.quiet;
+
+    const filenames = globFiles(pattern);
+    const members: string[] = [];
+    for (const filename of filenames) {
+      // Mirror `load`'s internal `filename_to_objectname` when no explicit
+      // object is requested (engine-ts `load` alone would default to 'obj').
+      const objName = objectKwarg || filenameToObjectname(filename);
+      ctx.call('load', [filename, objName], forward);
+      members.push(objName);
+    }
+
+    if (group) {
+      const memberNames = objectKwarg !== '' ? [objectKwarg] : members;
+      ex.registerGadget(group, 'group');
+      const set = ex.ensureGroup(group);
+      for (const n of memberNames) set.add(n);
+    }
+    ctx.publish();
+    return null;
+  });
+
   // `load_embedded(key, name, ...)` — materialise a block declared earlier in the
   // script with `embed` (`importing.py:load_embedded`). The parser captured the
   // block's `[format, lines]` into the executive's embed store; here we fetch it,
@@ -668,6 +843,116 @@ export function registerFileio(ctx: RegistrarCtx): void {
     if (!name) name = key || ex.embedDefaultKey;
     const content = block.lines.join('');
     return ctx.call('load', [content, name, state, block.format]);
+  });
+
+  // `load_raw(content, format, object='', state=0, finish=1, discrete=-1, ...)`
+  // — API-only loader for structured data already held in memory
+  // (`importing.py:load_raw`). PyMOL hands the raw string straight to the loader
+  // for the named `format`, never touching the filesystem for the formats we
+  // support. We delegate to `load` with the content and an EXPLICIT format so its
+  // filename/sniff heuristics are bypassed. Returns null to mirror PyMOL, whose
+  // `_cmd.load` result is not the object name.
+  ctx.command('load_raw', (rawArgs, rawKwargs) => {
+    const kwargs: Record<string, unknown> = { ...rawKwargs };
+    const args: unknown[] = [];
+    for (const a of rawArgs) {
+      const m = typeof a === 'string' ? /^([A-Za-z_]\w*)=(.*)$/.exec(a) : null;
+      if (m) kwargs[m[1]!] = m[2];
+      else args.push(a);
+    }
+    const content = ctx.str(pick(args, kwargs, 0, 'content'), '');
+    const format = ctx.str(pick(args, kwargs, 1, 'format'), '').toLowerCase();
+    const object = ctx.str(pick(args, kwargs, 2, 'object'), '');
+    const state = asInt(pick(args, kwargs, 3, 'state'), 0);
+    const discrete = asInt(pick(args, kwargs, 5, 'discrete'), -1);
+    if (format === '') {
+      throw new Error('load_raw: a format is required');
+    }
+    ctx.call('load', [content, object, state, format], { discrete });
+    return null;
+  });
+
+  // `load_traj(filename, object='', state=1, format='', interval=1, average=1,
+  //  start=1, stop=-1, max=-1, selection='all', image=1, shift=[0,0,0], plugin='')`
+  // — read a molecular-dynamics trajectory and append its frames as states of an
+  // already-loaded object (`importing.py:load_traj` -> C `_cmd.load_traj`). The
+  // topology must already exist; each frame becomes one CoordSet appended from
+  // `state` (1-based; 0 = append after the last state). `interval`/`start`/`stop`/
+  // `max` subsample the file. Only the DCD format is parsed here (the format the
+  // differential exercises); other VMD molfile plugins are not modelled.
+  ctx.command('load_traj', (rawArgs, rawKwargs) => {
+    const kwargs: Record<string, unknown> = { ...rawKwargs };
+    const args: unknown[] = [];
+    for (const a of rawArgs) {
+      const m = typeof a === 'string' ? /^([A-Za-z_]\w*)=(.*)$/.exec(a) : null;
+      if (m) kwargs[m[1]!] = m[2];
+      else args.push(a);
+    }
+    const filename = ctx.str(pick(args, kwargs, 0, 'filename'), '');
+    let object = ctx.str(pick(args, kwargs, 1, 'object'), '').trim();
+    const state = asInt(pick(args, kwargs, 2, 'state'), 1);
+    let interval = asInt(pick(args, kwargs, 4, 'interval'), 1);
+    const start = asInt(pick(args, kwargs, 6, 'start'), 1);
+    const stop = asInt(pick(args, kwargs, 7, 'stop'), -1);
+    const max = asInt(pick(args, kwargs, 8, 'max'), -1);
+    if (interval < 1) interval = 1;
+
+    // Resolve the target object: explicit name, else guess from the filename's
+    // basename, else fall back to the last loaded object
+    // (`_guess_trajectory_object`).
+    if (object === '') {
+      const base = filename.replace(/^.*[\\/]/, '').replace(/\.[^.]*$/, '');
+      if (base !== '' && ex.molecule(base)) object = base;
+      else {
+        const mols = ex.moleculesInOrder();
+        object = mols.length > 0 ? mols[mols.length - 1]!.name : 'obj01';
+      }
+    }
+    const mol = ex.molecule(object);
+    if (!mol) throw new Error(`load_traj: object '${object}' not found`);
+
+    const bytes = readDiskBytes(filename);
+    if (bytes === null) {
+      throw new Error(
+        `load_traj: cannot read '${filename}' — the browser has no filesystem`,
+      );
+    }
+    const traj = parseDcd(bytes);
+    if (traj === null) {
+      throw new Error(`load_traj: unsupported or unreadable trajectory '${filename}'`);
+    }
+    if (traj.natom !== mol.natom) {
+      throw new Error(
+        `load_traj: trajectory atom count (${traj.natom}) does not match ` +
+          `object '${object}' (${mol.natom})`,
+      );
+    }
+
+    // Select frames by start/stop/interval/max, then append them starting at the
+    // requested base state (state 0 => append after the current last state).
+    let baseIdx = state > 0 ? state - 1 : mol.nstate;
+    if (baseIdx < 0) baseIdx = 0;
+    const first = Math.max(1, start);
+    const last = stop < 0 ? traj.frames.length : Math.min(stop, traj.frames.length);
+    let loaded = 0;
+    for (let f = first; f <= last; f += interval) {
+      if (max >= 0 && max !== 0 && loaded >= max) break;
+      const frame = traj.frames[f - 1];
+      if (!frame) continue;
+      const idx = baseIdx + loaded;
+      // Grow the states array so a gap before `baseIdx` is filled with copies of
+      // the topology's first coordinate set (matching PyMOL's CoordSet fill).
+      while (mol.states.length < idx) {
+        const seed = mol.states[0] ?? new Float32Array(mol.natom * 3);
+        mol.states.push(new Float32Array(seed));
+      }
+      const copy = new Float32Array(frame);
+      if (idx < mol.states.length) mol.states[idx] = copy;
+      else mol.states.push(copy);
+      loaded++;
+    }
+    ctx.publish();
+    return loaded;
   });
 
   /**
@@ -876,6 +1161,43 @@ export function registerFileio(ctx: RegistrarCtx): void {
     const rawName = ctx.str(pick(args, kwargs, 1, 'object'), 'model') || 'model';
     const name = legalizeObjectName(rawName);
     ex.addMolecule(new ObjectMolecule(name));
+    ctx.publish();
+    return null;
+  });
+
+  /**
+   * `load_object(type, object, name, ...)` — the low-level, general-purpose
+   * developer entry point that every in-memory loader (`load_cgo`, `load_model`,
+   * `load_map`, `load_callback`, `load_brick`) is built on (`importing.py:185`).
+   * It routes a Python payload to the correct C-side loader based on the numeric
+   * `loadable` type code (`constants.py:_loadable`). The TS engine does not model
+   * the opaque payloads (CGO float lists, ChemPy models/maps, Python callbacks,
+   * GAMESS bricks), but reproduces the object-creation side effects faithfully:
+   * the new object appears in `get_names`, reports the right `get_type` kind, and
+   * holds no atoms. Mirrors `load_object` returning `None`.
+   */
+  ctx.command('load_object', (args, kwargs): Json => {
+    const type = asInt(pick(args, kwargs, 0, 'type'), -1);
+    const rawName = ctx.str(pick(args, kwargs, 2, 'name'), '') || 'object';
+    const name = legalizeObjectName(rawName);
+    switch (type) {
+      case 8: // loadable.model — ChemPy Indexed/Model → ObjectMolecule
+        ex.addMolecule(new ObjectMolecule(name));
+        break;
+      case 10: // loadable.brick — chempy.brick → ObjectMap
+      case 11: // loadable.chempymap — chempy.map → ObjectMap
+        ex.registerGadget(name, 'object:map');
+        break;
+      case 12: // loadable.callback — Python callback object
+        ex.registerGadget(name, 'object:callback');
+        break;
+      case 13: // loadable.cgo — compiled graphics object
+        ex.registerGadget(name, 'object:cgo');
+        break;
+      default: // unmodelled loadable type — treat as a generic molecule object
+        ex.addMolecule(new ObjectMolecule(name));
+        break;
+    }
     ctx.publish();
     return null;
   });

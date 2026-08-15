@@ -617,7 +617,24 @@ export class Engine {
     h('set_view', (args) => {
       const v = args[0];
       if (!Array.isArray(v)) throw new Error('set_view expects a list of 18 floats');
-      ex.view.set(v as number[]);
+      const view = (v as unknown[]).map(Number);
+      // Element 17 is the SIGNED field of view. SceneSetView (layer1/Scene.cpp)
+      // does not store it per-view: it updates the `field_of_view` /
+      // `orthoscopic` SETTINGS from it (only when the magnitude clears ~1), and
+      // get_view then reports `ortho ? fov : -fov` off those settings. Mirror
+      // that so, e.g., a passed fov of 0 leaves the default (20) intact and
+      // get_view reports -20 rather than round-tripping the raw 0.
+      const fov = Number(view[17]);
+      if (fov < 0) {
+        ex.set('orthoscopic', 0);
+        if (fov < -(1 - 1e-4)) ex.set('field_of_view', -fov);
+      } else {
+        ex.set('orthoscopic', fov > 0.5 ? 1 : 0);
+        if (fov > 1 + 1e-4) ex.set('field_of_view', fov);
+      }
+      const settingFov = ex.getSettingFloat('field_of_view');
+      view[17] = ex.getSettingFloat('orthoscopic') !== 0 ? settingFov : -settingFov;
+      ex.view.set(view);
       this.emitView();
       return null;
     });

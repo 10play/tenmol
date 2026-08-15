@@ -63,6 +63,31 @@ function toNum(v: unknown, dflt: number): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : dflt;
 }
+/* ----------------------------- vec3 helpers ----------------------------- */
+type Vec3 = [number, number, number];
+function sub3(a: Vec3, b: Vec3): Vec3 {
+  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}
+function dot3(a: Vec3, b: Vec3): number {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+function cross3(a: Vec3, b: Vec3): Vec3 {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+}
+function normalize3(a: Vec3): Vec3 {
+  const len = Math.hypot(a[0], a[1], a[2]) || 1;
+  return [a[0] / len, a[1] / len, a[2] / len];
+}
+/** Transpose (inverse of a rotation) of a column-major 3x3 times a vector. */
+function mat3TransposeMulVec(m: number[], v: Vec3): Vec3 {
+  // Column-major m: index = col*3 + row. m^T * v => row i = column i of m dotted v.
+  return [
+    m[0]! * v[0] + m[1]! * v[1] + m[2]! * v[2],
+    m[3]! * v[0] + m[4]! * v[1] + m[5]! * v[2],
+    m[6]! * v[0] + m[7]! * v[1] + m[8]! * v[2],
+  ];
+}
+
 function toBool(v: unknown, dflt = false): boolean {
   if (v == null || v === '') return dflt;
   if (typeof v === 'boolean') return v;
@@ -509,15 +534,38 @@ export function registerExtras(ctx: RegistrarCtx): void {
   };
   ctx.command('intra_rms_cur', intraRmsCur);
 
-  /* look_at — aim the camera at a point (set the model-space rotation origin). */
+  /* look_at(target_obj, mobile_obj='_Camera') — reorient the camera so its
+     forward (z) axis faces the center of `target_obj`. Ports ExecutiveLookAt /
+     ExecutiveCameraLookAt (layer3/Executive.cpp): eye = current camera world
+     position, build glm::lookAt(eye, targetCenter, up=(0,1,0)) and convert it
+     back into the 18-float view (SceneView::FromWorldHomogeneous). Passing a
+     real mobile object is a no-op in PyMOL (ExecutiveObjectLookAt does nothing),
+     as is a missing target. */
   ctx.command('look_at', (args, kwargs): Json => {
-    const x = toNum(args[0] ?? kwargs['x'], 0);
-    const y = toNum(args[1] ?? kwargs['y'], 0);
-    const z = toNum(args[2] ?? kwargs['z'], 0);
+    const targetName = str(args[0] ?? kwargs['target_obj']);
+    const mobile = str(args[1] ?? kwargs['mobile_obj'], '_Camera') || '_Camera';
+    if (targetName === '' || mobile !== '_Camera') return null;
+    const sphere = ex.selectionSphere(targetName);
+    if (!sphere) return null;
+    const center = sphere.center as Vec3;
     const view = ex.view.get();
-    view[12] = x;
-    view[13] = y;
-    view[14] = z;
+    const rot = view.slice(0, 9); // column-major model -> camera
+    const pos: Vec3 = [view[9]!, view[10]!, view[11]!];
+    const origin: Vec3 = [view[12]!, view[13]!, view[14]!];
+    // Camera position in model space: eye = origin - R^T * pos (worldPos()).
+    const eye = sub3(origin, mat3TransposeMulVec(rot, pos));
+    // glm::lookAt(eye, center, up): f forward, s right, u up (all model space).
+    const f = normalize3(sub3(center, eye));
+    const s = normalize3(cross3(f, [0, 1, 0]));
+    const u = cross3(s, f);
+    // New column-major model->camera rotation: columns s, u, -f.
+    view[0] = s[0]; view[1] = u[0]; view[2] = -f[0];
+    view[3] = s[1]; view[4] = u[1]; view[5] = -f[1];
+    view[6] = s[2]; view[7] = u[2]; view[8] = -f[2];
+    // New camera-space Pos = Vrot*origin + Vtrans, Vtrans = (-s.eye, -u.eye, f.eye).
+    view[9] = dot3(s, origin) - dot3(s, eye);
+    view[10] = dot3(u, origin) - dot3(u, eye);
+    view[11] = -dot3(f, origin) + dot3(f, eye);
     ex.view.set(view);
     ctx.emitView();
     return null;
@@ -597,12 +645,12 @@ export function registerExtras(ctx: RegistrarCtx): void {
     [
       // file & network I/O (need a filesystem / parser / network we lack here).
       // `load` is real (cmd/fileio.ts) — it parses structured content by format.
-      'loadall',
+      // `loadall` is real now — see cmd/fileio.ts (glob loader + grouping).
       // `load_embedded` is real now — see cmd/fileio.ts (embed-block loader).
       // `load_model` is real now — see cmd/fileio.ts (ChemPy-model importer).
       // `load_mtz` is incentive-only — registered separately below (throws).
       'load_png',
-      'load_traj',
+      // `load_traj` is real now — see cmd/fileio.ts (DCD trajectory importer).
       'save',
       // `fetch` is real now — see cmd/fileio.ts (loads the cached/local file).
       // `ray`/`draw`/`png` are real now — see cmd/render.ts.

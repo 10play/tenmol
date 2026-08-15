@@ -190,15 +190,28 @@ describe('extras — residual command sweep', () => {
     expect(rms[1]).toBeGreaterThan(0); // models differ by +0.5 in x
   });
 
-  it('look_at and middle move the rotation origin (via emitView)', () => {
+  it('look_at aims the camera forward axis at the target; middle recentres', () => {
     const { ex, call, stats } = setup();
-    call('look_at', [1, 2, 3]);
-    let view = ex.view.get();
-    expect([view[12], view[13], view[14]]).toEqual([1, 2, 3]);
+    // Known camera: identity rotation, 50 units in front, origin at 0.
+    ex.view.set([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50, 0, 0, 0, 40, 60, -20]);
+    // Reorient the camera to face object 'm' (default mobile_obj='_Camera').
+    call('look_at', ['m']);
+    const v = ex.view.get();
+    // After look_at the target centre projects onto the camera's forward (-z)
+    // axis: cameraCoords(center) = pos + R*(center - origin) = (0, 0, -dist).
+    const c = ex.selectionSphere('m')!.center;
+    const R = v.slice(0, 9); // column-major model -> camera
+    const d = [c[0] - v[12]!, c[1] - v[13]!, c[2] - v[14]!];
+    const camX = R[0]! * d[0]! + R[3]! * d[1]! + R[6]! * d[2]! + v[9]!;
+    const camY = R[1]! * d[0]! + R[4]! * d[1]! + R[7]! * d[2]! + v[10]!;
+    const camZ = R[2]! * d[0]! + R[5]! * d[1]! + R[8]! * d[2]! + v[11]!;
+    expect(Math.abs(camX)).toBeLessThan(1e-3);
+    expect(Math.abs(camY)).toBeLessThan(1e-3);
+    expect(camZ).toBeLessThan(0); // target in front of the camera
     call('middle');
-    view = ex.view.get();
+    const view2 = ex.view.get();
     // Middle recenters somewhere finite (the spread of all atoms).
-    expect(Number.isFinite(view[12]!)).toBe(true);
+    expect(Number.isFinite(view2[12]!)).toBe(true);
     expect(stats().viewEmits).toBeGreaterThanOrEqual(2);
   });
 
