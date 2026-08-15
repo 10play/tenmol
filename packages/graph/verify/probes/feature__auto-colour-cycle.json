@@ -1,0 +1,18 @@
+{
+  "id": "feature__auto-colour-cycle",
+  "feature": "auto-colour-cycle",
+  "kind": "coloring",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m1"},
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m2"}
+  ],
+  "checks": [
+    {"call": ["get_object_color_index", "m1"], "label": "1st loaded object gets AutoColor[0] (carbon=26)"},
+    {"call": ["get_object_color_index", "m2"], "label": "2nd loaded object gets AutoColor[1] (cyan=5)"},
+    {"call": ["get_setting_int", "auto_color_next"], "label": "auto_color_next advanced by 2 after two loads"},
+    {"call": ["get_color_index", "cyan"], "label": "cyan reference index = 5"}
+  ],
+  "tol": 1e-3,
+  "expected": [26, 5, 2, 5]
+}

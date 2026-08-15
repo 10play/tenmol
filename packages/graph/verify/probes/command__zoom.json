@@ -1,0 +1,17 @@
+{
+  "id": "command__zoom", "feature": "zoom", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p, pos=[10, 0, 0]"},
+    {"do":"pseudoatom p, pos=[-10, 0, 0]"},
+    {"do":"pseudoatom p, pos=[0, 6, 0]"},
+    {"do":"pseudoatom q, pos=[100, 100, 100]"},
+    {"do":"zoom p, buffer=2"}
+  ],
+  "checks": [
+    {"call":["get_view"],"label":"view after zoom on selection p with buffer=2 (origin at p centroid, camera distance from extent+buffer)","tol":1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1,0,0,0,1,0,0,0,1,0,0,-68.05538177490234,0,2,0,53.65538024902344,82.45538330078125,-20]
+  ]
+}

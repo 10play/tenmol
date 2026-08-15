@@ -1,0 +1,25 @@
+{
+  "id": "feature__atom-namespace", "feature": "atom-namespace", "kind": "querying", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"alter all, q=0.5"},
+    {"do":"alter (name CA), b=88.0"},
+    {"do":"alter (elem C), name='CX'"},
+    {"do":"sort"}
+  ],
+  "checks": [
+    {"call":["count_atoms","q>0.4 and q<0.6"],"label":"q symbol written across all atoms"},
+    {"call":["count_atoms","b>80"],"label":"b symbol written only to the CA atom"},
+    {"call":["count_atoms","name CX"],"label":"name symbol rewritten on carbons"},
+    {"call":["count_atoms","elem C"],"label":"elem read-only symbol usable in selection"},
+    {"call":["count_atoms","all"],"label":"total atoms unchanged"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    1,
+    3,
+    3,
+    10
+  ]
+}

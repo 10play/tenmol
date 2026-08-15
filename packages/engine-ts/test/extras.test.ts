@@ -76,7 +76,8 @@ describe('extras — residual command sweep', () => {
       // cealign/usalign/pair_fit) to cmd/align.ts (see parity-*.test.ts).
       'save', 'log', // ray/draw/png are real now (cmd/render.ts)
       // `map_set` moved to cmd/maps.ts (real elementwise map arithmetic).
-      'mcopy', 'volume', 'cls', 'cache', 'quit',
+      // `volume` moved to cmd/maps.ts (real object:volume gadget creator).
+      'mcopy', 'cls', 'cache', 'quit',
       'alias', 'assign_stereo',
       'get_mtl_obj', 'get_povray', 'povray',
     ];
@@ -87,8 +88,9 @@ describe('extras — residual command sweep', () => {
     // cmd/system.ts as the real movie set_frame mode 3, and `minsert` moved to
     // cmd/system.ts as the real movie frame-insert; then `pbc_unwrap` and
     // `pbc_wrap` moved to cmd/symmetry.ts as real PBC-trajectory handlers; then
-    // `unset_deep` moved to cmd/settings2.ts as the real bulk setting reset).
-    expect(handlers.size).toBeGreaterThanOrEqual(56);
+    // `unset_deep` moved to cmd/settings2.ts as the real bulk setting reset;
+    // then `volume` moved to cmd/maps.ts as the real object:volume creator).
+    expect(handlers.size).toBeGreaterThanOrEqual(55);
   });
 
   /* --------------------------- REAL behaviours --------------------------- */

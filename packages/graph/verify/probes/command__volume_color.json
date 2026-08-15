@@ -1,0 +1,31 @@
+{
+  "id": "command__volume_color",
+  "feature": "volume_color",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/testing/data/emd_1155.ccp4, m" },
+    { "do": "volume vol, m" },
+    { "do": "volume_color vol, 0.10 1.0 0.0 0.0 0.5 0.20 0.0 0.0 1.0 0.5" }
+  ],
+  "checks": [
+    { "call": ["volume_color", "vol"], "label": "getter returns flat [v,r,g,b,a]*N of ramp set above" },
+    { "call": ["get_type", "vol"], "label": "vol is a volume object (expect object:volume)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      0.10000000149011612,
+      1,
+      0,
+      0,
+      0.5,
+      0.20000000298023224,
+      0,
+      0,
+      1,
+      0.5
+    ],
+    "object:volume"
+  ]
+}

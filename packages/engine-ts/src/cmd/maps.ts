@@ -510,6 +510,36 @@ export function registerMaps(ctx: RegistrarCtx): void {
     return null;
   });
 
+  /* -------------------------------- volume ------------------------------- */
+
+  // `volume(name, map, ramp='', selection='', buffer=0.0, state=1, carve=None,
+  // source_state=0, quiet=1)` — creates a direct volume-rendering object from a
+  // map (creating.py:577 → _cmd.volume / ObjectVolume). Like slice_new the
+  // object references a map by name and holds no atoms; we track it as a gadget
+  // so it appears in get_names and reports `get_type == 'object:volume'`. If the
+  // volume object already exists it is overwritten (unlike the iso* family).
+  // A `ramp` that parses as a float is consumed as a legacy `level` and cleared;
+  // a remaining non-empty `ramp` triggers volume_color(name, ramp, state).
+  ctx.command('volume', (args, kwargs): Json => {
+    const name = toStr(args[0] ?? kwargs.name);
+    const mapName = toStr(args[1] ?? kwargs.map);
+    let ramp = toStr(args[2] ?? kwargs.ramp, '');
+    if (mapName && !maps.get(mapName)) {
+      throw new Error(`volume: no map named '${mapName}'`);
+    }
+    // Legacy: a bare float ramp is treated as a contour level and ignored.
+    if (ramp !== '' && Number.isFinite(Number(ramp))) ramp = '';
+
+    ex.registerGadget(name, 'object:volume');
+    ctx.publish();
+
+    if (ramp) {
+      const state = toNum(args[5] ?? kwargs.state, 1);
+      ctx.call('volume_color', [name, ramp, state], {});
+    }
+    return name;
+  });
+
   /* -------------------------- get_isosurface_stats ----------------------- */
 
   ctx.command('get_isosurface_stats', (args, kwargs): Json => {
@@ -534,6 +564,23 @@ export function registerMaps(ctx: RegistrarCtx): void {
     ex.registerGadget(name, 'object:map');
     ctx.publish();
     return null;
+  });
+
+  /* ------------------------------ load_ccp4map --------------------------- */
+
+  // Internal seam used by `cmd.load` to bring a CCP4/MRC binary density map into
+  // the map registry (importing.py `load` → `loadable.ccp4`/`loadable.mrc` →
+  // ObjectMapCCP4StrToMap). The public `load` reads the file bytes off disk and
+  // delegates here so the parsed grid lands in the same store the iso*/volume
+  // commands read. Registers the object as `object:map` in the executive.
+  ctx.command('load_ccp4map', (args, kwargs): Json => {
+    const name = toStr(args[0] ?? kwargs.name);
+    const bytes = (args[1] ?? kwargs.bytes) as Uint8Array;
+    const m = parseCcp4(bytes, name);
+    maps.set(name, m);
+    ex.registerGadget(name, 'object:map');
+    ctx.publish();
+    return name;
   });
 }
 
@@ -616,6 +663,105 @@ function parseXplor(text: string, name: string): VolMap {
 
   const spacing: Vec3 = [ca! / na!, cb! / nb!, cc! / nc!];
   const origin: Vec3 = [amin! * spacing[0], bmin! * spacing[1], cmin! * spacing[2]];
+  return { name, origin, spacing, dims, data, levels: [] };
+}
+
+/* ------------------------------ CCP4/MRC parser -------------------------- */
+
+/**
+ * Parse a CCP4 / MRC binary electron-density map
+ * (`layer2/ObjectMap.cpp:ObjectMapCCP4StrToMap`). The 1024-byte header is 256
+ * little-endian 32-bit words:
+ *   0..2   NC, NR, NS      grid columns/rows/sections (fast→slow axis)
+ *   3      MODE            0=int8, 1=int16, 2=float32, 6=uint16
+ *   4..6   NCSTART…        start index of column/row/section
+ *   7..9   MX, MY, MZ      sampling (grid) intervals along cell axes X,Y,Z
+ *   10..15 cell a,b,c,α,β,γ (floats)
+ *   16..18 MAPC, MAPR, MAPS which cell axis (1=X,2=Y,3=Z) is column/row/section
+ *   23     NSYMBT          bytes of symmetry records after the header
+ *   49..51 ORIGIN x,y,z    (MRC2000 origin, floats)
+ * Density follows at byte 1024+NSYMBT, column-fastest. The grid is treated as
+ * orthorhombic (spacing = cell_axis / sampling); skewed cells are not modelled.
+ */
+function parseCcp4(bytes: Uint8Array, name: string): VolMap {
+  if (bytes.length < 1024) throw new Error('load: CCP4/MRC file is too small for a header');
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const i32 = (w: number): number => dv.getInt32(w * 4, true);
+  const f32 = (w: number): number => dv.getFloat32(w * 4, true);
+
+  const nc = i32(0);
+  const nr = i32(1);
+  const ns = i32(2);
+  const mode = i32(3);
+  const start: Vec3 = [i32(4), i32(5), i32(6)];
+  const sampling: Vec3 = [i32(7), i32(8), i32(9)];
+  const cell: Vec3 = [f32(10), f32(11), f32(12)];
+  const mapc = i32(16);
+  const mapr = i32(17);
+  const maps_ = i32(18);
+  const nsymbt = i32(23);
+  const mrcOrigin: Vec3 = [f32(49), f32(50), f32(51)];
+
+  if (nc <= 0 || nr <= 0 || ns <= 0 || nc * nr * ns > 1 << 30) {
+    throw new Error('load: CCP4/MRC header has an implausible grid size');
+  }
+
+  // Map the column/row/section axes onto X/Y/Z via MAPC/MAPR/MAPS (default
+  // 1,2,3 = already X,Y,Z). `axisOf[k]` is the cell axis (0/1/2) of the k-th
+  // stored axis (0=column,1=row,2=section).
+  const axisOf: [number, number, number] = [
+    (mapc || 1) - 1,
+    (mapr || 2) - 1,
+    (maps_ || 3) - 1,
+  ];
+  const storedDims: [number, number, number] = [nc, nr, ns];
+  const dims: Vec3 = [0, 0, 0];
+  const spacing: Vec3 = [1, 1, 1];
+  const origin: Vec3 = [0, 0, 0];
+  for (let k = 0; k < 3; k++) {
+    const a = axisOf[k]!;
+    dims[a] = storedDims[k]!;
+    const samp = sampling[a] || storedDims[k]!;
+    const sp = samp > 0 ? cell[a]! / samp : 1;
+    spacing[a] = sp;
+    origin[a] = mrcOrigin[a] !== 0 ? mrcOrigin[a]! : start[k]! * sp;
+  }
+
+  const n = nc * nr * ns;
+  const dataStart = 1024 + Math.max(0, nsymbt);
+  const data = new Float32Array(n);
+  // Read column-fastest (stored order) and scatter into X/Y/Z grid order.
+  const readVal =
+    mode === 2
+      ? (o: number): number => dv.getFloat32(dataStart + o * 4, true)
+      : mode === 1
+        ? (o: number): number => dv.getInt16(dataStart + o * 2, true)
+        : mode === 6
+          ? (o: number): number => dv.getUint16(dataStart + o * 2, true)
+          : (o: number): number => dv.getInt8(dataStart + o); // mode 0 (int8)
+  const bytesPer = mode === 2 ? 4 : mode === 1 || mode === 6 ? 2 : 1;
+  if (dataStart + n * bytesPer > bytes.length) {
+    throw new Error('load: CCP4/MRC file is truncated (density shorter than header claims)');
+  }
+  // If the stored axes are already X,Y,Z (the common case) copy straight through;
+  // otherwise permute each cell into its X/Y/Z slot.
+  const identity = axisOf[0] === 0 && axisOf[1] === 1 && axisOf[2] === 2;
+  let o = 0;
+  for (let s = 0; s < ns; s++) {
+    for (let r = 0; r < nr; r++) {
+      for (let c = 0; c < nc; c++, o++) {
+        if (identity) {
+          data[o] = readVal(o);
+        } else {
+          const stored: [number, number, number] = [c, r, s];
+          const gx = stored[axisOf.indexOf(0) as 0 | 1 | 2]!;
+          const gy = stored[axisOf.indexOf(1) as 0 | 1 | 2]!;
+          const gz = stored[axisOf.indexOf(2) as 0 | 1 | 2]!;
+          data[idx(dims, gx, gy, gz)] = readVal(o);
+        }
+      }
+    }
+  }
   return { name, origin, spacing, dims, data, levels: [] };
 }
 

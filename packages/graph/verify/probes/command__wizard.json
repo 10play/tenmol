@@ -1,0 +1,18 @@
+{
+  "id": "command__wizard", "feature": "wizard", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"wizard measurement"},
+    {"do":"wizard mutagenesis"},
+    {"do":"wizard"},
+    {"do":"wizard"}
+  ],
+  "checks": [
+    {"call":["get_wizard"],"label":"stack empty (None) after two wizard pushes then two no-arg wizard clears"},
+    {"call":["count_atoms","all"],"label":"wizard command creates no atoms"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    null,
+    0
+  ]
+}

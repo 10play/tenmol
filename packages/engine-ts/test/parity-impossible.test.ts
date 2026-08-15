@@ -37,21 +37,27 @@ describe('parity: provably-impossible-in-a-browser (xfail)', () => {
   // graduated: its OBJECT-creation side effect (an object:callback in get_names)
   // is a synchronous, observable state change even though the per-frame Python
   // draw callback itself cannot fire in a browser — so it is a real passing test
-  // below, not an xfail. 5 items remain.
+  // below, not an xfail. `volume`/`slice_new` likewise graduated: their
+  // object-creation side effect (object:volume / object:slice in get_names) is a
+  // synchronous, observable state change, only the pixel raymarch stays out of
+  // scope. 4 items remain.
 
   // (2) volume + slice RENDERING -> volumetric 3-D-texture raymarch.
-  // WHY IMPOSSIBLE: `volume` (creating.py, line 577) and `slice_new`
-  // (creating.py, line 680) create object:volume / object:slice that a separate
-  // WebGL2 3-D-texture raymarching subsystem draws. The geometry-frame protocol
-  // excludes volume/slice, and both verbs are documented no-ops here, so the
-  // objects are never created.
-  it.fails('volume/slice: create renderable object:volume and object:slice', async () => {
+  // WHY the pixel raymarch is impossible: `volume` (creating.py, line 577) and
+  // `slice_new` (creating.py, line 680) create object:volume / object:slice that
+  // a separate WebGL2 3-D-texture raymarching subsystem draws, which the
+  // geometry-frame protocol excludes. BUT object *creation* is a synchronous,
+  // observable state change: both verbs now register a gadget so get_names lists
+  // the object and get_type reports object:volume / object:slice — matching real
+  // PyMOL for state observers. Only the pixel raymarch stays out of scope, so
+  // this is a real passing test, not an xfail.
+  it('volume/slice: create observable object:volume and object:slice', async () => {
     const b = await boot();
     await ignore(b.call('map_new', ['map', 'gaussian', 1.0, 'all']));
     await ignore(b.call('volume', ['vol', 'map']));
     await ignore(b.call('slice_new', ['sli', 'map']));
     const names = (await b.call('get_names', ['objects'])) as string[];
-    // A real PyMOL would list both freshly-created volumetric objects.
+    // A real PyMOL lists both freshly-created volumetric objects.
     expect(names).toContain('vol');
     expect(names).toContain('sli');
   });

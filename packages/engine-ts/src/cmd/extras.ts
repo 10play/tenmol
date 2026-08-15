@@ -745,7 +745,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // maps / volumes / slices (need a map object model)
       // `map_set` is real — see cmd/maps.ts (elementwise map arithmetic).
       // `slice_new` is real now — see cmd/maps.ts (registers an object:slice gadget).
-      'volume',
+      // `volume` is real now — see cmd/maps.ts (registers an object:volume gadget).
       'volume_panel',
       // `spheroid` is real now — see below (averages state groups + collapses NCSet).
       'vdw_fit',

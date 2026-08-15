@@ -1,0 +1,21 @@
+{
+  "id": "command__view",
+  "feature": "view",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load ${REPO}/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "orient"},
+    {"do": "view v1, store"},
+    {"do": "turn x, 90"},
+    {"do": "turn y, 45"},
+    {"do": "view v1, recall, 0"}
+  ],
+  "checks": [
+    {"call": ["get_view"], "label": "view vector after storing orient then perturbing camera then recalling v1"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50, 0, 0, 0, 40, 100, -20]
+  ]
+}

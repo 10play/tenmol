@@ -1,0 +1,19 @@
+{
+  "id": "command__volume", "feature": "volume", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"map_new mymap, gaussian, 1.0, m"},
+    {"do":"volume myvol, mymap"}
+  ],
+  "checks": [
+    {"call":["get_names","objects"],"label":"objects after volume (m, mymap, myvol)"},
+    {"call":["get_type","myvol"],"label":"type of created object (expect object:volume)"},
+    {"call":["count_atoms","all"],"label":"volume adds no atoms"}
+  ],
+  "expected": [
+    ["m", "mymap", "myvol"],
+    "object:volume",
+    5684
+  ],
+  "tol": 0
+}

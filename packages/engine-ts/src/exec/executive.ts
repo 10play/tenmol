@@ -591,9 +591,6 @@ export class Executive {
 
   /* ---------------------------- auto colour --------------------------- */
 
-  /** Next slot in {@link AUTO_COLOR_CYCLE} (`ColorGetNext` cursor). */
-  private autoColorNext = 0;
-
   /**
    * Assign a freshly loaded molecular object its object colour from the
    * `auto_color` cycle — PyMOL's `ExecutiveManageObject` behaviour when the
@@ -602,13 +599,22 @@ export class Executive {
    * `pseudoatom`, which leaves its object colour unset (reported as `0`). A
    * no-op when `auto_color` is explicitly off or the object already carries an
    * explicit colour.
+   *
+   * The cursor lives in the `auto_color_next` global setting (PyMOL's
+   * `ColorGetNext`, layer1/Color.cpp): read it, wrap, emit, advance and store
+   * it back so `get_setting_int("auto_color_next")` observes the progress.
    */
   autoColorObject(mol: ObjectMolecule): void {
     const s = this.settings.get('auto_color');
     const on = s === undefined ? true : Number(s) !== 0;
     if (!on || mol.color >= 0) return;
-    mol.color = AUTO_COLOR_CYCLE[this.autoColorNext % AUTO_COLOR_CYCLE.length]!;
-    this.autoColorNext++;
+    let next = Number(this.settings.get('auto_color_next') ?? 0);
+    if (!Number.isFinite(next) || next < 0 || next >= AUTO_COLOR_CYCLE.length) next = 0;
+    mol.color = AUTO_COLOR_CYCLE[next]!;
+    next++;
+    if (next >= AUTO_COLOR_CYCLE.length) next = 0;
+    this.settings.set('auto_color_next', next);
+    this.settingsVersion++;
   }
 
   getSettingFloat(name: string): number {
@@ -653,8 +659,13 @@ export class Executive {
    * mean atom position), then the frame is the box centre (= the mean) and a
    * radius of half the largest box dimension (floored to `MAX_VDW`). This is the
    * origin `reset` restores.
+   *
+   * `buffer` mirrors `cmd.zoom`'s padding: PyMOL grows the extent box by `buffer`
+   * on every side BEFORE measuring (`mx += buffer; mn -= buffer`), so the centre
+   * is unchanged (symmetric) and the radius gains exactly `buffer`. The
+   * `MAX_VDW` floor is applied AFTER the buffer, matching ExecutiveWindowZoom.
    */
-  windowZoomSphere(sel: string): { center: [number, number, number]; radius: number } | null {
+  windowZoomSphere(sel: string, buffer = 0): { center: [number, number, number]; radius: number } | null {
     const matched = selectAtoms(sel, this.selectorContext);
     if (matched.length === 0) return null;
     const min: [number, number, number] = [Infinity, Infinity, Infinity];
@@ -677,7 +688,7 @@ export class Executive {
     const fmxX = Math.max(mean[0] - min[0], max[0] - mean[0]);
     const fmxY = Math.max(mean[1] - min[1], max[1] - mean[1]);
     const fmxZ = Math.max(mean[2] - min[2], max[2] - mean[2]);
-    let radius = Math.max(fmxX, fmxY, fmxZ);
+    let radius = Math.max(fmxX, fmxY, fmxZ) + buffer;
     const MAX_VDW = 2.5;
     if (radius < MAX_VDW) radius = MAX_VDW;
     return { center: mean, radius };

@@ -544,9 +544,27 @@ export class Engine {
       case 'delete':
         this.call('delete', [args[0] ?? 'all'], kwargs);
         return;
-      case 'zoom':
-        this.call('zoom', [args[0] ?? 'all'], kwargs);
+      case 'zoom': {
+        // The console parser keeps every `key=value` token positional (it cannot
+        // infer kwargs without a signature). Fold `zoom`'s `buffer` back out so a
+        // console line like `zoom p, buffer=2` matches real PyMOL. A bare second
+        // positional (`zoom p, 2`) is the buffer too.
+        const zk: Record<string, unknown> = { ...kwargs };
+        const zpos: unknown[] = [];
+        for (const a of args) {
+          if (typeof a === 'string') {
+            const eq = a.indexOf('=');
+            const key = eq > 0 ? a.slice(0, eq).trim() : '';
+            if (eq > 0 && key === 'buffer') {
+              zk['buffer'] = a.slice(eq + 1).trim();
+              continue;
+            }
+          }
+          zpos.push(a);
+        }
+        this.call('zoom', [zpos[0] ?? 'all', zpos[1]], zk);
         return;
+      }
       case 'orient':
         this.call('orient', [args[0] ?? 'all'], kwargs);
         return;
@@ -729,9 +747,15 @@ export class Engine {
       this.emitView();
       return null;
     });
-    h('zoom', (args) => {
-      const sphere = ex.selectionSphere(str(args[0], 'all') || 'all');
-      if (sphere) ex.view.zoomToSphere(sphere.center, sphere.radius, Number(args[1] ?? 0));
+    h('zoom', (args, kwargs) => {
+      // `ExecutiveWindowZoom(sele, buffer)` (Executive.cpp): frame the WEIGHTED
+      // extent — origin at the centre of mass, radius = half the largest
+      // (buffer-grown, recentred) box dimension floored to MAX_VDW, clip slab at
+      // ±1.2·radius — exactly like `reset` but on a selection and with `buffer`.
+      // NOT a plain bounding sphere. See `windowZoomSphere`/`ViewState.windowSphere`.
+      const buffer = Number(args[1] ?? kwargs['buffer'] ?? 0);
+      const sphere = ex.windowZoomSphere(str(args[0], 'all') || 'all', buffer);
+      if (sphere) ex.view.windowSphere(sphere.center, sphere.radius);
       this.emitView();
       return null;
     });

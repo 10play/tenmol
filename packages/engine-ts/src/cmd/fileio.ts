@@ -870,6 +870,25 @@ export function registerFileio(ctx: RegistrarCtx): void {
   }
 
   /**
+   * Map a filename extension (or explicit `format`) to a binary density-map
+   * loader format, matching PyMOL's `load` dispatch of `.ccp4`/`.mrc`/`.map` to
+   * `loadable.ccp4`/`loadable.mrc` (ObjectMapCCP4StrToMap). Returns '' for a
+   * non-map extension.
+   */
+  function mapFormatFromExtension(pathOrFmt: string): string {
+    const m = /\.([A-Za-z0-9]+)\s*$/.exec(pathOrFmt.trim());
+    const ext = (m ? m[1]! : pathOrFmt.trim()).toLowerCase();
+    switch (ext) {
+      case 'ccp4':
+      case 'mrc':
+      case 'map':
+        return 'ccp4';
+      default:
+        return '';
+    }
+  }
+
+  /**
    * Sniff a structure format from the content itself, so a pasted/dropped block
    * loads without an explicit `format`. Distinctive markers first.
    */
@@ -904,6 +923,26 @@ export function registerFileio(ctx: RegistrarCtx): void {
     let content = ctx.str(pick(args, kwargs, 0, 'filename'), '');
     const objArg = ctx.str(pick(args, kwargs, 1, 'object'), '');
     const fmtArg = ctx.str(pick(args, kwargs, 3, 'format'), '').toLowerCase();
+
+    // Binary density maps (CCP4/MRC/MAP) are not structure files: read the raw
+    // bytes off disk and hand them to the map subsystem, which parses the grid
+    // and registers an ObjectMap. PyMOL routes these extensions to
+    // ObjectMapCCP4StrToMap rather than any molecule parser (importing.py:load).
+    if (content !== '' && !/\r?\n/.test(content)) {
+      const mapFmt = mapFormatFromExtension(fmtArg) || mapFormatFromExtension(content);
+      if (mapFmt) {
+        const bytes = readDiskBytes(content);
+        if (bytes) {
+          const mapName = ex.uniqueName(objArg || filenameToObjectname(content));
+          ctx.call('load_ccp4map', [mapName, bytes]);
+          return mapName;
+        }
+        throw new Error(
+          `load: cannot read map '${content}' — the browser has no filesystem; ` +
+            `pass file contents (or drop the file) with a format`,
+        );
+      }
+    }
 
     // A single-line argument with no embedded structure is a filename, not
     // content. Under Node, read it off disk (PyMOL loads files by path); the

@@ -1,0 +1,21 @@
+{
+  "id": "command__vdw_fit",
+  "feature": "vdw_fit",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"call": ["vdw_fit", "ala and name CA", "ala and name CB"]}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "all"], "label": "atoms intact after vdw_fit (unsupported no-op)"},
+    {"call": ["get_names"], "label": "object list unchanged by vdw_fit"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    [
+      "ala"
+    ]
+  ]
+}
