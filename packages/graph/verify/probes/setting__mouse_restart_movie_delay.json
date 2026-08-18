@@ -1,0 +1,11 @@
+{"id":"setting__mouse_restart_movie_delay","feature":"mouse_restart_movie_delay","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set mouse_restart_movie_delay, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","mouse_restart_movie_delay"],"label":"mouse_restart_movie_delay global default (no prior set) = 0"},
+   {"call":["get_setting_float","mouse_restart_movie_delay","ala"],"label":"mouse_restart_movie_delay after set 1 (roundtrip)"}
+ ],
+ "tol": 1e-6,
+ "expected": [0, 1]}

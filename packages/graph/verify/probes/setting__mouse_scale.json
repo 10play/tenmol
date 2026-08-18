@@ -1,0 +1,11 @@
+{"id":"setting__mouse_scale","feature":"mouse_scale","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set mouse_scale, 2.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","mouse_scale"],"label":"mouse_scale global default (no prior set)"},
+   {"call":["get_setting_float","mouse_scale","ala"],"label":"mouse_scale per-object after set 2.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [1.3, 2.5]}
