@@ -1,0 +1,8 @@
+{"id":"selection__elem","feature":"elem","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","elem C"],"label":"elem C = every carbon"},
+   {"call":["count_atoms","elem N"],"label":"elem N = every nitrogen"},
+   {"call":["count_atoms","elem O+S"],"label":"elem O+S = oxygen or sulfur"}
+ ],
+ "expected":[3405,956,1323]}
