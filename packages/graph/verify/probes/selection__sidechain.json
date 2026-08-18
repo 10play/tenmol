@@ -1,0 +1,9 @@
+{"id":"selection__sidechain","feature":"sidechain","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","sidechain"],"label":"sidechain keyword = polymer non-backbone atoms"},
+   {"call":["count_atoms","sc."],"label":"sc. alias = sidechain"},
+   {"call":["count_atoms","sidechain and chain A"],"label":"sidechain intersect chain A"},
+   {"call":["count_atoms","backbone"],"label":"backbone contrast"}
+ ],
+ "expected":[2621,2621,735,2848]}
