@@ -1,0 +1,19 @@
+{
+  "id": "setting__mesh_radius",
+  "feature": "mesh_radius",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set mesh_radius, 0.05, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","mesh_radius"],"label":"global default (no prior set) -> 0.0"},
+    {"call":["get_setting_float","mesh_radius","m"],"label":"per-object set 0.05 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0,
+    0.05
+  ]
+}

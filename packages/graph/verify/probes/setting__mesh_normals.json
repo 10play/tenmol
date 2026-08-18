@@ -1,0 +1,15 @@
+{
+  "id": "setting__mesh_normals", "feature": "mesh_normals", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set mesh_normals, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","mesh_normals"],"label":"global mesh_normals default (no prior set)"},
+    {"call":["get_setting_int","mesh_normals","ala"],"label":"per-object mesh_normals after set 0"}
+  ],
+  "expected": [
+    1,
+    0
+  ]
+}

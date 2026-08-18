@@ -1,0 +1,18 @@
+{
+  "id": "setting__mesh_negative_color", "feature": "mesh_negative_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set mesh_negative_color, blue, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","mesh_negative_color"],"label":"default mesh_negative_color (global, unset) -> red color index 4 (SettingInfo default 'red')"},
+    {"call":["get_setting_int","mesh_negative_color","m"],"label":"mesh_negative_color on m after set blue -> blue color index"},
+    {"call":["get_color_index","blue"],"label":"blue color index (oracle vs engine)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    4,
+    2,
+    2
+  ]
+}
