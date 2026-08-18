@@ -1,0 +1,12 @@
+{
+  "id": "setting__auto_defer_atom_count", "feature": "auto_defer_atom_count", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set auto_defer_atom_count, 500"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","auto_defer_atom_count"],"label":"auto_defer_atom_count after set 500"}
+  ],
+  "expected": [
+    500
+  ]
+}
