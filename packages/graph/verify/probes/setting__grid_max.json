@@ -1,0 +1,11 @@
+{
+  "id": "setting__grid_max", "feature": "grid_max", "kind": "setting", "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {"call":["get_setting_int","grid_max"],"label":"default grid_max == -1"},
+    {"call":["do","set grid_max, 20"],"label":"set grid_max 20 (side-effect)"},
+    {"call":["get_setting_int","grid_max"],"label":"grid_max after set == 20"}
+  ],
+  "tol": 0,
+  "expected": [-1, null, 20]
+}
