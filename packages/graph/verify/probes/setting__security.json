@@ -1,0 +1,15 @@
+{
+  "id": "setting__security",
+  "feature": "security",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set security, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","security"],"label":"global security after set 0 -> 0"}
+  ],
+  "expected": [
+    0
+  ]
+}

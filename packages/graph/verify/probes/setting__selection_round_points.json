@@ -1,0 +1,15 @@
+{
+  "id": "setting__selection_round_points", "feature": "selection_round_points", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set selection_round_points, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","selection_round_points"],"label":"global selection_round_points default (no set)"},
+    {"call":["get_setting_boolean","selection_round_points","m"],"label":"per-object selection_round_points after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}
