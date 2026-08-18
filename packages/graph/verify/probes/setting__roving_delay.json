@@ -1,0 +1,16 @@
+{
+  "id": "setting__roving_delay", "feature": "roving_delay", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set roving_delay, 0.85, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","roving_delay"],"label":"global roving_delay default (no prior global set)"},
+    {"call":["get_setting_float","roving_delay","ala"],"label":"per-object roving_delay after set 0.85"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.2,
+    0.85
+  ]
+}
