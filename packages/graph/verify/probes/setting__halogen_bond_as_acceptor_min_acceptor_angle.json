@@ -1,0 +1,11 @@
+{"id":"setting__halogen_bond_as_acceptor_min_acceptor_angle","feature":"halogen_bond_as_acceptor_min_acceptor_angle","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set halogen_bond_as_acceptor_min_acceptor_angle, 75.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","halogen_bond_as_acceptor_min_acceptor_angle"],"label":"halogen_bond_as_acceptor_min_acceptor_angle global default (no prior set)"},
+   {"call":["get_setting_float","halogen_bond_as_acceptor_min_acceptor_angle","ala"],"label":"halogen_bond_as_acceptor_min_acceptor_angle per-object after set 75.5 (roundtrip)"}
+ ],
+ "tol": 1e-6,
+ "expected": [90, 75.5]}

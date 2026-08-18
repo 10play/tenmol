@@ -1,0 +1,19 @@
+{
+  "id": "setting__halogen_bond_as_acceptor_max_acceptor_angle",
+  "feature": "halogen_bond_as_acceptor_max_acceptor_angle",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set halogen_bond_as_acceptor_max_acceptor_angle, 150.0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","halogen_bond_as_acceptor_max_acceptor_angle"],"label":"global default (unset) -> 170.0"},
+    {"call":["get_setting_float","halogen_bond_as_acceptor_max_acceptor_angle","m"],"label":"per-object set to 150.0 -> 150.0"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    170,
+    150
+  ]
+}
