@@ -1,0 +1,11 @@
+{"id":"setting__gradient_min_length","feature":"gradient_min_length","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set gradient_min_length, 5.0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","gradient_min_length"],"label":"gradient_min_length global default (no prior set)"},
+   {"call":["get_setting_float","gradient_min_length","ala"],"label":"gradient_min_length per-object after set 5.0"}
+ ],
+ "tol": 1e-6,
+ "expected": [2, 5]}

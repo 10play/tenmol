@@ -1,0 +1,19 @@
+{
+  "id": "setting__gradient_min_slope",
+  "feature": "gradient_min_slope",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set gradient_min_slope, 0.25, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","gradient_min_slope"],"label":"global default (unset) -> 0.00001"},
+    {"call":["get_setting_float","gradient_min_slope","m"],"label":"per-object set to 0.25 -> 0.25"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.00001,
+    0.25
+  ]
+}
