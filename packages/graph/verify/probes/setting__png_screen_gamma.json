@@ -1,0 +1,19 @@
+{
+  "id": "setting__png_screen_gamma",
+  "feature": "png_screen_gamma",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set png_screen_gamma, 1.8, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","png_screen_gamma"],"label":"global default png_screen_gamma -> 2.4"},
+    {"call":["get_setting_float","png_screen_gamma","m"],"label":"per-object set to 1.8 -> roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2.4,
+    1.8
+  ]
+}
