@@ -1,0 +1,20 @@
+{
+  "id": "command__map_double",
+  "feature": "map_double",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/testing/data/mapaligned.dx, m, format=dx" },
+    { "call": ["get_volume_histogram", "m", 1] },
+    { "call": ["map_double", "m"] }
+  ],
+  "checks": [
+    { "call": ["get_extent", "m"], "label": "physical extent unchanged after map_double", "tol": 0.001 },
+    { "call": ["get_volume_histogram", "m", 1], "label": "histogram [min,max,mean,stdev,total-samples] after map_double (bins=1 -> h0=sample count, grows 8->27)", "tol": 0.001 }
+  ],
+  "tol": 0.001,
+  "expected": [
+    [[1, 2, 3], [5, 7, 9]],
+    [1, 9.100000381469727, 3.9124999046325684, 2.037363052368164, 27]
+  ]
+}
