@@ -1,0 +1,15 @@
+{
+  "id": "setting__internal_prompt", "feature": "internal_prompt", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set internal_prompt, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","internal_prompt"],"label":"global internal_prompt default (no prior set)"},
+    {"call":["get_setting_boolean","internal_prompt","ala"],"label":"per-object internal_prompt after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

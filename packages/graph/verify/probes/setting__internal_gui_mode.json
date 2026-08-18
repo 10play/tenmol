@@ -1,0 +1,15 @@
+{
+  "id": "setting__internal_gui_mode",
+  "feature": "internal_gui_mode",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set internal_gui_mode, 2"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","internal_gui_mode"],"label":"global internal_gui_mode after set 2 (default 0)"}
+  ],
+  "expected": [
+    2
+  ]
+}
