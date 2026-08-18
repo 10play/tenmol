@@ -1,0 +1,15 @@
+{
+  "id": "setting__line_color", "feature": "line_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set line_color, blue"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","line_color"],"label":"line_color after set blue -> blue color index"},
+    {"call":["get_color_index","blue"],"label":"blue color index (oracle vs engine)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2,
+    2
+  ]
+}
