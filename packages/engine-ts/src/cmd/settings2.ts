@@ -26,8 +26,26 @@ import { SETTING_INFO_DEFAULTS, type ColorDefault } from './setting-defaults';
 import type { RegistrarCtx } from './registrar';
 
 /** `cSetting_*` type tags (`layer1/Setting.h`). */
+const cSetting_boolean = 1;
+const cSetting_int = 2;
 const cSetting_float3 = 4;
 const cSetting_string = 6;
+
+/**
+ * PyMOL's boolean-word map. `SettingSetFromString` (`layer1/Setting.cpp`) parses
+ * a boolean/int setting's text value with `sscanf(st, "%d", ...)` first, and when
+ * that fails falls back to matching `on`/`yes`/`true` -> 1 and `off`/`no`/`false`
+ * -> 0 (case-insensitive), defaulting to 0 for anything unrecognized. So
+ * `set clamp_colors, off` stores 0, not the literal string "off".
+ */
+const BOOLEAN_WORDS: Readonly<Record<string, number>> = {
+  on: 1,
+  yes: 1,
+  true: 1,
+  off: 0,
+  no: 0,
+  false: 0,
+};
 
 /**
  * Atom-level colour settings that a selection-scoped `set` stores PER ATOM
@@ -170,9 +188,19 @@ function coerceValue(raw: unknown, str: RegistrarCtx['str']): number | string {
  */
 function coerceSettingValue(name: string, raw: unknown, str: RegistrarCtx['str']): number | string {
   const v = coerceValue(raw, str);
-  if (typeof v === 'string' && COLOR_SETTINGS.has(name)) {
-    const idx = getColorIndex(v);
-    if (idx >= 0) return idx;
+  if (typeof v === 'string') {
+    // Boolean/int settings accept the word keywords on/yes/true/off/no/false
+    // (PyMOL's `SettingSetFromString` fallback). A numeric string already
+    // coerced to a number above, so only a non-numeric word reaches here.
+    const type = SETTING_INDEX_TYPE[name]?.[1];
+    if (type === cSetting_boolean || type === cSetting_int) {
+      const mapped = BOOLEAN_WORDS[v.trim().toLowerCase()];
+      if (mapped !== undefined) return mapped;
+    }
+    if (COLOR_SETTINGS.has(name)) {
+      const idx = getColorIndex(v);
+      if (idx >= 0) return idx;
+    }
   }
   return v;
 }

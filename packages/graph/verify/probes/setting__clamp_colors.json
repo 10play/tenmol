@@ -1,0 +1,32 @@
+{
+  "id": "setting__clamp_colors",
+  "feature": "clamp_colors",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "set clamp_colors, off"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_boolean",
+        "clamp_colors"
+      ],
+      "label": "clamp_colors after set off -> false (default is 1/true)"
+    },
+    {
+      "call": [
+        "get_setting_int",
+        "clamp_colors"
+      ],
+      "label": "clamp_colors int after set off -> 0"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    false,
+    0
+  ]
+}
