@@ -1,0 +1,17 @@
+{
+  "id": "setting__seq_view_label_color", "feature": "seq_view_label_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set seq_view_label_color, red"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","seq_view_label_color"],"label":"seq_view_label_color after set red -> red color index (set/get roundtrip)"},
+    {"call":["get_color_index","red"],"label":"red color index (get_setting_int == get_color_index)"},
+    {"call":["get_color_index","front"],"label":"default named color 'front' index (documents default)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    4,
+    4,
+    -6
+  ]
+}

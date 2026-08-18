@@ -1,0 +1,12 @@
+{"id":"setting__seq_view_fill_color","feature":"seq_view_fill_color","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"load packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"set seq_view_fill_color, red, m"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","seq_view_fill_color"],"label":"seq_view_fill_color global DEFAULT (COLOR, no global set) -> 104"},
+   {"call":["get_setting_int","seq_view_fill_color","m"],"label":"seq_view_fill_color per-object after set red (roundtrip get==set)"},
+   {"call":["get_color_index","red"],"label":"red color index (oracle vs engine)"}
+ ],
+ "tol": 0,
+ "expected": [104, 4, 4]}
