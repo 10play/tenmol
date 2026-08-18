@@ -1,0 +1,43 @@
+{
+  "id": "setting__label_padding",
+  "feature": "label_padding",
+  "kind": "setting",
+  "probeKind": "state",
+  "tol": 0.000001,
+  "ops": [],
+  "checks": [
+    {
+      "call": [
+        "get_setting_tuple",
+        "label_padding"
+      ],
+      "label": "default_tuple"
+    },
+    {
+      "call": [
+        "get_setting_float",
+        "label_padding"
+      ],
+      "label": "default_float"
+    },
+    {
+      "call": [
+        "get_setting_int",
+        "label_padding"
+      ],
+      "label": "default_int"
+    }
+  ],
+  "expected": [
+    [
+      4,
+      [
+        0.2,
+        0.2,
+        0
+      ]
+    ],
+    0,
+    0
+  ]
+}

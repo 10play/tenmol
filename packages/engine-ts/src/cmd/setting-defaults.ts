@@ -6,9 +6,8 @@
  *   - boolean (`REC_b`)  -> 0 | 1
  *   - int     (`REC_i`)  -> the default int (min/max args dropped)
  *   - float   (`REC_f`)  -> the default float
- *   - float3  (`REC_3`)  -> the first component (get_setting_float on a vector
- *                            reads the leading scalar; the tuple form is not
- *                            modelled by the scalar get_setting_* path)
+ *   - float3  (`REC_3`)  -> the [x,y,z] vector (get_setting_tuple/text read the
+ *                            triple; get_setting_float on a float3 returns 0)
  *   - string  (`REC_s`)  -> the default string, verbatim
  *   - color   (`REC_c`)  -> the raw default color reference string ("-1", "red",
  *                            "0x000000", …); `resolveSetting` runs it through
@@ -29,7 +28,7 @@ export interface ColorDefault {
   readonly color: string;
 }
 
-export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | ColorDefault>> = {
+export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | number[] | ColorDefault>> = {
   "bonding_vdw_cutoff": 0.2,
   "min_mesh_spacing": 0.6,
   "dot_density": 2,
@@ -40,6 +39,7 @@ export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | Co
   "ambient": 0.14,
   "direct": 0.45,
   "reflect": 0.45,
+  "light": [-0.4, -0.4, -1],
   "power": 1,
   "antialias": 1,
   "cavity_cull": 10,
@@ -168,6 +168,7 @@ export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | Co
   "ray_opaque_background": -1,
   "transparency": 0,
   "ray_texture": 0,
+  "ray_texture_settings": [0.1, 5, 1],
   "suspend_updates": 0,
   "full_screen": 0,
   "surface_mode": 0,
@@ -483,15 +484,22 @@ export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | Co
   "label_size": 14,
   "spec_direct": 0,
   "light_count": 2,
+  "light2": [-0.55, -0.7, 0.15],
+  "light3": [0.3, -0.6, -0.2],
   "hide_underscore_names": 1,
   "selection_round_points": 0,
   "distance_exclusion": 5,
   "h_bond_exclusion": 3,
   "label_shadow_mode": 0,
+  "light4": [-1.2, 0.3, -0.2],
+  "light5": [0.3, 0.6, -0.75],
+  "light6": [-0.3, 0.5, 0],
+  "light7": [0.9, -0.1, -0.15],
   "label_outline_color": { color: "-1" },
   "ray_trace_mode": 0,
   "ray_trace_gain": 0.12,
   "selection_visible_only": 0,
+  "label_position": [0, 0, 1.75],
   "ray_trace_depth_factor": 0.1,
   "ray_trace_slope_factor": 0.6,
   "ray_trace_disco_factor": 0.05,
@@ -509,6 +517,8 @@ export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | Co
   "pdb_echo_tags": "HEADER, TITLE, COMPND",
   "connect_bonded": 0,
   "spec_direct_power": 55,
+  "light8": [1.3, 2, 0.8],
+  "light9": [-1.7, -0.5, 1.2],
   "ray_shadow_decay_range": 1.8,
   "spec_count": -1,
   "sculpt_min_scale": 0.975,
@@ -732,9 +742,11 @@ export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | Co
   "pick_surface": 0,
   "bg_image_filename": "",
   "bg_image_mode": 0,
+  "bg_image_tilesize": [100, 100, 0],
   "bg_image_linear": 1,
   "load_object_props_default": "*",
   "load_atom_props_default": "*",
+  "label_placement_offset": [0, 0, 0],
   "pdb_conect_nodup": 1,
   "label_connector": 0,
   "label_connector_mode": 0,
@@ -744,8 +756,10 @@ export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | Co
   "label_bg_color": { color: "-1" },
   "use_geometry_shaders": 1,
   "label_relative_mode": 0,
+  "label_screen_point": [0, 0, 0],
   "label_multiline_spacing": 1.2,
   "label_multiline_justification": 1,
+  "label_padding": [0.2, 0.2, 0],
   "label_bg_transparency": 0.6,
   "label_bg_outline": 0,
   "ray_label_connector_flat": 1,

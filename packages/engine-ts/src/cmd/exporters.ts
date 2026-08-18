@@ -836,7 +836,9 @@ export function registerExporters(ctx: RegistrarCtx): void {
     const settings: Record<string, number | string> = {};
     for (const k of SESSION_SETTING_KEYS) {
       const v = ex.getSetting(k);
-      if (v !== undefined) settings[k] = v;
+      // SESSION_SETTING_KEYS holds only scalar settings (no float3), so the cast
+      // to the scalar session-setting type is safe.
+      if (v !== undefined) settings[k] = v as number | string;
     }
     // PyMOL's session['names'] is a list of per-object spec lists; index 4 is the
     // object type code (1 = molecule). We emit one spec per molecule object.

@@ -1,0 +1,58 @@
+{
+  "id": "setting__label_position",
+  "feature": "label_position",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "call": [
+        "set",
+        "label_position",
+        [
+          1,
+          2,
+          4
+        ]
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_float",
+        "label_position"
+      ],
+      "label": "get_setting_float on float3 (default-type read, expect 0 both)"
+    },
+    {
+      "call": [
+        "get_setting_text",
+        "label_position"
+      ],
+      "label": "float3 text roundtrip after set [1,2,4]"
+    },
+    {
+      "call": [
+        "get_setting_tuple",
+        "label_position"
+      ],
+      "label": "float3 tuple roundtrip after set [1,2,4]"
+    }
+  ],
+  "tol": 0.0001,
+  "expected": [
+    0,
+    "[ 1.00000, 2.00000, 4.00000 ]",
+    [
+      4,
+      [
+        1,
+        2,
+        4
+      ]
+    ]
+  ]
+}

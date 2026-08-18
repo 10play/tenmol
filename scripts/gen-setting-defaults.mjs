@@ -69,10 +69,12 @@ for (let raw of lines) {
   } else if (t === 'f') {
     def = numLit(splitArgs(rest)[0]);
   } else if (t === '3') {
-    // float3 (vector): PyMOL's scalar get_setting_float on a float3 returns 0
-    // (verified against the oracle for `light`), not a component — so a vector
-    // setting has no scalar default. Omit it; the read falls through to 0.
-    continue;
+    // float3 (vector): the compiled-in default is a [x,y,z] triple. Scalar
+    // get_setting_float on a float3 returns 0 (verified vs the oracle), but the
+    // tuple/text readers need the real vector, so we emit all three components.
+    const comps = splitArgs(rest).map(numLit);
+    if (comps.length !== 3) throw new Error(`bad float3 default for ${name}: ${rest}`);
+    def = comps;
   } else if (t === 's') {
     // string literal in quotes
     const sm = rest.match(/^"((?:[^"\\]|\\.)*)"$/);
@@ -96,9 +98,8 @@ let out = `/**
  *   - boolean (\`REC_b\`)  -> 0 | 1
  *   - int     (\`REC_i\`)  -> the default int (min/max args dropped)
  *   - float   (\`REC_f\`)  -> the default float
- *   - float3  (\`REC_3\`)  -> the first component (get_setting_float on a vector
- *                            reads the leading scalar; the tuple form is not
- *                            modelled by the scalar get_setting_* path)
+ *   - float3  (\`REC_3\`)  -> the [x,y,z] vector (get_setting_tuple/text read the
+ *                            triple; get_setting_float on a float3 returns 0)
  *   - string  (\`REC_s\`)  -> the default string, verbatim
  *   - color   (\`REC_c\`)  -> the raw default color reference string ("-1", "red",
  *                            "0x000000", …); \`resolveSetting\` runs it through
@@ -119,7 +120,7 @@ export interface ColorDefault {
   readonly color: string;
 }
 
-export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | ColorDefault>> = {
+export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | number[] | ColorDefault>> = {
 `;
 
 for (const e of entries) {
@@ -127,6 +128,7 @@ for (const e of entries) {
   let val;
   if (e.type === 'c') val = `{ color: ${JSON.stringify(e.def.color)} }`;
   else if (e.type === 's') val = JSON.stringify(e.def);
+  else if (e.type === '3') val = `[${e.def.join(', ')}]`;
   else val = String(e.def);
   out += `  ${key}: ${val},\n`;
 }

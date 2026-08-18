@@ -122,14 +122,45 @@ const SCULPT_SETTING_DEFAULTS: Readonly<Record<string, number>> = {
  * type comes from the authoritative per-setting catalog (`SETTING_INDEX_TYPE`),
  * not a hand-maintained allowlist, so *every* boolean/int setting formats right.
  */
-function settingText(name: string, v: number | string | undefined): string {
-  if (COLOR_SETTINGS.has(name)) return colorSettingText(v);
+function settingText(name: string, v: SettingValue | undefined): string {
+  if (COLOR_SETTINGS.has(name)) return colorSettingText(v as number | string | undefined);
   if (v === undefined) return '';
+  // float3 (vector): PyMOL's `SettingGetTextValue` formats a float3 as
+  // "[ %1.5f, %1.5f, %1.5f ]" (verified vs the oracle — `get_setting_text`
+  // after `set label_position, [1,2,4]` -> "[ 1.00000, 2.00000, 4.00000 ]").
+  if (Array.isArray(v)) return formatFloat3(v);
   if (typeof v === 'string') return v;
   const type = SETTING_INDEX_TYPE[name]?.[1];
   if (type === cSetting_boolean) return v !== 0 ? 'on' : 'off';
   if (type === cSetting_int) return String(Math.trunc(v));
   return v.toFixed(5); // "%1.5f"
+}
+
+/** A resolved setting value: scalar, string, or a float3 vector. */
+type SettingValue = number | string | number[];
+
+/** PyMOL's float3 text form: `[ %1.5f, %1.5f, %1.5f ]` (`SettingGetTextValue`). */
+function formatFloat3(v: readonly number[]): string {
+  const p = (n: number): string => (Number.isFinite(n) ? n : 0).toFixed(5);
+  return `[ ${p(v[0] ?? 0)}, ${p(v[1] ?? 0)}, ${p(v[2] ?? 0)} ]`;
+}
+
+/**
+ * Parse a `set` value into a float3 vector, or `null` if it is not three
+ * numbers. Mirrors the forms PyMOL accepts (verified vs the oracle): a JS list
+ * `[x,y,z]` (the API/call form), a bracketed string `"[x, y, z]"`, and a
+ * whitespace/comma separated string `"x y z"` / `"x,y,z"`.
+ */
+function parseFloat3(raw: unknown): number[] | null {
+  let parts: unknown[];
+  if (Array.isArray(raw)) parts = raw;
+  else if (typeof raw === 'string') {
+    const inner = raw.trim().replace(/^[[({]|[\])}]$/g, '');
+    parts = inner.split(/[\s,]+/).filter((s) => s.length > 0);
+  } else return null;
+  if (parts.length !== 3) return null;
+  const nums = parts.map((p) => Number(p));
+  return nums.some((n) => Number.isNaN(n)) ? null : nums;
 }
 
 /**
@@ -139,13 +170,15 @@ function settingText(name: string, v: number | string | undefined): string {
  * INDEX — mirroring PyMOL, which stores colours as indices — so we run them
  * through `getColorIndex` here. Everything else is already a number/string.
  */
-function infoDefaultValue(entry: number | string | ColorDefault): number | string {
+function infoDefaultValue(entry: number | string | number[] | ColorDefault): SettingValue {
+  // float3 defaults are stored as a raw [x,y,z] array; keep them as the vector.
+  if (Array.isArray(entry)) return entry;
   if (typeof entry === 'object') return getColorIndex(entry.color);
   return entry;
 }
 
 /** PyMOL's compiled-in default for `name`, or undefined if not a real setting. */
-function settingInfoDefault(name: string): number | string | undefined {
+function settingInfoDefault(name: string): SettingValue | undefined {
   if (!Object.prototype.hasOwnProperty.call(SETTING_INFO_DEFAULTS, name)) return undefined;
   return infoDefaultValue(SETTING_INFO_DEFAULTS[name]!);
 }
@@ -170,7 +203,15 @@ function coerceValue(raw: unknown, str: RegistrarCtx['str']): number | string {
  * red` stores `4`. A bare numeric index passes through; an unknown colour name
  * is left verbatim (matches PyMOL's text fallback for non-palette values).
  */
-function coerceSettingValue(name: string, raw: unknown, str: RegistrarCtx['str']): number | string {
+function coerceSettingValue(name: string, raw: unknown, str: RegistrarCtx['str']): SettingValue {
+  // float3 (vector) settings store a [x,y,z] triple, not a scalar. PyMOL's
+  // `SettingSetFromString` parses the value into three floats; the `set` value
+  // reaches us either as a JS list (call form) or a string ("[x, y, z]" / "x y
+  // z"), all of which `parseFloat3` handles (verified vs the oracle).
+  if (SETTING_INDEX_TYPE[name]?.[1] === cSetting_float3) {
+    const vec = parseFloat3(raw);
+    if (vec) return vec;
+  }
   const v = coerceValue(raw, str);
   if (typeof v === 'string') {
     // Boolean/int settings accept the word keywords on/yes/true/off/no/false
@@ -194,9 +235,9 @@ export function registerSettings2(ctx: RegistrarCtx): void {
   const str = ctx.str;
 
   /** Live defaults captured lazily from the executive on first override. */
-  const capturedDefaults = new Map<string, number | string>();
+  const capturedDefaults = new Map<string, SettingValue>();
   /** objName -> (settingName -> value). */
-  const perObject = new Map<string, Map<string, number | string>>();
+  const perObject = new Map<string, Map<string, SettingValue>>();
 
   // Window state the scene extras track (no GL side effects here). Viewport size
   // lives on the executive so `cmd.viewport` (here) and `cmd.get_viewport` (on
@@ -205,7 +246,7 @@ export function registerSettings2(ctx: RegistrarCtx): void {
   let fullScreenState = 0;
 
   /** The default a global setting resets to. */
-  const defaultOf = (name: string): number | string => {
+  const defaultOf = (name: string): SettingValue => {
     if (capturedDefaults.has(name)) return capturedDefaults.get(name)!;
     if (Object.prototype.hasOwnProperty.call(SETTING_DEFAULTS, name)) return SETTING_DEFAULTS[name]!;
     // Comprehensive compiled-in default (`SettingInfo.h`); 0 only for the
@@ -242,7 +283,8 @@ export function registerSettings2(ctx: RegistrarCtx): void {
       if (PER_ATOM_COLOR_SETTINGS.has(name)) {
         const atoms = ex.atomsMatching(sel);
         for (const ua of atoms) {
-          (ua.atom.atomSettings ??= {})[name] = value;
+          // Per-atom colour settings are scalar colour indices, never float3.
+          (ua.atom.atomSettings ??= {})[name] = value as number | string;
         }
         ctx.publish();
         return atoms.length;
@@ -437,13 +479,13 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     const obj = str(args[0] ?? kwargs['object']);
     const m = perObject.get(obj);
     if (!m || m.size === 0) return null;
-    const rows: [number, number, number | string][] = [];
+    const rows: [number, number, number | string | number[]][] = [];
     for (const [name, value] of m) {
       const meta = SETTING_INDEX_TYPE[name];
       if (!meta) continue; // not a real PyMOL setting -> never serialized
       const [index, type] = meta;
-      let v: number | string = value;
-      if (type !== cSetting_float3 && type !== cSetting_string && typeof value !== 'string') {
+      let v: number | string | number[] = value;
+      if (type !== cSetting_float3 && type !== cSetting_string && typeof value !== 'string' && !Array.isArray(value)) {
         // boolean / int / color are integers; float keeps its value.
         v = type === 3 ? value : Math.trunc(value);
       }
@@ -460,7 +502,7 @@ export function registerSettings2(ctx: RegistrarCtx): void {
   // the global. The engine's built-in handlers only read the global store, so
   // we re-register the query verbs here (this subsystem loads after the
   // built-ins, so these win) to consult the per-object overrides first.
-  const resolveSetting = (name: string, sel: string): number | string | undefined => {
+  const resolveSetting = (name: string, sel: string): SettingValue | undefined => {
     if (sel) {
       for (const obj of objectsFor(sel)) {
         const m = perObject.get(obj);
@@ -483,8 +525,10 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     // returns PyMOL's real default instead of a bare 0.
     return settingInfoDefault(name);
   };
-  const asFloat = (v: number | string | undefined): number =>
-    typeof v === 'number' ? v : Number(v ?? 0);
+  // Scalar float accessor. A float3 vector has no scalar value — PyMOL's
+  // `get_setting_float` on a float3 returns 0 (verified vs the oracle).
+  const asFloat = (v: SettingValue | undefined): number =>
+    Array.isArray(v) ? 0 : typeof v === 'number' ? v : Number(v ?? 0);
 
   ctx.command('get_setting', (args, kwargs): Json => {
     const v = resolveSetting(str(args[0] ?? kwargs['name']), str(args[1] ?? kwargs['selection'] ?? ''));
@@ -522,9 +566,20 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     const v = resolveSetting(name, sel);
     return settingText(name, v);
   });
-  ctx.command('get_setting_tuple', (args, kwargs): Json => [
-    resolveSetting(str(args[0] ?? kwargs['name']), str(args[1] ?? kwargs['selection'] ?? '')) ?? 0,
-  ] as Json);
+  // `cmd.get_setting_tuple(name, selection, state)` -> `(type, value_tuple)`.
+  // For a float3 setting PyMOL returns `[4, [x, y, z]]` (type tag
+  // cSetting_float3 = 4, then the 3-float vector) — verified vs the oracle for
+  // both the default and after a `set`. Scalar settings keep the engine's
+  // existing single-element shape.
+  ctx.command('get_setting_tuple', (args, kwargs): Json => {
+    const name = str(args[0] ?? kwargs['name']);
+    const v = resolveSetting(name, str(args[1] ?? kwargs['selection'] ?? ''));
+    if (SETTING_INDEX_TYPE[name]?.[1] === cSetting_float3) {
+      const vec = Array.isArray(v) ? v : [0, 0, 0];
+      return [cSetting_float3, [vec[0] ?? 0, vec[1] ?? 0, vec[2] ?? 0]] as Json;
+    }
+    return [v ?? 0] as Json;
+  });
 
   /* ------------------------------- view extras ---------------------------- */
   ctx.command('get_clip', (): Json => {

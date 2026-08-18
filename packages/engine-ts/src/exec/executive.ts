@@ -85,7 +85,7 @@ export class Executive {
    * the `objects` command subsystem via {@link groups}.
    */
   private readonly groupMembership = new Map<string, Set<string>>();
-  private readonly settings = new Map<string, number | string>(Object.entries(DEFAULT_SETTINGS));
+  private readonly settings = new Map<string, number | string | number[]>(Object.entries(DEFAULT_SETTINGS));
   /**
    * Bumped on every `set()`. The engine's geometry memoization (F1) folds this
    * into each rep's content hash so a settings change (e.g. `sphere_scale`,
@@ -504,7 +504,7 @@ export class Executive {
 
   /* ------------------------------ settings ---------------------------- */
 
-  set(name: string, value: number | string | boolean): void {
+  set(name: string, value: number | string | boolean | number[]): void {
     this.settings.set(name, typeof value === 'boolean' ? (value ? 1 : 0) : value);
     this.settingsVersion++;
   }
@@ -514,7 +514,7 @@ export class Executive {
     return this.settingsVersion;
   }
 
-  getSetting(name: string): number | string | undefined {
+  getSetting(name: string): number | string | number[] | undefined {
     return this.settings.get(name);
   }
 
@@ -641,6 +641,9 @@ export class Executive {
 
   getSettingFloat(name: string): number {
     const v = this.settings.get(name);
+    // A float3 (vector) setting has no scalar float value — PyMOL's
+    // `SettingGet_f` on a float3 returns 0 (verified vs the oracle for `light`).
+    if (Array.isArray(v)) return 0;
     return typeof v === 'number' ? v : Number(v ?? 0);
   }
 

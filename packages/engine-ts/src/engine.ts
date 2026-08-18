@@ -1014,7 +1014,8 @@ export class Engine {
       const v = ex.getSetting(name);
       // Colour-typed settings read back as a colour NAME, not the raw index —
       // `SettingGetTextPtr`'s `cSetting_color` branch (`Setting.cpp`).
-      if (COLOR_SETTINGS.has(name)) return colorSettingText(v);
+      // Colour settings are never float3, so the scalar cast is safe here.
+      if (COLOR_SETTINGS.has(name)) return colorSettingText(v as number | string | undefined);
       return v === undefined ? '' : String(v);
     });
     h('get_setting_tuple', (args) => [ex.getSetting(str(args[0])) ?? 0]);
