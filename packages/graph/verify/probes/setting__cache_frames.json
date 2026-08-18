@@ -1,0 +1,12 @@
+{
+  "id": "setting__cache_frames", "feature": "cache_frames", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set cache_frames, on"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","cache_frames"],"label":"cache_frames after set on"}
+  ],
+  "expected": [
+    true
+  ]
+}
