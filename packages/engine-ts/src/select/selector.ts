@@ -130,7 +130,9 @@ type KeywordKey =
   | 'acceptor'
   | 'metals'
   | 'masked'
-  | 'protected';
+  | 'protected'
+  | 'fixed'
+  | 'guide';
 
 const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
   name: 'name',
@@ -202,7 +204,13 @@ const KEYWORDS: Readonly<Record<string, KeywordKey>> = {
   metals: 'metals',
   masked: 'masked',
   protected: 'protected',
+  fixed: 'fixed',
+  'fxd.': 'fixed',
+  guide: 'guide',
 };
+
+/** Atom modeling-flag bit set by `flag fix` — the `fixed`/`fxd.` selector. */
+const ATOM_FLAG_FIX = 3;
 
 /** Metal elements for the `metals` keyword (element heuristic). */
 const METAL_ELEMENTS = new Set([
@@ -692,11 +700,46 @@ function matchKeyword(kw: KeywordKey, ua: UniverseAtom): boolean {
     case 'protected':
       // Atoms flagged immobile-during-editing by `protect` (cleared by `deprotect`).
       return a.protected === true;
+    case 'fixed':
+      // `fixed`/`fxd.` — atoms carrying the fix flag (flag bit 3), set by
+      // `flag fix, <sele>, set`. Equivalent to `flag 3`.
+      return ((a.flags ?? 0) & (1 << ATOM_FLAG_FIX)) !== 0;
     case 'enabled':
     case 'bonded':
-      // Handled in evalSet (need object/bond context); unreachable here.
+    case 'guide':
+      // Handled in evalSet (need object/residue/bond context); unreachable here.
       return false;
   }
+}
+
+/**
+ * `guide` — the cartoon/ribbon trace atoms: exactly one guide atom per polymer
+ * residue. Mirrors PyMOL's guide-atom assignment (cAtomFlag_guide, Selector.cpp):
+ * within each polymer residue pick the first carbon named `CA` (protein
+ * C-alpha), else `C4'`/`C4*` (nucleic-acid guide), else `C3'`/`C3*` as a nucleic
+ * fallback for residues lacking C4' (e.g. PNA).
+ */
+function guideAtoms(env: EvalEnv): Set<number> {
+  const out = new Set<number>();
+  for (const idxs of env.byRes.values()) {
+    // Residue is polymer when its atoms are polymer (non-het, non-solvent).
+    if (!isPolymer(env.universe[idxs[0]!]!.atom)) continue;
+    let primary = -1;
+    let fallback = -1;
+    for (const j of idxs) {
+      const at = env.universe[j]!.atom;
+      if (at.elem.toUpperCase() !== 'C') continue;
+      const name = at.name.toUpperCase();
+      if (name === 'CA' || name === "C4'" || name === 'C4*') {
+        primary = j;
+        break; // first CA / C4' wins, matching PyMOL's atom-order scan
+      }
+      if (fallback < 0 && (name === "C3'" || name === 'C3*')) fallback = j;
+    }
+    const guide = primary >= 0 ? primary : fallback;
+    if (guide >= 0) out.add(guide);
+  }
+  return out;
 }
 
 function isPolymer(a: AtomInfo): boolean {
@@ -919,6 +962,7 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
         for (let i = 0; i < n; i++) if ((env.adj[i]?.length ?? 0) > 0) s.add(i);
         return s;
       }
+      if (kw === 'guide') return guideAtoms(env);
       return filter((ua) => matchKeyword(kw, ua));
     }
     case 'ref': {

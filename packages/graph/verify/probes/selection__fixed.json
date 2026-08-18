@@ -1,0 +1,34 @@
+{
+  "id": "selection__fixed",
+  "feature": "fixed",
+  "kind": "selection",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "flag fix, chain A, set"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "count_atoms",
+        "fixed"
+      ],
+      "label": "fixed keyword = atoms with fix flag (flag 3) set"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "not fixed"
+      ],
+      "label": "not fixed = complement"
+    }
+  ],
+  "expected": [
+    1479,
+    4205
+  ]
+}

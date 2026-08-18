@@ -1,0 +1,39 @@
+{
+  "id": "selection__guide",
+  "feature": "guide",
+  "kind": "selection",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "count_atoms",
+        "guide"
+      ],
+      "label": "guide atoms (protein CA + nucleic guide atoms)"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "guide and chain A"
+      ],
+      "label": "guide atoms in chain A"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "name CA and polymer"
+      ],
+      "label": "reference: protein CA count"
+    }
+  ],
+  "expected": [
+    712,
+    186,
+    712
+  ]
+}
