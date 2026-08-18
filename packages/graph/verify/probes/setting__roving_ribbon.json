@@ -1,0 +1,19 @@
+{
+  "id": "setting__roving_ribbon",
+  "feature": "roving_ribbon",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set roving_ribbon, 4.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","roving_ribbon"],"label":"global default (unset) -> -7.0"},
+    {"call":["get_setting_float","roving_ribbon","m"],"label":"per-object set 4.5 roundtrip -> 4.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    -7,
+    4.5
+  ]
+}

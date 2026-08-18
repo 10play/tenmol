@@ -1,0 +1,11 @@
+{"id":"setting__roving_origin_z_cushion","feature":"roving_origin_z_cushion","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set roving_origin_z_cushion, 5.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","roving_origin_z_cushion"],"label":"global roving_origin_z_cushion default (no prior global set)"},
+   {"call":["get_setting_float","roving_origin_z_cushion","ala"],"label":"per-object roving_origin_z_cushion after set 5.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [3, 5.5]}
