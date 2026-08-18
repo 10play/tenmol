@@ -1,0 +1,23 @@
+{
+  "id": "setting__button_mode",
+  "feature": "button_mode",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "set button_mode, 1"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_int",
+        "button_mode"
+      ],
+      "label": "global set to 1 -> 1"
+    }
+  ],
+  "expected": [
+    1
+  ]
+}

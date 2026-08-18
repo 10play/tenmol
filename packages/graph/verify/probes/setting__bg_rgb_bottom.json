@@ -1,0 +1,17 @@
+{
+  "id": "setting__bg_rgb_bottom", "feature": "bg_rgb_bottom", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set bg_rgb_bottom, red"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","bg_rgb_bottom"],"label":"bg_rgb_bottom index after set red"},
+    {"call":["get_setting_text","bg_rgb_bottom"],"label":"bg_rgb_bottom name after set red"},
+    {"call":["get_color_index","red"],"label":"red palette index (expected to equal setting)"}
+  ],
+  "tol": 0,
+  "expected": [
+    4,
+    "red",
+    4
+  ]
+}
