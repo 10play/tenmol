@@ -1,0 +1,11 @@
+{"id":"setting__seq_view_label_spacing","feature":"seq_view_label_spacing","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set seq_view_label_spacing, 3, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","seq_view_label_spacing"],"label":"seq_view_label_spacing global default (no prior set)"},
+   {"call":["get_setting_int","seq_view_label_spacing","ala"],"label":"seq_view_label_spacing per-object after set 3"}
+ ],
+ "tol": 1e-6,
+ "expected": [5, 3]}
