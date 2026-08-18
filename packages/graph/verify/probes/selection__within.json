@@ -1,0 +1,6 @@
+{"id":"selection__within","feature":"within","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[{"call":["count_atoms","all within 5 of (resi 10)"],"label":"all_w5_resi10"},
+           {"call":["count_atoms","chain A within 4 of name SG"],"label":"chainA_w4_SG"},
+           {"call":["count_atoms","name CA within 8 of (resi 50)"],"label":"CA_w8_resi50"}],
+ "expected":[392,11,104]}

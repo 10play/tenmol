@@ -1,0 +1,8 @@
+{"id":"selection__wildcards","feature":"wildcards","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","resn AL*"],"label":"resn AL* = residues starting with AL (glob *)"},
+   {"call":["count_atoms","name C*"],"label":"name C* = atom names starting with C"},
+   {"call":["count_atoms","name *A"],"label":"name *A = atom names ending with A"}
+ ],
+ "expected":[360,3405,712]}

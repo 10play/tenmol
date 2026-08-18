@@ -1,0 +1,12 @@
+{
+  "id": "setting__all_states", "feature": "all_states", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set all_states, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","all_states"],"label":"all_states after set 1"}
+  ],
+  "expected": [
+    true
+  ]
+}
