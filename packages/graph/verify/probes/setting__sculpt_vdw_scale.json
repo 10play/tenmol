@@ -1,0 +1,13 @@
+{
+  "id": "setting__sculpt_vdw_scale", "feature": "sculpt_vdw_scale", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set sculpt_vdw_scale, 0.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","sculpt_vdw_scale"],"label":"sculpt_vdw_scale after set 0.5 (roundtrip; default 0.97 verified separately)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.5
+  ]
+}
