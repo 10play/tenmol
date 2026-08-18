@@ -1,0 +1,35 @@
+{
+  "id": "setting__ray_orthoscopic",
+  "feature": "ray_orthoscopic",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "set ray_orthoscopic, 1, m"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_int",
+        "ray_orthoscopic"
+      ],
+      "label": "global default (unset) -> -1"
+    },
+    {
+      "call": [
+        "get_setting_int",
+        "ray_orthoscopic",
+        "m"
+      ],
+      "label": "per-object set to 1 -> 1"
+    }
+  ],
+  "expected": [
+    -1,
+    1
+  ]
+}
