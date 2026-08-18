@@ -1,0 +1,10 @@
+{"id":"setting__h_bond_from_proton","feature":"h_bond_from_proton","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set h_bond_from_proton, 0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","h_bond_from_proton"],"label":"h_bond_from_proton global default (no prior set)"},
+   {"call":["get_setting_boolean","h_bond_from_proton","ala"],"label":"h_bond_from_proton per-object after set 0"}
+ ],
+ "expected": [true, false]}

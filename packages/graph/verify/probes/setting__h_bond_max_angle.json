@@ -1,0 +1,11 @@
+{"id":"setting__h_bond_max_angle","feature":"h_bond_max_angle","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"set h_bond_max_angle, 45.0, m"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","h_bond_max_angle"],"label":"h_bond_max_angle global default (no prior set) -> 63.0"},
+   {"call":["get_setting_float","h_bond_max_angle","m"],"label":"h_bond_max_angle per-object set 45.0 roundtrip"}
+ ],
+ "tol": 1e-6,
+ "expected": [63, 45]}

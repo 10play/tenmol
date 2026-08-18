@@ -1,0 +1,16 @@
+{
+  "id": "setting__h_bond_power_b", "feature": "h_bond_power_b", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set h_bond_power_b, 3.0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","h_bond_power_b"],"label":"global default (no prior set) -> 5.0"},
+    {"call":["get_setting_float","h_bond_power_b","m"],"label":"per-object set 3.0 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    5,
+    3
+  ]
+}
