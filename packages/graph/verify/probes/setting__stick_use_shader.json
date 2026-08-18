@@ -1,0 +1,19 @@
+{
+  "id": "setting__stick_use_shader",
+  "feature": "stick_use_shader",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set stick_use_shader, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","stick_use_shader"],"label":"global stick_use_shader default -> true (1)"},
+    {"call":["get_setting_boolean","stick_use_shader","m"],"label":"per-object stick_use_shader after set 0 -> false"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    true,
+    false
+  ]
+}

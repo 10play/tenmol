@@ -1,0 +1,10 @@
+{"id":"setting__stop_on_exceptions","feature":"stop_on_exceptions","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set stop_on_exceptions, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","stop_on_exceptions"],"label":"stop_on_exceptions global default (no prior set)"},
+   {"call":["get_setting_boolean","stop_on_exceptions","ala"],"label":"stop_on_exceptions per-object after set 1"}
+ ],
+ "expected": [false, true]}
