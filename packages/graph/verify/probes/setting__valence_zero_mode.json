@@ -1,0 +1,10 @@
+{"id":"setting__valence_zero_mode","feature":"valence_zero_mode","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set valence_zero_mode, 2, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","valence_zero_mode"],"label":"valence_zero_mode global default (no prior set)"},
+   {"call":["get_setting_int","valence_zero_mode","ala"],"label":"valence_zero_mode per-object after set 2"}
+ ],
+ "expected": [1, 2]}

@@ -1,0 +1,19 @@
+{
+  "id": "setting__use_tessellation_shaders",
+  "feature": "use_tessellation_shaders",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set use_tessellation_shaders, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","use_tessellation_shaders"],"label":"global default (unset) -> true"},
+    {"call":["get_setting_boolean","use_tessellation_shaders","m"],"label":"per-object set to 0 -> false"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    true,
+    false
+  ]
+}
