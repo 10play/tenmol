@@ -480,12 +480,23 @@ class Parser {
   }
 }
 
+/** Strip a single pair of matching enclosing quotes (`'x'`/`"x"`) from a token. */
+function stripEnclosingQuotes(s: string): string {
+  if (s.length >= 2 && (s[0] === "'" || s[0] === '"') && s[s.length - 1] === s[0]) {
+    return s.slice(1, -1);
+  }
+  return s;
+}
+
 /** `+`-grouped value spec into a prop node; numeric ranges for resi/index/id. */
 function buildProp(key: PropKey, spec: string): Node {
   const values: string[] = [];
   const ranges: Array<[number, number]> = [];
-  for (const part of spec.split('+')) {
-    if (part === '') continue;
+  for (const rawPart of spec.split('+')) {
+    // Skip empties from adjacent `+` (`CA+`), but keep an explicitly quoted empty
+    // value (`alt ''`) — that selects atoms with an empty altloc.
+    if (rawPart === '') continue;
+    const part = stripEnclosingQuotes(rawPart);
     const m = /^(-?\d+)-(-?\d+)$/.exec(part);
     if (m && (key === 'resi' || key === 'index' || key === 'id')) {
       ranges.push([parseInt(m[1]!, 10), parseInt(m[2]!, 10)]);
