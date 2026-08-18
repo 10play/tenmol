@@ -1,0 +1,15 @@
+{
+  "id": "setting__dot_mode", "feature": "dot_mode", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set dot_mode, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","dot_mode"],"label":"global dot_mode default (no prior set)"},
+    {"call":["get_setting_int","dot_mode","ala"],"label":"per-object dot_mode after set 1"}
+  ],
+  "expected": [
+    0,
+    1
+  ]
+}

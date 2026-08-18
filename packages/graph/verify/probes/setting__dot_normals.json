@@ -1,0 +1,12 @@
+{
+  "id": "setting__dot_normals", "feature": "dot_normals", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set dot_normals, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","dot_normals"],"label":"dot_normals after set 0 (default 1)"}
+  ],
+  "expected": [
+    false
+  ]
+}
