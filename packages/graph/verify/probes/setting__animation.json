@@ -1,0 +1,8 @@
+{
+  "id": "setting__animation", "feature": "animation", "kind": "setting", "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {"call":["get_setting_int","animation"],"label":"animation default (no prior set)"}
+  ],
+  "expected": [1]
+}
