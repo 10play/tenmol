@@ -1,0 +1,14 @@
+{
+  "id": "selection__byobject", "feature": "byobject", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m1"},
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m2"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "m1"], "label": "all atoms of object m1"},
+    {"call": ["count_atoms", "m1 and resi 10"], "label": "seed atoms (resi 10 in m1)"},
+    {"call": ["count_atoms", "byobject (m1 and resi 10)"], "label": "byobject expands seed to whole object m1"},
+    {"call": ["count_atoms", "byobject name CA"], "label": "byobject over CA atoms = both whole objects"}
+  ],
+  "expected": [5684, 38, 5684, 11368]
+}

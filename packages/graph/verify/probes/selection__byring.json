@@ -1,0 +1,12 @@
+{
+  "id": "selection__byring", "feature": "byring", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "byring resn PHE"], "label": "ring atoms of rings containing PHE seed atoms"},
+    {"call": ["count_atoms", "byring (resn TRP and name CA)"], "label": "ring atoms of rings containing TRP CA seed"},
+    {"call": ["count_atoms", "byring resn HIS"], "label": "ring atoms of rings containing HIS seed atoms"}
+  ],
+  "expected": [114, 0, 20]
+}

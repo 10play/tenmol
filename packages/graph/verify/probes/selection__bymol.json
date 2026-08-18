@@ -1,0 +1,12 @@
+{
+  "id": "selection__bymol", "feature": "bymol", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "bymol name CA"], "label": "bymol expands CA seeds to whole bonded molecules"},
+    {"call": ["count_atoms", "bymol (resi 10)"], "label": "bymol expands residue-10 seeds to whole bonded molecules"},
+    {"call": ["count_atoms", "bymol name SG"], "label": "bymol expands SG seeds to whole bonded molecules"}
+  ],
+  "expected": [5469, 4071, 5099]
+}

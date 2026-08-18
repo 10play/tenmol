@@ -1,0 +1,12 @@
+{
+  "id": "selection__bychain", "feature": "bychain", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "bychain (resi 10)"], "label": "all atoms of every chain touching residue 10"},
+    {"call": ["count_atoms", "bychain name SG"], "label": "all atoms of every chain touching an SG atom"},
+    {"call": ["count_atoms", "bychain (chain A and resi 5)"], "label": "whole chain A (touched by chain A resi 5)"}
+  ],
+  "expected": [5394, 5469, 1479]
+}
