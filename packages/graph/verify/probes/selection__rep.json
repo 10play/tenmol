@@ -1,0 +1,13 @@
+{"id":"selection__rep","feature":"rep","kind":"selection","probeKind":"state",
+ "ops":[
+   {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"hide everything"},
+   {"do":"show spheres, chain A"},
+   {"do":"show lines, resn ALA"}
+ ],
+ "checks":[
+   {"call":["count_atoms","rep spheres"],"label":"atoms shown as spheres (chain A)"},
+   {"call":["count_atoms","rep lines"],"label":"atoms shown as lines (resn ALA)"},
+   {"call":["count_atoms","rep cartoon"],"label":"atoms shown as cartoon (none)"}
+ ],
+ "expected":[1479, 360, 0]}

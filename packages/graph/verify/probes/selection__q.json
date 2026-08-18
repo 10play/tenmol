@@ -1,0 +1,12 @@
+{
+  "id": "selection__q", "feature": "q", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call":["count_atoms","q > 0.5"],"label":"atoms with occupancy > 0.5"},
+    {"call":["count_atoms","q < 1"],"label":"atoms with partial occupancy < 1"},
+    {"call":["count_atoms","q = 1"],"label":"atoms with full occupancy = 1"}
+  ],
+  "expected": [5684, 0, 5684]
+}
