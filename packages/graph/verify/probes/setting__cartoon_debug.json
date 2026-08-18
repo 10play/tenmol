@@ -1,0 +1,12 @@
+{
+  "id": "setting__cartoon_debug", "feature": "cartoon_debug", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set cartoon_debug, 2"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cartoon_debug"],"label":"cartoon_debug after set 2"}
+  ],
+  "expected": [
+    2
+  ]
+}
