@@ -1,0 +1,11 @@
+{"id":"setting__ray_improve_shadows","feature":"ray_improve_shadows","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set ray_improve_shadows, 0.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","ray_improve_shadows"],"label":"ray_improve_shadows global default (no prior set)"},
+   {"call":["get_setting_float","ray_improve_shadows","ala"],"label":"ray_improve_shadows per-object after set 0.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [0.1, 0.5]}
