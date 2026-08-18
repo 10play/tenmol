@@ -22,6 +22,7 @@ import { Rep, REP_NAMES } from '@tenmol/protocol';
 import { repBit } from '../model/atom';
 import { COLOR_SETTINGS, colorSettingText, getColorIndex, REP_COLOR_SETTING_DEFAULTS } from '../exec/color';
 import { SETTING_INDEX_TYPE } from './setting-catalog';
+import { SETTING_INFO_DEFAULTS, type ColorDefault } from './setting-defaults';
 import type { RegistrarCtx } from './registrar';
 
 /** `cSetting_*` type tags (`layer1/Setting.h`). */
@@ -129,6 +130,24 @@ function settingText(name: string, v: number | string | undefined): string {
   return v.toFixed(5); // "%1.5f"
 }
 
+/**
+ * Resolve a raw entry from the generated `SETTING_INFO_DEFAULTS` table to the
+ * scalar value `get_setting_*` returns. Colour-typed defaults are stored as a
+ * raw colour reference ("-1", "red", "0x000000", …) and read back as a colour
+ * INDEX — mirroring PyMOL, which stores colours as indices — so we run them
+ * through `getColorIndex` here. Everything else is already a number/string.
+ */
+function infoDefaultValue(entry: number | string | ColorDefault): number | string {
+  if (typeof entry === 'object') return getColorIndex(entry.color);
+  return entry;
+}
+
+/** PyMOL's compiled-in default for `name`, or undefined if not a real setting. */
+function settingInfoDefault(name: string): number | string | undefined {
+  if (!Object.prototype.hasOwnProperty.call(SETTING_INFO_DEFAULTS, name)) return undefined;
+  return infoDefaultValue(SETTING_INFO_DEFAULTS[name]!);
+}
+
 /** rep command-name -> rep id, for the representation-toggle path of `toggle`. */
 const REP_ID_BY_NAME = new Map<string, number>();
 for (const [id, name] of Object.entries(REP_NAMES)) REP_ID_BY_NAME.set(name, Number(id));
@@ -177,7 +196,10 @@ export function registerSettings2(ctx: RegistrarCtx): void {
   const defaultOf = (name: string): number | string => {
     if (capturedDefaults.has(name)) return capturedDefaults.get(name)!;
     if (Object.prototype.hasOwnProperty.call(SETTING_DEFAULTS, name)) return SETTING_DEFAULTS[name]!;
-    return 0;
+    // Comprehensive compiled-in default (`SettingInfo.h`); 0 only for the
+    // handful of settings PyMOL genuinely defaults to 0 or that aren't tabulated.
+    const info = settingInfoDefault(name);
+    return info ?? 0;
   };
 
   /** Objects whose atoms match `sel` (for per-object / per-bond scoping). */
@@ -444,7 +466,10 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     if (Object.prototype.hasOwnProperty.call(SCULPT_SETTING_DEFAULTS, name)) {
       return SCULPT_SETTING_DEFAULTS[name];
     }
-    return undefined;
+    // Comprehensive compiled-in default for every remaining setting whose
+    // upstream default is non-zero (`SettingInfo.h`), so an unset numeric read
+    // returns PyMOL's real default instead of a bare 0.
+    return settingInfoDefault(name);
   };
   const asFloat = (v: number | string | undefined): number =>
     typeof v === 'number' ? v : Number(v ?? 0);
