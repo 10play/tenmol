@@ -1,0 +1,15 @@
+{
+  "id": "setting__surface_cavity_mode", "feature": "surface_cavity_mode", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set surface_cavity_mode, 2, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","surface_cavity_mode"],"label":"global surface_cavity_mode default (no prior set)"},
+    {"call":["get_setting_int","surface_cavity_mode","ala"],"label":"per-object surface_cavity_mode after set 2"}
+  ],
+  "expected": [
+    0,
+    2
+  ]
+}

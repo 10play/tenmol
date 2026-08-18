@@ -1,0 +1,18 @@
+{
+  "id": "setting__surface_clear_selection",
+  "feature": "surface_clear_selection",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set surface_clear_selection, chain A, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","surface_clear_selection"],"label":"global default -> empty string"},
+    {"call":["get_setting_text","surface_clear_selection","m"],"label":"per-object set roundtrip -> chain A"}
+  ],
+  "expected": [
+    "",
+    "chain A"
+  ]
+}
