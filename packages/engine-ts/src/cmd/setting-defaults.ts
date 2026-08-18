@@ -767,7 +767,7 @@ export const SETTING_INFO_DEFAULTS: Readonly<Record<string, number | string | nu
   "pick_labels": 1,
   "label_z_target": 0,
   "session_embeds_data": 1,
-  "volume_mode": 1,
+  "volume_mode": 0,
   "trilines": 0,
   "collada_export_lighting": 0,
   "collada_geometry_mode": 1,

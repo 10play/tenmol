@@ -13,6 +13,14 @@ const CONSTS = {
   MAX_SPHERE_QUALITY: 4,
 };
 
+// Open-source-PyMOL default overrides. The vendored SettingInfo.h is the
+// incentive (commercial) header; a handful of settings ship a different
+// compiled-in default in the open-source build that the oracle runs. Reconcile
+// them here (verified vs the real open-source oracle).
+const OVERRIDES = {
+  volume_mode: 0, // incentive SettingInfo.h says 1; open-source PyMOL ships 0
+};
+
 const text = readFileSync(SRC, 'utf8');
 const lines = text.split('\n');
 
@@ -86,6 +94,7 @@ for (let raw of lines) {
     if (!cm) throw new Error(`bad color default for ${name}: ${rest}`);
     def = { color: cm[1] };
   }
+  if (Object.prototype.hasOwnProperty.call(OVERRIDES, name)) def = OVERRIDES[name];
   entries.push({ name, type: t, def });
 }
 
