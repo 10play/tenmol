@@ -1,0 +1,11 @@
+{"id":"setting__cartoon_ring_transparency","feature":"cartoon_ring_transparency","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set cartoon_ring_transparency, 0.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","cartoon_ring_transparency"],"label":"cartoon_ring_transparency global default (no prior set)"},
+   {"call":["get_setting_float","cartoon_ring_transparency","ala"],"label":"cartoon_ring_transparency per-object after set 0.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [-1, 0.5]}
