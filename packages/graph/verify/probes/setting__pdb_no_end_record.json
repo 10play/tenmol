@@ -1,0 +1,15 @@
+{
+  "id": "setting__pdb_no_end_record", "feature": "pdb_no_end_record", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set pdb_no_end_record, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","pdb_no_end_record"],"label":"global pdb_no_end_record default (no prior set)"},
+    {"call":["get_setting_boolean","pdb_no_end_record","ala"],"label":"per-object pdb_no_end_record after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

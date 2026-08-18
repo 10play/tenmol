@@ -1,0 +1,15 @@
+{
+  "id": "setting__pdb_retain_ids", "feature": "pdb_retain_ids", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set pdb_retain_ids, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","pdb_retain_ids"],"label":"global pdb_retain_ids default (no prior set) -> false"},
+    {"call":["get_setting_boolean","pdb_retain_ids","m"],"label":"per-object pdb_retain_ids after set 1 -> true"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}
