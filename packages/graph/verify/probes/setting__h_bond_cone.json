@@ -1,0 +1,11 @@
+{"id":"setting__h_bond_cone","feature":"h_bond_cone","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set h_bond_cone, 90.0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","h_bond_cone"],"label":"h_bond_cone global default (no prior set)"},
+   {"call":["get_setting_float","h_bond_cone","ala"],"label":"h_bond_cone per-object after set 90.0"}
+ ],
+ "tol": 1e-6,
+ "expected": [180.0, 90.0]}
