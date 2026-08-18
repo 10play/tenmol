@@ -1,0 +1,12 @@
+{
+  "id": "setting__presentation_auto_start", "feature": "presentation_auto_start", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set presentation_auto_start, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","presentation_auto_start"],"label":"presentation_auto_start after set 0"}
+  ],
+  "expected": [
+    false
+  ]
+}

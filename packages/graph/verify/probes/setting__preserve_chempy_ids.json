@@ -1,0 +1,19 @@
+{
+  "id": "setting__preserve_chempy_ids",
+  "feature": "preserve_chempy_ids",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set preserve_chempy_ids, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","preserve_chempy_ids"],"label":"global default (unset) -> false"},
+    {"call":["get_setting_boolean","preserve_chempy_ids","m"],"label":"per-object set to 1 -> true"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    false,
+    true
+  ]
+}
