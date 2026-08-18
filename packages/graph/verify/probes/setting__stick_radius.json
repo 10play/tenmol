@@ -1,0 +1,19 @@
+{
+  "id": "setting__stick_radius",
+  "feature": "stick_radius",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set stick_radius, 0.4, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_float", "stick_radius"], "label": "global default -> 0.25"},
+    {"call": ["get_setting_float", "stick_radius", "m"], "label": "per-object set to 0.4 -> 0.4"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.25,
+    0.4
+  ]
+}

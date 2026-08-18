@@ -1,0 +1,19 @@
+{
+  "id": "setting__stick_overlap",
+  "feature": "stick_overlap",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set stick_overlap, 0.7, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","stick_overlap"],"label":"global default (unset) -> 0.2"},
+    {"call":["get_setting_float","stick_overlap","m"],"label":"per-object set to 0.7 -> 0.7"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.2,
+    0.7
+  ]
+}

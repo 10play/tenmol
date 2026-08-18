@@ -1,0 +1,19 @@
+{
+  "id": "setting__stick_nub",
+  "feature": "stick_nub",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set stick_nub, 0.45, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","stick_nub"],"label":"global default (no prior set) -> 0.7"},
+    {"call":["get_setting_float","stick_nub","m"],"label":"per-object set 0.45 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.7,
+    0.45
+  ]
+}
