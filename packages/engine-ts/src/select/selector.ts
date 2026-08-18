@@ -119,10 +119,13 @@ type PropKey =
   | 'resi'
   | 'index'
   | 'id'
+  | 'rank'
   | 'segi'
   | 'alt'
   | 'custom'
   | 'color'
+  | 'cartoon_color'
+  | 'ribbon_color'
   | 'rep'
   | 'flag'
   | 'label'
@@ -148,6 +151,7 @@ type KeywordKey =
   | 'masked'
   | 'protected'
   | 'fixed'
+  | 'restrained'
   | 'guide';
 
 const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
@@ -164,12 +168,15 @@ const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
   index: 'index',
   'idx.': 'index',
   id: 'id',
+  rank: 'rank',
   segi: 'segi',
   's.': 'segi',
   alt: 'alt',
   altloc: 'alt',
   custom: 'custom',
   color: 'color',
+  cartoon_color: 'cartoon_color',
+  ribbon_color: 'ribbon_color',
   rep: 'rep',
   flag: 'flag',
   'f.': 'flag',
@@ -235,11 +242,15 @@ const KEYWORDS: Readonly<Record<string, KeywordKey>> = {
   protected: 'protected',
   fixed: 'fixed',
   'fxd.': 'fixed',
+  restrained: 'restrained',
+  'rst.': 'restrained',
   guide: 'guide',
 };
 
 /** Atom modeling-flag bit set by `flag fix` — the `fixed`/`fxd.` selector. */
 const ATOM_FLAG_FIX = 3;
+/** Atom modeling-flag bit set by `flag restrain` — the `restrained`/`rst.` selector. */
+const ATOM_FLAG_RESTRAIN = 2;
 
 /** Metal elements for the `metals` keyword (element heuristic). */
 const METAL_ELEMENTS = new Set([
@@ -585,7 +596,7 @@ function buildProp(key: PropKey, spec: string): Node {
     if (rawPart === '') continue;
     const part = stripEnclosingQuotes(rawPart);
     const m = /^(-?\d+)-(-?\d+)$/.exec(part);
-    if (m && (key === 'resi' || key === 'index' || key === 'id')) {
+    if (m && (key === 'resi' || key === 'index' || key === 'id' || key === 'rank')) {
       ranges.push([parseInt(m[1]!, 10), parseInt(m[2]!, 10)]);
     } else {
       values.push(part);
@@ -679,10 +690,28 @@ function matchProp(node: Extract<Node, { t: 'prop' }>, ua: UniverseAtom): boolea
         node.values.some((v) => Number(v) === a.id) ||
         node.ranges.some(([lo, hi]) => a.id >= lo && a.id <= hi)
       );
+    case 'rank':
+      // `rank N` — 0-based atom load order (PyMOL's `rank`), whereas `index` is
+      // 1-based. The universe index is 0-based per-object load order.
+      return (
+        node.values.some((v) => Number(v) === ua.index) ||
+        node.ranges.some(([lo, hi]) => ua.index >= lo && ua.index <= hi)
+      );
     case 'color':
       return node.values.some((v) => {
         const idx = /^-?\d+$/.test(v) ? Number(v) : getColorIndex(v);
         return idx === a.color;
+      });
+    case 'cartoon_color':
+    case 'ribbon_color':
+      // Per-atom colour setting (PyMOL SELE_CCLs / SELE_RCLs, read via
+      // AtomSettingGetIfDefined): an atom matches only when it has a *defined*
+      // per-atom override for this setting whose colour index equals the query
+      // (`cartoon_color -1` therefore never matches an unset atom).
+      return node.values.some((v) => {
+        const idx = /^-?\d+$/.test(v) ? Number(v) : getColorIndex(v);
+        const set = a.atomSettings?.[node.key];
+        return set !== undefined && Number(set) === idx;
       });
     case 'rep':
       return node.values.some((v) => {
@@ -775,6 +804,10 @@ function matchKeyword(kw: KeywordKey, ua: UniverseAtom): boolean {
       // `fixed`/`fxd.` — atoms carrying the fix flag (flag bit 3), set by
       // `flag fix, <sele>, set`. Equivalent to `flag 3`.
       return ((a.flags ?? 0) & (1 << ATOM_FLAG_FIX)) !== 0;
+    case 'restrained':
+      // `restrained`/`rst.` — atoms carrying the restrain flag (flag bit 2), set
+      // by `flag restrain, <sele>, set`. Equivalent to `flag 2`.
+      return ((a.flags ?? 0) & (1 << ATOM_FLAG_RESTRAIN)) !== 0;
     case 'enabled':
     case 'bonded':
     case 'guide':

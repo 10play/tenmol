@@ -96,6 +96,15 @@ export interface AtomInfo {
    * properties set.
    */
   properties?: Record<string, string | number | boolean>;
+  /**
+   * Per-atom setting overrides (PyMOL's `AtomInfoType.setting` /
+   * `AtomSettingGetIfDefined`). A `set <name>, <val>, <sele>` for an atom-level
+   * setting (e.g. `cartoon_color`, `ribbon_color`) stores the value here on each
+   * matched atom, keyed by setting name. Colour-typed settings hold a colour
+   * INDEX. A key present means the atom has a *defined* override for that
+   * setting; absent ⇒ unset (the `<setting> -1` selector then does not match it).
+   */
+  atomSettings?: Record<string, number | string>;
 }
 
 /** `1 << rep` — the visRep bit for a representation. */

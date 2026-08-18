@@ -29,6 +29,15 @@ const cSetting_float3 = 4;
 const cSetting_string = 6;
 
 /**
+ * Atom-level colour settings that a selection-scoped `set` stores PER ATOM
+ * rather than per object (PyMOL keeps these in `AtomInfoType.setting`, reached
+ * by the `cartoon_color` / `ribbon_color` selectors via AtomSettingGetIfDefined).
+ * A `set cartoon_color, red, chain A` therefore tags each matched atom, and
+ * `get_object_settings` stays unaffected — matching real PyMOL.
+ */
+const PER_ATOM_COLOR_SETTINGS: ReadonlySet<string> = new Set(['cartoon_color', 'ribbon_color']);
+
+/**
  * Compiled-in defaults for the settings this subsystem may reset to
  * (`layer1/SettingInfo.h`). `unset` restores these; anything not listed falls
  * back to 0 (PyMOL's numeric default for most unlisted settings). We *also*
@@ -194,6 +203,16 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     const sel = str(args[2] ?? kwargs['selection'] ?? '');
     if (!name) return 0;
     if (sel) {
+      // Atom-level colour settings tag each matched atom (PyMOL per-atom
+      // setting), read back by the `cartoon_color`/`ribbon_color` selectors.
+      if (PER_ATOM_COLOR_SETTINGS.has(name)) {
+        const atoms = ex.atomsMatching(sel);
+        for (const ua of atoms) {
+          (ua.atom.atomSettings ??= {})[name] = value;
+        }
+        ctx.publish();
+        return atoms.length;
+      }
       const objs = objectsFor(sel);
       for (const obj of objs) {
         let m = perObject.get(obj);
@@ -219,6 +238,18 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     const sel = str(args[1] ?? kwargs['selection'] ?? '');
     if (!name) return 0;
     if (sel) {
+      // Atom-level colour settings: clear the per-atom override where defined.
+      if (PER_ATOM_COLOR_SETTINGS.has(name)) {
+        let cleared = 0;
+        for (const ua of ex.atomsMatching(sel)) {
+          if (ua.atom.atomSettings && name in ua.atom.atomSettings) {
+            delete ua.atom.atomSettings[name];
+            cleared++;
+          }
+        }
+        ctx.publish();
+        return cleared;
+      }
       // Per-object: drop the override for every matched object.
       let n = 0;
       for (const obj of objectsFor(sel)) {

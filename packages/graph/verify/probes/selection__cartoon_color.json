@@ -1,0 +1,42 @@
+{
+  "id": "selection__cartoon_color",
+  "feature": "cartoon_color",
+  "kind": "selection",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "set cartoon_color, red, chain A"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "count_atoms",
+        "cartoon_color red"
+      ],
+      "label": "atoms with per-atom cartoon_color red"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "cartoon_color -1"
+      ],
+      "label": "atoms with default/unset cartoon_color -1"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "chain A"
+      ],
+      "label": "atoms in chain A (control)"
+    }
+  ],
+  "expected": [
+    1479,
+    0,
+    1479
+  ]
+}

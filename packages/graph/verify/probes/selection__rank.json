@@ -1,0 +1,39 @@
+{
+  "id": "selection__rank",
+  "feature": "rank",
+  "kind": "selection",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "count_atoms",
+        "rank 0"
+      ],
+      "label": "rank 0 = single atom by 0-based rank"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "rank 0-9"
+      ],
+      "label": "rank 0-9 = range of 10 atoms"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "rank 0+1+2"
+      ],
+      "label": "rank 0+1+2 = list of 3 atoms"
+    }
+  ],
+  "expected": [
+    1,
+    10,
+    3
+  ]
+}
