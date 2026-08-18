@@ -1,0 +1,16 @@
+{
+  "id": "setting__ribbon_power", "feature": "ribbon_power", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ribbon_power, 3.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ribbon_power"],"label":"global ribbon_power default (no prior set)"},
+    {"call":["get_setting_float","ribbon_power","ala"],"label":"per-object ribbon_power after set 3.5 (roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2,
+    3.5
+  ]
+}
