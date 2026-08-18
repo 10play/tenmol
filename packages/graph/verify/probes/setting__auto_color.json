@@ -1,0 +1,12 @@
+{
+  "id": "setting__auto_color", "feature": "auto_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set auto_color, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","auto_color"],"label":"auto_color after set 0"}
+  ],
+  "expected": [
+    false
+  ]
+}

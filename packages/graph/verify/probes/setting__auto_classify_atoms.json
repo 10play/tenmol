@@ -1,0 +1,15 @@
+{
+  "id": "setting__auto_classify_atoms", "feature": "auto_classify_atoms", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set auto_classify_atoms, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","auto_classify_atoms"],"label":"global auto_classify_atoms default (no prior set)"},
+    {"call":["get_setting_int","auto_classify_atoms","ala"],"label":"per-object auto_classify_atoms after set 0"}
+  ],
+  "expected": [
+    1,
+    0
+  ]
+}

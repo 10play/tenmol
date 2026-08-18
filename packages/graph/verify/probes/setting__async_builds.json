@@ -1,0 +1,18 @@
+{
+  "id": "setting__async_builds",
+  "feature": "async_builds",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set async_builds, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","async_builds"],"label":"global default (unset) -> false"},
+    {"call":["get_setting_boolean","async_builds","m"],"label":"per-object set to 1 -> true"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}
