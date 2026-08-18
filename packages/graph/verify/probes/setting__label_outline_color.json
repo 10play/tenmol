@@ -1,0 +1,15 @@
+{
+  "id": "setting__label_outline_color", "feature": "label_outline_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set label_outline_color, blue"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","label_outline_color"],"label":"label_outline_color after set blue -> blue color index"},
+    {"call":["get_color_index","blue"],"label":"blue color index (oracle vs engine)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2,
+    2
+  ]
+}
