@@ -1,0 +1,19 @@
+{
+  "id": "setting__surface_poor",
+  "feature": "surface_poor",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set surface_poor, 0.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","surface_poor"],"label":"global default (unset) -> 0.85"},
+    {"call":["get_setting_float","surface_poor","m"],"label":"per-object set to 0.5 -> 0.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.85,
+    0.5
+  ]
+}

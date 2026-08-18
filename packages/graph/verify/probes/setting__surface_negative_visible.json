@@ -1,0 +1,12 @@
+{
+  "id": "setting__surface_negative_visible", "feature": "surface_negative_visible", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set surface_negative_visible, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","surface_negative_visible"],"label":"surface_negative_visible after set 1"}
+  ],
+  "expected": [
+    1
+  ]
+}
