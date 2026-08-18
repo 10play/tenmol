@@ -1,0 +1,19 @@
+{
+  "id": "setting__ss_strand_psi_exclude",
+  "feature": "ss_strand_psi_exclude",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ss_strand_psi_exclude, 45.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ss_strand_psi_exclude"],"label":"global default (no prior set) -> 90.0"},
+    {"call":["get_setting_float","ss_strand_psi_exclude","m"],"label":"per-object set 45.5 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    90,
+    45.5
+  ]
+}

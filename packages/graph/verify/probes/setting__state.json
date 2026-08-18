@@ -1,0 +1,15 @@
+{
+  "id": "setting__state", "feature": "state", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set state, 2, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","state"],"label":"global default state -> 1"},
+    {"call":["get_setting_int","state","m"],"label":"per-object state after set 2 -> 2"}
+  ],
+  "expected": [
+    1,
+    2
+  ]
+}
