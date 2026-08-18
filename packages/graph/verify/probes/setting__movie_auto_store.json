@@ -1,0 +1,15 @@
+{
+  "id":"setting__movie_auto_store","feature":"movie_auto_store","kind":"setting","probeKind":"state",
+  "ops":[
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/tiny.pdb, m1"},
+    {"do":"create m2, m1"},
+    {"do":"set movie_auto_store, 1, m1"},
+    {"do":"set movie_auto_store, 0, m2"}
+  ],
+  "checks":[
+    {"call":["get_setting_boolean","movie_auto_store"],"label":"movie_auto_store global default (no prior set)"},
+    {"call":["get_setting_boolean","movie_auto_store","m1"],"label":"movie_auto_store per-object after set 1"},
+    {"call":["get_setting_boolean","movie_auto_store","m2"],"label":"movie_auto_store per-object after set 0"}
+  ],
+  "expected": [true, true, false]
+}

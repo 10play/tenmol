@@ -1,0 +1,16 @@
+{
+  "id": "setting__movie_delay", "feature": "movie_delay", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set movie_delay, 42.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","movie_delay"],"label":"global default (no prior set) -> 30.0"},
+    {"call":["get_setting_float","movie_delay","m"],"label":"per-object set 42.5 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    30,
+    42.5
+  ]
+}
