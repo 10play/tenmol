@@ -1,0 +1,15 @@
+{
+  "id": "setting__cartoon_putty_transform",
+  "feature": "cartoon_putty_transform",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set cartoon_putty_transform, 3"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cartoon_putty_transform"],"label":"global cartoon_putty_transform after set 3"}
+  ],
+  "expected": [
+    3
+  ]
+}
