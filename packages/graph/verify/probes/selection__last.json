@@ -1,0 +1,8 @@
+{"id":"selection__last","feature":"last","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","last chain A"],"label":"last chain A = single last atom of chain A"},
+   {"call":["count_atoms","last (resn ALA)"],"label":"last (resn ALA) = single last ALA atom"},
+   {"call":["count_atoms","last all"],"label":"last all = single last atom overall"}
+ ],
+ "expected":[1,1,1]}

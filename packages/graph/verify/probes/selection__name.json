@@ -1,0 +1,8 @@
+{"id":"selection__name","feature":"name","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","name CA"],"label":"name CA = atoms named CA"},
+   {"call":["count_atoms","name CA+CB"],"label":"name CA+CB = atoms named CA or CB"},
+   {"call":["count_atoms","n. N+O"],"label":"n. N+O alias = atoms named N or O"}
+ ],
+ "expected":[712,1372,1639]}

@@ -1,0 +1,7 @@
+{"id":"selection__metals","feature":"metals","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/testing/data/1rx1.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","metals"],"label":"metals = metallic-element atoms (Ca2+ ion)"},
+   {"call":["count_atoms","metals and elem CA"],"label":"metals and elem CA = the calcium ion"}
+ ],
+ "expected":[1,1]}
