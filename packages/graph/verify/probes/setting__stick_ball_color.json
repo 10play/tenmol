@@ -1,0 +1,18 @@
+{
+  "id": "setting__stick_ball_color", "feature": "stick_ball_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set stick_ball_color, blue, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","stick_ball_color"],"label":"stick_ball_color global default (COLOR, -1)"},
+    {"call":["get_setting_int","stick_ball_color","m"],"label":"stick_ball_color on m after set blue -> blue color index"},
+    {"call":["get_color_index","blue"],"label":"blue color index (oracle vs engine)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    -1,
+    2,
+    2
+  ]
+}
