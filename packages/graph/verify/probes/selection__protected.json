@@ -1,0 +1,34 @@
+{
+  "id": "selection__protected",
+  "feature": "protected",
+  "kind": "selection",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "protect chain A"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "count_atoms",
+        "protected"
+      ],
+      "label": "protected keyword = atoms with protect flag (flag 6) set"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "not protected"
+      ],
+      "label": "not protected = complement"
+    }
+  ],
+  "expected": [
+    1479,
+    4205
+  ]
+}
