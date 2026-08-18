@@ -1,0 +1,15 @@
+{
+  "id": "setting__validate_object_names", "feature": "validate_object_names", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set validate_object_names, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","validate_object_names"],"label":"global validate_object_names default (no prior set)"},
+    {"call":["get_setting_boolean","validate_object_names","m"],"label":"per-object validate_object_names after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

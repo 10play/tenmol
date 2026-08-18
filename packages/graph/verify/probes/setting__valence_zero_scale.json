@@ -1,0 +1,10 @@
+{"id":"setting__valence_zero_scale","feature":"valence_zero_scale","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set valence_zero_scale, 0.75, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","valence_zero_scale"],"label":"valence_zero_scale global default (no prior set)"},
+   {"call":["get_setting_float","valence_zero_scale","ala"],"label":"valence_zero_scale per-object after set 0.75"}
+ ],
+ "expected": [0.2, 0.75]}

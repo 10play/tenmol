@@ -1,0 +1,11 @@
+{"id":"setting__volume_data_range","feature":"volume_data_range","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"load packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"set volume_data_range, 7.5, m"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","volume_data_range"],"label":"volume_data_range global default (no prior set)"},
+   {"call":["get_setting_float","volume_data_range","m"],"label":"volume_data_range per-object after set 7.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [5, 7.5]}
