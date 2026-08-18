@@ -1,0 +1,12 @@
+{
+  "id": "setting__defer_updates", "feature": "defer_updates", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set defer_updates, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","defer_updates"],"label":"defer_updates after set 1"}
+  ],
+  "expected": [
+    true
+  ]
+}
