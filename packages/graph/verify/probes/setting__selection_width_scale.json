@@ -1,0 +1,16 @@
+{
+  "id": "setting__selection_width_scale",
+  "feature": "selection_width_scale",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set selection_width_scale, 3.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","selection_width_scale"],"label":"selection_width_scale after set 3.5 (default 2.0)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    3.5
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "setting__selection_width_max", "feature": "selection_width_max", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set selection_width_max, 6.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","selection_width_max"],"label":"global selection_width_max default (no prior set)"},
+    {"call":["get_setting_float","selection_width_max","ala"],"label":"per-object selection_width_max after set 6.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    10,
+    6.5
+  ]
+}
