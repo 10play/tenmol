@@ -1,0 +1,19 @@
+{
+  "id": "setting__cartoon_nucleic_acid_as_cylinders",
+  "feature": "cartoon_nucleic_acid_as_cylinders",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set cartoon_nucleic_acid_as_cylinders, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cartoon_nucleic_acid_as_cylinders"],"label":"global default (unset) -> 1"},
+    {"call":["get_setting_int","cartoon_nucleic_acid_as_cylinders","m"],"label":"per-object set to 0 -> 0"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    0
+  ]
+}
