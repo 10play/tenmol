@@ -1,0 +1,15 @@
+{
+  "id": "setting__slice_dynamic_grid", "feature": "slice_dynamic_grid", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set slice_dynamic_grid, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","slice_dynamic_grid"],"label":"global slice_dynamic_grid default (no prior set)"},
+    {"call":["get_setting_boolean","slice_dynamic_grid","ala"],"label":"per-object slice_dynamic_grid after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

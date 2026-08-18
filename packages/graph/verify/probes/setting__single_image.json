@@ -1,0 +1,15 @@
+{
+  "id": "setting__single_image", "feature": "single_image", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set single_image, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","single_image"],"label":"global single_image default (no prior set)"},
+    {"call":["get_setting_boolean","single_image","ala"],"label":"per-object single_image after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}
