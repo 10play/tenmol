@@ -1,0 +1,10 @@
+{"id":"setting__scenes_changed","feature":"scenes_changed","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set scenes_changed, 0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","scenes_changed"],"label":"scenes_changed global default (no prior set)"},
+   {"call":["get_setting_boolean","scenes_changed","ala"],"label":"scenes_changed per-object after set 0"}
+ ],
+ "expected": [true, false]}

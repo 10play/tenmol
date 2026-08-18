@@ -1,0 +1,19 @@
+{
+  "id": "setting__scene_restart_movie_delay",
+  "feature": "scene_restart_movie_delay",
+  "kind": "setting",
+  "probeKind": "state",
+  "tol": 1e-6,
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set scene_restart_movie_delay, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","scene_restart_movie_delay"],"tol":1e-6,"label":"global default (unset) -> 1.0"},
+    {"call":["get_setting_float","scene_restart_movie_delay","m"],"tol":1e-6,"label":"per-object set 0 -> 0.0 (roundtrip)"}
+  ],
+  "expected": [
+    1,
+    0
+  ]
+}
