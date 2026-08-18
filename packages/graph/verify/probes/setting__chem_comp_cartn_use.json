@@ -1,0 +1,11 @@
+{"id":"setting__chem_comp_cartn_use","feature":"chem_comp_cartn_use","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set chem_comp_cartn_use, 3, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","chem_comp_cartn_use"],"label":"chem_comp_cartn_use global default (no prior set)"},
+   {"call":["get_setting_int","chem_comp_cartn_use","ala"],"label":"chem_comp_cartn_use per-object after set 3"}
+ ],
+ "tol": 1e-6,
+ "expected": [0, 3]}
