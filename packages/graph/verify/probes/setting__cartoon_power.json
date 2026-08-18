@@ -1,0 +1,16 @@
+{
+  "id": "setting__cartoon_power", "feature": "cartoon_power", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cartoon_power, 3.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","cartoon_power"],"label":"global cartoon_power default (no prior set)"},
+    {"call":["get_setting_float","cartoon_power","ala"],"label":"per-object cartoon_power after set 3.5 (roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2,
+    3.5
+  ]
+}
