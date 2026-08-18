@@ -1,0 +1,11 @@
+{"id":"setting__sweep_phase","feature":"sweep_phase","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set sweep_phase, 1.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","sweep_phase"],"label":"sweep_phase global default (no prior set)"},
+   {"call":["get_setting_float","sweep_phase","ala"],"label":"sweep_phase per-object after set 1.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [0, 1.5]}

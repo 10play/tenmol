@@ -1,0 +1,12 @@
+{
+  "id": "setting__swap_dsn6_bytes", "feature": "swap_dsn6_bytes", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set swap_dsn6_bytes, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","swap_dsn6_bytes"],"label":"swap_dsn6_bytes after set 0 -> false"}
+  ],
+  "expected": [
+    false
+  ]
+}
