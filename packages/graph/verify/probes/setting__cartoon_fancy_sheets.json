@@ -1,0 +1,10 @@
+{"id":"setting__cartoon_fancy_sheets","feature":"cartoon_fancy_sheets","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set cartoon_fancy_sheets, 0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","cartoon_fancy_sheets"],"label":"cartoon_fancy_sheets global default (no prior set)"},
+   {"call":["get_setting_boolean","cartoon_fancy_sheets","ala"],"label":"cartoon_fancy_sheets per-object after set 0"}
+ ],
+ "expected": [true, false]}
