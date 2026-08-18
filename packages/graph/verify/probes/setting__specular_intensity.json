@@ -1,0 +1,16 @@
+{
+  "id": "setting__specular_intensity", "feature": "specular_intensity", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set specular_intensity, 0.25, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","specular_intensity"],"label":"global specular_intensity default (no prior set)"},
+    {"call":["get_setting_float","specular_intensity","ala"],"label":"per-object specular_intensity after set 0.25"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.5,
+    0.25
+  ]
+}

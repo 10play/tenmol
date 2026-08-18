@@ -1,0 +1,16 @@
+{
+  "id": "setting__specular", "feature": "specular", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set specular, 0.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","specular"],"label":"global specular default (no prior set)"},
+    {"call":["get_setting_float","specular","ala"],"label":"per-object specular after set 0.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    0.5
+  ]
+}
