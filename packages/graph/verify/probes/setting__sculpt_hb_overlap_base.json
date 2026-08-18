@@ -1,0 +1,16 @@
+{
+  "id": "setting__sculpt_hb_overlap_base", "feature": "sculpt_hb_overlap_base", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set sculpt_hb_overlap_base, 0.72, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","sculpt_hb_overlap_base"],"label":"global default sculpt_hb_overlap_base (no set)"},
+    {"call":["get_setting_float","sculpt_hb_overlap_base","ala"],"label":"per-object set/get roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.35,
+    0.72
+  ]
+}
