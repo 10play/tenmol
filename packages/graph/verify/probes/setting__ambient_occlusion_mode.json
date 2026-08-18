@@ -1,0 +1,15 @@
+{
+  "id": "setting__ambient_occlusion_mode",
+  "feature": "ambient_occlusion_mode",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set ambient_occlusion_mode, 2"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","ambient_occlusion_mode"],"label":"global ambient_occlusion_mode after set 2"}
+  ],
+  "expected": [
+    2
+  ]
+}
