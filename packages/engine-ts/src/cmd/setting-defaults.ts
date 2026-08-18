@@ -21,8 +21,6 @@
  * DO NOT EDIT BY HAND — regenerate with `node scripts/gen-setting-defaults.mjs`.
  */
 
-/* eslint-disable */
-
 /** Colour-typed setting default: a raw colour reference resolved at read time. */
 export interface ColorDefault {
   readonly color: string;

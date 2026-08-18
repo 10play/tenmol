@@ -1102,7 +1102,8 @@ export class Engine {
       const srcMol = ex.molecule(sourceName);
       const tgtMol = ex.molecule(targetName);
       if (srcMol && tgtMol) {
-        tgtMol.objectMatrix = srcMol.objectMatrix ? srcMol.objectMatrix.slice() : undefined;
+        if (srcMol.objectMatrix) tgtMol.objectMatrix = srcMol.objectMatrix.slice();
+        else delete tgtMol.objectMatrix;
         // `copy_ttt_too`: when both modes are auto (-1, the default), PyMOL also
         // copies the object's TTT display matrix (`ExecutiveMatrixCopy2`), but
         // only when the source actually has one — a missing source TTT never
@@ -1156,11 +1157,11 @@ export class Engine {
           break;
         }
         case 1:
-          mol.ttt = undefined;
+          delete mol.ttt;
           this.publish();
           break;
         case 2:
-          mol.objectMatrix = undefined;
+          delete mol.objectMatrix;
           this.publish();
           break;
       }

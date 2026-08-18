@@ -317,7 +317,7 @@ export class Executive {
     if (!this.objects.has(name) && !this.measures.has(name) && !this.gadgets.has(name)) {
       this.order.push(name);
     }
-    this.gadgets.set(name, { name, kind, enabled: true, extent });
+    this.gadgets.set(name, { name, kind, enabled: true, ...(extent ? { extent } : {}) });
   }
 
   gadget(name: string): { name: string; kind: string; enabled: boolean } | undefined {

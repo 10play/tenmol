@@ -11,7 +11,6 @@
  * The blank/retired slot (index 83) is omitted. Do not edit by hand.
  */
 
-/* eslint-disable */
 export const SETTING_INDEX_TYPE: Readonly<Record<string, readonly [number, number]>> = {
   "bonding_vdw_cutoff": [0, 3],
   "min_mesh_spacing": [1, 3],
