@@ -1,0 +1,19 @@
+{
+  "id": "setting__dot_width",
+  "feature": "dot_width",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set dot_width, 3.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","dot_width"],"label":"global default (no prior set) -> 2.0"},
+    {"call":["get_setting_float","dot_width","m"],"label":"per-object set 3.5 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2,
+    3.5
+  ]
+}
