@@ -1,0 +1,15 @@
+{
+  "id": "setting__label_size", "feature": "label_size", "kind": "setting", "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {"call":["get_setting_float","label_size"],"label":"default label_size == 14"},
+    {"call":["do","set label_size, 24.5"],"label":"set label_size 24.5 (side-effect)"},
+    {"call":["get_setting_float","label_size"],"label":"label_size after set == 24.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    14,
+    null,
+    24.5
+  ]
+}
