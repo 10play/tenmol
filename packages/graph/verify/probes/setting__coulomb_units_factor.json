@@ -1,0 +1,19 @@
+{
+  "id": "setting__coulomb_units_factor",
+  "feature": "coulomb_units_factor",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set coulomb_units_factor, 331.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","coulomb_units_factor"],"label":"global default coulomb_units_factor -> 557.0"},
+    {"call":["get_setting_float","coulomb_units_factor","m"],"label":"per-object set/get roundtrip -> 331.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    557,
+    331.5
+  ]
+}

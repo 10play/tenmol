@@ -1,0 +1,12 @@
+{"id":"setting__dash_color","feature":"dash_color","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set dash_color, red, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","dash_color"],"label":"dash_color global default (COLOR, no prior set)"},
+   {"call":["get_setting_int","dash_color","ala"],"label":"dash_color per-object after set red"},
+   {"call":["get_color_index","red"],"label":"red palette index (expected to equal dash_color on ala)"}
+ ],
+ "tol": 0,
+ "expected": [-1, 4, 4]}

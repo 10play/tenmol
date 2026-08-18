@@ -1,0 +1,10 @@
+{"id":"setting__dash_as_cylinders","feature":"dash_as_cylinders","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set dash_as_cylinders, 0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","dash_as_cylinders"],"label":"dash_as_cylinders global default (no prior set)"},
+   {"call":["get_setting_boolean","dash_as_cylinders","ala"],"label":"dash_as_cylinders per-object after set 0"}
+ ],
+ "expected": [true, false]}

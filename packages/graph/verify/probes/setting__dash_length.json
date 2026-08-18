@@ -1,0 +1,15 @@
+{
+  "id": "setting__dash_length", "feature": "dash_length", "kind": "setting", "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {"call":["get_setting_float","dash_length"],"label":"default dash_length == 0.15"},
+    {"call":["do","set dash_length, 0.42"],"label":"set dash_length 0.42 (side-effect)"},
+    {"call":["get_setting_float","dash_length"],"label":"dash_length after set == 0.42"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.15,
+    null,
+    0.42
+  ]
+}
