@@ -1,0 +1,18 @@
+{
+  "id": "setting__default_fofc_map_rep",
+  "feature": "default_fofc_map_rep",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set default_fofc_map_rep, isomesh, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","default_fofc_map_rep"],"label":"global default -> volume"},
+    {"call":["get_setting_text","default_fofc_map_rep","m"],"label":"per-object roundtrip -> isomesh"}
+  ],
+  "expected": [
+    "volume",
+    "isomesh"
+  ]
+}

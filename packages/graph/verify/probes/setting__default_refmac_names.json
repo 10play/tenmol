@@ -1,0 +1,35 @@
+{
+  "id": "setting__default_refmac_names",
+  "feature": "default_refmac_names",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "set default_refmac_names, FOO PHFOO DELFOO PHDELFOO, m"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_text",
+        "default_refmac_names"
+      ],
+      "label": "global default -> FWT PHWT DELFWT PHDELWT"
+    },
+    {
+      "call": [
+        "get_setting_text",
+        "default_refmac_names",
+        "m"
+      ],
+      "label": "per-object set roundtrip -> FOO PHFOO DELFOO PHDELFOO"
+    }
+  ],
+  "expected": [
+    "FWT PHWT DELFWT PHDELWT",
+    "FOO PHFOO DELFOO PHDELFOO"
+  ]
+}
