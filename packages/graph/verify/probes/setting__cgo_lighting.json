@@ -1,0 +1,11 @@
+{"id":"setting__cgo_lighting","feature":"cgo_lighting","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set cgo_lighting, 0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","cgo_lighting"],"label":"cgo_lighting global default (no prior set)"},
+   {"call":["get_setting_int","cgo_lighting","ala"],"label":"cgo_lighting per-object after set 0"}
+ ],
+ "tol": 1e-6,
+ "expected": [1, 0]}
