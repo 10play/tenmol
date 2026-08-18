@@ -1,0 +1,13 @@
+{
+  "id": "setting__sculpt_avd_gap", "feature": "sculpt_avd_gap", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set sculpt_avd_gap, 2.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","sculpt_avd_gap"],"label":"sculpt_avd_gap after set 2.5 (roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2.5
+  ]
+}

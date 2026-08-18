@@ -1,0 +1,16 @@
+{
+  "id": "setting__sculpt_avd_range", "feature": "sculpt_avd_range", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set sculpt_avd_range, 5.0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","sculpt_avd_range"],"label":"global default sculpt_avd_range"},
+    {"call":["get_setting_float","sculpt_avd_range","ala"],"label":"per-object sculpt_avd_range after set 5.0"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    -1,
+    5
+  ]
+}
