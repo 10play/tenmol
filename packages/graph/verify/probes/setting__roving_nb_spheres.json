@@ -1,0 +1,16 @@
+{
+  "id": "setting__roving_nb_spheres", "feature": "roving_nb_spheres", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set roving_nb_spheres, 12.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","roving_nb_spheres"],"label":"global roving_nb_spheres default (no prior set)"},
+    {"call":["get_setting_float","roving_nb_spheres","ala"],"label":"per-object roving_nb_spheres after set 12.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    8,
+    12.5
+  ]
+}

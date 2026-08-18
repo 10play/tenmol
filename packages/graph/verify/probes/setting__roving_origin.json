@@ -1,0 +1,15 @@
+{
+  "id": "setting__roving_origin", "feature": "roving_origin", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set roving_origin, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","roving_origin"],"label":"global roving_origin default (no prior set)"},
+    {"call":["get_setting_boolean","roving_origin","ala"],"label":"per-object roving_origin after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}
