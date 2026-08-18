@@ -1,0 +1,19 @@
+{
+  "id": "setting__label_connector_ext_length",
+  "feature": "label_connector_ext_length",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set label_connector_ext_length, 4.0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","label_connector_ext_length"],"label":"global default -> 2.5"},
+    {"call":["get_setting_float","label_connector_ext_length","m"],"label":"per-object set 4.0 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2.5,
+    4
+  ]
+}

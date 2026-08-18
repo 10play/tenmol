@@ -1,0 +1,14 @@
+{
+  "id": "setting__label_color", "feature": "label_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set label_color, red, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","label_color"],"label":"label_color global default (COLOR, -6 front)"},
+    {"call":["get_setting_int","label_color","ala"],"label":"label_color per-object after set red"},
+    {"call":["get_color_index","red"],"label":"red palette index (expected to equal label_color on ala)"}
+  ],
+  "tol": 0,
+  "expected": [-6, 4, 4]
+}

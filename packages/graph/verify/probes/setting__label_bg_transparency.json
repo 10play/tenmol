@@ -1,0 +1,11 @@
+{"id":"setting__label_bg_transparency","feature":"label_bg_transparency","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set label_bg_transparency, 0.25, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","label_bg_transparency"],"label":"label_bg_transparency global default (0.6, no global set)"},
+   {"call":["get_setting_float","label_bg_transparency","ala"],"label":"label_bg_transparency per-object after set 0.25 (roundtrip)"}
+ ],
+ "tol": 1e-6,
+ "expected": [0.6, 0.25]}
