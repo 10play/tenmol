@@ -1,0 +1,9 @@
+{"id":"selection__hydro","feature":"hydro","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/3al1.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","hydro"],"label":"hydro = hydrogen atoms"},
+   {"call":["count_atoms","not hydro"],"label":"not hydro = heavy atoms"},
+   {"call":["count_atoms","h."],"label":"h. alias = hydrogen atoms"},
+   {"call":["count_atoms","hydrogens"],"label":"hydrogens alias = hydrogen atoms"}
+ ],
+ "expected":[356,323,356,356]}

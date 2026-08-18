@@ -1,0 +1,8 @@
+{"id":"selection__index","feature":"index","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","index 1"],"label":"index 1 = single atom by 1-based index"},
+   {"call":["count_atoms","index 1-10"],"label":"index 1-10 = range of 10 atoms"},
+   {"call":["count_atoms","index 1+2+3"],"label":"index 1+2+3 = list of 3 atoms"}
+ ],
+ "expected":[1,10,3]}

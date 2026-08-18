@@ -1,0 +1,8 @@
+{"id":"selection__id","feature":"id","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","id 1"],"label":"id 1 = single external atom ID"},
+   {"call":["count_atoms","id 1-10"],"label":"id 1-10 = external ID range"},
+   {"call":["count_atoms","id 1+5+9"],"label":"id 1+5+9 = external ID list"}
+ ],
+ "expected":[1,10,3]}
