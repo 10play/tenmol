@@ -1,0 +1,10 @@
+{"id":"setting__fit_kabsch","feature":"fit_kabsch","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"set fit_kabsch, 1, m"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","fit_kabsch"],"label":"global default (unset) -> 0"},
+   {"call":["get_setting_int","fit_kabsch","m"],"label":"per-object set to 1 -> 1"}
+ ],
+ "expected":[0, 1]}

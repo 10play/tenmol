@@ -1,0 +1,19 @@
+{
+  "id": "setting__fit_tolerance",
+  "feature": "fit_tolerance",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set fit_tolerance, 0.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","fit_tolerance"],"label":"global default fit_tolerance (unset) -> 1e-7"},
+    {"call":["get_setting_float","fit_tolerance","m"],"label":"per-object fit_tolerance after set 0.5 -> roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1e-7,
+    0.5
+  ]
+}
