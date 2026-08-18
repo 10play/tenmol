@@ -1,0 +1,10 @@
+{"id":"setting__cartoon_smooth_loops","feature":"cartoon_smooth_loops","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set cartoon_smooth_loops, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","cartoon_smooth_loops"],"label":"cartoon_smooth_loops global default (no prior set)"},
+   {"call":["get_setting_boolean","cartoon_smooth_loops","ala"],"label":"cartoon_smooth_loops per-object after set 1"}
+ ],
+ "expected": [false, true]}
