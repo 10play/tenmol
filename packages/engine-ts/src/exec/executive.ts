@@ -61,9 +61,15 @@ const DEFAULT_SETTINGS: Readonly<Record<string, number | string>> = {
   sculpt_tri_max: 18,
   // Mouse-config panel reads these; PyMOL's fresh-session defaults.
   button_mode: 0,
+  // button_mode_name's SettingInfo.h default is "" but PyMOL's runtime startup
+  // (mouse-config init) sets it to '3-Button Viewing'; the oracle reports that
+  // on a fresh session, so this engine-specific override is authoritative and
+  // must stay (removing it would wrongly resolve to the empty SettingInfo.h value).
   button_mode_name: '3-Button Viewing',
-  mouse_grid: 0,
-  mouse_selection_mode: 0,
+  // NOTE: mouse_grid and mouse_selection_mode used to be hardcoded to 0 here,
+  // which overrode and diverged from the authoritative SettingInfo.h defaults
+  // (both 1, oracle-confirmed). They are intentionally omitted so resolveSetting
+  // falls through to SETTING_INFO_DEFAULTS.
 };
 
 export class Executive {
