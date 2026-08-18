@@ -1,0 +1,8 @@
+{"id":"selection__none","feature":"none","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","none"],"label":"none keyword = empty set"},
+   {"call":["count_atoms","none and all"],"label":"none intersect all = empty"},
+   {"call":["count_atoms","not none"],"label":"not none = every atom"}
+ ],
+ "expected":[0,0,5684]}

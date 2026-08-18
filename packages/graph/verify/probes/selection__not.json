@@ -1,0 +1,8 @@
+{"id":"selection__not","feature":"not","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","not chain A"],"label":"not chain A = atoms outside chain A"},
+   {"call":["count_atoms","not name CA"],"label":"not name CA = atoms other than CA"},
+   {"call":["count_atoms","not (resn ALA)"],"label":"not (resn ALA) = atoms not in ALA residues"}
+ ],
+ "expected":[4205,4972,5324]}
