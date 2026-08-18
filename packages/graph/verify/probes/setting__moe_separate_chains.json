@@ -1,0 +1,20 @@
+{
+  "id": "setting__moe_separate_chains",
+  "feature": "moe_separate_chains",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set moe_separate_chains, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","moe_separate_chains"],"label":"global default (unset) -> -1"},
+    {"call":["get_setting_int","moe_separate_chains","m"],"label":"per-object set to 1 -> 1"},
+    {"call":["get_setting_boolean","moe_separate_chains","m"],"label":"per-object set to 1 -> true"}
+  ],
+  "expected": [
+    -1,
+    1,
+    true
+  ]
+}
