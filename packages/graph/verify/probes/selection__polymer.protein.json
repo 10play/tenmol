@@ -1,0 +1,47 @@
+{
+ "id": "selection__polymer.protein",
+ "feature": "polymer.protein",
+ "kind": "selection",
+ "probeKind": "state",
+ "ops": [
+  {
+   "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+  }
+ ],
+ "checks": [
+  {
+   "call": [
+    "count_atoms",
+    "polymer.protein"
+   ],
+   "label": "polymer.protein = protein polymer atoms"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "polymer.nucleic"
+   ],
+   "label": "polymer.nucleic = 0 (all-protein structure)"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "polymer.protein and chain A"
+   ],
+   "label": "polymer.protein intersect chain A"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "polymer"
+   ],
+   "label": "polymer context (superset)"
+  }
+ ],
+ "expected": [
+  5469,
+  0,
+  1479,
+  5469
+ ]
+}

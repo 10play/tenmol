@@ -70,6 +70,10 @@ type Node =
   | { t: 'prop'; key: PropKey; values: string[]; ranges: Array<[number, number]> }
   | { t: 'keyword'; kw: KeywordKey }
   | { t: 'cmp'; field: CmpField; op: CmpOp; value: number }
+  // `p.<name> <cmp> <value>` / `property.<name> <cmp> <value>` — matches atoms
+  // whose user-defined property `name` (set via `alter`, read as a float)
+  // satisfies the comparison. PyMOL's SELE_PROP.
+  | { t: 'propcmp'; name: string; op: CmpOp; value: number }
   | { t: 'ref'; name: string }
   | { t: 'not'; a: Node }
   | { t: 'and'; a: Node; b: Node }
@@ -127,6 +131,8 @@ type KeywordKey =
   | 'hetatm'
   | 'hydro'
   | 'polymer'
+  | 'polymerProtein'
+  | 'polymerNucleic'
   | 'solvent'
   | 'organic'
   | 'inorganic'
@@ -201,6 +207,12 @@ const KEYWORDS: Readonly<Record<string, KeywordKey>> = {
   hydrogens: 'hydro',
   'h.': 'hydro',
   polymer: 'polymer',
+  'pol.': 'polymer',
+  // Dotted polymer sub-classes (PyMOL SELE_PROz / SELE_NUCz). This open-source
+  // build only accepts the dotted forms; the bare `protein`/`nucleic`/`pro.`/
+  // `nuc.` aliases are `#if 0`-disabled and raise "Invalid selection name".
+  'polymer.protein': 'polymerProtein',
+  'polymer.nucleic': 'polymerNucleic',
   solvent: 'solvent',
   organic: 'organic',
   'org.': 'organic',
@@ -241,6 +253,16 @@ const DONOR_ELEMENTS = new Set(['N', 'O']);
 const ACCEPTOR_ELEMENTS = new Set(['N', 'O', 'S']);
 
 const SOLVENT_RESN = new Set(['HOH', 'WAT', 'H2O', 'TIP', 'SOL']);
+/** Known protein residue names — PyMOL's `AtomInfoKnownProteinResName`
+ *  (`layer2/AtomInfo.cpp`). Compared uppercase. */
+const PROTEIN_RESN = new Set([
+  'ALA', 'ARG', 'ASP', 'ASN', 'CYS', 'CYX', 'GLN', 'GLU', 'GLY', 'HIS', 'HID',
+  'HIE', 'HIP', 'ILE', 'LEU', 'LYS', 'MET', 'MSE', 'PHE', 'PRO', 'PTR', 'SER',
+  'THR', 'TRP', 'TYR', 'VAL',
+]);
+/** PNA residue names — PyMOL's `AtomInfoKnownPNAResName`; these count as nucleic
+ *  even on HETATM records. */
+const PNA_RESN = new Set(['APN', 'CPN', 'GPN', 'TPN', 'IPN']);
 /** Protein/nucleic backbone atom names (`bb.`). */
 const BACKBONE_NAMES = new Set([
   'N', 'CA', 'C', 'O', 'OXT', // protein
@@ -517,6 +539,22 @@ class Parser {
       const spec = this.next();
       return this.buildProp(key, spec);
     }
+    // Custom-property comparison `p.<name> <cmp> <value>` /
+    // `property.<name> <cmp> <value>` (PyMOL SELE_PROP). The property name is
+    // glued onto the `p.`/`property.` prefix; a comparison operator + numeric
+    // value must follow, else the token falls through to a bare reference.
+    let propName: string | null = null;
+    if (low.startsWith('p.') && t.length > 2) propName = t.slice(2);
+    else if (low.startsWith('property.') && t.length > 9) propName = t.slice(9);
+    if (propName !== null && CMP_OPS.has(this.peek() ?? '')) {
+      const raw = this.next();
+      const op: CmpOp = raw === '==' ? '=' : (raw as CmpOp);
+      const value = Number(this.next());
+      if (!Number.isFinite(value)) {
+        throw new SelectionError(`property '${propName}' comparison expects a number`);
+      }
+      return { t: 'propcmp', name: propName, op, value };
+    }
     // Otherwise a bare reference: object name or named selection. A leading `?`
     // marks the name as optional — `?name` resolves to the named object/selection
     // if it exists and to the empty set otherwise (no error), which is exactly how
@@ -742,6 +780,8 @@ function matchKeyword(kw: KeywordKey, ua: UniverseAtom): boolean {
     case 'guide':
     case 'organic':
     case 'inorganic':
+    case 'polymerProtein':
+    case 'polymerNucleic':
       // Handled in evalSet (need object/residue/bond context); unreachable here.
       return false;
   }
@@ -779,6 +819,76 @@ function guideAtoms(env: EvalEnv): Set<number> {
 
 function isPolymer(a: AtomInfo): boolean {
   return !a.hetatm && !SOLVENT_RESN.has(a.resn.toUpperCase());
+}
+
+/** PyMOL's `AtomInfoKnownNucleicResName`: a PNA name, or (after an optional
+ *  leading `D` for deoxyribonucleotides) a single base letter A/C/G/I/T/U. */
+function isKnownNucleicResName(resn: string): boolean {
+  if (PNA_RESN.has(resn)) return true;
+  const r = resn[0] === 'D' ? resn.slice(1) : resn;
+  return r.length === 1 && 'ACGITU'.includes(r);
+}
+
+/**
+ * Classify a residue as polymer `protein`/`nucleic` (or `null` when neither),
+ * mirroring `SelectorClassifyAtoms` (`layer3/Selector.cpp`): first by residue
+ * name against the protein/nucleic tables, then — for unrecognised residues —
+ * by canonical backbone-atom perception (Cα/N/C/O + peptide bond for protein;
+ * O3'/C3'/C4'/C5'/O5' + phosphodiester/phosphate bond for nucleic).
+ */
+function classifyPolymerResidue(idxs: number[], env: EvalEnv): 'protein' | 'nucleic' | null {
+  const rep = env.universe[idxs[0]!]!.atom;
+  const resn = rep.resn.toUpperCase();
+  const het = rep.hetatm;
+  if (!het && PROTEIN_RESN.has(resn)) return 'protein';
+  if ((!het || PNA_RESN.has(resn)) && isKnownNucleicResName(resn)) return 'nucleic';
+  if (SOLVENT_RESN.has(resn)) return null;
+
+  // Unrecognised residue: perceive polymer class from its atoms + bonds.
+  const bondedToName = (uidx: number, target: string): boolean => {
+    const tt = target.toUpperCase();
+    for (const j of env.adj[uidx] ?? []) {
+      if (env.universe[j]!.atom.name.toUpperCase() === tt) return true;
+    }
+    return false;
+  };
+  let ca = false, n = false, c = false, o = false;
+  let c3 = false, c4 = false, c5 = false, o3 = false, o5 = false;
+  let cnBond = false, ncBond = false, o3Bond = false, pBond = false;
+  for (const uidx of idxs) {
+    const at = env.universe[uidx]!.atom;
+    const el = at.elem.toUpperCase();
+    const name = at.name.toUpperCase();
+    if (el === 'C') {
+      if (name === 'C') { c = true; if (bondedToName(uidx, 'N')) cnBond = true; }
+      else if (name === 'CA') ca = true;
+      else if (name === "C3'" || name === 'C3*') c3 = true;
+      else if (name === "C4'" || name === 'C4*') c4 = true;
+      else if (name === "C5'" || name === 'C5*') c5 = true;
+    } else if (el === 'N') {
+      if (name === 'N') { n = true; if (bondedToName(uidx, 'C')) ncBond = true; }
+    } else if (el === 'O') {
+      if (name === 'O') o = true;
+      else if (name === "O3'" || name === 'O3*') { o3 = true; if (bondedToName(uidx, 'P')) o3Bond = true; }
+      else if (name === "O5'" || name === 'O5*') o5 = true;
+    } else if (el === 'P') {
+      if (name === 'P' && (bondedToName(uidx, 'O3*') || bondedToName(uidx, "O3'"))) pBond = true;
+    }
+  }
+  if (ca && n && c && o && (cnBond || ncBond)) return 'protein';
+  if (o3 && c3 && c4 && c5 && o5 && (o3Bond || pBond)) return 'nucleic';
+  return null;
+}
+
+/** `polymer.protein` / `polymer.nucleic` — polymer atoms whose residue
+ *  classifies as protein / nucleic (see {@link classifyPolymerResidue}). */
+function polymerClassAtoms(kw: 'polymerProtein' | 'polymerNucleic', env: EvalEnv): Set<number> {
+  const want = kw === 'polymerProtein' ? 'protein' : 'nucleic';
+  const out = new Set<number>();
+  for (const idxs of env.byRes.values()) {
+    if (classifyPolymerResidue(idxs, env) === want) for (const j of idxs) out.add(j);
+  }
+  return out;
 }
 
 /**
@@ -1033,6 +1143,15 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
       }
       return filter((ua) => matchCmp(node, ua.atom));
     }
+    case 'propcmp':
+      // Only atoms carrying the named property qualify (PyMOL skips atoms with
+      // no prop_id); the value is read as a float, matching PropertyGetAsFloat.
+      return filter((ua) => {
+        const raw = ua.atom.properties?.[node.name];
+        if (raw === undefined) return false;
+        const lhs = typeof raw === 'boolean' ? (raw ? 1 : 0) : Number(raw);
+        return Number.isFinite(lhs) && compareOp(lhs, node.op, node.value);
+      });
     case 'keyword': {
       const kw = node.kw;
       if (kw === 'enabled') return filter((ua) => env.enabled.has(ua.objName));
@@ -1043,6 +1162,7 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
       }
       if (kw === 'guide') return guideAtoms(env);
       if (kw === 'organic' || kw === 'inorganic') return orgInoAtoms(kw, env);
+      if (kw === 'polymerProtein' || kw === 'polymerNucleic') return polymerClassAtoms(kw, env);
       return filter((ua) => matchKeyword(kw, ua));
     }
     case 'ref': {

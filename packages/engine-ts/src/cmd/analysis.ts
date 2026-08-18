@@ -57,7 +57,7 @@ function compileExpr(expr: string, extraParams: string[]): (...a: unknown[]) => 
   // map to the camelCase AtomInfo keys on write-back (see runPerAtom).
   const params = [
     ...ATOM_FIELDS, 'index', 'hetatm', 'model',
-    'formal_charge', 'partial_charge', 'p', ...extraParams, 'stored',
+    'formal_charge', 'partial_charge', 'p', 'properties', ...extraParams, 'stored',
   ];
   const body = `${expr}\n;return [${ATOM_FIELDS.join(',')},formal_charge,partial_charge];`;
 
@@ -155,10 +155,12 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
       const base: unknown[] = ATOM_FIELDS.map((f) => (f === 'custom' ? a.custom ?? '' : a[f]));
       base.push(ua.index + 1, a.hetatm, ua.objName);
       base.push(a.formalCharge ?? 0, a.partialCharge ?? 0);
-      // `p` — the atom's custom-property namespace (set via set_atom_property).
-      // For `alter` we hand over the live store so `p.foo = ...` persists; for
-      // read-only `iterate` an empty stand-in when the atom has none.
-      base.push(opts.writeBack ? (a.properties ??= {}) : a.properties ?? {});
+      // `p` / `properties` — the atom's custom-property namespace (PyMOL exposes
+      // both names for it). For `alter` we hand over the live store so
+      // `p.foo = ...` / `properties['foo'] = ...` persist; for read-only
+      // `iterate` an empty stand-in when the atom has none.
+      const propStore = opts.writeBack ? (a.properties ??= {}) : a.properties ?? {};
+      base.push(propStore, propStore);
       if (withCoords) {
         const mol = ex.molecule(ua.objName)!;
         const [x, y, z] = mol.coord(ua.index, opts.state && opts.state > 0 ? opts.state : 1);
