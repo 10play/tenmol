@@ -1,0 +1,11 @@
+{"id":"setting__ss_strand_phi_include","feature":"ss_strand_phi_include","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set ss_strand_phi_include, 55.0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","ss_strand_phi_include"],"label":"ss_strand_phi_include global default (no prior global set)"},
+   {"call":["get_setting_float","ss_strand_phi_include","ala"],"label":"ss_strand_phi_include per-object after set 55.0"}
+ ],
+ "tol": 1e-6,
+ "expected": [40, 55]}

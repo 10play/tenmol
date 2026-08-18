@@ -1,0 +1,11 @@
+{"id":"setting__ss_helix_psi_target","feature":"ss_helix_psi_target","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set ss_helix_psi_target, -60.0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","ss_helix_psi_target"],"label":"ss_helix_psi_target global default (no prior set)"},
+   {"call":["get_setting_float","ss_helix_psi_target","ala"],"label":"ss_helix_psi_target per-object after set -60.0"}
+ ],
+ "tol": 1e-6,
+ "expected": [-48, -60]}
