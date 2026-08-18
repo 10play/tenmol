@@ -1,0 +1,14 @@
+{
+  "id": "setting__movie_panel", "feature": "movie_panel", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set movie_panel, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","movie_panel"],"label":"global movie_panel after set 0 (roundtrip)"},
+    {"call":["get_setting_boolean","movie_panel"],"label":"global movie_panel as boolean after set 0"}
+  ],
+  "expected": [
+    0,
+    false
+  ]
+}
