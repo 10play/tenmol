@@ -1,0 +1,16 @@
+{
+  "id": "setting__ray_blend_red", "feature": "ray_blend_red", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ray_blend_red, 0.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_blend_red"],"label":"global ray_blend_red default (no prior set)"},
+    {"call":["get_setting_float","ray_blend_red","ala"],"label":"per-object ray_blend_red after set 0.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.17,
+    0.5
+  ]
+}
