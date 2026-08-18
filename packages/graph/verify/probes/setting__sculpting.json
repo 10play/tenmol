@@ -1,0 +1,15 @@
+{
+  "id": "setting__sculpting", "feature": "sculpting", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set sculpting, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","sculpting"],"label":"global sculpting default (no prior set)"},
+    {"call":["get_setting_boolean","sculpting","ala"],"label":"per-object sculpting after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "setting__sdof_drag_scale", "feature": "sdof_drag_scale", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set sdof_drag_scale, 2.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","sdof_drag_scale"],"label":"sdof_drag_scale after set 2.5 (roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2.5
+  ]
+}
