@@ -1,0 +1,18 @@
+{
+  "id": "setting__wrap_output",
+  "feature": "wrap_output",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set wrap_output, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","wrap_output"],"label":"global DEFAULT (unset) -> false"},
+    {"call":["get_setting_boolean","wrap_output","m"],"label":"per-object set to 1 -> true"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}
