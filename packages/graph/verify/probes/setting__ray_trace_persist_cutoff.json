@@ -1,0 +1,13 @@
+{
+  "id": "setting__ray_trace_persist_cutoff", "feature": "ray_trace_persist_cutoff", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set ray_trace_persist_cutoff, 0.375"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_trace_persist_cutoff"],"label":"global ray_trace_persist_cutoff after set 0.375 (roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.375
+  ]
+}
