@@ -1,0 +1,19 @@
+{
+  "id": "setting__transparency",
+  "feature": "transparency",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set transparency, 0.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","transparency"],"label":"global default transparency -> 0.0"},
+    {"call":["get_setting_float","transparency","m"],"label":"per-object roundtrip set 0.5 -> 0.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0,
+    0.5
+  ]
+}

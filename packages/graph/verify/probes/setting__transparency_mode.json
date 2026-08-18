@@ -1,0 +1,13 @@
+{
+  "id": "setting__transparency_mode", "feature": "transparency_mode", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set transparency_mode, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","transparency_mode"],"label":"global default (unset) -> 2 (int idx 213)"},
+    {"call":["get_setting_int","transparency_mode","m"],"label":"per-object set to 1 -> 1"}
+  ],
+  "tol": 0,
+  "expected": [2, 1]
+}
