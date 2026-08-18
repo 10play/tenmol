@@ -1,0 +1,15 @@
+{
+  "id": "setting__auto_show_selections",
+  "feature": "auto_show_selections",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "set auto_show_selections, 0"}
+  ],
+  "checks": [
+    {"call": ["get_setting_int", "auto_show_selections"], "label": "auto_show_selections after set 0 (roundtrip; default 1)"}
+  ],
+  "expected": [
+    0
+  ]
+}
