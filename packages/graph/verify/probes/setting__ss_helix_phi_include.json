@@ -1,0 +1,19 @@
+{
+  "id": "setting__ss_helix_phi_include",
+  "feature": "ss_helix_phi_include",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ss_helix_phi_include, 42.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ss_helix_phi_include"],"label":"global default (no prior global set) -> 55.0"},
+    {"call":["get_setting_float","ss_helix_phi_include","m"],"label":"per-object set 42.5 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    55.0,
+    42.5
+  ]
+}

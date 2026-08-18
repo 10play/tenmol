@@ -1,0 +1,19 @@
+{
+  "id": "setting__ss_helix_phi_target",
+  "feature": "ss_helix_phi_target",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set ss_helix_phi_target, -30.5, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_float", "ss_helix_phi_target"], "label": "global default (unset) -> -57.0"},
+    {"call": ["get_setting_float", "ss_helix_phi_target", "m"], "label": "per-object set to -30.5 -> -30.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    -57.0,
+    -30.5
+  ]
+}
