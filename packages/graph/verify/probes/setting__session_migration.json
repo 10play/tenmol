@@ -1,0 +1,17 @@
+{
+  "id": "setting__session_migration",
+  "feature": "session_migration",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set session_migration, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","session_migration"],"label":"session_migration after set 0 -> false (default is on/1)"},
+    {"call":["get_setting_int","session_migration"],"label":"session_migration int after set 0 -> 0"}
+  ],
+  "expected": [
+    false,
+    0
+  ]
+}
