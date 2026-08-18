@@ -1,0 +1,16 @@
+{
+  "id": "setting__openvr_laser_width", "feature": "openvr_laser_width", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set openvr_laser_width, 5.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","openvr_laser_width"],"label":"global openvr_laser_width default (no prior set)"},
+    {"call":["get_setting_float","openvr_laser_width","ala"],"label":"per-object openvr_laser_width after set 5.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    3,
+    5.5
+  ]
+}
