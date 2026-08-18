@@ -1,0 +1,12 @@
+{
+  "id": "selection__b", "feature": "b", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call":["count_atoms","b > 50"],"label":"atoms with B-factor > 50"},
+    {"call":["count_atoms","b < 20"],"label":"atoms with B-factor < 20"},
+    {"call":["count_atoms","b > 0"],"label":"atoms with B-factor > 0"}
+  ],
+  "expected": [803, 1729, 5684]
+}

@@ -1,0 +1,8 @@
+{"id":"selection__all","feature":"all","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","all"],"label":"all keyword = every atom"},
+   {"call":["count_atoms","*"],"label":"* alias = every atom"},
+   {"call":["count_atoms","all and chain A"],"label":"all intersect chain A"}
+ ],
+ "expected":[5684,5684,1479]}

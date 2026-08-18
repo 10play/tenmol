@@ -1,0 +1,12 @@
+{
+  "id": "selection__around", "feature": "around", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "chain A around 5"], "label": "atoms within 5A of chain A, excluding chain A"},
+    {"call": ["count_atoms", "(resi 10) around 4"], "label": "atoms within 4A of resi 10, excluding resi 10"},
+    {"call": ["count_atoms", "name CA around 3.5"], "label": "atoms within 3.5A of any CA, excluding the CAs"}
+  ],
+  "expected": [260, 199, 3941]
+}
