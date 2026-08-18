@@ -1,0 +1,15 @@
+{
+  "id": "setting__pdb_hetatm_sort", "feature": "pdb_hetatm_sort", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set pdb_hetatm_sort, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","pdb_hetatm_sort"],"label":"global pdb_hetatm_sort default (no prior set)"},
+    {"call":["get_setting_boolean","pdb_hetatm_sort","ala"],"label":"per-object pdb_hetatm_sort after set 1 (roundtrip)"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}
