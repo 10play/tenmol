@@ -1,0 +1,23 @@
+{
+  "id": "setting__light4",
+  "feature": "light4",
+  "kind": "setting",
+  "probeKind": "state",
+  "tol": 0.0001,
+  "ops": [
+    {"do": "load packages/engine/test/dat/1tii.pdb, m"},
+    {"call": ["set", "light4", [0.1, 0.2, 0.3], "m"]}
+  ],
+  "checks": [
+    {"call": ["get_setting_tuple", "light4"], "label": "global default float3 tuple (expect [4,[-1.2,0.3,-0.2]])"},
+    {"call": ["get_setting_text", "light4"], "label": "global default float3 text"},
+    {"call": ["get_setting_tuple", "light4", "m"], "label": "per-object float3 tuple after set [0.1,0.2,0.3] (expect [4,[0.1,0.2,0.3]])"},
+    {"call": ["get_setting_text", "light4", "m"], "label": "per-object float3 text after set [0.1,0.2,0.3]"}
+  ],
+  "expected": [
+    [4, [-1.2, 0.3, -0.2]],
+    "[ -1.20000, 0.30000, -0.20000 ]",
+    [4, [0.1, 0.2, 0.3]],
+    "[ 0.10000, 0.20000, 0.30000 ]"
+  ]
+}
