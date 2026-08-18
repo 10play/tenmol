@@ -1,0 +1,11 @@
+{"id":"setting__cartoon_smooth_cycles","feature":"cartoon_smooth_cycles","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set cartoon_smooth_cycles, 5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","cartoon_smooth_cycles"],"label":"cartoon_smooth_cycles global default (no prior set)"},
+   {"call":["get_setting_int","cartoon_smooth_cycles","ala"],"label":"cartoon_smooth_cycles per-object after set 5"}
+ ],
+ "tol": 1e-6,
+ "expected": [2, 5]}

@@ -1,0 +1,10 @@
+{"id":"setting__cartoon_smooth_cylinder_window","feature":"cartoon_smooth_cylinder_window","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set cartoon_smooth_cylinder_window, 5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","cartoon_smooth_cylinder_window"],"label":"cartoon_smooth_cylinder_window global default (no prior set)"},
+   {"call":["get_setting_int","cartoon_smooth_cylinder_window","ala"],"label":"cartoon_smooth_cylinder_window per-object after set 5"}
+ ],
+ "expected":[2, 5]}
