@@ -1,0 +1,16 @@
+{
+  "id": "setting__roving_sticks", "feature": "roving_sticks", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set roving_sticks, 4.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","roving_sticks"],"label":"global default (no prior set) -> 6.0"},
+    {"call":["get_setting_float","roving_sticks","m"],"label":"per-object set 4.5 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    6,
+    4.5
+  ]
+}
