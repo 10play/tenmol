@@ -1,0 +1,15 @@
+{
+  "id": "setting__dot_color", "feature": "dot_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set dot_color, red"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","dot_color"],"label":"dot_color after set red -> red color index"},
+    {"call":["get_color_index","red"],"label":"red color index (oracle vs engine)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    4,
+    4
+  ]
+}
