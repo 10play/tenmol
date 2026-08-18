@@ -1,0 +1,18 @@
+{
+  "id": "setting__pdb_echo_tags",
+  "feature": "pdb_echo_tags",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set pdb_echo_tags, Hello World, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","pdb_echo_tags"],"label":"global default (unset) -> HEADER, TITLE, COMPND"},
+    {"call":["get_setting_text","pdb_echo_tags","m"],"label":"per-object set roundtrip -> Hello World"}
+  ],
+  "expected": [
+    "HEADER, TITLE, COMPND",
+    "Hello World"
+  ]
+}

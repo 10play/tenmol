@@ -1,0 +1,15 @@
+{
+  "id": "setting__pdb_formal_charges", "feature": "pdb_formal_charges", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set pdb_formal_charges, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","pdb_formal_charges"],"label":"global pdb_formal_charges default (no prior set)"},
+    {"call":["get_setting_boolean","pdb_formal_charges","ala"],"label":"per-object pdb_formal_charges after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}
