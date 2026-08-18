@@ -1,0 +1,18 @@
+{
+  "id": "setting__load_atom_props_default",
+  "feature": "load_atom_props_default",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set load_atom_props_default, b_factor occupancy, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","load_atom_props_default"],"label":"global default (expect '*')"},
+    {"call":["get_setting_text","load_atom_props_default","m"],"label":"per-object STRING roundtrip -> 'b_factor occupancy'"}
+  ],
+  "expected": [
+    "*",
+    "b_factor occupancy"
+  ]
+}

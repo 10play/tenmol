@@ -1,0 +1,11 @@
+{"id":"setting__line_stick_helper","feature":"line_stick_helper","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set line_stick_helper, 0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","line_stick_helper"],"label":"line_stick_helper global default (no prior set)"},
+   {"call":["get_setting_int","line_stick_helper","ala"],"label":"line_stick_helper per-object after set 0"}
+ ],
+ "tol": 1e-6,
+ "expected": [1, 0]}

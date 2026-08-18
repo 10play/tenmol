@@ -1,0 +1,15 @@
+{
+  "id": "setting__load_object_props_default",
+  "feature": "load_object_props_default",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set load_object_props_default, PUBCHEM_COMPOUND_CID PUBCHEM_CONFORMER_RMSD"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","load_object_props_default"],"label":"set/get roundtrip of non-numeric string (default is \"*\")"}
+  ],
+  "expected": [
+    "PUBCHEM_COMPOUND_CID PUBCHEM_CONFORMER_RMSD"
+  ]
+}
