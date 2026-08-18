@@ -1,0 +1,5 @@
+{"id":"selection__gap","feature":"gap","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[{"call":["count_atoms","chain A gap 2"],"label":"chain A gap 2"},
+           {"call":["count_atoms","(resi 10) gap 1"],"label":"(resi 10) gap 1"}],
+ "expected":[3923,5404]}

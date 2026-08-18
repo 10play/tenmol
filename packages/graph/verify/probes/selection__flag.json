@@ -1,0 +1,15 @@
+{
+  "id": "selection__flag", "feature": "flag", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "flag 0, chain A, set"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "flag 0"], "label": "flag 0 selects atoms with modeling-flag 0 set (= chain A after flag set)"},
+    {"call": ["count_atoms", "flag 24"], "label": "flag 24 selects atoms with flag 24 set (none set = 0)"}
+  ],
+  "expected": [
+    1479,
+    0
+  ]
+}
