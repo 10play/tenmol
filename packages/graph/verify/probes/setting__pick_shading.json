@@ -1,0 +1,19 @@
+{
+  "id": "setting__pick_shading",
+  "feature": "pick_shading",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set pick_shading, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","pick_shading"],"label":"global default (unset) -> false"},
+    {"call":["get_setting_boolean","pick_shading","m"],"label":"per-object set to 1 -> true"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    false,
+    true
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "setting__pdb_unbond_cations",
+  "feature": "pdb_unbond_cations",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set pdb_unbond_cations, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","pdb_unbond_cations"],"label":"pdb_unbond_cations after set 0 (roundtrip)"}
+  ],
+  "expected": [
+    0
+  ]
+}
