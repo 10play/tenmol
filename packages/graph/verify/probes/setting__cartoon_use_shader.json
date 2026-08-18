@@ -1,0 +1,15 @@
+{
+  "id": "setting__cartoon_use_shader", "feature": "cartoon_use_shader", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cartoon_use_shader, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","cartoon_use_shader"],"label":"global cartoon_use_shader default (no prior set)"},
+    {"call":["get_setting_boolean","cartoon_use_shader","ala"],"label":"per-object cartoon_use_shader after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

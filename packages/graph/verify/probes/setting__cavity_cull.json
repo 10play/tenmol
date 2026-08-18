@@ -1,0 +1,18 @@
+{
+  "id": "setting__cavity_cull",
+  "feature": "cavity_cull",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cavity_cull, 25, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cavity_cull"],"label":"global cavity_cull default (no prior set)"},
+    {"call":["get_setting_int","cavity_cull","ala"],"label":"per-object cavity_cull after set 25"}
+  ],
+  "expected": [
+    10,
+    25
+  ]
+}
