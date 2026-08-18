@@ -1,0 +1,12 @@
+{
+  "id": "selection__beyond", "feature": "beyond", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "all beyond 5 of chain A"], "label": "atoms farther than 5A from chain A"},
+    {"call": ["count_atoms", "all beyond 8 of (resi 10)"], "label": "atoms farther than 8A from resi 10"},
+    {"call": ["count_atoms", "all beyond 10 of name CA"], "label": "atoms farther than 10A from any CA"}
+  ],
+  "expected": [3945, 4722, 0]
+}

@@ -1,0 +1,9 @@
+{"id":"selection__backbone","feature":"backbone","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","backbone"],"label":"backbone keyword = polymer backbone atoms"},
+   {"call":["count_atoms","bb."],"label":"bb. alias = backbone"},
+   {"call":["count_atoms","backbone and chain A"],"label":"backbone intersect chain A"},
+   {"call":["count_atoms","sidechain"],"label":"sidechain contrast (non-backbone polymer)"}
+ ],
+ "expected":[2848,2848,744,2621]}
