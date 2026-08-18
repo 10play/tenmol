@@ -1,0 +1,15 @@
+{
+  "id": "setting__ignore_case", "feature": "ignore_case", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ignore_case, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","ignore_case"],"label":"global ignore_case default (no prior global set)"},
+    {"call":["get_setting_boolean","ignore_case","ala"],"label":"per-object ignore_case after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}
