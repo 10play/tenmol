@@ -1,0 +1,16 @@
+{
+  "id": "setting__stereo_shift", "feature": "stereo_shift", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set stereo_shift, 3.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","stereo_shift"],"label":"default global stereo_shift (unset)"},
+    {"call":["get_setting_float","stereo_shift","m"],"label":"per-object stereo_shift after set 3.5 (roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2,
+    3.5
+  ]
+}

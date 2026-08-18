@@ -1,0 +1,15 @@
+{
+  "id": "setting__stereo", "feature": "stereo", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set stereo, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","stereo"],"label":"global stereo default (no prior set)"},
+    {"call":["get_setting_int","stereo","ala"],"label":"per-object stereo after set 1"}
+  ],
+  "expected": [
+    0,
+    1
+  ]
+}
