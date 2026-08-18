@@ -1,0 +1,151 @@
+@layer legacy {
+  /*
+   * The shared floating-window chrome — a draggable, resizable, raisable panel.
+   *
+   * Generalized from `features/dialogs/dialogs.css` (`.dlgwin`), which was the
+   * one good movable-window in the app and lived trapped inside a single
+   * feature. Every persistent tool panel (builder, colours, settings, compute,
+   * apbs, plugin manager) now renders in this frame instead of a bespoke
+   * `position: fixed` box that could not be moved and covered the 3-D scene.
+   *
+   * STACKING. Like `.dlgwin`, the z-index is written INLINE from the shared
+   * window counter (floor 30) so it clears the seqview HUD (20) and viewport
+   * HUD (10); the rule here is only a floor for a window rendered before its
+   * first raise. See `windowZ.ts`.
+   */
+  .flwin {
+    position: fixed;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    min-width: 240px;
+    max-height: 100vh;
+    background: var(--panel, #202020);
+    border: 1px solid var(--line, #3a3a3a);
+    border-radius: 5px;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 50%);
+    font-size: 11px;
+    color: inherit;
+    overflow: hidden;
+  }
+
+  .flwin__title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    padding: 3px 4px 3px 9px;
+    border-bottom: 1px solid var(--line, #3a3a3a);
+    cursor: move;
+    user-select: none;
+    touch-action: none;
+  }
+
+  .flwin__label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  /* Slot for per-panel status (busy dot, mouse mode…) that rides in the bar. */
+  .flwin__extra {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+  }
+
+  .flwin__btn {
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: inherit;
+  }
+
+  .flwin__btn:hover {
+    background: rgb(255 255 255 / 12%);
+  }
+
+  .flwin__body {
+    position: relative;
+    flex: 1 1 auto;
+    overflow: auto;
+    /*
+     * Reserve the scrollbar gutter so the bar appearing or disappearing never
+     * reflows the body. A dense panel whose content hovers around the body
+     * height (the builder does) would otherwise toggle its scrollbar as rows
+     * come and go, and each toggle narrows the content and re-wraps every button
+     * row — which reads to a headless click as a target that never holds still,
+     * hanging Playwright's actionability wait. Reserving the gutter keeps the
+     * content width constant whether or not the bar is shown.
+     */
+    scrollbar-gutter: stable;
+    padding: 6px;
+    min-height: 0;
+  }
+
+  .flwin__footer {
+    flex: none;
+    border-top: 1px solid var(--line, #3a3a3a);
+    padding: 5px 6px;
+  }
+
+  .flwin__grip {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    touch-action: none;
+    background: linear-gradient(
+      135deg,
+      transparent 50%,
+      var(--line, #6a6a6a) 50%,
+      var(--line, #6a6a6a) 62%,
+      transparent 62%
+    );
+  }
+
+  .flwin.is-minimised {
+    min-width: 220px;
+  }
+
+  /*
+   * SMALL SCREENS. On a phone-sized viewport (or coarse pointer) a window
+   * cannot be usefully dragged and can trap itself off-screen, so it fills the
+   * viewport instead. The inline geometry is overridden here (`!important`, the
+   * one place it is warranted: the inline style comes from the geometry hook and
+   * we deliberately want the media query to win). Drag/resize affordances are
+   * hidden by the component when maximised.
+   */
+  @media (max-width: 640px), (pointer: coarse) {
+    .flwin.flwin--maximisable {
+      inset: 8px !important;
+      left: 8px !important;
+      top: 8px !important;
+      width: auto !important;
+      height: auto !important;
+      max-height: none;
+    }
+
+    .flwin.flwin--maximisable .flwin__title {
+      cursor: default;
+    }
+
+    .flwin.flwin--maximisable .flwin__grip {
+      display: none;
+    }
+
+    .flwin.flwin--maximisable .flwin__body {
+      height: auto !important;
+    }
+  }
+}

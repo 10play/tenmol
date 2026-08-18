@@ -184,15 +184,24 @@ interface SceneEntry {
 /**
  * A Python line the port cannot and should not run: the app's feature panels
  * install their bridge-side helpers with lines like
- * `/import tenmol_bridge.panels.settings as _s;_s.install()`, sent every poll.
- * Those are internal plumbing (real PyMOL runs them in its interpreter), so the
- * port stays silent for them — but ONLY for import statements, so a user's own
- * `/expr` or bare line is still run as JavaScript (see `do`).
+ * `/import tenmol_bridge.panels.settings as _s;_s.install()`, sent every poll,
+ * and the Builder's one-shot `_ __import__('tenmol_bridge.panels.builder',
+ * fromlist=['install']).install(cmd)` bootstrap. Those are internal plumbing
+ * (real PyMOL runs them in its interpreter), so the port stays silent for them —
+ * but ONLY for these bootstrap forms, so a user's own `/expr` or bare line is
+ * still run as JavaScript (see `do`).
  */
 function isPythonImport(line: string): boolean {
   const stripped = line.trim().replace(/^\//, '');
   if (line.trim().startsWith('@')) return true; // `@script` include
-  return splitCommands(stripped).some((c) => /^(from|import)\s/.test(c.trim()));
+  return splitCommands(stripped).some((c) => {
+    const t = c.trim();
+    // `from x import y` / `import x` statements, and the Builder's bootstrap
+    // idiom `_ __import__('...').install(cmd)` — anchored to the leading
+    // `_ __import__(` so a user line that merely mentions `__import__` elsewhere
+    // (e.g. inside a string) is still evaluated as JavaScript.
+    return /^(from|import)\s/.test(t) || /^_\s+__import__\s*\(/.test(t);
+  });
 }
 
 /**

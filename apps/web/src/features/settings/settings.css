@@ -39,59 +39,18 @@
     color: #ff8080;
   }
 
-  .setwin {
-    position: absolute;
-    top: 52px;
-    right: 8px;
-    z-index: 41;
-    display: flex;
-    flex-direction: column;
-    /* The Qt dialog's minimum is 400x500 (advanced_settings_gui.py:20). */
-    width: 620px;
-    min-width: 400px;
-    height: 560px;
-    min-height: 500px;
-    background: var(--pm-panel);
-    border: 1px solid var(--pm-line);
-    box-shadow: 0 8px 28px rgb(0 0 0 / 55%);
-    font-family: var(--pm-font-ui);
-    font-size: var(--pm-fs);
-    color: var(--pm-text);
-  }
-
-  .setwin[data-window='menu'] {
-    width: 380px;
-  }
-
-  .setwin__title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 20px;
-    padding: 0 4px 0 8px;
-    background: var(--pm-panel-alt);
-    border-bottom: 1px solid var(--pm-edge);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--pm-text-dim);
-  }
-
-  .setwin__title button {
-    background: none;
-    border: none;
-    color: var(--pm-text-dim);
-    cursor: pointer;
-    font-size: 14px;
-    line-height: 1;
-  }
-
+  /* The settings overlay now renders inside the shared `.flwin` chrome
+     (ui/FloatingWindow), which owns positioning, sizing, the title bar and the
+     outer scroll. What remains is just the inner body column: it fills the
+     window body so the advanced table's own scroll region stays bounded. */
   .setwin__body {
-    flex: 1;
-    min-height: 0;
+    height: 100%;
     display: flex;
     flex-direction: column;
     overflow: auto;
+    font-family: var(--pm-font-ui);
+    font-size: var(--pm-fs);
+    color: var(--pm-text);
   }
 
   .setwin__status {
@@ -492,19 +451,9 @@
  * and typography change; no BEM class is renamed.
  * ================================================================== */
 
-/* The window as a floating, rounded, frosted card. */
-:root[data-ui-theme='shadcn'] .setwin {
-  border-radius: var(--sh-r-panel);
-  overflow: hidden;
-  box-shadow: var(--sh-pop);
-  background: var(--sh-panel-frost);
-  backdrop-filter: var(--sh-blur);
-}
-
-:root[data-ui-theme='shadcn'] .setwin__title {
-  height: 30px;
-  padding: 0 6px 0 12px;
-}
+/* The window chrome (rounded/frosted card, title bar) is now owned by the
+   shared `.flwin` FloatingWindow, so the former `.setwin` / `.setwin__title`
+   modern overrides are gone; only the inner surfaces are restyled below. */
 
 /* --- the setting menu ---------------------------------------------------- */
 

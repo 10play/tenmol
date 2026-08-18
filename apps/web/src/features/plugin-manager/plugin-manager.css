@@ -5,11 +5,14 @@
  * bolted-on dialog.
  */
 
+  /* The Plugin Manager now renders inside the shared `.flwin` chrome
+     (ui/FloatingWindow), which owns positioning, sizing, the title bar and the
+     scroll — so this is just the inner content column. Was a `min-width: 520px;
+     max-height: 70vh` in-flow box that reflowed the shell grid and shrank the
+     3-D viewport. */
   .plugmgr {
     display: flex;
     flex-direction: column;
-    min-width: 520px;
-    max-height: 70vh;
     font-size: 11px;
     color: var(--pm-text);
   }
@@ -329,20 +332,16 @@
  * bare-link legacy leaves in favour of hoverable menu rows.
  * ==================================================================== */
 
+/* The frosted-card chrome (background, border, radius, shadow, positioning) is
+   now owned by the shared `.flwin` FloatingWindow, which carries the modern
+   `bg-pm-panel/border-line/rounded-lg` classes; here only the inner typography
+   remains. */
 :root[data-ui-theme='shadcn'] .plugmgr {
   min-width: 0;
   width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  max-height: none;
   font-family: var(--pm-font-ui);
   font-size: 13px;
   color: var(--pm-text);
-  background: var(--sh-panel-frost);
-  border: 1px solid var(--pm-line);
-  border-radius: var(--sh-r-panel);
-  box-shadow: var(--sh-shadow-card);
-  overflow: hidden;
 }
 
 /* -- header: the tab bar ---------------------------------------------- */

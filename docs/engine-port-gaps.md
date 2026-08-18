@@ -259,7 +259,7 @@ saving/exporting (structures, images, sessions, movies, meshes).
 
 ---
 
-## 6. Movies · states · scenes · wizards · builder — none
+## 6. Movies · states · scenes · wizards — none (builder: ported, wizard-less)
 
 - **Multiple states**: `read_pdbstr` stores MODEL states, but there is no state
   navigation (`frame`, `set_state`, `mset`, `mplay`, `count_states` is a stub),
@@ -271,8 +271,18 @@ saving/exporting (structures, images, sessions, movies, meshes).
   (`cmd.view`) ARE implemented; scenes are not.
 - **Wizards**: none — `wizard`, `wizards.*` (measurement, mutagenesis, pair
   fitting, sculpting, density, …). Wizard panel shows "not ported".
-- **Builder**: none — the whole `editor.*` fragment-building / sculpting surface
-  (see §2). Builder buttons error.
+- **Builder**: the `cmd.builder_*` panel surface IS ported
+  (`packages/engine-ts/src/cmd/builder-panel.ts`) — `builder_show`/`builder_state`/
+  `builder_tables`, a `pk1..pk4` pick machine (`builder_pick`), and `builder_action`
+  driven through the ported chemistry verbs (`bond`, `unbond`, `cycle_valence`,
+  `h_add`/`h_fill`, `invert`, `replace`, `remove_picked`, `editor.attach_*`), so the
+  panel opens, polls and its buttons work instead of erroring. ONE divergence: this
+  engine has no PyMOL wizard state machine, so instead of arming a `Wizard` object,
+  a button pressed with the wrong pick ARMS THE TOOL and applies it on the next
+  qualifying `builder_pick` (click-to-place). `builder_state` reports the armed tool
+  as a synthetic `wizard` (name + "Pick an atom to…" prompt) so the React panel shows
+  the prompt and routes the pick; re-pressing the tool (or its Cancel row) disarms.
+  Still absent: `clean` (incentive-only) and the wizard-mediated sculpt/flag modes.
 
 ---
 

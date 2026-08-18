@@ -16,6 +16,7 @@
  */
 
 import { createStore, type Store } from '@tenmol/stores';
+import { WINDOW_Z_FLOOR, nextWindowZ, topWindowZ } from '../../ui/windowZ';
 
 /** The four dialog window kinds hosted in area 10. */
 export const DIALOG_KINDS = ['volume', 'properties', 'texteditor', 'advanced-settings'] as const;
@@ -85,21 +86,18 @@ export function dialogKey(kind: DialogKind, arg = ''): string {
 /** Build a fresh dialogs store with its own window list and z-index counter. */
 export function createDialogsStore(): DialogsStore {
 /*
- * FLOOR FOR FLOATING WINDOWS.
- *
- * This was 10, so the first window opened at z-index 11 — BELOW the sequence
- * viewer, which is `z-index: 20` because PyMOL draws the Seq block above the
- * scene (`seqview.css`). With a sequence shown, the viewer covered a window's
- * title bar and File/Save were unclickable. Caught by the text-editor e2e
- * spec, where Playwright reported `.seqrow__line ... intercepts pointer
- * events`; the CSS rule on `.dlgwin` could not fix it, because `DialogWindow`
- * sets `zIndex` INLINE from this number and inline wins.
- *
- * 30 clears the viewport HUD (10) and the Seq block (20). Raising a window
- * still increments from here, so relative order among windows is unchanged.
+ * STACKING. z-indices come from `ui/windowZ`, the ONE allocator every floating
+ * window in the app shares — the newer `FloatingWindow` panels (builder,
+ * colours, settings, …) and these dialog windows both draw from it, so a panel
+ * and a dialog opened in the same session can never tie and stack by DOM order.
+ * Both start from `WINDOW_Z_FLOOR = 30`, which clears the viewport HUD (10) and
+ * the seqview Seq block (20): the floor was once 10, the first window opened at
+ * 11 BELOW the sequence viewer, and the Seq block covered its title bar so
+ * File/Save were unclickable (`DialogWindow` writes `zIndex` INLINE from this
+ * number and inline wins over CSS). `topZ` mirrors the last z this store took;
+ * the raise no-op below compares against the SHARED top so a dialog under a
+ * `FloatingWindow` still lifts above it.
  */
-const WINDOW_Z_FLOOR = 30;
-
 const store = createStore<DialogsState>({ windows: [], topZ: WINDOW_Z_FLOOR });
 
   const patch = (key: string, fn: (w: DialogWindowSpec) => DialogWindowSpec) =>
@@ -111,7 +109,7 @@ const store = createStore<DialogsState>({ windows: [], topZ: WINDOW_Z_FLOOR });
     open(kind, arg = ''): string {
       const key = dialogKey(kind, arg);
       const state = store.get();
-      const z = state.topZ + 1;
+      const z = nextWindowZ();
       const existing = state.windows.find((w) => w.key === key);
       if (existing) {
         // Cached per name, exactly like `_volume_windows_qt`: show and raise,
@@ -153,8 +151,11 @@ const store = createStore<DialogsState>({ windows: [], topZ: WINDOW_Z_FLOOR });
     raise(key): void {
       const state = store.get();
       const window = state.windows.find((w) => w.key === key);
-      if (!window || window.z === state.topZ) return;
-      const z = state.topZ + 1;
+      // Already the top-most window across BOTH window systems — nothing to do.
+      // Compared against the SHARED top (not this store's `topZ`) so a dialog
+      // sitting under a `FloatingWindow` panel still lifts above it on raise.
+      if (!window || window.z === topWindowZ()) return;
+      const z = nextWindowZ();
       store.set({ topZ: z, windows: state.windows.map((w) => (w.key === key ? { ...w, z } : w)) });
     },
 
