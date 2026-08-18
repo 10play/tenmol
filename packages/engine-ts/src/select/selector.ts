@@ -74,6 +74,9 @@ type Node =
   | { t: 'not'; a: Node }
   | { t: 'and'; a: Node; b: Node }
   | { t: 'or'; a: Node; b: Node }
+  // `A in B` — atoms of A whose identity (resi/chain/name/resn/segi) matches an
+  // atom of B (cross-object identity match, not coordinates). PyMOL's SELE_IN_2.
+  | { t: 'in'; a: Node; b: Node }
   // Set operators (need the whole matched set, not a per-atom predicate):
   | { t: 'byres'; a: Node }
   | { t: 'bycalpha'; a: Node }
@@ -120,6 +123,8 @@ type KeywordKey =
   | 'hydro'
   | 'polymer'
   | 'solvent'
+  | 'organic'
+  | 'inorganic'
   | 'backbone'
   | 'sidechain'
   | 'visible'
@@ -190,6 +195,10 @@ const KEYWORDS: Readonly<Record<string, KeywordKey>> = {
   'h.': 'hydro',
   polymer: 'polymer',
   solvent: 'solvent',
+  organic: 'organic',
+  'org.': 'organic',
+  inorganic: 'inorganic',
+  'ino.': 'inorganic',
   backbone: 'backbone',
   'bb.': 'backbone',
   sidechain: 'sidechain',
@@ -270,9 +279,18 @@ class Parser {
 
   private parseOr(): Node {
     let a = this.parseAnd();
-    while (this.isOp(this.peek(), 'or', '|')) {
-      this.next();
-      a = { t: 'or', a, b: this.parseAnd() };
+    // `or`/`|` and the `in` identity operator share PyMOL's priority (0x40),
+    // below `and` (0x60), so both bind at this level, left-associatively.
+    for (;;) {
+      if (this.isOp(this.peek(), 'or', '|')) {
+        this.next();
+        a = { t: 'or', a, b: this.parseAnd() };
+      } else if (this.isOp(this.peek(), 'in')) {
+        this.next();
+        a = { t: 'in', a, b: this.parseAnd() };
+      } else {
+        break;
+      }
     }
     return a;
   }
@@ -287,7 +305,7 @@ class Parser {
         continue;
       }
       const t = this.peek();
-      if (t !== undefined && t !== ')' && !this.isOp(t, 'or', '|')) {
+      if (t !== undefined && t !== ')' && !this.isOp(t, 'or', '|', 'in')) {
         a = { t: 'and', a, b: this.parseNot() };
         continue;
       }
@@ -707,6 +725,8 @@ function matchKeyword(kw: KeywordKey, ua: UniverseAtom): boolean {
     case 'enabled':
     case 'bonded':
     case 'guide':
+    case 'organic':
+    case 'inorganic':
       // Handled in evalSet (need object/residue/bond context); unreachable here.
       return false;
   }
@@ -744,6 +764,42 @@ function guideAtoms(env: EvalEnv): Set<number> {
 
 function isPolymer(a: AtomInfo): boolean {
   return !a.hetatm && !SOLVENT_RESN.has(a.resn.toUpperCase());
+}
+
+/**
+ * `organic` / `inorganic` — the two non-polymer, non-solvent chemical classes
+ * (PyMOL's cAtomFlag_organic / cAtomFlag_inorganic). Classification is per
+ * residue and applies to every atom of that residue, mirroring
+ * `SelectorClassifyAtoms`: among residues that are neither polymer nor solvent,
+ * a residue containing a carbon atom is `organic` (small-molecule ligand); one
+ * with no carbon that is not all-hydrogen is `inorganic` (metal ion, etc.).
+ */
+function orgInoAtoms(kw: 'organic' | 'inorganic', env: EvalEnv): Set<number> {
+  const out = new Set<number>();
+  for (const idxs of env.byRes.values()) {
+    const first = env.universe[idxs[0]!]!.atom;
+    if (isPolymer(first) || SOLVENT_RESN.has(first.resn.toUpperCase())) continue;
+    let hasCarbon = false;
+    let allHydrogen = true;
+    for (const j of idxs) {
+      const el = env.universe[j]!.atom.elem.toUpperCase();
+      if (el === 'C') hasCarbon = true;
+      if (el !== 'H' && el !== 'D') allHydrogen = false;
+    }
+    const match = kw === 'organic' ? hasCarbon : !hasCarbon && !allHydrogen;
+    if (match) for (const j of idxs) out.add(j);
+  }
+  return out;
+}
+
+/** Identity tuple used by the `in` operator: the atom's resi/chain/name/resn/segi
+ *  (PyMOL compares resv+inscode — captured together by the `resi` text — plus
+ *  chain, name, resn and segi), compared case-insensitively. */
+function identityKey(ua: UniverseAtom): string {
+  const a = ua.atom;
+  return [a.resi, a.chain, a.name, a.resn, a.segi]
+    .map((s) => s.toLowerCase())
+    .join('');
 }
 
 /** Everything the set evaluator needs precomputed once per selection. */
@@ -963,6 +1019,7 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
         return s;
       }
       if (kw === 'guide') return guideAtoms(env);
+      if (kw === 'organic' || kw === 'inorganic') return orgInoAtoms(kw, env);
       return filter((ua) => matchKeyword(kw, ua));
     }
     case 'ref': {
@@ -996,6 +1053,18 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
     case 'or': {
       const s = evalSet(node.a, env);
       for (const i of evalSet(node.b, env)) s.add(i);
+      return s;
+    }
+    case 'in': {
+      // Keep atoms of A whose identity (resi/chain/name/resn/segi) also appears
+      // on some atom of B — a cross-object atom-by-atom identity match (PyMOL's
+      // SELE_IN_2), comparing the identifier fields, never coordinates.
+      const a = evalSet(node.a, env);
+      const b = evalSet(node.b, env);
+      const bKeys = new Set<string>();
+      for (const j of b) bKeys.add(identityKey(env.universe[j]!));
+      const s = new Set<number>();
+      for (const i of a) if (bKeys.has(identityKey(env.universe[i]!))) s.add(i);
       return s;
     }
     case 'byres': {
