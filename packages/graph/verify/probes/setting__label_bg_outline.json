@@ -1,0 +1,15 @@
+{
+  "id": "setting__label_bg_outline", "feature": "label_bg_outline", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set label_bg_outline, on, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","label_bg_outline"],"label":"global label_bg_outline default (no prior set)"},
+    {"call":["get_setting_boolean","label_bg_outline","ala"],"label":"per-object label_bg_outline after set on"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

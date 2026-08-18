@@ -1,0 +1,12 @@
+{"id":"setting__label_bg_color","feature":"label_bg_color","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set label_bg_color, red, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","label_bg_color"],"label":"label_bg_color global default (COLOR, no prior set)"},
+   {"call":["get_setting_int","label_bg_color","ala"],"label":"label_bg_color per-object after set red"},
+   {"call":["get_color_index","red"],"label":"red palette index (expected to equal label_bg_color on ala)"}
+ ],
+ "tol": 0,
+ "expected": [-1, 4, 4]}
