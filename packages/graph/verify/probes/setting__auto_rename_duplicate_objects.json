@@ -1,0 +1,12 @@
+{
+  "id": "setting__auto_rename_duplicate_objects", "feature": "auto_rename_duplicate_objects", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set auto_rename_duplicate_objects, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","auto_rename_duplicate_objects"],"label":"global auto_rename_duplicate_objects after set 1"}
+  ],
+  "expected": [
+    true
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "setting__auto_number_selections", "feature": "auto_number_selections", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set auto_number_selections, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","auto_number_selections"],"label":"auto_number_selections after set 1 (default 0)"}
+  ],
+  "expected": [
+    1
+  ]
+}
