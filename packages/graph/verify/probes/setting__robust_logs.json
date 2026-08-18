@@ -1,0 +1,12 @@
+{
+  "id": "setting__robust_logs", "feature": "robust_logs", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set robust_logs, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","robust_logs"],"label":"robust_logs after set 1 (default off/0)"}
+  ],
+  "expected": [
+    true
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "setting__ribbon_use_shader",
+  "feature": "ribbon_use_shader",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ribbon_use_shader, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","ribbon_use_shader"],"label":"global default (unset) -> true (default 1)"},
+    {"call":["get_setting_boolean","ribbon_use_shader","m"],"label":"per-object set to 0 -> false"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    true,
+    false
+  ]
+}
