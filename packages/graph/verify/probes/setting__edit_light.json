@@ -1,0 +1,12 @@
+{
+  "id": "setting__edit_light", "feature": "edit_light", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set edit_light, 3"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","edit_light"],"label":"global edit_light after set 3"}
+  ],
+  "expected": [
+    3
+  ]
+}

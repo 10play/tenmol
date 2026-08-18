@@ -1,0 +1,13 @@
+{
+  "id": "setting__dynamic_width_max", "feature": "dynamic_width_max", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set dynamic_width_max, 3.75"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","dynamic_width_max"],"label":"dynamic_width_max after set 3.75 (roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    3.75
+  ]
+}
