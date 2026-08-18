@@ -1,0 +1,11 @@
+{"id":"setting__cartoon_helix_radius","feature":"cartoon_helix_radius","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set cartoon_helix_radius, 3.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","cartoon_helix_radius"],"label":"cartoon_helix_radius global default (no prior set)"},
+   {"call":["get_setting_float","cartoon_helix_radius","ala"],"label":"cartoon_helix_radius per-object after set 3.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [2.25, 3.5]}

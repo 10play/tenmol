@@ -1,0 +1,15 @@
+{
+  "id": "setting__cartoon_gap_cutoff",
+  "feature": "cartoon_gap_cutoff",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set cartoon_gap_cutoff, 5"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cartoon_gap_cutoff"],"label":"cartoon_gap_cutoff after set 5"}
+  ],
+  "expected": [
+    5
+  ]
+}

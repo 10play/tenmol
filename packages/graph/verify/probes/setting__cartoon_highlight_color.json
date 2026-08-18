@@ -1,0 +1,21 @@
+{
+  "id": "setting__cartoon_highlight_color",
+  "feature": "cartoon_highlight_color",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cartoon_highlight_color, red, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cartoon_highlight_color"],"label":"global default cartoon_highlight_color (COLOR, -1)"},
+    {"call":["get_setting_int","cartoon_highlight_color","ala"],"label":"cartoon_highlight_color on ala after set red -> red color index"},
+    {"call":["get_color_index","red"],"label":"red color index (oracle vs engine)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    -1,
+    4,
+    4
+  ]
+}
