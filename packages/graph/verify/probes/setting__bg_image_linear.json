@@ -1,0 +1,12 @@
+{
+  "id":"setting__bg_image_linear","feature":"bg_image_linear","kind":"setting","probeKind":"state",
+  "ops":[
+    {"do":"set bg_image_linear, 0"}
+  ],
+  "checks":[
+    {"call":["get_setting_boolean","bg_image_linear"],"label":"bg_image_linear after set 0 (default is 1)"}
+  ],
+  "expected":[
+    false
+  ]
+}
