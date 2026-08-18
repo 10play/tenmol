@@ -1,0 +1,16 @@
+{
+  "id": "setting__cartoon_rect_length", "feature": "cartoon_rect_length", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set cartoon_rect_length, 3.7, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","cartoon_rect_length"],"label":"global default (no prior set) -> 1.40"},
+    {"call":["get_setting_float","cartoon_rect_length","m"],"label":"per-object set 3.7 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1.4,
+    3.7
+  ]
+}

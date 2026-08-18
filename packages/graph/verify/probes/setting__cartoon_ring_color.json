@@ -1,0 +1,17 @@
+{
+  "id": "setting__cartoon_ring_color", "feature": "cartoon_ring_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set cartoon_ring_color, blue, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cartoon_ring_color"],"label":"global default cartoon_ring_color (-1)"},
+    {"call":["get_setting_int","cartoon_ring_color","m"],"label":"per-object cartoon_ring_color after set blue"},
+    {"call":["get_color_index","blue"],"label":"blue palette index"}
+  ],
+  "expected": [
+    -1,
+    2,
+    2
+  ]
+}
