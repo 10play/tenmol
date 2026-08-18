@@ -1,0 +1,10 @@
+{"id":"setting__use_geometry_shaders","feature":"use_geometry_shaders","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set use_geometry_shaders, 0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","use_geometry_shaders"],"label":"use_geometry_shaders global default (no prior set)"},
+   {"call":["get_setting_boolean","use_geometry_shaders","ala"],"label":"use_geometry_shaders per-object after set 0"}
+ ],
+ "expected": [true, false]}
