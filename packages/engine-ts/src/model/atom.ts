@@ -22,6 +22,12 @@ export interface AtomInfo {
   chain: string;
   /** Segment identifier (`segi`). */
   segi: string;
+  /**
+   * Custom per-atom string field (PyMOL `AtomInfoType.custom`). A free-form
+   * text tag set through `alter sele, custom='...'` and read by the `custom`
+   * selection keyword. Absent ⇒ empty string.
+   */
+  custom?: string;
   /** Alternate-location indicator (`alt`). */
   alt: string;
   /** Canonical element symbol ('C', 'Fe'). */

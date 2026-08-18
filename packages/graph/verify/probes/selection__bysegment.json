@@ -1,0 +1,9 @@
+{"id":"selection__bysegment","feature":"bysegment","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","resi 10"],"label":"resi 10 reference count"},
+   {"call":["count_atoms","bysegment (resi 10)"],"label":"bysegment expands resi 10 to whole segment (empty segi = all)"},
+   {"call":["count_atoms","bysegment name CA"],"label":"bysegment expands CA to whole segment (all atoms)"},
+   {"call":["count_atoms","all"],"label":"total atom count"}
+ ],
+ "expected":[38,5684,5684,5684]}

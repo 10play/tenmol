@@ -41,6 +41,7 @@ const ATOM_FIELDS = [
   'color',
   'ss',
   'id',
+  'custom',
 ] as const;
 
 /** Fields that must be coerced to a number when written back by `alter`. */
@@ -149,7 +150,9 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
     const matched = ex.atomsMatching(sel);
     for (const ua of matched) {
       const a = ua.atom;
-      const base: unknown[] = ATOM_FIELDS.map((f) => a[f]);
+      // `custom` is optional on the record and defaults to '' (PyMOL keeps it a
+      // string), so expose it as such to the expression body.
+      const base: unknown[] = ATOM_FIELDS.map((f) => (f === 'custom' ? a.custom ?? '' : a[f]));
       base.push(ua.index + 1, a.hetatm, ua.objName);
       base.push(a.formalCharge ?? 0, a.partialCharge ?? 0);
       // `p` — the atom's custom-property namespace (set via set_atom_property).
@@ -174,7 +177,7 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
             rec[field] = Number(raw);
           } else if (field === 'ss' || field === 'name' || field === 'resn' ||
                      field === 'resi' || field === 'chain' || field === 'segi' ||
-                     field === 'alt' || field === 'elem') {
+                     field === 'alt' || field === 'elem' || field === 'custom') {
             rec[field] = String(raw);
           }
         }

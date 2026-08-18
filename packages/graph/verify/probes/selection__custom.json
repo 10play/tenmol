@@ -1,0 +1,11 @@
+{"id":"selection__custom","feature":"custom","kind":"selection","probeKind":"state",
+ "ops":[
+   {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"alter chain A, custom='foo'"}
+ ],
+ "checks":[
+   {"call":["count_atoms","custom foo"],"label":"custom foo matches atoms whose custom field == foo"},
+   {"call":["count_atoms","chain A"],"label":"baseline: chain A atom count (all set to custom foo)"},
+   {"call":["count_atoms","not custom foo"],"label":"complement: atoms without custom foo"}
+ ],
+ "expected":[1479,1479,4205]}

@@ -82,6 +82,7 @@ type Node =
   | { t: 'bymol'; a: Node }
   | { t: 'byobject'; a: Node }
   | { t: 'bychain'; a: Node }
+  | { t: 'bysegment'; a: Node }
   | { t: 'first'; a: Node }
   | { t: 'last'; a: Node }
   | { t: 'neighbor'; a: Node; includeSelf?: boolean }
@@ -96,7 +97,7 @@ type Node =
   | { t: 'nearto'; dist: number; a: Node; b: Node }
   | { t: 'beyond'; dist: number; a: Node; b: Node };
 
-type CmpField = 'b' | 'q' | 'pc' | 'fc';
+type CmpField = 'b' | 'q' | 'pc' | 'fc' | 'x' | 'y' | 'z';
 type CmpOp = '<' | '<=' | '>' | '>=' | '=' | '!=';
 
 type PropKey =
@@ -109,6 +110,7 @@ type PropKey =
   | 'id'
   | 'segi'
   | 'alt'
+  | 'custom'
   | 'color'
   | 'rep'
   | 'flag'
@@ -148,6 +150,7 @@ const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
   's.': 'segi',
   alt: 'alt',
   altloc: 'alt',
+  custom: 'custom',
   color: 'color',
   rep: 'rep',
   flag: 'flag',
@@ -155,7 +158,9 @@ const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
   ss: 'ss',
 };
 
-/** Numeric atom fields comparable with `<`, `>`, `=`, … (`b > 50`, `q = 1`). */
+/** Numeric atom fields comparable with `<`, `>`, `=`, … (`b > 50`, `q = 1`).
+ *  `x`/`y`/`z` compare the atom's Cartesian coordinate (same operator grammar;
+ *  PyMOL rejects `in`/`within` on them, so only the comparison operators apply). */
 const NUMERIC_FIELDS: Readonly<Record<string, CmpField>> = {
   b: 'b',
   q: 'q',
@@ -165,6 +170,9 @@ const NUMERIC_FIELDS: Readonly<Record<string, CmpField>> = {
   fc: 'fc',
   'fc.': 'fc',
   formal_charge: 'fc',
+  x: 'x',
+  y: 'y',
+  z: 'z',
 };
 const CMP_OPS: ReadonlySet<string> = new Set(['<', '<=', '>', '>=', '=', '==', '!=']);
 
@@ -320,6 +328,10 @@ class Parser {
     if (this.isOp(t, 'bychain')) {
       this.next();
       return { t: 'bychain', a: this.parseNot() };
+    }
+    if (this.isOp(t, 'bysegment', 'byseg', 'bs.')) {
+      this.next();
+      return { t: 'bysegment', a: this.parseNot() };
     }
     // bycalpha / bca. — the C-alpha of every residue the operand touches.
     if (this.isOp(t, 'bycalpha', 'bca.')) {
@@ -570,6 +582,9 @@ function matchProp(node: Extract<Node, { t: 'prop' }>, ua: UniverseAtom): boolea
       return node.values.some((v) => eq(v, a.segi));
     case 'alt':
       return node.values.some((v) => eq(v, a.alt) || (v === '' && a.alt === ''));
+    case 'custom':
+      // `custom` is the free-form per-atom string set by `alter`; unset ⇒ ''.
+      return node.values.some((v) => eq(v, a.custom ?? '') || (v === '' && (a.custom ?? '') === ''));
     case 'resi':
       return (
         node.values.some((v) => v === a.resi || Number(v) === a.resv) ||
@@ -611,7 +626,26 @@ function matchProp(node: Extract<Node, { t: 'prop' }>, ua: UniverseAtom): boolea
   }
 }
 
-/** Numeric comparison on a per-atom field (`b`, `q`, `pc`, `fc`). */
+/** Apply a comparison operator; `=`/`!=` use a small tolerance (float fields). */
+function compareOp(lhs: number, op: CmpOp, value: number): boolean {
+  switch (op) {
+    case '<':
+      return lhs < value;
+    case '<=':
+      return lhs <= value;
+    case '>':
+      return lhs > value;
+    case '>=':
+      return lhs >= value;
+    case '=':
+      return Math.abs(lhs - value) < 1e-4;
+    case '!=':
+      return Math.abs(lhs - value) >= 1e-4;
+  }
+}
+
+/** Numeric comparison on a per-atom field (`b`, `q`, `pc`, `fc`). The Cartesian
+ *  `x`/`y`/`z` fields are handled in {@link evalSet} where coordinates live. */
 function matchCmp(node: Extract<Node, { t: 'cmp' }>, a: AtomInfo): boolean {
   const lhs =
     node.field === 'b'
@@ -621,20 +655,7 @@ function matchCmp(node: Extract<Node, { t: 'cmp' }>, a: AtomInfo): boolean {
         : node.field === 'pc'
           ? a.partialCharge ?? 0
           : a.formalCharge ?? 0;
-  switch (node.op) {
-    case '<':
-      return lhs < node.value;
-    case '<=':
-      return lhs <= node.value;
-    case '>':
-      return lhs > node.value;
-    case '>=':
-      return lhs >= node.value;
-    case '=':
-      return Math.abs(lhs - node.value) < 1e-4;
-    case '!=':
-      return Math.abs(lhs - node.value) >= 1e-4;
-  }
+  return compareOp(lhs, node.op, node.value);
 }
 
 function matchKeyword(kw: KeywordKey, ua: UniverseAtom): boolean {
@@ -692,6 +713,8 @@ interface EvalEnv {
   byRes: Map<string, number[]>;
   /** object|chain key -> universe indices (for `bychain`). */
   byChain: Map<string, number[]>;
+  /** object|segi key -> universe indices (for `bysegment`). */
+  bySegment: Map<string, number[]>;
   /** objName -> universe indices (for `byobject`). */
   byObject: Map<string, number[]>;
   /** connected-component id per universe atom (for `bymol`). */
@@ -856,6 +879,10 @@ function chainKey(ua: UniverseAtom): string {
   return `${ua.objName}|${ua.atom.chain}`;
 }
 
+function segKey(ua: UniverseAtom): string {
+  return `${ua.objName}|${ua.atom.segi}`;
+}
+
 /** Evaluate a node to the SET of matching universe indices. */
 function evalSet(node: Node, env: EvalEnv): Set<number> {
   const n = env.universe.length;
@@ -871,8 +898,19 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
       return new Set();
     case 'prop':
       return filter((ua) => matchProp(node, ua));
-    case 'cmp':
+    case 'cmp': {
+      // `x`/`y`/`z` compare the atom's Cartesian coordinate (from env.coords);
+      // all other numeric fields read straight off the AtomInfo record.
+      if (node.field === 'x' || node.field === 'y' || node.field === 'z') {
+        const axis = node.field === 'x' ? 0 : node.field === 'y' ? 1 : 2;
+        const s = new Set<number>();
+        for (let i = 0; i < n; i++) {
+          if (compareOp(env.coords[i]![axis]!, node.op, node.value)) s.add(i);
+        }
+        return s;
+      }
       return filter((ua) => matchCmp(node, ua.atom));
+    }
     case 'keyword': {
       const kw = node.kw;
       if (kw === 'enabled') return filter((ua) => env.enabled.has(ua.objName));
@@ -953,6 +991,8 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
       return expandGroups(evalSet(node.a, env), (i) => env.byObject.get(env.universe[i]!.objName) ?? []);
     case 'bychain':
       return expandGroups(evalSet(node.a, env), (i) => env.byChain.get(chainKey(env.universe[i]!)) ?? []);
+    case 'bysegment':
+      return expandGroups(evalSet(node.a, env), (i) => env.bySegment.get(segKey(env.universe[i]!)) ?? []);
     case 'neighbor': {
       // Atoms directly bonded to the selection. `neighbor`/`nbr.` excludes the
       // selection itself; `bound_to`/`bto.` (includeSelf) keeps members of the
@@ -1077,10 +1117,12 @@ export function selectAtoms(expr: string, ctx: SelectorContext): UniverseAtom[] 
   };
   const byRes = new Map<string, number[]>();
   const byChain = new Map<string, number[]>();
+  const bySegment = new Map<string, number[]>();
   const byObject = new Map<string, number[]>();
   for (let i = 0; i < n; i++) {
     push(byRes, resKey(universe[i]!), i);
     push(byChain, chainKey(universe[i]!), i);
+    push(bySegment, segKey(universe[i]!), i);
     push(byObject, universe[i]!.objName, i);
   }
 
@@ -1130,7 +1172,7 @@ export function selectAtoms(expr: string, ctx: SelectorContext): UniverseAtom[] 
   for (const o of objects) if (o.enabled) enabled.add(o.name);
 
   const set = evalSet(ast, {
-    universe, ctx, coords, vdw, byRes, byChain, byObject, component, byComponent, adj, enabled,
+    universe, ctx, coords, vdw, byRes, byChain, bySegment, byObject, component, byComponent, adj, enabled,
   });
   return [...set].sort((x, y) => x - y).map((i) => universe[i]!);
 }
