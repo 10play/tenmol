@@ -1,0 +1,11 @@
+{"id":"setting__matrix_mode","feature":"matrix_mode","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set matrix_mode, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","matrix_mode"],"label":"matrix_mode global default (no prior set)"},
+   {"call":["get_setting_int","matrix_mode","ala"],"label":"matrix_mode per-object after set 1"}
+ ],
+ "tol": 1e-6,
+ "expected": [-1, 1]}

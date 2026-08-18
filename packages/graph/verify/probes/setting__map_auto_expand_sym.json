@@ -1,0 +1,18 @@
+{
+  "id": "setting__map_auto_expand_sym",
+  "feature": "map_auto_expand_sym",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set map_auto_expand_sym, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","map_auto_expand_sym"],"label":"global default (unset) -> on/true"},
+    {"call":["get_setting_boolean","map_auto_expand_sym","m"],"label":"per-object set to 0 -> false"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}
