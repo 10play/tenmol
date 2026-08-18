@@ -1,0 +1,15 @@
+{
+  "id": "setting__cgo_sphere_quality", "feature": "cgo_sphere_quality", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set cgo_sphere_quality, 3, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cgo_sphere_quality"],"label":"global cgo_sphere_quality default -> 1"},
+    {"call":["get_setting_int","cgo_sphere_quality","m"],"label":"per-object cgo_sphere_quality after set 3"}
+  ],
+  "expected": [
+    1,
+    3
+  ]
+}
