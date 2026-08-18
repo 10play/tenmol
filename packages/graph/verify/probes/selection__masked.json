@@ -1,0 +1,58 @@
+{
+ "id": "selection__masked",
+ "feature": "masked",
+ "kind": "selection",
+ "probeKind": "state",
+ "ops": [
+  {
+   "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+  },
+  {
+   "do": "mask chain A"
+  }
+ ],
+ "checks": [
+  {
+   "call": [
+    "count_atoms",
+    "masked"
+   ],
+   "label": "masked keyword after mask chain A"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "msk."
+   ],
+   "label": "msk. alias"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "not masked"
+   ],
+   "label": "not masked = rest"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "masked and not chain A"
+   ],
+   "label": "masked outside chain A (should be 0)"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "all"
+   ],
+   "label": "total atoms"
+  }
+ ],
+ "expected": [
+  1479,
+  1479,
+  4205,
+  0,
+  5684
+ ]
+}

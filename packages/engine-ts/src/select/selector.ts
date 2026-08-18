@@ -77,6 +77,10 @@ type Node =
   // `A in B` — atoms of A whose identity (resi/chain/name/resn/segi) matches an
   // atom of B (cross-object identity match, not coordinates). PyMOL's SELE_IN_2.
   | { t: 'in'; a: Node; b: Node }
+  // `A like B` — atoms of A whose identity (name + resv + inscode) matches an
+  // atom of B, IGNORING chain/segi/resn (this is the difference from `in`).
+  // PyMOL's SELE_LIK2.
+  | { t: 'like'; a: Node; b: Node }
   // Set operators (need the whole matched set, not a per-atom predicate):
   | { t: 'byres'; a: Node }
   | { t: 'bycalpha'; a: Node }
@@ -117,6 +121,7 @@ type PropKey =
   | 'color'
   | 'rep'
   | 'flag'
+  | 'label'
   | 'ss';
 type KeywordKey =
   | 'hetatm'
@@ -162,6 +167,8 @@ const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
   rep: 'rep',
   flag: 'flag',
   'f.': 'flag',
+  label: 'label',
+  'lab.': 'label',
   ss: 'ss',
 };
 
@@ -212,6 +219,7 @@ const KEYWORDS: Readonly<Record<string, KeywordKey>> = {
   acceptor: 'acceptor',
   metals: 'metals',
   masked: 'masked',
+  'msk.': 'masked',
   protected: 'protected',
   fixed: 'fixed',
   'fxd.': 'fixed',
@@ -288,6 +296,9 @@ class Parser {
       } else if (this.isOp(this.peek(), 'in')) {
         this.next();
         a = { t: 'in', a, b: this.parseAnd() };
+      } else if (this.isOp(this.peek(), 'like', 'l.')) {
+        this.next();
+        a = { t: 'like', a, b: this.parseAnd() };
       } else {
         break;
       }
@@ -305,7 +316,7 @@ class Parser {
         continue;
       }
       const t = this.peek();
-      if (t !== undefined && t !== ')' && !this.isOp(t, 'or', '|', 'in')) {
+      if (t !== undefined && t !== ')' && !this.isOp(t, 'or', '|', 'in', 'like', 'l.')) {
         a = { t: 'and', a, b: this.parseNot() };
         continue;
       }
@@ -611,6 +622,10 @@ function matchProp(node: Extract<Node, { t: 'prop' }>, ua: UniverseAtom): boolea
     case 'custom':
       // `custom` is the free-form per-atom string set by `alter`; unset ⇒ ''.
       return node.values.some((v) => eq(v, a.custom ?? '') || (v === '' && (a.custom ?? '') === ''));
+    case 'label':
+      // `label <text>` (SELE_LABs) matches atoms whose per-atom label text fits
+      // the wildcard pattern; an unset label ⇒ ''.
+      return node.values.some((v) => eq(v, a.label ?? '') || (v === '' && (a.label ?? '') === ''));
     case 'resi':
       return (
         node.values.some((v) => v === a.resi || Number(v) === a.resv) ||
@@ -800,6 +815,14 @@ function identityKey(ua: UniverseAtom): string {
   return [a.resi, a.chain, a.name, a.resn, a.segi]
     .map((s) => s.toLowerCase())
     .join('');
+}
+
+/** Identity tuple used by the `like` operator: name + resv + inscode only
+ *  (PyMOL's SELE_LIK2), IGNORING chain/segi/resn. The `resi` text carries
+ *  resv+inscode together; compared case-insensitively. */
+function likeKey(ua: UniverseAtom): string {
+  const a = ua.atom;
+  return `${a.name.toLowerCase()}|${a.resi.toLowerCase()}`;
 }
 
 /** Everything the set evaluator needs precomputed once per selection. */
@@ -1065,6 +1088,17 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
       for (const j of b) bKeys.add(identityKey(env.universe[j]!));
       const s = new Set<number>();
       for (const i of a) if (bKeys.has(identityKey(env.universe[i]!))) s.add(i);
+      return s;
+    }
+    case 'like': {
+      // Keep atoms of A whose name+resv+inscode identity also appears on some
+      // atom of B — like `in`, but ignoring chain/segi/resn (PyMOL's SELE_LIK2).
+      const a = evalSet(node.a, env);
+      const b = evalSet(node.b, env);
+      const bKeys = new Set<string>();
+      for (const j of b) bKeys.add(likeKey(env.universe[j]!));
+      const s = new Set<number>();
+      for (const i of a) if (bKeys.has(likeKey(env.universe[i]!))) s.add(i);
       return s;
     }
     case 'byres': {
