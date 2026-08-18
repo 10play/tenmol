@@ -1,0 +1,16 @@
+{
+  "id": "setting__surface_trim_factor", "feature": "surface_trim_factor", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set surface_trim_factor, 3.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","surface_trim_factor"],"label":"global default (unset) -> 2.0"},
+    {"call":["get_setting_float","surface_trim_factor","m"],"label":"per-object set to 3.5 -> 3.5 (roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2,
+    3.5
+  ]
+}
