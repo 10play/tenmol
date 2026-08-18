@@ -1,0 +1,18 @@
+{
+  "id": "setting__group_arrow_prefix",
+  "feature": "group_arrow_prefix",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set group_arrow_prefix, on, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","group_arrow_prefix"],"label":"global default (unset) group_arrow_prefix text"},
+    {"call":["get_setting_text","group_arrow_prefix","m"],"label":"per-object group_arrow_prefix text after set on"}
+  ],
+  "expected": [
+    "off",
+    "on"
+  ]
+}

@@ -114,37 +114,21 @@ const SCULPT_SETTING_DEFAULTS: Readonly<Record<string, number>> = {
 };
 
 /**
- * Setting names whose value formats as an integer / boolean when read as text
- * (`layer1/SettingInfo.h` `REC_i` / `REC_b`). `SettingGetTextPtr`
- * (`layer1/Setting.cpp`) prints booleans as `on`/`off`, ints with `%d`, and
- * every other numeric setting (the float default) with `%1.5f`. We only need the
- * non-float exceptions among the settings this port actually tracks; unknown
- * numeric settings fall through to the float format, PyMOL's most common type.
- */
-const BOOLEAN_SETTINGS: ReadonlySet<string> = new Set([
-  'orthoscopic',
-  'mouse_grid',
-  'cartoon_side_chain_helper',
-  'valence',
-]);
-const INT_SETTINGS: ReadonlySet<string> = new Set([
-  'button_mode',
-  'mouse_selection_mode',
-  'ray_trace_mode',
-  'antialias',
-]);
-
-/**
  * PyMOL's `SettingGetTextPtr` — the text form `cmd.get` / `cmd.get_setting_text`
- * return. Colour-typed settings read back as a colour name; booleans as
- * `on`/`off`; ints with `%d`; floats with `%1.5f`; strings verbatim.
+ * return. `SettingGetTextValue` (`layer1/Setting.cpp`) switches on the setting's
+ * `cSetting_*` type: colour-typed settings read back as a colour name; booleans
+ * (`cSetting_boolean`) as `on`/`off`; ints (`cSetting_int`) with `%d`; every
+ * other numeric setting (the float default) with `%1.5f`; strings verbatim. The
+ * type comes from the authoritative per-setting catalog (`SETTING_INDEX_TYPE`),
+ * not a hand-maintained allowlist, so *every* boolean/int setting formats right.
  */
 function settingText(name: string, v: number | string | undefined): string {
   if (COLOR_SETTINGS.has(name)) return colorSettingText(v);
   if (v === undefined) return '';
   if (typeof v === 'string') return v;
-  if (BOOLEAN_SETTINGS.has(name)) return v !== 0 ? 'on' : 'off';
-  if (INT_SETTINGS.has(name)) return String(Math.trunc(v));
+  const type = SETTING_INDEX_TYPE[name]?.[1];
+  if (type === cSetting_boolean) return v !== 0 ? 'on' : 'off';
+  if (type === cSetting_int) return String(Math.trunc(v));
   return v.toFixed(5); // "%1.5f"
 }
 
