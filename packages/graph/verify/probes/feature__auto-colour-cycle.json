@@ -4,8 +4,8 @@
   "kind": "coloring",
   "probeKind": "state",
   "ops": [
-    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m1"},
-    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m2"}
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m1"},
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m2"}
   ],
   "checks": [
     {"call": ["get_object_color_index", "m1"], "label": "1st loaded object gets AutoColor[0] (carbon=26)"},

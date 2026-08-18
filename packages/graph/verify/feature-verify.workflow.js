@@ -10,7 +10,7 @@ export const meta = {
 // args = the claimed batch: [{id, feature, kind, category, subcategory, summary, signature, doc, probeKind, attempts}, ...]
 // Accept an array OR a JSON string (the runtime may stringify the args value).
 const BATCH = Array.isArray(args) ? args : typeof args === 'string' && args.trim() ? JSON.parse(args) : []
-const REPO = '/home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol'
+const REPO = '/home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol'
 const MAX_FIX_ROUNDS = 4
 
 if (BATCH.length === 0) {

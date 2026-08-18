@@ -1,7 +1,7 @@
 {
   "id": "command__get_area", "feature": "get_area", "kind": "command", "probeKind": "state",
   "ops": [
-    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
     {"do": "set dot_solvent, 0"},
     {"do": "set dot_density, 3"}
   ],

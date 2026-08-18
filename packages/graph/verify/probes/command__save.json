@@ -1,9 +1,9 @@
 {
   "id": "command__save", "feature": "save", "kind": "command", "probeKind": "state",
   "ops": [
-    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
-    {"do":"save /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/graph/verify/.work/command__save.out.pdb, m and chain A and name CA"},
-    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/graph/verify/.work/command__save.out.pdb, roundtrip"}
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"save /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/graph/verify/.work/command__save.out.pdb, m and chain A and name CA"},
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/graph/verify/.work/command__save.out.pdb, roundtrip"}
   ],
   "checks": [
     {"call":["get_names"],"label":"objects present after save+reload"},

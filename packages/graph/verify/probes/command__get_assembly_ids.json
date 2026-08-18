@@ -5,7 +5,7 @@
   "probeKind": "state",
   "ops": [
     {"do": "set cif_keepinmemory, 1"},
-    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/testing/data/1pup.cif, m"}
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/testing/data/1pup.cif, m"}
   ],
   "checks": [
     {"call": ["get_assembly_ids", "m"], "label": "assembly ids from mmCIF _pdbx_struct_assembly.id"},

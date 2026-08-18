@@ -5,7 +5,7 @@
   "probeKind": "state",
   "ops": [
     {
-      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/testing/data/mapaligned.dx, dxmap, format=dx"
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/testing/data/mapaligned.dx, dxmap, format=dx"
     }
   ],
   "checks": [

@@ -4,7 +4,7 @@
   "kind": "command",
   "probeKind": "state",
   "ops": [
-    {"do": "loadall /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/tiny.pd*, group=grp"}
+    {"do": "loadall /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/tiny.pd*, group=grp"}
   ],
   "checks": [
     {"call": ["count_atoms", "*"], "label": "atoms loaded by loadall"},

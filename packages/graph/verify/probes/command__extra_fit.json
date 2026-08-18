@@ -4,8 +4,8 @@
   "kind": "command",
   "probeKind": "state",
   "ops": [
-    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m1"},
-    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m2"},
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m1"},
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m2"},
     {"do": "translate [15, 0, 0], m2"},
     {"call": ["extra_fit", "m1 or m2", "m1", "super"]}
   ],

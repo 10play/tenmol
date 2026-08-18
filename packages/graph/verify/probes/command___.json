@@ -1,7 +1,7 @@
 {
   "id": "command___", "feature": "@", "kind": "command", "probeKind": "state",
   "ops": [
-    {"do":"@/home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/graph/verify/.work/command___.include.pml"}
+    {"do":"@/home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/graph/verify/.work/command___.include.pml"}
   ],
   "checks": [
     {"call":["count_atoms","foo"],"label":"atoms created by pseudoatom inside included script"},

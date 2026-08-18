@@ -4,7 +4,7 @@
   "kind": "feature",
   "probeKind": "state",
   "ops": [
-    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/testing/data/emd_1155.ccp4, dmap, format=ccp4" }
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/testing/data/emd_1155.ccp4, dmap, format=ccp4" }
   ],
   "checks": [
     { "call": ["get_names", "objects"], "label": "CCP4 file registered as a map object 'dmap'" },

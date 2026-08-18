@@ -4,7 +4,7 @@
   "kind": "command",
   "probeKind": "state",
   "ops": [
-    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/graph/verify/.work/onec.pdb, m" },
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/graph/verify/.work/onec.pdb, m" },
     { "do": "set_geometry m, 3, 3" },
     { "do": "h_add m" }
   ],

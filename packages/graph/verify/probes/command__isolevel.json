@@ -4,7 +4,7 @@
   "kind": "command",
   "probeKind": "state",
   "ops": [
-    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m" },
     { "do": "map_new mmm, gaussian, 1.0, m" },
     { "do": "isomesh msh, mmm, 1.0" },
     { "do": "isolevel msh, 2.5" }

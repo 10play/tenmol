@@ -1,9 +1,9 @@
 {
   "id": "feature__supported-formats", "feature": "supported-formats", "kind": "feature", "probeKind": "state",
   "ops": [
-    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/small02.pdb, mpdb"},
-    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/small03.mol2, mmol2"},
-    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/small01.mol, mmol"}
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/small02.pdb, mpdb"},
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/small03.mol2, mmol2"},
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/small01.mol, mmol"}
   ],
   "checks": [
     {"call":["get_names"],"label":"objects created from three formats"},

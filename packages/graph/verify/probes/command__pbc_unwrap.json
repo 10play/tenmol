@@ -5,7 +5,7 @@
   "probeKind": "state",
   "ops": [
     {
-      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/graph/verify/.work/pbc_unwrap_traj.pdb, m"
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/graph/verify/.work/pbc_unwrap_traj.pdb, m"
     },
     {
       "call": [

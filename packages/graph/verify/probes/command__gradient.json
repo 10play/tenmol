@@ -1,7 +1,7 @@
 {
   "id": "command__gradient", "feature": "gradient", "kind": "command", "probeKind": "state",
   "ops": [
-    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
     {"do":"map_new mymap, gaussian, 1.0, m"},
     {"do":"gradient mygrad, mymap"}
   ],

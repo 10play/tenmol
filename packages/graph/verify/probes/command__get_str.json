@@ -4,7 +4,7 @@
   "kind": "command",
   "probeKind": "state",
   "ops": [
-    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map/tenmol/packages/engine/test/dat/1tii.pdb, m" }
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m" }
   ],
   "checks": [
     { "call": ["get_str", "pdb", "m and chain A and resi 1 and name CA"], "label": "PDB export of a single CA atom" },
