@@ -1,0 +1,11 @@
+{"id":"setting__slow_idle","feature":"slow_idle","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set slow_idle, 1000, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","slow_idle"],"label":"slow_idle global default (no prior set)"},
+   {"call":["get_setting_float","slow_idle","ala"],"label":"slow_idle per-object after set 1000 (roundtrip)"}
+ ],
+ "tol": 1e-6,
+ "expected": [40000, 1000]}

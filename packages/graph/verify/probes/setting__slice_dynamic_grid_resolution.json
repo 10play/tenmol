@@ -1,0 +1,16 @@
+{
+  "id": "setting__slice_dynamic_grid_resolution", "feature": "slice_dynamic_grid_resolution", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set slice_dynamic_grid_resolution, 5.0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","slice_dynamic_grid_resolution"],"label":"global slice_dynamic_grid_resolution default (no prior global set) -> 3.0"},
+    {"call":["get_setting_float","slice_dynamic_grid_resolution","m"],"label":"per-object slice_dynamic_grid_resolution after set 5.0 (roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    3,
+    5
+  ]
+}
