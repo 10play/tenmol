@@ -1,0 +1,10 @@
+{"id":"setting__editor_auto_measure","feature":"editor_auto_measure","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set editor_auto_measure, 0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","editor_auto_measure"],"label":"editor_auto_measure global default (no prior set)"},
+   {"call":["get_setting_boolean","editor_auto_measure","ala"],"label":"editor_auto_measure per-object after set 0"}
+ ],
+ "expected": [true, false]}

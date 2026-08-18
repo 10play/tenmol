@@ -1,0 +1,11 @@
+{"id":"setting__editor_bond_cycle_mode","feature":"editor_bond_cycle_mode","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set editor_bond_cycle_mode, 2, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","editor_bond_cycle_mode"],"label":"editor_bond_cycle_mode global default (no prior set)"},
+   {"call":["get_setting_int","editor_bond_cycle_mode","ala"],"label":"editor_bond_cycle_mode per-object after set 2"}
+ ],
+ "tol": 1e-6,
+ "expected": [1, 1]}

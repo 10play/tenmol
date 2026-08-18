@@ -1,0 +1,16 @@
+{
+  "id": "setting__ellipsoid_probability", "feature": "ellipsoid_probability", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ellipsoid_probability, 0.75, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ellipsoid_probability"],"label":"global default (unset) -> 0.5"},
+    {"call":["get_setting_float","ellipsoid_probability","m"],"label":"per-object set to 0.75 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.5,
+    0.75
+  ]
+}
