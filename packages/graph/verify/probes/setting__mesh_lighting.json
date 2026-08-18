@@ -1,0 +1,15 @@
+{
+  "id": "setting__mesh_lighting", "feature": "mesh_lighting", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set mesh_lighting, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","mesh_lighting"],"label":"global mesh_lighting default (no prior set)"},
+    {"call":["get_setting_boolean","mesh_lighting","ala"],"label":"per-object mesh_lighting after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}
