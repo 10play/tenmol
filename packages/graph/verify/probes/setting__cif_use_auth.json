@@ -1,0 +1,15 @@
+{
+  "id": "setting__cif_use_auth", "feature": "cif_use_auth", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cif_use_auth, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","cif_use_auth"],"label":"global cif_use_auth default (no prior set)"},
+    {"call":["get_setting_boolean","cif_use_auth","ala"],"label":"per-object cif_use_auth after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}
