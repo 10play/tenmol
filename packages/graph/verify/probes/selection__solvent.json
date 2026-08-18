@@ -1,0 +1,8 @@
+{"id":"selection__solvent","feature":"solvent","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","solvent"],"label":"solvent keyword = water/solvent atoms"},
+   {"call":["count_atoms","not solvent"],"label":"complement of solvent"},
+   {"call":["count_atoms","solvent and elem O"],"label":"solvent intersect oxygen"}
+ ],
+ "expected":[215,5469,215]}
