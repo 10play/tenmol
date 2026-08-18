@@ -1,0 +1,16 @@
+{
+  "id": "setting__ray_trace_disco_factor", "feature": "ray_trace_disco_factor", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ray_trace_disco_factor, 0.37, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_trace_disco_factor"],"label":"global default ray_trace_disco_factor (unset) -> 0.05"},
+    {"call":["get_setting_float","ray_trace_disco_factor","m"],"label":"per-object set 0.37 -> roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.05,
+    0.37
+  ]
+}

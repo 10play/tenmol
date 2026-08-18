@@ -1,0 +1,14 @@
+{
+  "id":"setting__ray_trace_frames","feature":"ray_trace_frames","kind":"setting","probeKind":"state",
+  "ops":[
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/tiny.pdb, m1"},
+    {"do":"create m2, m1"},
+    {"do":"set ray_trace_frames, 1, m1"}
+  ],
+  "checks":[
+    {"call":["get_setting_boolean","ray_trace_frames"],"label":"ray_trace_frames global default (no prior set)"},
+    {"call":["get_setting_boolean","ray_trace_frames","m1"],"label":"ray_trace_frames per-object after set 1"},
+    {"call":["get_setting_boolean","ray_trace_frames","m2"],"label":"ray_trace_frames per-object unset inherits global default"}
+  ],
+  "expected": [false, true, false]
+}
