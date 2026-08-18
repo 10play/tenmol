@@ -1,0 +1,11 @@
+{"id":"setting__ray_default_renderer","feature":"ray_default_renderer","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set ray_default_renderer, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","ray_default_renderer"],"label":"ray_default_renderer global default (no prior set)"},
+   {"call":["get_setting_int","ray_default_renderer","ala"],"label":"ray_default_renderer per-object after set 1"}
+ ],
+ "tol": 1e-6,
+ "expected": [0, 1]}
