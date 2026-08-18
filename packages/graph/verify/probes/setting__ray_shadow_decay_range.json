@@ -1,0 +1,11 @@
+{"id":"setting__ray_shadow_decay_range","feature":"ray_shadow_decay_range","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set ray_shadow_decay_range, 5.0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","ray_shadow_decay_range"],"label":"ray_shadow_decay_range global default (no prior set)"},
+   {"call":["get_setting_float","ray_shadow_decay_range","ala"],"label":"ray_shadow_decay_range per-object after set 5.0"}
+ ],
+ "tol": 1e-6,
+ "expected": [1.8, 5]}

@@ -1,0 +1,19 @@
+{
+  "id": "setting__ray_pixel_scale",
+  "feature": "ray_pixel_scale",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ray_pixel_scale, 2.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_pixel_scale"],"label":"global default (unset) -> 1.30"},
+    {"call":["get_setting_float","ray_pixel_scale","m"],"label":"per-object set/get roundtrip -> 2.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1.3,
+    2.5
+  ]
+}

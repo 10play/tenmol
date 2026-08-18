@@ -1,0 +1,13 @@
+{
+  "id": "setting__ray_scatter", "feature": "ray_scatter", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set ray_scatter, 0.35"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_scatter"],"label":"global ray_scatter after set 0.35 (default 0.0)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.35
+  ]
+}
