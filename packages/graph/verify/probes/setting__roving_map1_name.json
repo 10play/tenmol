@@ -1,0 +1,18 @@
+{
+  "id": "setting__roving_map1_name",
+  "feature": "roving_map1_name",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set roving_map1_name, my_map, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","roving_map1_name"],"label":"global default (STRING, expect empty string)"},
+    {"call":["get_setting_text","roving_map1_name","m"],"label":"per-object set roundtrip (expect my_map)"}
+  ],
+  "expected": [
+    "",
+    "my_map"
+  ]
+}
