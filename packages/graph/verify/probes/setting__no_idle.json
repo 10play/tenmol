@@ -1,0 +1,19 @@
+{
+  "id": "setting__no_idle",
+  "feature": "no_idle",
+  "kind": "setting",
+  "probeKind": "state",
+  "tol": 1e-6,
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set no_idle, 500.0, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_float", "no_idle"], "label": "no_idle global default (unset) -> 2000.0"},
+    {"call": ["get_setting_float", "no_idle", "m"], "label": "no_idle per-object set to 500.0 (roundtrip)"}
+  ],
+  "expected": [
+    2000,
+    500
+  ]
+}

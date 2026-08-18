@@ -1,0 +1,19 @@
+{
+  "id": "setting__nb_spheres_size",
+  "feature": "nb_spheres_size",
+  "kind": "setting",
+  "probeKind": "state",
+  "tol": 1e-6,
+  "ops": [
+    {"do": "load packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set nb_spheres_size, 0.75, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_float", "nb_spheres_size"], "label": "global default nb_spheres_size (expect 0.25)"},
+    {"call": ["get_setting_float", "nb_spheres_size", "m"], "label": "per-object nb_spheres_size after set 0.75 (roundtrip)"}
+  ],
+  "expected": [
+    0.25,
+    0.75
+  ]
+}
