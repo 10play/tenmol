@@ -1,0 +1,10 @@
+{"id":"setting__normal_workaround","feature":"normal_workaround","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set normal_workaround, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","normal_workaround"],"label":"normal_workaround global default (no prior set)"},
+   {"call":["get_setting_boolean","normal_workaround","ala"],"label":"normal_workaround per-object after set 1"}
+ ],
+ "expected": [false, true]}

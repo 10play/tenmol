@@ -1,0 +1,19 @@
+{
+  "id": "setting__nonbonded_size",
+  "feature": "nonbonded_size",
+  "kind": "setting",
+  "probeKind": "state",
+  "tol": 1e-6,
+  "ops": [
+    {"do": "load packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set nonbonded_size, 0.5, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_float", "nonbonded_size"], "label": "global default nonbonded_size (expect 0.25)"},
+    {"call": ["get_setting_float", "nonbonded_size", "m"], "label": "per-object nonbonded_size after set 0.5 (roundtrip)"}
+  ],
+  "expected": [
+    0.25,
+    0.5
+  ]
+}
