@@ -234,8 +234,12 @@ describe('builder_action', () => {
         return (ea === e1 && eb === e2) || (ea === e2 && eb === e1);
       });
     };
-    // Pick H1 (index 2) and H2 (index 4).
-    e.call('builder_pick', ['m', 2, null, 'multi']);
+    // Pick H1 (index 3) and H2 (index 4). NOTE: the loader applies PyMOL's
+    // `pdb_standard_order` (default on), which reorders the atoms into standard
+    // order — heavies first — so the on-disk order C1,H1,C2,H2 becomes
+    // C1(1),C2(2),H1(3),H2(4). Verified against the real-PyMOL oracle:
+    // `index 2` is a carbon, not H1. The two hydrogens are therefore at 3 and 4.
+    e.call('builder_pick', ['m', 3, null, 'multi']);
     e.call('builder_pick', ['m', 4, null, 'multi']);
     const reply = e.call('builder_action', ['createBond'], {}) as unknown as { error?: unknown };
     expect(reply.error).toBeNull();
