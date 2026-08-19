@@ -200,39 +200,19 @@ describe('mview / get_movie_view', () => {
 });
 
 describe('morph', () => {
-  it('builds an N-state object whose middle state is the endpoint midpoint', () => {
-    const { handlers, ex } = harness(twoStatePdb());
-    const morph = handlers.get('morph')!;
-
-    // 5 states over the two source states: middle (state 3, t=0.5) is the midpoint.
-    const frames = morph(['morphed', 'm'], { steps: 5 });
-    expect(frames).toBe(5);
-
-    const out = ex.molecule('morphed')!;
-    expect(out.nstate).toBe(5);
-    expect(out.natom).toBe(2);
-
-    // State 1 == source state 1.
-    expect(out.coord(0, 1)).toEqual([0, 0, 0]);
-    expect(out.coord(1, 1)).toEqual([10, 0, 0]);
-    // State 5 == source state 2.
-    expect(out.coord(0, 5)[0]).toBeCloseTo(4, 5);
-    expect(out.coord(1, 5)[0]).toBeCloseTo(20, 5);
-    // State 3 (t=0.5) == coordinate midpoint of the two endpoints.
-    const midA = out.coord(0, 3);
-    const midB = out.coord(1, 3);
-    expect(midA[0]).toBeCloseTo(2, 5);
-    expect(midA[1]).toBeCloseTo(1, 5);
-    expect(midA[2]).toBeCloseTo(3, 5);
-    expect(midB[0]).toBeCloseTo(15, 5);
-    expect(midB[1]).toBeCloseTo(4, 5);
-    expect(midB[2]).toBeCloseTo(2, 5);
-  });
-
-  it('returns null for an unknown source object', () => {
+  // Open-Source PyMOL's `morph` raises IncentiveOnlyException unconditionally —
+  // BOTH the rigimol and linear methods sit behind the raise (morphing.py:42),
+  // verified against the oracle. engine-ts reproduces that error rather than
+  // running the linear interpolator.
+  it('raises the incentive-only error (both rigimol and linear)', () => {
     const { handlers } = harness(twoStatePdb());
     const morph = handlers.get('morph')!;
-    expect(morph(['x', 'nope'], {})).toBeNull();
+    expect(() => morph(['morphed', 'm'], { steps: 5 })).toThrow(
+      /not available in Open-Source PyMOL/,
+    );
+    expect(() => morph(['morphed', 'm'], { method: 'linear' })).toThrow(
+      /not available in Open-Source PyMOL/,
+    );
   });
 });
 

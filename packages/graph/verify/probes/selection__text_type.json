@@ -1,0 +1,14 @@
+{
+  "id":"selection__text_type","feature":"text_type","kind":"selection","probeKind":"state",
+  "ops":[
+    {"do":"load packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"alter resi 1-5, text_type='C.ar'"},
+    {"do":"alter name CA, text_type='C.3'"}
+  ],
+  "checks":[
+    {"call":["count_atoms","text_type C.ar"],"label":"tt C.ar"},
+    {"call":["count_atoms","tt. C.3"],"label":"tt. C.3 alias"},
+    {"call":["count_atoms","text_type C.*"],"label":"tt wildcard C.*"}
+  ],
+  "expected":[200,712,912]
+}

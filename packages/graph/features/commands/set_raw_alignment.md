@@ -4,7 +4,7 @@ kind: command
 category: fitting-alignment
 subcategory: alignment objects
 summary: API-only builder that constructs an alignment object from raw lists of (model, index) column tuples.
-parity: unknown
+parity: implemented
 ---
 
 ## Purpose
@@ -37,4 +37,4 @@ cmd.set_raw_alignment('alnnew', raw)
 - [align](./align.md)
 
 ## Source
-`packages/engine/modules/pymol/creating.py:648`; signature in `docs/api-reference/commands.mdx:3672`. Parity: not located in the TypeScript port — unknown.
+`packages/engine/modules/pymol/creating.py:648`; signature in `docs/api-reference/commands.mdx:3672`. Parity: ported in `packages/engine-ts/src/cmd/align.ts` (`ctx.command('set_raw_alignment', …)`) — normalises the raw columns into the same store `get_raw_alignment` reads. NOTE: it cannot be differentially verified because the real-PyMOL oracle's `_cmd.set_raw_alignment` segfaults on every input (see `packages/graph/verify/reports/command__set_raw_alignment.md`).

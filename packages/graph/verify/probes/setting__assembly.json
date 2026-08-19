@@ -1,0 +1,6 @@
+{"id":"setting__assembly","feature":"assembly","kind":"setting","probeKind":"state",
+ "ops":[{"do":"set assembly, 1"}],
+ "checks":[
+   {"call":["get_setting_tuple","assembly"],"label":"assembly string setting stores '1' -> [6,['1']]"},
+   {"call":["get","assembly"],"label":"get assembly text"}],
+ "expected":[[6,["1"]],"1"]}

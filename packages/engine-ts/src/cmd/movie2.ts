@@ -25,10 +25,16 @@
  * case; the position/clip/fov channels use straight linear interpolation, which
  * is the `power=1` ("linear") mode of `cmd.mview`.
  */
-import type { Json } from '@tenmol/protocol';
-import { ObjectMolecule } from '../model/molecule';
+import { type Json, incentiveOnly } from '@tenmol/protocol';
+import { PymolError } from '@tenmol/backend';
 import type { View18 } from '../view/view';
 import type { RegistrarCtx } from './registrar';
+
+/** Verbatim `str(IncentiveOnlyException)` for `morph` (morphing.py:42). */
+const MORPH_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "morph" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
 
 /* ------------------------------ arg helpers ------------------------------ */
 
@@ -472,53 +478,13 @@ export function registerMovie2(ctx: RegistrarCtx): void {
   });
 
   /* ------------------------------- morph ------------------------------- */
-  // morph(name, source, target=None, source_state=1, target_state=?, steps=30)
-  // Build a new multi-state object whose `steps` coordinate sets linearly
-  // interpolate between two endpoint conformations:
-  //   - target given: state 1 of `source` -> state 1 of `target`;
-  //   - target omitted: state `source_state` (1) -> state `target_state` (2)
-  //     of `source` (a two-state object).
-  // Returns the number of states (frames) created, or null on error.
-  ctx.command('morph', (args, kwargs): Json => {
-    const rawName = ctx.str(pick(args, kwargs, 0, 'name'), '');
-    const srcName = ctx.str(pick(args, kwargs, 1, 'source'), '');
-    const tgtName = ctx.str(pick(args, kwargs, 2, 'target'), '');
-    const src = ctx.executive.molecule(srcName);
-    if (!src) return null;
-    const tgt = tgtName !== '' ? ctx.executive.molecule(tgtName) : src;
-    if (!tgt) return null;
-
-    const srcState = frameOf(pick(args, kwargs, 3, 'source_state'), 1);
-    const tgtState = frameOf(pick(args, kwargs, 4, 'target_state'), tgtName !== '' ? 1 : 2);
-    const steps = Math.max(2, frameOf(pick(args, kwargs, 5, 'steps'), 30));
-
-    const a = src.states[srcState - 1];
-    const b = tgt.states[tgtState - 1];
-    if (!a || !b) return null;
-    const natom = Math.min(src.natom, tgt.natom);
-    if (natom === 0) return null;
-
-    const name = rawName !== '' ? ctx.executive.uniqueName(rawName) : ctx.executive.uniqueName('morph');
-    const out = new ObjectMolecule(name);
-    // Clone the atom table + bonds from the source object.
-    for (let i = 0; i < natom; i++) out.atoms.push({ ...src.atoms[i]! });
-    for (const [i, j] of src.bonds) {
-      if (i < natom && j < natom) out.bonds.push([i, j]);
-    }
-    // Materialise the interpolated coordinate sets.
-    for (let k = 0; k < steps; k++) {
-      const t = steps === 1 ? 0 : k / (steps - 1);
-      const coords = new Float32Array(natom * 3);
-      for (let o = 0; o < natom * 3; o++) {
-        const av = a[o] ?? 0;
-        const bv = b[o] ?? 0;
-        coords[o] = av + (bv - av) * t;
-      }
-      out.states.push(coords);
-    }
-    ctx.executive.addMolecule(out);
-    ctx.publish();
-    return out.nstate;
+  // `morphing.morph` is incentive-only: BOTH methods (rigimol AND linear) sit
+  // behind an unconditional `raise pymol.IncentiveOnlyException()`
+  // (morphing.py:42, before any method dispatch), so Open-Source PyMOL raises
+  // for every `cmd.morph` call. Reproduce the exact error the oracle surfaces
+  // (mirrors extras.ts / display.ts), rather than the linear interpolator.
+  ctx.command('morph', (): Json => {
+    throw new PymolError(incentiveOnly('morph', MORPH_INCENTIVE_ONLY), 'morph');
   });
 
   /* ---- no-op file IO in the browser port ---- */

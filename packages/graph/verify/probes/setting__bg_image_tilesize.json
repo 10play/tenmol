@@ -1,0 +1,5 @@
+{"id":"setting__bg_image_tilesize","feature":"bg_image_tilesize","kind":"setting","probeKind":"state",
+ "ops":[],
+ "checks":[
+   {"call":["get_setting_tuple","bg_image_tilesize"],"label":"float3 default [4,[100,100,0]]"}],
+ "expected":[[4,[100,100,0]]]}

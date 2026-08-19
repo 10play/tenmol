@@ -1,0 +1,15 @@
+{
+  "id":"selection__numeric_type","feature":"numeric_type","kind":"selection","probeKind":"state",
+  "ops":[
+    {"do":"load packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"alter resi 1-10, numeric_type=7"},
+    {"do":"alter resi 11-20, numeric_type=8"}
+  ],
+  "checks":[
+    {"call":["count_atoms","numeric_type 7"],"label":"nt 7 (resi 1-10)"},
+    {"call":["count_atoms","nt. 8"],"label":"nt. 8 alias (resi 11-20)"},
+    {"call":["count_atoms","numeric_type 7+8"],"label":"nt 7+8 integer list"},
+    {"call":["count_atoms","numeric_type 5-9"],"label":"nt 5-9 integer range"}
+  ],
+  "expected":[482,445,927,927]
+}

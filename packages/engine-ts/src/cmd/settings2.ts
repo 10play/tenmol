@@ -212,6 +212,13 @@ function coerceSettingValue(name: string, raw: unknown, str: RegistrarCtx['str']
     const vec = parseFloat3(raw);
     if (vec) return vec;
   }
+  // String-typed settings (`REC_s`, e.g. `assembly`, `label_font_id` names)
+  // store the value verbatim as text — PyMOL's `SettingSetFromString`
+  // cSetting_string branch keeps the string, so `set assembly, 1` stores "1",
+  // not the number 1 (verified vs the oracle: get_setting_tuple -> [6, ['1']]).
+  if (SETTING_INDEX_TYPE[name]?.[1] === cSetting_string) {
+    return str(raw);
+  }
   const v = coerceValue(raw, str);
   if (typeof v === 'string') {
     // Boolean/int settings accept the word keywords on/yes/true/off/no/false
@@ -567,18 +574,21 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     return settingText(name, v);
   });
   // `cmd.get_setting_tuple(name, selection, state)` -> `(type, value_tuple)`.
-  // For a float3 setting PyMOL returns `[4, [x, y, z]]` (type tag
-  // cSetting_float3 = 4, then the 3-float vector) — verified vs the oracle for
-  // both the default and after a `set`. Scalar settings keep the engine's
-  // existing single-element shape.
+  // PyMOL always answers `[typeCode, [values…]]` (Setting.cpp SettingGetTuple):
+  // a float3 setting gives `[4, [x, y, z]]`, and every scalar setting gives
+  // `[type, [value]]` — colours (type 5) hold the packed colour value, strings
+  // (type 6) the string, ints/floats/bools the number. Verified vs the oracle
+  // (bg_rgb → [5,[1073741824]], ribbon_color → [5,[-1]], assembly → [6,['']]).
   ctx.command('get_setting_tuple', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
     const v = resolveSetting(name, str(args[1] ?? kwargs['selection'] ?? ''));
-    if (SETTING_INDEX_TYPE[name]?.[1] === cSetting_float3) {
+    const type = SETTING_INDEX_TYPE[name]?.[1] ?? 0;
+    if (type === cSetting_float3) {
       const vec = Array.isArray(v) ? v : [0, 0, 0];
       return [cSetting_float3, [vec[0] ?? 0, vec[1] ?? 0, vec[2] ?? 0]] as Json;
     }
-    return [v ?? 0] as Json;
+    const val = v ?? (type === cSetting_string ? '' : 0);
+    return [type, [val]] as Json;
   });
 
   /* ------------------------------- view extras ---------------------------- */

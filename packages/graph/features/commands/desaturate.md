@@ -3,7 +3,7 @@ name: desaturate
 kind: command
 category: coloring
 subcategory: color adjustment
-summary: Desaturates (blends toward grey) the colors of a selection by a given factor.
+summary: Desaturates a selection's colours toward grey — incentive-only; raises IncentiveOnlyException (matched by the TS engine).
 parity: implemented
 ---
 
@@ -20,7 +20,7 @@ parity: implemented
 | `quiet` | int | `1` | Suppress status output when `1` |
 
 ## Behaviour
-Adjusts per-atom colors toward grey by the factor `a` (0 = no change, 1 = fully grey). Note: in upstream open-source PyMOL this is an incentive-only feature (`desaturate` raises `IncentiveOnlyException`); the tenmol TypeScript engine provides a working implementation that blends colors toward grey.
+Conceptually adjusts per-atom colors toward grey by the factor `a` (0 = no change, 1 = fully grey). This is an **incentive-only** feature: upstream open-source PyMOL's `desaturate` raises `IncentiveOnlyException` rather than recolouring, and the tenmol TypeScript engine matches that by raising the identical error (verified against the real-PyMOL oracle).
 
 ## Examples
 ```python
@@ -33,4 +33,4 @@ desaturate not chain A, a=0.7
 - [set_color](../commands/set_color.md)
 
 ## Source
-`packages/engine/modules/pymol/experimenting.py:268` (`def desaturate`; upstream raises `IncentiveOnlyException`). Ported: `packages/engine-ts/src/cmd/display.ts:184` (`ctx.command('desaturate', ...)`, blend-toward-grey).
+`packages/engine/modules/pymol/experimenting.py:280` (`def desaturate` — raises `IncentiveOnlyException`). Ported: `packages/engine-ts/src/cmd/display.ts` (`ctx.command('desaturate', ...)` raises the same incentive-only error to match Open-Source PyMOL).

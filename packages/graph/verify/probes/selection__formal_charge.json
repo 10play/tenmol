@@ -1,0 +1,15 @@
+{
+  "id":"selection__formal_charge","feature":"formal_charge","kind":"selection","probeKind":"state",
+  "ops":[
+    {"do":"load packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"alter chain A and polymer, formal_charge=2"}
+  ],
+  "checks":[
+    {"call":["count_atoms","formal_charge = 1"],"label":"native fc=1 (LYS NZ + ARG NH1 outside chain A)"},
+    {"call":["count_atoms","fc. < 0"],"label":"native fc<0 (ASP OD2 + GLU OE2)"},
+    {"call":["count_atoms","fc. = 2"],"label":"fc.=2 (altered chain A polymer)"},
+    {"call":["count_atoms","fc. >= 1"],"label":"fc.>=1"},
+    {"call":["count_atoms","formal_charge = 0"],"label":"fc=0 remainder"}
+  ],
+  "expected":[51,52,1479,1530,4102]
+}

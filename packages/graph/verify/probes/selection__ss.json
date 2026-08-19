@@ -1,0 +1,13 @@
+{
+  "id":"selection__ss","feature":"ss","kind":"selection","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/pept.pdb, p"},{"do":"dss"}],
+  "checks":[
+    {"call":["count_atoms","ss H"],"label":"ss H (helix, none in pept)"},
+    {"call":["count_atoms","ss S"],"label":"ss S (strand Cα)"},
+    {"call":["count_atoms","ss L"],"label":"ss L literal only (loop Cα)"},
+    {"call":["count_atoms","ss ''"],"label":"ss '' unassigned (not folded into L)"},
+    {"call":["count_atoms","ss S+L"],"label":"ss S+L list"},
+    {"call":["count_atoms","ss H or ss S or ss L"],"label":"all assigned"}
+  ],
+  "expected":[0,11,2,94,13,13]
+}

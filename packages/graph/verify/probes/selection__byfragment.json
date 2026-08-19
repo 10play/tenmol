@@ -1,0 +1,11 @@
+{
+  "id":"selection__byfragment","feature":"byfragment","kind":"selection","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/1tii.pdb, m"}],
+  "checks":[
+    {"call":["count_atoms","byfragment (resi 5)"],"label":"byfragment: no editor fragments -> empty (NOT bymolecule)"},
+    {"call":["count_atoms","byfrag (chain A)"],"label":"byfrag alias -> empty"},
+    {"call":["count_atoms","bf. (all)"],"label":"bf. alias -> empty"},
+    {"call":["count_atoms","bymolecule (resi 5)"],"label":"bymolecule still expands the whole connected molecule"}
+  ],
+  "expected":[0,0,0,4071]
+}

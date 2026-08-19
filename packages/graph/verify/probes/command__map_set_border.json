@@ -1,0 +1,10 @@
+{
+  "id":"command__map_set_border","feature":"map_set_border","kind":"command","probeKind":"state",
+  "ops":[{"do":"load packages/engine/testing/data/h2o-elf-nstart.ccp4, dm"}],
+  "checks":[
+    {"call":["map_set_border","dm",0.0],"label":"map_set_border returns None"},
+    {"call":["get_volume_histogram","dm",6],"label":"histogram after setting edge voxels to 0"}
+  ],
+  "tol":0.01,
+  "expected":[null,[-0.48972979187965393,4.9909186363220215,0.05733998119831085,0.9867156744003296,56575,3052,1601,1318,1261,193]]
+}

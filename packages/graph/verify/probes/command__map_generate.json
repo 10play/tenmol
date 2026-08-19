@@ -1,0 +1,9 @@
+{
+  "id":"command__map_generate","feature":"map_generate","kind":"command","probeKind":"state",
+  "ops":[],
+  "checks":[
+    {"call":["map_generate","m1","nonexistent.mtz","FWT","PHWT","None",0,0],"label":"map_generate raises bare CmdException for an unreadable reflection file"},
+    {"call":["get_names"],"label":"no map object created"}
+  ],
+  "expected":[{"__error":" Error: "},[]]
+}
