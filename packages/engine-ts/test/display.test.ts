@@ -3,7 +3,7 @@ import { Executive } from '../src/exec/executive';
 import { parsePdb } from '../src/model/pdb';
 import { Rep } from '@tenmol/protocol';
 import { registerDisplay } from '../src/cmd/display';
-import { getColorIndex, getColorTuple } from '../src/exec/color';
+import { getColorIndex } from '../src/exec/color';
 import type { CommandHandler, RegistrarCtx } from '../src/cmd/registrar';
 
 /* ------------------------------------------------------------------------ */
