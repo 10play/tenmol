@@ -1,0 +1,6 @@
+{"id":"setting__bg_rgb","feature":"bg_rgb","kind":"setting","probeKind":"state",
+ "ops":[{"do":"set bg_rgb, red"}],
+ "checks":[
+   {"call":["get_setting_int","bg_rgb"],"label":"bg_rgb set red -> color index"},
+   {"call":["get_color_index","red"],"label":"red color index reference"}],
+ "expected":[4,4]}

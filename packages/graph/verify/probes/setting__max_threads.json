@@ -1,0 +1,4 @@
+{"id":"setting__max_threads","feature":"max_threads","kind":"setting","probeKind":"state",
+ "ops":[{"do":"set max_threads, 4"}],
+ "checks":[{"call":["get_setting_int","max_threads"],"label":"max_threads set 4 roundtrip (env-independent)"}],
+ "expected":[4]}

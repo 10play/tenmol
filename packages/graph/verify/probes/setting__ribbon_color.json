@@ -1,0 +1,6 @@
+{"id":"setting__ribbon_color","feature":"ribbon_color","kind":"setting","probeKind":"state",
+ "ops":[{"do":"set ribbon_color, blue"}],
+ "checks":[
+   {"call":["get_setting_int","ribbon_color"],"label":"ribbon_color set blue -> color index"},
+   {"call":["get_color_index","blue"],"label":"blue color index reference"}],
+ "expected":[2,2]}
