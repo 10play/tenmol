@@ -305,17 +305,42 @@ const PALETTE: ReadonlyArray<readonly [string, RGB]> = buildPalette();
 const NAME_TO_INDEX = new Map<string, number>();
 const INDEX_TO_RGB = new Map<number, RGB>();
 const INDEX_TO_NAME = new Map<number, string>();
-for (let i = 0; i < PALETTE.length; i++) {
-  const [name, rgb] = PALETTE[i]!;
-  NAME_TO_INDEX.set(name, i);
-  INDEX_TO_RGB.set(i, rgb);
-  // First name registered for an index wins, so aliases (`grey`/`gray`) resolve
-  // back to their canonical spelling — matching PyMOL's `ColorGetName`.
-  if (!INDEX_TO_NAME.has(i)) INDEX_TO_NAME.set(i, name);
-}
 
 /** Next index for a runtime-defined colour (`cmd.set_color`). */
 let nextColorIndex = PALETTE.length;
+
+/**
+ * (Re)load the built-in palette into the lookup tables, discarding any colours a
+ * previous session defined with `set_color`. Runs at module load and from
+ * {@link resetColorTable}.
+ */
+function loadPalette(): void {
+  NAME_TO_INDEX.clear();
+  INDEX_TO_RGB.clear();
+  INDEX_TO_NAME.clear();
+  for (let i = 0; i < PALETTE.length; i++) {
+    const [name, rgb] = PALETTE[i]!;
+    NAME_TO_INDEX.set(name, i);
+    INDEX_TO_RGB.set(i, rgb);
+    // First name registered for an index wins, so aliases (`grey`/`gray`) resolve
+    // back to their canonical spelling — matching PyMOL's `ColorGetName`.
+    if (!INDEX_TO_NAME.has(i)) INDEX_TO_NAME.set(i, name);
+  }
+  nextColorIndex = PALETTE.length;
+}
+loadPalette();
+
+/**
+ * Reset the colour table to the built-in palette, as PyMOL's `ColorReset` does for a
+ * fresh session. The lookup tables and the `set_color` cursor are module-level
+ * singletons — deliberately, since PyMOL's colour table is one flat global namespace —
+ * so without this a colour defined by one {@link Engine} would leak into the next one
+ * built in the same process. Called once per session from `registerColoring`, which
+ * keeps each engine's colour table independent (and per-probe replay deterministic).
+ */
+export function resetColorTable(): void {
+  loadPalette();
+}
 
 /**
  * `cmd.set_color(name, rgb)` — define or redefine a named colour. Returns its

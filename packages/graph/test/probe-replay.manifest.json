@@ -1,0 +1,27 @@
+{
+  "//": "Classification of verify/probes/*.json against engine-ts on master, consumed by probe-replay.ts. tooSlow = replayable but excluded from the unit lane for wall-clock (still covered by oracle-diff.spec.ts). knownFailures = probes whose engine-ts output does not yet match real PyMOL (genuine engine gaps), asserted to STILL diverge so a future fix trips the test and prompts promotion. Regenerate by classifying every probe through replayProbe() after an engine change.",
+  "tooSlow": [
+    "command__gradient",
+    "command__isodot",
+    "command__isolevel",
+    "command__isomesh",
+    "command__isosurface",
+    "command__slice_new",
+    "command__volume",
+    "feature__space_groups"
+  ],
+  "knownFailures": [
+    "command___",
+    "command__get_session",
+    "command__load_embedded",
+    "command__pbc_unwrap",
+    "command__run",
+    "command__save",
+    "command__set_geometry",
+    "command__torsion",
+    "feature__colour-by-rep",
+    "feature__session-format",
+    "setting__auto_indicate_flags",
+    "setting__editor_bond_cycle_mode"
+  ]
+}
