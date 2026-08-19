@@ -232,8 +232,10 @@ file, then `load(..., format='ccp4')`. Only MTZ reflection files supported. Requ
 `headering` module.
 
 ### Source
-`packages/engine/modules/pymol/creating.py:176`. Parity: unknown — not in the TypeScript
-engine registry (depends on native MTZ handling).
+`packages/engine/modules/pymol/creating.py:176`. Parity:
+`packages/engine-ts/src/cmd/maps.ts` registers `map_generate` as a blanket stub —
+engine-ts has no MTZ reader, so it raises the same bare `CmdException` Open-Source PyMOL
+surfaces for an unreadable reflection file (`creating.py:55-57`) for every call.
 
 ---
 

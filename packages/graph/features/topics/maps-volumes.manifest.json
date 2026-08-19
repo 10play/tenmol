@@ -7,7 +7,11 @@
     "summary": "Creates a map object from atoms using a built-in field generator (gaussian, vdw, coulomb).",
     "signature": "map_new(name, type='gaussian', grid=None, selection='(all)', buffer=None, box=None, state=0, quiet=1, zoom=0, normalize=-1, clamp=[1.0, -1.0], resolution=0.0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:291", "packages/engine-ts/src/cmd/maps.ts:76", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:291",
+      "packages/engine-ts/src/cmd/maps.ts:76",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#map_new"
   },
@@ -19,7 +23,10 @@
     "summary": "Combines maps via minimum, maximum, average, sum, or difference operators.",
     "signature": "map_set(name, operator, operands='', target_state=0, source_state=0, zoom=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2615", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2615",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/maps-volumes.md#map_set"
   },
@@ -31,7 +38,11 @@
     "summary": "Sets the scalar level on the edge (border) grid points of a map.",
     "signature": "map_set_border(name, level=0.0, state=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2656", "packages/engine-ts/src/cmd/maps.ts:283", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2656",
+      "packages/engine-ts/src/cmd/maps.ts:283",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#map_set_border"
   },
@@ -43,7 +54,11 @@
     "summary": "Resamples a map at twice the current resolution (eight-fold memory increase).",
     "signature": "map_double(name, state=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2685", "packages/engine-ts/src/cmd/maps.ts:265", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2685",
+      "packages/engine-ts/src/cmd/maps.ts:265",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#map_double"
   },
@@ -55,7 +70,11 @@
     "summary": "Resamples a map at half the current resolution, optionally smoothing.",
     "signature": "map_halve(name, state=0, smooth=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2709", "packages/engine-ts/src/cmd/maps.ts:274", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2709",
+      "packages/engine-ts/src/cmd/maps.ts:274",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#map_halve"
   },
@@ -67,7 +86,11 @@
     "summary": "Crops a map's extent to just cover a selection plus a buffer.",
     "signature": "map_trim(name, selection, buffer=0.0, map_state=0, sele_state=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2739", "packages/engine-ts/src/cmd/maps.ts:213", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2739",
+      "packages/engine-ts/src/cmd/maps.ts:213",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#map_trim"
   },
@@ -79,8 +102,11 @@
     "summary": "Synthesizes an x-ray map object from a reflection (MTZ) file and amplitude/phase columns.",
     "signature": "map_generate(name, reflection_file, amplitudes, phases, weights='None', reso_low=50.0, reso_high=1.0, quiet=1, zoom=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:176", "docs/api-reference/commands.mdx"],
-    "parityStatus": "unknown",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:176",
+      "docs/api-reference/commands.mdx"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#map_generate"
   },
   {
@@ -91,7 +117,9 @@
     "summary": "API-only loader for a ChemPy map object (Phenix temporary routine).",
     "signature": "load_map(*arg, **kw)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/importing.py:218"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/importing.py:218"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/maps-volumes.md#load_map"
   },
@@ -103,7 +131,9 @@
     "summary": "API-only loader for a brick (grid) object (GAMESS-UK temporary routine).",
     "signature": "load_brick(*arg, **kw)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/importing.py:210"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/importing.py:210"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/maps-volumes.md#load_brick"
   },
@@ -115,7 +145,10 @@
     "summary": "Loads an MTZ reflection file as map objects (fofc/2fofc, or one map when columns named).",
     "signature": "load_mtz(filename, prefix='', amplitudes='', phases='', weights='None', reso_low=0, reso_high=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/importing.py:1481", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/importing.py:1481",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/maps-volumes.md#load_mtz"
   },
@@ -127,7 +160,10 @@
     "summary": "CCP4/MRC binary electron-density raster format loaded via cmd.load (format='ccp4'); also brix/dsn6/omap.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/importing.py:649-694", "packages/engine/modules/pymol/importing.py:1142-1143"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/importing.py:649-694",
+      "packages/engine/modules/pymol/importing.py:1142-1143"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/maps-volumes.md#ccp4"
   },
@@ -139,7 +175,10 @@
     "summary": "XPLOR/CNS ASCII density map format loaded via cmd.load or the API-only read_xplorstr.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/importing.py:1074-1095", "packages/engine/modules/pymol/importing.py:694"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/importing.py:1074-1095",
+      "packages/engine/modules/pymol/importing.py:694"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/maps-volumes.md#xplor"
   },
@@ -151,7 +190,10 @@
     "summary": "OpenDX/APBS electrostatics grid format (.dx/.dxbin) loaded via cmd.load (format='dx').",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/importing.py:104-105", "packages/engine/modules/pymol/importing.py:914"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/importing.py:104-105",
+      "packages/engine/modules/pymol/importing.py:914"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/maps-volumes.md#dx"
   },
@@ -163,7 +205,11 @@
     "summary": "Creates a wireframe mesh isosurface object from a map at a contour level.",
     "signature": "isomesh(name, map, level=1.0, selection='', buffer=0.0, state=1, carve=None, source_state=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:514", "packages/engine-ts/src/cmd/maps.ts:345", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:514",
+      "packages/engine-ts/src/cmd/maps.ts:345",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#isomesh"
   },
@@ -175,7 +221,11 @@
     "summary": "Creates a solid triangulated surface object from a map at a contour level.",
     "signature": "isosurface(name, map, level=1.0, selection='', buffer=0.0, state=1, carve=None, source_state=0, side=1, mode=3, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:719", "packages/engine-ts/src/cmd/maps.ts:346", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:719",
+      "packages/engine-ts/src/cmd/maps.ts:346",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#isosurface"
   },
@@ -187,7 +237,11 @@
     "summary": "Creates a dot isosurface object (sampled points) from a map at a contour level.",
     "signature": "isodot(name, map, level=1.0, selection='', buffer=0.0, state=0, carve=None, source_state=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:779", "packages/engine-ts/src/cmd/maps.ts:347", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:779",
+      "packages/engine-ts/src/cmd/maps.ts:347",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#isodot"
   },
@@ -199,7 +253,11 @@
     "summary": "Changes the contour level of an existing isodot/isosurface/isomesh object in place.",
     "signature": "isolevel(name, level=1.0, state=0, query=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:822", "packages/engine-ts/src/cmd/maps.ts:198", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:822",
+      "packages/engine-ts/src/cmd/maps.ts:198",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#isolevel"
   },
@@ -211,7 +269,11 @@
     "summary": "Creates a gradient object from a map between a minimum and maximum level.",
     "signature": "gradient(name, map, minimum=1.0, maximum=-1.0, selection='', buffer=0.0, state=0, carve=None, source_state=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:843", "packages/engine-ts/src/cmd/ramps.ts:218", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:843",
+      "packages/engine-ts/src/cmd/ramps.ts:218",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#gradient"
   },
@@ -223,7 +285,10 @@
     "summary": "Creates a direct volume-rendering object from a map, colored by a named ramp transfer function.",
     "signature": "volume(name, map, ramp='', selection='', buffer=0.0, state=1, carve=None, source_state=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:577", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:577",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/maps-volumes.md#volume"
   },
@@ -235,7 +300,11 @@
     "summary": "Sets or gets the value-to-RGBA transfer function (color ramp) of a volume object.",
     "signature": "volume_color(name, ramp='', state=-1, quiet=1, _guiupdate=True)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/colorramping.py:123", "packages/engine-ts/src/cmd/ramps.ts:264", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/colorramping.py:123",
+      "packages/engine-ts/src/cmd/ramps.ts:264",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#volume_color"
   },
@@ -247,7 +316,11 @@
     "summary": "Registers a named volume color ramp reusable as a preset when creating/coloring volumes.",
     "signature": "volume_ramp_new(name, ramp)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/colorramping.py:56", "packages/engine-ts/src/cmd/ramps.ts:256", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/colorramping.py:56",
+      "packages/engine-ts/src/cmd/ramps.ts:256",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#volume_ramp_new"
   },
@@ -259,7 +332,11 @@
     "summary": "Opens the interactive Volume Color Map Editor for a volume object.",
     "signature": "volume_panel(name, quiet=1, _noqt=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/colorramping.py:183", "apps/web/src/features/volume/", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/colorramping.py:183",
+      "apps/web/src/features/volume/",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/maps-volumes.md#volume_panel"
   },
@@ -271,7 +348,11 @@
     "summary": "API-only accessor returning the raw scalar grid of a map or volume object.",
     "signature": "get_volume_field(objName, state=1, copy=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:40", "packages/engine-ts/src/cmd/maps.ts:161", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:40",
+      "packages/engine-ts/src/cmd/maps.ts:161",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#get_volume_field"
   },
@@ -283,7 +364,11 @@
     "summary": "API-only: returns [min, max, mean, stdev, histogram...] (length bins+4) for a map or volume.",
     "signature": "get_volume_histogram(objName, bins=64, range=None)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:62", "packages/engine-ts/src/cmd/maps.ts:170", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:62",
+      "packages/engine-ts/src/cmd/maps.ts:170",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#get_volume_histogram"
   },
@@ -295,7 +380,10 @@
     "summary": "Creates a 2-D slice (cutting plane) object through a map, colored by a ramp.",
     "signature": "slice_new(name, map, state=1, source_state=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:680", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:680",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/maps-volumes.md#slice_new"
   },
@@ -307,7 +395,11 @@
     "summary": "Creates a color-ramp object from map potential values or from proximity to a molecular object.",
     "signature": "ramp_new(name, map_name, range=[-1.0, 0.0, 1.0], color=['red', [1.0, 1.0, 1.0], 'blue'], state=1, selection='', beyond=2.0, within=6.0, sigma=2.0, zero=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:374", "packages/engine-ts/src/cmd/ramps.ts:178", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:374",
+      "packages/engine-ts/src/cmd/ramps.ts:178",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#ramp_new"
   },
@@ -319,7 +411,11 @@
     "summary": "Updates the range and/or colors of an existing color ramp in place.",
     "signature": "ramp_update(name, range=[], color=[], quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:492", "packages/engine-ts/src/cmd/ramps.ts:190", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:492",
+      "packages/engine-ts/src/cmd/ramps.ts:190",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#ramp_update"
   },
@@ -331,7 +427,11 @@
     "summary": "Interactive panel editing a volume's transfer function: map histogram plot with draggable color/alpha control points on a logarithmic alpha axis.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pmg_qt/volume.py:69-877", "apps/web/src/features/volume/", "docs/dialogs-volume-properties-scenes.md"],
+    "sourceRefs": [
+      "packages/engine/modules/pmg_qt/volume.py:69-877",
+      "apps/web/src/features/volume/",
+      "docs/dialogs-volume-properties-scenes.md"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#volume-color-map-editor"
   }

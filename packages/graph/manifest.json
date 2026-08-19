@@ -5226,7 +5226,7 @@
         "packages/engine/modules/pymol/creating.py:648",
         "docs/api-reference/commands.mdx:3672"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/fitting-alignment.md#set_raw_alignment",
       "sidecar": "features/topics/fitting-alignment.manifest.json"
     },
@@ -5926,7 +5926,7 @@
         "packages/engine/modules/pymol/creating.py:176",
         "docs/api-reference/commands.mdx"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/maps-volumes.md#map_generate",
       "sidecar": "features/topics/maps-volumes.manifest.json"
     },

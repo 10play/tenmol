@@ -7,7 +7,10 @@
     "summary": "Lists the contents of the current working directory, optionally filtered by a glob pattern.",
     "signature": "ls(pattern=None)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/externing.py:73", "docs/api-reference/commands.mdx:2292"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/externing.py:73",
+      "docs/api-reference/commands.mdx:2292"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/ls.md"
   },
@@ -19,7 +22,10 @@
     "summary": "Extends the existing movie frame-to-state specification using mset syntax.",
     "signature": "madd(specification='', frame=0, freeze=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:677", "docs/api-reference/commands.mdx:2302"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:677",
+      "docs/api-reference/commands.mdx:2302"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/madd.md"
   },
@@ -31,7 +37,10 @@
     "summary": "Resamples a map object at twice its current resolution (finer grid).",
     "signature": "map_double(name, state=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2685", "docs/api-reference/commands.mdx:2314"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2685",
+      "docs/api-reference/commands.mdx:2314"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/map_double.md"
   },
@@ -43,8 +52,11 @@
     "summary": "Synthesizes an electron-density map object from reflection data (amplitudes and phases).",
     "signature": "map_generate(name, reflection_file, amplitudes, phases, weights='None', reso_low=50.0, reso_high=1.0, quiet=1, zoom=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:176", "docs/api-reference/commands.mdx:2323"],
-    "parityStatus": "unknown",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:176",
+      "docs/api-reference/commands.mdx:2323"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/map_generate.md"
   },
   {
@@ -55,7 +67,10 @@
     "summary": "Resamples a map object at half its current resolution (coarser grid), optionally smoothing.",
     "signature": "map_halve(name, state=0, smooth=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2709", "docs/api-reference/commands.mdx:2339"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2709",
+      "docs/api-reference/commands.mdx:2339"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/map_halve.md"
   },
@@ -67,7 +82,10 @@
     "summary": "Creates a map object with a built-in generator (Gaussian, VDW, Coulomb, etc.) over a selection.",
     "signature": "map_new(name, type='gaussian', grid=None, selection='(all)', buffer=None, box=None, state=0, quiet=1, zoom=0, normalize=-1, clamp=[1.0, -1.0], resolution=0.0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:291", "docs/api-reference/commands.mdx:2351"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:291",
+      "docs/api-reference/commands.mdx:2351"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/map_new.md"
   },
@@ -79,7 +97,10 @@
     "summary": "Internal shortcut factory supplying tab-completion candidates for map object names.",
     "signature": "map_sc(sc=Shortcut, gnot=get_names_of_type)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/cmd.py:372", "packages/engine/modules/pymol/completing.py:62"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/cmd.py:372",
+      "packages/engine/modules/pymol/completing.py:62"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/map_sc.md"
   },
@@ -91,7 +112,10 @@
     "summary": "Performs elementwise operations on and between map objects (min, max, sum, average, difference, copy, unique).",
     "signature": "map_set(name, operator, operands='', target_state=0, source_state=0, zoom=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2615", "docs/api-reference/commands.mdx:2377"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2615",
+      "docs/api-reference/commands.mdx:2377"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/map_set.md"
   },
@@ -103,7 +127,10 @@
     "summary": "Sets the map value on all edge (border) grid points to a fixed level.",
     "signature": "map_set_border(name, level=0.0, state=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2656", "docs/api-reference/commands.mdx:2393"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2656",
+      "docs/api-reference/commands.mdx:2393"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/map_set_border.md"
   },
@@ -115,7 +142,10 @@
     "summary": "Reduces a map's extent to just cover a selection of atoms plus a buffer.",
     "signature": "map_trim(name, selection, buffer=0.0, map_state=0, sele_state=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2739", "docs/api-reference/commands.mdx:2405"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2739",
+      "docs/api-reference/commands.mdx:2405"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/map_trim.md"
   },
@@ -127,7 +157,10 @@
     "summary": "Appends generalized command-line operations to a movie frame (additive counterpart of mdo).",
     "signature": "mappend(frame, command)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:323", "docs/api-reference/commands.mdx:2418"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:323",
+      "docs/api-reference/commands.mdx:2418"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mappend.md"
   },
@@ -139,7 +172,10 @@
     "summary": "Makes the indicated atoms unpickable with the mouse, protecting them from accidental selection.",
     "signature": "mask(selection='(all)', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/controlling.py:870", "docs/api-reference/commands.mdx:2429"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/controlling.py:870",
+      "docs/api-reference/commands.mdx:2429"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mask.md"
   },
@@ -151,7 +187,10 @@
     "summary": "Copies an object's transformation matrix onto another object (or into the camera view).",
     "signature": "matrix_copy(source_name='', target_name='', source_mode=-1, target_mode=-1, source_state=1, target_state=1, target_undo=1, log=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2396", "docs/api-reference/commands.mdx:2440"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2396",
+      "docs/api-reference/commands.mdx:2440"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/matrix_copy.md"
   },
@@ -163,7 +202,10 @@
     "summary": "Resets an object's transformation matrix (representation, TTT/movie, or state matrix).",
     "signature": "matrix_reset(name, state=1, mode=-1, log=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2464", "docs/api-reference/commands.mdx:2458"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2464",
+      "docs/api-reference/commands.mdx:2458"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/matrix_reset.md"
   },
@@ -175,7 +217,10 @@
     "summary": "Legacy alias of matrix_copy that copies a transformation matrix from one object to another.",
     "signature": "matrix_transfer(source_name='', target_name='', source_mode=-1, target_mode=-1, source_state=1, target_state=1, target_undo=1, log=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/api.py:270", "docs/api-reference/commands.mdx:2472"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/api.py:270",
+      "docs/api-reference/commands.mdx:2472"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/matrix_transfer.md"
   },
@@ -187,7 +232,10 @@
     "summary": "Clears the movie frame image cache.",
     "signature": "mclear()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:436", "docs/api-reference/commands.mdx:2490"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:436",
+      "docs/api-reference/commands.mdx:2490"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mclear.md"
   },
@@ -199,7 +247,10 @@
     "summary": "Copies key frames and movie commands from one range of the movie to another.",
     "signature": "mcopy(target, source=0, count=-1, freeze=0, object='', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:545", "docs/api-reference/commands.mdx:2494"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:545",
+      "docs/api-reference/commands.mdx:2494"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/mcopy.md"
   },
@@ -211,7 +262,10 @@
     "summary": "Removes frames (camera views and object motions) from the movie timeline.",
     "signature": "mdelete(count=-1, frame=0, freeze=0, object='', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:591", "docs/api-reference/commands.mdx:2509"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:591",
+      "docs/api-reference/commands.mdx:2509"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/mdelete.md"
   },
@@ -223,7 +277,10 @@
     "summary": "Defines (or replaces) the command-line operations run when a given movie frame plays.",
     "signature": "mdo(frame, command)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:274", "docs/api-reference/commands.mdx:2523"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:274",
+      "docs/api-reference/commands.mdx:2523"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/mdo.md"
   },
@@ -235,7 +292,10 @@
     "summary": "Dumps the current set of movie commands as text output.",
     "signature": "mdump()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:81", "docs/api-reference/commands.mdx:2534"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:81",
+      "docs/api-reference/commands.mdx:2534"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/mdump.md"
   }
