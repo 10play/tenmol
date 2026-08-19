@@ -17,6 +17,7 @@ import { parsePdb } from '../src/model/pdb';
 import { repBit } from '../src/model/atom';
 import { Rep } from '@tenmol/protocol';
 import { registerSettings2 } from '../src/cmd/settings2';
+import { SETTING_INFO_DEFAULTS } from '../src/cmd/setting-defaults';
 import type { CommandHandler } from '../src/cmd/registrar';
 import { SMALL_PDB } from './fixture';
 
@@ -49,6 +50,33 @@ function makeHarness(): Harness {
     publishCount: () => published,
   };
 }
+
+describe('setting-defaults: generated compiled-in defaults (SettingInfo.h table)', () => {
+  it('applies the open-source volume_mode override (0, not the incentive header 1)', () => {
+    // The vendored SettingInfo.h ships the incentive default (1); open-source
+    // PyMOL — the verification oracle — ships 0. scripts/gen-setting-defaults.mjs
+    // reconciles this via its OVERRIDES map. Verified against the real oracle
+    // (packages/graph/verify/probes/setting__volume_mode.json).
+    expect(SETTING_INFO_DEFAULTS['volume_mode']).toBe(0);
+    const h = makeHarness();
+    expect(h.ex.getSettingFloat('volume_mode')).toBe(0);
+    expect(h.call('get_setting_int', ['volume_mode'])).toBe(0);
+  });
+
+  it('locks representative compiled-in defaults across every REC_* value type', () => {
+    // Regenerated deterministically by scripts/gen-setting-defaults.mjs; these pin
+    // the parse of each macro shape so a generator change can't silently drift a
+    // default. Values verified against real PyMOL during the feature-verify grind.
+    expect(SETTING_INFO_DEFAULTS['sphere_scale']).toBe(1); // REC_f float
+    expect(SETTING_INFO_DEFAULTS['surface_quality']).toBe(0); // REC_i int
+    expect(SETTING_INFO_DEFAULTS['two_sided_lighting']).toBe(-1); // REC_i, negative default
+    expect(SETTING_INFO_DEFAULTS['valence']).toBe(1); // REC_b boolean -> 1
+    expect(SETTING_INFO_DEFAULTS['swap_dsn6_bytes']).toBe(1); // REC_b boolean
+    expect(SETTING_INFO_DEFAULTS['wildcard']).toBe('*'); // REC_s string
+    expect(SETTING_INFO_DEFAULTS['surface_color']).toEqual({ color: '-1' }); // REC_c colour ref
+    expect(SETTING_INFO_DEFAULTS['label_position']).toEqual([0, 0, 1.75]); // REC_3 float3 vector
+  });
+});
 
 describe('settings2: set / unset global round-trip', () => {
   it('resets a numeric setting to its compiled default', () => {
