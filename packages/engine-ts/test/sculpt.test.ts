@@ -174,17 +174,16 @@ describe('minimize / clean', () => {
     expect(bondLen(t, 1, 2)).toBeCloseTo(1.9, 6);
   });
 
-  it('clean also relaxes the geometry (energy decreases)', () => {
+  it('clean raises the incentive-only error (matches Open-Source PyMOL)', () => {
+    // Upstream `clean` does `raise pymol.IncentiveOnlyException` (computing.py),
+    // so `cmd.clean` raises rather than minimising — verified against the oracle.
     const pdb = [
       atomLine(1, 'C1', 'C', 0, 0, 0),
       atomLine(2, 'C2', 'C', 1.9, 0, 0),
       conect(1, 2),
     ].join('\n');
-    const t0 = setup(pdb);
-    const E0 = t0.call('clean', ['all', 0, 0]) as number;
     const t = setup(pdb);
-    const E = t.call('clean', ['all']) as number;
-    expect(E).toBeLessThan(E0);
+    expect(() => t.call('clean', ['all'])).toThrow(/not available in Open-Source PyMOL/);
   });
 });
 

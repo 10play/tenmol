@@ -19,9 +19,18 @@
  * deposited coordinates). `smooth` box-averages coordinates across states
  * (temporal) or, for a single state, across bonded neighbours (spatial).
  */
-import type { Json } from '@tenmol/protocol';
+import { type Json, incentiveOnly } from '@tenmol/protocol';
+import { PymolError } from '@tenmol/backend';
 import type { ObjectMolecule } from '../model/molecule';
 import type { RegistrarCtx } from './registrar';
+
+/** Verbatim `str(IncentiveOnlyException)` for `clean` — Open-Source PyMOL's
+ *  `clean` does `raise pymol.IncentiveOnlyException` (computing.py:20-29), so the
+ *  command raises rather than minimising. Shape matches extras.ts / display.ts. */
+const CLEAN_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "clean" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
 
 /* ------------------------------ arg parsing ------------------------------ */
 
@@ -387,21 +396,13 @@ export function registerSculpt(ctx: RegistrarCtx): void {
   ctx.command('minimize', (): Json => null);
 
   /* -------------------------------- clean ------------------------------- */
-  // clean(selection, state=0, cycles=100) — open-source substitute for the
-  // MMFF94 `clean` (which raises IncentiveOnlyException upstream): idealise
-  // geometry toward covalent-radius bond lengths; returns the final energy.
-  ctx.command('clean', (args, kwargs): Json => {
-    const sel = ctx.str(pick(args, kwargs, 0, 'selection'), 'all') || 'all';
-    const mol = resolveObj(sel);
-    if (!mol) return 0;
-    const state = normState(num(pick(args, kwargs, 1, 'state'), 0), mol);
-    const cycles = Math.max(0, Math.round(num(pick(args, kwargs, 2, 'cycles'), 100)));
-    const r = buildRestraints(mol, state, 'covalent');
-    const x = readState(mol, state);
-    const E = minimizeCoords(r, x, cycles);
-    writeState(mol, state, x);
-    ctx.publish();
-    return E;
+  // clean(selection, …) is incentive-only: Open-Source PyMOL's `clean`
+  // immediately `raise pymol.IncentiveOnlyException` (computing.py:20-29), so
+  // `cmd.clean` raises rather than running MMFF94. Reproduce the exact
+  // `str(IncentiveOnlyException)` the oracle surfaces (the builder panel already
+  // reports the same reason and `clean_available = false`).
+  ctx.command('clean', (): Json => {
+    throw new PymolError(incentiveOnly('clean', CLEAN_INCENTIVE_ONLY), 'clean');
   });
 
   /* -------------------------------- smooth ------------------------------ */
