@@ -312,7 +312,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `assign_stereo` `assign_stereo(selection='all', state=-1, method='', quiet=1, prop='stereo')` | command | Assigns the R/S stereo atom property, requiring a Schrodinger Suite or RDKit backend. | partial | [doc](features/topics/editing-building.md#assign_stereo) |
 | `attach` `attach(element, geometry, valence, name='', quiet=1)` | command | Adds a single new atom onto the currently picked atom with a given geometry and valence. | implemented | [doc](features/commands/attach.md) |
 | `bond` `bond(atom1='pk1', atom2='pk2', order=1, quiet=1, symop='')` | command | Creates a new bond between two single-atom selections (default pk1/pk2), within the same object. | implemented | [doc](features/topics/editing-building.md#bond) |
-| `check` `check(selection=None, preserve=0)` | command | Unsupported stub that would assign forcefield parameters to a selection. | partial | [doc](features/commands/check.md) |
+| `check` `check(selection=None, preserve=0)` | command | Unsupported stub that would assign forcefield parameters to a selection. | implemented | [doc](features/commands/check.md) |
 | `cycle_valence` `cycle_valence(h_fill=1, quiet=1)` | command | Cycles the bond order (single/double/triple/aromatic) of the currently picked bond. | implemented | [doc](features/commands/cycle_valence.md) |
 | `delete` `delete(name)` | command | Removes whole objects and named selections (not individual atoms). | implemented | [doc](features/topics/editing-building.md#delete) |
 | `deprotect` `deprotect(selection='(all)', quiet=1)` | command | Clears the protected flag on atoms, reversing the protect command. | implemented | [doc](features/commands/deprotect.md) |

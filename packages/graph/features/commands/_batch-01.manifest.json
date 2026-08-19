@@ -219,7 +219,7 @@
       "packages/engine/modules/pymol/experimenting.py:73",
       "packages/engine-ts/src/cmd/topics.ts:99"
     ],
-    "parityStatus": "partial",
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/check.md"
   },
   {

@@ -4,7 +4,7 @@ kind: command
 category: editing-building
 subcategory: forcefield
 summary: Unsupported stub that would assign forcefield parameters to a selection.
-parity: partial
+parity: implemented
 ---
 
 ## Purpose
@@ -38,7 +38,9 @@ check chain A
 - [sculpt_activate](../commands/sculpt_activate.md)
 
 ## Source
-`packages/engine/modules/pymol/experimenting.py:73`. The TS port implements a
-lightweight `check` in `packages/engine-ts/src/cmd/topics.ts` that tallies
-selected atoms and intra-selection bonds per object rather than assigning
-forcefield parameters.
+`packages/engine/modules/pymol/experimenting.py:73`. Upstream `check` does
+`from chempy.tinker import realtime`, which imports the compiled `molobj` module
+that is absent from Open-Source PyMOL, so `cmd.check` raises
+`ModuleNotFoundError: No module named 'molobj'`. The TS port
+(`packages/engine-ts/src/cmd/topics.ts`) reproduces that exact error to match the
+oracle.
