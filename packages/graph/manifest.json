@@ -5159,7 +5159,7 @@
         "docs/api-reference/commands.mdx:2601",
         "packages/engine-ts/src/cmd/movie2.ts:374"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/fitting-alignment.md#morph",
       "sidecar": "features/topics/fitting-alignment.manifest.json"
     },
