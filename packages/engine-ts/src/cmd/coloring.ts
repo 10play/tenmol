@@ -18,6 +18,7 @@ import {
   ELEMENT_COLOR,
   getColorIndex,
   getColorTuple,
+  resetColorTable,
   setColor,
   type RGB,
 } from '../exec/color';
@@ -410,6 +411,11 @@ function resolveOrDefine(name: string, rgb: RGB): number {
 
 export function registerColoring(ctx: RegistrarCtx): void {
   const { executive: ex, str } = ctx;
+
+  // A fresh registration is a fresh session: discard any colours a previous
+  // engine defined with `set_color` (the colour table is a module-level global,
+  // mirroring PyMOL's one flat namespace), matching PyMOL's `ColorReset`.
+  resetColorTable();
 
   /* ------------------------------ set_color ----------------------------- */
 
