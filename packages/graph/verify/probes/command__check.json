@@ -1,0 +1,6 @@
+{
+  "id":"command__check","feature":"check","kind":"command","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/pept.pdb, p"}],
+  "checks":[{"call":["check","p"],"label":"check imports chempy.tinker.realtime -> molobj (absent in Open-Source PyMOL) -> ModuleNotFoundError"}],
+  "expected":[{"__error":"No module named 'molobj'"}]
+}

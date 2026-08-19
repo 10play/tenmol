@@ -46,18 +46,12 @@ describe('help / topic verbs', () => {
 });
 
 describe('check', () => {
-  it('reports the atom and bond counts of a selection', async () => {
+  it('raises the same ModuleNotFoundError as Open-Source PyMOL', async () => {
+    // Upstream `check` imports chempy.tinker.realtime -> the compiled `molobj`
+    // module, which is absent from Open-Source PyMOL, so `cmd.check` raises
+    // `ModuleNotFoundError: No module named 'molobj'` — verified vs the oracle.
     const backend = await loaded();
-    const all = (await backend.call('check', ['all'])) as string;
-    // 9 atoms; the fixture is a fully-bonded di-peptide (>=1 bond) in 1 object.
-    expect(all).toMatch(new RegExp(`${EXPECTED.total} atom\\(s\\)`));
-    expect(all).toMatch(/bond\(s\)/);
-    expect(all).toMatch(/1 object\(s\)/);
-    expect(all).toMatch(/\[m\]/);
-
-    // A narrower selection reports fewer atoms.
-    const ca = (await backend.call('check', ['name CA'])) as string;
-    expect(ca).toMatch(new RegExp(`${EXPECTED.ca} atom\\(s\\)`));
+    await expect(backend.call('check', ['all'])).rejects.toThrow(/No module named 'molobj'/);
   });
 });
 
