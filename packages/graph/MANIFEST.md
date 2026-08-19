@@ -856,7 +856,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `color` | selection | Atoms whose colour equals a colour index or name (color <n>). | implemented | [doc](features/topics/selection-algebra.md#color) |
 | `coordinate-ranges` | selection | Numeric comparison on an atom's x/y/z Cartesian coordinate. | unknown | [doc](features/topics/selection-algebra.md#coordinate-ranges) |
 | `custom` | selection | Selects atoms by the custom per-atom annotation string. | unknown | [doc](features/topics/selection-algebra.md#custom) |
-| `delocalized` | selection | Atoms in a delocalized bond where explicit degree differs from valence (deloc.). | unknown | [doc](features/topics/selection-algebra.md#delocalized) |
+| `delocalized` | selection | Atoms in a delocalized bond where explicit degree differs from valence (deloc.). | implemented | [doc](features/topics/selection-algebra.md#delocalized) |
 | `donors` | selection | Candidate hydrogen-bond donor atoms (don.). | implemented | [doc](features/topics/selection-algebra.md#donors) |
 | `elem` | selection | Selects atoms by chemical element symbol (e./symbol/element). | implemented | [doc](features/topics/selection-algebra.md#elem) |
 | `enabled` | selection | Atoms belonging to a currently enabled object. | implemented | [doc](features/topics/selection-algebra.md#enabled) |
@@ -885,7 +885,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `neighbor` | selection | Atoms directly bonded to the selection, excluding it (nbr.). | implemented | [doc](features/topics/selection-algebra.md#neighbor) |
 | `none` | selection | The empty set of atoms. | implemented | [doc](features/topics/selection-algebra.md#none) |
 | `not` | selection | Unary complement of an operand (!). | implemented | [doc](features/topics/selection-algebra.md#not) |
-| `numeric_type` | selection | Selects atoms by integer numeric (atom) type (nt.). | unknown | [doc](features/topics/selection-algebra.md#numeric_type) |
+| `numeric_type` | selection | Selects atoms by integer numeric (atom) type (nt.). | implemented | [doc](features/topics/selection-algebra.md#numeric_type) |
 | `or` | selection | Set union of two operands (\| / +). | implemented | [doc](features/topics/selection-algebra.md#or) |
 | `organic` | selection | Small organic (ligand) molecules (org.). | unknown | [doc](features/topics/selection-algebra.md#organic) |
 | `origin` | selection | A pseudo-atom at the current rotation origin, for distance queries. | unknown | [doc](features/topics/selection-algebra.md#origin) |
@@ -910,9 +910,9 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `slash-macro` | selection | Positional /object/segi/chain/resi/name shorthand ANDing the present fields. | implemented | [doc](features/topics/selection-algebra.md#slash-macro) |
 | `solvent` | selection | Solvent atoms, primarily water (sol.). | implemented | [doc](features/topics/selection-algebra.md#solvent) |
 | `ss` | selection | Selects atoms by secondary-structure type H/S/L. | implemented | [doc](features/topics/selection-algebra.md#ss) |
-| `state` | selection | Selects atoms belonging to a given object state. | unknown | [doc](features/topics/selection-algebra.md#state) |
+| `state` | selection | Selects atoms belonging to a given object state. | implemented | [doc](features/topics/selection-algebra.md#state) |
 | `stereo` | selection | Selects atoms by R/S chirality label. | unknown | [doc](features/topics/selection-algebra.md#stereo) |
-| `text_type` | selection | Selects atoms by MOL2/Tripos text (atom) type (tt.). | unknown | [doc](features/topics/selection-algebra.md#text_type) |
+| `text_type` | selection | Selects atoms by MOL2/Tripos text (atom) type (tt.). | implemented | [doc](features/topics/selection-algebra.md#text_type) |
 | `visible` | selection | Atoms with at least one representation currently shown (v.). | implemented | [doc](features/topics/selection-algebra.md#visible) |
 | `wildcards` | selection | Glob wildcards */? in text property value specs, case-insensitive. | implemented | [doc](features/topics/selection-algebra.md#wildcards) |
 | `within` | selection | Atoms of A within a distance of any atom of B (w.). | implemented | [doc](features/topics/selection-algebra.md#within) |

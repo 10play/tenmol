@@ -609,9 +609,10 @@ export function registerMaps(ctx: RegistrarCtx): void {
   // map_generate(name, reflection_file, amplitudes, phases, …) synthesizes an
   // x-ray map from an MTZ reflection file. Open-Source PyMOL raises a bare
   // `pymol.CmdException` when the reflection file cannot be read
-  // (creating.py:55-57 → the bridge renders it as " Error: "). engine-ts has no
-  // MTZ reader, so the command can never produce a map; it raises the same bare
-  // CmdException the oracle surfaces for an unreadable reflection file.
+  // (creating.py:55-57 → the bridge renders it as " Error: "). engine-ts has NO
+  // MTZ reader at all, so this is a BLANKET stub: it raises that same bare
+  // CmdException for *every* call, not a targeted read-failure check. When real
+  // MTZ parsing lands, gate the raise on an actual unreadable-file test.
   ctx.command('map_generate', (): Json => {
     throw new PymolError(wireError('CmdException', ' Error: '), 'map_generate');
   });

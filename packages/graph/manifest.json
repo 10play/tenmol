@@ -12397,7 +12397,7 @@
         "packages/engine/layer3/Selector.cpp:609-610",
         "packages/engine/layer3/Selector.cpp:7526-7532"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#delocalized",
       "sidecar": "features/topics/selection-algebra.manifest.json"
     },
@@ -12854,7 +12854,7 @@
       "sourceRefs": [
         "packages/engine/layer3/Selector.cpp:552-554"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#numeric_type",
       "sidecar": "features/topics/selection-algebra.manifest.json"
     },
@@ -13244,7 +13244,7 @@
       "sourceRefs": [
         "packages/engine/layer3/Selector.cpp:576"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#state",
       "sidecar": "features/topics/selection-algebra.manifest.json"
     },
@@ -13275,7 +13275,7 @@
       "sourceRefs": [
         "packages/engine/layer3/Selector.cpp:556-559"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#text_type",
       "sidecar": "features/topics/selection-algebra.manifest.json"
     },

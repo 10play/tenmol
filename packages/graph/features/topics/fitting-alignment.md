@@ -661,17 +661,17 @@ they are matched by sequence alignment first. Two methods exist: `rigimol` (ince
 
 ### Behaviour
 
-With `state1=0` and an N-state `sele1`, morph builds N (or N-1 if `state2=0`) consecutive morphings, giving
-`N*steps` states. `rigimol` is a Schrödinger incentive feature — in the open-source engine it raises
-`IncentiveOnlyException`; use `method=linear` there. Linear morphing straight-line-interpolates matched atom
-coordinates.
+`morph` is **incentive-only** in Open-Source PyMOL: the raise sits at the top of `morphing.py`
+before the method dispatch, so BOTH `method=rigimol` and `method=linear` raise
+`IncentiveOnlyException`. The TS engine matches upstream by raising the identical error for every
+`morph` call (verified against the real-PyMOL oracle).
 
 ### Examples
 
 ```
 fetch 1akeA 4akeA, async=0
 align 1akeA, 4akeA
-morph mout, 1akeA, 4akeA, method=linear
+morph mout, 1akeA, 4akeA          # incentive-only: raises IncentiveOnlyException
 ```
 
 ### Related
@@ -680,7 +680,6 @@ morph mout, 1akeA, 4akeA, method=linear
 
 ### Source
 
-`packages/engine/modules/pymol/morphing.py:12`; `docs/api-reference/commands.mdx:2601`. Parity:
-`packages/engine-ts/src/cmd/movie2.ts:374` — the TS port implements **linear** morphing only (builds a fresh
-multi-state object by linearly interpolating the two endpoint coordinate sets); `rigimol`, `refinement`, and
-sequence `match` are not implemented.
+`packages/engine/modules/pymol/morphing.py:42` (raises `IncentiveOnlyException` unconditionally).
+Parity: `packages/engine-ts/src/cmd/movie2.ts` (`ctx.command('morph', …)`) raises the same
+incentive-only error to match Open-Source PyMOL.

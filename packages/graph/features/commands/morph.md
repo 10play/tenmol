@@ -32,12 +32,13 @@ morph(name, sele1, sele2=None, state1=-1, state2=-1, refinement=3,
 | `quiet` | int | `1` | suppress feedback |
 
 ## Behaviour
-Two methods exist. **RigiMOL** is an incentive-only feature available to
-official PyMOL sponsors - in this open engine `morph` raises
-`IncentiveOnlyException` for that path. **Linear** morphing is quick and robust
-but produces distorted intermediates, cleaned up by `refinement` sculpting
-cycles. If `sele1` has N states and `state1=0`, morphs are chained across all
-consecutive states (and back to state 1), producing up to N*`steps` states.
+Two methods exist — **RigiMOL** (incentive-only, for official PyMOL sponsors)
+and **linear** interpolation. In Open-Source PyMOL, however, `morph` raises
+`IncentiveOnlyException` **unconditionally**: the raise sits at the top of
+`morphing.py` before any method dispatch, so BOTH `method=rigimol` and
+`method=linear` raise. The tenmol TypeScript engine matches upstream by raising
+the identical incentive-only error for every call (verified against the
+real-PyMOL oracle).
 
 ## Examples
 ```
@@ -52,7 +53,7 @@ morph mout, 1akeA, 4akeA, method=linear
 - [mset](mset.md), [mplay](mplay.md) - play the resulting trajectory
 
 ## Source
-`packages/engine/modules/pymol/morphing.py:12` (raises `IncentiveOnlyException`
-for rigimol). The TS port implements a linear-interpolation morph at
-`packages/engine-ts/src/cmd/movie2.ts:374`, without sequence-alignment matching
-or sculpting refinement.
+`packages/engine/modules/pymol/morphing.py:42` (raises `IncentiveOnlyException`
+unconditionally, before the rigimol/linear dispatch). The TS port
+(`packages/engine-ts/src/cmd/movie2.ts`, `ctx.command('morph', …)`) raises the
+same incentive-only error to match Open-Source PyMOL.

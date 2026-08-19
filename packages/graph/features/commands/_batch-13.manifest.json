@@ -7,7 +7,11 @@
     "summary": "Dumps the current internal memory state to standard output for debugging.",
     "signature": "mem()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/experimenting.py:55", "docs/api-reference/commands.mdx:2540", "packages/engine-ts/src/cmd/system.ts:125"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/experimenting.py:55",
+      "docs/api-reference/commands.mdx:2540",
+      "packages/engine-ts/src/cmd/system.ts:125"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mem.md"
   },
@@ -19,7 +23,10 @@
     "summary": "Resets the frames-per-second (rate) counter.",
     "signature": "meter_reset()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1800", "docs/api-reference/commands.mdx:2544"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1800",
+      "docs/api-reference/commands.mdx:2544"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/commands/meter_reset.md"
   },
@@ -31,7 +38,11 @@
     "summary": "Jumps the movie playhead to the middle frame.",
     "signature": "middle()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:934", "docs/api-reference/commands.mdx:2548", "packages/engine-ts/src/cmd/extras.ts:449"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:934",
+      "docs/api-reference/commands.mdx:2548",
+      "packages/engine-ts/src/cmd/extras.ts:449"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/middle.md"
   },
@@ -43,7 +54,11 @@
     "summary": "Placeholder/unsupported energy-minimization command wrapping the TINKER realtime backend.",
     "signature": "minimize(sele='', iter=500, grad=0.01, interval=50, _setup=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/experimenting.py:108", "docs/api-reference/commands.mdx:2552", "packages/engine-ts/src/cmd/sculpt.ts:393"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/experimenting.py:108",
+      "docs/api-reference/commands.mdx:2552",
+      "packages/engine-ts/src/cmd/sculpt.ts:393"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/minimize.md"
   },
@@ -55,7 +70,10 @@
     "summary": "Inserts blank frames into the movie's camera view and object motions.",
     "signature": "minsert(count, frame=0, freeze=0, object='', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:640", "docs/api-reference/commands.mdx:2564"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:640",
+      "docs/api-reference/commands.mdx:2564"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/commands/minsert.md"
   },
@@ -67,7 +85,11 @@
     "summary": "Stores, recalls, or clears the camera matrix used for the movie's first frame.",
     "signature": "mmatrix(action)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:772", "docs/api-reference/commands.mdx:2578", "packages/engine-ts/src/cmd/movie2.ts:254"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:772",
+      "docs/api-reference/commands.mdx:2578",
+      "packages/engine-ts/src/cmd/movie2.ts:254"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mmatrix.md"
   },
@@ -79,7 +101,10 @@
     "summary": "Moves key frames and movie commands from one frame position to another.",
     "signature": "mmove(target, source=0, count=-1, freeze=0, object='', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:493", "docs/api-reference/commands.mdx:2586"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:493",
+      "docs/api-reference/commands.mdx:2586"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/commands/mmove.md"
   },
@@ -91,8 +116,12 @@
     "summary": "Builds a multi-state interpolated trajectory between two (or more) conformations.",
     "signature": "morph(name, sele1, sele2=None, state1=-1, state2=-1, refinement=3, steps=30, method='rigimol', match='align', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/morphing.py:12", "docs/api-reference/commands.mdx:2601", "packages/engine-ts/src/cmd/movie2.ts:374"],
-    "parityStatus": "partial",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/morphing.py:12",
+      "docs/api-reference/commands.mdx:2601",
+      "packages/engine-ts/src/cmd/movie2.ts:374"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/morph.md"
   },
   {
@@ -103,7 +132,11 @@
     "summary": "Cycles through the mouse modes in the current mouse configuration ring.",
     "signature": "mouse(action=None, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/controlling.py:609", "docs/api-reference/commands.mdx:2618", "packages/engine-ts/src/cmd/controlflow.ts:229"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/controlling.py:609",
+      "docs/api-reference/commands.mdx:2618",
+      "packages/engine-ts/src/cmd/controlflow.ts:229"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mouse.md"
   },
@@ -115,7 +148,11 @@
     "summary": "Translates the camera along one of the three primary axes.",
     "signature": "move(axis, distance)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:352", "docs/api-reference/commands.mdx:2627", "packages/engine-ts/src/cmd/transforms.ts:201"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:352",
+      "docs/api-reference/commands.mdx:2627",
+      "packages/engine-ts/src/cmd/transforms.ts:201"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/move.md"
   },
@@ -127,7 +164,11 @@
     "summary": "Positions an object along a named curve at a parametric point t.",
     "signature": "move_on_curve(mobile_obj, curve_obj, t)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2167", "docs/api-reference/commands.mdx:2638", "packages/engine-ts/src/cmd/movie2.ts:353"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2167",
+      "docs/api-reference/commands.mdx:2638",
+      "packages/engine-ts/src/cmd/movie2.ts:353"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/move_on_curve.md"
   },
@@ -139,7 +180,11 @@
     "summary": "Starts playing the currently defined movie.",
     "signature": "mplay()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:247", "docs/api-reference/commands.mdx:2648", "packages/engine-ts/src/cmd/system.ts:195"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:247",
+      "docs/api-reference/commands.mdx:2648",
+      "packages/engine-ts/src/cmd/system.ts:195"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mplay.md"
   },
@@ -151,7 +196,11 @@
     "summary": "Writes movie frames to a series of numbered PNG files.",
     "signature": "mpng(prefix, first=0, last=0, preserve=0, modal=0, mode=-1, quiet=1, width=0, height=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:366", "docs/api-reference/commands.mdx:2654", "packages/engine-ts/src/cmd/movie2.ts:417"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:366",
+      "docs/api-reference/commands.mdx:2654",
+      "packages/engine-ts/src/cmd/movie2.ts:417"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/mpng.md"
   },
@@ -163,7 +212,11 @@
     "summary": "Mutates selenomethionine (MSE) residues to methionine (MET).",
     "signature": "mse2met(selection='all', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:3031", "docs/api-reference/commands.mdx:2672", "packages/engine-ts/src/cmd/extras.ts:232"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:3031",
+      "docs/api-reference/commands.mdx:2672",
+      "packages/engine-ts/src/cmd/extras.ts:232"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mse2met.md"
   },
@@ -175,7 +228,11 @@
     "summary": "Defines the mapping between molecular states and movie frames.",
     "signature": "mset(specification='', frame=1, freeze=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:691", "docs/api-reference/commands.mdx:2681", "packages/engine-ts/src/cmd/system.ts:169"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:691",
+      "docs/api-reference/commands.mdx:2681",
+      "packages/engine-ts/src/cmd/system.ts:169"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mset.md"
   },
@@ -187,7 +244,11 @@
     "summary": "Stops movie playback.",
     "signature": "mstop()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:121", "docs/api-reference/commands.mdx:2693", "packages/engine-ts/src/cmd/system.ts:199"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:121",
+      "docs/api-reference/commands.mdx:2693",
+      "packages/engine-ts/src/cmd/system.ts:199"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mstop.md"
   },
@@ -199,7 +260,11 @@
     "summary": "Toggles movie playback on or off.",
     "signature": "mtoggle()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:104", "docs/api-reference/commands.mdx:2699", "packages/engine-ts/src/cmd/system.ts:203"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:104",
+      "docs/api-reference/commands.mdx:2699",
+      "packages/engine-ts/src/cmd/system.ts:203"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/mtoggle.md"
   },
@@ -211,7 +276,10 @@
     "summary": "Internal helper that expands a filename pattern into per-object/state filenames and selections.",
     "signature": "multifilenamegen(filename, selection, state)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/exporting.py:735", "docs/api-reference/commands.mdx:2703"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/exporting.py:735",
+      "docs/api-reference/commands.mdx:2703"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/multifilenamegen.md"
   },
@@ -223,7 +291,11 @@
     "summary": "Saves each object and/or state of a multi-object selection to a separate file.",
     "signature": "multifilesave(filename, selection='*', state=-1, format='', ref='', ref_state=-1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/exporting.py:707", "docs/api-reference/commands.mdx:2711", "packages/engine-ts/src/cmd/exporters.ts:560"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/exporting.py:707",
+      "docs/api-reference/commands.mdx:2711",
+      "packages/engine-ts/src/cmd/exporters.ts:560"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/multifilesave.md"
   },
@@ -235,7 +307,11 @@
     "summary": "Writes a multi-entry PDB/CIF file, one HEADER/CRYST-delimited entry per object.",
     "signature": "multisave(filename, pattern='all', state=-1, append=0, format='', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/exporting.py:604", "docs/api-reference/commands.mdx:2725", "packages/engine-ts/src/cmd/exporters.ts:553"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/exporting.py:604",
+      "docs/api-reference/commands.mdx:2725",
+      "packages/engine-ts/src/cmd/exporters.ts:553"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/multisave.md"
   }

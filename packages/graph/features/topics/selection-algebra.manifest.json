@@ -7,7 +7,10 @@
     "summary": "Selects atoms by atom name (n.), supporting +-lists and glob wildcards.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:505-508", "packages/engine-ts/src/select/selector.ts:505"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:505-508",
+      "packages/engine-ts/src/select/selector.ts:505"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#name"
   },
@@ -19,7 +22,10 @@
     "summary": "Selects atoms by residue (compound) name (r./resname).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:657-660", "packages/engine-ts/src/select/selector.ts:511"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:657-660",
+      "packages/engine-ts/src/select/selector.ts:511"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#resn"
   },
@@ -31,7 +37,10 @@
     "summary": "Selects atoms by residue identifier (i./residue), supporting +-lists and numeric ranges.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:517-522", "packages/engine-ts/src/select/selector.ts:517"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:517-522",
+      "packages/engine-ts/src/select/selector.ts:517"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#resi"
   },
@@ -43,7 +52,10 @@
     "summary": "Selects atoms by chain identifier (c.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:561-563", "packages/engine-ts/src/select/selector.ts:510"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:561-563",
+      "packages/engine-ts/src/select/selector.ts:510"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#chain"
   },
@@ -55,7 +67,10 @@
     "summary": "Selects atoms by segment identifier (s./segid/segment).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:568-572", "packages/engine-ts/src/select/selector.ts:513"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:568-572",
+      "packages/engine-ts/src/select/selector.ts:513"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#segi"
   },
@@ -67,7 +82,10 @@
     "summary": "Selects atoms by chemical element symbol (e./symbol/element).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:509-513", "packages/engine-ts/src/select/selector.ts:507"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:509-513",
+      "packages/engine-ts/src/select/selector.ts:507"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#elem"
   },
@@ -79,7 +97,10 @@
     "summary": "Selects atoms by alternate-location identifier (altloc); empty value matches no-altloc atoms.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:530-531", "packages/engine-ts/src/select/selector.ts:515"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:530-531",
+      "packages/engine-ts/src/select/selector.ts:515"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#alt"
   },
@@ -91,7 +112,9 @@
     "summary": "Selects atoms carrying a given flag number 0-31 (f.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:533-535"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:533-535"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#flag"
   },
@@ -103,7 +126,10 @@
     "summary": "Numeric comparison on integer formal charge (fc.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:548-550", "packages/engine-ts/src/select/selector.ts:142-144"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:548-550",
+      "packages/engine-ts/src/select/selector.ts:142-144"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#formal_charge"
   },
@@ -115,7 +141,10 @@
     "summary": "Numeric comparison on floating-point partial charge (pc.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:539-541", "packages/engine-ts/src/select/selector.ts:139-141"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:539-541",
+      "packages/engine-ts/src/select/selector.ts:139-141"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#partial_charge"
   },
@@ -127,7 +156,10 @@
     "summary": "Numeric comparison on the B-factor / temperature-factor column.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:663", "packages/engine-ts/src/select/selector.ts:136"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:663",
+      "packages/engine-ts/src/select/selector.ts:136"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#b"
   },
@@ -139,7 +171,10 @@
     "summary": "Numeric comparison on the occupancy column.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:664", "packages/engine-ts/src/select/selector.ts:137"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:664",
+      "packages/engine-ts/src/select/selector.ts:137"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#q"
   },
@@ -151,7 +186,10 @@
     "summary": "Selects atoms by secondary-structure type H/S/L.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:574", "packages/engine-ts/src/select/selector.ts:542-548"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:574",
+      "packages/engine-ts/src/select/selector.ts:542-548"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#ss"
   },
@@ -163,7 +201,10 @@
     "summary": "Selects atoms by 1-based object-local atom index (idx.), supporting ranges.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:587-588", "packages/engine-ts/src/select/selector.ts:522-526"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:587-588",
+      "packages/engine-ts/src/select/selector.ts:522-526"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#index"
   },
@@ -175,7 +216,10 @@
     "summary": "Selects atoms by external atom ID (PDB/mmCIF serial), supporting ranges.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:590-591", "packages/engine-ts/src/select/selector.ts:527-531"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:590-591",
+      "packages/engine-ts/src/select/selector.ts:527-531"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#id"
   },
@@ -187,7 +231,9 @@
     "summary": "Selects atoms by original load-order rank, supporting ranges.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:592"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:592"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#rank"
   },
@@ -199,8 +245,10 @@
     "summary": "Selects atoms belonging to a given object state.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:576"],
-    "parityStatus": "unknown",
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:576"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#state"
   },
   {
@@ -211,7 +259,9 @@
     "summary": "Selects atoms by the custom per-atom annotation string.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:557"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:557"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#custom"
   },
@@ -223,8 +273,10 @@
     "summary": "Selects atoms by MOL2/Tripos text (atom) type (tt.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:556-559"],
-    "parityStatus": "unknown",
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:556-559"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#text_type"
   },
   {
@@ -235,8 +287,10 @@
     "summary": "Selects atoms by integer numeric (atom) type (nt.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:552-554"],
-    "parityStatus": "unknown",
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:552-554"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#numeric_type"
   },
   {
@@ -247,7 +301,10 @@
     "summary": "Set intersection of two operands (& / implicit-and between adjacent terms).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:463-464", "packages/engine-ts/src/select/selector.ts:238-255"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:463-464",
+      "packages/engine-ts/src/select/selector.ts:238-255"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#and"
   },
@@ -259,7 +316,10 @@
     "summary": "Set union of two operands (| / +).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:465-468", "packages/engine-ts/src/select/selector.ts:229-236"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:465-468",
+      "packages/engine-ts/src/select/selector.ts:229-236"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#or"
   },
@@ -271,7 +331,10 @@
     "summary": "Unary complement of an operand (!).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:419-420", "packages/engine-ts/src/select/selector.ts:257-265"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:419-420",
+      "packages/engine-ts/src/select/selector.ts:257-265"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#not"
   },
@@ -283,7 +346,9 @@
     "summary": "Keeps atoms of A whose full identity also appears in B.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:469"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:469"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#in"
   },
@@ -295,7 +360,9 @@
     "summary": "Keeps atoms of A matching B by name and numeric identifiers only (l.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:471-473"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:471-473"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#like"
   },
@@ -307,7 +374,10 @@
     "summary": "Atoms of A within a distance of any atom of B (w.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:594-595", "packages/engine-ts/src/select/selector.ts:379-383"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:594-595",
+      "packages/engine-ts/src/select/selector.ts:379-383"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#within"
   },
@@ -319,7 +389,10 @@
     "summary": "Atoms within a distance of A, excluding A itself (a.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:494-496", "packages/engine-ts/src/select/selector.ts:887-893"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:494-496",
+      "packages/engine-ts/src/select/selector.ts:887-893"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#around"
   },
@@ -331,7 +404,10 @@
     "summary": "A plus everything within a distance of it (x.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:498-500", "packages/engine-ts/src/select/selector.ts:894-900"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:498-500",
+      "packages/engine-ts/src/select/selector.ts:894-900"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#expand"
   },
@@ -343,7 +419,10 @@
     "summary": "Atoms not in A whose VDW surface clears every atom of A by at least a distance.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:537", "packages/engine-ts/src/select/selector.ts:926-944"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:537",
+      "packages/engine-ts/src/select/selector.ts:926-944"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#gap"
   },
@@ -355,7 +434,10 @@
     "summary": "Atoms of A within a distance of B, excluding B itself (nto.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:597-598", "packages/engine-ts/src/select/selector.ts:909-917"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:597-598",
+      "packages/engine-ts/src/select/selector.ts:909-917"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#near_to"
   },
@@ -367,7 +449,10 @@
     "summary": "Atoms of A farther than a distance from every atom of B (be.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:600-601", "packages/engine-ts/src/select/selector.ts:918-925"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:600-601",
+      "packages/engine-ts/src/select/selector.ts:918-925"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#beyond"
   },
@@ -379,7 +464,10 @@
     "summary": "Expands the selection to every atom of every residue it touches (br.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:430-435", "packages/engine-ts/src/select/selector.ts:841-846"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:430-435",
+      "packages/engine-ts/src/select/selector.ts:841-846"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#byres"
   },
@@ -391,7 +479,10 @@
     "summary": "Expands the selection to every atom of every chain it touches (bc.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:437-438", "packages/engine-ts/src/select/selector.ts:876-877"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:437-438",
+      "packages/engine-ts/src/select/selector.ts:876-877"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#bychain"
   },
@@ -403,7 +494,10 @@
     "summary": "Expands the selection to every atom of every object it touches (bo.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:440-443", "packages/engine-ts/src/select/selector.ts:874-875"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:440-443",
+      "packages/engine-ts/src/select/selector.ts:874-875"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#byobject"
   },
@@ -415,7 +509,10 @@
     "summary": "Expands the selection to every atom of every bonded molecule it touches (bm.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:448-450", "packages/engine-ts/src/select/selector.ts:872-873"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:448-450",
+      "packages/engine-ts/src/select/selector.ts:872-873"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#bymol"
   },
@@ -427,7 +524,10 @@
     "summary": "Expands the selection to the bonded connected fragment (bf.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:426-428", "packages/engine-ts/src/select/selector.ts:286-289"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:426-428",
+      "packages/engine-ts/src/select/selector.ts:286-289"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#byfragment"
   },
@@ -439,7 +539,10 @@
     "summary": "Atoms on a ring (size <= 7) containing a seed atom.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:684", "packages/engine-ts/src/select/selector.ts:675-695"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:684",
+      "packages/engine-ts/src/select/selector.ts:675-695"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#byring"
   },
@@ -451,7 +554,10 @@
     "summary": "The C-alpha atom of every residue the operand touches (bca.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:457-458", "packages/engine-ts/src/select/selector.ts:847-857"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:457-458",
+      "packages/engine-ts/src/select/selector.ts:847-857"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#bycalpha"
   },
@@ -463,7 +569,10 @@
     "summary": "Atoms directly bonded to the selection, excluding it (nbr.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:422-424", "packages/engine-ts/src/select/selector.ts:878-884"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:422-424",
+      "packages/engine-ts/src/select/selector.ts:878-884"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#neighbor"
   },
@@ -475,7 +584,10 @@
     "summary": "Every atom in every object (*); also the value of an empty expression.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:331", "packages/engine-ts/src/select/selector.ts:409"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:331",
+      "packages/engine-ts/src/select/selector.ts:409"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#all"
   },
@@ -487,7 +599,10 @@
     "summary": "The empty set of atoms.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:332", "packages/engine-ts/src/select/selector.ts:410"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:332",
+      "packages/engine-ts/src/select/selector.ts:410"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#none"
   },
@@ -499,7 +614,10 @@
     "summary": "Atoms flagged as heteroatoms (het).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:479-480", "packages/engine-ts/src/select/selector.ts:581-582"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:479-480",
+      "packages/engine-ts/src/select/selector.ts:581-582"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#hetatm"
   },
@@ -511,7 +629,10 @@
     "summary": "All hydrogen/deuterium atoms (hydrogens/h.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:482-485", "packages/engine-ts/src/select/selector.ts:583-584"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:482-485",
+      "packages/engine-ts/src/select/selector.ts:583-584"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#hydro"
   },
@@ -523,7 +644,10 @@
     "summary": "Biopolymer (protein/nucleic) atoms, excluding solvent and heteroatoms (pol.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:627-628", "packages/engine-ts/src/select/selector.ts:587-589"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:627-628",
+      "packages/engine-ts/src/select/selector.ts:587-589"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#polymer"
   },
@@ -535,7 +659,9 @@
     "summary": "Protein subset of polymer (protein/pro.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:630"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:630"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#polymerprotein"
   },
@@ -547,7 +673,9 @@
     "summary": "Nucleic-acid subset of polymer (nucleic/nuc.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:631"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:631"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#polymernucleic"
   },
@@ -559,7 +687,10 @@
     "summary": "Solvent atoms, primarily water (sol.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:649-650", "packages/engine-ts/src/select/selector.ts:585-586"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:649-650",
+      "packages/engine-ts/src/select/selector.ts:585-586"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#solvent"
   },
@@ -571,7 +702,9 @@
     "summary": "Small organic (ligand) molecules (org.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:643-644"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:643-644"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#organic"
   },
@@ -583,7 +716,9 @@
     "summary": "Inorganic groups: ions and other non-carbon non-polymer atoms (ino.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:646-647"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:646-647"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#inorganic"
   },
@@ -595,7 +730,10 @@
     "summary": "Atoms whose element is a metal.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:670", "packages/engine-ts/src/select/selector.ts:604-605"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:670",
+      "packages/engine-ts/src/select/selector.ts:604-605"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#metals"
   },
@@ -607,7 +745,10 @@
     "summary": "Polymer backbone atoms (bb.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:672-673", "packages/engine-ts/src/select/selector.ts:590-591"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:672-673",
+      "packages/engine-ts/src/select/selector.ts:590-591"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#backbone"
   },
@@ -619,7 +760,10 @@
     "summary": "Polymer non-backbone (side chain) atoms (sc.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:675-676", "packages/engine-ts/src/select/selector.ts:592-593"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:675-676",
+      "packages/engine-ts/src/select/selector.ts:592-593"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#sidechain"
   },
@@ -631,7 +775,10 @@
     "summary": "Candidate hydrogen-bond donor atoms (don.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:603-604", "packages/engine-ts/src/select/selector.ts:600-601"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:603-604",
+      "packages/engine-ts/src/select/selector.ts:600-601"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#donors"
   },
@@ -643,7 +790,10 @@
     "summary": "Candidate hydrogen-bond acceptor atoms (acc.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:606-607", "packages/engine-ts/src/select/selector.ts:602-603"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:606-607",
+      "packages/engine-ts/src/select/selector.ts:602-603"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#acceptors"
   },
@@ -655,7 +805,10 @@
     "summary": "Atoms with at least one representation currently shown (v.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:490-492", "packages/engine-ts/src/select/selector.ts:594-596"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:490-492",
+      "packages/engine-ts/src/select/selector.ts:594-596"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#visible"
   },
@@ -667,7 +820,10 @@
     "summary": "Atoms belonging to a currently enabled object.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:515", "packages/engine-ts/src/select/selector.ts:810"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:515",
+      "packages/engine-ts/src/select/selector.ts:810"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#enabled"
   },
@@ -679,7 +835,10 @@
     "summary": "Atoms that have coordinates in the current/requested state (pr.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:654-655", "packages/engine-ts/src/select/selector.ts:597-599"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:654-655",
+      "packages/engine-ts/src/select/selector.ts:597-599"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#present"
   },
@@ -691,7 +850,9 @@
     "summary": "Atoms with the mask flag set, protected from picking/editing (msk.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:543-544"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:543-544"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#masked"
   },
@@ -703,7 +864,9 @@
     "summary": "Atoms with the protect flag set, excluded from sculpting/movement.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:546"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:546"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#protected"
   },
@@ -715,7 +878,9 @@
     "summary": "Atoms carrying the fix flag (flag 3), held in place during sculpting (fxd.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:620-621"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:620-621"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#fixed"
   },
@@ -727,7 +892,9 @@
     "summary": "Atoms carrying the restrain flag (flag 2), tethered to reference coords (rst.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:623-624"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:623-624"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#restrained"
   },
@@ -739,7 +906,9 @@
     "summary": "A pseudo-atom at the current scene centre, for distance queries.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:366"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:366"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#center"
   },
@@ -751,7 +920,9 @@
     "summary": "A pseudo-atom at the current rotation origin, for distance queries.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:365"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:365"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#origin"
   },
@@ -763,7 +934,10 @@
     "summary": "Atoms that participate in at least one bond.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:566", "packages/engine-ts/src/select/selector.ts:811-814"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:566",
+      "packages/engine-ts/src/select/selector.ts:811-814"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#bonded"
   },
@@ -775,7 +949,10 @@
     "summary": "Atoms for which a named representation is currently shown (rep <name>).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:524", "packages/engine-ts/src/select/selector.ts:537-541"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:524",
+      "packages/engine-ts/src/select/selector.ts:537-541"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#rep"
   },
@@ -787,7 +964,10 @@
     "summary": "Atoms whose colour equals a colour index or name (color <n>).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:526", "packages/engine-ts/src/select/selector.ts:532-536"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:526",
+      "packages/engine-ts/src/select/selector.ts:532-536"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#color"
   },
@@ -799,7 +979,9 @@
     "summary": "Numeric comparison on an atom's x/y/z Cartesian coordinate.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:678-680"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:678-680"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#coordinate-ranges"
   },
@@ -811,7 +993,10 @@
     "summary": "A bare token resolves to a stored named selection (%name) or an object name (model/m.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:582-585", "packages/engine-ts/src/select/selector.ts:818-822"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:582-585",
+      "packages/engine-ts/src/select/selector.ts:818-822"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#named-selections"
   },
@@ -823,7 +1008,9 @@
     "summary": "Glob wildcards */? in text property value specs, case-insensitive.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine-ts/src/select/selector.ts:491-499"],
+    "sourceRefs": [
+      "packages/engine-ts/src/select/selector.ts:491-499"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#wildcards"
   },
@@ -835,7 +1022,9 @@
     "summary": "Inclusive numeric ranges lo-hi for resi/index/id/rank, combinable with +-lists.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine-ts/src/select/selector.ts:439-452"],
+    "sourceRefs": [
+      "packages/engine-ts/src/select/selector.ts:439-452"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#resi-ranges"
   },
@@ -847,7 +1036,9 @@
     "summary": "Positional /object/segi/chain/resi/name shorthand ANDing the present fields.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine-ts/src/select/selector.ts:460-486"],
+    "sourceRefs": [
+      "packages/engine-ts/src/select/selector.ts:460-486"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#slash-macro"
   },
@@ -859,7 +1050,10 @@
     "summary": "Atoms directly bonded to the selection, retaining the seed itself (bto.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:445-446", "packages/engine-ts/src/select/selector.ts:322"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:445-446",
+      "packages/engine-ts/src/select/selector.ts:322"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#bound_to"
   },
@@ -871,7 +1065,10 @@
     "summary": "Expands the selection to every atom of every segment (segi) it touches (bs.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:452-455", "packages/engine/layer3/Selector.cpp:8914"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:452-455",
+      "packages/engine/layer3/Selector.cpp:8914"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#bysegment"
   },
@@ -883,7 +1080,10 @@
     "summary": "Expands the selection to atoms in the same crystallographic unit-cell neighbourhood.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:668", "packages/engine/layer3/Selector.cpp:9069"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:668",
+      "packages/engine/layer3/Selector.cpp:9069"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#bycell"
   },
@@ -895,7 +1095,10 @@
     "summary": "Grows the selection outward by a number of covalent bonds, not distance (xt.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:502-503", "packages/engine/layer3/Selector.cpp:7367"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:502-503",
+      "packages/engine/layer3/Selector.cpp:7367"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#extend"
   },
@@ -907,7 +1110,10 @@
     "summary": "The single lowest-index atom of the operand (first in table order).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:460", "packages/engine-ts/src/select/selector.ts:862-866"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:460",
+      "packages/engine-ts/src/select/selector.ts:862-866"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#first"
   },
@@ -919,7 +1125,10 @@
     "summary": "The single highest-index atom of the operand (last in table order).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:461", "packages/engine-ts/src/select/selector.ts:867-871"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:461",
+      "packages/engine-ts/src/select/selector.ts:867-871"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#last"
   },
@@ -931,7 +1140,10 @@
     "summary": "Cartoon/ribbon guide atoms: protein C-alpha and nucleic C4', one per polymer residue.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:652", "packages/engine/layer3/Selector.cpp:7626-7629"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:652",
+      "packages/engine/layer3/Selector.cpp:7626-7629"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#guide"
   },
@@ -943,7 +1155,10 @@
     "summary": "Residues whose one-letter protein sequence matches a regular-expression motif (ps.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:612-613", "packages/engine-ts/src/select/selector.ts:751"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:612-613",
+      "packages/engine-ts/src/select/selector.ts:751"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#pepseq"
   },
@@ -955,7 +1170,10 @@
     "summary": "Selects atoms by R/S chirality label.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:666", "packages/engine/layer3/Selector.cpp:7964"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:666",
+      "packages/engine/layer3/Selector.cpp:7964"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#stereo"
   },
@@ -967,8 +1185,11 @@
     "summary": "Atoms in a delocalized bond where explicit degree differs from valence (deloc.).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:609-610", "packages/engine/layer3/Selector.cpp:7526-7532"],
-    "parityStatus": "unknown",
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:609-610",
+      "packages/engine/layer3/Selector.cpp:7526-7532"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#delocalized"
   },
   {
@@ -979,7 +1200,10 @@
     "summary": "Atoms whose per-atom cartoon_color setting equals a colour index or name.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:527", "packages/engine/layer3/Selector.cpp:8017-8020"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:527",
+      "packages/engine/layer3/Selector.cpp:8017-8020"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#cartoon_color"
   },
@@ -991,7 +1215,10 @@
     "summary": "Atoms whose per-atom ribbon_color setting equals a colour index or name.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:528", "packages/engine/layer3/Selector.cpp:8017-8020"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:528",
+      "packages/engine/layer3/Selector.cpp:8017-8020"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#ribbon_color"
   },
@@ -1003,7 +1230,10 @@
     "summary": "Atoms carrying a rendered label whose string matches a value.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:685", "packages/engine/layer3/Selector.cpp:8039"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:685",
+      "packages/engine/layer3/Selector.cpp:8039"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#label"
   },
@@ -1015,7 +1245,10 @@
     "summary": "Numeric/string comparison on a user-defined per-atom property in the p. namespace.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Selector.cpp:678", "packages/engine/layer3/Selector.cpp:8600"],
+    "sourceRefs": [
+      "packages/engine/layer3/Selector.cpp:678",
+      "packages/engine/layer3/Selector.cpp:8600"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/selection-algebra.md#property"
   }

@@ -341,12 +341,13 @@ Desaturates (greys down) the colours in a selection by blending each atom's colo
 | `quiet` | | `1` | |
 
 ### Behaviour
-For each distinct source colour, blends `rgb*(1-a) + grey*a` and registers the result as a new
-colour via `set_color`, remapping atoms to it (identical source colours share one new slot).
+Conceptually blends each atom's colour toward grey (`rgb*(1-a) + grey*a`). This is an
+**incentive-only** feature: upstream open-source PyMOL's `desaturate` raises `IncentiveOnlyException`
+instead of recolouring, and the TS engine matches upstream by raising the identical error.
 
 ### Examples
 ```
-desaturate                 # 50% toward grey, all atoms
+desaturate                 # incentive-only: raises IncentiveOnlyException
 desaturate chain B, 0.8
 ```
 
@@ -354,7 +355,8 @@ desaturate chain B, 0.8
 `set_color`, `color`
 
 ### Source
-`docs/api-reference/commands.mdx` `### cmd.desaturate`; TS `packages/engine-ts/src/cmd/display.ts:184`
+`packages/engine/modules/pymol/experimenting.py:280` (raises `IncentiveOnlyException`);
+TS `packages/engine-ts/src/cmd/display.ts` raises the same incentive-only error.
 
 ---
 

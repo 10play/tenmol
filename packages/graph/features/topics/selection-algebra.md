@@ -104,8 +104,11 @@ two-operand selector, not a value list).
 
 ## ss
 
-`ss <type>` — match by secondary-structure assignment: `H` (helix), `S` (strand/sheet), `L` or `''`
-(loop/unassigned). Multi-valued: `ss H+S`. Assignments come from `dss` or the loaded file.
+`ss <type>` — match by secondary-structure assignment: `H` (helix), `S` (strand/sheet), `L` (loop).
+Multi-valued: `ss H+S`. Assignments come from `dss` or the loaded file. Matching is a literal
+alpha-list compare on the ssType string: PyMOL does **not** fold an unassigned `''` into `L`, so
+`ss L` selects only atoms explicitly assigned `L`, while `ss ''` selects the unassigned ones (ported
+to the TS engine to match this).
 
 ## index
 
@@ -125,8 +128,9 @@ re-sorting). Accepts `+`-lists and ranges. *Not yet ported to the TS engine.*
 
 ## state
 
-`state <n>` — match atoms belonging to object state `n` (used with multi-state / trajectory objects).
-*Not yet ported to the TS engine.*
+`state <n>` — match atoms belonging to object state `n` (used with multi-state / trajectory objects);
+`-1` is the object's current state. An atom matches when its object owns a coordinate set for that
+state. Ported to the TS engine (SELE_STAs).
 
 ## custom
 
@@ -136,12 +140,15 @@ column). *Not yet ported to the TS engine.*
 ## text_type
 
 `text_type <v>` / `tt. <v>` — match by the MOL2/Tripos "text type" (atom type string), e.g.
-`text_type C.ar`. *Not yet ported to the TS engine.*
+`text_type C.ar`. Alpha/wildcard list match (SELE_TTYs) on the `textType` field, settable via
+`alter sele, text_type='C.ar'`. Ported to the TS engine.
 
 ## numeric_type
 
 `numeric_type <v>` / `nt. <v>` — match by the integer atom "numeric type" (legacy AMBER/type code).
-*Not yet ported to the TS engine.*
+Integer-list/range match (SELE_NTYs) on the `customType` field, settable via
+`alter sele, numeric_type=N`; unset atoms carry the `cAtomInfoNoType` sentinel and match nothing.
+Ported to the TS engine.
 
 ## and
 
@@ -290,7 +297,9 @@ like other text selectors. *Not yet ported to the TS engine.*
 ## delocalized
 
 `delocalized` / `deloc.` — atoms participating in a delocalized (non-integer-order) bond, i.e. where
-explicit degree ≠ explicit valence (aromatic/resonant systems). *Not yet ported to the TS engine.*
+`floor(degree/valence) != degree/valence` (aromatic/resonant systems). Ported to the TS engine
+(SELE_DESz), driven by the bond-order perception in the PDB loader (backbone carbonyls, aromatic
+rings, guanidinium, nucleobases — the order half of `assign_pdb_known_residue`).
 
 ## cartoon_color
 
