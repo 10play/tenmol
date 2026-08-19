@@ -179,7 +179,7 @@
       "packages/engine/modules/pymol/importing.py:1074-1095",
       "packages/engine/modules/pymol/importing.py:694"
     ],
-    "parityStatus": "partial",
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#xplor"
   },
   {

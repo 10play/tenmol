@@ -329,8 +329,10 @@ API-only `read_xplorstr` for in-memory XPLOR text.
 `loadable.xplorstr` without touching disk.
 
 ### Source
-`packages/engine/modules/pymol/importing.py:1074-1095`. Parity: partial — via `cmd.load`;
-native XPLOR parsing coverage uncertain.
+`packages/engine/modules/pymol/importing.py:1074-1095`. Parity: `read_xplorstr` is ported in
+`packages/engine-ts/src/cmd/maps.ts` (`parseXplor`) and parses the XPLOR ASCII grid into a map
+object whose values match the oracle (verified vs real PyMOL — grid header, ZYX sections, and
+the `get_volume_histogram` readback all agree).
 
 ---
 

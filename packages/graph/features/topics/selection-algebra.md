@@ -227,8 +227,10 @@ The most-used expander: `byres (resn LIG around 5)` grabs whole neighbouring res
 
 ## byfragment
 
-`byfragment A` / `byfrag A` / `bf. A` — expand `A` to the connected fragment reachable by bonds. In the
-TS port this shares the connected-component implementation with `bymol`.
+`byfragment A` / `byfrag A` / `bf. A` — expand `A` to the editor's picked fragments (SELE_BYF1,
+`EditorGetNFrag`), NOT the whole connected molecule. With no editor fragments defined it selects
+nothing — the only state the TS engine models (so it is distinct from `bymol`, verified against the
+oracle to return 0 on a freshly loaded structure).
 
 ## byring
 

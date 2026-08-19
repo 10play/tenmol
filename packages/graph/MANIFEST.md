@@ -501,7 +501,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `CCP4` | feature | CCP4/MRC binary electron-density raster format loaded via cmd.load (format='ccp4'); also brix/dsn6/omap. | partial | [doc](features/topics/maps-volumes.md#ccp4) |
 | `DX` | feature | OpenDX/APBS electrostatics grid format (.dx/.dxbin) loaded via cmd.load (format='dx'). | partial | [doc](features/topics/maps-volumes.md#dx) |
 | `Volume Color Map Editor` | feature | Interactive panel editing a volume's transfer function: map histogram plot with draggable color/alpha control points on a logarithmic alpha axis. | implemented | [doc](features/topics/maps-volumes.md#volume-color-map-editor) |
-| `XPLOR` | feature | XPLOR/CNS ASCII density map format loaded via cmd.load or the API-only read_xplorstr. | partial | [doc](features/topics/maps-volumes.md#xplor) |
+| `XPLOR` | feature | XPLOR/CNS ASCII density map format loaded via cmd.load or the API-only read_xplorstr. | implemented | [doc](features/topics/maps-volumes.md#xplor) |
 
 ## measurement (10)
 
