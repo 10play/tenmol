@@ -170,7 +170,11 @@ describe('ss selector', () => {
   it('matches H / S / L (loop) and H+S grouping', () => {
     expect(count('ss H')).toBe(5);
     expect(count('ss S')).toBe(4);
-    expect(count('ss L')).toBe(9); // everything with empty ss
+    // PyMOL's `ss L` matches only the literal 'L' ssType, NOT unassigned ''
+    // (SELE_SSTs alpha match). The fixture assigns no 'L', so `ss L` is empty
+    // and the 9 unassigned atoms are selected by `ss ''` instead.
+    expect(count('ss L')).toBe(0);
+    expect(count("ss ''")).toBe(9);
     expect(count('ss H+S')).toBe(9);
   });
 });

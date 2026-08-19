@@ -764,12 +764,11 @@ function matchProp(node: Extract<Node, { t: 'prop' }>, ua: UniverseAtom): boolea
         (v) => eq(v, a.textType ?? '') || (v === '' && (a.textType ?? '') === ''),
       );
     case 'ss':
-      // 'H' helix, 'S' strand; 'L' (or empty) is loop/unassigned.
-      return node.values.some((v) => {
-        const u = v.toUpperCase();
-        const s = a.ss.toUpperCase();
-        return u === 'L' ? s === '' || s === 'L' : s === u;
-      });
+      // `ss <type>` (SELE_SSTs) — alpha/wildcard match on the literal ssType
+      // string ('H'/'S'/'L'/…). PyMOL does NOT fold an unassigned '' into 'L':
+      // `ss L` selects only atoms whose ss is exactly 'L', and `ss ''` selects
+      // the unassigned ones. (Case-insensitive, like other alpha selectors.)
+      return node.values.some((v) => eq(v, a.ss) || (v === '' && a.ss === ''));
   }
 }
 
