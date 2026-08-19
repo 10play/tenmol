@@ -1,0 +1,5 @@
+{"id":"setting__openvr_gui_scene_color","feature":"openvr_gui_scene_color","kind":"setting","probeKind":"state",
+ "ops":[{"do":"set openvr_gui_scene_color, 0.75"}],
+ "checks":[
+   {"call":["get_setting_float","openvr_gui_scene_color"],"label":"float roundtrip 0.75"}],
+ "expected":[0.75]}
