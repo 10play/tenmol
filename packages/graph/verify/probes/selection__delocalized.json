@@ -1,0 +1,12 @@
+{
+  "id":"selection__delocalized","feature":"delocalized","kind":"selection","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/1tii.pdb, m"}],
+  "checks":[
+    {"call":["count_atoms","delocalized"],"label":"delocalized: degree/valence non-integer (partial/multiple bond)"},
+    {"call":["count_atoms","deloc."],"label":"deloc. alias"},
+    {"call":["count_atoms","delocalized and name O"],"label":"backbone carbonyl O (C=O order 2)"},
+    {"call":["count_atoms","delocalized and resn PHE"],"label":"PHE aromatic ring"},
+    {"call":["count_atoms","delocalized and name NH1 and resn ARG"],"label":"ARG guanidinium CZ=NH1"}
+  ],
+  "expected":[2427,2427,927,152,44]
+}

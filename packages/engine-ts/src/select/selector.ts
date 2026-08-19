@@ -159,6 +159,7 @@ type KeywordKey =
   | 'protected'
   | 'fixed'
   | 'restrained'
+  | 'delocalized'
   | 'guide';
 
 const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
@@ -257,6 +258,8 @@ const KEYWORDS: Readonly<Record<string, KeywordKey>> = {
   'fxd.': 'fixed',
   restrained: 'restrained',
   'rst.': 'restrained',
+  delocalized: 'delocalized',
+  'deloc.': 'delocalized',
   guide: 'guide',
 };
 
@@ -849,6 +852,7 @@ function matchKeyword(kw: KeywordKey, ua: UniverseAtom): boolean {
     case 'enabled':
     case 'bonded':
     case 'guide':
+    case 'delocalized':
     case 'organic':
     case 'inorganic':
     case 'polymerProtein':
@@ -1026,6 +1030,8 @@ interface EvalEnv {
   byComponent: Map<number, number[]>;
   /** bonded neighbours (universe indices) per universe atom. */
   adj: number[][];
+  /** summed bond orders per universe atom (for `delocalized`). */
+  valence: Float64Array;
   /** VDW radius per universe atom (for `gap`). */
   vdw: number[];
   /** Names of enabled objects (for `enabled`). */
@@ -1245,6 +1251,19 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
         return s;
       }
       if (kw === 'guide') return guideAtoms(env);
+      if (kw === 'delocalized') {
+        // `delocalized`/`deloc.` (SELE_DESz): degree/valence is non-integer, i.e.
+        // the atom participates in a partial/multiple bond. Matches
+        // floor(deg/val) != deg/val (Selector.cpp:7530), NaN (unbonded 0/0)
+        // included, exactly as PyMOL.
+        const s = new Set<number>();
+        for (let i = 0; i < n; i++) {
+          const deg = env.adj[i]?.length ?? 0;
+          const deloc = deg / env.valence[i]!;
+          if (Math.floor(deloc) !== deloc) s.add(i);
+        }
+        return s;
+      }
       if (kw === 'organic' || kw === 'inorganic') return orgInoAtoms(kw, env);
       if (kw === 'polymerProtein' || kw === 'polymerNucleic') return polymerClassAtoms(kw, env);
       return filter((ua) => matchKeyword(kw, ua));
@@ -1489,7 +1508,10 @@ export function selectAtoms(expr: string, ctx: SelectorContext): UniverseAtom[] 
   }
 
   // Bond adjacency and covalent connected components, both across the universe.
+  // `valence` accumulates each atom's summed bond orders (default order 1) for
+  // the `delocalized` selector (degree/valence non-integer ⇒ a partial bond).
   const adj: number[][] = Array.from({ length: n }, () => []);
+  const valence = new Float64Array(n);
   const parent = new Int32Array(n);
   for (let i = 0; i < n; i++) parent[i] = i;
   const find = (x: number): number => {
@@ -1501,10 +1523,14 @@ export function selectAtoms(expr: string, ctx: SelectorContext): UniverseAtom[] 
   };
   for (const o of objects) {
     const base = objBase.get(o.name)!;
-    for (const [i, j] of o.bonds) {
+    for (const bnd of o.bonds) {
+      const i = bnd[0], j = bnd[1];
+      const order = bnd[2] ?? 1;
       const ui = base + i, uj = base + j;
       adj[ui]!.push(uj);
       adj[uj]!.push(ui);
+      valence[ui]! += order;
+      valence[uj]! += order;
       const ri = find(ui), rj = find(uj);
       if (ri !== rj) parent[ri] = rj;
     }
@@ -1523,7 +1549,7 @@ export function selectAtoms(expr: string, ctx: SelectorContext): UniverseAtom[] 
   for (const o of objects) if (o.enabled) enabled.add(o.name);
 
   const set = evalSet(ast, {
-    universe, ctx, coords, vdw, byRes, byChain, bySegment, byObject, component, byComponent, adj, enabled,
+    universe, ctx, coords, vdw, byRes, byChain, bySegment, byObject, component, byComponent, adj, valence, enabled,
   });
   return [...set].sort((x, y) => x - y).map((i) => universe[i]!);
 }
