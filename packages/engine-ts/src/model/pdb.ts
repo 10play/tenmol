@@ -15,6 +15,7 @@ import type { AtomInfo } from './atom';
 import { defaultVisRep } from './atom';
 import { canonicalElement, isKnownElement } from './element';
 import { connectByDistance } from './bonding';
+import { assignPdbKnownResidueCharges } from './pdb-chem';
 import { ObjectMolecule } from './molecule';
 import { sortAtomsInPlace } from './atomsort';
 
@@ -216,6 +217,10 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
 
   // Distance-based connectivity for standard residues (no CONECT).
   connectByDistance(mol, addBond);
+
+  // Perceive integer formal charges for known-residue ionisable atoms the way
+  // PyMOL does during connectivity (LYS/ARG/HIP +1, ASP/GLU/OXT/phosphate −1).
+  assignPdbKnownResidueCharges(mol);
 
   // PyMOL sorts the atom table into canonical order at load
   // (`ObjectMoleculeSort`), so `cmd.index`/`iterate`/`get_model` enumerate in
