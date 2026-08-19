@@ -96,6 +96,7 @@ type Node =
   | { t: 'byring'; a: Node }
   | { t: 'pepseq'; seq: string }
   | { t: 'bymol'; a: Node }
+  | { t: 'byfragment'; a: Node }
   | { t: 'byobject'; a: Node }
   | { t: 'bychain'; a: Node }
   | { t: 'bysegment'; a: Node }
@@ -403,9 +404,16 @@ class Parser {
       this.next();
       return { t: 'byres', a: this.parseNot() };
     }
-    if (this.isOp(t, 'bymol', 'bymolecule', 'bm.', 'byfragment')) {
+    if (this.isOp(t, 'bymol', 'bymolecule', 'bm.')) {
       this.next();
       return { t: 'bymol', a: this.parseNot() };
+    }
+    // `byfragment`/`byfrag`/`bf.` (SELE_BYF1) expands to the editor's picked
+    // fragments (EditorGetNFrag). With no editor fragments defined it selects
+    // NOTHING — the only state engine-ts models — so it is NOT `bymol`.
+    if (this.isOp(t, 'byfragment', 'byfrag', 'bf.')) {
+      this.next();
+      return { t: 'byfragment', a: this.parseNot() };
     }
     if (this.isOp(t, 'byobject', 'byobj', 'bo.')) {
       this.next();
@@ -1357,6 +1365,13 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
     }
     case 'bymol':
       return expandGroups(evalSet(node.a, env), (i) => env.byComponent.get(env.component[i]!) ?? []);
+    case 'byfragment':
+      // Editor picked-fragment membership (SELE_BYF1). engine-ts models no
+      // editor fragments, so — like PyMOL with EditorGetNFrag()==0 — this always
+      // selects nothing. The operand is still evaluated so a malformed inner
+      // selection still errors.
+      evalSet(node.a, env);
+      return new Set();
     case 'byobject':
       return expandGroups(evalSet(node.a, env), (i) => env.byObject.get(env.universe[i]!.objName) ?? []);
     case 'bychain':
