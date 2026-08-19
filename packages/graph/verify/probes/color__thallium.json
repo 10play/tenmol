@@ -1,0 +1,24 @@
+{
+  "id": "color__thallium", "feature": "thallium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color thallium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","thallium"],"label":"thallium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","thallium"],"label":"thallium palette index"},
+    {"call":["count_atoms","color thallium"],"label":"atoms colored thallium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.6509804129600525,
+      0.3294117748737335,
+      0.3019607961177826
+    ],
+    5356,
+    1,
+    1
+  ]
+}

@@ -1,0 +1,11 @@
+{"id":"setting__surface_clear_state","feature":"surface_clear_state","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set surface_clear_state, 3, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","surface_clear_state"],"label":"surface_clear_state global default (no prior set)"},
+   {"call":["get_setting_int","surface_clear_state","ala"],"label":"surface_clear_state per-object after set 3"}
+ ],
+ "tol": 1e-6,
+ "expected": [0, 3]}

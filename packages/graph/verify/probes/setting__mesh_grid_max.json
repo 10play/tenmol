@@ -1,0 +1,11 @@
+{"id":"setting__mesh_grid_max","feature":"mesh_grid_max","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set mesh_grid_max, 40, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","mesh_grid_max"],"label":"mesh_grid_max global default (no prior set)"},
+   {"call":["get_setting_int","mesh_grid_max","ala"],"label":"mesh_grid_max per-object after set 40"}
+ ],
+ "tol": 1e-6,
+ "expected": [80, 40]}

@@ -1,0 +1,23 @@
+{
+  "id": "command__fab", "feature": "fab", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fab AG, mypep"}
+  ],
+  "checks": [
+    {"call":["get_names"],"label":"object created by fab"},
+    {"call":["count_atoms","mypep and name CA"],"label":"CA atoms = residue count"},
+    {"call":["count_atoms","mypep and name C"],"label":"backbone carbonyl carbons"},
+    {"call":["count_atoms","mypep and name N"],"label":"backbone nitrogens"},
+    {"call":["count_atoms","mypep"],"label":"total atoms in peptide"}
+  ],
+  "tol": 0,
+  "expected": [
+    [
+      "mypep"
+    ],
+    2,
+    2,
+    2,
+    17
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "command__matrix_transfer",
+  "feature": "matrix_transfer",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "create tgt, ala"},
+    {"call": ["translate", [5, 0, 0]], "kwargs": {"object": "ala", "camera": 0}},
+    {"do": "matrix_transfer ala, tgt"}
+  ],
+  "checks": [
+    {"call": ["get_object_ttt", "ala"], "label": "source TTT set by translate"},
+    {"call": ["get_object_ttt", "tgt"], "label": "target TTT after matrix_transfer copy"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1, 0, 0, 5, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+    [1, 0, 0, 5, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "setting__pdb_insertions_go_first", "feature": "pdb_insertions_go_first", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set pdb_insertions_go_first, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","pdb_insertions_go_first"],"label":"global pdb_insertions_go_first default (no prior set)"},
+    {"call":["get_setting_boolean","pdb_insertions_go_first","ala"],"label":"per-object pdb_insertions_go_first after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

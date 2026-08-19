@@ -1,0 +1,22 @@
+{
+  "id": "color__carbon", "feature": "carbon", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color carbon, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color carbon"],"label":"atoms colored carbon"},
+    {"call":["get_color_index","carbon"],"label":"carbon palette index"},
+    {"call":["get_color_tuple","carbon"],"label":"carbon rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    26,
+    [
+      0.20000000298023224,
+      1,
+      0.20000000298023224
+    ]
+  ]
+}

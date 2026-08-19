@@ -1,0 +1,15 @@
+{
+  "id": "setting__clean_electro_mode", "feature": "clean_electro_mode", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set clean_electro_mode, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","clean_electro_mode"],"label":"global clean_electro_mode default (no prior set)"},
+    {"call":["get_setting_int","clean_electro_mode","ala"],"label":"per-object clean_electro_mode after set 0"}
+  ],
+  "expected": [
+    1,
+    0
+  ]
+}

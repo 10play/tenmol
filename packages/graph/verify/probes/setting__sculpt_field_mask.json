@@ -1,0 +1,12 @@
+{
+  "id": "setting__sculpt_field_mask", "feature": "sculpt_field_mask", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set sculpt_field_mask, 255"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","sculpt_field_mask"],"label":"sculpt_field_mask after set 255 (roundtrip)"}
+  ],
+  "expected": [
+    255
+  ]
+}

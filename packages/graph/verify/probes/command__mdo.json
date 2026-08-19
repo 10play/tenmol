@@ -1,0 +1,19 @@
+{
+  "id": "command__mdo",
+  "feature": "mdo",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "mset 1 x3"},
+    {"call": ["mdo", 2, "set sphere_scale, 5"]},
+    {"call": ["frame", 2, 1]},
+    {"do": "refresh"}
+  ],
+  "checks": [
+    {"call": ["get_setting_float", "sphere_scale"], "label": "sphere_scale set by mdo frame-2 command"},
+    {"call": ["count_frames"], "label": "movie length"}
+  ],
+  "tol": 1e-3,
+  "expected": [5, 3]
+}

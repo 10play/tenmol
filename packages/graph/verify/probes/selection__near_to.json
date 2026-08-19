@@ -1,0 +1,5 @@
+{"id":"selection__near_to","feature":"near_to","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[{"call":["count_atoms","(chain A) near_to 5 of (resi 10)"],"label":"chainA_nto5_resi10"},
+           {"call":["count_atoms","name CA near_to 4 of name CB"],"label":"CA_nto4_CB"}],
+ "expected":[64,663]}

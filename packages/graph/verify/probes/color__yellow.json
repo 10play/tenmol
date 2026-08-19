@@ -1,0 +1,25 @@
+{
+  "id": "color__yellow", "feature": "yellow", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"pseudoatom p2"},
+    {"do":"color yellow, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","yellow"],"label":"yellow palette index"},
+    {"call":["get_color_tuple","yellow"],"label":"yellow RGB tuple","tol":1e-3},
+    {"call":["count_atoms","color yellow"],"label":"atoms colored yellow"},
+    {"call":["count_atoms","p1 or p2"],"label":"total atoms"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    6,
+    [
+      1,
+      1,
+      0
+    ],
+    1,
+    2
+  ]
+}

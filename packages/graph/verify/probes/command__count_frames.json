@@ -1,0 +1,14 @@
+{
+  "id": "command__count_frames", "feature": "count_frames", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "m"], "kwargs": {"pos": [0, 0, 0]}},
+    {"do": "mset 1 x10"}
+  ],
+  "checks": [
+    {"call": ["count_frames"], "label": "movie frame count after mset 1 x10 (expect 10)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10
+  ]
+}

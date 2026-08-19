@@ -1,0 +1,18 @@
+{
+  "id": "command__spectrum", "feature": "spectrum", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"pseudoatom p2"},
+    {"do":"pseudoatom p3"},
+    {"do":"spectrum count, blue_red"}
+  ],
+  "checks": [
+    {"call":["count_atoms","all"],"label":"total atoms"},
+    {"call":["count_atoms","color c083"],"label":"atoms at blue (min) endpoint"},
+    {"call":["count_atoms","color c125"],"label":"atoms at mid slot"},
+    {"call":["count_atoms","color c166"],"label":"atoms at red (max, clamped) endpoint"},
+    {"call":["get_color_index","c083"],"label":"blue_red first palette color registered"}
+  ],
+  "expected": [3, 1, 1, 1, 2238],
+  "tol": 0
+}

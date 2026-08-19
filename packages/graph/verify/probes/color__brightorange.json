@@ -1,0 +1,22 @@
+{
+  "id": "color__brightorange", "feature": "brightorange", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color brightorange, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","brightorange"],"label":"brightorange RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color brightorange"],"label":"atoms colored brightorange"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      1,
+      0.699999988079071,
+      0.20000000298023224
+    ],
+    1,
+    1
+  ]
+}

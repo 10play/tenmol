@@ -1,0 +1,10 @@
+{"id":"setting__stereo_double_pump_mono","feature":"stereo_double_pump_mono","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set stereo_double_pump_mono, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","stereo_double_pump_mono"],"label":"stereo_double_pump_mono global default (no prior set)"},
+   {"call":["get_setting_boolean","stereo_double_pump_mono","ala"],"label":"stereo_double_pump_mono per-object after set 1"}
+ ],
+ "expected": [false, true]}

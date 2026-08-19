@@ -1,0 +1,25 @@
+{
+  "id": "color__forest",
+  "feature": "forest",
+  "kind": "color",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "color forest"}
+  ],
+  "checks": [
+    {"call": ["get_color_index", "forest"], "label": "forest color index"},
+    {"call": ["get_color_tuple", "forest"], "label": "forest RGB tuple"},
+    {"call": ["count_atoms", "all"], "label": "atom count after color"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    22,
+    [
+      0.20000000298023224,
+      0.6000000238418579,
+      0.20000000298023224
+    ],
+    10
+  ]
+}

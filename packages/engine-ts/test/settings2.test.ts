@@ -2,7 +2,7 @@
  * Tests for the `settings2` subsystem (packages/engine-ts/src/cmd/settings2.ts):
  * `set` (global + per-object), `unset`, `toggle`, `set_bond`/`unset_bond`,
  * `get_object_settings`, `get_setting_legacy`, `get_clip`, `viewport`,
- * `window`, `full_screen`, `reference`.
+ * `window`, `full_screen`.
  *
  * Isolated: builds a RegistrarCtx over a bare Executive so no other in-progress
  * subsystem is pulled in. Expected values are derived by hand from PyMOL's
@@ -17,6 +17,7 @@ import { parsePdb } from '../src/model/pdb';
 import { repBit } from '../src/model/atom';
 import { Rep } from '@tenmol/protocol';
 import { registerSettings2 } from '../src/cmd/settings2';
+import { SETTING_INFO_DEFAULTS } from '../src/cmd/setting-defaults';
 import type { CommandHandler } from '../src/cmd/registrar';
 import { SMALL_PDB } from './fixture';
 
@@ -49,6 +50,33 @@ function makeHarness(): Harness {
     publishCount: () => published,
   };
 }
+
+describe('setting-defaults: generated compiled-in defaults (SettingInfo.h table)', () => {
+  it('applies the open-source volume_mode override (0, not the incentive header 1)', () => {
+    // The vendored SettingInfo.h ships the incentive default (1); open-source
+    // PyMOL — the verification oracle — ships 0. scripts/gen-setting-defaults.mjs
+    // reconciles this via its OVERRIDES map. Verified against the real oracle
+    // (packages/graph/verify/probes/setting__volume_mode.json).
+    expect(SETTING_INFO_DEFAULTS['volume_mode']).toBe(0);
+    const h = makeHarness();
+    expect(h.ex.getSettingFloat('volume_mode')).toBe(0);
+    expect(h.call('get_setting_int', ['volume_mode'])).toBe(0);
+  });
+
+  it('locks representative compiled-in defaults across every REC_* value type', () => {
+    // Regenerated deterministically by scripts/gen-setting-defaults.mjs; these pin
+    // the parse of each macro shape so a generator change can't silently drift a
+    // default. Values verified against real PyMOL during the feature-verify grind.
+    expect(SETTING_INFO_DEFAULTS['sphere_scale']).toBe(1); // REC_f float
+    expect(SETTING_INFO_DEFAULTS['surface_quality']).toBe(0); // REC_i int
+    expect(SETTING_INFO_DEFAULTS['two_sided_lighting']).toBe(-1); // REC_i, negative default
+    expect(SETTING_INFO_DEFAULTS['valence']).toBe(1); // REC_b boolean -> 1
+    expect(SETTING_INFO_DEFAULTS['swap_dsn6_bytes']).toBe(1); // REC_b boolean
+    expect(SETTING_INFO_DEFAULTS['wildcard']).toBe('*'); // REC_s string
+    expect(SETTING_INFO_DEFAULTS['surface_color']).toEqual({ color: '-1' }); // REC_c colour ref
+    expect(SETTING_INFO_DEFAULTS['label_position']).toEqual([0, 0, 1.75]); // REC_3 float3 vector
+  });
+});
 
 describe('settings2: set / unset global round-trip', () => {
   it('resets a numeric setting to its compiled default', () => {
@@ -93,17 +121,21 @@ describe('settings2: per-object settings', () => {
     expect(n).toBe(1);
     // Global stays at its default — per-object override is separate.
     expect(h.ex.getSettingFloat('sphere_scale')).toBe(1.0);
-    expect(h.call('get_object_settings', ['m'])).toEqual({ sphere_scale: 0.7 });
+    // PyMOL's get_object_settings serializes the object-level setting handle as
+    // a list of [index, type, value] tuples (SettingAsPyList). sphere_scale is
+    // index 155, type 3 (cSetting_float). Verified against real PyMOL.
+    expect(h.call('get_object_settings', ['m'])).toEqual([[155, 3, 0.7]]);
 
     const removed = h.call('unset', ['sphere_scale', 'm']);
     expect(removed).toBe(1);
-    expect(h.call('get_object_settings', ['m'])).toEqual({});
+    expect(h.call('get_object_settings', ['m'])).toBeNull();
   });
 
-  it('returns an empty object for an object with no overrides', () => {
+  it('returns null for an object with no overrides', () => {
     const h = makeHarness();
-    expect(h.call('get_object_settings', ['m'])).toEqual({});
-    expect(h.call('get_object_settings', ['nope'])).toEqual({});
+    // No settings handle -> C-layer null -> Python None. Verified against real PyMOL.
+    expect(h.call('get_object_settings', ['m'])).toBeNull();
+    expect(h.call('get_object_settings', ['nope'])).toBeNull();
   });
 });
 
@@ -133,31 +165,50 @@ describe('settings2: toggle', () => {
 });
 
 describe('settings2: bond settings', () => {
-  it('set_bond counts the CA-CB bond and unset_bond removes it', () => {
+  // Read the per-bond override of a single bond spanning two selections,
+  // directly off the executive store (get_bond lives in a different subsystem
+  // not registered by this harness).
+  const bondValue = (h: Harness, name: string, sel1: string, sel2: string): number | string | undefined => {
+    const a = new Set(h.ex.atomsMatching(sel1).map((u) => u.index));
+    const b = new Set(h.ex.atomsMatching(sel2).map((u) => u.index));
+    const mol = h.ex.molecule('m')!;
+    for (const [i, j] of mol.bonds) {
+      if ((a.has(i) && b.has(j)) || (a.has(j) && b.has(i))) return h.ex.getBondSetting(name, 'm', i, j);
+    }
+    return undefined;
+  };
+
+  it('set_bond overrides the CA-CB bond and unset_bond removes it', () => {
     const h = makeHarness();
     // In ALA, CA (idx1) is distance-bonded to CB (idx4); GLY has no CB.
-    const n = h.call('set_bond', ['stick_radius', '0.5', 'name CA', 'name CB']);
-    expect(n).toBe(1);
-    // Idempotent selection order does not create duplicates.
-    const removed = h.call('unset_bond', ['stick_radius', 'name CB', 'name CA']);
-    expect(removed).toBe(1);
-    // Nothing left to remove.
-    expect(h.call('unset_bond', ['stick_radius', 'name CA', 'name CB'])).toBe(0);
+    // Real PyMOL's set_bond/unset_bond return None (the count is not surfaced
+    // to Python); the effect is observed on the stored per-bond override.
+    expect(h.call('set_bond', ['stick_radius', '0.5', 'name CA', 'name CB'])).toBeNull();
+    expect(bondValue(h, 'stick_radius', 'name CA', 'name CB')).toBe(0.5);
+    // Idempotent selection order does not create duplicates; unset clears it.
+    expect(h.call('unset_bond', ['stick_radius', 'name CB', 'name CA'])).toBeNull();
+    expect(bondValue(h, 'stick_radius', 'name CA', 'name CB')).toBeUndefined();
+    // Nothing left to remove — still None.
+    expect(h.call('unset_bond', ['stick_radius', 'name CA', 'name CB'])).toBeNull();
   });
 
-  it('set_bond over the backbone marks each consecutive bond once', () => {
+  it('set_bond over the backbone marks each consecutive bond', () => {
     const h = makeHarness();
     // Within-ALA backbone bonds among {N,CA,C}: N-CA and CA-C => 2 bonds.
-    const n = h.call('set_bond', ['stick_radius', '0.4', 'name N+CA+C and chain A', 'name N+CA+C and chain A']);
-    expect(n).toBe(2);
+    // set_bond returns None; each bond carries the override.
+    expect(
+      h.call('set_bond', ['stick_radius', '0.4', 'name N+CA+C and chain A', 'name N+CA+C and chain A']),
+    ).toBeNull();
+    expect(bondValue(h, 'stick_radius', 'name N', 'name CA')).toBe(0.4);
+    expect(bondValue(h, 'stick_radius', 'name CA', 'name C')).toBe(0.4);
   });
 });
 
 describe('settings2: view extras', () => {
   it('get_clip reads front/back from the default view', () => {
     const h = makeHarness();
-    // defaultView(): dist=40, front=dist-20=20, back=dist+20=60.
-    expect(h.call('get_clip')).toEqual([20, 60]);
+    // defaultView() matches PyMOL SceneSetDefaultView: front=40, back=100.
+    expect(h.call('get_clip')).toEqual([40, 100]);
     // A set_view moves the clip planes; get_clip tracks them.
     const v = h.ex.view.get();
     v[15] = 5;
@@ -176,17 +227,30 @@ describe('settings2: view extras', () => {
     expect(h.call('viewport', [-1, 720])).toEqual([800, 720]);
   });
 
-  it('window / full_screen / reference are no-ops returning null', () => {
+  it('window / full_screen are no-ops returning null', () => {
     const h = makeHarness();
     expect(h.call('window', ['hide'])).toBeNull();
     expect(h.call('full_screen', [1])).toBeNull();
     expect(h.call('full_screen', [-1])).toBeNull();
-    expect(h.call('reference')).toBeNull();
+    // `reference` is no longer a settings2 no-op: it moved to the `editing`
+    // subsystem as a real per-atom reference-state command (store/recall/
+    // validate/swap), verified against real PyMOL by the oracle differential.
   });
 
-  it('get_setting_legacy returns the current global value or null', () => {
+  it('get_setting_legacy is an exact alias of get_setting_float', () => {
+    // `modules/pymol/api.py`: `get_setting_float as get_setting_legacy`. It
+    // reads a setting as a float and honours the per-object `object` argument,
+    // returning the same value get_setting_float would (verified vs real PyMOL).
     const h = makeHarness();
     expect(h.call('get_setting_legacy', ['sphere_scale'])).toBe(1.0);
-    expect(h.call('get_setting_legacy', ['nonexistent_setting'])).toBeNull();
+    // Per-object override resolves like get_setting_float, not the global.
+    h.call('set', ['sphere_scale', 0.25, 'ala']);
+    expect(h.call('get_setting_legacy', ['sphere_scale', 'ala'])).toBe(
+      h.call('get_setting_float', ['sphere_scale', 'ala']),
+    );
+    // Unknown setting matches get_setting_float exactly (both 0 in this port).
+    expect(h.call('get_setting_legacy', ['nonexistent_setting'])).toBe(
+      h.call('get_setting_float', ['nonexistent_setting']),
+    );
   });
 });

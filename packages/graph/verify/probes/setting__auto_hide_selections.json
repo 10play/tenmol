@@ -1,0 +1,13 @@
+{
+  "id": "setting__auto_hide_selections",
+  "feature": "auto_hide_selections",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {"call": ["get_setting_int", "auto_hide_selections"], "label": "default auto_hide_selections (PyMOL default on/1)"}
+  ],
+  "expected": [
+    1
+  ]
+}

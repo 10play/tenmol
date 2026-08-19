@@ -1,0 +1,47 @@
+{
+ "id": "selection__inorganic",
+ "feature": "inorganic",
+ "kind": "selection",
+ "probeKind": "state",
+ "ops": [
+  {
+   "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/testing/data/1rx1.pdb, m"
+  }
+ ],
+ "checks": [
+  {
+   "call": [
+    "count_atoms",
+    "inorganic"
+   ],
+   "label": "inorganic (Ca2+ ion, non-carbon non-polymer)"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "organic"
+   ],
+   "label": "organic (NAP ligand, carbon-containing small molecule)"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "polymer"
+   ],
+   "label": "polymer (protein) partition context"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "solvent"
+   ],
+   "label": "solvent (water) partition context"
+  }
+ ],
+ "expected": [
+  1,
+  48,
+  1268,
+  118
+ ]
+}

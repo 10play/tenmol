@@ -1,0 +1,19 @@
+{
+  "id": "command__meter_reset",
+  "feature": "meter_reset",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "meter_reset"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "all"], "label": "scene unaffected by meter_reset (atom count)"},
+    {"call": ["count_atoms", "elem C"], "label": "carbon count unchanged after meter_reset"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    3
+  ]
+}

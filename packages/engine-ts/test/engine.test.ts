@@ -319,9 +319,10 @@ describe('LocalBackend', () => {
     await backend.connect();
     await backend.do('fragment ala');
     expect(await backend.call('get_names', ['objects'])).toEqual(['ala']);
-    expect(await backend.call('count_atoms', ['all'])).toBe(5);
+    // The chempy fragment library includes hydrogens, so ala is 10 atoms (matches real PyMOL).
+    expect(await backend.call('count_atoms', ['all'])).toBe(10);
     await backend.do('show spheres');
-    expect(await backend.call('count_atoms', ['rep spheres'])).toBe(5);
+    expect(await backend.call('count_atoms', ['rep spheres'])).toBe(10);
   });
 
   it('answers the object-panel endpoint with a real snapshot', async () => {
@@ -388,10 +389,10 @@ describe('LocalBackend', () => {
     await backend.connect();
     await backend.do('fragment ala'); // command language
     await backend.do('cmd.count_atoms("all")'); // JS expression -> value shown
-    expect(lines.some((l) => l === '5')).toBe(true);
+    expect(lines.some((l) => l === '10')).toBe(true); // ala fragment has hydrogens (10 atoms)
     // JS statements can act: show every atom as spheres.
     await backend.do('cmd.show_as("spheres", "all"); print("done")');
-    expect(await backend.call('count_atoms', ['rep spheres'])).toBe(5);
+    expect(await backend.call('count_atoms', ['rep spheres'])).toBe(10);
     expect(lines.some((l) => l === 'done')).toBe(true);
   });
 

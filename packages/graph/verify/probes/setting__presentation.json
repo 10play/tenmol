@@ -1,0 +1,12 @@
+{
+  "id": "setting__presentation", "feature": "presentation", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set presentation, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","presentation"],"label":"presentation after set 1 (default 0)"}
+  ],
+  "expected": [
+    true
+  ]
+}

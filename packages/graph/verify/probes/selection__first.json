@@ -1,0 +1,8 @@
+{"id":"selection__first","feature":"first","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","first chain A"],"label":"first chain A = single first atom of chain A"},
+   {"call":["count_atoms","first (resn ALA)"],"label":"first (resn ALA) = single first ALA atom"},
+   {"call":["count_atoms","first all"],"label":"first all = single first atom overall"}
+ ],
+ "expected":[1,1,1]}

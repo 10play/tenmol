@@ -1,16 +1,9 @@
 /**
  * The `controlflow` command subsystem: PyMOL's control-flow / session / system
- * glue that, in a browser sandbox, is either a coordinate undo/redo stack or a
- * deliberate, side-effect-free no-op.
+ * glue that, in a browser sandbox, is a small amount of real behaviour plus a
+ * set of deliberate, side-effect-free no-ops.
  *
  * WHAT IS REAL HERE
- * - A minimal coordinate/atom-state **undo/redo stack** (PyMOL's `CUndo`,
- *   `layer3/Executive.cpp:ExecutiveSaveUndo`). `push_undo(selection, state)`
- *   snapshots the current coordinates of the matched atoms; `undo()` restores
- *   the most recent snapshot (capturing the pre-restore coordinates onto the
- *   redo stack so `redo()` can re-apply them). This is a real, working undo of
- *   the last *recorded* coordinate mutation: a mutating command (or a test)
- *   calls `push_undo` before it edits coordinates, exactly as PyMOL does.
  * - `pop(name, source)` — PyMOL's `cmd.pop`: take one atom out of the named
  *   selection `source` and place it (alone) into the selection `name`. Returns
  *   1 if an atom was moved, 0 if `source` was empty.
@@ -18,90 +11,37 @@
  *   module-local map, observable through the added `get_key_bindings()` getter.
  *
  * WHAT IS A DOCUMENTED NO-OP (never touches the real FS / shell / process)
- * - `run` / `spawn` / `system` — in the browser there is no filesystem or shell,
- *   so these return `null` WITHOUT executing anything (they do not throw).
- * - `sync` / `abort` / `accept` / `ending` / `splash` / `update` /
- *   `rebuild_all` — session lifecycle / render-refresh signals with nothing to
- *   drive locally; they succeed inertly (`null`).
+ * - `push_undo` / `undo` / `redo` — coordinate undo is NOT ported. Real
+ *   (open-source, headless) PyMOL only rolls back the object *currently being
+ *   edited* through the picking Editor: `ExecutiveUndo` acts on
+ *   `ExecutiveGetLastObjectEdited`, which scripting never sets. So a scripted
+ *   `push_undo(sel); translate ...; undo` does NOT restore the pre-translate
+ *   coordinates — the atoms stay translated. (Verified against real PyMOL via
+ *   the differential oracle.) These three succeed inertly (`null`).
+ * - `run` — a `.pml` file IS executed: PyMOL's `run(file.pml)` delegates to
+ *   `cmd.load`, whose `pml` handler runs `cmd.do("_ @file")` (`importing.py:1625`),
+ *   so we replay the script through the console's `@`-include (under Node the
+ *   file is read and each line run; the browser reports it honestly). Python
+ *   (`.py`/`.pym`) scripts have no interpreter in this port, so they stay inert.
+ * - `spawn` / `system` — in the browser there is no filesystem or shell, so
+ *   these return `null` WITHOUT executing anything (they do not throw).
+ * - `sync` / `abort` / `accept` / `ending` / `splash` / `rebuild_all` —
+ *   session lifecycle / render-refresh signals with nothing to drive locally;
+ *   they succeed inertly (`null`).
  * - `api` — returns `null`.
  *
  * NOTE ON OWNERSHIP: several of these names (`undo`, `redo`, `sync`, `splash`,
- * `update`, `api`) are also registered as bare stubs by the `system` subsystem.
- * This registrar runs LAST (`ALL_REGISTRARS`), so its handlers win; the undo
- * stack here supersedes the inert `system` stubs. `get_version` is a FIXED stub
- * in engine.ts and is intentionally NOT redefined.
+ * `api`) are also registered as bare stubs by the `system` subsystem. This
+ * registrar runs LAST (`ALL_REGISTRARS`), so its handlers win; they match the
+ * inert `system` stubs. `update` is owned solely by the `system` subsystem
+ * (a real behavioural port) and is NOT re-stubbed here. `get_version` is a
+ * FIXED stub in engine.ts and is intentionally NOT redefined.
  */
 import type { RegistrarCtx } from './registrar';
 import type { Json } from '@tenmol/protocol';
-import type { Executive } from '../exec/executive';
 
-/**
- * One recorded coordinate snapshot: the (object, atom, state) coordinates as
- * they were at capture time. Atoms are addressed by object *name* + per-object
- * atom index + 1-based state so a snapshot survives object-reference churn and
- * is re-resolved against the live executive at apply time.
- */
-interface UndoEntry {
-  objName: string;
-  index: number;
-  state: number;
-  xyz: [number, number, number];
-}
-type Snapshot = UndoEntry[];
-
-/** Module-global session state (PyMOL keeps one undo history per session). */
-const undoStack: Snapshot[] = [];
-const redoStack: Snapshot[] = [];
 /** Recorded input bindings: `set_key`/`button`/`mouse`/`config_mouse`. */
 const keyBindings = new Map<string, string>();
-
-/** Normalise a state argument: PyMOL state 0 (current) / -1 map to state 1. */
-function normState(state: number): number {
-  return Number.isFinite(state) && state >= 1 ? Math.trunc(state) : 1;
-}
-
-/** Snapshot the current coordinates of every atom matching `sel` in `state`. */
-function capture(ex: Executive, sel: string, state: number): Snapshot {
-  const st = normState(state);
-  const snap: Snapshot = [];
-  for (const ua of ex.atomsMatching(sel)) {
-    const mol = ex.molecule(ua.objName);
-    if (!mol) continue;
-    const [x, y, z] = mol.coord(ua.index, st);
-    snap.push({ objName: ua.objName, index: ua.index, state: st, xyz: [x, y, z] });
-  }
-  return snap;
-}
-
-/** Read the current coordinates for the atoms named by `snap` (for the inverse). */
-function captureLike(ex: Executive, snap: Snapshot): Snapshot {
-  const out: Snapshot = [];
-  for (const e of snap) {
-    const mol = ex.molecule(e.objName);
-    if (!mol) continue;
-    const [x, y, z] = mol.coord(e.index, e.state);
-    out.push({ objName: e.objName, index: e.index, state: e.state, xyz: [x, y, z] });
-  }
-  return out;
-}
-
-/** Write a snapshot's coordinates back into the live molecules. Returns count. */
-function apply(ex: Executive, snap: Snapshot): number {
-  let n = 0;
-  for (const e of snap) {
-    const mol = ex.molecule(e.objName);
-    if (!mol) continue;
-    const set = mol.states[e.state - 1];
-    if (!set) continue;
-    const o = e.index * 3;
-    if (o < 0 || o + 2 >= set.length) continue;
-    set[o] = e.xyz[0];
-    set[o + 1] = e.xyz[1];
-    set[o + 2] = e.xyz[2];
-    n++;
-  }
-  return n;
-}
 
 /** Positional arg else same-named kwarg else default, coerced to string. */
 function pick(
@@ -119,50 +59,22 @@ function pick(
 export function registerControlflow(ctx: RegistrarCtx): void {
   const ex = ctx.executive;
 
-  // A fresh registration is a fresh session: start with an empty history and
-  // no recorded bindings.
-  undoStack.length = 0;
-  redoStack.length = 0;
+  // A fresh registration is a fresh session: forget any recorded bindings.
   keyBindings.clear();
 
   /* ------------------------------ undo/redo --------------------------- */
 
-  // `cmd.push_undo(selection, state)` — record the current coordinates so a
-  // later `undo()` can restore them. Recording a new snapshot invalidates the
-  // redo history (PyMOL discards the redo branch on a new edit). Returns null
-  // (PyMOL returns None).
-  ctx.command('push_undo', (args, kwargs) => {
-    const sel = pick(ctx, args, kwargs, 0, 'selection', 'all') || 'all';
-    const state = Number(pick(ctx, args, kwargs, 1, 'state', '0'));
-    undoStack.push(capture(ex, sel, state));
-    redoStack.length = 0;
-    return null;
-  });
-
-  // `cmd.undo()` — restore the most recent snapshot. The pre-restore
-  // coordinates of the same atoms are captured onto the redo stack first, so
-  // `redo()` reverses this exactly. Returns the number of atoms restored, or
-  // null when there is nothing to undo (a documented, safe no-op).
-  ctx.command('undo', () => {
-    const snap = undoStack.pop();
-    if (!snap) return null;
-    redoStack.push(captureLike(ex, snap));
-    const n = apply(ex, snap);
-    ctx.publish();
-    return n;
-  });
-
-  // `cmd.redo()` — re-apply the most recently undone snapshot, capturing the
-  // current coordinates back onto the undo stack. Returns the atom count or
-  // null when there is nothing to redo.
-  ctx.command('redo', () => {
-    const snap = redoStack.pop();
-    if (!snap) return null;
-    undoStack.push(captureLike(ex, snap));
-    const n = apply(ex, snap);
-    ctx.publish();
-    return n;
-  });
+  // `cmd.push_undo(selection, ...)` / `cmd.undo()` / `cmd.redo()` — coordinate
+  // undo is NOT ported behaviourally. Real (open-source, headless) PyMOL only
+  // restores the object *currently being edited* through the picking Editor
+  // (`ExecutiveUndo` acts on `ExecutiveGetLastObjectEdited`), so a scripted
+  // `push_undo(sel); translate ...; undo` leaves the coordinates AT the
+  // translated position — `undo`/`redo` do not roll a scripted edit back. We
+  // verified this against real PyMOL via the differential oracle. These three
+  // therefore succeed inertly (return null / None) without touching coords.
+  ctx.command('push_undo', () => null);
+  ctx.command('undo', () => null);
+  ctx.command('redo', () => null);
 
   /* ---------------------------------- pop ----------------------------- */
 
@@ -190,10 +102,24 @@ export function registerControlflow(ctx: RegistrarCtx): void {
     return 1;
   });
 
+  /* -------------------------------- run ------------------------------- */
+
+  // `cmd.run(filename, namespace=None)` — execute a script file. PyMOL routes a
+  // `.pml` file to `cmd.load`, whose `pml` loader runs `cmd.do("_ @file")`
+  // (`importing.py:1625`); we mirror that by replaying the script through the
+  // console's `@`-include (reads the file under Node, runs each line). Python
+  // (`.py`/`.pym`) scripts have no interpreter in this port and stay inert.
+  ctx.command('run', (args, kwargs) => {
+    const filename = pick(ctx, args, kwargs, 0, 'filename');
+    if (filename && /\.pml$/i.test(filename)) {
+      ctx.call('do', [`@${filename}`]);
+    }
+    return null;
+  });
+
   /* ----------------------- sandboxed no-ops (safe) -------------------- */
-  // No filesystem, shell or process in the browser: run/spawn/system return
-  // null WITHOUT executing anything, and never throw.
-  ctx.command('run', () => null);
+  // No filesystem, shell or process in the browser: spawn/system return null
+  // WITHOUT executing anything, and never throw.
   ctx.command('spawn', () => null);
   ctx.command('system', () => null);
 
@@ -201,9 +127,11 @@ export function registerControlflow(ctx: RegistrarCtx): void {
   ctx.command('sync', () => null);
   ctx.command('abort', () => null);
   ctx.command('accept', () => null);
-  ctx.command('ending', () => null);
+  // `ending` (jump to last movie frame) is registered in system.ts where the
+  // movie/frame state lives.
   ctx.command('splash', () => null);
-  ctx.command('update', () => null);
+  // `update` (coordinate transfer) is registered in system.ts, which owns a real
+  // behavioural port; it is intentionally NOT re-stubbed here.
   ctx.command('rebuild_all', () => null);
   ctx.command('api', () => null);
 

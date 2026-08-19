@@ -1,0 +1,15 @@
+{
+  "id": "setting__auto_remove_hydrogens", "feature": "auto_remove_hydrogens", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set auto_remove_hydrogens, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","auto_remove_hydrogens"],"label":"global auto_remove_hydrogens default (no prior set)"},
+    {"call":["get_setting_boolean","auto_remove_hydrogens","ala"],"label":"per-object auto_remove_hydrogens after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

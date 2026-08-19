@@ -1,0 +1,15 @@
+{
+  "id": "setting__overlay_lines", "feature": "overlay_lines", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set overlay_lines, 10, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","overlay_lines"],"label":"global overlay_lines default (no prior set)"},
+    {"call":["get_setting_int","overlay_lines","ala"],"label":"per-object overlay_lines after set 10"}
+  ],
+  "expected": [
+    5,
+    10
+  ]
+}

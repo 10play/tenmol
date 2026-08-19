@@ -1,0 +1,17 @@
+{
+  "id": "command__clip",
+  "feature": "clip",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "call": ["set_view", [0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, 0, 0, -30, 1, 2, 3, 10, 50, -20]] },
+    { "do": "clip slab, 20" }
+  ],
+  "checks": [
+    { "call": ["get_view"], "label": "get_view after clip slab 20 (front idx15, back idx16)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [0.5, 0, 0.8659999966621399, 0, 1, 0, -0.8659999966621399, 0, 0.5, 0, 0, -30, 1, 2, 3, 20, 40, -20]
+  ]
+}

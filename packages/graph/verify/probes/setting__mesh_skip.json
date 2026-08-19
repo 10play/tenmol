@@ -1,0 +1,13 @@
+{
+  "id": "setting__mesh_skip", "feature": "mesh_skip", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set mesh_skip, 3, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","mesh_skip"],"label":"mesh_skip global default (no prior set)"},
+    {"call":["get_setting_int","mesh_skip","ala"],"label":"mesh_skip per-object after set 3"}
+  ],
+  "tol": 1e-6,
+  "expected": [0, 3]
+}

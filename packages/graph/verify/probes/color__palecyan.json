@@ -1,0 +1,22 @@
+{
+  "id": "color__palecyan", "feature": "palecyan", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color palecyan, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color palecyan"],"label":"atoms colored palecyan"},
+    {"call":["get_color_index","palecyan"],"label":"palecyan palette index"},
+    {"call":["get_color_tuple","palecyan"],"label":"palecyan rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5265,
+    [
+      0.800000011920929,
+      1,
+      1
+    ]
+  ]
+}

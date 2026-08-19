@@ -54,32 +54,41 @@ function atom(
   return cols.join('');
 }
 
-// vdw(C) = 1.7, probe = 1.4 -> R = 3.1; a lone carbon's full sphere area.
-const R = 1.7 + 1.4;
-const LONE_C_AREA = 4 * Math.PI * R * R; // ~120.7628
+// get_area depends on `dot_solvent` (default OFF), so the sphere radius is the
+// van-der-Waals radius with NO solvent probe added (PyMOL RepDot area mode):
+// vdw(C) = 1.7 -> a lone carbon's full sphere area = 4*pi*1.7^2 ~ 36.3168.
+// (Oracle-confirmed against real PyMOL: 36.31681.)
+const R = 1.7;
+const LONE_C_AREA = 4 * Math.PI * R * R; // ~36.3168
 
 /* --------------------------------- tests --------------------------------- */
 
 describe('get_area', () => {
-  it('an isolated atom is the full 4*pi*(vdw+probe)^2 sphere', () => {
+  it('an isolated atom is the full 4*pi*vdw^2 sphere (dot_solvent off)', () => {
     const { call } = harness(atom(1, 'CA', 'ALA', 'A', 1, 0, 0, 0, 'C'));
     const area = call('get_area', 'all') as number;
-    expect(area).toBeCloseTo(LONE_C_AREA, 6);
-    expect(LONE_C_AREA).toBeCloseTo(120.7628, 3);
+    // get_area is dot-sampled (PyMOL's geodesic sphere weights), so a fully
+    // exposed atom recovers 4*pi*vdw^2 only up to the tessellation's precision
+    // (~1e-5). Real PyMOL likewise returns ~36.31681, not the exact analytic.
+    expect(area).toBeCloseTo(LONE_C_AREA, 3);
+    expect(LONE_C_AREA).toBeCloseTo(36.3168, 3);
   });
 
-  it('two fused atoms occlude each other: single < total < 2*single', () => {
+  it('two fused atoms occlude each other (whole-object context)', () => {
     const pdb = [
       atom(1, 'CA', 'ALA', 'A', 1, 0, 0, 0, 'C'),
       atom(2, 'CB', 'ALA', 'A', 1, 1.5, 0, 0, 'C'),
     ].join('\n');
     const { call } = harness(pdb);
     const total = call('get_area', 'all') as number;
-    // Context = selection: a single-atom selection is fully exposed.
+    // PyMOL occludes over the WHOLE object, so even a single-atom selection is
+    // buried by the rest of the object — CA alone is NOT the lone-atom area.
+    // (Oracle-confirmed against real PyMOL: total 53.3913, CA alone 26.6956.)
     const single = call('get_area', 'name CA') as number;
-    expect(single).toBeCloseTo(LONE_C_AREA, 6);
-    expect(total).toBeGreaterThan(single); // both still largely exposed
-    expect(total).toBeLessThan(2 * single); // but each loses its buried cap
+    expect(single).toBeLessThan(LONE_C_AREA); // buried cap removed by CB
+    expect(single).toBeCloseTo(total / 2, 6); // symmetric pair
+    expect(total).toBeGreaterThan(LONE_C_AREA); // still largely exposed
+    expect(total).toBeLessThan(2 * LONE_C_AREA); // but each loses its buried cap
   });
 
   it('load_b writes each atom area into b and they sum to the total', () => {
@@ -159,14 +168,21 @@ describe('index / id_atom / get_bonds', () => {
     expect(() => call('id_atom', 'all')).toThrow();
   });
 
-  it('get_bonds / get_bond return internal 1-based bond pairs', () => {
+  it('get_bonds / get_bond return internal bond tuples', () => {
     const { call } = harness(pdb);
     // CA-CB (1.5 A) are covalently connected; CG (10 A) is isolated.
-    expect(call('get_bonds', 'all')).toEqual([[1, 2]]);
-    expect(call('get_bond', 'all')).toEqual([1, 2]);
-    // A selection excluding CB has no internal bond.
+    // get_bonds returns (atm1, atm2, order): atm1/atm2 are 0-based indices
+    // enumerating the atoms WITHIN the selection (not the index property),
+    // order is the bond order (1 = single). Verified against real PyMOL.
+    expect(call('get_bonds', 'all')).toEqual([[0, 1, 1]]);
+    // get_bond(name, selection1, selection2=None): real PyMOL returns a
+    // per-object list `[model, [[idx1, idx2, value], ...]]` for every bond
+    // spanning the two selections, with value=null when the per-bond setting
+    // is unset (verified against the oracle).
+    expect(call('get_bond', 'stick_radius', 'all')).toEqual([['m', [[1, 2, null]]]]);
+    // A selection excluding CB has no internal bond -> empty list.
     expect(call('get_bonds', 'name CA')).toEqual([]);
-    expect(call('get_bond', 'name CA')).toBeNull();
+    expect(call('get_bond', 'stick_radius', 'name CA')).toEqual([]);
   });
 });
 

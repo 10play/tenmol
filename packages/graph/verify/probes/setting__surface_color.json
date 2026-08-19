@@ -1,0 +1,18 @@
+{
+  "id": "setting__surface_color", "feature": "surface_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set surface_color, red, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","surface_color"],"label":"surface_color global default (-1)"},
+    {"call":["get_setting_int","surface_color","ala"],"label":"surface_color on ala after set red -> red color index"},
+    {"call":["get_color_index","red"],"label":"red color index (oracle vs engine)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    -1,
+    4,
+    4
+  ]
+}

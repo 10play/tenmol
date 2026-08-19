@@ -1,0 +1,19 @@
+{
+  "id": "setting__sculpt_vdw_scale14",
+  "feature": "sculpt_vdw_scale14",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set sculpt_vdw_scale14, 0.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","sculpt_vdw_scale14"],"label":"global default (unset) -> 0.9"},
+    {"call":["get_setting_float","sculpt_vdw_scale14","m"],"label":"per-object set 0.5 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.9,
+    0.5
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "setting__label_placement_offset",
+  "feature": "label_placement_offset",
+  "kind": "setting",
+  "probeKind": "state",
+  "tol": 0.000001,
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "set label_placement_offset, [1.0, 2.0, 3.0]"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_float",
+        "label_placement_offset"
+      ],
+      "label": "first component after set [1,2,3]"
+    }
+  ],
+  "expected": [
+    0
+  ]
+}

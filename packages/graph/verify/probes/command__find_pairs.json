@@ -1,0 +1,23 @@
+{
+  "id": "command__find_pairs",
+  "feature": "find_pairs",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "pa"], "kwargs": {"pos": [0, 0, 0]}},
+    {"call": ["pseudoatom", "pb"], "kwargs": {"pos": [1, 0, 0]}}
+  ],
+  "checks": [
+    {"call": ["find_pairs", "pa", "pb"], "kwargs": {"cutoff": 2.0}, "label": "pa..pb within 2.0 A gives one (model,index) pair"},
+    {"call": ["find_pairs", "pa", "pb"], "kwargs": {"cutoff": 0.5}, "label": "tight 0.5 A cutoff (dist=1.0) gives no pairs"},
+    {"call": ["find_pairs", "pa", "pa"], "kwargs": {"cutoff": 2.0}, "label": "self selection skips identical atom, single-atom object gives no pairs"},
+    {"call": ["count_atoms", "pa"], "label": "sanity: pa has one atom"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [[["pa", 1], ["pb", 1]]],
+    [],
+    [],
+    1
+  ]
+}

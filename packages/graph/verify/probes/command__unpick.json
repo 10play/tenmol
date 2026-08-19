@@ -1,0 +1,23 @@
+{
+  "id": "command__unpick",
+  "feature": "unpick",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "select keep, name CA" },
+    { "do": "edit name CA" },
+    { "do": "unpick" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "?pk1"], "label": "pk1 selection cleared by unpick" },
+    { "call": ["count_atoms", "?pk2"], "label": "pk2 selection absent after unpick" },
+    { "call": ["count_atoms", "keep"], "label": "non-pk named selection survives unpick" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    0,
+    0,
+    1
+  ]
+}

@@ -45,6 +45,8 @@ interface IsoObject {
   /** Triangle indices (empty for isodot). */
   indices: Uint32Array;
   kind: 'mesh' | 'surface' | 'dot';
+  /** Current contour level (settable/queryable via `isolevel`). */
+  level: number;
 }
 
 /* -------------------------------- helpers -------------------------------- */
@@ -70,6 +72,23 @@ export function registerMaps(ctx: RegistrarCtx): void {
   // Per-registration state (closure-scoped, so isolated tests never leak).
   const maps = new Map<string, VolMap>();
   const isoObjects = new Map<string, IsoObject>();
+
+  /** Grid bounding box: `[origin, origin + spacing*(dims-1)]` — the corner-to-
+   *  corner extent PyMOL records on an ObjectMapState (ObjectMap.cpp: ExtentMin/
+   *  ExtentMax = Origin + Grid*Min/Max). Used by `get_extent`/zoom on a map. */
+  const mapExtent = (m: VolMap): [Vec3, Vec3] => [
+    [m.origin[0], m.origin[1], m.origin[2]],
+    [
+      m.origin[0] + m.spacing[0] * (m.dims[0] - 1),
+      m.origin[1] + m.spacing[1] * (m.dims[1] - 1),
+      m.origin[2] + m.spacing[2] * (m.dims[2] - 1),
+    ],
+  ];
+  /** Store a map grid and register it as an `object:map` gadget with its extent. */
+  const putMap = (m: VolMap): void => {
+    maps.set(m.name, m);
+    ex.registerGadget(m.name, 'object:map', mapExtent(m));
+  };
 
   /* ------------------------------- map_new ------------------------------- */
 
@@ -150,8 +169,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
       }
     }
 
-    maps.set(name, { name, origin, spacing, dims, data, levels: [] });
-    ex.registerGadget(name, 'object:map');
+    putMap({ name, origin, spacing, dims, data, levels: [] });
     ctx.publish();
     return name;
   });
@@ -168,20 +186,48 @@ export function registerMaps(ctx: RegistrarCtx): void {
   /* ------------------------- get_volume_histogram ------------------------ */
 
   ctx.command('get_volume_histogram', (args, kwargs): Json => {
+    // PyMOL (querying.py:62) returns a flat list of length `bins + 4`:
+    //   [min, max, mean, stdev, h0 .. h(bins-1)]
+    // `range` defaults to (0., 0.) which means "use the full data range".
     const name = toStr(args[0] ?? kwargs.name);
     const bins = Math.max(1, Math.floor(toNum(args[1] ?? kwargs.bins, 64)));
     const m = maps.get(name);
     if (!m) throw new Error(`get_volume_histogram: no map named '${name}'`);
-    let lo = Infinity;
-    let hi = -Infinity;
+
+    // Data min/max, mean and (population) standard deviation.
+    let dmin = Infinity;
+    let dmax = -Infinity;
+    let sum = 0;
+    let sumSq = 0;
+    const n = m.data.length;
     for (const v of m.data) {
-      if (v < lo) lo = v;
-      if (v > hi) hi = v;
+      if (v < dmin) dmin = v;
+      if (v > dmax) dmax = v;
+      sum += v;
+      sumSq += v * v;
     }
-    if (!Number.isFinite(lo)) {
-      lo = 0;
-      hi = 0;
+    if (!Number.isFinite(dmin)) {
+      dmin = 0;
+      dmax = 0;
     }
+    const mean = n > 0 ? sum / n : 0;
+    const variance = n > 0 ? Math.max(0, sumSq / n - mean * mean) : 0;
+    const stdev = Math.sqrt(variance);
+
+    // Histogram range: explicit `range` arg (unless it is the (0,0) sentinel),
+    // otherwise the full data range.
+    const rng = (args[2] ?? kwargs.range) as unknown;
+    let lo = dmin;
+    let hi = dmax;
+    if (Array.isArray(rng) && rng.length >= 2) {
+      const r0 = Number(rng[0]);
+      const r1 = Number(rng[1]);
+      if (Number.isFinite(r0) && Number.isFinite(r1) && !(r0 === 0 && r1 === 0)) {
+        lo = r0;
+        hi = r1;
+      }
+    }
+
     const counts = new Array<number>(bins).fill(0);
     const span = hi - lo;
     for (const v of m.data) {
@@ -190,17 +236,30 @@ export function registerMaps(ctx: RegistrarCtx): void {
       if (b >= bins) b = bins - 1;
       counts[b] = (counts[b] ?? 0) + 1;
     }
-    return [lo, hi, ...counts];
+    return [dmin, dmax, mean, stdev, ...counts];
   });
 
   /* ------------------------------- isolevel ------------------------------ */
 
   ctx.command('isolevel', (args, kwargs): Json => {
     const name = toStr(args[0] ?? kwargs.name);
-    const level = toNum(args[1] ?? kwargs.level, 1);
-    // `name` may name a map directly, or an iso object built from a map.
+    const query = toNum(args[3] ?? kwargs.query, 0);
+    // `isolevel` operates on the isodot/isomesh/isosurface object (matching
+    // real PyMOL, where the level lives on ObjectMesh/ObjectSurface). When
+    // `query` is truthy it reads the current level back; otherwise it sets it.
+    const iso = isoObjects.get(name);
+    if (iso) {
+      if (query) return iso.level;
+      const level = toNum(args[1] ?? kwargs.level, 1);
+      iso.level = level;
+      ctx.publish();
+      return level;
+    }
+    // Fall back to naming a map directly (records a level on the grid).
     const m = maps.get(name);
     if (m) {
+      if (query) return m.levels.length > 0 ? m.levels[m.levels.length - 1]! : 1;
+      const level = toNum(args[1] ?? kwargs.level, 1);
       m.levels.push(level);
       ctx.publish();
       return level;
@@ -296,6 +355,106 @@ export function registerMaps(ctx: RegistrarCtx): void {
     return name;
   });
 
+  /* ------------------------------- map_set ------------------------------- */
+
+  // Operator names -> internal index (ObjectMap map arithmetic), matching
+  // PyMOL's `map_op_dict` in editing.py.
+  const MAP_OPS = [
+    'minimum',
+    'maximum',
+    'sum',
+    'average',
+    'difference',
+    'copy',
+    'unique',
+  ] as const;
+
+  /** Resolve an operator string via unique-prefix shortcut (PyMOL Shortcut). */
+  const resolveOp = (raw: string): string => {
+    const s = raw.toLowerCase();
+    if ((MAP_OPS as readonly string[]).includes(s)) return s;
+    const hits = MAP_OPS.filter((o) => o.startsWith(s));
+    if (hits.length === 1) return hits[0]!;
+    throw new Error(`map_set: Invalid operator '${raw}'.`);
+  };
+
+  ctx.command('map_set', (args, kwargs): Json => {
+    const name = toStr(args[0] ?? kwargs.name);
+    const operator = resolveOp(toStr(args[1] ?? kwargs.operator));
+    const operands = toStr(args[2] ?? kwargs.operands, '');
+    const zoom = toNum(args[5] ?? kwargs.zoom, 0);
+
+    const srcNames = operands.split(/\s+/).filter((s) => s.length > 0);
+    const sources = srcNames
+      .map((n) => maps.get(n))
+      .filter((m): m is VolMap => m != null);
+    if (sources.length === 0) {
+      throw new Error(`map_set: no valid source maps in '${operands}'.`);
+    }
+
+    // Result grid geometry follows the first source; only voxels that exist in
+    // every operand of a matching grid participate in a combine.
+    const base = sources[0]!;
+    const dims: Vec3 = [...base.dims];
+    const n = dims[0] * dims[1] * dims[2];
+    const out = new Float32Array(n);
+    const sameGrid = (m: VolMap): boolean =>
+      m.dims[0] === dims[0] && m.dims[1] === dims[1] && m.dims[2] === dims[2];
+    const combinable = sources.filter(sameGrid);
+
+    for (let i = 0; i < n; i++) {
+      switch (operator) {
+        case 'copy':
+        case 'unique':
+          out[i] = base.data[i] ?? 0;
+          break;
+        case 'minimum': {
+          let v = Infinity;
+          for (const m of combinable) v = Math.min(v, m.data[i] ?? 0);
+          out[i] = v;
+          break;
+        }
+        case 'maximum': {
+          let v = -Infinity;
+          for (const m of combinable) v = Math.max(v, m.data[i] ?? 0);
+          out[i] = v;
+          break;
+        }
+        case 'sum': {
+          let v = 0;
+          for (const m of combinable) v += m.data[i] ?? 0;
+          out[i] = v;
+          break;
+        }
+        case 'average': {
+          let v = 0;
+          for (const m of combinable) v += m.data[i] ?? 0;
+          out[i] = combinable.length > 0 ? v / combinable.length : 0;
+          break;
+        }
+        case 'difference': {
+          // First operand minus the sum of the rest.
+          let v = combinable[0]?.data[i] ?? 0;
+          for (let k = 1; k < combinable.length; k++) v -= combinable[k]!.data[i] ?? 0;
+          out[i] = v;
+          break;
+        }
+      }
+    }
+
+    putMap({
+      name,
+      origin: [...base.origin],
+      spacing: [...base.spacing],
+      dims,
+      data: out,
+      levels: [],
+    });
+    void zoom;
+    ctx.publish();
+    return name;
+  });
+
   /* --------------------- isomesh / isosurface / isodot ------------------- */
 
   const buildIso = (kind: IsoObject['kind'], args: unknown[], kwargs: Record<string, unknown>): Json => {
@@ -325,6 +484,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
         verts: Float32Array.from(pts),
         indices: new Uint32Array(0),
         kind,
+        level,
       });
     } else {
       const { verts, indices } = marchingCubes(m, level);
@@ -333,6 +493,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
         verts,
         indices,
         kind,
+        level,
       });
     }
     const typeName =
@@ -346,6 +507,54 @@ export function registerMaps(ctx: RegistrarCtx): void {
   ctx.command('isosurface', (args, kwargs): Json => buildIso('surface', args, kwargs));
   ctx.command('isodot', (args, kwargs): Json => buildIso('dot', args, kwargs));
 
+  /* ------------------------------- slice_new ----------------------------- */
+
+  // `slice_new(name, map, state=1, source_state=0)` — creates a 2-D slice
+  // (cutting-plane) object through a map, colored by a ramp (creating.py:680 →
+  // ExecutiveSliceNew / ObjectSlice). The slice references a map by name and
+  // holds no atoms; here we track it as a gadget so it appears in get_names and
+  // reports `get_type == 'object:slice'`. PyMOL raises if the map is missing.
+  ctx.command('slice_new', (args, kwargs): Json => {
+    const name = toStr(args[0] ?? kwargs.name);
+    const mapName = toStr(args[1] ?? kwargs.map);
+    if (mapName && !maps.get(mapName)) {
+      throw new Error(`slice_new: no map named '${mapName}'`);
+    }
+    ex.registerGadget(name, 'object:slice');
+    ctx.publish();
+    return null;
+  });
+
+  /* -------------------------------- volume ------------------------------- */
+
+  // `volume(name, map, ramp='', selection='', buffer=0.0, state=1, carve=None,
+  // source_state=0, quiet=1)` — creates a direct volume-rendering object from a
+  // map (creating.py:577 → _cmd.volume / ObjectVolume). Like slice_new the
+  // object references a map by name and holds no atoms; we track it as a gadget
+  // so it appears in get_names and reports `get_type == 'object:volume'`. If the
+  // volume object already exists it is overwritten (unlike the iso* family).
+  // A `ramp` that parses as a float is consumed as a legacy `level` and cleared;
+  // a remaining non-empty `ramp` triggers volume_color(name, ramp, state).
+  ctx.command('volume', (args, kwargs): Json => {
+    const name = toStr(args[0] ?? kwargs.name);
+    const mapName = toStr(args[1] ?? kwargs.map);
+    let ramp = toStr(args[2] ?? kwargs.ramp, '');
+    if (mapName && !maps.get(mapName)) {
+      throw new Error(`volume: no map named '${mapName}'`);
+    }
+    // Legacy: a bare float ramp is treated as a contour level and ignored.
+    if (ramp !== '' && Number.isFinite(Number(ramp))) ramp = '';
+
+    ex.registerGadget(name, 'object:volume');
+    ctx.publish();
+
+    if (ramp) {
+      const state = toNum(args[5] ?? kwargs.state, 1);
+      ctx.call('volume_color', [name, ramp, state], {});
+    }
+    return name;
+  });
+
   /* -------------------------- get_isosurface_stats ----------------------- */
 
   ctx.command('get_isosurface_stats', (args, kwargs): Json => {
@@ -354,6 +563,344 @@ export function registerMaps(ctx: RegistrarCtx): void {
     if (!o) throw new Error(`get_isosurface_stats: no object named '${name}'`);
     return { verts: o.verts.length / 3, tris: o.indices.length / 3 };
   });
+
+  /* ----------------------------- read_xplorstr --------------------------- */
+
+  // `read_xplorstr(xplor, name, state=0, finish=1, discrete=0, quiet=1, zoom=-1)`
+  // — API-only loader that reads an XPLOR ASCII map straight from a Python string
+  // (importing.py:read_xplorstr → _cmd.load with loadable.xplorstr). No temp file
+  // and no format sniffing. Mirrors `_cmd.load` which returns None, so this
+  // returns null (unlike the read_*str molecule loaders which return the name).
+  ctx.command('read_xplorstr', (args, kwargs): Json => {
+    const xplor = toStr(args[0] ?? kwargs.xplor);
+    const name = toStr(args[1] ?? kwargs.name) || 'map';
+    const m = parseXplor(xplor, name);
+    putMap(m);
+    ctx.publish();
+    return null;
+  });
+
+  /* ------------------------------ load_ccp4map --------------------------- */
+
+  // Internal seam used by `cmd.load` to bring a CCP4/MRC binary density map into
+  // the map registry (importing.py `load` → `loadable.ccp4`/`loadable.mrc` →
+  // ObjectMapCCP4StrToMap). The public `load` reads the file bytes off disk and
+  // delegates here so the parsed grid lands in the same store the iso*/volume
+  // commands read. Registers the object as `object:map` in the executive.
+  ctx.command('load_ccp4map', (args, kwargs): Json => {
+    const name = toStr(args[0] ?? kwargs.name);
+    const bytes = (args[1] ?? kwargs.bytes) as Uint8Array;
+    const m = parseCcp4(bytes, name);
+    putMap(m);
+    ctx.publish();
+    return name;
+  });
+
+  /* ------------------------------ load_dxmap ----------------------------- */
+
+  // Internal seam used by `cmd.load` to bring an OpenDX/APBS ASCII grid map
+  // (importing.py `load` → `loadable.dx` → ObjectMapDXStrToMap). The public
+  // `load` reads the file text off disk and delegates here so the parsed grid
+  // lands in the same store the iso*/volume commands read.
+  ctx.command('load_dxmap', (args, kwargs): Json => {
+    const name = toStr(args[0] ?? kwargs.name);
+    const text = toStr(args[1] ?? kwargs.text);
+    const m = parseDx(text, name);
+    putMap(m);
+    ctx.publish();
+    return name;
+  });
+}
+
+/* ------------------------------ XPLOR parser ----------------------------- */
+
+/**
+ * Parse an XPLOR ASCII electron-density map (`layer2/ObjectMap.cpp:ObjectMapXPLORStrToMap`).
+ * Layout:
+ *   <blank line>
+ *   NTITLE                             (int)
+ *   NTITLE title lines
+ *   NA AMIN AMAX  NB BMIN BMAX  NC CMIN CMAX   (9 ints — grid + index ranges)
+ *   A B C ALPHA BETA GAMMA             (6 floats — unit cell)
+ *   ZYX
+ *   for each C section (kc = CMIN..CMAX):
+ *     <section index>                  (int)
+ *     (AMAX-AMIN+1)*(BMAX-BMIN+1) floats, A fastest then B, 6 per line
+ *   -9999
+ *   <average> <sigma>
+ * Values are stored A-fastest, then B, then C, matching {@link idx}. The unit
+ * cell is treated as orthorhombic (spacing = axis/N); non-90° cells would need a
+ * skew matrix the VolMap grid does not model.
+ */
+function parseXplor(text: string, name: string): VolMap {
+  // Flatten to whitespace-separated tokens, but keep the ZYX marker findable.
+  const lines = text.split(/\r?\n/);
+  let li = 0;
+  const nextNonEmpty = (): string => {
+    while (li < lines.length && lines[li]!.trim() === '') li++;
+    return li < lines.length ? lines[li++]! : '';
+  };
+
+  const ntitle = parseInt(nextNonEmpty().trim(), 10);
+  if (!Number.isFinite(ntitle)) throw new Error('read_xplorstr: bad title count');
+  for (let i = 0; i < ntitle; i++) li++; // skip title lines (may be blank)
+
+  const gridTok = (lines[li++] ?? '').trim().split(/\s+/).map(Number);
+  if (gridTok.length < 9 || gridTok.some((v) => !Number.isFinite(v))) {
+    throw new Error('read_xplorstr: bad grid header');
+  }
+  const [na, amin, amax, nb, bmin, bmax, nc, cmin, cmax] = gridTok as number[];
+
+  const cellTok = (lines[li++] ?? '').trim().split(/\s+/).map(Number);
+  if (cellTok.length < 6 || cellTok.some((v) => !Number.isFinite(v))) {
+    throw new Error('read_xplorstr: bad unit-cell line');
+  }
+  const [ca, cb, cc] = cellTok as number[];
+
+  // The "ZYX" ordering marker.
+  const marker = (lines[li++] ?? '').trim().toUpperCase();
+  if (marker !== 'ZYX') throw new Error(`read_xplorstr: expected ZYX, got '${marker}'`);
+
+  const nx = amax! - amin! + 1;
+  const ny = bmax! - bmin! + 1;
+  const nz = cmax! - cmin! + 1;
+  const dims: Vec3 = [nx, ny, nz];
+  const data = new Float32Array(nx * ny * nz);
+
+  // Remaining tokens are the per-section index headers interleaved with data.
+  const rest: number[] = [];
+  for (; li < lines.length; li++) {
+    const t = lines[li]!.trim();
+    if (t === '') continue;
+    for (const s of t.split(/\s+/)) {
+      const n = Number(s);
+      if (Number.isFinite(n)) rest.push(n);
+    }
+  }
+  const perSection = nx * ny;
+  let ri = 0;
+  for (let z = 0; z < nz; z++) {
+    ri++; // section index header (one integer per section)
+    for (let s = 0; s < perSection; s++) {
+      const x = s % nx;
+      const y = Math.floor(s / nx);
+      data[idx(dims, x, y, z)] = rest[ri++] ?? 0;
+    }
+  }
+  // A trailing `-9999` sentinel and the average/sigma pair follow; ignored.
+
+  const spacing: Vec3 = [ca! / na!, cb! / nb!, cc! / nc!];
+  const origin: Vec3 = [amin! * spacing[0], bmin! * spacing[1], cmin! * spacing[2]];
+  return { name, origin, spacing, dims, data, levels: [] };
+}
+
+/* -------------------------------- DX parser ------------------------------ */
+
+/**
+ * Parse an OpenDX / APBS ASCII grid map
+ * (`layer2/ObjectMap.cpp:ObjectMapDXStrToMap`). Layout:
+ *   # comment lines (ignored)
+ *   object 1 class gridpositions counts NX NY NZ
+ *   origin  OX OY OZ
+ *   delta   d00 d01 d02
+ *   delta   d10 d11 d12
+ *   delta   d20 d21 d22
+ *   object 2 class gridconnections counts …        (ignored)
+ *   object 3 class array type double rank 0 items N data follows
+ *   v0 v1 v2 …                                      (N ASCII floats)
+ * Data is ordered with the LAST axis (z / NZ) varying fastest, then y, then x
+ * (the `a`→`b`→`c` nesting in the C loop). Only the axis-aligned (diagonal
+ * delta) case is modelled — `spacing = diag(delta)` — matching PyMOL's
+ * `is_diagonalf` branch; a skewed delta matrix would need the map skew transform
+ * the orthorhombic VolMap does not carry. Binary/gzip DX are not supported here.
+ */
+function parseDx(text: string, name: string): VolMap {
+  if (text.charCodeAt(0) === 0x1f && text.charCodeAt(1) === 0x8b) {
+    throw new Error('load: gzipped DX data not supported');
+  }
+  const lines = text.split(/\r?\n/);
+  let nx = 0;
+  let ny = 0;
+  let nz = 0;
+  const origin: Vec3 = [0, 0, 0];
+  const deltas: number[][] = [];
+  let li = 0;
+  let gotCounts = false;
+  let gotOrigin = false;
+
+  for (; li < lines.length; li++) {
+    const raw = lines[li]!;
+    const t = raw.trim();
+    if (t === '' || t.startsWith('#')) continue;
+    const low = t.toLowerCase();
+
+    if (!gotCounts) {
+      // `object 1 class gridpositions counts NX NY NZ`
+      const m = /gridpositions\s+counts\s+(\S+)\s+(\S+)\s+(\S+)/i.exec(t);
+      if (m) {
+        nx = parseInt(m[1]!, 10);
+        ny = parseInt(m[2]!, 10);
+        nz = parseInt(m[3]!, 10);
+        gotCounts = true;
+      }
+      continue;
+    }
+    if (!gotOrigin) {
+      if (low.startsWith('origin')) {
+        const p = t.split(/\s+/).slice(1).map(Number);
+        origin[0] = p[0] ?? 0;
+        origin[1] = p[1] ?? 0;
+        origin[2] = p[2] ?? 0;
+        gotOrigin = true;
+      }
+      continue;
+    }
+    if (low.startsWith('delta')) {
+      const p = t.split(/\s+/).slice(1).map(Number);
+      deltas.push([p[0] ?? 0, p[1] ?? 0, p[2] ?? 0]);
+      continue;
+    }
+    if (deltas.length >= 3) break; // header done; data-declaration/data follows
+  }
+
+  if (!gotCounts) throw new Error("load: DX missing 'object 1 class gridpositions counts'");
+  if (!Number.isFinite(nx) || !Number.isFinite(ny) || !Number.isFinite(nz)) {
+    throw new Error('load: DX bad grid counts');
+  }
+  if (deltas.length < 3) throw new Error("load: DX missing 'delta' vectors");
+
+  // Axis-aligned spacing is the diagonal of the delta matrix.
+  const spacing: Vec3 = [deltas[0]![0]!, deltas[1]![1]!, deltas[2]![2]!];
+  const dims: Vec3 = [nx, ny, nz];
+  const nItems = nx * ny * nz;
+
+  // Collect the remaining numeric tokens as the data payload. A line starting
+  // with `object`/`attribute`/`component`/`#` is metadata; everything else that
+  // parses as numbers is data (the `data follows` line ends the object header).
+  const vals: number[] = [];
+  for (; li < lines.length && vals.length < nItems; li++) {
+    const t = lines[li]!.trim();
+    if (t === '' || t.startsWith('#')) continue;
+    const low = t.toLowerCase();
+    if (low.startsWith('object') || low.startsWith('attribute') || low.startsWith('component')) {
+      continue;
+    }
+    for (const s of t.split(/\s+/)) {
+      const n = Number(s);
+      if (Number.isFinite(n)) vals.push(n);
+    }
+  }
+
+  const data = new Float32Array(nItems);
+  // DX stores z fastest, then y, then x (loop a-outer, b, c-inner).
+  let p = 0;
+  for (let a = 0; a < nx; a++) {
+    for (let b = 0; b < ny; b++) {
+      for (let c = 0; c < nz; c++) {
+        data[idx(dims, a, b, c)] = vals[p++] ?? 0;
+      }
+    }
+  }
+  return { name, origin, spacing, dims, data, levels: [] };
+}
+
+/* ------------------------------ CCP4/MRC parser -------------------------- */
+
+/**
+ * Parse a CCP4 / MRC binary electron-density map
+ * (`layer2/ObjectMap.cpp:ObjectMapCCP4StrToMap`). The 1024-byte header is 256
+ * little-endian 32-bit words:
+ *   0..2   NC, NR, NS      grid columns/rows/sections (fast→slow axis)
+ *   3      MODE            0=int8, 1=int16, 2=float32, 6=uint16
+ *   4..6   NCSTART…        start index of column/row/section
+ *   7..9   MX, MY, MZ      sampling (grid) intervals along cell axes X,Y,Z
+ *   10..15 cell a,b,c,α,β,γ (floats)
+ *   16..18 MAPC, MAPR, MAPS which cell axis (1=X,2=Y,3=Z) is column/row/section
+ *   23     NSYMBT          bytes of symmetry records after the header
+ *   49..51 ORIGIN x,y,z    (MRC2000 origin, floats)
+ * Density follows at byte 1024+NSYMBT, column-fastest. The grid is treated as
+ * orthorhombic (spacing = cell_axis / sampling); skewed cells are not modelled.
+ */
+function parseCcp4(bytes: Uint8Array, name: string): VolMap {
+  if (bytes.length < 1024) throw new Error('load: CCP4/MRC file is too small for a header');
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const i32 = (w: number): number => dv.getInt32(w * 4, true);
+  const f32 = (w: number): number => dv.getFloat32(w * 4, true);
+
+  const nc = i32(0);
+  const nr = i32(1);
+  const ns = i32(2);
+  const mode = i32(3);
+  const start: Vec3 = [i32(4), i32(5), i32(6)];
+  const sampling: Vec3 = [i32(7), i32(8), i32(9)];
+  const cell: Vec3 = [f32(10), f32(11), f32(12)];
+  const mapc = i32(16);
+  const mapr = i32(17);
+  const maps_ = i32(18);
+  const nsymbt = i32(23);
+  const mrcOrigin: Vec3 = [f32(49), f32(50), f32(51)];
+
+  if (nc <= 0 || nr <= 0 || ns <= 0 || nc * nr * ns > 1 << 30) {
+    throw new Error('load: CCP4/MRC header has an implausible grid size');
+  }
+
+  // Map the column/row/section axes onto X/Y/Z via MAPC/MAPR/MAPS (default
+  // 1,2,3 = already X,Y,Z). `axisOf[k]` is the cell axis (0/1/2) of the k-th
+  // stored axis (0=column,1=row,2=section).
+  const axisOf: [number, number, number] = [
+    (mapc || 1) - 1,
+    (mapr || 2) - 1,
+    (maps_ || 3) - 1,
+  ];
+  const storedDims: [number, number, number] = [nc, nr, ns];
+  const dims: Vec3 = [0, 0, 0];
+  const spacing: Vec3 = [1, 1, 1];
+  const origin: Vec3 = [0, 0, 0];
+  for (let k = 0; k < 3; k++) {
+    const a = axisOf[k]!;
+    dims[a] = storedDims[k]!;
+    const samp = sampling[a] || storedDims[k]!;
+    const sp = samp > 0 ? cell[a]! / samp : 1;
+    spacing[a] = sp;
+    origin[a] = mrcOrigin[a] !== 0 ? mrcOrigin[a]! : start[k]! * sp;
+  }
+
+  const n = nc * nr * ns;
+  const dataStart = 1024 + Math.max(0, nsymbt);
+  const data = new Float32Array(n);
+  // Read column-fastest (stored order) and scatter into X/Y/Z grid order.
+  const readVal =
+    mode === 2
+      ? (o: number): number => dv.getFloat32(dataStart + o * 4, true)
+      : mode === 1
+        ? (o: number): number => dv.getInt16(dataStart + o * 2, true)
+        : mode === 6
+          ? (o: number): number => dv.getUint16(dataStart + o * 2, true)
+          : (o: number): number => dv.getInt8(dataStart + o); // mode 0 (int8)
+  const bytesPer = mode === 2 ? 4 : mode === 1 || mode === 6 ? 2 : 1;
+  if (dataStart + n * bytesPer > bytes.length) {
+    throw new Error('load: CCP4/MRC file is truncated (density shorter than header claims)');
+  }
+  // If the stored axes are already X,Y,Z (the common case) copy straight through;
+  // otherwise permute each cell into its X/Y/Z slot.
+  const identity = axisOf[0] === 0 && axisOf[1] === 1 && axisOf[2] === 2;
+  let o = 0;
+  for (let s = 0; s < ns; s++) {
+    for (let r = 0; r < nr; r++) {
+      for (let c = 0; c < nc; c++, o++) {
+        if (identity) {
+          data[o] = readVal(o);
+        } else {
+          const stored: [number, number, number] = [c, r, s];
+          const gx = stored[axisOf.indexOf(0) as 0 | 1 | 2]!;
+          const gy = stored[axisOf.indexOf(1) as 0 | 1 | 2]!;
+          const gz = stored[axisOf.indexOf(2) as 0 | 1 | 2]!;
+          data[idx(dims, gx, gy, gz)] = readVal(o);
+        }
+      }
+    }
+  }
+  return { name, origin, spacing, dims, data, levels: [] };
 }
 
 /* ---------------------------- grid resampling ---------------------------- */

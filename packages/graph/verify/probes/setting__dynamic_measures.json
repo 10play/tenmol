@@ -1,0 +1,19 @@
+{
+  "id": "setting__dynamic_measures",
+  "feature": "dynamic_measures",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set dynamic_measures, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","dynamic_measures"],"label":"global default -> true (1)"},
+    {"call":["get_setting_boolean","dynamic_measures","m"],"label":"per-object set to 0 -> false"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    true,
+    false
+  ]
+}

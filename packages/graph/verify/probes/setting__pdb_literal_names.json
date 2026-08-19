@@ -1,0 +1,12 @@
+{
+  "id": "setting__pdb_literal_names", "feature": "pdb_literal_names", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set pdb_literal_names, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","pdb_literal_names"],"label":"pdb_literal_names after set 1"}
+  ],
+  "expected": [
+    true
+  ]
+}

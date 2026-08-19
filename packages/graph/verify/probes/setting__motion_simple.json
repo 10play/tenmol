@@ -1,0 +1,12 @@
+{
+  "id": "setting__motion_simple", "feature": "motion_simple", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set motion_simple, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","motion_simple"],"label":"global motion_simple after set 1"}
+  ],
+  "expected": [
+    1
+  ]
+}

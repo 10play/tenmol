@@ -1,0 +1,18 @@
+{
+  "id": "command__simple",
+  "feature": "simple",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "call": ["simple", "m"] }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "rep ribbon"], "label": "atoms shown as ribbon" },
+    { "call": ["count_atoms", "rep lines"], "label": "atoms shown as lines" },
+    { "call": ["count_atoms", "rep sticks"], "label": "atoms shown as sticks" },
+    { "call": ["count_atoms", "rep nonbonded"], "label": "atoms shown as nonbonded" }
+  ],
+  "tol": 1e-3,
+  "expected": [5684, 251, 0, 215]
+}

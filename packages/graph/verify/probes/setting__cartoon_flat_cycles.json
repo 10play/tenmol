@@ -1,0 +1,18 @@
+{
+  "id": "setting__cartoon_flat_cycles",
+  "feature": "cartoon_flat_cycles",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set cartoon_flat_cycles, 9, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_int", "cartoon_flat_cycles"], "label": "global default (unset) -> 4"},
+    {"call": ["get_setting_int", "cartoon_flat_cycles", "m"], "label": "per-object set to 9 -> 9"}
+  ],
+  "expected": [
+    4,
+    9
+  ]
+}

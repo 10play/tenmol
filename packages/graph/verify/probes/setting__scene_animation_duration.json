@@ -1,0 +1,19 @@
+{
+  "id": "setting__scene_animation_duration",
+  "feature": "scene_animation_duration",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set scene_animation_duration, 5.0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","scene_animation_duration"],"label":"global default (no prior set) -> 2.25"},
+    {"call":["get_setting_float","scene_animation_duration","m"],"label":"per-object set 5.0 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2.25,
+    5
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "command__get_frame",
+  "feature": "get_frame",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"}
+  ],
+  "checks": [
+    {"call": ["get_frame"], "label": "get_frame with no movie (1-based)"},
+    {"call": ["get_state"], "label": "get_state, equals get_frame with no movie"}
+  ],
+  "tol": 1e-3,
+  "expected": [1, 1]
+}

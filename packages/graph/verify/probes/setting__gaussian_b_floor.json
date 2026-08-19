@@ -1,0 +1,19 @@
+{
+  "id": "setting__gaussian_b_floor",
+  "feature": "gaussian_b_floor",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set gaussian_b_floor, 40, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","gaussian_b_floor"],"label":"global default gaussian_b_floor (unset)"},
+    {"call":["get_setting_float","gaussian_b_floor","m"],"label":"gaussian_b_floor on object m after set 40 (roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0,
+    40
+  ]
+}

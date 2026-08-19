@@ -1,0 +1,16 @@
+{
+  "id": "command__get_atom_coords",
+  "feature": "get_atom_coords",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom p, pos=[1.5, -2.25, 3.75]" }
+  ],
+  "checks": [
+    { "call": ["get_atom_coords", "p"], "label": "coords of single pseudoatom" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1.5, -2.25, 3.75]
+  ]
+}

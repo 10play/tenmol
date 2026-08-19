@@ -1,0 +1,18 @@
+{
+  "id": "command__get_movie_playing",
+  "feature": "get_movie_playing",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "mset 1 x30"},
+    {"do": "mplay"}
+  ],
+  "checks": [
+    {"call": ["get_movie_playing"], "label": "movie playing after mplay"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "command__mtoggle",
+  "feature": "mtoggle",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "mset 1 x10" },
+    { "do": "mtoggle" }
+  ],
+  "checks": [
+    { "call": ["get_movie_playing"], "label": "movie playing after mtoggle" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1
+  ]
+}

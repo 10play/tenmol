@@ -1,0 +1,19 @@
+{
+  "id": "command__get_assembly_ids",
+  "feature": "get_assembly_ids",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "set cif_keepinmemory, 1"},
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/testing/data/1pup.cif, m"}
+  ],
+  "checks": [
+    {"call": ["get_assembly_ids", "m"], "label": "assembly ids from mmCIF _pdbx_struct_assembly.id"},
+    {"call": ["count_atoms", "m"], "label": "sanity: atoms loaded"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["1"],
+    338
+  ]
+}

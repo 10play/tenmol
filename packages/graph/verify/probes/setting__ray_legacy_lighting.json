@@ -1,0 +1,16 @@
+{
+  "id": "setting__ray_legacy_lighting", "feature": "ray_legacy_lighting", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ray_legacy_lighting, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_legacy_lighting"],"label":"global ray_legacy_lighting default (no prior set)"},
+    {"call":["get_setting_float","ray_legacy_lighting","ala"],"label":"per-object ray_legacy_lighting after set 1"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0,
+    1
+  ]
+}

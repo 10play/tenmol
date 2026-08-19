@@ -1,0 +1,17 @@
+{
+  "id": "command__get_clip",
+  "feature": "get_clip",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "call": ["set_view", [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -80.0, 0.0, 0.0, 0.0, 40.0, 100.0, 0.0]] }
+  ],
+  "checks": [
+    { "call": ["get_clip"], "label": "get_clip returns (front, back) clip planes" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [40, 100]
+  ]
+}

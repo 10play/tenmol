@@ -1,0 +1,20 @@
+{
+  "id": "command__get_setting_float", "feature": "get_setting_float", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set sphere_scale, 2.5"},
+    {"do":"set sphere_scale, 0.25, ala"},
+    {"do":"set cartoon_transparency, 0.7"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","sphere_scale"],"label":"global float setting"},
+    {"call":["get_setting_float","sphere_scale","ala"],"label":"per-object float override"},
+    {"call":["get_setting_float","cartoon_transparency"],"label":"another global float setting"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2.5,
+    0.25,
+    0.7
+  ]
+}

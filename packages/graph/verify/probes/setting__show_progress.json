@@ -1,0 +1,10 @@
+{"id":"setting__show_progress","feature":"show_progress","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set show_progress, 0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","show_progress"],"label":"show_progress global default (no prior set)"},
+   {"call":["get_setting_boolean","show_progress","ala"],"label":"show_progress per-object after set 0"}
+ ],
+ "expected": [true, false]}

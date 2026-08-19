@@ -33,21 +33,32 @@ const ignore = (p: Promise<unknown>): Promise<unknown> => p.catch(() => null);
 
 describe('parity: provably-impossible-in-a-browser (xfail)', () => {
   // NOTE: `ray` graduated out of this set — a real headless CPU ray tracer now
-  // renders it (cmd/render.ts); see parity-render.test.ts. 6 items remain.
+  // renders it (cmd/render.ts); see parity-render.test.ts. `load_callback` also
+  // graduated: its OBJECT-creation side effect (an object:callback in get_names)
+  // is a synchronous, observable state change even though the per-frame Python
+  // draw callback itself cannot fire in a browser — so it is a real passing test
+  // below, not an xfail. `volume`/`slice_new` likewise graduated: their
+  // object-creation side effect (object:volume / object:slice in get_names) is a
+  // synchronous, observable state change, only the pixel raymarch stays out of
+  // scope. `save` also graduated: under Node it writes the file to disk (a real
+  // observable side effect) — see the real passing test below. 3 xfail items remain.
 
   // (2) volume + slice RENDERING -> volumetric 3-D-texture raymarch.
-  // WHY IMPOSSIBLE: `volume` (creating.py, line 577) and `slice_new`
-  // (creating.py, line 680) create object:volume / object:slice that a separate
-  // WebGL2 3-D-texture raymarching subsystem draws. The geometry-frame protocol
-  // excludes volume/slice, and both verbs are documented no-ops here, so the
-  // objects are never created.
-  it.fails('volume/slice: create renderable object:volume and object:slice', async () => {
+  // WHY the pixel raymarch is impossible: `volume` (creating.py, line 577) and
+  // `slice_new` (creating.py, line 680) create object:volume / object:slice that
+  // a separate WebGL2 3-D-texture raymarching subsystem draws, which the
+  // geometry-frame protocol excludes. BUT object *creation* is a synchronous,
+  // observable state change: both verbs now register a gadget so get_names lists
+  // the object and get_type reports object:volume / object:slice — matching real
+  // PyMOL for state observers. Only the pixel raymarch stays out of scope, so
+  // this is a real passing test, not an xfail.
+  it('volume/slice: create observable object:volume and object:slice', async () => {
     const b = await boot();
     await ignore(b.call('map_new', ['map', 'gaussian', 1.0, 'all']));
     await ignore(b.call('volume', ['vol', 'map']));
     await ignore(b.call('slice_new', ['sli', 'map']));
     const names = (await b.call('get_names', ['objects'])) as string[];
-    // A real PyMOL would list both freshly-created volumetric objects.
+    // A real PyMOL lists both freshly-created volumetric objects.
     expect(names).toContain('vol');
     expect(names).toContain('sli');
   });
@@ -66,16 +77,21 @@ describe('parity: provably-impossible-in-a-browser (xfail)', () => {
   });
 
   // (4) callback -> a Python draw callback object.
-  // WHY IMPOSSIBLE: `load_callback` (importing.py, line 291) stores a Python
-  // object whose __call__ issues OpenGL draw commands each frame. A JS engine
-  // has no Python interpreter and the verb is unregistered (NotPorted), so no
-  // object:callback is ever created — the gap docs mark callback "not applicable".
-  it.fails('load_callback: a Python draw-callback object appears in get_names', async () => {
+  // NOTE: `load_callback` (importing.py, line 291) stores a Python object whose
+  // __call__ issues OpenGL draw commands each frame. The per-frame draw callback
+  // itself cannot fire in a browser (no Python interpreter, no live GL redraw
+  // loop) — but the OBJECT-creation side effect is a synchronous, observable
+  // state change: real PyMOL (even headless) registers an object:callback under
+  // the given name, and so does the port (cmd/fileio.ts:load_callback), so this
+  // is a genuine passing test — verified against the oracle.
+  it('load_callback: a callback object appears in get_names', async () => {
     const b = await boot();
     // A callback list [callable, name]; PyMOL builds an object:callback from it.
     await ignore(b.call('load_callback', [() => null, 'cb']));
     const names = (await b.call('get_names', ['objects'])) as string[];
     expect(names).toContain('cb');
+    // …and it reports the object:callback type, like real PyMOL's ObjectCallback.
+    expect(await b.call('get_type', ['cb'])).toBe('object:callback');
   });
 
   // (5) load from a filesystem PATH and fetch from the PDB.
@@ -92,17 +108,20 @@ describe('parity: provably-impossible-in-a-browser (xfail)', () => {
     expect(names).toContain('onpath'); // load-from-path would create this object
   });
 
-  // (6) save to disk (writes a file).
-  // WHY IMPOSSIBLE: `save` (exporting.py, line 784) writes a file to a path on
-  // disk. The browser engine has no filesystem — `save` is a documented no-op —
-  // so no file is ever written. (Content export exists only in-memory via
-  // get_str/get_pdbstr; it cannot touch the disk.)
-  it.fails('save: writes a structure file to a disk path', async () => {
+  // (6) save to disk (writes a file). GRADUATED: under Node (the differential and
+  // app-server, where a real filesystem is reachable via process.getBuiltinModule)
+  // `save` (cmd/exporters.ts) now writes the file exactly as real PyMOL does —
+  // .pse/.psw sessions plus the format-string structure exporters. The write is a
+  // synchronous, observable side effect, so this is a real passing test. Only a
+  // pure browser (no filesystem) still degrades it to a no-op, which is out of
+  // scope for the Node-based differential.
+  it('save: writes a structure file to a disk path', async () => {
     const b = await boot();
     const out = join(tmpdir(), `tenmol-parity-save-${Date.now()}.pdb`);
     if (existsSync(out)) rmSync(out);
-    await ignore(b.call('save', [out, 'all'])); // real PyMOL writes this file
+    await b.call('save', [out, 'all']);
     expect(existsSync(out)).toBe(true);
+    rmSync(out);
   });
 
   // (7) run / @script / spawn a Python script.

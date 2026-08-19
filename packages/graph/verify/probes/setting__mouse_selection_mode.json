@@ -1,0 +1,15 @@
+{
+  "id": "setting__mouse_selection_mode",
+  "feature": "mouse_selection_mode",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set mouse_selection_mode, 2"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","mouse_selection_mode"],"label":"global mouse_selection_mode after set 2 (default 1 -> 2 roundtrip)"}
+  ],
+  "expected": [
+    2
+  ]
+}

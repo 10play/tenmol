@@ -1,0 +1,19 @@
+{
+  "id": "setting__active_selections",
+  "feature": "active_selections",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {
+      "call": [
+        "get_setting_int",
+        "active_selections"
+      ],
+      "label": "default active_selections (PyMOL default on/1)"
+    }
+  ],
+  "expected": [
+    1
+  ]
+}

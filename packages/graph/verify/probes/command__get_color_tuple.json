@@ -1,0 +1,21 @@
+{
+  "id": "command__get_color_tuple", "feature": "get_color_tuple", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","red"],"label":"red RGB tuple","tol":1e-6},
+    {"call":["get_color_tuple","green"],"label":"green RGB tuple","tol":1e-6},
+    {"call":["get_color_tuple","blue"],"label":"blue RGB tuple","tol":1e-6},
+    {"call":["get_color_tuple","white"],"label":"white RGB tuple","tol":1e-6},
+    {"call":["get_color_tuple","yellow"],"label":"yellow RGB tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+    [1, 1, 1],
+    [1, 1, 0]
+  ]
+}

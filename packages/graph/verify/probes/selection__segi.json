@@ -1,0 +1,12 @@
+{"id":"selection__segi","feature":"segi","kind":"selection","probeKind":"state",
+ "ops":[
+   {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"alter chain A, segi='A'"},
+   {"do":"alter not chain A, segi='B'"}
+ ],
+ "checks":[
+   {"call":["count_atoms","segi A"],"label":"segi A matches atoms whose segment id == A (chain A set to segi A)"},
+   {"call":["count_atoms","segi B"],"label":"segi B matches atoms whose segment id == B (non-chain-A set to segi B)"},
+   {"call":["count_atoms","segi A+B"],"label":"segi A+B = union of both segments = all atoms"}
+ ],
+ "expected":[1479,4205,5684]}

@@ -1,0 +1,19 @@
+{
+  "id": "setting__cartoon_putty_scale_power",
+  "feature": "cartoon_putty_scale_power",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set cartoon_putty_scale_power, 2.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","cartoon_putty_scale_power"],"label":"global default (unset) -> 1.5"},
+    {"call":["get_setting_float","cartoon_putty_scale_power","m"],"label":"per-object set to 2.5 -> roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1.5,
+    2.5
+  ]
+}

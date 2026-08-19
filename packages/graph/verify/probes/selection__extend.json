@@ -1,0 +1,12 @@
+{
+  "id": "selection__extend", "feature": "extend", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "(resi 10) extend 1"], "label": "resi 10 grown outward by 1 bond"},
+    {"call": ["count_atoms", "(name CA and resi 10) extend 2"], "label": "CA of resi 10 grown outward by 2 bonds"},
+    {"call": ["count_atoms", "(resi 10) extend 0"], "label": "resi 10 grown by 0 bonds (unchanged)"}
+  ],
+  "expected": [55, 49, 38]
+}

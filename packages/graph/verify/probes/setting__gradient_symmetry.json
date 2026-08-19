@@ -1,0 +1,16 @@
+{
+  "id": "setting__gradient_symmetry",
+  "feature": "gradient_symmetry",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set gradient_symmetry, 0.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","gradient_symmetry"],"label":"global gradient_symmetry after set 0.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.5
+  ]
+}

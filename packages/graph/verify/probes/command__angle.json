@@ -1,0 +1,18 @@
+{
+  "id": "command__angle", "feature": "angle", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"call": ["angle", "ang1", "name n", "name ca", "name c"]}
+  ],
+  "checks": [
+    {"call": ["get_names", "objects"], "label": "angle measurement object created and listed among objects"},
+    {"call": ["get_names", "all"], "label": "angle object present in full name list, not registered as a selection"},
+    {"call": ["get_angle", "name n", "name ca", "name c"], "label": "geometric angle at CA vertex matches", "tol": 1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["ala", "ang1"],
+    ["ala", "ang1"],
+    110.96632385253906
+  ]
+}

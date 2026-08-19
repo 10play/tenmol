@@ -1,0 +1,22 @@
+{
+  "id": "color__deepolive", "feature": "deepolive", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color deepolive, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","deepolive"],"label":"deepolive RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color deepolive"],"label":"atoms colored deepolive"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.6000000238418579,
+      0.6000000238418579,
+      0.10000000149011612
+    ],
+    1,
+    1
+  ]
+}

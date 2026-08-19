@@ -1,0 +1,8 @@
+{"id":"selection__resn","feature":"resn","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","resn ALA"],"label":"resn ALA = atoms in ALA residues"},
+   {"call":["count_atoms","resn ALA+GLY"],"label":"resn ALA+GLY = atoms in ALA or GLY residues"},
+   {"call":["count_atoms","r. HOH"],"label":"r. HOH alias = water atoms"}
+ ],
+ "expected":[360,568,215]}

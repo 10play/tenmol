@@ -1,0 +1,24 @@
+{
+  "id": "color__tungsten", "feature": "tungsten", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color tungsten, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","tungsten"],"label":"tungsten RGB tuple","tol":1e-6},
+    {"call":["get_color_index","tungsten"],"label":"tungsten palette index"},
+    {"call":["count_atoms","color tungsten"],"label":"atoms colored tungsten"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.12941177189350128,
+      0.5803921818733215,
+      0.8392156958580017
+    ],
+    5349,
+    1,
+    1
+  ]
+}

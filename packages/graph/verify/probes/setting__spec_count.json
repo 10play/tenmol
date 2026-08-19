@@ -1,0 +1,13 @@
+{
+  "id": "setting__spec_count", "feature": "spec_count", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set spec_count, 4"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","spec_count"],"label":"global spec_count after set 4"}
+  ],
+  "tol": 0,
+  "expected": [
+    4
+  ]
+}

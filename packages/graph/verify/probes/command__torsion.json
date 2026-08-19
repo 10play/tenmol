@@ -1,0 +1,30 @@
+{
+  "id": "command__torsion",
+  "feature": "torsion",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load ${REPO}/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "edit (chain D and resi 3 and name CB), (chain D and resi 3 and name CA)"},
+    {"do": "torsion 30"}
+  ],
+  "checks": [
+    {"call": ["get_dihedral", "chain D and resi 3 and name N", "chain D and resi 3 and name CA", "chain D and resi 3 and name CB", "chain D and resi 3 and name OG"], "label": "chi1 N-CA-CB-OG after torsion 30 about CB-CA bond"},
+    {"call": ["get_atom_coords", "chain D and resi 3 and name OG"], "label": "coords of OG (pk1/CB-side, rotated)"},
+    {"call": ["get_atom_coords", "chain D and resi 3 and name N"], "label": "coords of N (pk2/CA-side, must stay fixed)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    93.46253967285156,
+    [
+      49.88010787963867,
+      -13.585511207580566,
+      15.544577598571777
+    ],
+    [
+      47.362998962402344,
+      -12.347000122070312,
+      17.070999145507812
+    ]
+  ]
+}

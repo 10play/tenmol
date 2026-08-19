@@ -1,0 +1,12 @@
+{
+  "id": "setting__movie_loop", "feature": "movie_loop", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set movie_loop, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","movie_loop"],"label":"movie_loop after set 0 (default 1)"}
+  ],
+  "expected": [
+    false
+  ]
+}

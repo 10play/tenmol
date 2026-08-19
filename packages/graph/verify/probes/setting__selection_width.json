@@ -1,0 +1,19 @@
+{
+  "id": "setting__selection_width",
+  "feature": "selection_width",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set selection_width, 6.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","selection_width"],"label":"global default (unset) -> 3.0"},
+    {"call":["get_setting_float","selection_width","m"],"label":"per-object set to 6.5 -> 6.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    3,
+    6.5
+  ]
+}

@@ -1,0 +1,12 @@
+{"id":"setting__session_embeds_data","feature":"session_embeds_data","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"set session_embeds_data, 0"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","session_embeds_data"],"label":"session_embeds_data boolean after set 0 (default 1)"},
+   {"call":["get_setting_int","session_embeds_data"],"label":"session_embeds_data int after set 0 (default 1)"}
+ ],
+ "expected":[
+   false,
+   0
+ ]}

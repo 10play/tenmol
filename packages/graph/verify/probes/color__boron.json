@@ -1,0 +1,22 @@
+{
+  "id": "color__boron", "feature": "boron", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color boron, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","boron"],"label":"boron RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color boron"],"label":"atoms colored boron"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      1,
+      0.7098039388656616,
+      0.7098039388656616
+    ],
+    1,
+    1
+  ]
+}

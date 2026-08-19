@@ -1,0 +1,19 @@
+{
+  "id": "setting__mouse_z_scale",
+  "feature": "mouse_z_scale",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set mouse_z_scale, 2.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","mouse_z_scale"],"label":"global default (no prior set) -> 1.0"},
+    {"call":["get_setting_float","mouse_z_scale","m"],"label":"per-object set 2.5 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    2.5
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "setting__surface_carve_state",
+  "feature": "surface_carve_state",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set surface_carve_state, 3, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","surface_carve_state"],"label":"global surface_carve_state default (no prior set)"},
+    {"call":["get_setting_int","surface_carve_state","ala"],"label":"per-object surface_carve_state after set 3"}
+  ],
+  "expected": [
+    0,
+    3
+  ]
+}

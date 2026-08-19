@@ -375,23 +375,34 @@ export function registerSculpt(ctx: RegistrarCtx): void {
   });
 
   /* ------------------------------- minimize ----------------------------- */
-  // minimize(selection='(all)', state=0, cycles=500) — clean geometry toward
-  // covalent-radius bond lengths and reference angles; returns the final energy.
-  const idealize = (args: unknown[], kwargs: Record<string, unknown>, dfltCycles: number): Json => {
+  // minimize(sele='', iter=500, grad=0.01, interval=50, _setup=1)
+  // Upstream `minimize` (experimenting.py:108) is a nonfunctional stub: it
+  // routes to `chempy.tinker.realtime`, which is NOT part of open-source
+  // PyMOL, so `realtime.setup()` never succeeds and the command leaves the
+  // coordinates untouched (printing "minimize: missing parameters"). Match
+  // that behaviour faithfully — a no-op that returns None — rather than the
+  // covalent idealiser (which belonged to `clean`, verified against the
+  // oracle: fragment-ala bonds stay at their deposited lengths after
+  // `minimize`).
+  ctx.command('minimize', (): Json => null);
+
+  /* -------------------------------- clean ------------------------------- */
+  // clean(selection, state=0, cycles=100) — open-source substitute for the
+  // MMFF94 `clean` (which raises IncentiveOnlyException upstream): idealise
+  // geometry toward covalent-radius bond lengths; returns the final energy.
+  ctx.command('clean', (args, kwargs): Json => {
     const sel = ctx.str(pick(args, kwargs, 0, 'selection'), 'all') || 'all';
     const mol = resolveObj(sel);
     if (!mol) return 0;
     const state = normState(num(pick(args, kwargs, 1, 'state'), 0), mol);
-    const cycles = Math.max(0, Math.round(num(pick(args, kwargs, 2, 'cycles'), dfltCycles)));
+    const cycles = Math.max(0, Math.round(num(pick(args, kwargs, 2, 'cycles'), 100)));
     const r = buildRestraints(mol, state, 'covalent');
     const x = readState(mol, state);
     const E = minimizeCoords(r, x, cycles);
     writeState(mol, state, x);
     ctx.publish();
     return E;
-  };
-  ctx.command('minimize', (args, kwargs): Json => idealize(args, kwargs, 500));
-  ctx.command('clean', (args, kwargs): Json => idealize(args, kwargs, 100));
+  });
 
   /* -------------------------------- smooth ------------------------------ */
   // smooth(selection='all', passes=1, window=5, first=1, last=0, ends=0)
@@ -413,29 +424,98 @@ export function registerSculpt(ctx: RegistrarCtx): void {
 
     const nstate = mol.nstate;
     if (nstate >= 2) {
-      // Temporal smoothing across states.
-      const first = Math.max(1, Math.round(num(pick(args, kwargs, 3, 'first'), 1)));
-      const lastRaw = Math.round(num(pick(args, kwargs, 4, 'last'), 0));
-      const last = lastRaw <= 0 ? nstate : Math.min(nstate, lastRaw);
-      const half = Math.floor(window / 2);
-      for (let p = 0; p < passes; p++) {
-        // Snapshot the source coordinates so a pass reads a stable frame.
-        const src = mol.states.map((s) => (s ? Float32Array.from(s) : s));
-        for (let s = first - 1; s <= last - 1; s++) {
-          const dst = mol.states[s];
-          if (!dst) continue;
-          for (const i of idx) {
-            for (let k = 0; k < 3; k++) {
-              let sum = 0;
-              let cnt = 0;
-              for (let t = s - half; t <= s + half; t++) {
-                if (t < 0 || t >= nstate) continue;
-                const st = src[t];
-                if (!st) continue;
-                sum += st[i * 3 + k]!;
-                cnt++;
+      // Temporal smoothing across states — mirrors ExecutiveSmooth
+      // (layer3/Executive.cpp). `first`/`last` are 1-based here (as passed to
+      // cmd.smooth, before the Python wrapper's -1); convert to 0-based state
+      // indices spanning the local window [first..last].
+      const firstArg = Math.round(num(pick(args, kwargs, 3, 'first'), 1));
+      const lastArg = Math.round(num(pick(args, kwargs, 4, 'last'), 0));
+      const ends = Math.round(num(pick(args, kwargs, 5, 'ends'), 0));
+
+      const maxState = nstate - 1;
+      let first = firstArg - 1;
+      let last = lastArg - 1;
+      if (last < 0) last = maxState;
+      if (first < 0) first = 0;
+      if (last < first) {
+        const tmp = last;
+        last = first;
+        first = tmp;
+      }
+      if (last > maxState) last = maxState;
+
+      const nLocal = last - first + 1;
+      const backward = Math.floor(window / 2);
+      const forward = Math.floor(window / 2);
+
+      // `ends` selects how the terminal states of the range are handled:
+      //   0 -> hold the ends fixed (end_skip = 1)
+      //   1 -> smooth the ends too (asymmetric, clamped window)
+      //   2 -> skip half a window at each end
+      //   3 -> cyclic (wrap-around) averaging
+      let endSkip = 0;
+      let loop = false;
+      switch (ends) {
+        case 0:
+          endSkip = 1;
+          break;
+        case 1:
+          endSkip = 0;
+          break;
+        case 2:
+          endSkip = backward;
+          break;
+        case 3:
+          endSkip = 0;
+          loop = true;
+          break;
+        default:
+          endSkip = 0;
+          break;
+      }
+
+      let range: number;
+      let offset: number;
+      if (ends) {
+        range = last - first + 1;
+        offset = 0;
+      } else {
+        range = last - endSkip - (first + endSkip) + 1;
+        offset = endSkip;
+      }
+
+      // Window must be at least 2 and no larger than the number of frames,
+      // otherwise real PyMOL leaves the coordinates untouched.
+      const windowAbs = Math.abs(window);
+      if (windowAbs >= 2 && nLocal >= windowAbs) {
+        for (let p = 0; p < passes; p++) {
+          // Snapshot the source coordinates so a pass reads a stable frame.
+          const src = mol.states.map((s) => (s ? Float32Array.from(s) : s));
+          for (let b = 0; b < range; b++) {
+            const stbLocal = b + offset;
+            if (stbLocal < endSkip || stbLocal >= nLocal - endSkip) continue;
+            const dst = mol.states[first + stbLocal];
+            if (!dst) continue;
+            for (const i of idx) {
+              for (let k = 0; k < 3; k++) {
+                let sum = 0;
+                let cnt = 0;
+                for (let d = -backward; d <= forward; d++) {
+                  let stLocal = stbLocal + d;
+                  if (loop) {
+                    if (stLocal < 0) stLocal += nLocal;
+                    else if (stLocal >= nLocal) stLocal -= nLocal;
+                  } else {
+                    if (stLocal < 0) stLocal = 0;
+                    else if (stLocal >= nLocal) stLocal = nLocal - 1;
+                  }
+                  const st = src[first + stLocal];
+                  if (!st) continue;
+                  sum += st[i * 3 + k]!;
+                  cnt++;
+                }
+                if (cnt > 0) dst[i * 3 + k] = sum / cnt;
               }
-              if (cnt > 0) dst[i * 3 + k] = sum / cnt;
             }
           }
         }

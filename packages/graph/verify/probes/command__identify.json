@@ -1,0 +1,21 @@
+{
+  "id": "command__identify",
+  "feature": "identify",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, pos=[0,0,0], name=PS1" },
+    { "do": "pseudoatom m, pos=[1,1,1], name=PS2" }
+  ],
+  "checks": [
+    { "call": ["identify", "m"], "label": "mode 0: list of stable atom IDs" },
+    { "call": ["identify", "m", 1], "label": "mode 1: (object, id) tuples" },
+    { "call": ["identify", "m and name PS2"], "label": "identify honors selection" }
+  ],
+  "tol": 0,
+  "expected": [
+    [0, 1],
+    [["m", 0], ["m", 1]],
+    [1]
+  ]
+}

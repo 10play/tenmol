@@ -1,0 +1,24 @@
+{
+  "id": "color__yttrium", "feature": "yttrium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color yttrium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","yttrium"],"label":"yttrium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","yttrium"],"label":"yttrium palette index"},
+    {"call":["count_atoms","color yttrium"],"label":"atoms colored yttrium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.5803921818733215,
+      1,
+      1
+    ],
+    5314,
+    1,
+    1
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__europium", "feature": "europium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color europium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color europium"],"label":"atoms colored europium"},
+    {"call":["get_color_index","europium"],"label":"europium palette index"},
+    {"call":["get_color_tuple","europium"],"label":"europium rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5338,
+    [
+      0.3803921639919281,
+      1,
+      0.7803921699523926
+    ]
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "command__unset_bond",
+  "feature": "unset_bond",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, name=AA, pos=[0,0,0]" },
+    { "do": "pseudoatom m, name=BB, pos=[1.5,0,0]" },
+    { "do": "bond (m and name AA), (m and name BB)" }
+  ],
+  "checks": [
+    { "call": ["set_bond", "stick_radius", 0.5, "m"], "label": "set_bond establishes a per-bond stick_radius override" },
+    { "call": ["get_bond", "stick_radius", "m"], "label": "per-bond stick_radius is 0.5 after set_bond (precondition)" },
+    { "call": ["unset_bond", "stick_radius", "m"], "label": "unset_bond clears the per-bond override" },
+    { "call": ["get_bond", "stick_radius", "m"], "label": "per-bond stick_radius reverts to null after unset_bond" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    null,
+    [["m", [[1, 2, 0.5]]]],
+    null,
+    [["m", [[1, 2, null]]]]
+  ]
+}

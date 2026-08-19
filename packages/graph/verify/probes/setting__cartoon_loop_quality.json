@@ -1,0 +1,11 @@
+{"id":"setting__cartoon_loop_quality","feature":"cartoon_loop_quality","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set cartoon_loop_quality, 12, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","cartoon_loop_quality"],"label":"cartoon_loop_quality global default (no prior set)"},
+   {"call":["get_setting_float","cartoon_loop_quality","ala"],"label":"cartoon_loop_quality per-object after set 12"}
+ ],
+ "tol": 1e-6,
+ "expected": [-1, 12]}

@@ -1,0 +1,23 @@
+{
+  "id": "command__load_object",
+  "feature": "load_object",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {
+      "call": ["load_object", 13, [6.0, 1.0, 0.0, 0.0, 7.0, 0.0, 0.0, 0.0, 1.0], "ball"],
+      "label": "load_object(loadable.cgo) returns None"
+    },
+    { "call": ["get_names"], "label": "object names after load_object" },
+    { "call": ["get_type", "ball"], "label": "type of loaded cgo object" },
+    { "call": ["count_atoms", "all"], "label": "cgo carries no atoms" }
+  ],
+  "tol": 0.001,
+  "expected": [
+    null,
+    ["ball"],
+    "object:cgo",
+    0
+  ]
+}

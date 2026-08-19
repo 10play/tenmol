@@ -1,0 +1,23 @@
+{
+  "id": "command__pop",
+  "feature": "pop",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "select src, (ala and name N+CA+C)" },
+    { "do": "pop tmp, src" },
+    { "do": "pop tmp, src" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "tmp"], "label": "tmp holds exactly one popped atom" },
+    { "call": ["count_atoms", "src"], "label": "src consumed by two pops (3-2=1)" },
+    { "call": ["count_atoms", "ala and name N+CA+C"], "label": "underlying object atoms untouched" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    1,
+    3
+  ]
+}

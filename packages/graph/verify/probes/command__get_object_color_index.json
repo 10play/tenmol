@@ -1,0 +1,15 @@
+{
+  "id": "command__get_object_color_index", "feature": "get_object_color_index", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"call":["set_object_color","p1","red"]},
+    {"do":"pseudoatom p2"}
+  ],
+  "checks": [
+    {"call":["get_object_color_index","p1"],"label":"object color index after set to red"},
+    {"call":["get_object_color_index","p2"],"label":"default object color index"},
+    {"call":["get_color_index","red"],"label":"red color index reference"}
+  ],
+  "tol": 1e-3,
+  "expected": [4, 0, 4]
+}

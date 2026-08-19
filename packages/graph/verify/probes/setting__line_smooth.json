@@ -1,0 +1,12 @@
+{
+  "id": "setting__line_smooth", "feature": "line_smooth", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set line_smooth, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","line_smooth"],"label":"line_smooth (bool, default 1) after set 0 -> false"}
+  ],
+  "expected": [
+    false
+  ]
+}

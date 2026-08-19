@@ -1,0 +1,11 @@
+{"id":"setting__sweep_speed","feature":"sweep_speed","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set sweep_speed, 0.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","sweep_speed"],"label":"sweep_speed global default (no prior set)"},
+   {"call":["get_setting_float","sweep_speed","ala"],"label":"sweep_speed per-object after set 0.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [0.75, 0.5]}

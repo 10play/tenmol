@@ -153,8 +153,12 @@ describe('sculpt_deactivate / sculpt_purge', () => {
 });
 
 describe('minimize / clean', () => {
-  it('lowers total energy and idealizes an over-long bond', () => {
-    // C-C bonds at 1.9 Å (covalent ideal ~1.52) -> reducible energy.
+  it('minimize is a no-op stub (matches upstream): coords unchanged', () => {
+    // Upstream `minimize` routes to chempy.tinker.realtime, which is absent
+    // from open-source PyMOL, so the command leaves coordinates untouched.
+    // Verified against the real-PyMOL oracle: `fragment ala; minimize ala`
+    // leaves the deposited bond lengths (e.g. N-CA 1.4599, C-O 1.2368) intact
+    // rather than idealising them toward covalent-radius sums.
     const pdb = [
       atomLine(1, 'C1', 'C', 0, 0, 0),
       atomLine(2, 'C2', 'C', 1.9, 0, 0),
@@ -163,17 +167,11 @@ describe('minimize / clean', () => {
       conect(2, 3),
     ].join('\n');
 
-    // Initial energy: minimize with 0 cycles just reports the starting energy.
-    const t0 = setup(pdb);
-    const E0 = t0.call('minimize', ['all', 0, 0]) as number;
-    expect(E0).toBeGreaterThan(0.1);
-
-    // A full run lowers the energy and pulls the bond toward ~1.52 Å.
     const t = setup(pdb);
-    const E = t.call('minimize', ['all', 0, 300]) as number;
-    expect(E).toBeLessThan(E0);
-    expect(bondLen(t, 0, 1)).toBeLessThan(1.9);
-    expect(Math.abs(bondLen(t, 0, 1) - 1.52)).toBeLessThan(0.15);
+    expect(t.call('minimize', ['all', 500])).toBeNull();
+    // The stretched 1.9 Å bond is left exactly as deposited.
+    expect(bondLen(t, 0, 1)).toBeCloseTo(1.9, 6);
+    expect(bondLen(t, 1, 2)).toBeCloseTo(1.9, 6);
   });
 
   it('clean also relaxes the geometry (energy decreases)', () => {
@@ -212,7 +210,10 @@ describe('smooth (temporal, across states)', () => {
     const before = t.mol().coord(0, 2)[0]; // deviated middle state = 1
     expect(before).toBeCloseTo(1, 5);
 
-    t.call('smooth', ['all', 1, 5]);
+    // window=3 (must be <= number of states): real PyMOL's ExecutiveSmooth
+    // no-ops when the window is larger than the frame count, so a window of 5
+    // over 3 states would leave the coordinates untouched.
+    t.call('smooth', ['all', 1, 3]);
 
     const after = t.mol().coord(0, 2)[0];
     // Box-average of (0,1,0) -> ~1/3: the deviation from the line (0) shrinks.

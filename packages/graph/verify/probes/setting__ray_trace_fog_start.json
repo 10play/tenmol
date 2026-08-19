@@ -1,0 +1,16 @@
+{
+  "id": "setting__ray_trace_fog_start", "feature": "ray_trace_fog_start", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ray_trace_fog_start, 0.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_trace_fog_start"],"label":"global ray_trace_fog_start default (no prior set)"},
+    {"call":["get_setting_float","ray_trace_fog_start","ala"],"label":"per-object ray_trace_fog_start after set 0.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    -1,
+    0.5
+  ]
+}

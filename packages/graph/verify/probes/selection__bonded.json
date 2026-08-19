@@ -1,0 +1,8 @@
+{"id":"selection__bonded","feature":"bonded","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","bonded"],"label":"atoms with at least one bond"},
+   {"call":["count_atoms","not bonded"],"label":"isolated atoms (no bond)"},
+   {"call":["count_atoms","bonded and chain A"],"label":"bonded atoms in chain A"}
+ ],
+ "expected":[5469,215,1479]}

@@ -1,0 +1,12 @@
+{
+  "id": "setting__editor_auto_dihedral", "feature": "editor_auto_dihedral", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set editor_auto_dihedral, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","editor_auto_dihedral"],"label":"editor_auto_dihedral after set 0 (default is 1)"}
+  ],
+  "expected": [
+    false
+  ]
+}

@@ -1,0 +1,10 @@
+{"id":"setting__sculpt_tri_mode","feature":"sculpt_tri_mode","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set sculpt_tri_mode, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","sculpt_tri_mode"],"label":"sculpt_tri_mode global default (no prior set)"},
+   {"call":["get_setting_int","sculpt_tri_mode","ala"],"label":"sculpt_tri_mode per-object after set 1"}
+ ],
+ "expected": [0, 1]}

@@ -1,0 +1,19 @@
+{
+  "id": "setting__cartoon_putty_scale_max",
+  "feature": "cartoon_putty_scale_max",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set cartoon_putty_scale_max, 6.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","cartoon_putty_scale_max"],"label":"global default cartoon_putty_scale_max -> 4.0"},
+    {"call":["get_setting_float","cartoon_putty_scale_max","m"],"label":"per-object set/get roundtrip -> 6.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    4,
+    6.5
+  ]
+}

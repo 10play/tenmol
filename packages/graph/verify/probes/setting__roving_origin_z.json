@@ -1,0 +1,12 @@
+{
+  "id": "setting__roving_origin_z", "feature": "roving_origin_z", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set roving_origin_z, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","roving_origin_z"],"label":"roving_origin_z after set 0 (roundtrip; default is 1)"}
+  ],
+  "expected": [
+    false
+  ]
+}

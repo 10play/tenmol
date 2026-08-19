@@ -1,0 +1,20 @@
+{
+  "id": "command__remove_picked",
+  "feature": "remove_picked",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom m1, name=A, pos=[0,0,0]"},
+    {"do": "pseudoatom m1, name=B, pos=[3,0,0]"},
+    {"do": "pseudoatom m1, name=C, pos=[6,0,0]"},
+    {"do": "edit m1 and name A"},
+    {"call": ["remove_picked"]}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "all"], "label": "atoms remaining after remove_picked"},
+    {"call": ["count_atoms", "name A"], "label": "picked atom A is gone"},
+    {"call": ["count_atoms", "name B"], "label": "sibling atom B untouched"}
+  ],
+  "tol": 1e-3,
+  "expected": [2, 0, 1]
+}

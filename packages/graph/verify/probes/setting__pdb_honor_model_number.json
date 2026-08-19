@@ -1,0 +1,12 @@
+{
+  "id": "setting__pdb_honor_model_number", "feature": "pdb_honor_model_number", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set pdb_honor_model_number, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","pdb_honor_model_number"],"label":"global pdb_honor_model_number after set 1"}
+  ],
+  "expected": [
+    1
+  ]
+}

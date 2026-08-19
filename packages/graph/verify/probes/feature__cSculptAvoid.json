@@ -1,0 +1,16 @@
+{
+  "id": "feature__cSculptAvoid",
+  "feature": "cSculptAvoid",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    { "do": "set sculpt_field_mask, 2559" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "sculpt_field_mask"], "label": "sculpt_field_mask holds the 0x800 avoid bit (0x1FF|0x800=2559)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2559
+  ]
+}

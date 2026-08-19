@@ -1,0 +1,15 @@
+{
+  "id": "setting__surface_quality", "feature": "surface_quality", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set surface_quality, 2, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","surface_quality"],"label":"global surface_quality default (no prior set)"},
+    {"call":["get_setting_int","surface_quality","ala"],"label":"per-object surface_quality after set 2"}
+  ],
+  "expected": [
+    0,
+    2
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "command__get_session",
+  "feature": "get_session",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load ${REPO}/packages/engine/test/dat/1tii.pdb, m" },
+    { "call": ["save", "/tmp/tenmol_get_session_rt.pse"] },
+    { "do": "delete all" },
+    { "call": ["load", "/tmp/tenmol_get_session_rt.pse"] }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "all"], "label": "atoms restored from get_session snapshot round-trip" },
+    { "call": ["get_names"], "label": "object names restored from session" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    5684,
+    ["m"]
+  ]
+}

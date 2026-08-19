@@ -1,0 +1,18 @@
+{
+  "id": "setting__default_phenix_no_fill_names",
+  "feature": "default_phenix_no_fill_names",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set default_phenix_no_fill_names, FOFCWT_no_fill PHFOFCWT_no_fill None None, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_text", "default_phenix_no_fill_names"], "label": "global default (unset) string value"},
+    {"call": ["get_setting_text", "default_phenix_no_fill_names", "m"], "label": "per-object set to custom non-numeric string roundtrip"}
+  ],
+  "expected": [
+    "2FOFCWT_no_fill PH2FOFCWT_no_fill None None",
+    "FOFCWT_no_fill PHFOFCWT_no_fill None None"
+  ]
+}

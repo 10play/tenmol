@@ -1,0 +1,11 @@
+{"id":"setting__sculpt_plan_weight","feature":"sculpt_plan_weight","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set sculpt_plan_weight, 0.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","sculpt_plan_weight"],"label":"sculpt_plan_weight global default (no prior set)"},
+   {"call":["get_setting_float","sculpt_plan_weight","ala"],"label":"sculpt_plan_weight per-object after set 0.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [1, 0.5]}

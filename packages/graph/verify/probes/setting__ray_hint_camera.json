@@ -1,0 +1,16 @@
+{
+  "id": "setting__ray_hint_camera", "feature": "ray_hint_camera", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ray_hint_camera, 3.14159, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_hint_camera"],"label":"default ray_hint_camera (global, no prior set)"},
+    {"call":["get_setting_float","ray_hint_camera","m"],"label":"per-object ray_hint_camera after set 3.14159 (set/get roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2.15,
+    3.14159
+  ]
+}

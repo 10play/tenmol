@@ -1,0 +1,18 @@
+{
+  "id": "setting__ribbon_trace_atoms",
+  "feature": "ribbon_trace_atoms",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ribbon_trace_atoms, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","ribbon_trace_atoms"],"label":"global ribbon_trace_atoms default (no prior set)"},
+    {"call":["get_setting_int","ribbon_trace_atoms","ala"],"label":"per-object ribbon_trace_atoms after set 1"}
+  ],
+  "expected": [
+    0,
+    1
+  ]
+}

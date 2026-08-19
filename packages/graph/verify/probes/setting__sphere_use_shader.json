@@ -1,0 +1,18 @@
+{
+  "id": "setting__sphere_use_shader",
+  "feature": "sphere_use_shader",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set sphere_use_shader, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","sphere_use_shader"],"label":"global default (unset) -> true (default 1)"},
+    {"call":["get_setting_boolean","sphere_use_shader","m"],"label":"per-object set to 0 -> false (roundtrip)"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

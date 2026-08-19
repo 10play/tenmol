@@ -1,0 +1,19 @@
+{
+  "id": "command__load", "feature": "load", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call":["get_names"],"label":"object names after load"},
+    {"call":["count_atoms","m"],"label":"total atoms loaded"},
+    {"call":["count_atoms","m and name CA"],"label":"CA atoms loaded"},
+    {"call":["get_chains","m"],"label":"chains in loaded object"}
+  ],
+  "tol": 0,
+  "expected": [
+    ["m"],
+    5684,
+    712,
+    ["", "A", "C", "D", "E", "F", "G", "H"]
+  ]
+}

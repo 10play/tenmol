@@ -1,0 +1,19 @@
+{
+  "id": "setting__stick_fixed_radius",
+  "feature": "stick_fixed_radius",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set stick_fixed_radius, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","stick_fixed_radius"],"label":"global default (unset) -> false"},
+    {"call":["get_setting_boolean","stick_fixed_radius","m"],"label":"per-object set to 1 -> true"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    false,
+    true
+  ]
+}

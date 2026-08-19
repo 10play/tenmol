@@ -1,0 +1,21 @@
+{
+  "id": "command__ramp_update",
+  "feature": "ramp_update",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom foo, pos=[0,0,0]" },
+    { "call": ["ramp_new", "r1", "foo", [3.0, 6.0], ["red", "blue"]] },
+    { "call": ["ramp_update", "r1"], "kwargs": { "range": [1.0, 9.0] } },
+    { "call": ["ramp_update", "r1"], "kwargs": { "color": ["green", "orange"] } }
+  ],
+  "checks": [
+    { "call": ["get_names", "objects"], "label": "objects after ramp_update (expect ['foo','r1'])" },
+    { "call": ["count_atoms", "all"], "label": "ramp_update adds no atoms (expect 1)" }
+  ],
+  "tol": 0,
+  "expected": [
+    ["foo", "r1"],
+    1
+  ]
+}

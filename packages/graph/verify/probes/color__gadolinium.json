@@ -1,0 +1,22 @@
+{
+  "id": "color__gadolinium", "feature": "gadolinium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color gadolinium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color gadolinium"],"label":"atoms colored gadolinium"},
+    {"call":["get_color_tuple","gadolinium"],"label":"gadolinium rgb tuple","tol":1e-6},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    [
+      0.2705882489681244,
+      1,
+      0.7803921699523926
+    ],
+    1
+  ]
+}

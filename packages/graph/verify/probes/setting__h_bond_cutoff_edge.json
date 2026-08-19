@@ -1,0 +1,11 @@
+{"id":"setting__h_bond_cutoff_edge","feature":"h_bond_cutoff_edge","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set h_bond_cutoff_edge, 4.0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","h_bond_cutoff_edge"],"label":"h_bond_cutoff_edge global default (no prior set)"},
+   {"call":["get_setting_float","h_bond_cutoff_edge","ala"],"label":"h_bond_cutoff_edge per-object after set 4.0"}
+ ],
+ "tol": 1e-6,
+ "expected": [3.2, 4.0]}

@@ -1,0 +1,15 @@
+{
+  "id": "setting__cartoon_discrete_colors", "feature": "cartoon_discrete_colors", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cartoon_discrete_colors, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","cartoon_discrete_colors"],"label":"global cartoon_discrete_colors default (no prior set)"},
+    {"call":["get_setting_boolean","cartoon_discrete_colors","ala"],"label":"per-object cartoon_discrete_colors after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

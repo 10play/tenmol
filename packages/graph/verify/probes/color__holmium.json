@@ -1,0 +1,22 @@
+{
+  "id": "color__holmium", "feature": "holmium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color holmium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","holmium"],"label":"holmium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color holmium"],"label":"atoms colored holmium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0,
+      1,
+      0.6117647290229797
+    ],
+    1,
+    1
+  ]
+}

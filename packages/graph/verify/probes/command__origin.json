@@ -1,0 +1,15 @@
+{
+  "id": "command__origin", "feature": "origin", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1, pos=[10, 20, 30]"},
+    {"do":"pseudoatom p2, pos=[-40, -50, -60]"},
+    {"do":"origin position=[1.0, 2.0, 3.0]"}
+  ],
+  "checks": [
+    {"call":["get_view"],"label":"view after origin position=[1,2,3] (model-space origin idx12-14)","tol":1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 2, -47, 1, 2, 3, 40, 100, -20]
+  ]
+}

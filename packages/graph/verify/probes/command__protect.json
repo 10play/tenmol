@@ -1,0 +1,21 @@
+{
+  "id": "command__protect",
+  "feature": "protect",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "protect name CA" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "protected"], "label": "atoms carrying the protected flag" },
+    { "call": ["count_atoms", "not protected"], "label": "unprotected atoms" },
+    { "call": ["count_atoms", "all"], "label": "total atoms (sanity)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    9,
+    10
+  ]
+}

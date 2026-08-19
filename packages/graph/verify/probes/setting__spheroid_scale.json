@@ -1,0 +1,16 @@
+{
+  "id": "setting__spheroid_scale", "feature": "spheroid_scale", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set spheroid_scale, 0.75, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","spheroid_scale"],"label":"global default (unset) -> 1.0"},
+    {"call":["get_setting_float","spheroid_scale","m"],"label":"per-object set to 0.75 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    0.75
+  ]
+}

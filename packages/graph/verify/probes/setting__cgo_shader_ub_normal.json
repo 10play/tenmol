@@ -1,0 +1,16 @@
+{
+  "id": "setting__cgo_shader_ub_normal",
+  "feature": "cgo_shader_ub_normal",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set cgo_shader_ub_normal, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","cgo_shader_ub_normal"],"label":"global cgo_shader_ub_normal after set 1 -> true"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    true
+  ]
+}

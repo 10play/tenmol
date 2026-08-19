@@ -1,0 +1,10 @@
+{"id":"setting__scene_loop","feature":"scene_loop","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set scene_loop, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","scene_loop"],"label":"scene_loop global default (no prior set)"},
+   {"call":["get_setting_boolean","scene_loop","ala"],"label":"scene_loop per-object after set 1"}
+ ],
+ "expected": [false, true]}

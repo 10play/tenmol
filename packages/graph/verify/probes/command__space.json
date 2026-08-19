@@ -1,0 +1,19 @@
+{
+  "id": "command__space", "feature": "space", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"space cmyk"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","blue"],"label":"blue RGB after space cmyk","tol":1e-3},
+    {"call":["get_color_tuple","green"],"label":"green RGB after space cmyk","tol":1e-3},
+    {"call":["get_color_tuple","red"],"label":"red RGB after space cmyk","tol":1e-3},
+    {"call":["get_color_tuple","yellow"],"label":"yellow RGB after space cmyk","tol":1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [0.07647020369768143, 0.17058785259723663, 0.6176467537879944],
+    [0.3980388641357422, 0.7784310579299927, 0.26078394055366516],
+    [0.9627447724342346, 0.15098001062870026, 0],
+    [1, 0.9431369304656982, 0]
+  ]
+}

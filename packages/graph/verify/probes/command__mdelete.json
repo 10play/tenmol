@@ -1,0 +1,19 @@
+{
+  "id": "command__mdelete",
+  "feature": "mdelete",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "mset 1 x10"},
+    {"call": ["mdelete", 4, 1]}
+  ],
+  "checks": [
+    {"call": ["count_frames"], "label": "frames remaining after deleting 4"},
+    {"call": ["get_movie_length"], "label": "movie length after deleting 4"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    6,
+    6
+  ]
+}

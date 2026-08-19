@@ -1,0 +1,22 @@
+{
+  "id": "color__strontium", "feature": "strontium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color strontium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","strontium"],"label":"strontium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color strontium"],"label":"atoms colored strontium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0,
+      1,
+      0
+    ],
+    1,
+    1
+  ]
+}

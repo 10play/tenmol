@@ -1,0 +1,24 @@
+{
+  "id": "color__krypton", "feature": "krypton", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color krypton, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","krypton"],"label":"krypton RGB tuple","tol":1e-6},
+    {"call":["get_color_index","krypton"],"label":"krypton palette index"},
+    {"call":["count_atoms","color krypton"],"label":"atoms colored krypton"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.3607843220233917,
+      0.7215686440467834,
+      0.8196078538894653
+    ],
+    5311,
+    1,
+    1
+  ]
+}

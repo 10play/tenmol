@@ -1,0 +1,15 @@
+{
+  "id": "setting__pdb_conect_all", "feature": "pdb_conect_all", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set pdb_conect_all, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","pdb_conect_all"],"label":"global pdb_conect_all default (no prior set)"},
+    {"call":["get_setting_boolean","pdb_conect_all","ala"],"label":"per-object pdb_conect_all after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

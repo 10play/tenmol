@@ -1,0 +1,19 @@
+{
+  "id": "feature__colour-by-chain",
+  "feature": "colour-by-chain",
+  "kind": "coloring",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "util.cbc" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "chain A and color 5"], "label": "chain A -> cyan (5)" },
+    { "call": ["count_atoms", "chain C and color 154"], "label": "chain C -> lightmagenta (154)" },
+    { "call": ["count_atoms", "chain D and color 6"], "label": "chain D -> yellow (6)" },
+    { "call": ["count_atoms", "chain E and color 9"], "label": "chain E -> salmon (9)" },
+    { "call": ["count_atoms", "color 5"], "label": "total cyan atoms = only chain A" }
+  ],
+  "tol": 1e-3,
+  "expected": [1479, 290, 740, 740, 1479]
+}

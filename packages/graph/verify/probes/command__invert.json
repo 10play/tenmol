@@ -1,0 +1,20 @@
+{
+  "id": "command__invert",
+  "feature": "invert",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "edit chain D and resi 2 and name CA, chain D and resi 2 and name N, chain D and resi 2 and name C" },
+    { "do": "invert" }
+  ],
+  "checks": [
+    { "call": ["get_atom_coords", "m and chain D and resi 2 and name CB"], "label": "CB (free substituent) moved by inversion" },
+    { "call": ["get_atom_coords", "m and chain D and resi 2 and name CA"], "label": "CA (pk1 center) held fixed" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [47.034481048583984, -10.126325607299805, 18.557641983032227],
+    [46.32500076293945, -11.383000373840332, 19.040000915527344]
+  ]
+}

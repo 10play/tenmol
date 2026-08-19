@@ -1,0 +1,16 @@
+{
+  "id": "command__get_drag_object_name",
+  "feature": "get_drag_object_name",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" }
+  ],
+  "checks": [
+    { "call": ["get_drag_object_name"], "label": "no object in drag mode returns empty" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ""
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "setting__atom_type_format",
+  "feature": "atom_type_format",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "set atom_type_format, sybyl, m"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_text",
+        "atom_type_format"
+      ],
+      "label": "global default (unset) -> mol2"
+    },
+    {
+      "call": [
+        "get_setting_text",
+        "atom_type_format",
+        "m"
+      ],
+      "label": "per-object set to sybyl -> sybyl"
+    }
+  ],
+  "expected": [
+    "mol2",
+    "sybyl"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "setting__hash_max",
+  "feature": "hash_max",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set hash_max, 250"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","hash_max"],"label":"global hash_max after set 250"}
+  ],
+  "expected": [
+    250
+  ]
+}

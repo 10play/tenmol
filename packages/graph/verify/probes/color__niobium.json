@@ -1,0 +1,24 @@
+{
+  "id": "color__niobium", "feature": "niobium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color niobium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","niobium"],"label":"niobium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","niobium"],"label":"niobium palette index"},
+    {"call":["count_atoms","color niobium"],"label":"atoms colored niobium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.45098039507865906,
+      0.7607843279838562,
+      0.7882353067398071
+    ],
+    5316,
+    1,
+    1
+  ]
+}

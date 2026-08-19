@@ -1,0 +1,18 @@
+{
+  "id": "command__ending",
+  "feature": "ending",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "mset 1 x30" },
+    { "do": "frame 5" },
+    { "do": "ending" }
+  ],
+  "checks": [
+    { "call": ["get_frame"], "label": "current frame after ending (last frame)" },
+    { "call": ["count_frames"], "label": "total frames defined" }
+  ],
+  "tol": 1e-3,
+  "expected": [30, 30]
+}

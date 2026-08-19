@@ -1,0 +1,16 @@
+{
+  "id": "setting__halogen_bond_distance", "feature": "halogen_bond_distance", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set halogen_bond_distance, 4.2, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","halogen_bond_distance"],"label":"global default (no prior set) -> 3.5"},
+    {"call":["get_setting_float","halogen_bond_distance","m"],"label":"per-object set 4.2 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    3.5,
+    4.2
+  ]
+}

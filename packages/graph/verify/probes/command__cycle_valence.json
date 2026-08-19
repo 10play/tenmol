@@ -1,0 +1,18 @@
+{
+  "id": "command__cycle_valence",
+  "feature": "cycle_valence",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "edit (ala and name CA), (ala and name CB)" },
+    { "do": "cycle_valence" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "ala and elem H"], "label": "hydrogens after single->double cycle_valence" },
+    { "call": ["count_atoms", "ala and neighbor (name CB)"], "label": "neighbors of CB after cycle" },
+    { "call": ["count_atoms", "ala"], "label": "total atoms after cycle_valence" }
+  ],
+  "tol": 1e-3,
+  "expected": [3, 3, 8]
+}

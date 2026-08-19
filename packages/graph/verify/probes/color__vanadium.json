@@ -1,0 +1,24 @@
+{
+  "id": "color__vanadium", "feature": "vanadium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color vanadium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","vanadium"],"label":"vanadium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","vanadium"],"label":"vanadium palette index"},
+    {"call":["count_atoms","color vanadium"],"label":"atoms colored vanadium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.6509804129600525,
+      0.6509804129600525,
+      0.6705882549285889
+    ],
+    5298,
+    1,
+    1
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__smudge", "feature": "smudge", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color smudge, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color smudge"],"label":"atoms colored smudge"},
+    {"call":["get_color_index","smudge"],"label":"smudge palette index"},
+    {"call":["get_color_tuple","smudge"],"label":"smudge rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5270,
+    [
+      0.550000011920929,
+      0.699999988079071,
+      0.4000000059604645
+    ]
+  ]
+}

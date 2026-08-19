@@ -1,0 +1,15 @@
+{
+  "id": "setting__cartoon_fancy_helices", "feature": "cartoon_fancy_helices", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cartoon_fancy_helices, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","cartoon_fancy_helices"],"label":"global cartoon_fancy_helices default (no prior set)"},
+    {"call":["get_setting_boolean","cartoon_fancy_helices","ala"],"label":"per-object cartoon_fancy_helices after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

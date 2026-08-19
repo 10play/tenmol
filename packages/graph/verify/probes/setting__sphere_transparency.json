@@ -1,0 +1,16 @@
+{
+  "id": "setting__sphere_transparency", "feature": "sphere_transparency", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set sphere_transparency, 0.4, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","sphere_transparency"],"label":"global sphere_transparency default (no prior set)"},
+    {"call":["get_setting_float","sphere_transparency","ala"],"label":"per-object sphere_transparency after set 0.4"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0,
+    0.4
+  ]
+}

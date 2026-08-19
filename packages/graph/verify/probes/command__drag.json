@@ -1,0 +1,16 @@
+{
+  "id": "command__drag",
+  "feature": "drag",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "drag chain A" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "button_mode"], "label": "button_mode after drag (edit_mode switches mouse ring)" },
+    { "call": ["count_atoms", "chain A"], "label": "atoms in dragged selection" }
+  ],
+  "tol": 1e-3,
+  "expected": [1, 1479]
+}

@@ -64,12 +64,30 @@ function harness(pdb: string): {
   const ex = new Executive();
   ex.addMolecule(parsePdb(pdb, 'm'));
   const handlers = new Map<string, CommandHandler>();
+  // Minimal settings store so setting-backed commands (e.g. `rock`, which mirrors
+  // ControlRock by toggling the global `rock` boolean setting) round-trip.
+  const settings = new Map<string, unknown>();
   const ctx = {
     command: (n: string, f: CommandHandler) => handlers.set(n, f),
     executive: ex,
     publish() {},
     emitView() {},
     str: (v: unknown, d = '') => (v == null ? d : String(v)),
+    call: (name: string, args: unknown[] = []) => {
+      if (name === 'set') {
+        settings.set(String(args[0]), args[1]);
+        return 1;
+      }
+      if (name === 'get_setting_boolean') {
+        const v = settings.get(String(args[0]));
+        return v === true || v === 1;
+      }
+      if (name === 'get_setting_int') {
+        const v = settings.get(String(args[0]));
+        return v === true ? 1 : v === false || v == null ? 0 : Number(v);
+      }
+      return null;
+    },
   };
   registerMovie2(ctx);
   return { handlers, ex };
@@ -113,9 +131,15 @@ describe('mview / get_movie_view', () => {
     const mid = getView([15], {}) as number[];
     expect(mid).toHaveLength(18);
 
-    // Position channel (indices 9-11) is linear: halfway between the endpoints.
-    // Frame 15 is (15-1)/(30-1) = 14/29 of the way, not exactly half.
-    const t = (15 - 1) / (30 - 1);
+    // The raw frame fraction (15-1)/(30-1) = 14/29 is eased through PyMOL's
+    // default movie curve (power=1.4, parabolic) before being applied to every
+    // channel — real PyMOL does NOT lerp straight between key frames
+    // (ViewElemInterpolate, layer1/View.cpp). Both position AND rotation ride
+    // the SAME eased fraction.
+    const raw = (15 - 1) / (30 - 1);
+    // power=1.4, parabolic, bias=1: raw < 0.5 -> pow(raw*2, 1.4)*0.5
+    const t = Math.pow(raw * 2, 1.4) * 0.5;
+    // Position channel (indices 9-11) is linear in the eased fraction.
     expect(mid[9]!).toBeCloseTo(0 + (30 - 0) * t, 5);
     expect(mid[10]!).toBeCloseTo(0 + (60 - 0) * t, 5);
     expect(mid[11]!).toBeCloseTo(-40 + (-90 - -40) * t, 5);
@@ -259,18 +283,24 @@ describe('mmatrix / curves / file-io stubs', () => {
     expect(mid[14]).toBeCloseTo(15, 6);
   });
 
-  it('curve_new + move_on_curve sample between control views', () => {
-    const { handlers } = harness(twoStatePdb());
+  it('curve_new + move_on_curve set the object TTT to the curve position', () => {
+    const { handlers, ex } = harness(twoStatePdb());
     const curveNew = handlers.get('curve_new')!;
     const moveOn = handlers.get('move_on_curve')!;
 
-    const a = zRotView(0, [0, 0, 0]);
-    const b = zRotView(0, [10, 0, 0]);
-    curveNew(['c', [a, b]], {});
-    const mid = moveOn(['c', 0.5], {}) as number[];
-    expect(mid[9]).toBeCloseTo(5, 6);
-    // Unknown curve -> null.
-    expect(moveOn(['missing'], {})).toBeNull();
+    curveNew(['c'], {});
+    // The default bezier spline evaluated at t=0.5 is (5, 0, -7.5) — verified
+    // against real PyMOL (cmd.move_on_curve then cmd.get_object_ttt). move_on_curve
+    // writes that into the mobile object's TTT translation (indices 3/7/11) and
+    // returns null (ExecutiveMoveObjectOnCurve).
+    expect(moveOn(['m', 'c', 0.5], {})).toBeNull();
+    const ttt = ex.molecule('m')!.ttt!;
+    expect(ttt[3]).toBeCloseTo(5, 6);
+    expect(ttt[7]).toBeCloseTo(0, 6);
+    expect(ttt[11]).toBeCloseTo(-7.5, 6);
+    // Unknown curve or unknown object -> null, no TTT change.
+    expect(moveOn(['m', 'missing', 0.5], {})).toBeNull();
+    expect(moveOn(['nope', 'c', 0.5], {})).toBeNull();
   });
 
   it('mpng / mdump are no-ops', () => {

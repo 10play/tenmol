@@ -1,0 +1,12 @@
+{
+  "id": "setting__auto_color_next", "feature": "auto_color_next", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set auto_color_next, 5"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","auto_color_next"],"label":"auto_color_next after set 5"}
+  ],
+  "expected": [
+    5
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "id": "command__pbc_unwrap",
+  "feature": "pbc_unwrap",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/graph/verify/.work/pbc_unwrap_traj.pdb, m"
+    },
+    {
+      "call": [
+        "pbc_unwrap",
+        "m"
+      ],
+      "kwargs": {
+        "bymol": 1
+      }
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "count_atoms",
+        "m"
+      ],
+      "label": "atom count preserved"
+    },
+    {
+      "call": [
+        "count_states",
+        "m"
+      ],
+      "label": "two trajectory states"
+    },
+    {
+      "call": [
+        "get_atom_coords",
+        "m",
+        1
+      ],
+      "label": "state 1 unchanged (reference frame)"
+    },
+    {
+      "call": [
+        "get_atom_coords",
+        "m",
+        2
+      ],
+      "label": "state 2 unwrapped across the PBC boundary"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    1,
+    2,
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      -0.5000001192092896,
+      1,
+      1
+    ]
+  ]
+}

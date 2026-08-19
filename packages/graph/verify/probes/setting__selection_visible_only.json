@@ -1,0 +1,19 @@
+{
+  "id": "setting__selection_visible_only",
+  "feature": "selection_visible_only",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set selection_visible_only, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","selection_visible_only"],"label":"global default (unset) -> false"},
+    {"call":["get_setting_boolean","selection_visible_only","m"],"label":"per-object set to 1 -> true"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    false,
+    true
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "setting__bg_image_mode",
+  "feature": "bg_image_mode",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set bg_image_mode, 2"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","bg_image_mode"],"label":"global bg_image_mode after set 2"}
+  ],
+  "expected": [
+    2
+  ]
+}

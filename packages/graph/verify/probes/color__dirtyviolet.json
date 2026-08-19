@@ -1,0 +1,25 @@
+{
+  "id": "color__dirtyviolet",
+  "feature": "dirtyviolet",
+  "kind": "color",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "color dirtyviolet, ala"}
+  ],
+  "checks": [
+    {"call": ["get_color_index", "dirtyviolet"], "label": "color index of dirtyviolet"},
+    {"call": ["get_color_tuple", "dirtyviolet"], "label": "RGB tuple of dirtyviolet"},
+    {"call": ["count_atoms", "color dirtyviolet"], "label": "atoms colored dirtyviolet"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    5272,
+    [
+      0.699999988079071,
+      0.5,
+      0.5
+    ],
+    10
+  ]
+}

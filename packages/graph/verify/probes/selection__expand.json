@@ -1,0 +1,12 @@
+{
+  "id": "selection__expand", "feature": "expand", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "chain A expand 5"], "label": "chain A plus all atoms within 5A (includes chain A)"},
+    {"call": ["count_atoms", "(resi 10) expand 4"], "label": "resi 10 plus all atoms within 4A (includes resi 10)"},
+    {"call": ["count_atoms", "name CA expand 3"], "label": "all CA plus all atoms within 3A (includes the CAs)"}
+  ],
+  "expected": [1739, 237, 4355]
+}

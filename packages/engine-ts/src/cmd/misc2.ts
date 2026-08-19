@@ -1,5 +1,5 @@
 /**
- * More flat verbs: preset aliases (pretty/simple/technical/publication), label2, get_phipsi, dirty/dirty_wizard, finish_object, and the colorection (named colour-selection) set.
+ * More flat verbs: preset aliases (pretty/simple/technical/publication), label2, dirty/dirty_wizard, finish_object, and the colorection (named colour-selection) set.
  *
  * Registers through the shared {@link RegistrarCtx}. Compose real verbs via
  * `ctx.call(...)`; simple state via `ctx.executive`; `ctx.publish()` after
@@ -49,12 +49,6 @@ export function registerMisc2(ctx: RegistrarCtx): void {
   // A variant spelling of `label`; forward args + kwargs to the real verb.
   ctx.command('label2', (args, kwargs): Json => ctx.call('label', args, kwargs));
 
-  /* ------------------------------ get_phipsi ---------------------------- */
-  // Forward to the ported backbone-dihedral helper and return its result.
-  ctx.command('get_phipsi', (args): Json =>
-    ctx.call('util.phipsi', [str(args[0], 'all') || 'all']),
-  );
-
   /* ------------------- dirty / dirty_wizard / finish_object ------------- */
   // PyMOL's `dirty` flags the scene for redraw; the engine re-emits by
   // publishing. `finish_object` finalises a just-built object — same effect
@@ -80,21 +74,47 @@ export function registerMisc2(ctx: RegistrarCtx): void {
     return snap.map((t) => [...t]);
   });
 
-  // set_colorection(dict_or_name, prefix): restore atom colours from a passed
-  // snapshot (array) or the one stored under `prefix`, matched by identity.
+  // set_colorection(dict_or_name, prefix): restore atom colours. Accepts three
+  // shapes:
+  //   * PyMOL's native flat colorection `[color0, sele0, color1, sele1, …]` (a
+  //     list of int pairs, exactly what `get_colorection` returns in real
+  //     PyMOL). Each pair names a stored selection `_!c_<prefix>_<color>` holding
+  //     the atoms that carried `<color>` when `<prefix>` was snapshotted; the
+  //     verb recolours those atoms back to `<color>`. We recover that membership
+  //     from the per-atom snapshot saved under the prefix.
+  //   * the engine's own per-atom snapshot `[[objName, id, color], …]` passed
+  //     directly (elements are triples/arrays).
+  //   * `null`/name → the snapshot stored under `prefix`.
   ctx.command('set_colorection', (args): Json => {
     const first = args[0];
+    const applySnapshot = (snap: ColorSnapshot, wanted?: Set<number>): void => {
+      const byId = new Map<string, { color: number }>();
+      for (const ua of ex.atomsMatching('all')) byId.set(`${ua.objName}|${ua.atom.id}`, ua.atom);
+      for (const [objName, id, color] of snap) {
+        if (wanted && !wanted.has(Number(color))) continue;
+        const a = byId.get(`${objName}|${id}`);
+        if (a) a.color = Number(color);
+      }
+      ctx.publish();
+    };
+
+    if (Array.isArray(first) && first.length > 0 && !Array.isArray(first[0])) {
+      // Native flat colorection: recolour only atoms whose snapshot colour is
+      // named by an even-index entry of the pair list.
+      const flat = first as number[];
+      const wanted = new Set<number>();
+      for (let i = 0; i < flat.length; i += 2) wanted.add(Number(flat[i]));
+      const snap = COLORECTIONS.get(prefixOf(args, str));
+      if (!snap) return null;
+      applySnapshot(snap, wanted);
+      return null;
+    }
+
     const snap: ColorSnapshot | undefined = Array.isArray(first)
       ? (first as ColorSnapshot)
       : COLORECTIONS.get(prefixOf(args, str));
     if (!snap) return null;
-    const byId = new Map<string, { color: number }>();
-    for (const ua of ex.atomsMatching('all')) byId.set(`${ua.objName}|${ua.atom.id}`, ua.atom);
-    for (const [objName, id, color] of snap) {
-      const a = byId.get(`${objName}|${id}`);
-      if (a) a.color = Number(color);
-    }
-    ctx.publish();
+    applySnapshot(snap);
     return null;
   });
 

@@ -1,0 +1,15 @@
+{
+  "id": "setting__label_distance_digits", "feature": "label_distance_digits", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set label_distance_digits, 4, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","label_distance_digits"],"label":"global label_distance_digits default (no prior set) -> -1"},
+    {"call":["get_setting_int","label_distance_digits","m"],"label":"per-object label_distance_digits after set 4"}
+  ],
+  "expected": [
+    -1,
+    4
+  ]
+}

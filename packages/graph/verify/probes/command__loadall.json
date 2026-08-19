@@ -1,0 +1,20 @@
+{
+  "id": "command__loadall",
+  "feature": "loadall",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "loadall /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/tiny.pd*, group=grp"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "*"], "label": "atoms loaded by loadall"},
+    {"call": ["count_atoms", "grp"], "label": "atoms grouped under grp"},
+    {"call": ["get_names"], "label": "object names after loadall"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    37,
+    37,
+    ["tiny", "grp"]
+  ]
+}

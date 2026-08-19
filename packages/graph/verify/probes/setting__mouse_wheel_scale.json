@@ -1,0 +1,13 @@
+{
+  "id": "setting__mouse_wheel_scale", "feature": "mouse_wheel_scale", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set mouse_wheel_scale, 2.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","mouse_wheel_scale"],"label":"mouse_wheel_scale after set 2.5 (default 0.5)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    2.5
+  ]
+}

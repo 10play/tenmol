@@ -1,0 +1,19 @@
+{
+  "id": "command__help_setting",
+  "feature": "help_setting",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {
+      "call": ["help_setting", "cartoon_transparency"],
+      "label": "help_setting returns documentation for a named setting"
+    }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    {
+      "__error": " Incentive-Only-Error: \"help_setting\" is not available in Open-Source PyMOL\n\n    Please visit http://pymol.org if you are interested in the\n    full featured \"Incentive PyMOL\" version.\n"
+    }
+  ]
+}

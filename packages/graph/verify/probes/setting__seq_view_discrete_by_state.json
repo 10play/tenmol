@@ -1,0 +1,15 @@
+{
+  "id": "setting__seq_view_discrete_by_state",
+  "feature": "seq_view_discrete_by_state",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set seq_view_discrete_by_state, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","seq_view_discrete_by_state"],"label":"set 0 -> false (setter changes default true)"}
+  ],
+  "expected": [
+    false
+  ]
+}

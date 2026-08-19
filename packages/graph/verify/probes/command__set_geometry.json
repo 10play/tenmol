@@ -1,0 +1,20 @@
+{
+  "id": "command__set_geometry",
+  "feature": "set_geometry",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/graph/verify/.work/onec.pdb, m" },
+    { "do": "set_geometry m, 3, 3" },
+    { "do": "h_add m" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "m and elem H"], "label": "H added to satisfy set_geometry planar valence 3" },
+    { "call": ["count_atoms", "m"], "label": "total atoms after set_geometry+h_add" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    3,
+    4
+  ]
+}

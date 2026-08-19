@@ -1,0 +1,16 @@
+{
+  "id": "setting__fog", "feature": "fog", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set fog, 0.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","fog"],"label":"global fog default (no prior set)"},
+    {"call":["get_setting_float","fog","ala"],"label":"per-object fog after set 0.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    0.5
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "setting__ignore_case_chain", "feature": "ignore_case_chain", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ignore_case_chain, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","ignore_case_chain"],"label":"global ignore_case_chain default (no prior set)"},
+    {"call":["get_setting_int","ignore_case_chain","ala"],"label":"per-object ignore_case_chain after set 1"}
+  ],
+  "expected": [
+    0,
+    1
+  ]
+}

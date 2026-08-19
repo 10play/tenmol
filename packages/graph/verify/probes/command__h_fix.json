@@ -1,0 +1,21 @@
+{
+  "id": "command__h_fix",
+  "feature": "h_fix",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "h_fix ala"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "elem C"], "label": "heavy carbon count unchanged by h_fix"},
+    {"call": ["get_distance", "name CA", "name CB"], "label": "CA-CB heavy bond length unchanged by h_fix", "tol": 0.05},
+    {"call": ["get_angle", "name N", "name CA", "name CB"], "label": "N-CA-CB heavy angle unchanged by h_fix", "tol": 0.5}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    3,
+    1.538316249847412,
+    107.6633071899414
+  ]
+}

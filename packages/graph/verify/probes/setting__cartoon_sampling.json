@@ -1,0 +1,11 @@
+{"id":"setting__cartoon_sampling","feature":"cartoon_sampling","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set cartoon_sampling, 14, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","cartoon_sampling"],"label":"cartoon_sampling global default (no prior set)"},
+   {"call":["get_setting_int","cartoon_sampling","ala"],"label":"cartoon_sampling per-object after set 14"}
+ ],
+ "tol": 1e-6,
+ "expected": [-1, 14]}

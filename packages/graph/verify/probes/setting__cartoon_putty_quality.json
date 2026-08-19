@@ -1,0 +1,16 @@
+{
+  "id": "setting__cartoon_putty_quality",
+  "feature": "cartoon_putty_quality",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set cartoon_putty_quality, 15"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","cartoon_putty_quality"],"label":"global cartoon_putty_quality after set 15"}
+  ],
+  "tol": 0.000001,
+  "expected": [
+    15
+  ]
+}

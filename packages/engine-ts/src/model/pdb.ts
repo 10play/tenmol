@@ -16,6 +16,7 @@ import { defaultVisRep } from './atom';
 import { canonicalElement, isKnownElement } from './element';
 import { connectByDistance } from './bonding';
 import { ObjectMolecule } from './molecule';
+import { sortAtomsInPlace } from './atomsort';
 
 function col(line: string, start: number, end: number): string {
   // PDB columns are 1-based inclusive; slice with 0-based [start-1, end).
@@ -97,6 +98,10 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
         mol.cell = { a, b, c, alpha, beta, gamma };
         const sg = col(line, 56, 66).trim();
         mol.spacegroup = sg || 'P 1';
+        // PyMOL reads Z from a 3-char field (cols 67-69), so `…30` -> 3; a
+        // missing/blank value defaults to 1 (ObjectMolecule2.cpp PDBZValue).
+        const z = parseInt(col(line, 67, 69).trim(), 10);
+        mol.pdbZValue = Number.isFinite(z) ? z : 1;
       }
       continue;
     }
@@ -146,7 +151,10 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
         const elem = inferElement(rawName, col(line, 77, 78));
         const resiText = col(line, 23, 26).trim() + col(line, 27, 27).trim();
         const atom: AtomInfo = {
-          id: mol.atoms.length + 1,
+          // PyMOL reads the 5-char serial column into ai->id (ObjectMolecule2.cpp
+          // ObjectMoleculeReadPDBStr); it is 0 when the column is not a number,
+          // NOT a re-sequenced index. TER records consume serials, so ids gap.
+          id: Number.isFinite(serial) ? serial : 0,
           name: rawName.trim(),
           resn: col(line, 18, 20).trim(),
           resi: resiText,
@@ -208,6 +216,12 @@ export function parsePdb(text: string, name: string): ObjectMolecule {
 
   // Distance-based connectivity for standard residues (no CONECT).
   connectByDistance(mol, addBond);
+
+  // PyMOL sorts the atom table into canonical order at load
+  // (`ObjectMoleculeSort`), so `cmd.index`/`iterate`/`get_model` enumerate in
+  // that order rather than raw file order. Do this after bonds are built so the
+  // remap fixes up bond endpoints and coordinate sets together.
+  sortAtomsInPlace(mol);
 
   return mol;
 }

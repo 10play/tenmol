@@ -1,0 +1,19 @@
+{
+  "id": "command__publication",
+  "feature": "publication",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "publication m" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "cartoon_smooth_loops", "m"], "label": "cartoon_smooth_loops enabled" },
+    { "call": ["get_setting_int", "cartoon_fancy_helices", "m"], "label": "cartoon_fancy_helices enabled" },
+    { "call": ["get_setting_int", "cartoon_flat_sheets", "m"], "label": "cartoon_flat_sheets enabled" },
+    { "call": ["get_setting_int", "cartoon_side_chain_helper", "m"], "label": "cartoon_side_chain_helper disabled" },
+    { "call": ["get_setting_int", "cartoon_highlight_color", "m"], "label": "cartoon_highlight_color set to grey50 index" }
+  ],
+  "tol": 1e-3,
+  "expected": [0, 0, 1, 0, -1]
+}

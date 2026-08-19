@@ -1,0 +1,19 @@
+{
+  "id": "command__finish_object", "feature": "finish_object", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom obj, pos=[1,2,3]"},
+    {"do":"pseudoatom obj, pos=[4,5,6]"},
+    {"do":"finish_object obj"}
+  ],
+  "checks": [
+    {"call":["count_atoms","obj"],"label":"atoms present after finish_object"},
+    {"call":["get_names","objects"],"label":"object name list"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2,
+    [
+      "obj"
+    ]
+  ]
+}

@@ -1,0 +1,561 @@
+{
+  "id": "feature__Wizard__base_class___protocol_",
+  "feature": "Wizard (base class / protocol)",
+  "kind": "wizard",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "wizard measurement"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "wizards.catalog"
+      ],
+      "label": "protocol catalog: every bundled wizard + the Wizard menubar render through the one base protocol"
+    },
+    {
+      "call": [
+        "wizards.menu",
+        "mode"
+      ],
+      "label": "base get_menu render method: the pushed Measurement wizard's `mode` pop-up (nested neighbour submenus)"
+    },
+    {
+      "call": [
+        "wizards.menu",
+        "object_mode"
+      ],
+      "label": "base get_menu render method: the Measurement wizard's `object_mode` pop-up"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    {
+      "wizards": [
+        {
+          "name": "annotation",
+          "cls": "Annotation",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "appearance",
+          "cls": "Appearance",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "benchmark",
+          "cls": "Benchmark",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "box",
+          "cls": "Box",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "charge",
+          "cls": "Charge",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "cleanup",
+          "cls": "Cleanup",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "command",
+          "cls": "Command",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "demo",
+          "cls": "Demo",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "density",
+          "cls": "Density",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "distance",
+          "cls": "Distance",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "dragging",
+          "cls": "Dragging",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "filter",
+          "cls": "Filter",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "label",
+          "cls": "Label",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "measurement",
+          "cls": "Measurement",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "message",
+          "cls": "Message",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "mutagenesis",
+          "cls": "Mutagenesis",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "nucmutagenesis",
+          "cls": "Nucmutagenesis",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "openvr",
+          "cls": "Openvr",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "pair_fit",
+          "cls": "Pair_fit",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "pseudoatom",
+          "cls": "Pseudoatom",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "renaming",
+          "cls": "Renaming",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "sculpting",
+          "cls": "Sculpting",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "security",
+          "cls": "Security",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "stereodemo",
+          "cls": "Stereodemo",
+          "available": true,
+          "note": ""
+        },
+        {
+          "name": "toggle",
+          "cls": "Toggle",
+          "available": true,
+          "note": ""
+        }
+      ],
+      "menubar": [
+        {
+          "kind": "command",
+          "label": "Appearance",
+          "command": "wizard appearance"
+        },
+        {
+          "kind": "command",
+          "label": "Measurement",
+          "command": "wizard measurement"
+        },
+        {
+          "kind": "submenu",
+          "label": "Mutagenesis",
+          "items": [
+            {
+              "kind": "command",
+              "label": "Protein",
+              "command": "wizard mutagenesis"
+            },
+            {
+              "kind": "command",
+              "label": "Nucleic Acids",
+              "command": "wizard nucmutagenesis"
+            }
+          ]
+        },
+        {
+          "kind": "command",
+          "label": "Pair Fitting",
+          "command": "wizard pair_fit"
+        },
+        {
+          "kind": "separator"
+        },
+        {
+          "kind": "command",
+          "label": "Density",
+          "command": "wizard density"
+        },
+        {
+          "kind": "command",
+          "label": "Filter",
+          "command": "wizard filter"
+        },
+        {
+          "kind": "command",
+          "label": "Sculpting",
+          "command": "wizard sculpting"
+        },
+        {
+          "kind": "separator"
+        },
+        {
+          "kind": "command",
+          "label": "Label",
+          "command": "wizard label"
+        },
+        {
+          "kind": "command",
+          "label": "Charge",
+          "command": "wizard charge"
+        },
+        {
+          "kind": "separator"
+        },
+        {
+          "kind": "submenu",
+          "label": "Demo",
+          "items": [
+            {
+              "kind": "command",
+              "label": "Representations",
+              "command": "wizard demo, reps"
+            },
+            {
+              "kind": "command",
+              "label": "Cartoon Ribbons",
+              "command": "wizard demo, cartoon"
+            },
+            {
+              "kind": "command",
+              "label": "Roving Detail",
+              "command": "wizard demo, roving"
+            },
+            {
+              "kind": "command",
+              "label": "Roving Density",
+              "command": "wizard demo, roving_density"
+            },
+            {
+              "kind": "command",
+              "label": "Transparency",
+              "command": "wizard demo, trans"
+            },
+            {
+              "kind": "command",
+              "label": "Ray Tracing",
+              "command": "wizard demo, ray"
+            },
+            {
+              "kind": "command",
+              "label": "Sculpting",
+              "command": "wizard demo, sculpt"
+            },
+            {
+              "kind": "command",
+              "label": "Scripted Animation",
+              "command": "wizard demo, anime"
+            },
+            {
+              "kind": "command",
+              "label": "Electrostatics",
+              "command": "wizard demo, elec"
+            },
+            {
+              "kind": "command",
+              "label": "Compiled Graphics Objects",
+              "command": "wizard demo, cgo"
+            },
+            {
+              "kind": "command",
+              "label": "Molscript/Raster3D Input",
+              "command": "wizard demo, raster3d"
+            },
+            {
+              "kind": "separator"
+            },
+            {
+              "kind": "command",
+              "label": "End Demonstration",
+              "command": "replace_wizard demo, finish"
+            }
+          ]
+        }
+      ],
+      "aliases": {
+        "distance": "measurement"
+      }
+    },
+    {
+      "tag": "mode",
+      "items": [
+        {
+          "code": 2,
+          "kind": "title",
+          "text": "Measurement Mode"
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Distances",
+          "command": "cmd.get_wizard().set_mode(\"pairs\")"
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Distances to Rings",
+          "command": "cmd.get_wizard().set_mode(\"rings\")"
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Angles",
+          "command": "cmd.get_wizard().set_mode(\"angle\")"
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Dihedrals",
+          "command": "cmd.get_wizard().set_mode(\"dihed\")"
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Polar Neighbors",
+          "submenu": [
+            {
+              "code": 2,
+              "kind": "title",
+              "text": "Polar Neighbors: "
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in all objects",
+              "command": "cmd.get_wizard().set_neighbor_target(\"polar\",\"all\")"
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in object",
+              "submenu": [
+                {
+                  "code": 2,
+                  "kind": "title",
+                  "text": "Object: "
+                }
+              ]
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in selection",
+              "submenu": [
+                {
+                  "code": 2,
+                  "kind": "title",
+                  "text": "Selections: "
+                }
+              ]
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in other objects",
+              "command": "cmd.get_wizard().set_neighbor_target(\"polar\",\"other\")"
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in same object",
+              "command": "cmd.get_wizard().set_neighbor_target(\"polar\", \"same\")"
+            }
+          ]
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Heavy Neighbors",
+          "submenu": [
+            {
+              "code": 2,
+              "kind": "title",
+              "text": "Heavy Neighbors: "
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in all objects",
+              "command": "cmd.get_wizard().set_neighbor_target(\"heavy\",\"all\")"
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in object",
+              "submenu": [
+                {
+                  "code": 2,
+                  "kind": "title",
+                  "text": "Object: "
+                }
+              ]
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in selection",
+              "submenu": [
+                {
+                  "code": 2,
+                  "kind": "title",
+                  "text": "Selections: "
+                }
+              ]
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in other objects",
+              "command": "cmd.get_wizard().set_neighbor_target(\"heavy\",\"other\")"
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in same object",
+              "command": "cmd.get_wizard().set_neighbor_target(\"heavy\", \"same\")"
+            }
+          ]
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Neighbors",
+          "submenu": [
+            {
+              "code": 2,
+              "kind": "title",
+              "text": "Neighbors: "
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in all objects",
+              "command": "cmd.get_wizard().set_neighbor_target(\"neigh\",\"all\")"
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in object",
+              "submenu": [
+                {
+                  "code": 2,
+                  "kind": "title",
+                  "text": "Object: "
+                }
+              ]
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in selection",
+              "submenu": [
+                {
+                  "code": 2,
+                  "kind": "title",
+                  "text": "Selections: "
+                }
+              ]
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in other objects",
+              "command": "cmd.get_wizard().set_neighbor_target(\"neigh\",\"other\")"
+            },
+            {
+              "code": 1,
+              "kind": "item",
+              "text": "in same object",
+              "command": "cmd.get_wizard().set_neighbor_target(\"neigh\", \"same\")"
+            }
+          ]
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Polar Contacts",
+          "command": "cmd.get_wizard().set_mode(\"hbond\")"
+        }
+      ],
+      "error": null
+    },
+    {
+      "tag": "object_mode",
+      "items": [
+        {
+          "code": 2,
+          "kind": "title",
+          "text": "New Measurements?"
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Merge With Previous",
+          "command": "cmd.get_wizard().set_object_mode(\"merge\")"
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Replace Previous",
+          "command": "cmd.get_wizard().set_object_mode(\"overwr\")"
+        },
+        {
+          "code": 1,
+          "kind": "item",
+          "text": "Create New Object",
+          "command": "cmd.get_wizard().set_object_mode(\"append\")"
+        }
+      ],
+      "error": null
+    }
+  ]
+}

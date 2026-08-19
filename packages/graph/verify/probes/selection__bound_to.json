@@ -1,0 +1,12 @@
+{
+  "id": "selection__bound_to", "feature": "bound_to", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "bound_to name CA"], "label": "atoms bonded to any CA, including the CAs"},
+    {"call": ["count_atoms", "bound_to (resn ALA and name CB)"], "label": "atoms bonded to ALA CB, including the CBs"},
+    {"call": ["count_atoms", "bound_to name SG"], "label": "atoms bonded to any SG, including the SGs"}
+  ],
+  "expected": [2084, 72, 24]
+}

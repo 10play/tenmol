@@ -1,0 +1,15 @@
+{
+  "id": "command__get_view", "feature": "get_view", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1, pos=[10, 20, 30]"},
+    {"do":"center p1"},
+    {"do":"turn y, 90"}
+  ],
+  "checks": [
+    {"call":["get_view"],"label":"18-float view vector after center + turn y 90","tol":1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [-4.371138828673793e-8, 0, -1, 0, 0.9999999403953552, 0, 1, 0, -4.371138828673793e-8, 0, 0, -50, 10, 20, 30, 20, 80, -20]
+  ]
+}

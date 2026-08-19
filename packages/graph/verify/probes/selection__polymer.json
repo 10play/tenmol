@@ -1,0 +1,8 @@
+{"id":"selection__polymer","feature":"polymer","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","polymer"],"label":"polymer keyword = biopolymer atoms"},
+   {"call":["count_atoms","not polymer"],"label":"complement of polymer"},
+   {"call":["count_atoms","polymer and chain A"],"label":"polymer intersect chain A"}
+ ],
+ "expected":[5469,215,1479]}

@@ -1,0 +1,22 @@
+{
+  "id": "color__palegreen", "feature": "palegreen", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color palegreen, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color palegreen"],"label":"atoms colored palegreen"},
+    {"call":["get_color_index","palegreen"],"label":"palegreen palette index"},
+    {"call":["get_color_tuple","palegreen"],"label":"palegreen rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5259,
+    [
+      0.6499999761581421,
+      0.8999999761581421,
+      0.6499999761581421
+    ]
+  ]
+}

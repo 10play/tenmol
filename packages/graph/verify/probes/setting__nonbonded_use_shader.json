@@ -1,0 +1,15 @@
+{
+  "id": "setting__nonbonded_use_shader",
+  "feature": "nonbonded_use_shader",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set nonbonded_use_shader, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","nonbonded_use_shader"],"label":"global default (unset) -> 1/true"},
+    {"call":["get_setting_boolean","nonbonded_use_shader","m"],"label":"per-object roundtrip set 0 -> false"}
+  ],
+  "expected": [true, false]
+}

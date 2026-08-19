@@ -1,0 +1,15 @@
+{
+  "id": "command__get_setting_legacy", "feature": "get_setting_legacy", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"as spheres"},
+    {"do":"set sphere_scale, 2.5"},
+    {"do":"set sphere_scale, 0.25, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_legacy","sphere_scale"],"label":"global sphere_scale via legacy alias"},
+    {"call":["get_setting_legacy","sphere_scale","ala"],"label":"per-object override via legacy alias"}
+  ],
+  "tol": 1e-3,
+  "expected": [2.5, 0.25]
+}

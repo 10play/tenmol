@@ -1,0 +1,22 @@
+{
+  "id": "color__chocolate", "feature": "chocolate", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color chocolate, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","chocolate"],"label":"chocolate RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color chocolate"],"label":"atoms colored chocolate"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.5550000071525574,
+      0.22200000286102295,
+      0.11100000143051147
+    ],
+    1,
+    1
+  ]
+}

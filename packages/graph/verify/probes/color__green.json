@@ -1,0 +1,24 @@
+{
+  "id": "color__green", "feature": "green", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color green, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","green"],"label":"green RGB tuple","tol":1e-6},
+    {"call":["get_color_index","green"],"label":"green palette index"},
+    {"call":["count_atoms","color green"],"label":"atoms colored green"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0,
+      1,
+      0
+    ],
+    3,
+    1,
+    1
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "command__select_list",
+  "feature": "select_list",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" }
+  ],
+  "checks": [
+    { "call": ["select_list", "mysel", "ala", [1, 2, 3], 0, "index", 1], "label": "select_list returns number of atoms selected" },
+    { "call": ["count_atoms", "mysel"], "label": "count_atoms of the created selection" },
+    { "call": ["count_atoms", "ala"], "label": "sanity: total atoms in object" }
+  ],
+  "tol": 1e-3,
+  "expected": [3, 3, 10]
+}

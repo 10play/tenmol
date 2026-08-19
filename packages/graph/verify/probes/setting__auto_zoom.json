@@ -1,0 +1,12 @@
+{
+  "id": "setting__auto_zoom", "feature": "auto_zoom", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set auto_zoom, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","auto_zoom"],"label":"auto_zoom after set 1"}
+  ],
+  "expected": [
+    1
+  ]
+}

@@ -1,0 +1,11 @@
+{"id":"setting__sculpt_max_min","feature":"sculpt_max_min","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set sculpt_max_min, 6.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","sculpt_max_min"],"label":"sculpt_max_min global default (no prior set)"},
+   {"call":["get_setting_float","sculpt_max_min","ala"],"label":"sculpt_max_min per-object after set 6.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [4, 6.5]}

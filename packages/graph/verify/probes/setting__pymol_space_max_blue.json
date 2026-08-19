@@ -1,0 +1,11 @@
+{"id":"setting__pymol_space_max_blue","feature":"pymol_space_max_blue","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set pymol_space_max_blue, 0.3, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","pymol_space_max_blue"],"label":"pymol_space_max_blue global default (no prior set)"},
+   {"call":["get_setting_float","pymol_space_max_blue","ala"],"label":"pymol_space_max_blue per-object after set 0.3"}
+ ],
+ "tol": 1e-6,
+ "expected": [0.9, 0.3]}

@@ -1,0 +1,8 @@
+{"id":"selection__or","feature":"or","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","chain A or chain B"],"label":"OR: chain A union chain B"},
+   {"call":["count_atoms","name CA or name CB"],"label":"OR: name CA union name CB"},
+   {"call":["count_atoms","resn ALA or resn GLY"],"label":"OR: resn ALA union resn GLY"}
+ ],
+ "expected":[1479, 1372, 568]}

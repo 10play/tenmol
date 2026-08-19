@@ -1,0 +1,18 @@
+{
+  "id": "command__dihedral", "feature": "dihedral", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"call": ["dihedral", "dih1", "name n", "name ca", "name c", "name o"]}
+  ],
+  "checks": [
+    {"call": ["get_names", "objects"], "label": "dihedral measurement object created and listed among objects"},
+    {"call": ["get_names", "all"], "label": "dihedral object present in full name list, not registered as a selection"},
+    {"call": ["get_dihedral", "name n", "name ca", "name c", "name o"], "label": "geometric dihedral N-CA-C-O matches", "tol": 1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["ala", "dih1"],
+    ["ala", "dih1"],
+    0.6010083556175232
+  ]
+}

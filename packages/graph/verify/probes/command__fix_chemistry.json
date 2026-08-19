@@ -1,0 +1,16 @@
+{
+  "id": "command__fix_chemistry",
+  "feature": "fix_chemistry",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"call": ["fix_chemistry", "m", "m", 1, 1]}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "m"], "label": "atom count preserved after fix_chemistry"},
+    {"call": ["count_atoms", "all"], "label": "total atom count unchanged"}
+  ],
+  "tol": 1e-3,
+  "expected": [5684, 5684]
+}

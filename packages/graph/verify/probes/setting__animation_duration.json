@@ -1,0 +1,11 @@
+{
+  "id": "setting__animation_duration", "feature": "animation_duration", "kind": "setting", "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {"call":["get_setting_float","animation_duration"],"label":"default animation_duration (no prior set)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.75
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "setting__rock_delay", "feature": "rock_delay", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set rock_delay, 45.0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","rock_delay"],"label":"global default (no prior set) -> 30.0"},
+    {"call":["get_setting_float","rock_delay","m"],"label":"per-object set 45.0 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    30,
+    45
+  ]
+}

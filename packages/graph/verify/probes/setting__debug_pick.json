@@ -1,0 +1,15 @@
+{
+  "id": "setting__debug_pick", "feature": "debug_pick", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set debug_pick, 2, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","debug_pick"],"label":"global debug_pick default (no prior set)"},
+    {"call":["get_setting_int","debug_pick","ala"],"label":"per-object debug_pick after set 2"}
+  ],
+  "expected": [
+    0,
+    2
+  ]
+}

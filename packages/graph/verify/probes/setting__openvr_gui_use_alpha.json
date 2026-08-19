@@ -1,0 +1,11 @@
+{"id":"setting__openvr_gui_use_alpha","feature":"openvr_gui_use_alpha","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set openvr_gui_use_alpha, 2, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","openvr_gui_use_alpha"],"label":"openvr_gui_use_alpha global default (no prior set)"},
+   {"call":["get_setting_int","openvr_gui_use_alpha","ala"],"label":"openvr_gui_use_alpha per-object after set 2"}
+ ],
+ "tol": 1e-6,
+ "expected": [0, 2]}

@@ -1,0 +1,11 @@
+{
+  "id": "setting__session_cache_optimize", "feature": "session_cache_optimize", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set session_cache_optimize, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","session_cache_optimize"],"label":"session_cache_optimize after set 1 (roundtrip; default 0, int idx 596)"}
+  ],
+  "tol": 0,
+  "expected": [1]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "setting__stereo_mode",
+  "feature": "stereo_mode",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "set stereo_mode, 1, m"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_int",
+        "stereo_mode"
+      ],
+      "label": "global default (unset) -> 2"
+    },
+    {
+      "call": [
+        "get_setting_int",
+        "stereo_mode",
+        "m"
+      ],
+      "label": "per-object set to 1 -> 1"
+    }
+  ],
+  "expected": [
+    2,
+    1
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "setting__fit_iterations",
+  "feature": "fit_iterations",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set fit_iterations, 250, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","fit_iterations"],"label":"global fit_iterations default (no prior set) -> 1000"},
+    {"call":["get_setting_int","fit_iterations","m"],"label":"per-object fit_iterations after set 250 -> 250"}
+  ],
+  "expected": [
+    1000,
+    250
+  ]
+}

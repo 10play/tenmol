@@ -90,13 +90,24 @@ describe('misc2 — preset aliases / label2 / get_phipsi / dirty / colorection',
     expect(Number(nAlias)).toBe(5);
   });
 
-  it('get_phipsi returns a (phi, psi) pair', async () => {
+  it('get_phipsi returns an (object, index) -> (phi, psi) dict', async () => {
     const b = await boot(PEPT_PDB);
-    const pp = await b.call('get_phipsi', ['name CA']);
-    expect(Array.isArray(pp)).toBe(true);
-    expect((pp as unknown[]).length).toBe(2);
-    // Same value the ported helper produces directly.
-    expect(pp).toEqual(await b.call('util.phipsi', ['name CA']));
+    // Real PyMOL returns a dict keyed by the (object, index) tuple, one entry
+    // per interior CA whose full backbone resolves — NOT a bare [phi, psi] list.
+    const pp = (await b.call('get_phipsi', ['name CA'])) as Record<string, [number, number]>;
+    expect(Array.isArray(pp)).toBe(false);
+    expect(typeof pp).toBe('object');
+    const keys = Object.keys(pp);
+    expect(keys.length).toBeGreaterThan(0);
+    for (const k of keys) {
+      expect(k.startsWith('m,')).toBe(true); // "<object>,<1-based index>"
+      const pair = pp[k]!;
+      expect(pair).toHaveLength(2);
+      expect(typeof pair[0]).toBe('number');
+      expect(typeof pair[1]).toBe('number');
+    }
+    // Empty selection -> empty dict (matches real PyMOL over the bridge).
+    expect(await b.call('get_phipsi', ['none'])).toEqual({});
   });
 
   it('dirty / dirty_wizard / finish_object are callable and return null', async () => {

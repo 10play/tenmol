@@ -1,0 +1,22 @@
+{
+  "id": "color__bluewhite", "feature": "bluewhite", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color bluewhite, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","bluewhite"],"label":"bluewhite RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color bluewhite"],"label":"atoms colored bluewhite"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.8500000238418579,
+      0.8500000238418579,
+      1
+    ],
+    1,
+    1
+  ]
+}

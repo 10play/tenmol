@@ -1,0 +1,16 @@
+{
+  "id": "setting__dash_transparency", "feature": "dash_transparency", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set dash_transparency, 0.4, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","dash_transparency"],"label":"global dash_transparency default (no prior set) -> 0"},
+    {"call":["get_setting_float","dash_transparency","m"],"label":"per-object dash_transparency set 0.4 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0,
+    0.4
+  ]
+}

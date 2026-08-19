@@ -1,0 +1,17 @@
+{
+  "id": "command__attach",
+  "feature": "attach",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "edit (name CA)"},
+    {"do": "attach F, 1, 1"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "elem F"], "label": "one fluorine attached"},
+    {"call": ["count_atoms", "elem F and (neighbor name CA)"], "label": "fluorine bonded to CA"}
+  ],
+  "tol": 1e-3,
+  "expected": [1, 1]
+}

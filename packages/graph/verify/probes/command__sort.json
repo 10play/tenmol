@@ -1,0 +1,16 @@
+{
+  "id": "command__sort", "feature": "sort", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom m, pos=[0,0,0], resi=1"},
+    {"do":"pseudoatom m, pos=[5,5,5], resi=2"},
+    {"do":"alter m and index 1, resi=9"},
+    {"do":"sort m"}
+  ],
+  "checks": [
+    {"call":["get_atom_coords","m and index 1"],"label":"coords at index 1 after sort (canonical: resi2 atom = 5,5,5)","tol":1e-4},
+    {"call":["get_atom_coords","m and index 2"],"label":"coords at index 2 after sort (resi9 atom = 0,0,0)","tol":1e-4},
+    {"call":["count_atoms","m"],"label":"atom count in object"}
+  ],
+  "tol": 1e-3,
+  "expected": [[5,5,5],[0,0,0],2]
+}

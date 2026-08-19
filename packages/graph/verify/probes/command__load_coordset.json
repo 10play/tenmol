@@ -1,0 +1,26 @@
+{
+  "id": "command__load_coordset",
+  "feature": "load_coordset",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    {
+      "call": [
+        "load_coordset",
+        [
+          [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5, 5],
+          [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9], [10, 10, 10]
+        ],
+        "ala",
+        0
+      ],
+      "label": "load_coordset with state=0 appends a new state"
+    }
+  ],
+  "checks": [
+    { "call": ["count_states", "ala"], "label": "state count after appending a coordset" }
+  ],
+  "tol": 1e-3,
+  "expected": [2]
+}

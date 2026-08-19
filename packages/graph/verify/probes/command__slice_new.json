@@ -1,0 +1,14 @@
+{
+  "id": "command__slice_new", "feature": "slice_new", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"map_new mymap, gaussian, 1.0, m"},
+    {"do":"slice_new mysli, mymap"}
+  ],
+  "checks": [
+    {"call":["get_names","objects"],"label":"objects after slice_new (m, mymap, mysli)"},
+    {"call":["count_atoms","all"],"label":"slice_new adds no atoms"}
+  ],
+  "tol": 0,
+  "expected": [["m","mymap","mysli"], 5684]
+}

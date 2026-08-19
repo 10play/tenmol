@@ -64,23 +64,35 @@ describe('extras — residual command sweep', () => {
       // real
       'alphatoall', 'mse2met', 'mask', 'unmask', 'get_mask', 'delete_states',
       'split_states', 'join_states', 'copy_to', 'extract', 'overlap',
-      'intra_rms_cur', 'look_at', 'middle', 'refresh',
+      // `middle` moved to cmd/system.ts (real movie set_frame mode 3 — jumps
+      // the playhead to the middle frame, not a camera recentre).
+      'intra_rms_cur', 'look_at', 'refresh',
       'transparency', 'stereo', 'edit_mode',
       // no-ops (representative sample across every batch). `load` is no longer
       // here — it is a real handler in cmd/fileio.ts (see load.test.ts); likewise
-      // `edit`/`remove_picked` moved to cmd/editing.ts, `fab` to cmd/editor.ts,
-      // and the superposition family (intra_rms/alignto/extra_fit/cealign/
-      // usalign/pair_fit) to cmd/align.ts (see parity-*.test.ts).
-      'save', 'fetch', 'log', 'unpick', // ray/draw/png are real now (cmd/render.ts)
-      'mcopy', 'map_set', 'volume', 'cls', 'cache', 'quit',
+      // `fetch` moved to cmd/fileio.ts (loads the cached/local file);
+      // `edit`/`remove_picked`/`unpick` moved to cmd/editing.ts, `fab` to
+      // cmd/editor.ts, and the superposition family (intra_rms/alignto/extra_fit/
+      // cealign/usalign/pair_fit) to cmd/align.ts (see parity-*.test.ts).
+      // `save` moved to cmd/exporters.ts (real .pse session + structure exporter).
+      'log', // ray/draw/png are real now (cmd/render.ts)
+      // `map_set` moved to cmd/maps.ts (real elementwise map arithmetic).
+      // `volume` moved to cmd/maps.ts (real object:volume gadget creator).
+      'mcopy', 'cls', 'cache', 'quit',
       'alias', 'assign_stereo',
       'get_mtl_obj', 'get_povray', 'povray',
     ];
     for (const name of claimed) {
       expect(handlers.has(name), `missing handler: ${name}`).toBe(true);
     }
-    // > 60 verbs registered overall.
-    expect(handlers.size).toBeGreaterThan(60);
+    // ~56 verbs registered overall (was >60 before `middle` moved to
+    // cmd/system.ts as the real movie set_frame mode 3, and `minsert` moved to
+    // cmd/system.ts as the real movie frame-insert; then `pbc_unwrap` and
+    // `pbc_wrap` moved to cmd/symmetry.ts as real PBC-trajectory handlers; then
+    // `unset_deep` moved to cmd/settings2.ts as the real bulk setting reset;
+    // then `volume` moved to cmd/maps.ts as the real object:volume creator; then
+    // `save` moved to cmd/exporters.ts as the real .pse session/structure writer).
+    expect(handlers.size).toBeGreaterThanOrEqual(54);
   });
 
   /* --------------------------- REAL behaviours --------------------------- */
@@ -189,16 +201,26 @@ describe('extras — residual command sweep', () => {
     expect(rms[1]).toBeGreaterThan(0); // models differ by +0.5 in x
   });
 
-  it('look_at and middle move the rotation origin (via emitView)', () => {
-    const { ex, call, stats } = setup();
-    call('look_at', [1, 2, 3]);
-    let view = ex.view.get();
-    expect([view[12], view[13], view[14]]).toEqual([1, 2, 3]);
-    call('middle');
-    view = ex.view.get();
-    // Middle recenters somewhere finite (the spread of all atoms).
-    expect(Number.isFinite(view[12]!)).toBe(true);
-    expect(stats().viewEmits).toBeGreaterThanOrEqual(2);
+  it('look_at aims the camera forward axis at the target', () => {
+    const { ex, call } = setup();
+    // Known camera: identity rotation, 50 units in front, origin at 0.
+    ex.view.set([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50, 0, 0, 0, 40, 60, -20]);
+    // Reorient the camera to face object 'm' (default mobile_obj='_Camera').
+    call('look_at', ['m']);
+    const v = ex.view.get();
+    // After look_at the target centre projects onto the camera's forward (-z)
+    // axis: cameraCoords(center) = pos + R*(center - origin) = (0, 0, -dist).
+    const c = ex.selectionSphere('m')!.center;
+    const R = v.slice(0, 9); // column-major model -> camera
+    const d = [c[0] - v[12]!, c[1] - v[13]!, c[2] - v[14]!];
+    const camX = R[0]! * d[0]! + R[3]! * d[1]! + R[6]! * d[2]! + v[9]!;
+    const camY = R[1]! * d[0]! + R[4]! * d[1]! + R[7]! * d[2]! + v[10]!;
+    const camZ = R[2]! * d[0]! + R[5]! * d[1]! + R[8]! * d[2]! + v[11]!;
+    expect(Math.abs(camX)).toBeLessThan(1e-3);
+    expect(Math.abs(camY)).toBeLessThan(1e-3);
+    expect(camZ).toBeLessThan(0); // target in front of the camera
+    // `middle` no longer lives here — it moved to cmd/system.ts as the real
+    // movie set_frame mode 3 (jump the playhead to the middle frame).
   });
 
   it('transparency / stereo / edit_mode land as observable settings', () => {
@@ -223,8 +245,9 @@ describe('extras — residual command sweep', () => {
   it('environment-bound verbs are safe no-ops with the right shape', () => {
     const { ex, call } = setup();
     const before = ex.molecule('m')!.natom;
-    // null-returning (`load` is a real verb now — cmd/fileio.ts, load.test.ts)
-    for (const v of ['save', 'fetch', 'quit', 'cache', 'cls', 'log']) {
+    // null-returning (`load` is a real verb now — cmd/fileio.ts, load.test.ts;
+    // `save` is a real verb now — cmd/exporters.ts, .pse session exporter)
+    for (const v of ['quit', 'cache', 'cls', 'log']) {
       expect(call(v), `${v} should return null`).toBeNull();
     }
     // shaped returns

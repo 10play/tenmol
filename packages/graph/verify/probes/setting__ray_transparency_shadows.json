@@ -1,0 +1,15 @@
+{
+  "id": "setting__ray_transparency_shadows", "feature": "ray_transparency_shadows", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ray_transparency_shadows, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","ray_transparency_shadows"],"label":"global ray_transparency_shadows default (no prior set) = 1"},
+    {"call":["get_setting_boolean","ray_transparency_shadows","ala"],"label":"per-object ray_transparency_shadows after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

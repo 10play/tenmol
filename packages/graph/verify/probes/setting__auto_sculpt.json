@@ -1,0 +1,15 @@
+{
+  "id": "setting__auto_sculpt", "feature": "auto_sculpt", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set auto_sculpt, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","auto_sculpt"],"label":"global auto_sculpt default (no prior set)"},
+    {"call":["get_setting_boolean","auto_sculpt","ala"],"label":"per-object auto_sculpt after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

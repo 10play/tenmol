@@ -1,0 +1,24 @@
+{
+  "id": "color__violetpurple", "feature": "violetpurple", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color violetpurple, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","violetpurple"],"label":"violetpurple RGB tuple","tol":1e-6},
+    {"call":["get_color_index","violetpurple"],"label":"violetpurple palette index"},
+    {"call":["count_atoms","color violetpurple"],"label":"atoms colored violetpurple"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.550000011920929,
+      0.25,
+      0.6000000238418579
+    ],
+    5271,
+    1,
+    1
+  ]
+}

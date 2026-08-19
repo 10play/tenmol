@@ -1,0 +1,11 @@
+{"id":"setting__dash_radius","feature":"dash_radius","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set dash_radius, 0.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","dash_radius"],"label":"dash_radius global default (no prior set)"},
+   {"call":["get_setting_float","dash_radius","ala"],"label":"dash_radius per-object after set 0.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [0, 0.5]}

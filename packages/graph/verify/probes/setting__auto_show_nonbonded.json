@@ -1,0 +1,15 @@
+{
+  "id": "setting__auto_show_nonbonded", "feature": "auto_show_nonbonded", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set auto_show_nonbonded, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","auto_show_nonbonded"],"label":"global auto_show_nonbonded default (no prior set)"},
+    {"call":["get_setting_boolean","auto_show_nonbonded","ala"],"label":"per-object auto_show_nonbonded after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

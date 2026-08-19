@@ -1,0 +1,69 @@
+{
+  "id": "command__update",
+  "feature": "update",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "create m2, m"
+    },
+    {
+      "do": "translate [10, 0, 0], m2, camera=0"
+    },
+    {
+      "do": "update m, m2"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_atom_coords",
+        "m and index 1"
+      ],
+      "label": "m atom 1 coords overwritten by moved m2 (+10 x)"
+    },
+    {
+      "call": [
+        "get_atom_coords",
+        "m and index 2"
+      ],
+      "label": "m atom 2 coords overwritten by moved m2 (+10 x)"
+    },
+    {
+      "call": [
+        "get_atom_coords",
+        "m and index 100"
+      ],
+      "label": "m atom 100 coords overwritten by moved m2 (+10 x)"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "m"
+      ],
+      "label": "update does not change target atom count"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    [
+      29.099000930786133,
+      9.697999954223633,
+      -13.097000122070312
+    ],
+    [
+      24.531999588012695,
+      19.246000289916992,
+      11.675000190734863
+    ],
+    [
+      38.18000030517578,
+      1.9190000295639038,
+      7.293000221252441
+    ],
+    5684
+  ]
+}

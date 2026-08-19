@@ -1,0 +1,17 @@
+{
+  "id": "feature__space_groups",
+  "feature": "space groups",
+  "kind": "state",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m" },
+    { "do": "set_symmetry m, 68, 74, 90, 90, 90, 90, P 21 21 21" },
+    { "call": ["symexp", "sym", "m", "m", 3.0] }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "all"], "label": "atoms of source + all P212121 symmetry mates" },
+    { "call": ["count_atoms", "not m"], "label": "atoms belonging only to generated symmetry mates" }
+  ],
+  "tol": 1e-3,
+  "expected": [62524, 56840]
+}

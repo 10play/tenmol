@@ -1,0 +1,22 @@
+{
+  "id": "color__greencyan", "feature": "greencyan", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color greencyan, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color greencyan"],"label":"atoms colored greencyan"},
+    {"call":["get_color_index","greencyan"],"label":"greencyan palette index"},
+    {"call":["get_color_tuple","greencyan"],"label":"greencyan rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5275,
+    [
+      0.25,
+      1,
+      0.75
+    ]
+  ]
+}

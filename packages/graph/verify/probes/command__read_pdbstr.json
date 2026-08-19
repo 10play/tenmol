@@ -1,0 +1,19 @@
+{
+  "id": "command__read_pdbstr", "feature": "read_pdbstr", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call": ["read_pdbstr", "ATOM      1  N   ALA A   1      11.104   6.134  -6.504  1.00  0.00           N\nATOM      2  CA  ALA A   1      11.639   6.071  -5.147  1.00  0.00           C\nATOM      3  C   ALA A   1      13.140   6.132  -5.231  1.00  0.00           C\nATOM      4  O   ALA A   1      13.771   5.069  -5.319  1.00  0.00           O\nATOM      5  CB  ALA A   1      11.116   7.256  -4.334  1.00  0.00           C\nEND", "obj"]}
+  ],
+  "checks": [
+    {"call": ["get_names"], "label": "object created by read_pdbstr"},
+    {"call": ["count_atoms", "obj"], "label": "atoms loaded from pdb string"},
+    {"call": ["count_atoms", "obj and name CA"], "label": "CA atom parsed"},
+    {"call": ["get_chains", "obj"], "label": "chain from pdb string"}
+  ],
+  "tol": 0,
+  "expected": [
+    ["obj"],
+    5,
+    1,
+    ["A"]
+  ]
+}

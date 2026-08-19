@@ -1,0 +1,22 @@
+{
+  "id": "color__copper", "feature": "copper", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color copper, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color copper"],"label":"atoms colored copper"},
+    {"call":["get_color_index","copper"],"label":"copper palette index"},
+    {"call":["get_color_tuple","copper"],"label":"copper rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5304,
+    [
+      0.7843137383460999,
+      0.5019607543945312,
+      0.20000000298023224
+    ]
+  ]
+}

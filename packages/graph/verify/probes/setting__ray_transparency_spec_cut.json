@@ -1,0 +1,16 @@
+{
+  "id": "setting__ray_transparency_spec_cut", "feature": "ray_transparency_spec_cut", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ray_transparency_spec_cut, 0.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_transparency_spec_cut"],"label":"global default 0.9"},
+    {"call":["get_setting_float","ray_transparency_spec_cut","m"],"label":"per-object set 0.5 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.9,
+    0.5
+  ]
+}

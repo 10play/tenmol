@@ -1,0 +1,16 @@
+{
+  "id": "selection__alt", "feature": "alt", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/3al1.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "alt A"], "label": "alt A selects the A conformer atoms"},
+    {"call": ["count_atoms", "alt ''"], "label": "alt '' selects atoms with no altloc"},
+    {"call": ["count_atoms", "not alt ''"], "label": "not alt '' selects all altloc-bearing atoms"}
+  ],
+  "expected": [
+    176,
+    312,
+    367
+  ]
+}

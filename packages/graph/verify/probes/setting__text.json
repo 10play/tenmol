@@ -1,0 +1,15 @@
+{
+  "id": "setting__text",
+  "feature": "text",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set text, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","text"],"label":"text after set 1 (default 0/false)"}
+  ],
+  "expected": [
+    true
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "command__get_stlstr",
+  "feature": "get_stlstr",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "show surface" }
+  ],
+  "checks": [
+    { "call": ["get_stlstr"], "label": "get_stlstr() with defaults (binary=1) — incentive-only, expect raise" },
+    { "call": ["count_atoms", "all"], "label": "state intact after failed export" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    {
+      "__error": "get_stlstr: no such symbol (module 'pymol.cmd' has no attribute 'get_stlstr')"
+    },
+    10
+  ]
+}

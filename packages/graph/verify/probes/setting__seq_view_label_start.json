@@ -1,0 +1,15 @@
+{
+  "id": "setting__seq_view_label_start", "feature": "seq_view_label_start", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set seq_view_label_start, 5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","seq_view_label_start"],"label":"global seq_view_label_start default (no prior set)"},
+    {"call":["get_setting_int","seq_view_label_start","ala"],"label":"per-object seq_view_label_start after set 5"}
+  ],
+  "expected": [
+    1,
+    5
+  ]
+}

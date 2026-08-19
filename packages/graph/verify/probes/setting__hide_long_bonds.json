@@ -1,0 +1,10 @@
+{"id":"setting__hide_long_bonds","feature":"hide_long_bonds","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set hide_long_bonds, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","hide_long_bonds"],"label":"hide_long_bonds global default (no prior set)"},
+   {"call":["get_setting_boolean","hide_long_bonds","ala"],"label":"hide_long_bonds per-object after set 1"}
+ ],
+ "expected": [false, true]}

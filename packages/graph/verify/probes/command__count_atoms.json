@@ -1,0 +1,18 @@
+{
+  "id": "command__count_atoms",
+  "feature": "count_atoms",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "name CA"], "label": "one CA atom"},
+    {"call": ["count_atoms", "elem N"], "label": "one nitrogen atom"},
+    {"call": ["count_atoms", "elem O"], "label": "one carbonyl oxygen"},
+    {"call": ["count_atoms", "elem C"], "label": "three heavy carbons (CA, C, CB)"},
+    {"call": ["count_atoms", "none"], "label": "empty selection returns zero"}
+  ],
+  "tol": 1e-3,
+  "expected": [1, 1, 1, 3, 0]
+}

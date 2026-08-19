@@ -1,0 +1,19 @@
+{
+  "id": "setting__cartoon_dumbbell_width",
+  "feature": "cartoon_dumbbell_width",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set cartoon_dumbbell_width, 0.35, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","cartoon_dumbbell_width"],"label":"global default (unset) -> 0.17"},
+    {"call":["get_setting_float","cartoon_dumbbell_width","m"],"label":"per-object set 0.35 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.17,
+    0.35
+  ]
+}

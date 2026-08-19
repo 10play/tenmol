@@ -1,0 +1,15 @@
+{
+  "id": "setting__motion_hand", "feature": "motion_hand", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set motion_hand, -1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","motion_hand"],"label":"global motion_hand default (unset) -> 1"},
+    {"call":["get_setting_int","motion_hand","m"],"label":"per-object motion_hand after set -1"}
+  ],
+  "expected": [
+    1,
+    -1
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "setting__smooth_half_bonds",
+  "feature": "smooth_half_bonds",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set smooth_half_bonds, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","smooth_half_bonds"],"label":"global default -> true (1)"},
+    {"call":["get_setting_boolean","smooth_half_bonds","m"],"label":"per-object set to 0 -> false"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

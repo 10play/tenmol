@@ -1,0 +1,15 @@
+{
+  "id": "setting__keep_alive", "feature": "keep_alive", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set keep_alive, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","keep_alive"],"label":"global keep_alive default (no prior set) -> false"},
+    {"call":["get_setting_boolean","keep_alive","ala"],"label":"per-object keep_alive after set 1 -> true"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "command__multisave",
+  "feature": "multisave",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "create cpy, ala" },
+    { "do": "multisave /tmp/ms_probe_9f3a.pdb, all" },
+    { "do": "delete all" },
+    { "do": "load /tmp/ms_probe_9f3a.pdb, reloaded" }
+  ],
+  "checks": [
+    { "call": ["get_names"], "label": "objects after reloading the multisaved file" },
+    { "call": ["count_atoms", "all"], "label": "total atoms after reload" }
+  ],
+  "tol": 0,
+  "expected": [["ala", "cpy"], 20]
+}

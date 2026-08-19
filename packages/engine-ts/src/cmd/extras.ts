@@ -11,8 +11,8 @@
  *
  *   - REAL   — a correct behaviour computed from the executive/model:
  *              alphatoall, mse2met, mask/unmask/get_mask, delete_states,
- *              split_states, join_states, copy_to, extract, overlap,
- *              intra_rms/intra_rms_cur, look_at, middle, refresh, transparency,
+ *              split_states, join_states, spheroid, copy_to, extract, overlap,
+ *              intra_rms/intra_rms_cur, look_at, refresh, transparency,
  *              stereo, edit_mode.
  *
  *   - DOCUMENTED NO-OP — for genuinely environment-bound verbs (disk/network
@@ -36,16 +36,67 @@
  */
 
 import type { Json } from '@tenmol/protocol';
+import { incentiveOnly } from '@tenmol/protocol';
+import { PymolError } from '@tenmol/backend';
 import type { AtomInfo } from '../model/atom';
 import type { Executive } from '../exec/executive';
 import { ObjectMolecule } from '../model/molecule';
 import type { RegistrarCtx } from './registrar';
+
+/**
+ * `importing.load_mtz` — reflection-file import that builds fofc/2fofc (or a
+ * single named) map object. It is an incentive-only feature: in Open-Source
+ * PyMOL the function immediately raises `IncentiveOnlyException()`
+ * (importing.py:1511). The message mirrors Python's
+ * `str(IncentiveOnlyException)` verbatim — the `IncentiveOnlyException.__init__`
+ * default (`"<funcname>" is not available in Open-Source PyMOL`, __init__.py:491)
+ * plus the trailing "Please visit http://pymol.org …" block, and the leading
+ * `<label>: ` prefix from `CmdException.__str__` — so the differential matches.
+ */
+const LOAD_MTZ_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "load_mtz" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
+
+// `querying.pi_interactions` (querying.py:545) likewise raises
+// `IncentiveOnlyException()` in Open-Source PyMOL — the detection logic ships
+// only with Incentive PyMOL. Same verbatim `str(IncentiveOnlyException)` shape
+// as LOAD_MTZ_INCENTIVE_ONLY, with the function's own name.
+const PI_INTERACTIONS_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "pi_interactions" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
 
 function toNum(v: unknown, dflt: number): number {
   if (v == null || v === '') return dflt;
   const n = Number(v);
   return Number.isFinite(n) ? n : dflt;
 }
+/* ----------------------------- vec3 helpers ----------------------------- */
+type Vec3 = [number, number, number];
+function sub3(a: Vec3, b: Vec3): Vec3 {
+  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}
+function dot3(a: Vec3, b: Vec3): number {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+function cross3(a: Vec3, b: Vec3): Vec3 {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+}
+function normalize3(a: Vec3): Vec3 {
+  const len = Math.hypot(a[0], a[1], a[2]) || 1;
+  return [a[0] / len, a[1] / len, a[2] / len];
+}
+/** Transpose (inverse of a rotation) of a column-major 3x3 times a vector. */
+function mat3TransposeMulVec(m: number[], v: Vec3): Vec3 {
+  // Column-major m: index = col*3 + row. m^T * v => row i = column i of m dotted v.
+  return [
+    m[0]! * v[0] + m[1]! * v[1] + m[2]! * v[2],
+    m[3]! * v[0] + m[4]! * v[1] + m[5]! * v[2],
+    m[6]! * v[0] + m[7]! * v[1] + m[8]! * v[2],
+  ];
+}
+
 function toBool(v: unknown, dflt = false): boolean {
   if (v == null || v === '') return dflt;
   if (typeof v === 'boolean') return v;
@@ -62,14 +113,6 @@ interface UA {
 }
 
 /* ------------------------------ atom-flag store --------------------------- */
-
-/**
- * Per-atom boolean flags this module maintains outside {@link AtomInfo} (which
- * has no flag field). Keyed by atom identity so the state is observable through
- * a getter without touching the shared atom record. `mask`/`unmask` set/clear
- * the "masked" (unpickable) flag; `get_mask` reads it back.
- */
-const MASKED = new WeakSet<AtomInfo>();
 
 /* -------------------------------- helpers --------------------------------- */
 
@@ -165,14 +208,14 @@ function parseStateSpec(spec: string, maxState: number): Set<number> {
   return out;
 }
 
-/** RMSD over `uas` between state `s` and the reference state 1 (no superposition). */
-function rmsdToRef(ex: Executive, uas: UA[], s: number): number {
+/** RMSD over `uas` between state `s` and reference state `ref` (no superposition). */
+function rmsdToRef(ex: Executive, uas: UA[], s: number, ref: number): number {
   let sum = 0;
   let n = 0;
   for (const ua of uas) {
     const mol = ex.molecule(ua.objName);
     if (!mol || s > mol.nstate) continue;
-    const [ax, ay, az] = mol.coord(ua.index, 1);
+    const [ax, ay, az] = mol.coord(ua.index, ref);
     const [bx, by, bz] = mol.coord(ua.index, s);
     const dx = ax - bx;
     const dy = ay - by;
@@ -183,11 +226,72 @@ function rmsdToRef(ex: Executive, uas: UA[], s: number): number {
   return n === 0 ? 0 : Math.sqrt(sum / n);
 }
 
+/* -------------------------------------------------------------------------
+ * Mouse-ring editing switch (packages/engine/modules/pymol/controlling.py).
+ *
+ * PyMOL keeps a "mouse ring" — an ordered list of mouse configurations that
+ * `button_mode` indexes into. The engine models only the default `three_button`
+ * ring: [viewing, editing]. `edit_mode`/`drag` flip `button_mode` (and the
+ * mirrored `button_mode_name`) between those two entries, exactly as
+ * `controlling.py`'s `edit_mode` -> `mouse(action=...)` chain does.
+ * ------------------------------------------------------------------------- */
+
+const THREE_BUTTON_RING = ['three_button_viewing', 'three_button_editing'] as const;
+const MODE_NAME: Readonly<Record<string, string>> = {
+  three_button_viewing: '3-Button Viewing',
+  three_button_editing: '3-Button Editing',
+};
+
+/** Select a mouse mode by name — mirrors `mouse(action in mouse_ring)`. */
+function setMouseMode(ex: Executive, mode: string): void {
+  const bm = (THREE_BUTTON_RING as readonly string[]).indexOf(mode);
+  if (bm < 0) return;
+  ex.set('button_mode', bm);
+  ex.set('button_mode_name', MODE_NAME[mode] ?? mode);
+}
+
+/**
+ * Switch the mouse into (or out of) editing mode — the `edit_mode` body from
+ * controlling.py. With the default three-button ring, active switches
+ * `button_mode` 0 -> 1 (viewing -> editing); inactive switches it back.
+ */
+function applyEditMouseMode(ex: Executive, active: boolean): void {
+  const bm = Math.trunc(Number(ex.getSetting('button_mode') ?? 0));
+  if (bm < 0 || bm >= THREE_BUTTON_RING.length) return;
+  const mode: string | undefined = THREE_BUTTON_RING[bm];
+  if (mode === undefined) return;
+  if (active) {
+    if (mode.startsWith('three_button') && mode !== 'three_button_editing') {
+      setMouseMode(ex, 'three_button_editing');
+    }
+  } else if (mode.startsWith('three_button') && mode !== 'three_button_viewing') {
+    setMouseMode(ex, 'three_button_viewing');
+  }
+}
+
 /* -------------------------------- registrar ------------------------------- */
 
 export function registerExtras(ctx: RegistrarCtx): void {
   const ex = ctx.executive;
   const str = ctx.str;
+
+  /* ========================= INCENTIVE-ONLY ============================= */
+  // `load_mtz` is a licensed (incentive) feature: Open-Source PyMOL raises
+  // `IncentiveOnlyException()` instead of loading maps. Reproduce that exact
+  // rejection so the differential matches real PyMOL.
+  ctx.command('load_mtz', (): Json => {
+    throw new PymolError(incentiveOnly('load_mtz', LOAD_MTZ_INCENTIVE_ONLY), 'load_mtz');
+  });
+
+  // `pi_interactions` is also incentive-only: Open-Source PyMOL raises
+  // `IncentiveOnlyException()` immediately (querying.py:545) rather than
+  // computing pi-pi / pi-cation contacts. Reproduce that exact rejection.
+  ctx.command('pi_interactions', (): Json => {
+    throw new PymolError(
+      incentiveOnly('pi_interactions', PI_INTERACTIONS_INCENTIVE_ONLY),
+      'pi_interactions',
+    );
+  });
 
   /* ============================ REAL handlers ============================ */
 
@@ -248,25 +352,44 @@ export function registerExtras(ctx: RegistrarCtx): void {
     return changed;
   });
 
-  /* mask / unmask / get_mask — the per-atom "masked" (unpickable) flag. */
+  /* mask / unmask / get_mask — the per-atom "masked" (unpickable) flag stored on
+     AtomInfo.masked; read by the `masked` selection keyword. Only affects mouse
+     pickability, never command-line selection or transforms. */
   ctx.command('mask', (args, kwargs): Json => {
     const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
     const uas = ex.atomsMatching(selection) as UA[];
-    for (const ua of uas) MASKED.add(ua.atom);
+    for (const ua of uas) ua.atom.masked = true;
     return uas.length;
   });
   ctx.command('unmask', (args, kwargs): Json => {
     const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
     const uas = ex.atomsMatching(selection) as UA[];
-    for (const ua of uas) MASKED.delete(ua.atom);
+    for (const ua of uas) ua.atom.masked = false;
     return uas.length;
   });
   ctx.command('get_mask', (args, kwargs): Json => {
     const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
     const uas = ex.atomsMatching(selection) as UA[];
     let n = 0;
-    for (const ua of uas) if (MASKED.has(ua.atom)) n++;
+    for (const ua of uas) if (ua.atom.masked === true) n++;
     return n;
+  });
+
+  /* protect / deprotect — the per-atom "protected" flag stored on
+     AtomInfo.protected; read by the `protected` selection keyword. Protected
+     atoms are held immobile during editing transforms (torsion, drag, sculpt);
+     it never affects selection or display. */
+  ctx.command('protect', (args, kwargs): Json => {
+    const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
+    const uas = ex.atomsMatching(selection) as UA[];
+    for (const ua of uas) ua.atom.protected = true;
+    return uas.length;
+  });
+  ctx.command('deprotect', (args, kwargs): Json => {
+    const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
+    const uas = ex.atomsMatching(selection) as UA[];
+    for (const ua of uas) ua.atom.protected = false;
+    return uas.length;
   });
 
   /* delete_states — drop states matching a spec from an object. */
@@ -275,6 +398,9 @@ export function registerExtras(ctx: RegistrarCtx): void {
     const spec = str(args[1] ?? kwargs['states'], '');
     const mol = ex.molecule(name);
     if (!mol || spec === '') return 0;
+    // PyMOL's ExecutiveDeleteStates refuses discrete objects (each state may
+    // carry a distinct atom set), leaving their states untouched.
+    if (mol.discrete) return 0;
     const drop = parseStateSpec(spec, mol.nstate);
     if (drop.size === 0) return 0;
     const kept = mol.states.filter((_s, i) => !drop.has(i + 1));
@@ -282,6 +408,53 @@ export function registerExtras(ctx: RegistrarCtx): void {
     mol.states.splice(0, mol.states.length, ...kept);
     if (removed > 0) ctx.publish();
     return removed;
+  });
+
+  /* spheroid — average trajectory-state groups into ellipsoid-approximation
+     states, collapsing the state count. Ports the observable-state half of
+     ObjectMoleculeCreateSpheroid (layer2/ObjectMolecule.cpp): consecutive
+     coordinate sets are grouped `average` at a time (average < 1 ⇒ all states
+     in one group), each group's frame-0 coordinates are replaced by the
+     per-atom mean over the group, the trailing group states are dropped, and
+     NCSet becomes the number of groups. The per-spoke Spheroid/SpheroidNormal
+     surface (used only by the sphere renderer) is not modelled here since it
+     produces no state observable through the public API. */
+  ctx.command('spheroid', (args, kwargs): Json => {
+    const name = str(args[0] ?? kwargs['object'], '');
+    const mol = ex.molecule(name);
+    if (!mol || mol.nstate === 0) return null;
+    // average < 1 folds the whole trajectory into a single spheroid state.
+    let average = Math.trunc(toNum(args[1] ?? kwargs['average'], 0));
+    if (average < 1) average = mol.nstate;
+    const natom = mol.natom;
+    // Snapshot the source coordinate sets (skipping empty slots, as the C loop
+    // only advances its group counter on non-null CoordSets).
+    const src = mol.states.filter((s): s is Float32Array => s != null);
+    const grouped: Float32Array[] = [];
+    for (let i = 0; i < src.length; i += average) {
+      const group = src.slice(i, i + average);
+      const out = new Float32Array(natom * 3);
+      const counts = new Int32Array(natom);
+      for (const st of group) {
+        for (let o = 0; o < natom * 3; o++) out[o] = out[o]! + (st[o] ?? 0);
+        for (let a = 0; a < natom; a++) counts[a] = counts[a]! + 1;
+      }
+      for (let a = 0; a < natom; a++) {
+        const c = counts[a]!;
+        if (c) {
+          out[a * 3] = out[a * 3]! / c;
+          out[a * 3 + 1] = out[a * 3 + 1]! / c;
+          out[a * 3 + 2] = out[a * 3 + 2]! / c;
+        }
+      }
+      grouped.push(out);
+    }
+    mol.states.splice(0, mol.states.length, ...grouped);
+    // Keep the per-state parallel arrays no longer than the surviving states.
+    if (mol.titles.length > grouped.length) mol.titles.length = grouped.length;
+    if (mol.refPos.length > grouped.length) mol.refPos.length = grouped.length;
+    ctx.publish();
+    return grouped.length;
   });
 
   /* split_states — one new single-state object per source state. */
@@ -321,6 +494,8 @@ export function registerExtras(ctx: RegistrarCtx): void {
   ctx.command('join_states', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
     const selection = str(args[1] ?? kwargs['selection'], 'all') || 'all';
+    // mode 0 builds a discrete object (states may differ); modes 1-3 don't.
+    const mode = toNum(args[2] ?? kwargs['mode'], 2);
     if (name === '') return 0;
     // Distinct source objects, in executive order.
     const wanted = new Set(ex.atomsMatching(selection).map((ua) => ua.objName));
@@ -328,6 +503,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
     if (sources.length === 0) return 0;
     const template = sources[0]!;
     const nm = new ObjectMolecule(ex.uniqueName(name));
+    if (mode === 0) nm.discrete = true;
     template.atoms.forEach((a, k) => nm.atoms.push({ ...a, id: k + 1 }));
     for (const [i, j] of template.bonds) nm.bonds.push([i, j]);
     for (const src of sources) {
@@ -390,29 +566,34 @@ export function registerExtras(ctx: RegistrarCtx): void {
     return mol.natom;
   });
 
-  /* overlap — total VDW overlap (sum of ri+rj-d over clashing pairs). */
+  /* overlap — steric-clash metric: sum of [(VDWi + VDWj + adjust) - d]/2 over
+     pairs whose distance is below their combined VDW radii (+adjust). Ports
+     SelectorSumVDWOverlap (layer3/Selector.cpp): sumVDW = vi + vj + adjust and,
+     when dist < sumVDW, result += (sumVDW - dist)/2. querying.py passes
+     state1/state2 as separate 0-based coordinate states. */
   ctx.command('overlap', (args, kwargs): Json => {
     const sel1 = str(args[0] ?? kwargs['selection1'], 'all') || 'all';
     const sel2 = str(args[1] ?? kwargs['selection2'], 'all') || 'all';
-    const state = toNum(args[2] ?? kwargs['state'], 1) || 1;
-    const adjust = toNum(args[3] ?? kwargs['adjust'], 0);
+    const state1 = toNum(args[2] ?? kwargs['state1'], 1) || 1;
+    const state2 = toNum(args[3] ?? kwargs['state2'], 1) || 1;
+    const adjust = toNum(args[4] ?? kwargs['adjust'], 0);
     const a = ex.atomsMatching(sel1) as UA[];
     const b = ex.atomsMatching(sel2) as UA[];
     let total = 0;
     for (const ua of a) {
       const ma = ex.molecule(ua.objName);
       if (!ma) continue;
-      const [ax, ay, az] = ma.coord(ua.index, state);
+      const [ax, ay, az] = ma.coord(ua.index, state1);
       const ra = ma.vdw(ua.index);
       for (const ub of b) {
         if (ub.objName === ua.objName && ub.index === ua.index) continue;
         const mb = ex.molecule(ub.objName);
         if (!mb) continue;
-        const [bx, by, bz] = mb.coord(ub.index, state);
+        const [bx, by, bz] = mb.coord(ub.index, state2);
         const rb = mb.vdw(ub.index);
         const d = Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2 + (az - bz) ** 2);
-        const ov = ra + rb - d - adjust;
-        if (ov > 0) total += ov;
+        const sumVDW = ra + rb + adjust;
+        if (d < sumVDW) total += (sumVDW - d) / 2;
       }
     }
     return total;
@@ -423,39 +604,52 @@ export function registerExtras(ctx: RegistrarCtx): void {
      The reference state reports -1.0, as PyMOL does. */
   const intraRmsCur = (args: unknown[], kwargs: Record<string, unknown>): Json => {
     const selection = str(args[0] ?? kwargs['selection'], 'all') || 'all';
+    // Reference state (1-based); PyMOL's default state=0 resolves to state 1.
+    const ref = Math.max(1, Math.trunc(toNum(args[1] ?? kwargs['state'], 0)) || 1);
     const uas = ex.atomsMatching(selection) as UA[];
     const maxState = Math.max(1, ...uas.map((ua) => ex.molecule(ua.objName)?.nstate ?? 1));
     const out: number[] = [];
-    for (let s = 1; s <= maxState; s++) out.push(s === 1 ? -1.0 : rmsdToRef(ex, uas, s));
+    for (let s = 1; s <= maxState; s++) {
+      out.push(s === ref ? -1.0 : rmsdToRef(ex, uas, s, ref));
+    }
     return out;
   };
   ctx.command('intra_rms_cur', intraRmsCur);
 
-  /* look_at — aim the camera at a point (set the model-space rotation origin). */
+  /* look_at(target_obj, mobile_obj='_Camera') — reorient the camera so its
+     forward (z) axis faces the center of `target_obj`. Ports ExecutiveLookAt /
+     ExecutiveCameraLookAt (layer3/Executive.cpp): eye = current camera world
+     position, build glm::lookAt(eye, targetCenter, up=(0,1,0)) and convert it
+     back into the 18-float view (SceneView::FromWorldHomogeneous). Passing a
+     real mobile object is a no-op in PyMOL (ExecutiveObjectLookAt does nothing),
+     as is a missing target. */
   ctx.command('look_at', (args, kwargs): Json => {
-    const x = toNum(args[0] ?? kwargs['x'], 0);
-    const y = toNum(args[1] ?? kwargs['y'], 0);
-    const z = toNum(args[2] ?? kwargs['z'], 0);
+    const targetName = str(args[0] ?? kwargs['target_obj']);
+    const mobile = str(args[1] ?? kwargs['mobile_obj'], '_Camera') || '_Camera';
+    if (targetName === '' || mobile !== '_Camera') return null;
+    const sphere = ex.selectionSphere(targetName);
+    if (!sphere) return null;
+    const center = sphere.center as Vec3;
     const view = ex.view.get();
-    view[12] = x;
-    view[13] = y;
-    view[14] = z;
+    const rot = view.slice(0, 9); // column-major model -> camera
+    const pos: Vec3 = [view[9]!, view[10]!, view[11]!];
+    const origin: Vec3 = [view[12]!, view[13]!, view[14]!];
+    // Camera position in model space: eye = origin - R^T * pos (worldPos()).
+    const eye = sub3(origin, mat3TransposeMulVec(rot, pos));
+    // glm::lookAt(eye, center, up): f forward, s right, u up (all model space).
+    const f = normalize3(sub3(center, eye));
+    const s = normalize3(cross3(f, [0, 1, 0]));
+    const u = cross3(s, f);
+    // New column-major model->camera rotation: columns s, u, -f.
+    view[0] = s[0]; view[1] = u[0]; view[2] = -f[0];
+    view[3] = s[1]; view[4] = u[1]; view[5] = -f[1];
+    view[6] = s[2]; view[7] = u[2]; view[8] = -f[2];
+    // New camera-space Pos = Vrot*origin + Vtrans, Vtrans = (-s.eye, -u.eye, f.eye).
+    view[9] = dot3(s, origin) - dot3(s, eye);
+    view[10] = dot3(u, origin) - dot3(u, eye);
+    view[11] = -dot3(f, origin) + dot3(f, eye);
     ex.view.set(view);
     ctx.emitView();
-    return null;
-  });
-
-  /* middle — recentre the rotation origin on the middle of all objects. */
-  ctx.command('middle', (): Json => {
-    const sphere = ex.selectionSphere('all');
-    if (sphere) {
-      const view = ex.view.get();
-      view[12] = sphere.center[0];
-      view[13] = sphere.center[1];
-      view[14] = sphere.center[2];
-      ex.view.set(view);
-      ctx.emitView();
-    }
     return null;
   });
 
@@ -480,10 +674,27 @@ export function registerExtras(ctx: RegistrarCtx): void {
     return null;
   });
 
-  /* edit_mode — record the editor-mode on/off state as a setting. */
+  /* edit_mode — switch the mouse into editing mode (controlling.py:edit_mode).
+     Records the on/off state as a setting AND flips button_mode within the
+     current mouse ring, the way PyMOL's edit_mode -> mouse() chain does. */
   ctx.command('edit_mode', (args, kwargs): Json => {
     const active = toBool(args[0] ?? kwargs['active'], true);
     ex.set('edit_mode', active ? 1 : 0);
+    applyEditMouseMode(ex, active);
+    return null;
+  });
+
+  /* drag — activate interactive dragging of a selection's coordinates
+     (editing.py:drag). The interactive mouse-drag itself needs a live GL/picking
+     loop we do not model, but the observable side effect ports cleanly: a
+     non-empty selection defaults edit=1, which switches the mouse ring into
+     editing mode (button_mode 0 -> 1); an empty selection forces edit=0 and
+     leaves the ring untouched. */
+  ctx.command('drag', (args, kwargs): Json => {
+    const selection = str(args[0] ?? kwargs['selection'], '');
+    let edit = toBool(args[2] ?? kwargs['edit'], true);
+    if (selection === '') edit = false;
+    if (edit) applyEditMouseMode(ex, true);
     return null;
   });
 
@@ -502,14 +713,15 @@ export function registerExtras(ctx: RegistrarCtx): void {
     [
       // file & network I/O (need a filesystem / parser / network we lack here).
       // `load` is real (cmd/fileio.ts) — it parses structured content by format.
-      'loadall',
-      'load_embedded',
-      'load_model',
-      'load_mtz',
+      // `loadall` is real now — see cmd/fileio.ts (glob loader + grouping).
+      // `load_embedded` is real now — see cmd/fileio.ts (embed-block loader).
+      // `load_model` is real now — see cmd/fileio.ts (ChemPy-model importer).
+      // `load_mtz` is incentive-only — registered separately below (throws).
       'load_png',
-      'load_traj',
-      'save',
-      'fetch',
+      // `load_traj` is real now — see cmd/fileio.ts (DCD trajectory importer).
+      // `save` is real now — see cmd/exporters.ts (writes .pse sessions + the
+      // format-string structure exporters to disk).
+      // `fetch` is real now — see cmd/fileio.ts (loads the cached/local file).
       // `ray`/`draw`/`png` are real now — see cmd/render.ts.
       // logging to disk
       'log',
@@ -519,24 +731,24 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // interaction / editor picking (no live picking model here).
       // `edit` (pk1/pk2) is real — see cmd/editing.ts.
       'edit_keys',
-      'drag',
+      // `drag` is real now — see the handler above (mouse-ring editing switch).
       'release',
-      'unpick',
+      // `unpick` is real — see cmd/editing.ts (clears the pk* selections).
       // `fab` (peptide) is real — editor.ts; `fnab` (nucleic) — cmd/nucleic.ts.
       'h_fix',
       // movie frame-table edits (movie store lives in the engine)
       'mcopy',
-      'mdelete',
+      // `mdelete` is real now — see cmd/system.ts (splices the movie frame table).
+      // `mdo` is real now — see cmd/system.ts (binds/replays generalized frame commands).
       'mmove',
-      'mdo',
-      'minsert',
-      'scene_order',
+      // `minsert` is real now — see cmd/system.ts (splices blank frames into the movie table).
+      // `scene_order` is real now — see engine.ts (reorders the scene bin).
       // maps / volumes / slices (need a map object model)
-      'map_set',
-      'slice_new',
-      'volume',
+      // `map_set` is real — see cmd/maps.ts (elementwise map arithmetic).
+      // `slice_new` is real now — see cmd/maps.ts (registers an object:slice gadget).
+      // `volume` is real now — see cmd/maps.ts (registers an object:volume gadget).
       'volume_panel',
-      'spheroid',
+      // `spheroid` is real now — see below (averages state groups + collapses NCSet).
       'vdw_fit',
       // misc app / render controls with no state to observe
       'cls',
@@ -550,26 +762,51 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'feedback',
       'extend',
       'alias',
-      'matrix_copy',
+      // `matrix_copy`/`matrix_transfer` are real now — see the engine builtin
+      // (empty target composes the object matrix into the camera view).
       // chemistry/typing we do not model
       'assign_stereo',
       'text_type',
-      'unset_deep',
-      'pbc_wrap',
-      'pbc_unwrap',
+      // `unset_deep` is real now — see cmd/settings2.ts (bulk-clears per-object
+      // and per-bond setting overrides for the matched objects).
     ],
     null,
   );
 
   // Return an empty dict: analysis verbs producing a name->value mapping.
   // `cealign`/`usalign` are real now — see cmd/align.ts.
-  noop(['pi_interactions', 'stereochemistry'], {});
+  noop(['stereochemistry'], {});
 
   // Return an empty string: text-export getters.
   noop(['get_mtl_obj'], '');
 
   // Return a pair of empty strings: PovRay exporters (scene, header).
   noop(['get_povray', 'povray'], ['', '']);
+
+  // Genuinely ABSENT `cmd` symbols. Unlike an unported verb (which throws the
+  // port's own `NotPorted`), these functions are NOT bound onto `cmd` in the
+  // open-source build at all: `get_stlstr`/`read_stlstr` are incentive-only and
+  // live in `pymol.lazyio`, reachable only through `save`/`load`'s extension
+  // dispatch table (`exporting.py:1019`, `lazyio.py:224`). So `cmd.get_stlstr`
+  // is a real Python `AttributeError`, which the bridge surfaces as a
+  // `NotAllowed` "no such symbol" rejection. Reproduce that EXACT error so the
+  // differential sees identical behaviour instead of a mismatched port message.
+  const absentCmdSymbol = (names: readonly string[]): void => {
+    for (const name of names) {
+      ctx.command(name, () => {
+        throw new PymolError(
+          {
+            kind: 'NotAllowed',
+            type: 'NotAllowed',
+            message: `${name}: no such symbol (module 'pymol.cmd' has no attribute '${name}')`,
+            traceback: '',
+          },
+          name,
+        );
+      });
+    }
+  };
+  absentCmdSymbol(['get_stlstr', 'read_stlstr']);
 
   // `remove_picked` (cmd/editing.ts) and `pair_fit` (cmd/align.ts) are real now.
 }

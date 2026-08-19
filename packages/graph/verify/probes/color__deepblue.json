@@ -1,0 +1,22 @@
+{
+  "id": "color__deepblue", "feature": "deepblue", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color deepblue, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","deepblue"],"label":"deepblue RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color deepblue"],"label":"atoms colored deepblue"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.25,
+      0.25,
+      0.6499999761581421
+    ],
+    1,
+    1
+  ]
+}

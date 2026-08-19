@@ -21,15 +21,31 @@ function firstBlock(text: string): string {
   return out.join('\n');
 }
 
-/** `num_atoms num_bonds …` from the first molecule block's counts line. */
-function declaredCounts(block: string): { atoms: number; bonds: number } {
-  const lines = block.split(/\r?\n/);
-  const i = lines.findIndex((l) => /^@<TRIPOS>MOLECULE/.test(l));
-  const nums = (lines[i + 2] ?? '')
-    .trim()
-    .split(/\s+/)
-    .map((n) => parseInt(n, 10));
-  return { atoms: nums[0] ?? 0, bonds: nums[1] ?? 0 };
+/** Number of `@<TRIPOS>MOLECULE` blocks in the file (== state count). */
+function blockCount(text: string): number {
+  return (text.match(/^@<TRIPOS>MOLECULE/gm) ?? []).length;
+}
+
+/**
+ * Grand `num_atoms num_bonds` totals summed across EVERY molecule block's counts
+ * line (the second line of each block). PyMOL reads every block into one object,
+ * so these are the totals the merged atom/bond table must match.
+ */
+function declaredCounts(text: string): { atoms: number; bonds: number } {
+  const lines = text.split(/\r?\n/);
+  let atoms = 0;
+  let bonds = 0;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^@<TRIPOS>MOLECULE/.test(lines[i]!)) {
+      const nums = (lines[i + 2] ?? '')
+        .trim()
+        .split(/\s+/)
+        .map((n) => parseInt(n, 10));
+      atoms += nums[0] ?? 0;
+      bonds += nums[1] ?? 0;
+    }
+  }
+  return { atoms, bonds };
 }
 
 /** Whether the first block's BOND section contains a double or aromatic bond. */
@@ -66,10 +82,13 @@ describe('parseMol2', () => {
     describe(label, () => {
       const text = readFileSync(join(REPO, path), 'utf8');
       const block = firstBlock(text);
-      const declared = declaredCounts(block);
+      // PyMOL reads EVERY molecule block into one (discrete, multi-state) object,
+      // so the merged atom/bond table matches the sum over all blocks.
+      const declared = declaredCounts(text);
+      const nBlocks = blockCount(text);
       const mol = parseMol2(text, 'lig');
 
-      it('parses a non-empty atom table matching the first block', () => {
+      it('parses a non-empty atom table matching every block combined', () => {
         expect(mol.natom).toBeGreaterThan(0);
         expect(mol.natom).toBe(declared.atoms);
       });
@@ -86,12 +105,16 @@ describe('parseMol2', () => {
         }
       });
 
-      it('has one Float32 coordinate state with finite coords', () => {
-        expect(mol.states.length).toBe(1);
-        const set = mol.states[0]!;
-        expect(set).toBeInstanceOf(Float32Array);
-        expect(set.length).toBe(mol.natom * 3);
-        for (const v of set) expect(Number.isFinite(v)).toBe(true);
+      it('has one Float32 coordinate state per block with finite coords', () => {
+        // Single-block files stay one state; multi-block files become discrete
+        // multi-state objects (one state per @<TRIPOS>MOLECULE block).
+        expect(mol.states.length).toBe(nBlocks);
+        expect(mol.discrete).toBe(nBlocks > 1);
+        for (const set of mol.states) {
+          expect(set).toBeInstanceOf(Float32Array);
+          expect(set.length).toBe(mol.natom * 3);
+          for (const v of set) expect(Number.isFinite(v)).toBe(true);
+        }
       });
 
       it('canonicalises elements from the SYBYL atom type (part before ".")', () => {
@@ -122,11 +145,16 @@ describe('parseMol2', () => {
     expect(mol.atoms[19]!.elem).toBe('N');
   });
 
-  it('loads only the first molecule of a multi-molecule file', () => {
+  it('reads every molecule of a multi-molecule file into one discrete object', () => {
     const text = readFileSync(join(REPO, 'packages/engine/test/dat/small03.mol2'), 'utf8');
-    const mol = parseMol2(text, 'first');
-    // small03.mol2 holds 16 molecules; the first (AGLYSL01) has 10 atoms.
-    expect(mol.natom).toBe(10);
+    const mol = parseMol2(text, 'all');
+    // small03.mol2 holds 16 molecules totalling 389 atoms; PyMOL merges them all
+    // into one 16-state discrete object (verified against the real-PyMOL oracle:
+    // count_atoms=389, count_states=16, count_discrete=1). The first block
+    // (AGLYSL01, 10 atoms) still leads the merged table.
+    expect(mol.natom).toBe(389);
+    expect(mol.states.length).toBe(16);
+    expect(mol.discrete).toBe(true);
     expect(mol.atoms[0]!.resn).toBe('AGLY');
   });
 });

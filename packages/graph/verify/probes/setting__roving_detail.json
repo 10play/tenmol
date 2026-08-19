@@ -1,0 +1,12 @@
+{
+  "id": "setting__roving_detail", "feature": "roving_detail", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set roving_detail, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","roving_detail"],"label":"roving_detail after set 1 (boolean, default 0)"}
+  ],
+  "expected": [
+    true
+  ]
+}

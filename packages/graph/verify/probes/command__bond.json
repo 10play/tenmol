@@ -1,0 +1,23 @@
+{
+  "id": "command__bond",
+  "feature": "bond",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, name=AA, pos=[0,0,0]" },
+    { "do": "pseudoatom m, name=BB, pos=[1.5,0,0]" },
+    { "call": ["count_atoms", "neighbor (m and name AA)"], "comment": "0 before bond" },
+    { "do": "bond (m and name AA), (m and name BB)" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "neighbor (m and name AA)"], "label": "atoms bonded to AA after bond" },
+    { "call": ["count_atoms", "neighbor (m and name BB)"], "label": "atoms bonded to BB after bond" },
+    { "call": ["count_atoms", "bound_to (m and name AA)"], "label": "bound_to AA alias" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    1,
+    1
+  ]
+}

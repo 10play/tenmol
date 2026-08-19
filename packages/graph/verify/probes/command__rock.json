@@ -1,0 +1,19 @@
+{
+  "id": "command__rock",
+  "feature": "rock",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "call": ["rock", 1] }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "rock"], "label": "rock setting int after rock(1)" },
+    { "call": ["get_setting_boolean", "rock"], "label": "rock setting boolean after rock(1)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    true
+  ]
+}

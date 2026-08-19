@@ -1,0 +1,34 @@
+{
+ "id": "selection__in",
+ "feature": "in",
+ "kind": "selection",
+ "probeKind": "state",
+ "ops": [
+  {
+   "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m1"
+  },
+  {
+   "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m2"
+  }
+ ],
+ "checks": [
+  {
+   "call": [
+    "count_atoms",
+    "m1 in m2"
+   ],
+   "label": "IN: m1 atoms whose identity appears in m2 (full copy → all)"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "(m1 and chain A) in (m2 and resi 1-50)"
+   ],
+   "label": "IN: chain A atoms whose identity is in m2 resi 1-50"
+  }
+ ],
+ "expected": [
+  5684,
+  389
+ ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "feature__cSculptBond",
+  "feature": "cSculptBond",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "sculpt_activate ala" },
+    { "do": "translate [0.5, 0.0, 0.0], name CA, camera=0" },
+    { "call": ["sculpt_iterate", "ala"], "kwargs": { "cycles": 100 } }
+  ],
+  "checks": [
+    { "call": ["get_distance", "name N", "name CA"], "label": "N-CA bond harmonic restraint pulls length back toward reference", "tol": 0.05 },
+    { "call": ["get_distance", "name CA", "name C"], "label": "CA-C bond harmonic restraint pulls length back toward reference", "tol": 0.05 }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1.4672402143478394,
+    1.5043339729309082
+  ]
+}

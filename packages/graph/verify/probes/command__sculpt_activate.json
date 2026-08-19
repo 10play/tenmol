@@ -1,0 +1,23 @@
+{
+  "id": "command__sculpt_activate",
+  "feature": "sculpt_activate",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/tiny.pdb, m" },
+    { "do": "sculpt_activate m" },
+    { "do": "translate [0.5, 0.0, 0.0], m and resi 8 and name CA, camera=0" },
+    { "call": ["sculpt_iterate", "m"], "kwargs": { "cycles": 100 } }
+  ],
+  "checks": [
+    { "call": ["get_distance", "m and resi 8 and name N", "m and resi 8 and name CA"], "label": "N-CA bond restored toward reference stored by sculpt_activate", "tol": 0.05 },
+    { "call": ["get_distance", "m and resi 8 and name CA", "m and resi 8 and name C"], "label": "CA-C bond restored toward reference stored by sculpt_activate", "tol": 0.05 },
+    { "call": ["count_atoms", "m"], "label": "object atom count unchanged" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1.4787837266921997,
+    1.5213873386383057,
+    37
+  ]
+}

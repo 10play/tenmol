@@ -1,0 +1,11 @@
+{"id":"setting__sculpt_avd_weight","feature":"sculpt_avd_weight","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set sculpt_avd_weight, 2.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","sculpt_avd_weight"],"label":"sculpt_avd_weight global default (no prior set)"},
+   {"call":["get_setting_float","sculpt_avd_weight","ala"],"label":"sculpt_avd_weight per-object after set 2.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [4, 2.5]}

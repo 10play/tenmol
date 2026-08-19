@@ -191,17 +191,23 @@ describe('get_pdbstr', () => {
     const out = h.call('get_pdbstr', ['all']) as string;
 
     // Round trip: same atom count and coordinates (to float32 / 3-decimal).
+    // PyMOL exports atoms in canonical order (AtomInfoCompare / priority), not
+    // file order, so `GLY` here re-emits as N,CA even though the fixture loads
+    // CA,N. Match atoms by identity (chain+resv+name) instead of by index.
     const re = parsePdb(out, 're');
     const orig = ex.molecule('m')!;
     expect(re.natom).toBe(orig.natom);
-    for (let i = 0; i < orig.natom; i++) {
-      const a = orig.coord(i, 1);
+    const key = (a: AtomInfo): string => `${a.chain}/${a.resv}/${a.name}`;
+    const origByKey = new Map<string, { atom: AtomInfo; xyz: [number, number, number] }>();
+    for (let i = 0; i < orig.natom; i++) origByKey.set(key(orig.atoms[i]!), { atom: orig.atoms[i]!, xyz: orig.coord(i, 1) });
+    for (let i = 0; i < re.natom; i++) {
+      const match = origByKey.get(key(re.atoms[i]!));
+      expect(match).toBeDefined();
       const b = re.coord(i, 1);
-      for (let k = 0; k < 3; k++) expect(b[k]).toBeCloseTo(a[k], 3);
-      expect(re.atoms[i]!.name).toBe(orig.atoms[i]!.name);
-      expect(re.atoms[i]!.resn).toBe(orig.atoms[i]!.resn);
-      expect(re.atoms[i]!.elem).toBe(orig.atoms[i]!.elem);
-      expect(re.atoms[i]!.hetatm).toBe(orig.atoms[i]!.hetatm);
+      for (let k = 0; k < 3; k++) expect(b[k]).toBeCloseTo(match!.xyz[k], 3);
+      expect(re.atoms[i]!.resn).toBe(match!.atom.resn);
+      expect(re.atoms[i]!.elem).toBe(match!.atom.elem);
+      expect(re.atoms[i]!.hetatm).toBe(match!.atom.hetatm);
     }
   });
 
@@ -357,8 +363,12 @@ describe('load_coords', () => {
     expect(mol.coord(0, 1)).toEqual([1, 2, 3]);
     expect(mol.coord(1, 1)).toEqual([4, 5, 6]);
     expect(mol.coord(2, 1)).toEqual([7, 8, 9]);
-    // Untouched atom keeps its original coordinate.
-    expect(mol.coord(3, 1)[0]).toBeCloseTo(14.5, 3);
+    // Untouched atom keeps its original coordinate. Atoms are stored in PyMOL's
+    // canonical sorted order (`ObjectMoleculeSort` at load), so within GLY resi 2
+    // the backbone N (priority 1) precedes CA (priority 2): index 3 is GLY N
+    // (x=15.0) and index 4 is GLY CA (x=14.5).
+    expect(mol.coord(3, 1)[0]).toBeCloseTo(15.0, 3);
+    expect(mol.coord(4, 1)[0]).toBeCloseTo(14.5, 3);
     expect(h.published).toBe(before + 1);
   });
 });

@@ -1,0 +1,18 @@
+{
+  "id": "command__distance", "feature": "distance", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"call": ["distance", "dist_nc", "name n", "name c"]}
+  ],
+  "checks": [
+    {"call": ["get_names", "objects"], "label": "distance measurement object created and listed among objects"},
+    {"call": ["get_names", "all"], "label": "distance object present in full name list, not registered as a selection"},
+    {"call": ["get_distance", "name n", "name c"], "label": "geometric N..C distance matches", "tol": 1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["ala", "dist_nc"],
+    ["ala", "dist_nc"],
+    2.447319984436035
+  ]
+}

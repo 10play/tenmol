@@ -1,0 +1,15 @@
+{
+  "id": "setting__precomputed_lighting", "feature": "precomputed_lighting", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set precomputed_lighting, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","precomputed_lighting"],"label":"global precomputed_lighting default (off)"},
+    {"call":["get_setting_boolean","precomputed_lighting","ala"],"label":"per-object precomputed_lighting after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

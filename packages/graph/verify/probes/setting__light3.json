@@ -1,0 +1,22 @@
+{
+  "id": "setting__light3",
+  "feature": "light3",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_tuple", "light3"], "label": "float3 tuple DEFAULT (expect [4,[0.3,-0.6,-0.2]])"},
+    {"call": ["do", "set light3, [0.1,0.2,0.3]"], "label": "set light3 [0.1,0.2,0.3] via do"},
+    {"call": ["get_setting_tuple", "light3"], "label": "float3 tuple after set (expect [4,[0.1,0.2,0.3]])"},
+    {"call": ["get_setting_text", "light3"], "label": "float3 text format after set"}
+  ],
+  "tol": 0.0001,
+  "expected": [
+    [4, [0.3, -0.6, -0.2]],
+    null,
+    [4, [0.1, 0.2, 0.3]],
+    "[ 0.10000, 0.20000, 0.30000 ]"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "command__count_discrete",
+  "feature": "count_discrete",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, d, discrete=1"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "m"], "label": "sanity: source object loaded"},
+    {"call": ["count_discrete", "all"], "label": "one discrete object spanned by all"},
+    {"call": ["count_discrete", "d"], "label": "the discrete object counts as one"},
+    {"call": ["count_discrete", "m"], "label": "the non-discrete object counts as zero"}
+  ],
+  "tol": 1e-3,
+  "expected": [5684, 1, 1, 0]
+}

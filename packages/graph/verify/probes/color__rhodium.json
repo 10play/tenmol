@@ -1,0 +1,24 @@
+{
+  "id": "color__rhodium", "feature": "rhodium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color rhodium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","rhodium"],"label":"rhodium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","rhodium"],"label":"rhodium palette index"},
+    {"call":["count_atoms","color rhodium"],"label":"atoms colored rhodium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.03921568766236305,
+      0.4901960790157318,
+      0.5490196347236633
+    ],
+    5320,
+    1,
+    1
+  ]
+}

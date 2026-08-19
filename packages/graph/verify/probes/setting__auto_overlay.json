@@ -1,0 +1,12 @@
+{
+  "id": "setting__auto_overlay", "feature": "auto_overlay", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set auto_overlay, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","auto_overlay"],"label":"auto_overlay after set 1 (roundtrip)"}
+  ],
+  "expected": [
+    true
+  ]
+}

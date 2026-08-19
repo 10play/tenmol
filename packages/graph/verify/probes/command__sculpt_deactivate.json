@@ -1,0 +1,26 @@
+{
+  "id": "command__sculpt_deactivate",
+  "feature": "sculpt_deactivate",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/tiny.pdb, m" },
+    { "do": "sculpt_activate m" },
+    { "do": "translate [10, 0, 0], m and index 1" },
+    { "do": "sculpt_deactivate m" },
+    { "do": "sculpt_iterate m" }
+  ],
+  "checks": [
+    { "call": ["get_atom_coords", "m and index 1"], "label": "atom 1 keeps its +10 x shift: sculpt_iterate is a no-op after deactivate (restraints discarded)", "tol": 1e-3 },
+    { "call": ["count_atoms", "m"], "label": "object intact after deactivate" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      31.179000854492188,
+      27.898000717163086,
+      50.03200149536133
+    ],
+    37
+  ]
+}

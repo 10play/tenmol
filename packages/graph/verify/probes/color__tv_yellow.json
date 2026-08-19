@@ -1,0 +1,22 @@
+{
+  "id": "color__tv_yellow", "feature": "tv_yellow", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color tv_yellow, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","tv_yellow"],"label":"tv_yellow RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color tv_yellow"],"label":"atoms colored tv_yellow"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      1,
+      1,
+      0.20000000298023224
+    ],
+    1,
+    1
+  ]
+}

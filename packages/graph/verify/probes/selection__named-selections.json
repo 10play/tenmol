@@ -1,0 +1,11 @@
+{"id":"selection__named-selections","feature":"named-selections","kind":"selection","probeKind":"state",
+ "ops":[
+   {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"select mysel, chain A and name CA"}
+ ],
+ "checks":[
+   {"call":["count_atoms","mysel"],"label":"mysel = named selection atoms"},
+   {"call":["count_atoms","mysel and resn ALA"],"label":"mysel and resn ALA = intersect named sel"},
+   {"call":["count_atoms","not mysel"],"label":"not mysel = complement of named sel"}
+ ],
+ "expected":[186,15,5498]}

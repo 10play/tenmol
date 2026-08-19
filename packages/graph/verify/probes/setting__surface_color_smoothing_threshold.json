@@ -1,0 +1,13 @@
+{
+  "id": "setting__surface_color_smoothing_threshold", "feature": "surface_color_smoothing_threshold", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set surface_color_smoothing_threshold, 0.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","surface_color_smoothing_threshold"],"label":"global surface_color_smoothing_threshold after set 0.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.5
+  ]
+}

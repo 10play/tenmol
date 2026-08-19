@@ -1,0 +1,13 @@
+{
+  "id": "command__get_movie_length", "feature": "get_movie_length", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "m"], "kwargs": {"pos": [0, 0, 0]}},
+    {"do": "mset 1 x10"}
+  ],
+  "checks": [
+    {"call": ["get_movie_length"], "label": "frames explicitly defined by mset 1 x10 (expect 10)"},
+    {"call": ["count_frames"], "label": "cross-check count_frames also 10"}
+  ],
+  "tol": 1e-3,
+  "expected": [10, 10]
+}

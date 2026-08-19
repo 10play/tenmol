@@ -1,0 +1,20 @@
+{
+  "id": "setting__angle_label_position",
+  "feature": "angle_label_position",
+  "kind": "setting",
+  "probeKind": "state",
+  "tol": 0.000001,
+  "ops": [],
+  "checks": [
+    {
+      "call": [
+        "get_setting_float",
+        "angle_label_position"
+      ],
+      "label": "default"
+    }
+  ],
+  "expected": [
+    0.5
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__germanium", "feature": "germanium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color germanium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","germanium"],"label":"germanium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color germanium"],"label":"atoms colored germanium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.4000000059604645,
+      0.5607843399047852,
+      0.5607843399047852
+    ],
+    1,
+    1
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__oxygen", "feature": "oxygen", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color oxygen, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color oxygen"],"label":"atoms colored oxygen"},
+    {"call":["get_color_index","oxygen"],"label":"oxygen palette index"},
+    {"call":["get_color_tuple","oxygen"],"label":"oxygen rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    28,
+    [
+      1,
+      0.30000001192092896,
+      0.30000001192092896
+    ]
+  ]
+}

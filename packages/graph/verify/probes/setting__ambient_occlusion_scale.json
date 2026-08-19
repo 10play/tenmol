@@ -1,0 +1,20 @@
+{
+  "id": "setting__ambient_occlusion_scale",
+  "feature": "ambient_occlusion_scale",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {
+      "call": [
+        "get_setting_float",
+        "ambient_occlusion_scale"
+      ],
+      "label": "default ambient_occlusion_scale (no prior set)"
+    }
+  ],
+  "tol": 0.000001,
+  "expected": [
+    25
+  ]
+}

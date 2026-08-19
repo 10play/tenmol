@@ -1,0 +1,20 @@
+{
+  "id": "command__get_dihedral",
+  "feature": "get_dihedral",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"}
+  ],
+  "checks": [
+    {"call": ["get_dihedral", "name N", "name CA", "name C", "name O"], "label": "dihedral N-CA-C-O", "tol": 1e-3},
+    {"call": ["get_dihedral", "name O", "name C", "name CA", "name N"], "label": "dihedral reversed O-C-CA-N", "tol": 1e-3},
+    {"call": ["get_dihedral", "name N", "name CA", "name CB", "name C"], "label": "dihedral N-CA-CB-C", "tol": 1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    0.6010083556175232,
+    0.6010083556175232,
+    122.7596206665039
+  ]
+}

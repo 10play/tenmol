@@ -1,0 +1,24 @@
+{
+  "id": "color__curium", "feature": "curium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color curium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","curium"],"label":"curium palette index"},
+    {"call":["get_color_tuple","curium"],"label":"curium rgb tuple","tol":1e-6},
+    {"call":["count_atoms","color curium"],"label":"atoms colored curium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    5371,
+    [
+      0.47058823704719543,
+      0.3607843220233917,
+      0.8901960849761963
+    ],
+    1,
+    1
+  ]
+}

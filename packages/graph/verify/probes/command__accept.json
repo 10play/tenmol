@@ -1,0 +1,18 @@
+{
+  "id": "command__accept", "feature": "accept", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"call":["accept"]}
+  ],
+  "checks": [
+    {"call":["count_atoms","all"],"label":"atoms intact after accept"},
+    {"call":["get_names"],"label":"object list unchanged by accept"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    [
+      "ala"
+    ]
+  ]
+}

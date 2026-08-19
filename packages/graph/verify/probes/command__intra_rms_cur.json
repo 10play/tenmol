@@ -1,0 +1,47 @@
+{
+  "id": "command__intra_rms_cur",
+  "feature": "intra_rms_cur",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_pdbstr",
+        "ATOM      1  N   ALA A   1       0.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA  ALA A   1       1.000   0.000   0.000  1.00  0.00           C\nATOM      3  C   ALA A   1       2.000   1.000   0.000  1.00  0.00           C\nEND",
+        "t1"
+      ]
+    },
+    {
+      "call": [
+        "read_pdbstr",
+        "ATOM      1  N   ALA A   1       1.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA  ALA A   1       2.000   0.000   0.000  1.00  0.00           C\nATOM      3  C   ALA A   1       3.000   1.000   0.000  1.00  0.00           C\nEND",
+        "t2"
+      ]
+    },
+    {
+      "call": ["create", "m", "t1", 1, 1]
+    },
+    {
+      "call": ["create", "m", "t2", 1, 2]
+    }
+  ],
+  "checks": [
+    {
+      "call": ["count_states", "m"],
+      "label": "two-state object built (both engines agree on setup)"
+    },
+    {
+      "call": ["intra_rms_cur", "m", 1],
+      "label": "per-state RMS vs reference state 1, no fitting (pure 1.0 A translation -> [-1, 1])",
+      "tol": 0.001
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    2,
+    [
+      -1,
+      1
+    ]
+  ]
+}

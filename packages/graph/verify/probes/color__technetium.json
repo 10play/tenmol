@@ -1,0 +1,24 @@
+{
+  "id": "color__technetium", "feature": "technetium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color technetium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","technetium"],"label":"technetium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","technetium"],"label":"technetium palette index"},
+    {"call":["count_atoms","color technetium"],"label":"atoms colored technetium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.23137255012989044,
+      0.6196078658103943,
+      0.6196078658103943
+    ],
+    5318,
+    1,
+    1
+  ]
+}

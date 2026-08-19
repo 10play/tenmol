@@ -1,0 +1,21 @@
+{
+  "id": "setting__cartoon_nucleic_acid_color",
+  "feature": "cartoon_nucleic_acid_color",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cartoon_nucleic_acid_color, green, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cartoon_nucleic_acid_color"],"label":"global default cartoon_nucleic_acid_color (COLOR, -1)"},
+    {"call":["get_setting_int","cartoon_nucleic_acid_color","ala"],"label":"cartoon_nucleic_acid_color on ala after set green -> green color index"},
+    {"call":["get_color_index","green"],"label":"green color index (oracle vs engine)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    -1,
+    3,
+    3
+  ]
+}

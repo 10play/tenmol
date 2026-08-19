@@ -1,0 +1,11 @@
+{"id":"setting__dihedral_label_position","feature":"dihedral_label_position","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set dihedral_label_position, 2.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","dihedral_label_position"],"label":"dihedral_label_position global default (no prior set)"},
+   {"call":["get_setting_float","dihedral_label_position","ala"],"label":"dihedral_label_position per-object after set 2.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [1.2, 2.5]}

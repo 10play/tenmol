@@ -1,0 +1,15 @@
+{
+  "id": "setting__dot_lighting", "feature": "dot_lighting", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set dot_lighting, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","dot_lighting"],"label":"global dot_lighting default (no prior set)"},
+    {"call":["get_setting_boolean","dot_lighting","ala"],"label":"per-object dot_lighting after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

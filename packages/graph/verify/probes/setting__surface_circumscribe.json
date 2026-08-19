@@ -1,0 +1,15 @@
+{
+  "id": "setting__surface_circumscribe",
+  "feature": "surface_circumscribe",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set surface_circumscribe, 3, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","surface_circumscribe"],"label":"global default (unset) -> -1 (int idx 501)"},
+    {"call":["get_setting_int","surface_circumscribe","m"],"label":"per-object set to 3 -> 3"}
+  ],
+  "expected": [-1, 3]
+}

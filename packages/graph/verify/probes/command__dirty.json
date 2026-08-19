@@ -1,0 +1,18 @@
+{
+  "id": "command__dirty", "feature": "dirty", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"call":["dirty"]}
+  ],
+  "checks": [
+    {"call":["count_atoms","all"],"label":"atoms intact after dirty"},
+    {"call":["get_names"],"label":"object list unchanged by dirty"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    [
+      "ala"
+    ]
+  ]
+}

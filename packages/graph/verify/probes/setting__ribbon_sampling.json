@@ -1,0 +1,15 @@
+{
+  "id": "setting__ribbon_sampling", "feature": "ribbon_sampling", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ribbon_sampling, 9, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","ribbon_sampling"],"label":"global ribbon_sampling default (no prior set)"},
+    {"call":["get_setting_int","ribbon_sampling","ala"],"label":"per-object ribbon_sampling after set 9"}
+  ],
+  "expected": [
+    1,
+    9
+  ]
+}

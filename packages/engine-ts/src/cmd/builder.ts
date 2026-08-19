@@ -23,6 +23,7 @@ import { defaultVisRep } from '../model/atom';
 import { canonicalElement } from '../model/element';
 import type { ObjectMolecule } from '../model/molecule';
 import { templateBondOrder } from '../model/residue-bonds';
+import { sortAtomsInPlace } from '../model/atomsort';
 import type { RegistrarCtx } from './registrar';
 
 /* ------------------------------ arg helpers ------------------------------ */
@@ -129,14 +130,23 @@ const covalent = (elem: string): number => COVALENT[canonicalElement(elem)] ?? D
 const bondOrders = new WeakMap<ObjectMolecule, Map<string, number>>();
 const bondKey = (i: number, j: number): string => (i < j ? `${i}:${j}` : `${j}:${i}`);
 
-/** The order of bond `i–j` (0-based indices); defaults to 1 (single). */
+/** The order of bond `i–j` (0-based indices); defaults to 1 (single). The side
+ *  table is authoritative; fall back to the order stored on the bond tuple's
+ *  third element (as MOL/MOL2 loaders record it) so loaded orders are seen. */
 export function getBondOrder(mol: ObjectMolecule, i: number, j: number): number {
-  return bondOrders.get(mol)?.get(bondKey(i, j)) ?? 1;
+  const fromTable = bondOrders.get(mol)?.get(bondKey(i, j));
+  if (fromTable !== undefined) return fromTable;
+  const bond = mol.bonds.find(([a, b]) => (a === i && b === j) || (a === j && b === i));
+  return bond?.[2] ?? 1;
 }
 export function setBondOrder(mol: ObjectMolecule, i: number, j: number, order: number): void {
   let m = bondOrders.get(mol);
   if (!m) bondOrders.set(mol, (m = new Map()));
   m.set(bondKey(i, j), order);
+  // Keep the bond tuple's stored order in sync so readers that inspect the
+  // tuple directly (get_bonds, exporters, get_model) observe the new order.
+  const bond = mol.bonds.find(([a, b]) => (a === i && b === j) || (a === j && b === i));
+  if (bond) bond[2] = order;
 }
 
 /** Per-atom valence overrides (PyMOL `set_geometry`), keyed by stable atom id so
@@ -711,60 +721,187 @@ export function registerBuilder(ctx: RegistrarCtx): void {
   });
 
   /* --------------------------------- invert ------------------------------ */
-  // invert(selection='pk1') — invert the configuration at the picked atom by
-  // swapping the positions of two of its substituents (a chirality flip).
-  ctx.command('invert', (args, kwargs): Json => {
-    const target = firstAtom(sel(pick(args, kwargs, 0, 'selection'), 'pk1'));
+  // invert(quiet=1) — invert the stereochemistry at the picked atom `pk1`,
+  // holding the two attached atoms `pk2` and `pk3` immobile (Editor.cpp
+  // EditorInvert). PyMOL takes no selection argument: it reads the editor picks.
+  //
+  // Algorithm (Editor.cpp:608): with centre `v` = pk1, and the two immobile
+  // neighbours `v0` = pk2, `v1` = pk3, build the bisector axis
+  //   n = normalize( normalize(v-v0) + normalize(v-v1) )
+  // and rotate every "free" fragment (the atoms hanging off pk1 that are NOT
+  // bonded to pk2 or pk3) by 180° about that axis through `v`. Rotating by π
+  // about the bisector swaps the two free substituents' half-spaces — a rigid
+  // motion that inverts the chirality while leaving pk2/pk3 (and all bond
+  // lengths) untouched.
+  ctx.command('invert', (): Json => {
+    const target = firstAtom('pk1');
     if (!target) return null;
     const mol = ex.molecule(target.objName);
     if (!mol) return null;
-    const adj = buildAdjacency(mol);
-    const nbrs = adj[target.index]!;
-    if (nbrs.length < 2) return null;
-    // Prefer swapping the two lightest substituents (typically hydrogens).
-    const ranked = [...nbrs].sort(
-      (a, b) => valenceOf(mol.atoms[a]!.elem) - valenceOf(mol.atoms[b]!.elem),
-    );
-    const p = ranked[0]!;
-    const q = ranked[1]!;
+    const a2 = firstAtom('pk2');
+    const a3 = firstAtom('pk3');
+    // Both immobile picks must exist in the same object (EditorInvert requires
+    // pk1/pk2/pk3, all in one object, else it errors and does nothing).
+    if (!a2 || !a3) return null;
+    if (a2.objName !== target.objName || a3.objName !== target.objName) return null;
     const ci = target.index;
-    // Invert stereochemistry by swapping the two substituents' ANGULAR positions
-    // about the centre while preserving each bond length — a rigid reflection
-    // that never changes a bond length (editing.py invert holds atoms immobile).
+    const i2 = a2.index;
+    const i3 = a3.index;
+
+    const adj = buildAdjacency(mol);
+    // Free fragments: each neighbour of pk1 other than pk2/pk3 seeds a connected
+    // component reached without crossing back through pk1. Skip any component
+    // that contains pk2 or pk3 (a ring back to an immobile atom is not free).
+    const moved = new Set<number>();
+    for (const nb of adj[ci]!) {
+      if (nb === i2 || nb === i3) continue;
+      const seen = new Set<number>([nb]);
+      const stack = [nb];
+      let touchesImmobile = false;
+      while (stack.length > 0) {
+        const x = stack.pop()!;
+        if (x === i2 || x === i3) touchesImmobile = true;
+        for (const y of adj[x]!) {
+          if (y === ci || seen.has(y)) continue;
+          seen.add(y);
+          stack.push(y);
+        }
+      }
+      if (!touchesImmobile) for (const x of seen) moved.add(x);
+    }
+    if (moved.size === 0) return null;
+
     for (let s = 0; s < mol.states.length; s++) {
       const set = mol.states[s]!;
-      const cx = set[ci * 3] ?? 0, cy = set[ci * 3 + 1] ?? 0, cz = set[ci * 3 + 2] ?? 0;
-      const vp: [number, number, number] = [
-        (set[p * 3] ?? 0) - cx, (set[p * 3 + 1] ?? 0) - cy, (set[p * 3 + 2] ?? 0) - cz,
-      ];
-      const vq: [number, number, number] = [
-        (set[q * 3] ?? 0) - cx, (set[q * 3 + 1] ?? 0) - cy, (set[q * 3 + 2] ?? 0) - cz,
-      ];
-      const lp = Math.hypot(vp[0], vp[1], vp[2]) || 1;
-      const lq = Math.hypot(vq[0], vq[1], vq[2]) || 1;
-      // p takes q's direction at p's own length, and vice versa.
-      set[p * 3] = cx + (vq[0] / lq) * lp;
-      set[p * 3 + 1] = cy + (vq[1] / lq) * lp;
-      set[p * 3 + 2] = cz + (vq[2] / lq) * lp;
-      set[q * 3] = cx + (vp[0] / lp) * lq;
-      set[q * 3 + 1] = cy + (vp[1] / lp) * lq;
-      set[q * 3 + 2] = cz + (vp[2] / lp) * lq;
+      const v: Vec3 = [set[ci * 3] ?? 0, set[ci * 3 + 1] ?? 0, set[ci * 3 + 2] ?? 0];
+      const v0: Vec3 = [set[i2 * 3] ?? 0, set[i2 * 3 + 1] ?? 0, set[i2 * 3 + 2] ?? 0];
+      const v1: Vec3 = [set[i3 * 3] ?? 0, set[i3 * 3 + 1] ?? 0, set[i3 * 3 + 2] ?? 0];
+      const n0 = norm(sub(v, v0));
+      const n1 = norm(sub(v, v1));
+      const axis = norm(add(n0, n1));
+      // Rotate 180° about `axis` through `v`: R(p) = v + (2 (axis·d) axis − d),
+      // where d = p − v.
+      for (const idx of moved) {
+        const p: Vec3 = [set[idx * 3] ?? 0, set[idx * 3 + 1] ?? 0, set[idx * 3 + 2] ?? 0];
+        const d = sub(p, v);
+        const dot = axis[0] * d[0] + axis[1] * d[1] + axis[2] * d[2];
+        const r = sub(scale(axis, 2 * dot), d);
+        set[idx * 3] = v[0] + r[0];
+        set[idx * 3 + 1] = v[1] + r[1];
+        set[idx * 3 + 2] = v[2] + r[2];
+      }
     }
     ctx.publish();
     return null;
   });
 
   /* --------------------------------- fuse -------------------------------- */
-  // fuse(selection1='pk1', selection2='pk2', mode=0) — join two atoms of the same
-  // object with a bond (a minimal port of PyMOL's join-by-bond). Returns bonds
-  // added. Cross-object fusion is a documented no-op (bonds are intra-object).
+  // fuse(selection1='pk1', selection2='pk2', mode=0, recolor=1, move=1) — join
+  // two objects into one. PyMOL's `ExecutiveFuse`/`ObjectMoleculeFuse` copies the
+  // WHOLE object holding `selection1` (the source) into the object holding
+  // `selection2` (the target), then — unless `mode==3` — forms a bond between the
+  // target atom and the copy of the source atom, moving the copy into a bonding
+  // position first (`move`). The source object is left untouched, so the atom
+  // total grows by the source's atom count. Returns 1 on success.
   ctx.command('fuse', (args, kwargs): Json => {
-    const t1 = firstAtom(sel(pick(args, kwargs, 0, 'selection1'), 'pk1'));
-    const t2 = firstAtom(sel(pick(args, kwargs, 1, 'selection2'), 'pk2'));
-    if (!t1 || !t2 || t1.objName !== t2.objName || t1.index === t2.index) return 0;
-    const mol = ex.molecule(t1.objName);
-    if (!mol || hasBond(mol, t1.index, t2.index)) return 0;
-    mol.bonds.push(t1.index < t2.index ? [t1.index, t2.index] : [t2.index, t1.index]);
+    const mode = Math.trunc(num(pick(args, kwargs, 2, 'mode'), 0));
+    const recolor = num(pick(args, kwargs, 3, 'recolor'), 1) !== 0;
+    const move = num(pick(args, kwargs, 4, 'move'), 1) !== 0;
+    const s1 = firstAtom(sel(pick(args, kwargs, 0, 'selection1'), 'pk1')); // source
+    const s2 = firstAtom(sel(pick(args, kwargs, 1, 'selection2'), 'pk2')); // target
+    if (!s1 || !s2) return 0;
+
+    // Same object: PyMOL's ExecutiveFuse requires two *different* objects (it
+    // bails when obj0 == obj1). The port keeps a minimal intra-object bond here
+    // for backward compatibility with callers that lean on it.
+    if (s1.objName === s2.objName) {
+      if (s1.index === s2.index) return 0;
+      const mol = ex.molecule(s1.objName);
+      if (!mol || hasBond(mol, s1.index, s2.index)) return 0;
+      mol.bonds.push(s1.index < s2.index ? [s1.index, s2.index] : [s2.index, s1.index]);
+      ctx.publish();
+      return 1;
+    }
+
+    // Cross-object fuse: copy every atom of the source object into the target.
+    const srcMol = ex.molecule(s1.objName);
+    const dstMol = ex.molecule(s2.objName);
+    if (!srcMol || !dstMol || srcMol.natom === 0) return 0;
+
+    const createBond = mode !== 3;
+    const base = dstMol.natom; // first copied index within the target
+    const targetIdx = s2.index; // anchor atom in the target
+    const srcAnchorCopy = base + s1.index; // copy of the source anchor in the target
+
+    // Translation that moves the source copy so its anchor atom sits at bonding
+    // distance from the target anchor along the target→source direction.
+    let dx = 0;
+    let dy = 0;
+    let dz = 0;
+    if (createBond && move) {
+      const tp = dstMol.coord(targetIdx, 1);
+      const sp = srcMol.coord(s1.index, 1);
+      const bl = covalent(dstMol.atoms[targetIdx]!.elem) + covalent(srcMol.atoms[s1.index]!.elem);
+      let ux = sp[0] - tp[0];
+      let uy = sp[1] - tp[1];
+      let uz = sp[2] - tp[2];
+      const ul = Math.hypot(ux, uy, uz);
+      if (ul < 1e-6) {
+        ux = 1;
+        uy = 0;
+        uz = 0;
+      } else {
+        ux /= ul;
+        uy /= ul;
+        uz /= ul;
+      }
+      dx = tp[0] + ux * bl - sp[0];
+      dy = tp[1] + uy * bl - sp[1];
+      dz = tp[2] + uz * bl - sp[2];
+    }
+
+    // Copy the atom table (recolor carbons to the target atom's colour when asked).
+    const dstColor = dstMol.atoms[targetIdx]!.color;
+    for (let i = 0; i < srcMol.natom; i++) {
+      const sa = srcMol.atoms[i]!;
+      const copy: AtomInfo = { ...sa, id: base + i + 1 };
+      if (recolor && canonicalElement(sa.elem) === 'C') copy.color = dstColor;
+      dstMol.atoms.push(copy);
+    }
+
+    // Copy coordinates into every target state, applying the move translation.
+    if (dstMol.states.length === 0) dstMol.states.push(new Float32Array(base * 3));
+    const nNew = srcMol.natom;
+    for (let st = 0; st < dstMol.states.length; st++) {
+      const old = dstMol.states[st]!;
+      const out = new Float32Array(old.length + nNew * 3);
+      out.set(old, 0);
+      const ss = srcMol.states[st] ?? srcMol.states[0];
+      for (let k = 0; k < nNew; k++) {
+        out[old.length + k * 3] = (ss?.[k * 3] ?? 0) + dx;
+        out[old.length + k * 3 + 1] = (ss?.[k * 3 + 1] ?? 0) + dy;
+        out[old.length + k * 3 + 2] = (ss?.[k * 3 + 2] ?? 0) + dz;
+      }
+      dstMol.states[st] = out;
+    }
+
+    // Copy the source's internal bonds (shifted into the target's index space),
+    // preserving their orders.
+    for (const [a, b] of srcMol.bonds) {
+      const na = base + a;
+      const nb = base + b;
+      dstMol.bonds.push(na < nb ? [na, nb] : [nb, na]);
+      const ord = getBondOrder(srcMol, a, b);
+      if (ord !== 1) setBondOrder(dstMol, na, nb, ord);
+    }
+
+    // Form the linking bond between the target atom and the source anchor's copy.
+    if (createBond && !hasBond(dstMol, targetIdx, srcAnchorCopy)) {
+      dstMol.bonds.push(
+        targetIdx < srcAnchorCopy ? [targetIdx, srcAnchorCopy] : [srcAnchorCopy, targetIdx],
+      );
+    }
+
     ctx.publish();
     return 1;
   });
@@ -790,10 +927,23 @@ export function registerBuilder(ctx: RegistrarCtx): void {
   /* --------------------------- fix_chemistry / sort ---------------------- */
   // fix_chemistry(selection1, selection2) — PyMOL repairs valences/charges at the
   // interface of two selections. This port has no partial-charge model, so it is
-  // a no-op that reports success. sort() reorders atoms within residues; this
-  // port keeps load order, so it is a documented no-op.
+  // a no-op that reports success.
   ctx.command('fix_chemistry', (): Json => 0);
-  ctx.command('sort', (): Json => null);
+
+  // sort(object='') — re-sort atoms into PyMOL's canonical order
+  // (ObjectMoleculeSort). Needed after `alter` changes naming properties (resi,
+  // chain, name, ...) without moving atoms in the internal list. Empty object
+  // name re-sorts every molecule.
+  ctx.command('sort', (args, kwargs): Json => {
+    const objName = ctx.str(pick(args, kwargs, 0, 'object'), '');
+    const targets = objName ? [ex.molecule(objName)] : ex.moleculesInOrder();
+    for (const mol of targets) {
+      if (!mol) continue;
+      sortAtomsInPlace(mol);
+    }
+    ctx.publish();
+    return null;
+  });
 }
 
 /* -------------------------- distance connectivity ------------------------ */

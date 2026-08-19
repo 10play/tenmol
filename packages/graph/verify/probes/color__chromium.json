@@ -1,0 +1,22 @@
+{
+  "id": "color__chromium", "feature": "chromium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color chromium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color chromium"],"label":"atoms colored chromium"},
+    {"call":["get_color_index","chromium"],"label":"chromium palette index"},
+    {"call":["get_color_tuple","chromium"],"label":"chromium rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5299,
+    [
+      0.5411764979362488,
+      0.6000000238418579,
+      0.7803921699523926
+    ]
+  ]
+}

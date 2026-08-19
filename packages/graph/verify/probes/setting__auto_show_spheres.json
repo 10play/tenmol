@@ -1,0 +1,15 @@
+{
+  "id": "setting__auto_show_spheres", "feature": "auto_show_spheres", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set auto_show_spheres, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","auto_show_spheres"],"label":"global auto_show_spheres default (no global set) -> 0"},
+    {"call":["get_setting_boolean","auto_show_spheres","ala"],"label":"per-object auto_show_spheres after set 1 (roundtrip)"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

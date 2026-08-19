@@ -1,0 +1,16 @@
+{
+  "id": "command__load_callback",
+  "feature": "load_callback",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [],
+  "checks": [
+    { "call": ["load_callback", "cbdummy", "cbtest"], "label": "load_callback invocation (null=ok)" },
+    { "call": ["get_names"], "label": "callback object registered in object list" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    null,
+    ["cbtest"]
+  ]
+}

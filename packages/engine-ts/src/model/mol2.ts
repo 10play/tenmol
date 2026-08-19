@@ -49,18 +49,31 @@ function resnFromSubst(substName: string): string {
  * executive will file it under (the in-file molecule name is ignored, as PyMOL
  * uses the load-supplied object name).
  *
- * A MOL2 file may hold MANY `@<TRIPOS>MOLECULE` blocks. `parseMol2` returns a
- * single object, so it parses only the FIRST molecule and stops at the second
- * `@<TRIPOS>MOLECULE` marker; a `loadall`-style caller would iterate the blocks
- * instead. Malformed rows are skipped rather than aborting the load.
+ * A MOL2 file may hold MANY `@<TRIPOS>MOLECULE` blocks. PyMOL reads EVERY block
+ * into one object: with the default (`discrete<0`) `load`, a multi-block file
+ * becomes a DISCRETE multi-state object — each block is a new coordinate state
+ * and its atoms are merged into the shared atom table, so `count_atoms` reports
+ * the grand total across all blocks and `count_states` the block count
+ * (`ObjectMoleculeReadStr`'s `repeatFlag`/`restart` loop + `ObjectMoleculeMerge`).
+ * A single-block file stays a plain one-state object.
+ *
+ * The engine's dense CoordSet model keeps one atom table plus a full-width
+ * (`natom*3`) coordinate array per state, so each state here is filled with the
+ * whole (real) coordinate table; the per-state atom *membership* PyMOL tracks for
+ * discrete objects (which `state N` selection reads) is not modelled. Malformed
+ * rows are skipped rather than aborting the load.
  */
 export function parseMol2(text: string, name: string): ObjectMolecule {
   const mol = new ObjectMolecule(name);
   const lines = text.split(/\r?\n/);
 
   const coords: number[] = [];
-  // File `atom_id` -> 0-based table index, so the BOND block can resolve ids.
-  const idToIndex = new Map<number, number>();
+  // Global index of the first atom in the CURRENT block. BOND rows reference an
+  // atom by its 1-based POSITION within its own block (PyMOL reads the two ids
+  // then does `index--`, treating them as ordinals into the block's atom array,
+  // NOT as the file `atom_id` field), so a bond ordinal `k` resolves to the
+  // global table index `blockAtomStart + k - 1`. Reset at each block boundary.
+  let blockAtomStart = 0;
   const addBond = makeBondAdder(mol);
 
   let section = '';
@@ -72,7 +85,7 @@ export function parseMol2(text: string, name: string): ObjectMolecule {
       const rec = (marker[1] ?? '').toUpperCase();
       if (rec === 'MOLECULE') {
         moleculeBlocks++;
-        if (moleculeBlocks === 2) break; // Multi-molecule: keep only the first.
+        blockAtomStart = mol.atoms.length; // Next block's atoms start here.
       }
       section = rec;
       continue;
@@ -89,7 +102,6 @@ export function parseMol2(text: string, name: string): ObjectMolecule {
       // atom_id atom_name x y z atom_type [subst_id subst_name charge]
       const t = line.trim().split(/\s+/);
       if (t.length < 6) continue; // Not a full atom row.
-      const fileId = parseInt(t[0] ?? '', 10);
       const x = parseFloat(t[2] ?? '');
       const y = parseFloat(t[3] ?? '');
       const z = parseFloat(t[4] ?? '');
@@ -123,7 +135,6 @@ export function parseMol2(text: string, name: string): ObjectMolecule {
         visRep: defaultVisRep(),
       };
       if (Number.isFinite(charge)) atom.partialCharge = charge;
-      if (Number.isFinite(fileId)) idToIndex.set(fileId, mol.atoms.length);
       mol.atoms.push(atom);
       coords.push(x, y, z);
       continue;
@@ -131,17 +142,31 @@ export function parseMol2(text: string, name: string): ObjectMolecule {
 
     if (section === 'BOND') {
       // bond_id origin_atom_id target_atom_id bond_type (type in {1,2,3,ar,am,...}).
+      // origin/target are 1-based ORDINALS into the current block's atoms.
       const t = line.trim().split(/\s+/);
       if (t.length < 3) continue;
-      const a = idToIndex.get(parseInt(t[1] ?? '', 10));
-      const b = idToIndex.get(parseInt(t[2] ?? '', 10));
-      if (a === undefined || b === undefined) continue;
+      const oa = parseInt(t[1] ?? '', 10);
+      const ob = parseInt(t[2] ?? '', 10);
+      if (!Number.isFinite(oa) || !Number.isFinite(ob)) continue;
+      const a = blockAtomStart + oa - 1;
+      const b = blockAtomStart + ob - 1;
+      if (a < 0 || b < 0 || a >= mol.atoms.length || b >= mol.atoms.length) continue;
       addBond(a, b);
       continue;
     }
     // Other sections (SUBSTRUCTURE, COMMENT, CRYSIN, …) are not needed here.
   }
 
-  mol.states.push(Float32Array.from(coords));
+  // One coordinate state per MOLECULE block (PyMOL's per-block frame). The dense
+  // model can't hold a distinct per-state atom subset, so every state carries the
+  // full atom table's coordinates; the block count is what drives `count_states`.
+  const nState = Math.max(1, moleculeBlocks);
+  const allCoords = Float32Array.from(coords);
+  for (let s = 0; s < nState; s++) {
+    mol.states.push(s === 0 ? allCoords : allCoords.slice());
+  }
+  // A multi-block MOL2 loads discrete by default (ObjectMoleculeReadStr sets
+  // DiscreteFlag when a multi-coordinate-set file is read non-multiplexed).
+  if (moleculeBlocks > 1) mol.discrete = true;
   return mol;
 }

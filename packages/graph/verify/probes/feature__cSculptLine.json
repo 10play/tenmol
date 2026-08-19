@@ -1,0 +1,15 @@
+{
+  "id": "feature__cSculptLine",
+  "feature": "cSculptLine",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    { "do": "set sculpt_field_mask, 16" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "sculpt_field_mask"], "label": "cSculptLine bit (0x010=16) isolated as active mask" },
+    { "call": ["get_setting_float", "sculpt_line_weight"], "label": "linearity restraint weight default" }
+  ],
+  "tol": 1e-3,
+  "expected": [16, 1]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__palladium", "feature": "palladium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color palladium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color palladium"],"label":"atoms colored palladium"},
+    {"call":["get_color_index","palladium"],"label":"palladium palette index"},
+    {"call":["get_color_tuple","palladium"],"label":"palladium rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5321,
+    [
+      0,
+      0.4117647111415863,
+      0.5215686559677124
+    ]
+  ]
+}

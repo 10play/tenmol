@@ -1,0 +1,22 @@
+{
+  "id": "color__red", "feature": "red", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color red, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","red"],"label":"red RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color red"],"label":"atoms colored red"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      1,
+      0,
+      0
+    ],
+    1,
+    1
+  ]
+}

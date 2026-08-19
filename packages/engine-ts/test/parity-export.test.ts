@@ -14,6 +14,9 @@
  * RED today. Molecular surface *mesh* export is deliberately out of scope.
  */
 import { describe, it, expect } from 'vitest';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { LocalBackend } from '@tenmol/engine-ts';
 import { SMALL_PDB } from './fixture';
 
@@ -72,9 +75,18 @@ describe('parity: export / session', () => {
     // in the given selection (pattern) will have a HEADER and a CRYST (if symmetry
     // is defined) record, and is terminated with END. Loading such a multi-entry
     // PDB file into PyMOL will load each entry as a separate object."
-    const s = (await b.call('multisave', ['out.pdb', 'all'])) as string;
+    // multisave writes the file to disk (returns success, not the string) — read
+    // it back and count the per-object HEADER records.
+    const dir = mkdtempSync(join(tmpdir(), 'tenmol-ms-'));
+    let s: string;
+    try {
+      await b.call('multisave', [join(dir, 'out.pdb'), 'all']);
+      s = readFileSync(join(dir, 'out.pdb'), 'utf8');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
     const headers = (s.match(/^HEADER/gm) ?? []).length;
-    expect(headers).toBe(2); // RED today: TS concatenates blocks with no HEADER
+    expect(headers).toBe(2); // one HEADER per object
   });
 
   it('get_str("mol"): emits an MDL molfile that re-reads to 9 atoms', async () => {

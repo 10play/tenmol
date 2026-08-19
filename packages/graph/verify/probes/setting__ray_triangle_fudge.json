@@ -1,0 +1,19 @@
+{
+  "id": "setting__ray_triangle_fudge",
+  "feature": "ray_triangle_fudge",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ray_triangle_fudge, 0.25, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_triangle_fudge"],"label":"global default (unset) -> 1e-7"},
+    {"call":["get_setting_float","ray_triangle_fudge","m"],"label":"per-object set 0.25 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1e-7,
+    0.25
+  ]
+}

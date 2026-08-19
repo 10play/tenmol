@@ -1,0 +1,12 @@
+{"id":"setting__bg_rgb_top","feature":"bg_rgb_top","kind":"setting","probeKind":"state",
+ "ops":[{"do":"set bg_rgb_top, blue"}],
+ "checks":[
+   {"call":["get_setting_int","bg_rgb_top"],"label":"bg_rgb_top after set blue -> color index"},
+   {"call":["get_color_index","blue"],"label":"blue color index (oracle vs engine)"}
+ ],
+ "tol": 1e-6,
+ "expected": [
+   2,
+   2
+ ]
+}

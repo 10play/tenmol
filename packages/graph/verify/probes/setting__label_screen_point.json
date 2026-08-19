@@ -1,0 +1,21 @@
+{
+  "id": "setting__label_screen_point",
+  "feature": "label_screen_point",
+  "kind": "setting",
+  "probeKind": "state",
+  "tol": 0.0001,
+  "ops": [
+    {"do": "load packages/engine/test/dat/1tii.pdb, m"},
+    {"call": ["set", "label_screen_point", [1, 2, 3], "m"]}
+  ],
+  "checks": [
+    {"call": ["get_setting_tuple", "label_screen_point"], "label": "global default float3 tuple (expect [4,[0,0,0]])"},
+    {"call": ["get_setting_tuple", "label_screen_point", "m"], "label": "per-object float3 tuple after set [1,2,3] (expect [4,[1,2,3]])"},
+    {"call": ["get_setting_text", "label_screen_point", "m"], "label": "per-object float3 text after set [1,2,3]"}
+  ],
+  "expected": [
+    [4, [0, 0, 0]],
+    [4, [1, 2, 3]],
+    "[ 1.00000, 2.00000, 3.00000 ]"
+  ]
+}

@@ -168,6 +168,131 @@ function zpad(n: number, width: number): string {
 }
 
 /* --------------------------------------------------------------------------
+ * spectrumany fallback (viewing.py `spectrumany`). `spectrum` delegates here
+ * when the expression is not purely alphabetic OR the palette is not a known
+ * palette name — the pure-Python path that accepts an arbitrary colour list
+ * and rgb/hls/hsv interpolation, writing packed `0x40RRGGBB` inline colours.
+ * ------------------------------------------------------------------------ */
+
+/** Maps the 10 rainbow-family palette names to explicit colour-name strings
+ *  (viewing.py `palette_colors_dict`). Used when `colors` has no space. */
+const PALETTE_COLORS_DICT: Readonly<Record<string, string>> = {
+  rainbow_cycle: 'magenta blue cyan green yellow orange red magenta',
+  rainbow_cycle_rev: 'magenta red orange yellow green cyan blue magenta',
+  rainbow: 'blue cyan green yellow orange red',
+  rainbow_rev: 'red orange yellow green cyan blue',
+  rainbow2: 'blue cyan green yellow orange red',
+  rainbow2_rev: 'red orange yellow green cyan blue',
+  gcbmry: 'green cyan blue magenta red yellow',
+  yrmbcg: 'yellow red magenta blue cyan green',
+  cbmr: 'cyan blue magenta red',
+  rmbc: 'red magenta blue cyan',
+};
+
+type ColorFn = (a: number, b: number, c: number) => Vec3;
+
+/** Python `colorsys.rgb_to_hls`. */
+function rgbToHls(r: number, g: number, b: number): Vec3 {
+  const maxc = Math.max(r, g, b);
+  const minc = Math.min(r, g, b);
+  const sumc = maxc + minc;
+  const rangec = maxc - minc;
+  const l = sumc / 2;
+  if (minc === maxc) return [0, l, 0];
+  const s = l <= 0.5 ? rangec / sumc : rangec / (2 - maxc - minc);
+  const rc = (maxc - r) / rangec;
+  const gc = (maxc - g) / rangec;
+  const bc = (maxc - b) / rangec;
+  let h: number;
+  if (r === maxc) h = bc - gc;
+  else if (g === maxc) h = 2 + rc - bc;
+  else h = 4 + gc - rc;
+  h = ((h / 6) % 1 + 1) % 1;
+  return [h, l, s];
+}
+
+function hlsV(m1: number, m2: number, hueIn: number): number {
+  const hue = ((hueIn % 1) + 1) % 1;
+  if (hue < 1 / 6) return m1 + (m2 - m1) * hue * 6;
+  if (hue < 0.5) return m2;
+  if (hue < 2 / 3) return m1 + (m2 - m1) * (2 / 3 - hue) * 6;
+  return m1;
+}
+
+/** Python `colorsys.hls_to_rgb`. */
+function hlsToRgb(h: number, l: number, s: number): Vec3 {
+  if (s === 0) return [l, l, l];
+  const m2 = l <= 0.5 ? l * (1 + s) : l + s - l * s;
+  const m1 = 2 * l - m2;
+  return [hlsV(m1, m2, h + 1 / 3), hlsV(m1, m2, h), hlsV(m1, m2, h - 1 / 3)];
+}
+
+/** Python `colorsys.rgb_to_hsv`. */
+function rgbToHsv(r: number, g: number, b: number): Vec3 {
+  const maxc = Math.max(r, g, b);
+  const minc = Math.min(r, g, b);
+  const v = maxc;
+  if (minc === maxc) return [0, 0, v];
+  const rangec = maxc - minc;
+  const s = rangec / maxc;
+  const rc = (maxc - r) / rangec;
+  const gc = (maxc - g) / rangec;
+  const bc = (maxc - b) / rangec;
+  let h: number;
+  if (r === maxc) h = bc - gc;
+  else if (g === maxc) h = 2 + rc - bc;
+  else h = 4 + gc - rc;
+  h = ((h / 6) % 1 + 1) % 1;
+  return [h, s, v];
+}
+
+/** Python `colorsys.hsv_to_rgb`. */
+function hsvToRgb(h: number, s: number, v: number): Vec3 {
+  if (s === 0) return [v, v, v];
+  let i = Math.trunc(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - s * f);
+  const t = v * (1 - s * (1 - f));
+  i = ((i % 6) + 6) % 6;
+  switch (i) {
+    case 0: return [v, t, p];
+    case 1: return [q, v, p];
+    case 2: return [p, v, t];
+    case 3: return [p, q, v];
+    case 4: return [t, p, v];
+    default: return [v, p, q];
+  }
+}
+
+const IDENTITY_RGB: ColorFn = (a, b, c) => [a, b, c];
+
+/** `_spectrumany_interpolations`: [from_rgb, to_rgb] per interpolation mode. */
+const INTERP: Readonly<Record<string, readonly [ColorFn, ColorFn]>> = {
+  rgb: [IDENTITY_RGB, IDENTITY_RGB],
+  hls: [rgbToHls, hlsToRgb],
+  hsv: [rgbToHsv, hsvToRgb],
+};
+
+/**
+ * Resolve a palette name the way `palette_sc` (a `Shortcut` over
+ * `palette_dict`) does: an exact key, or a unique prefix of exactly one key.
+ * Returns the resolved key or `null` (the `not palette_hit` signal that sends
+ * `spectrum` to the `spectrumany` fallback).
+ */
+function resolvePaletteHit(name: string): string | null {
+  if (PALETTE_DICT[name]) return name;
+  let hit: string | null = null;
+  for (const key of Object.keys(PALETTE_DICT)) {
+    if (key.startsWith(name)) {
+      if (hit !== null) return null; // ambiguous prefix
+      hit = key;
+    }
+  }
+  return hit;
+}
+
+/* --------------------------------------------------------------------------
  * Argument coercion.
  * ------------------------------------------------------------------------ */
 
@@ -257,14 +382,20 @@ function enumeratedValue(expr: string, atom: AtomInfo): string {
 }
 
 /* --------------------------------------------------------------------------
- * Chain-colour cycle (util.cbc). Names from util.py `_color_cycle`, restricted
- * to colours present in the ported table so each resolves to a real index.
+ * Chain-colour cycle (util.cbc). The exact 40-entry `_color_cycle` from
+ * util.py (mirror of layer1/Color.cpp's AutoColor), by name — every name is
+ * present in the ported colour table and resolves to its real PyMOL index
+ * (e.g. lightmagenta -> 154), so `c % 40` matches `_color_cycle[c % 40]`.
  * ------------------------------------------------------------------------ */
 
 const CHAIN_COLOR_CYCLE = [
-  'carbon', 'cyan', 'magenta', 'yellow', 'salmon', 'slate', 'orange',
-  'green', 'teal', 'pink', 'marine', 'forest', 'violet', 'wheat', 'purple',
-  'limon', 'firebrick', 'deepblue', 'gray', 'red',
+  'carbon', 'cyan', 'lightmagenta', 'yellow', 'salmon', 'hydrogen', 'slate',
+  'orange', 'lime', 'deepteal', 'hotpink', 'yelloworange', 'violetpurple',
+  'grey70', 'marine', 'olive', 'smudge', 'teal', 'dirtyviolet', 'wheat',
+  'deepsalmon', 'lightpink', 'aquamarine', 'paleyellow', 'limegreen',
+  'skyblue', 'warmpink', 'limon', 'violet', 'bluewhite', 'greencyan',
+  'sand', 'forest', 'lightteal', 'darksalmon', 'splitpea', 'raspberry',
+  'grey50', 'deepblue', 'brown',
 ];
 
 /** Resolve a colour name to an index, defining it from `rgb` if not present. */
@@ -292,15 +423,122 @@ export function registerColoring(ctx: RegistrarCtx): void {
 
   /* ------------------------------ spectrum ------------------------------ */
 
+  /**
+   * The pure-Python `spectrumany` fallback (viewing.py:1978): arbitrary colour
+   * lists + rgb/hls/hsv interpolation. Reached from `spectrum` when the
+   * expression is non-alphabetic or the palette is not a known palette name.
+   */
+  const spectrumany = (
+    expr: string,
+    colorsArg: string,
+    selection: string,
+    minimum: number | undefined,
+    maximum: number | undefined,
+    interpolation: string,
+  ): Json => {
+    const interp = INTERP[interpolation] ?? INTERP.rgb!;
+    const [fromRgb, toRgb] = interp;
+
+    // A palette-name colours string, or split the given colour list.
+    let colorsStr = colorsArg;
+    if (!colorsStr.includes(' ')) {
+      colorsStr = PALETTE_COLORS_DICT[colorsStr.toLowerCase()] ?? colorsStr.replace(/_/g, ' ');
+    }
+    const colorNames = colorsStr.split(/\s+/).filter((s) => s.length > 0);
+    const nColors = colorNames.length;
+    if (nColors < 2) throw new Error('please provide at least 2 colors');
+
+    const colTuples = colorNames.map((c) => {
+      const idx = getColorIndex(c);
+      const t = idx >= 0 ? getColorTuple(idx) : null;
+      if (!t) throw new Error('unknown color');
+      return fromRgb(t[0], t[1], t[2]);
+    });
+
+    // Alias the expression (pc/fc/resi) exactly as spectrumany does.
+    const aliasExpr =
+      ({ pc: 'partial_charge', fc: 'formal_charge', resi: 'resv' } as Record<string, string>)[
+        expr
+      ] ?? expr;
+
+    const uaList = ex.atomsMatching(selection);
+
+    // Per-atom values: `count` -> 0-based order; numeric expr -> its value;
+    // non-numeric expr -> enumerate by sorted-unique index (spectrumany uses
+    // `sorted(set(e_list)).index`, NOT first-seen).
+    let eList: number[];
+    if (aliasExpr === 'count') {
+      eList = uaList.map((_, i) => i);
+    } else {
+      const raw = uaList.map((ua, i) => numericValue(aliasExpr, ua.atom, i, ua.index));
+      if (raw.every((v) => v !== null)) {
+        eList = raw as number[];
+      } else {
+        const strs = uaList.map((ua) => enumeratedValue(aliasExpr, ua.atom));
+        const uniqueSorted = [...new Set(strs)].sort();
+        const indexOf = new Map(uniqueSorted.map((s, i) => [s, i] as const));
+        eList = strs.map((s) => indexOf.get(s)!);
+      }
+    }
+
+    if (eList.length === 0) return [0, 0];
+
+    let mn = minimum;
+    let mx = maximum;
+    if (mn === undefined) mn = Math.min(...eList);
+    if (mx === undefined) mx = Math.max(...eList);
+
+    const valRange = mx - mn;
+    if (valRange === 0) {
+      // Degenerate range: colour everything the first colour (as PyMOL's
+      // `_self.color(colors[0], selection)`).
+      const idx0 = getColorIndex(colorNames[0]!);
+      for (const ua of uaList) if (idx0 >= 0) ua.atom.color = idx0;
+      ctx.publish();
+      return [mn, mx];
+    }
+
+    // Interpolate + pack a `0x40RRGGBB` inline TRGB colour per atom.
+    for (let i = 0; i < uaList.length; i++) {
+      const v = Math.min(1, Math.max(0, (eList[i]! - mn) / valRange)) * (nColors - 1);
+      const ci = Math.min(Math.trunc(v), nColors - 2);
+      const p = v - ci;
+      const c0 = colTuples[ci]!;
+      const c1 = colTuples[ci + 1]!;
+      const [rr, gg, bb] = toRgb(
+        c1[0] * p + c0[0] * (1 - p),
+        c1[1] * p + c0[1] * (1 - p),
+        c1[2] * p + c0[2] * (1 - p),
+      );
+      const r = Math.trunc(0xff * rr);
+      const g = Math.trunc(0xff * gg);
+      const b = Math.trunc(0xff * bb);
+      uaList[i]!.atom.color = 0x40000000 + r * 0x10000 + g * 0x100 + b;
+    }
+    ctx.publish();
+    return [mn, mx];
+  };
+
   const spectrum = (args: unknown[], kwargs: Record<string, unknown>): Json => {
     const expr = (str(args[0] ?? kwargs.expression, 'count') || 'count').toLowerCase();
-    const paletteName = (str(args[1] ?? kwargs.palette, 'rainbow') || 'rainbow').toLowerCase();
+    const paletteArg = str(args[1] ?? kwargs.palette, 'rainbow') || 'rainbow';
+    const paletteName = paletteArg.toLowerCase();
     const selection = str(args[2] ?? kwargs.selection, 'all') || 'all';
     let minimum = optNum(args[3] ?? kwargs.minimum);
     let maximum = optNum(args[4] ?? kwargs.maximum);
     const byres = Boolean(optNum(args[5] ?? kwargs.byres) ?? 0);
+    const interpolation = (str(args[7] ?? kwargs.interpolation, 'rgb') || 'rgb').toLowerCase();
 
-    const def = PALETTE_DICT[paletteName] ?? PALETTE_DICT.rainbow!;
+    // Dispatch to spectrumany when the expression is not purely alphabetic or
+    // the palette is not a known palette name (viewing.py:2133).
+    const strippedExpr = expr.replace(/_/g, '');
+    const exprAlpha = strippedExpr.length > 0 && /^[a-z]+$/.test(strippedExpr);
+    const paletteHit = resolvePaletteHit(paletteName);
+    if (!exprAlpha || !paletteHit) {
+      return spectrumany(expr, paletteArg, selection, minimum, maximum, interpolation);
+    }
+
+    const def = PALETTE_DICT[paletteHit] ?? PALETTE_DICT.rainbow!;
     const [prefix, digits, first, last] = def;
 
     // Build the discrete palette of colour indices (ExecutiveSpectrum loop).

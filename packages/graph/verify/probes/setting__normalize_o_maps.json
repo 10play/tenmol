@@ -1,0 +1,12 @@
+{
+  "id": "setting__normalize_o_maps", "feature": "normalize_o_maps", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set normalize_o_maps, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","normalize_o_maps"],"label":"normalize_o_maps after set 0 (non-default; default is 1)"}
+  ],
+  "expected": [
+    false
+  ]
+}

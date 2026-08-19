@@ -1,0 +1,18 @@
+{
+  "id": "setting__mesh_carve_state",
+  "feature": "mesh_carve_state",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set mesh_carve_state, 2, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","mesh_carve_state"],"label":"global default (unset) -> 0"},
+    {"call":["get_setting_int","mesh_carve_state","m"],"label":"per-object set to 2 -> 2"}
+  ],
+  "expected": [
+    0,
+    2
+  ]
+}

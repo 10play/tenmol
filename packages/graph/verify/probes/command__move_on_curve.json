@@ -1,0 +1,20 @@
+{
+  "id": "command__move_on_curve",
+  "feature": "move_on_curve",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "curve_new cc"},
+    {"call": ["move_on_curve", "ala", "cc", 0.5]}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "ala"], "label": "mobile object still present"},
+    {"call": ["get_object_ttt", "ala"], "label": "mobile object TTT set to curve position at t=0.5"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    [1, 0, 0, 5, 0, 1, 0, 0, 0, 0, 1, -7.5, 0, 0, 0, 1]
+  ]
+}

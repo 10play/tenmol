@@ -1,0 +1,18 @@
+{
+  "id": "setting__auto_defer_builds",
+  "feature": "auto_defer_builds",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set auto_defer_builds, 42, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_int", "auto_defer_builds"], "label": "global default (unset) -> 500"},
+    {"call": ["get_setting_int", "auto_defer_builds", "m"], "label": "per-object set to 42 -> 42"}
+  ],
+  "expected": [
+    500,
+    42
+  ]
+}

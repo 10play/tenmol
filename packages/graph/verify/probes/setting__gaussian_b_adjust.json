@@ -1,0 +1,16 @@
+{
+  "id": "setting__gaussian_b_adjust", "feature": "gaussian_b_adjust", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set gaussian_b_adjust, 5.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","gaussian_b_adjust"],"label":"global gaussian_b_adjust default (no prior set)"},
+    {"call":["get_setting_float","gaussian_b_adjust","ala"],"label":"per-object gaussian_b_adjust after set 5.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0,
+    5.5
+  ]
+}

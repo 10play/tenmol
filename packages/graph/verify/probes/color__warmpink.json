@@ -1,0 +1,22 @@
+{
+  "id": "color__warmpink", "feature": "warmpink", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color warmpink, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","warmpink"],"label":"warmpink RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color warmpink"],"label":"atoms colored warmpink"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.8500000238418579,
+      0.20000000298023224,
+      0.5
+    ],
+    1,
+    1
+  ]
+}

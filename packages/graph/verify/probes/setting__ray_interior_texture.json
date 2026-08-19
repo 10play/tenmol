@@ -1,0 +1,11 @@
+{"id":"setting__ray_interior_texture","feature":"ray_interior_texture","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set ray_interior_texture, 3, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","ray_interior_texture"],"label":"global default (no prior set) -> -1"},
+   {"call":["get_setting_int","ray_interior_texture","ala"],"label":"per-object after set 3 -> 3"}
+ ],
+ "tol": 1e-6,
+ "expected": [-1, 3]}

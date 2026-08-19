@@ -1,0 +1,24 @@
+{
+  "id": "color__protactinium", "feature": "protactinium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color protactinium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","protactinium"],"label":"protactinium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","protactinium"],"label":"protactinium palette index"},
+    {"call":["count_atoms","color protactinium"],"label":"atoms colored protactinium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0,
+      0.6313725709915161,
+      1
+    ],
+    5366,
+    1,
+    1
+  ]
+}

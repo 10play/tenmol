@@ -1,0 +1,22 @@
+{
+  "id": "color__phosphorus", "feature": "phosphorus", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color phosphorus, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","phosphorus"],"label":"phosphorus RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color phosphorus"],"label":"atoms colored phosphorus"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      1,
+      0.5019607543945312,
+      0
+    ],
+    1,
+    1
+  ]
+}

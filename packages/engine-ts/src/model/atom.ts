@@ -22,6 +22,12 @@ export interface AtomInfo {
   chain: string;
   /** Segment identifier (`segi`). */
   segi: string;
+  /**
+   * Custom per-atom string field (PyMOL `AtomInfoType.custom`). A free-form
+   * text tag set through `alter sele, custom='...'` and read by the `custom`
+   * selection keyword. Absent ⇒ empty string.
+   */
+  custom?: string;
   /** Alternate-location indicator (`alt`). */
   alt: string;
   /** Canonical element symbol ('C', 'Fe'). */
@@ -56,6 +62,49 @@ export interface AtomInfo {
    * rep is shown for this atom. Ported from the `visRep` int in `AtomInfoType`.
    */
   visRep: number;
+  /**
+   * Modeling flags bitmask (PyMOL `AtomInfoType.flags`). Bit `1 << n` set means
+   * the atom carries flag `n` — e.g. focus 0, free 1, restrain 2, fix 3,
+   * exclude 4, study 5, ignore 25. Set by the `flag` command and read by the
+   * `flag N` selector. Absent ⇒ no flags set.
+   */
+  flags?: number;
+  /**
+   * Unpickable flag (PyMOL `AtomInfoType.masked`). Set by the `mask` command
+   * and cleared by `unmask`; read by the `masked` selection keyword. Only
+   * affects mouse pickability, never command-line selection or transforms.
+   * Absent ⇒ not masked.
+   */
+  masked?: boolean;
+  /**
+   * Protected flag (PyMOL `AtomInfoType.protekted`). Set by the `protect`
+   * command and cleared by `deprotect`; read by the `protected` selection
+   * keyword. Protected atoms are held immobile during editing transforms
+   * (torsion, drag, sculpt). Absent ⇒ not protected.
+   */
+  protected?: boolean;
+  /**
+   * Internal atom-typing index (PyMOL `AtomInfoType.customType`). Assigned by
+   * upstream typing passes and read by the experimental `get_bond_print` debug
+   * dump; unassigned atoms are `-1` (the upstream default). Absent ⇒ -1.
+   */
+  customType?: number;
+  /**
+   * Custom atom-level properties (PyMOL's per-atom `Property` list in
+   * `layer2/AtomInfo.h`). Set via `cmd.set_atom_property` and reached in
+   * `iterate`/`alter` through the `p` object (e.g. `p.myprop`). Absent ⇒ no
+   * properties set.
+   */
+  properties?: Record<string, string | number | boolean>;
+  /**
+   * Per-atom setting overrides (PyMOL's `AtomInfoType.setting` /
+   * `AtomSettingGetIfDefined`). A `set <name>, <val>, <sele>` for an atom-level
+   * setting (e.g. `cartoon_color`, `ribbon_color`) stores the value here on each
+   * matched atom, keyed by setting name. Colour-typed settings hold a colour
+   * INDEX. A key present means the atom has a *defined* override for that
+   * setting; absent ⇒ unset (the `<setting> -1` selector then does not match it).
+   */
+  atomSettings?: Record<string, number | string>;
 }
 
 /** `1 << rep` — the visRep bit for a representation. */

@@ -1,0 +1,22 @@
+{
+  "id": "color__barium", "feature": "barium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color barium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","barium"],"label":"barium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color barium"],"label":"atoms colored barium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0,
+      0.7882353067398071,
+      0
+    ],
+    1,
+    1
+  ]
+}

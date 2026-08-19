@@ -1,0 +1,24 @@
+{
+  "id": "color__thorium", "feature": "thorium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color thorium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","thorium"],"label":"thorium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","thorium"],"label":"thorium palette index"},
+    {"call":["count_atoms","color thorium"],"label":"atoms colored thorium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0,
+      0.729411780834198,
+      1
+    ],
+    5365,
+    1,
+    1
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "command__recolour",
+  "feature": "recolour",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "color blue, all"},
+    {"do": "recolour all, everything"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "all"], "label": "atoms survive recolour"},
+    {"call": ["count_atoms", "color blue"], "label": "blue color assignment persists after recolour"},
+    {"call": ["get_color_index", "blue"], "label": "blue color index unchanged"}
+  ],
+  "tol": 1e-3,
+  "expected": [10, 10, 2]
+}

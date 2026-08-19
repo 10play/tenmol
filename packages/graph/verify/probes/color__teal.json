@@ -1,0 +1,25 @@
+{
+  "id": "color__teal",
+  "feature": "teal",
+  "kind": "color",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "color teal, all" }
+  ],
+  "checks": [
+    { "call": ["get_color_index", "teal"], "label": "teal color index" },
+    { "call": ["get_color_tuple", "teal"], "label": "teal rgb tuple" },
+    { "call": ["count_atoms", "color teal"], "label": "atoms colored teal" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    20,
+    [
+      0,
+      0.75,
+      0.75
+    ],
+    10
+  ]
+}

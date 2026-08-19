@@ -1,0 +1,22 @@
+{
+  "id": "color__molybdenum", "feature": "molybdenum", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color molybdenum, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","molybdenum"],"label":"molybdenum RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color molybdenum"],"label":"atoms colored molybdenum"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.3294117748737335,
+      0.7098039388656616,
+      0.7098039388656616
+    ],
+    1,
+    1
+  ]
+}

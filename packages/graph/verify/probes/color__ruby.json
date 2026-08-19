@@ -1,0 +1,25 @@
+{
+  "id": "color__ruby",
+  "feature": "ruby",
+  "kind": "named-color",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "color ruby, ala" }
+  ],
+  "checks": [
+    { "call": ["get_color_tuple", "ruby"], "label": "ruby RGB tuple" },
+    { "call": ["get_color_index", "ruby"], "label": "ruby color index" },
+    { "call": ["count_atoms", "color ruby"], "label": "atoms colored ruby" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      0.6000000238418579,
+      0.20000000298023224,
+      0.20000000298023224
+    ],
+    21,
+    10
+  ]
+}

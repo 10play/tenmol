@@ -1,0 +1,13 @@
+{
+  "id": "command___", "feature": "@", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"@/home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/graph/verify/.work/command___.include.pml"}
+  ],
+  "checks": [
+    {"call":["count_atoms","foo"],"label":"atoms created by pseudoatom inside included script"},
+    {"call":["get_setting_float","sphere_scale"],"label":"setting changed by included script"},
+    {"call":["get_names"],"label":"object names after @-include"}
+  ],
+  "tol": 1e-3,
+  "expected": [1, 0.75, ["foo"]]
+}

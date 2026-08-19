@@ -1,0 +1,16 @@
+{
+  "id": "command__fetch",
+  "feature": "fetch",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fetch 1tii, m, type=pdb, async=0, path=/home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "m"], "label": "fetch loaded the local pdb as object m"},
+    {"call": ["count_atoms", "all"], "label": "atoms present in the session after fetch"},
+    {"call": ["get_names", "objects"], "label": "object name registered by fetch"}
+  ],
+  "tol": 1e-3,
+  "expected": [5684, 5684, ["m"]]
+}

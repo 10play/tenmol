@@ -1,0 +1,16 @@
+{
+  "id": "feature__cSculptVDW",
+  "feature": "cSculptVDW",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "sculpt_field_mask"], "label": "default sculpt_field_mask (0x1FF=511) has the 0x020 vdw-clash bit set" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    511
+  ]
+}

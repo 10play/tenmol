@@ -1,0 +1,22 @@
+{
+  "id": "command__multifilesave", "feature": "multifilesave", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"multifilesave /tmp/tenmol_mfs_{name}.pdb, m and name CA"},
+    {"do":"load /tmp/tenmol_mfs_m.pdb, rt"}
+  ],
+  "checks": [
+    {"call":["count_atoms","m and name CA"],"label":"source CA atoms selected for save"},
+    {"call":["count_atoms","rt"],"label":"atoms reloaded from multifilesave {name} output file"},
+    {"call":["get_names"],"label":"objects present after reloading the saved file"}
+  ],
+  "tol": 0,
+  "expected": [
+    712,
+    712,
+    [
+      "m",
+      "rt"
+    ]
+  ]
+}

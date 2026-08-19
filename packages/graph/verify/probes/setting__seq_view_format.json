@@ -1,0 +1,13 @@
+{
+  "id": "setting__seq_view_format", "feature": "seq_view_format", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set seq_view_format, 2"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","seq_view_format"],"label":"seq_view_format after set 2"}
+  ],
+  "tol": 0,
+  "expected": [
+    2
+  ]
+}

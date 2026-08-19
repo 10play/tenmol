@@ -1,0 +1,15 @@
+{
+  "id": "setting__cartoon_tube_cap", "feature": "cartoon_tube_cap", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cartoon_tube_cap, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cartoon_tube_cap"],"label":"cartoon_tube_cap global default (no prior set)"},
+    {"call":["get_setting_int","cartoon_tube_cap","ala"],"label":"cartoon_tube_cap per-object after set 1"}
+  ],
+  "expected": [
+    2,
+    1
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "setting__distance_exclusion",
+  "feature": "distance_exclusion",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "set distance_exclusion, 10, m"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_int",
+        "distance_exclusion"
+      ],
+      "label": "global distance_exclusion default (no prior set) -> 5"
+    },
+    {
+      "call": [
+        "get_setting_int",
+        "distance_exclusion",
+        "m"
+      ],
+      "label": "per-object distance_exclusion after set 10 -> 10"
+    }
+  ],
+  "expected": [
+    5,
+    10
+  ]
+}

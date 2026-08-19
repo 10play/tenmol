@@ -1,0 +1,14 @@
+{
+  "id":"setting__autoclose_dialogs","feature":"autoclose_dialogs","kind":"setting","probeKind":"state",
+  "ops":[
+    {"do":"set autoclose_dialogs, 0"}
+  ],
+  "checks":[
+    {"call":["get_setting_boolean","autoclose_dialogs"],"label":"autoclose_dialogs boolean after set 0 (default 1)"},
+    {"call":["get_setting_int","autoclose_dialogs"],"label":"autoclose_dialogs int after set 0 (default 1)"}
+  ],
+  "expected":[
+    false,
+    0
+  ]
+}

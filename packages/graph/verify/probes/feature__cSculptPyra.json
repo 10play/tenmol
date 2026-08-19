@@ -1,0 +1,16 @@
+{
+  "id": "feature__cSculptPyra",
+  "feature": "cSculptPyra",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    { "do": "set sculpt_field_mask, 4" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "sculpt_field_mask"], "label": "cSculptPyra bit (0x004=4) isolated as active mask" },
+    { "call": ["get_setting_float", "sculpt_pyra_weight"], "label": "pyramidal (improper) restraint weight default" },
+    { "call": ["get_setting_float", "sculpt_pyra_inv_weight"], "label": "pyramidal inversion penalty weight default" }
+  ],
+  "tol": 1e-3,
+  "expected": [4, 1, 10]
+}

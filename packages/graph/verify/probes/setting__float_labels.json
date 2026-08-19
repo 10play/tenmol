@@ -1,0 +1,11 @@
+{"id":"setting__float_labels","feature":"float_labels","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set float_labels, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","float_labels"],"label":"float_labels global default (no prior set)"},
+   {"call":["get_setting_boolean","float_labels","ala"],"label":"float_labels per-object after set 1"},
+   {"call":["get_setting_int","float_labels","ala"],"label":"float_labels int per-object after set 1"}
+ ],
+ "expected":[false, true, 1]}

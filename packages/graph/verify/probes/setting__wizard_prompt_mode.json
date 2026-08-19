@@ -1,0 +1,18 @@
+{
+  "id": "setting__wizard_prompt_mode",
+  "feature": "wizard_prompt_mode",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set wizard_prompt_mode, 3, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_int", "wizard_prompt_mode"], "label": "global default (unset) -> 1"},
+    {"call": ["get_setting_int", "wizard_prompt_mode", "m"], "label": "per-object set to 3 -> 3"}
+  ],
+  "expected": [
+    1,
+    3
+  ]
+}

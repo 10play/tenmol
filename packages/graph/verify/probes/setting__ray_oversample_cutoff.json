@@ -1,0 +1,19 @@
+{
+  "id": "setting__ray_oversample_cutoff",
+  "feature": "ray_oversample_cutoff",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ray_oversample_cutoff, 90, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_oversample_cutoff"],"label":"global default (no prior set) -> 120"},
+    {"call":["get_setting_float","ray_oversample_cutoff","m"],"label":"per-object set 90 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    120,
+    90
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "command__get_version",
+  "feature": "get_version",
+  "kind": "querying",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" }
+  ],
+  "checks": [
+    { "call": ["get_version"], "label": "version tuple (default quiet=1)" },
+    { "call": ["get_version", 0], "label": "version tuple (quiet=0)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      "3.2.0a",
+      3,
+      3000000,
+      1786014386,
+      "c030472fa9f5ad96994bf3e4d4277b3862057897",
+      0
+    ],
+    [
+      "3.2.0a",
+      3,
+      3000000,
+      1786014386,
+      "c030472fa9f5ad96994bf3e4d4277b3862057897",
+      0
+    ]
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "command__forward", "feature": "forward", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "m"], "kwargs": {"pos": [0, 0, 0]}},
+    {"do": "mset 1 x10"},
+    {"do": "frame 5"},
+    {"do": "forward"}
+  ],
+  "checks": [
+    {"call": ["get_frame"], "label": "frame index after forward from frame 5 (expect 6)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    6
+  ]
+}

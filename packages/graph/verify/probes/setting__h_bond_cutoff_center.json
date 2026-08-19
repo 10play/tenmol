@@ -1,0 +1,19 @@
+{
+  "id": "setting__h_bond_cutoff_center",
+  "feature": "h_bond_cutoff_center",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set h_bond_cutoff_center, 4.2, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","h_bond_cutoff_center"],"label":"global default (no prior set) -> 3.6"},
+    {"call":["get_setting_float","h_bond_cutoff_center","m"],"label":"per-object set 4.2 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    3.6,
+    4.2
+  ]
+}

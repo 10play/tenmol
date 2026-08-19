@@ -1,0 +1,8 @@
+{"id":"selection__and","feature":"and","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","chain A and name CA"],"label":"AND: chain A intersect name CA"},
+   {"call":["count_atoms","resn ALA and name CB"],"label":"AND: resn ALA intersect name CB"},
+   {"call":["count_atoms","all and all"],"label":"AND identity: all and all = all"}
+ ],
+ "expected":[186, 72, 5684]}

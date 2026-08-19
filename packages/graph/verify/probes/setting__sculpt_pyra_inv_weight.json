@@ -1,0 +1,16 @@
+{
+  "id": "setting__sculpt_pyra_inv_weight",
+  "feature": "sculpt_pyra_inv_weight",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set sculpt_pyra_inv_weight, 3.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","sculpt_pyra_inv_weight"],"label":"sculpt_pyra_inv_weight after set 3.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    3.5
+  ]
+}

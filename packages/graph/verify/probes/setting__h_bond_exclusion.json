@@ -1,0 +1,18 @@
+{
+  "id": "setting__h_bond_exclusion",
+  "feature": "h_bond_exclusion",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set h_bond_exclusion, 5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","h_bond_exclusion"],"label":"global default (unset) -> 3"},
+    {"call":["get_setting_int","h_bond_exclusion","m"],"label":"per-object set to 5 -> 5 (roundtrip)"}
+  ],
+  "expected": [
+    3,
+    5
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "setting__state_counter_mode", "feature": "state_counter_mode", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set state_counter_mode, 2, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","state_counter_mode"],"label":"state_counter_mode global default (no prior set)"},
+    {"call":["get_setting_int","state_counter_mode","ala"],"label":"state_counter_mode per-object after set 2 (roundtrip)"}
+  ],
+  "expected": [
+    -1,
+    2
+  ]
+}

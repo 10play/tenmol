@@ -1,0 +1,22 @@
+{
+  "id": "color__brown", "feature": "brown", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color brown, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","brown"],"label":"brown RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color brown"],"label":"atoms colored brown"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.6499999761581421,
+      0.3199999928474426,
+      0.17000000178813934
+    ],
+    1,
+    1
+  ]
+}

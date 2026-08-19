@@ -1,0 +1,18 @@
+{
+  "id": "setting__default_phenix_names",
+  "feature": "default_phenix_names",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set default_phenix_names, MYCOEFF_ABC, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","default_phenix_names"],"label":"default_phenix_names global default"},
+    {"call":["get_setting_text","default_phenix_names","m"],"label":"default_phenix_names per-object set roundtrip -> MYCOEFF_ABC"}
+  ],
+  "expected": [
+    "2FOFCWT PH2FOFCWT FOFCWT PHFOFCWT",
+    "MYCOEFF_ABC"
+  ]
+}

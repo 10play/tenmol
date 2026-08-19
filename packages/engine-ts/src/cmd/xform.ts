@@ -3,16 +3,16 @@
  * get_object_state, get_selection_state, set_state_order, get_coordset,
  * load_coordset, set_discrete (+ its count_discrete getter path).
  *
- * `set_object_ttt` is intentionally NOT registered: the viewport has no TTT
- * (per-object matrix) support and `get_object_ttt` is a fixed `null` stub, so an
- * honest `NotPorted` is preferable to a lying no-op.
+ * `set_object_ttt` writes an object's TTT (transient display) matrix verbatim;
+ * the TTT matrix is also written by `translate object=…` and read back by
+ * `get_object_ttt` (see {@link registerTransforms}).
  *
  * Registers through the shared {@link RegistrarCtx}. Compose real verbs via
  * `ctx.call(...)` (`frame`, `load_coords`, `get_frame`); mutate model state via
  * `ctx.executive`; `ctx.publish()` after coordinate/state mutations.
  */
 import type { Json } from '@tenmol/protocol';
-import type { ObjectMolecule } from '../model/molecule';
+import { encodeCoords } from '@tenmol/protocol';
 import type { RegistrarCtx } from './registrar';
 
 function toNum(v: unknown, dflt: number): number {
@@ -60,6 +60,37 @@ function applyMat(set: Float32Array, o: number, m: number[]): void {
   set[o + 2] = m[8]! * x + m[9]! * y + m[10]! * z + m[11]!;
 }
 
+/**
+ * Convert a PyMOL-specific TTT matrix (row-major, with `ttt[12:15]` a
+ * pre-rotation translation and `ttt[3,7,11]` a post-rotation translation) into
+ * a standard homogeneous row-major 4×4. Ports PyMOL's `convertTTTfR44f`
+ * (layer0/Vector.cpp): the pre-translation is folded into the post-translation
+ * column so the result can be applied as a plain R44. This is what
+ * `ObjectMoleculeTransformSelection` does for `homogenous=0` inputs.
+ */
+function convertTTTtoR44(t: number[]): number[] {
+  const t12 = t[12]!, t13 = t[13]!, t14 = t[14]!;
+  return [
+    t[0]!, t[1]!, t[2]!,
+    t[0]! * t12 + t[1]! * t13 + t[2]! * t14 + t[3]!,
+    t[4]!, t[5]!, t[6]!,
+    t[4]! * t12 + t[5]! * t13 + t[6]! * t14 + t[7]!,
+    t[8]!, t[9]!, t[10]!,
+    t[8]! * t12 + t[9]! * t13 + t[10]! * t14 + t[11]!,
+    0, 0, 0, 1,
+  ];
+}
+
+/** Transpose a flat 16-element (column-major → row-major) 4×4 matrix. */
+function transposeMat16(m: number[]): number[] {
+  return [
+    m[0]!, m[4]!, m[8]!, m[12]!,
+    m[1]!, m[5]!, m[9]!, m[13]!,
+    m[2]!, m[6]!, m[10]!, m[14]!,
+    m[3]!, m[7]!, m[11]!, m[15]!,
+  ];
+}
+
 /** Row-major homogeneous 4×4 product a·b. */
 function mat4mul(a: number[], b: number[]): number[] {
   const out = new Array<number>(16).fill(0);
@@ -73,13 +104,6 @@ function mat4mul(a: number[], b: number[]): number[] {
   return out;
 }
 
-/**
- * Per-object "discrete" flag maintained outside {@link ObjectMolecule} (which
- * has no such field). Keyed by object identity so it survives without touching
- * the shared model; observable through the `count_discrete` getter below.
- */
-const DISCRETE = new WeakSet<ObjectMolecule>();
-
 export function registerXform(ctx: RegistrarCtx): void {
   const ex = ctx.executive;
   const str = ctx.str;
@@ -90,8 +114,16 @@ export function registerXform(ctx: RegistrarCtx): void {
   // an object's coordinates. state 0 == every state; state N == that state only.
   ctx.command('transform_object', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
-    const m = toMat16(args[1] ?? kwargs['matrix']);
+    let m = toMat16(args[1] ?? kwargs['matrix']);
     const state = toNum(args[2] ?? kwargs['state'], 0);
+    const homogenous = toBool(args[5] ?? kwargs['homogenous'], false);
+    const transpose = toBool(args[6] ?? kwargs['transpose'], false);
+    // Python layer transposes a column-major matrix into row-major first.
+    if (transpose) m = transposeMat16(m);
+    // transform_object always runs in the global frame; PyMOL converts a
+    // non-homogenous (TTT) matrix to a standard R44 before applying it, folding
+    // the matrix[12:15] pre-translation into the transform (convertTTTfR44f).
+    if (!homogenous) m = convertTTTtoR44(m);
     const mol = ex.molecule(name);
     if (!mol) return 0;
     const sets = state === 0 ? mol.states : [mol.states[state - 1]];
@@ -115,8 +147,15 @@ export function registerXform(ctx: RegistrarCtx): void {
   // the matched atoms (per-atom, in each object's own state arrays).
   ctx.command('transform_selection', (args, kwargs): Json => {
     const sel = str(args[0] ?? kwargs['selection'], 'all') || 'all';
-    const m = toMat16(args[1] ?? kwargs['matrix']);
+    let m = toMat16(args[1] ?? kwargs['matrix']);
     const state = toNum(args[2] ?? kwargs['state'], 0);
+    const homogenous = toBool(args[4] ?? kwargs['homogenous'], false);
+    const transpose = toBool(args[5] ?? kwargs['transpose'], false);
+    // Mirror editing.transform_selection: a column-major matrix is transposed to
+    // row-major first, then a non-homogenous (TTT) matrix has its matrix[12:15]
+    // pre-rotation translation folded into a standard R44 (convertTTTfR44f).
+    if (transpose) m = transposeMat16(m);
+    if (!homogenous) m = convertTTTtoR44(m);
     const matched = ex.atomsMatching(sel);
     let n = 0;
     for (const ua of matched) {
@@ -131,6 +170,33 @@ export function registerXform(ctx: RegistrarCtx): void {
     }
     if (n > 0) ctx.publish();
     return matched.length;
+  });
+
+  /* ---------------------------- set_object_ttt --------------------------- */
+
+  // set_object_ttt(object, ttt, state=0, quiet=1, homogenous=0) — API-only verb
+  // that sets an object's TTT (view-transformation) matrix verbatim. Ports
+  // editing.set_object_ttt: `state` is UNUSED (TTT is not state-specific) and
+  // `homogenous=1` transposes the 3×3 and rewrites the last column to [0,0,0,1]
+  // (PyMOL flags this transform as misleadingly named / possibly incorrect, but
+  // we mirror it faithfully). Returns None/null, like real PyMOL.
+  ctx.command('set_object_ttt', (args, kwargs): Json => {
+    const name = str(args[0] ?? kwargs['object']);
+    let ttt = toMat16(args[1] ?? kwargs['ttt']);
+    const homogenous = toBool(args[4] ?? kwargs['homogenous'], false);
+    const mol = ex.molecule(name);
+    if (!mol) return null;
+    if (homogenous) {
+      ttt = [
+        ttt[0]!, ttt[4]!, ttt[8]!, 0.0,
+        ttt[1]!, ttt[5]!, ttt[9]!, 0.0,
+        ttt[2]!, ttt[6]!, ttt[10]!, 0.0,
+        ttt[3]!, ttt[7]!, ttt[11]!, 1.0,
+      ];
+    }
+    mol.ttt = ttt;
+    ctx.publish();
+    return null;
   });
 
   /* ---------------------------- set_state_order -------------------------- */
@@ -153,30 +219,43 @@ export function registerXform(ctx: RegistrarCtx): void {
 
   /* ------------------------------ get_coordset --------------------------- */
 
-  // get_coordset(name, state=1, copy=1) — coordinates of a state as [x,y,z]
-  // triples. Always a fresh copy here, so `copy` is accepted but immaterial.
+  // get_coordset(name, state=1, copy=1) — the object's coordinate set as an
+  // N×3 numpy float32 array. Over the bridge real PyMOL serializes that as a
+  // base64 `__ndarray__` (packages/bridge/tenmol_bridge/codec.py); match that
+  // wire shape rather than returning a plain nested JS array. `copy` is always
+  // a fresh copy here, so it is accepted but immaterial.
   ctx.command('get_coordset', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
     const state = toNum(args[1] ?? kwargs['state'], 1) || 1;
     const mol = ex.molecule(name);
-    if (!mol) return [];
-    const out: number[][] = [];
+    if (!mol) return null;
+    const out: Array<readonly [number, number, number]> = [];
     for (let i = 0; i < mol.natom; i++) {
       const [x, y, z] = mol.coord(i, state);
       out.push([x, y, z]);
     }
-    return out;
+    return encodeCoords(out) as unknown as Json;
   });
 
   /* ----------------------------- load_coordset --------------------------- */
 
-  // load_coordset(coords, object, state=1) — the inverse of get_coordset. The
+  // load_coordset(coords, object, state=0) — the inverse of get_coordset. The
   // object name is itself a selection matching all its atoms, so this forwards
   // to the real `load_coords` (which writes coords[i] into the i-th atom).
+  // PyMOL passes `int(state)-1` to the C layer, where a negative (i.e. the
+  // default state=0) means "append a new coordset". We mirror that: state 0
+  // grows the object by one state seeded from the last one, then writes into it.
   ctx.command('load_coordset', (args, kwargs): Json => {
     const coords = args[0] ?? kwargs['coords'];
     const object = str(args[1] ?? kwargs['object']);
-    const state = toNum(args[2] ?? kwargs['state'], 1) || 1;
+    let state = toNum(args[2] ?? kwargs['state'], 0);
+    const mol = ex.molecule(object);
+    if (!mol) return 0;
+    if (state <= 0) {
+      const last = mol.states[mol.states.length - 1];
+      mol.states.push(last ? new Float32Array(last) : new Float32Array(mol.natom * 3));
+      state = mol.states.length;
+    }
     return ctx.call('load_coords', [coords, object, state]);
   });
 
@@ -196,10 +275,19 @@ export function registerXform(ctx: RegistrarCtx): void {
 
   /* --------------------------- get_selection_state ----------------------- */
 
-  // get_selection_state(selection) — the state a selection resolves to. Named
-  // selections here are not state-bound, so this is always 0 (== all/current),
-  // matching PyMOL's "state 0" convention.
-  ctx.command('get_selection_state', (): Json => 0);
+  // get_selection_state(selection) — the single effective object state shared by
+  // all objects the selection touches. Mirrors PyMOL: map get_object_state over
+  // get_object_list('(' + selection + ')'), returning the sole state if they all
+  // agree, 1 if no objects are touched, or raising if they differ.
+  ctx.command('get_selection_state', (args, kwargs): Json => {
+    const selection = str(args[0] ?? kwargs['selection']);
+    const names = ex.getObjectList(`(${selection})`);
+    const states = new Set<number>();
+    for (const name of names) states.add(toNum(ctx.call('get_object_state', [name]), 1));
+    if (states.size === 0) return 1;
+    if (states.size !== 1) throw new Error('Selection spans multiple object states');
+    return states.values().next().value as number;
+  });
 
   /* ------------------------------- set_frame ----------------------------- */
 
@@ -218,8 +306,7 @@ export function registerXform(ctx: RegistrarCtx): void {
     const flag = toBool(args[1] ?? kwargs['discrete'], true);
     const mol = ex.molecule(name);
     if (!mol) return 0;
-    if (flag) DISCRETE.add(mol);
-    else DISCRETE.delete(mol);
+    mol.discrete = flag;
     return 1;
   });
 
@@ -232,7 +319,7 @@ export function registerXform(ctx: RegistrarCtx): void {
     let n = 0;
     for (const nm of names) {
       const m = ex.molecule(nm);
-      if (m && DISCRETE.has(m)) n++;
+      if (m && m.discrete) n++;
     }
     return n;
   });

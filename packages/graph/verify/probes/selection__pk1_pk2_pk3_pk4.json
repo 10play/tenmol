@@ -1,0 +1,15 @@
+{
+  "id": "selection__pk1_pk2_pk3_pk4", "feature": "pk1/pk2/pk3/pk4", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "edit (chain A and resi 10 and name CA), (chain A and resi 11 and name CA), (chain A and resi 12 and name CA), (chain A and resi 13 and name CA), 0, 0"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "pk1"], "label": "pk1 = first picked atom"},
+    {"call": ["count_atoms", "pk2"], "label": "pk2 = second picked atom"},
+    {"call": ["count_atoms", "pk3"], "label": "pk3 = third picked atom"},
+    {"call": ["count_atoms", "pk4"], "label": "pk4 = fourth picked atom"},
+    {"call": ["count_atoms", "pk1 or pk2 or pk3 or pk4"], "label": "union of all four picks"}
+  ],
+  "expected": [1, 1, 1, 1, 4]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "color__rhenium", "feature": "rhenium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color rhenium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","rhenium"],"label":"rhenium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","rhenium"],"label":"rhenium palette index"},
+    {"call":["count_atoms","color rhenium"],"label":"atoms colored rhenium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.14901961386203766,
+      0.4901960790157318,
+      0.6705882549285889
+    ],
+    5350,
+    1,
+    1
+  ]
+}

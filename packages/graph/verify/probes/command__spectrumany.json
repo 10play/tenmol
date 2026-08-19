@@ -1,0 +1,20 @@
+{
+  "id": "command__spectrumany",
+  "feature": "spectrumany",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom p1"},
+    {"do": "pseudoatom p2"},
+    {"do": "pseudoatom p3"},
+    {"call": ["spectrum", "b", "blue_orange", "all"]}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "color blue"], "label": "spectrumany fallback (arbitrary colours, zero range) colours all atoms colors[0]=blue"},
+    {"call": ["count_atoms", "color orange"], "label": "colors[1]=orange unused when value range is zero"},
+    {"call": ["count_atoms", "all"], "label": "no atoms added/removed"},
+    {"call": ["get_color_index", "blue"], "label": "blue palette index stable"}
+  ],
+  "tol": 0,
+  "expected": [3, 0, 3, 2]
+}

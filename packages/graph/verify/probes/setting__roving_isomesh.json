@@ -1,0 +1,16 @@
+{
+  "id": "setting__roving_isomesh",
+  "feature": "roving_isomesh",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set roving_isomesh, 12.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","roving_isomesh"],"label":"roving_isomesh after set 12.5 (default 8.0)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    12.5
+  ]
+}

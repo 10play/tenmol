@@ -1,0 +1,16 @@
+{
+  "id": "setting__ray_direct_shade", "feature": "ray_direct_shade", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ray_direct_shade, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_direct_shade"],"label":"global ray_direct_shade default (no prior set)"},
+    {"call":["get_setting_float","ray_direct_shade","ala"],"label":"per-object ray_direct_shade after set 1"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.0,
+    1.0
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "command__load_mtz",
+  "feature": "load_mtz",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" }
+  ],
+  "checks": [
+    { "call": ["load_mtz", "/tmp/nonexistent.mtz"], "label": "load_mtz raises IncentiveOnlyException (open-source build)" },
+    { "call": ["get_names"], "label": "no map object created by load_mtz" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    {
+      "__error": " Incentive-Only-Error: \"load_mtz\" is not available in Open-Source PyMOL\n\n    Please visit http://pymol.org if you are interested in the\n    full featured \"Incentive PyMOL\" version.\n"
+    },
+    [
+      "ala"
+    ]
+  ]
+}

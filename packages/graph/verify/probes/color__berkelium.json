@@ -1,0 +1,24 @@
+{
+  "id": "color__berkelium", "feature": "berkelium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color berkelium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","berkelium"],"label":"berkelium palette index"},
+    {"call":["get_color_tuple","berkelium"],"label":"berkelium rgb tuple","tol":1e-6},
+    {"call":["count_atoms","color berkelium"],"label":"atoms colored berkelium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    5372,
+    [
+      0.5411764979362488,
+      0.30980393290519714,
+      0.8901960849761963
+    ],
+    1,
+    1
+  ]
+}

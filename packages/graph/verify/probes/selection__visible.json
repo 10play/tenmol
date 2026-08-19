@@ -1,0 +1,11 @@
+{"id":"selection__visible","feature":"visible","kind":"selection","probeKind":"state",
+ "ops":[
+   {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"hide everything"},
+   {"do":"show lines, chain A"}
+ ],
+ "checks":[
+   {"call":["count_atoms","visible"],"label":"visible = atoms with a rep shown (lines on chain A)"},
+   {"call":["count_atoms","not visible"],"label":"not visible = the rest"}
+ ],
+ "expected":[1479,4205]}

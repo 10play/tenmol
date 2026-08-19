@@ -1,0 +1,23 @@
+{
+  "id": "command__get_setting_boolean",
+  "feature": "get_setting_boolean",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set orthoscopic, 1"},
+    {"do":"set ray_shadows, 0"},
+    {"do":"set two_sided_lighting, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","orthoscopic"],"label":"global orthoscopic on -> true"},
+    {"call":["get_setting_boolean","ray_shadows"],"label":"global ray_shadows off -> false"},
+    {"call":["get_setting_boolean","two_sided_lighting","ala"],"label":"per-object two_sided_lighting on -> true"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    true,
+    false,
+    true
+  ]
+}

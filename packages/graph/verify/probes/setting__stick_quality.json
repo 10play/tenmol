@@ -1,0 +1,15 @@
+{
+  "id": "setting__stick_quality", "feature": "stick_quality", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set stick_quality, 15, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","stick_quality"],"label":"global stick_quality default (no prior set)"},
+    {"call":["get_setting_int","stick_quality","ala"],"label":"per-object stick_quality after set 15"}
+  ],
+  "expected": [
+    8,
+    15
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "command__uniquify",
+  "feature": "uniquify",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom o1, chain=A, pos=[0,0,0]" },
+    { "do": "pseudoatom o2, chain=A, pos=[3,0,0]" },
+    { "do": "uniquify chain, o2, o1" }
+  ],
+  "checks": [
+    { "call": ["get_chains", "o2"], "label": "o2 chain after uniquify (was A, must be renamed)" },
+    { "call": ["count_atoms", "chain A"], "label": "atoms still on chain A (only o1 should remain)" },
+    { "call": ["count_atoms", "o2 and not chain A"], "label": "o2 atoms moved off chain A" }
+  ],
+  "tol": 1e-3,
+  "expected": [["B"], 1, 1]
+}

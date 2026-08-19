@@ -1,0 +1,21 @@
+{
+  "id": "command__fragment", "feature": "fragment", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"}
+  ],
+  "checks": [
+    {"call":["count_atoms","ala"],"label":"total atoms in loaded fragment"},
+    {"call":["count_atoms","elem C"],"label":"carbon atoms in fragment"},
+    {"call":["count_atoms","elem N"],"label":"nitrogen atoms in fragment"},
+    {"call":["get_names"],"label":"object names after fragment load"}
+  ],
+  "tol": 0,
+  "expected": [
+    10,
+    3,
+    1,
+    [
+      "ala"
+    ]
+  ]
+}

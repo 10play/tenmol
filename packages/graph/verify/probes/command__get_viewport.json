@@ -1,0 +1,14 @@
+{
+  "id": "command__get_viewport",
+  "feature": "get_viewport",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "viewport 800, 600"}
+  ],
+  "checks": [
+    {"call": ["get_viewport"], "label": "viewport size after viewport 800,600"}
+  ],
+  "tol": 1e-3,
+  "expected": [[800, 600]]
+}

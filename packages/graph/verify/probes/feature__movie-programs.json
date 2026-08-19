@@ -1,0 +1,16 @@
+{
+  "id": "feature__movie-programs",
+  "feature": "movie-programs",
+  "kind": "state",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "call": ["movie.add_roll", 1.0] },
+    { "call": ["movie.add_blank", 1.0] }
+  ],
+  "checks": [
+    { "call": ["get_movie_length"], "label": "movie length after add_roll(1.0)+add_blank(1.0) @30fps" }
+  ],
+  "tol": 1e-3,
+  "expected": [60]
+}

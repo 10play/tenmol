@@ -1,0 +1,20 @@
+{
+  "id": "command__load_model",
+  "feature": "load_model",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {"call": ["load_model", null, "m"], "label": "load_model returns None"},
+    {"call": ["get_names"], "label": "object names after load_model (expect ['m'])"},
+    {"call": ["get_type", "m"], "label": "loaded model object type"},
+    {"call": ["count_atoms", "all"], "label": "empty model contributes no atoms"}
+  ],
+  "tol": 0,
+  "expected": [
+    null,
+    ["m"],
+    "object:molecule",
+    0
+  ]
+}

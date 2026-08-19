@@ -1,0 +1,20 @@
+{
+  "id": "command__mclear",
+  "feature": "mclear",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "mset 1 x10" },
+    { "call": ["mclear"] }
+  ],
+  "checks": [
+    { "call": ["get_movie_length"], "label": "movie length after mclear (mset definition preserved; mclear only frees image cache)" },
+    { "call": ["count_atoms", "all"], "label": "atoms unaffected by mclear" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    10
+  ]
+}

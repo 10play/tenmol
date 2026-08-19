@@ -1,0 +1,14 @@
+{
+  "id": "command__order", "feature": "order", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom pa1"},
+    {"do":"pseudoatom pa2"},
+    {"do":"pseudoatom pa3"},
+    {"do":"order pa3 pa2 pa1"}
+  ],
+  "checks": [
+    {"call":["get_names","objects"],"label":"explicit order reverses the panel name list"}
+  ],
+  "tol": 1e-3,
+  "expected": [["pa3", "pa2", "pa1"]]
+}

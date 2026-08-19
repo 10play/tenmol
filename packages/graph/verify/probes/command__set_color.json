@@ -1,0 +1,23 @@
+{
+  "id": "command__set_color", "feature": "set_color", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"call":["set_color", "mycolor", [0.25, 0.5, 0.75]]},
+    {"do":"color mycolor, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","mycolor"],"label":"new color RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color mycolor"],"label":"atoms colored with new color"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.25,
+      0.5,
+      0.75
+    ],
+    1,
+    1
+  ]
+}

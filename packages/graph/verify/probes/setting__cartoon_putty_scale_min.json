@@ -1,0 +1,19 @@
+{
+  "id": "setting__cartoon_putty_scale_min",
+  "feature": "cartoon_putty_scale_min",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cartoon_putty_scale_min, 0.3, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","cartoon_putty_scale_min"],"label":"global cartoon_putty_scale_min default (no prior set)"},
+    {"call":["get_setting_float","cartoon_putty_scale_min","ala"],"label":"per-object cartoon_putty_scale_min after set 0.3"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.6,
+    0.3
+  ]
+}

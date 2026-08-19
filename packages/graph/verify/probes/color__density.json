@@ -1,0 +1,22 @@
+{
+  "id": "color__density", "feature": "density", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color density, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color density"],"label":"atoms colored density"},
+    {"call":["get_color_index","density"],"label":"density palette index"},
+    {"call":["get_color_tuple","density"],"label":"density rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    4155,
+    [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.6000000238418579
+    ]
+  ]
+}

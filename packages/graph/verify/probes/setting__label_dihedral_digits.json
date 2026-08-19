@@ -1,0 +1,11 @@
+{"id":"setting__label_dihedral_digits","feature":"label_dihedral_digits","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set label_dihedral_digits, 3, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","label_dihedral_digits"],"label":"label_dihedral_digits global default (no prior set)"},
+   {"call":["get_setting_int","label_dihedral_digits","ala"],"label":"label_dihedral_digits per-object after set 3"}
+ ],
+ "tol": 0,
+ "expected": [-1, 3]}

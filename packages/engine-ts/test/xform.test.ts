@@ -12,6 +12,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { LocalBackend } from '@tenmol/engine-ts';
+import { decodeCoords, type WireNdarray } from '@tenmol/protocol';
 import { SMALL_PDB, EXPECTED } from './fixture';
 
 type Triple = [number, number, number];
@@ -39,8 +40,16 @@ async function boot(pdb = SMALL_PDB, name = 'm'): Promise<LocalBackend> {
   return backend;
 }
 
-const coordset = (b: LocalBackend, name = 'm', state = 1): Promise<Triple[]> =>
-  b.call<Triple[]>('get_coordset', [name, state]);
+// get_coordset returns an N×3 numpy float32 array, serialized on the wire as a
+// base64 `__ndarray__` (matching real PyMOL over the bridge). Decode it back to
+// [x,y,z] triples for the assertions.
+const coordset = async (b: LocalBackend, name = 'm', state = 1): Promise<Triple[]> => {
+  const nd = await b.call<WireNdarray>('get_coordset', [name, state]);
+  const flat = decodeCoords(nd);
+  const out: Triple[] = [];
+  for (let i = 0; i < flat.length; i += 3) out.push([flat[i]!, flat[i + 1]!, flat[i + 2]!]);
+  return out;
+};
 
 /** Row-major 4×4 translation matrix. */
 function translate(tx: number, ty: number, tz: number): number[] {
@@ -64,9 +73,11 @@ describe('get_coordset', () => {
     expect(cs[0]).toEqual([0, 0, 0]);
   });
 
-  it('returns [] for an unknown object', async () => {
+  it('returns null for an unknown object', async () => {
+    // Verified against real PyMOL over the oracle bridge: _cmd.get_coordset for
+    // a missing object yields None, not an empty array.
     const b = await boot();
-    expect(await coordset(b, 'nope')).toEqual([]);
+    expect(await b.call('get_coordset', ['nope'])).toBeNull();
   });
 });
 
@@ -188,9 +199,13 @@ describe('current-state getters', () => {
     expect(await b.call('get_object_state', ['nope'])).toBe(1);
   });
 
-  it('get_selection_state is 0 (all/current)', async () => {
+  it('get_selection_state is the shared object state (1 for single-state objects)', async () => {
+    // Mirrors real PyMOL: maps get_object_state over the selection's objects and
+    // returns the sole shared state; a single-state object reads 1, and an empty
+    // selection (no objects touched) also returns 1. Verified against the oracle.
     const b = await boot();
-    expect(await b.call('get_selection_state', ['chain A'])).toBe(0);
+    expect(await b.call('get_selection_state', ['chain A'])).toBe(1);
+    expect(await b.call('get_selection_state', ['none'])).toBe(1);
   });
 });
 

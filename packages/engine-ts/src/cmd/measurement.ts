@@ -18,6 +18,7 @@
  */
 
 import type { Json } from '@tenmol/protocol';
+import { encodeCoords } from '@tenmol/protocol';
 import type { ObjectMolecule } from '../model/molecule';
 import type { UniverseAtom } from '../select/selector';
 import type { RegistrarCtx } from './registrar';
@@ -206,14 +207,25 @@ export function registerMeasurement(ctx: RegistrarCtx): void {
     const sel = str(arg(args, kwargs, 0, 'selection'), 'all');
     const state = oneState(num(arg(args, kwargs, 1, 'state'), 0));
     const matched = ex.atomsMatching(sel);
-    return matched.map((ua) => coordAt(ua, state) as unknown as Json);
+    // API-only: real PyMOL returns an N×3 numpy float32 array (None for an empty
+    // selection). Over the bridge that array is serialized as a base64
+    // `__ndarray__` (packages/bridge/tenmol_bridge/codec.py); match that wire
+    // shape here rather than returning a plain nested JS array.
+    if (matched.length === 0) return null;
+    return encodeCoords(matched.map((ua) => coordAt(ua, state))) as unknown as Json;
   });
 
   ctx.command('get_extent', (args, kwargs): Json => {
     const sel = str(arg(args, kwargs, 0, 'selection'), 'all');
     const state = num(arg(args, kwargs, 1, 'state'), 0);
     const matched = ex.atomsMatching(sel);
-    if (matched.length === 0) return null;
+    if (matched.length === 0) {
+      // A map/gadget object has no atoms but does have a grid bounding box
+      // (ExecutiveGetExtent consults ObjectMap::GetExtent). Named directly, its
+      // recorded extent is returned.
+      const gext = ex.gadgetExtent(sel);
+      return gext ? [gext[0], gext[1]] : null;
+    }
     const min: Vec3 = [Infinity, Infinity, Infinity];
     const max: Vec3 = [-Infinity, -Infinity, -Infinity];
     for (const ua of matched) {
@@ -292,6 +304,25 @@ export function registerMeasurement(ctx: RegistrarCtx): void {
       if (ua.atom.name !== 'CA') continue;
       const pp = phiPsiForCA(mol, ua.index, state);
       if (pp) out[`${ua.objName}/${ua.atom.resi}`] = pp;
+    }
+    return out as unknown as Json;
+  });
+
+  /* ---------------------------- get_phipsi ---------------------------- */
+  // PyMOL's `cmd.get_phipsi` returns a dict keyed by the `(object, index)`
+  // tuple (1-based atom index) mapping each backbone CA to its `(phi, psi)`
+  // pair — NOT a bare `[phi, psi]` list. Only residues whose full backbone
+  // (prev-C, N, CA, C, next-N) resolves get an entry, so chain termini are
+  // omitted and an empty selection yields `{}`. Uses the same connectivity-based
+  // dihedral engine as `phi_psi` (a port of `SelectorGetPhiPsi`).
+  ctx.command('get_phipsi', (args, kwargs): Json => {
+    const sel = str(arg(args, kwargs, 0, 'selection'), '(name CA)');
+    const state = oneState(num(arg(args, kwargs, 1, 'state'), -1));
+    const out: Record<string, [number, number]> = {};
+    for (const ua of ex.atomsMatching(sel)) {
+      if (ua.atom.name !== 'CA') continue;
+      const pp = phiPsiForCA(molOf(ua), ua.index, state);
+      if (pp) out[`${ua.objName},${ua.index + 1}`] = pp;
     }
     return out as unknown as Json;
   });

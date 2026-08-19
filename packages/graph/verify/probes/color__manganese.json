@@ -1,0 +1,24 @@
+{
+  "id": "color__manganese", "feature": "manganese", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color manganese, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","manganese"],"label":"manganese RGB tuple","tol":1e-6},
+    {"call":["get_color_index","manganese"],"label":"manganese palette index"},
+    {"call":["count_atoms","color manganese"],"label":"atoms colored manganese"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.6117647290229797,
+      0.47843137383461,
+      0.7803921699523926
+    ],
+    5300,
+    1,
+    1
+  ]
+}

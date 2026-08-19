@@ -1,0 +1,23 @@
+{
+  "id": "setting__cache_max",
+  "feature": "cache_max",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "set cache_max, 12345678"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_int",
+        "cache_max"
+      ],
+      "label": "set cache_max -> 12345678"
+    }
+  ],
+  "expected": [
+    12345678
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "color__meitnerium", "feature": "meitnerium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color meitnerium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","meitnerium"],"label":"meitnerium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","meitnerium"],"label":"meitnerium palette index"},
+    {"call":["count_atoms","color meitnerium"],"label":"atoms colored meitnerium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.9215686321258545,
+      0,
+      0.14901961386203766
+    ],
+    5384,
+    1,
+    1
+  ]
+}

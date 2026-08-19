@@ -1,0 +1,15 @@
+{
+  "id": "command__transform_selection",
+  "feature": "transform_selection",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom m, pos=[1.0, 2.0, 3.0]"},
+    {"call": ["transform_selection", "m", [1,0,0,0, 0,1,0,0, 0,0,1,0, 5,0,0,1]]}
+  ],
+  "checks": [
+    {"call": ["get_atom_coords", "m"], "label": "coords after +5 X pre-rotation shift"}
+  ],
+  "tol": 1e-3,
+  "expected": [[6, 2, 3]]
+}

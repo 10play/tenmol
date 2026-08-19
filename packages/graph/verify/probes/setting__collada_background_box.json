@@ -1,0 +1,19 @@
+{
+  "id": "setting__collada_background_box",
+  "feature": "collada_background_box",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set collada_background_box, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","collada_background_box"],"label":"global default (unset) -> false"},
+    {"call":["get_setting_boolean","collada_background_box","m"],"label":"per-object set to 1 -> true"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    false,
+    true
+  ]
+}

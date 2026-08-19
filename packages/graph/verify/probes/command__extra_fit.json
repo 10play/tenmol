@@ -1,0 +1,29 @@
+{
+  "id": "command__extra_fit",
+  "feature": "extra_fit",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m1"},
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m2"},
+    {"do": "translate [15, 0, 0], m2"},
+    {"call": ["extra_fit", "m1 or m2", "m1", "super"]}
+  ],
+  "checks": [
+    {"call": ["get_extent", "m2"], "label": "mobile m2 extent after fit onto m1", "tol": 1e-2},
+    {"call": ["get_extent", "m1"], "label": "reference m1 extent unchanged", "tol": 1e-2},
+    {"call": ["count_atoms", "m2"], "label": "mobile atom count preserved"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      [11.59000015258789, -22.877002716064453, -28.26999855041504],
+      [84.68099975585938, 40.10100173950195, 47.233001708984375]
+    ],
+    [
+      [11.59000015258789, -22.87700080871582, -28.270000457763672],
+      [84.68099975585938, 40.10100173950195, 47.233001708984375]
+    ],
+    5684
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "command__minimize", "feature": "minimize", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "minimize ala"}
+  ],
+  "checks": [
+    {"call": ["get_distance", "ala and name N", "ala and name CA"], "label": "N-CA bond length after minimize"},
+    {"call": ["get_distance", "ala and name CA", "ala and name C"], "label": "CA-C bond length after minimize"},
+    {"call": ["get_distance", "ala and name C", "ala and name O"], "label": "C-O bond length after minimize"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1.4599355459213257,
+    1.5100582838058472,
+    1.2368391752243042
+  ]
+}

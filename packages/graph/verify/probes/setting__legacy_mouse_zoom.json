@@ -1,0 +1,15 @@
+{
+  "id": "setting__legacy_mouse_zoom", "feature": "legacy_mouse_zoom", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set legacy_mouse_zoom, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","legacy_mouse_zoom"],"label":"global default (unset) -> false"},
+    {"call":["get_setting_boolean","legacy_mouse_zoom","m"],"label":"per-object set to 1 -> true"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

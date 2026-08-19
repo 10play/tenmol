@@ -1,0 +1,19 @@
+{
+  "id": "setting__show_alpha_checker",
+  "feature": "show_alpha_checker",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set show_alpha_checker, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","show_alpha_checker"],"label":"global default (unset) -> true"},
+    {"call":["get_setting_boolean","show_alpha_checker","m"],"label":"per-object set to 0 -> false"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    true,
+    false
+  ]
+}

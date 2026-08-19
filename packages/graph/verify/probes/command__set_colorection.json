@@ -1,0 +1,19 @@
+{
+  "id": "command__set_colorection",
+  "feature": "set_colorection",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, pos=[0,0,0]" },
+    { "do": "color blue, m" },
+    { "call": ["get_colorection", "k"] },
+    { "do": "color red, m" }
+  ],
+  "checks": [
+    { "call": ["set_colorection", [2, 0], "k"], "label": "set_colorection(flat colorection payload, key) return" },
+    { "call": ["count_atoms", "color blue"], "label": "atoms restored to blue by set_colorection" },
+    { "call": ["count_atoms", "color red"], "label": "atoms still red after set_colorection" }
+  ],
+  "expected": [null, 1, 0],
+  "tol": 1e-3
+}

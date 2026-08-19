@@ -1,0 +1,24 @@
+{
+  "id": "color__slate", "feature": "slate", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color slate, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","slate"],"label":"slate RGB tuple","tol":1e-6},
+    {"call":["get_color_index","slate"],"label":"slate palette index"},
+    {"call":["count_atoms","color slate"],"label":"atoms colored slate"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.5,
+      0.5,
+      1
+    ],
+    11,
+    1,
+    1
+  ]
+}

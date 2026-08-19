@@ -26,6 +26,7 @@ import type { ObjectMolecule } from '../model/molecule';
 import {
   colorNames,
   getColorIndex,
+  REP_COLOR_SETTING_DEFAULTS,
   rgbForIndex,
   setColor,
   type RGB,
@@ -40,8 +41,6 @@ import type { RegistrarCtx } from './registrar';
  * dedicated getter commands (the differential/UI reads these).
  * ------------------------------------------------------------------------ */
 
-/** Object-level colour index (`ObjectMolecule.Obj.Color`). */
-const OBJECT_COLOR = new WeakMap<ObjectMolecule, number>();
 /** Per-object `cartoon_type` subtype. */
 const CARTOON_TYPE = new WeakMap<ObjectMolecule, number>();
 
@@ -114,7 +113,7 @@ export function registerDisplay(ctx: RegistrarCtx): void {
     if (idx < 0) return -1;
     const mol = ex.molecule(name);
     if (!mol) return -1;
-    OBJECT_COLOR.set(mol, idx);
+    mol.color = idx;
     ctx.publish();
     return idx;
   });
@@ -124,16 +123,29 @@ export function registerDisplay(ctx: RegistrarCtx): void {
   ctx.command('get_object_color', (args): Json => {
     const mol = ex.molecule(str(args[0]));
     if (!mol) return -1;
-    return OBJECT_COLOR.get(mol) ?? -1;
+    return mol.color;
   });
 
   /* ------------------------------ color_deep ---------------------------- */
 
   ctx.command('color_deep', (args, kwargs): Json => {
     const color = str(args[0] ?? kwargs.color);
-    const selection = str(args[1] ?? kwargs.selection, 'all') || 'all';
+    // PyMOL names this arg `name` (object name/pattern), default `all`.
+    const selection = str(args[1] ?? kwargs.name ?? kwargs.selection, 'all') || 'all';
     const idx = getColorIndex(color);
     if (idx < 0) return 0;
+    // The "deep" part: `unset_deep` every object/atom-level colour SETTING over
+    // the selection (PyMOL's `menu.rep_setting_lists`) so no per-rep override
+    // survives, then apply the colour. Mirrors `viewing.py:color_deep`.
+    for (const setting of Object.keys(REP_COLOR_SETTING_DEFAULTS)) {
+      // `unset` lives in the settings subsystem; tolerate its absence when
+      // `color_deep` is exercised against a display-only registrar.
+      try {
+        ctx.call?.('unset', [setting, selection]);
+      } catch {
+        /* no `unset` handler registered — skip the deep-unset step */
+      }
+    }
     // Per-atom colour (like `cmd.color`)…
     const count = ex.color(color, selection);
     // …plus the object colour of every object the selection touches (the
@@ -142,7 +154,7 @@ export function registerDisplay(ctx: RegistrarCtx): void {
     for (const ua of ex.atomsMatching(selection)) touched.add(ua.objName);
     for (const objName of touched) {
       const mol = ex.molecule(objName);
-      if (mol) OBJECT_COLOR.set(mol, idx);
+      if (mol) mol.color = idx;
     }
     ctx.publish();
     return count;
@@ -163,21 +175,30 @@ export function registerDisplay(ctx: RegistrarCtx): void {
   /* -------------------------- get_color_indices ------------------------- */
 
   ctx.command('get_color_indices', (args, kwargs): Json => {
-    // `all` includes runtime/extended colours; our table already returns every
-    // known name, so the flag only affects ordering intent — we return all.
-    void (args[0] ?? kwargs.all);
-    return colorNames().map((name) => [name, getColorIndex(name)] as [string, number]);
+    // PyMOL: mode 1 (all=0) returns only "named" colours — those whose name
+    // contains NO digit (ColorGetStatus == 1, skipping the generated ramps like
+    // br0-9, grey00-99, the s/r/c/w/o spectra); mode 2 (all=1) returns the full
+    // table. Indices are the real full-table positions either way.
+    const all = Number(args[0] ?? kwargs.all ?? 0);
+    const pairs = colorNames().map(
+      (name) => [name, getColorIndex(name)] as [string, number],
+    );
+    return all ? pairs : pairs.filter(([name]) => !/[0-9]/.test(name));
   });
 
   /* -------------------------------- space ------------------------------- */
 
   ctx.command('space', (args, kwargs): Json => {
     const space = (str(args[0] ?? kwargs.space, 'rgb') || 'rgb').toLowerCase();
+    const gamma = Number(args[1] ?? kwargs.gamma ?? 1);
     ex.set('color_space', space);
+    // Load the colour-space LUT so palette colours re-map through it (the
+    // `space` command's observable effect on `get_color_tuple`).
+    ex.setColorSpace(space, Number.isFinite(gamma) ? gamma : 1);
     ctx.publish();
     return null;
   });
-  ctx.command('get_color_space', (): Json => String(ex.getSetting('color_space') ?? 'rgb'));
+  ctx.command('get_color_space', (): Json => ex.getColorSpaceName());
 
   /* ------------------------------ desaturate ---------------------------- */
 

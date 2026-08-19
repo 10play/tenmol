@@ -1,0 +1,7 @@
+{"id":"selection__present","feature":"present","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","present"],"label":"atoms with coordinates present"},
+   {"call":["count_atoms","not present"],"label":"atoms without present coordinates"}
+ ],
+ "expected":[5684,0]}

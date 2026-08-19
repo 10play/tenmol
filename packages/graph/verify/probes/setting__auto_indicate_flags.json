@@ -1,0 +1,12 @@
+{
+  "id": "setting__auto_indicate_flags", "feature": "auto_indicate_flags", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set auto_indicate_flags, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","auto_indicate_flags"],"label":"global auto_indicate_flags after set 1"}
+  ],
+  "expected": [
+    1
+  ]
+}

@@ -1,0 +1,39 @@
+{
+ "id": "selection__polymer.nucleic",
+ "feature": "polymer.nucleic",
+ "kind": "selection",
+ "probeKind": "state",
+ "ops": [
+  {
+   "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/testing/data/1bna.cif, m"
+  }
+ ],
+ "checks": [
+  {
+   "call": [
+    "count_atoms",
+    "polymer.nucleic"
+   ],
+   "label": "polymer.nucleic = nucleic-acid polymer atoms"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "polymer.protein"
+   ],
+   "label": "polymer.protein = 0 (all-nucleic structure)"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "polymer"
+   ],
+   "label": "polymer total (all nucleic here) for contrast"
+  }
+ ],
+ "expected": [
+  486,
+  0,
+  486
+ ]
+}

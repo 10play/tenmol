@@ -1,0 +1,12 @@
+{
+  "id": "selection__bycalpha", "feature": "bycalpha", "kind": "selection", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "bycalpha chain A"], "label": "CA atoms of residues in chain A"},
+    {"call": ["count_atoms", "bycalpha (resi 10-20)"], "label": "CA atoms of residues 10-20"},
+    {"call": ["count_atoms", "bycalpha all"], "label": "CA atoms of every residue"}
+  ],
+  "expected": [186, 66, 712]
+}

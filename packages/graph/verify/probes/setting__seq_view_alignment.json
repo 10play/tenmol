@@ -1,0 +1,19 @@
+{
+  "id": "setting__seq_view_alignment",
+  "feature": "seq_view_alignment",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load packages/engine/test/dat/1tii.pdb, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_text", "seq_view_alignment"], "label": "global DEFAULT seq_view_alignment (expect empty string)"},
+    {"call": ["do", "set seq_view_alignment, aln_probe"], "label": "set seq_view_alignment aln_probe via do"},
+    {"call": ["get_setting_text", "seq_view_alignment"], "label": "global seq_view_alignment after set (roundtrip, expect aln_probe)"}
+  ],
+  "expected": [
+    "",
+    null,
+    "aln_probe"
+  ]
+}

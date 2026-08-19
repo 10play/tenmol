@@ -1,0 +1,16 @@
+{
+  "id": "command__assign_stereo",
+  "feature": "assign_stereo",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "assign_stereo all" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "all"], "label": "atom count unchanged by assign_stereo" },
+    { "call": ["count_atoms", "stereo R+S"], "label": "atoms carrying an R/S stereo property" }
+  ],
+  "tol": 1e-3,
+  "expected": [10, 0]
+}

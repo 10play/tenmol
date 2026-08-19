@@ -1,0 +1,15 @@
+{
+  "id": "command__alter_state", "feature": "alter_state", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "m"], "kwargs": {"pos": [1, 2, 3]}},
+    {"do": "alter_state 1, all, x=x+5"},
+    {"do": "alter_state 1, all, y=y*2"},
+    {"do": "alter_state 1, all, z=-z"}
+  ],
+  "checks": [
+    {"call": ["get_atom_coords", "m"], "label": "coords after alter_state edits x,y,z"},
+    {"call": ["count_atoms", "m"], "label": "atom count unchanged by alter_state"}
+  ],
+  "tol": 1e-3,
+  "expected": [[6, 4, -3], 1]
+}

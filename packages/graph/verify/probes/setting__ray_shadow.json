@@ -1,0 +1,15 @@
+{
+  "id": "setting__ray_shadow", "feature": "ray_shadow", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ray_shadow, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","ray_shadow"],"label":"global ray_shadow default (no prior set)"},
+    {"call":["get_setting_boolean","ray_shadow","ala"],"label":"per-object ray_shadow after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

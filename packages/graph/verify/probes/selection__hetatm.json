@@ -1,0 +1,8 @@
+{"id":"selection__hetatm","feature":"hetatm","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","hetatm"],"label":"hetatm keyword = HETATM-record atoms"},
+   {"call":["count_atoms","not hetatm"],"label":"complement = non-HETATM atoms"},
+   {"call":["count_atoms","hetatm and elem O"],"label":"hetatm intersect oxygen"}
+ ],
+ "expected":[215,5469,215]}

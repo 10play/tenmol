@@ -1,0 +1,13 @@
+{
+  "id": "setting__fast_idle", "feature": "fast_idle", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set fast_idle, 5000"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","fast_idle"],"label":"fast_idle after set 5000 (set/get roundtrip)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    5000
+  ]
+}

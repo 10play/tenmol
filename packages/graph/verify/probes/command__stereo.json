@@ -1,0 +1,16 @@
+{
+  "id": "command__stereo",
+  "feature": "stereo",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "stereo on" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "stereo"], "label": "stereo setting after 'stereo on'" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1
+  ]
+}

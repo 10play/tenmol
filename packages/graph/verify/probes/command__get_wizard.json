@@ -1,0 +1,14 @@
+{
+  "id": "command__get_wizard", "feature": "get_wizard", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"wizard measurement"},
+    {"do":"wizard"}
+  ],
+  "checks": [
+    {"call":["get_wizard"],"label":"get_wizard is None after push+pop leaves empty stack"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    null
+  ]
+}

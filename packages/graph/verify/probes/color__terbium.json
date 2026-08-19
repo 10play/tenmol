@@ -1,0 +1,24 @@
+{
+  "id": "color__terbium", "feature": "terbium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color terbium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","terbium"],"label":"terbium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","terbium"],"label":"terbium palette index"},
+    {"call":["count_atoms","color terbium"],"label":"atoms colored terbium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.1882352977991104,
+      1,
+      0.7803921699523926
+    ],
+    5340,
+    1,
+    1
+  ]
+}

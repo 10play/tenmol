@@ -1,0 +1,27 @@
+{
+  "id": "command__recolor", "feature": "recolor", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"set_color myblue, [0.2, 0.4, 0.9]"},
+    {"do":"color myblue, p1"},
+    {"do":"set_color myblue, [0.9, 0.1, 0.1]"},
+    {"do":"recolor"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color myblue"],"label":"atoms still bound to redefined colour index"},
+    {"call":["get_color_tuple","myblue"],"label":"redefined RGB after set_color+recolor","tol":1e-3},
+    {"call":["get_color_index","myblue"],"label":"colour index stable across redefine"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    [
+      0.8999999761581421,
+      0.10000000149011612,
+      0.10000000149011612
+    ],
+    5388,
+    1
+  ]
+}

@@ -1,0 +1,11 @@
+{"id":"selection__partial_charge","feature":"partial_charge","kind":"selection","probeKind":"state",
+ "ops":[
+   {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"alter chain A, partial_charge=0.5"}
+ ],
+ "checks":[
+   {"call":["count_atoms","pc. > 0"],"label":"pc. > 0 (chain A set to 0.5)"},
+   {"call":["count_atoms","partial_charge = 0"],"label":"partial_charge = 0 (untouched atoms)"},
+   {"call":["count_atoms","pc. < 0"],"label":"pc. < 0 (none)"}
+ ],
+ "expected": [1479, 4205, 0]}

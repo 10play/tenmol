@@ -1,0 +1,17 @@
+{
+  "id": "command__middle",
+  "feature": "middle",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "mset 1 x60" },
+    { "do": "frame 1" },
+    { "do": "middle" }
+  ],
+  "checks": [
+    { "call": ["get_frame"], "label": "current frame after middle" },
+    { "call": ["count_frames"], "label": "movie length" }
+  ],
+  "tol": 1e-3,
+  "expected": [31, 60]
+}

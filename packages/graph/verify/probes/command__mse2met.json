@@ -1,0 +1,18 @@
+{
+  "id": "command__mse2met",
+  "feature": "mse2met",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, name=SE, resn=MSE, elem=Se, pos=[0,0,0]" },
+    { "do": "mse2met m" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "resn MET"], "label": "MSE renamed to MET" },
+    { "call": ["count_atoms", "resn MSE"], "label": "no MSE residues remain" },
+    { "call": ["count_atoms", "name SD"], "label": "SE atom renamed to SD" },
+    { "call": ["count_atoms", "elem S"], "label": "Se element changed to S" }
+  ],
+  "tol": 1e-3,
+  "expected": [1, 0, 1, 1]
+}

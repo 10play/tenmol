@@ -1,0 +1,20 @@
+{
+  "id": "command__scene_order",
+  "feature": "scene_order",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "scene gamma, store" },
+    { "do": "scene alpha, store" },
+    { "do": "scene beta, store" },
+    { "do": "scene_order *, yes" }
+  ],
+  "checks": [
+    { "call": ["get_scene_list"], "label": "scene names after alphabetical scene_order sort" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["alpha", "beta", "gamma"]
+  ]
+}

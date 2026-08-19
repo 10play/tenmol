@@ -1,0 +1,17 @@
+{
+  "id": "command__get_object_list",
+  "feature": "get_object_list",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "fragment ala"}
+  ],
+  "checks": [
+    {"call": ["get_object_list", "all"], "label": "objects covered by (all)"},
+    {"call": ["get_object_list", "ala"], "label": "objects covered by ala selection"},
+    {"call": ["get_object_list", "m and resi 1"], "label": "objects covered by m subset"}
+  ],
+  "tol": 1e-3,
+  "expected": [["m", "ala"], ["ala"], ["m"]]
+}

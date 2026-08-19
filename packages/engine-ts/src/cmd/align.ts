@@ -377,6 +377,25 @@ export function registerAlign(ctx: RegistrarCtx): void {
   const str = ctx.str;
 
   /**
+   * Materialised alignment objects, keyed by name. Each value is the raw
+   * alignment: a list of columns, each column a list of `[objectName, index]`
+   * pairs (`index` is PyMOL's 1-based atom index). `align`/`super`/… populate
+   * this when called with `object=<name>`; `get_raw_alignment` reads it back.
+   */
+  const rawAlignments = new Map<string, Array<Array<[string, number]>>>();
+
+  /** Object load-order rank, so a column's members come out in the same order
+   *  real PyMOL lists them (by the alignment's object order). */
+  const loadRank = (name: string): number => {
+    let i = 0;
+    for (const mol of ctx.executive.moleculesInOrder()) {
+      if (mol.name === name) return i;
+      i++;
+    }
+    return i;
+  };
+
+  /**
    * Shared paired-selection gather for `fit` / `rms_cur` / `rms`. Pairs atoms by
    * IDENTITY — (segi, chain, resn, resi, name, alt) — matching PyMOL's default
    * `matchmaker=0`, so storage order is irrelevant (a reversed copy still pairs).
@@ -449,21 +468,33 @@ export function registerAlign(ctx: RegistrarCtx): void {
     return { mob, tgt, mobMols, n: mob.length, identical, Lmob: mobCA.length, Ltgt: tgtCA.length };
   };
 
+  /** Residue key (segi|chain|resi) used to group a residue's atoms together. */
+  const resKeyOf = (ua: UniverseAtom): string =>
+    `${ua.atom.segi}|${ua.atom.chain}|${ua.atom.resi}`;
+
+  /** Group a selection's atoms by residue, each residue mapping upper-cased atom
+   *  name -> UniverseAtom. Used by `align` to pair EVERY atom of two aligned
+   *  residues by name (PyMOL's `_cmd.align` fits over all aligned atoms, not just
+   *  the guide Cα — which is why a single-residue fragment still superposes). */
+  const residueAtomMap = (sel: string): Map<string, Map<string, UniverseAtom>> => {
+    const map = new Map<string, Map<string, UniverseAtom>>();
+    for (const ua of ctx.executive.atomsMatching(sel)) {
+      const rk = resKeyOf(ua);
+      let m = map.get(rk);
+      if (!m) {
+        m = new Map<string, UniverseAtom>();
+        map.set(rk, m);
+      }
+      m.set(ua.atom.name.toUpperCase(), ua);
+    }
+    return map;
+  };
+
   /** Apply a superposition transform to a single point (for TM-score scoring). */
   const applyPoint = (s: Superposition, p: Vec3): Vec3 => {
     const q: Vec3 = [p[0] - s.cMobile[0], p[1] - s.cMobile[1], p[2] - s.cMobile[2]];
     const rp = matVec(s.r, q);
     return [rp[0] + s.cTarget[0], rp[1] + s.cTarget[1], rp[2] + s.cTarget[2]];
-  };
-
-  /** Structurally superpose one object's Cα onto a target selection; returns the
-   *  post-fit RMS, or -1 when there are no guide atoms to pair. */
-  const superOnto = (mobileSel: string, targetSel: string): number => {
-    const p = caPairsByOrder(mobileSel, targetSel, 1);
-    if (p.n === 0) return -1;
-    const sup = superpose(p.mob, p.tgt);
-    applySuperposition(objectsFrom(ctx, p.mobMols), 1, sup);
-    return sup.rms;
   };
 
   /* -------------------------------- rms_cur ------------------------------ */
@@ -484,14 +515,15 @@ export function registerAlign(ctx: RegistrarCtx): void {
   /* ---------------------------------- fit -------------------------------- */
   // fit(mobile, target, ...) — Kabsch superpose the mobile object onto target,
   // return the post-fit RMS.
-  ctx.command('fit', (args, kwargs): Json => {
+  const fit = (args: unknown[], kwargs: Record<string, unknown>): Json => {
     const { mob, tgt, mobMols, state } = gatherPairs(args, kwargs);
     if (mob.length === 0) return 0;
     const sup = superpose(mob, tgt);
     applySuperposition(objectsFrom(ctx, mobMols), state, sup);
     ctx.publish();
     return sup.rms;
-  });
+  };
+  ctx.command('fit', fit);
 
   /* --------------------------------- align ------------------------------- */
   // align(mobile, target, ...) — Cα sequence-alignment superposition. Returns
@@ -507,28 +539,55 @@ export function registerAlign(ctx: RegistrarCtx): void {
     const tgtSeq = tgtCA.map((ua) => ua.atom.resn.toUpperCase());
     const pairs = lcsPairs(mobSeq, tgtSeq);
 
+    // PyMOL's `_cmd.align` superposes over ALL atoms of the aligned residues
+    // (paired by atom name), not just the guide Cα — so even a single-residue
+    // fragment yields a determinate rigid fit. Group each side's atoms by
+    // residue and, for every matched residue, pair atoms of the same name.
+    const mobRes = residueAtomMap(mobileSel);
+    const tgtRes = residueAtomMap(targetSel);
     const mob: Vec3[] = [];
     const tgt: Vec3[] = [];
     const mobMols = new Set<string>();
+    // Per-column atom pairing for the alignment object (if object= is given).
+    const columns: Array<Array<[string, number]>> = [];
+    let nRes = 0;
     for (const [i, j] of pairs) {
-      const mua = mobCA[i] as UniverseAtom;
-      const tua = tgtCA[j] as UniverseAtom;
-      const mMol = ctx.executive.molecule(mua.objName);
-      const tMol = ctx.executive.molecule(tua.objName);
-      if (!mMol || !tMol) continue;
-      mobMols.add(mua.objName);
-      mob.push(mMol.coord(mua.index, state));
-      tgt.push(tMol.coord(tua.index, state));
+      const mAtoms = mobRes.get(resKeyOf(mobCA[i] as UniverseAtom));
+      const tAtoms = tgtRes.get(resKeyOf(tgtCA[j] as UniverseAtom));
+      if (!mAtoms || !tAtoms) continue;
+      let paired = false;
+      for (const [name, mua] of mAtoms) {
+        const tua = tAtoms.get(name);
+        if (!tua) continue;
+        const mMol = ctx.executive.molecule(mua.objName);
+        const tMol = ctx.executive.molecule(tua.objName);
+        if (!mMol || !tMol) continue;
+        mobMols.add(mua.objName);
+        mob.push(mMol.coord(mua.index, state));
+        tgt.push(tMol.coord(tua.index, state));
+        // Column members are PyMOL 1-based indices, ordered by object load order.
+        const col: Array<[string, number]> = [
+          [mua.objName, mua.index + 1],
+          [tua.objName, tua.index + 1],
+        ];
+        col.sort((a, b) => loadRank(a[0]) - loadRank(b[0]));
+        columns.push(col);
+        paired = true;
+      }
+      if (paired) nRes++;
     }
     const n = mob.length;
     if (n === 0) return [0, 0, 0, 0, 0, 0, 0];
+
+    const objectName = str(pick(args, kwargs, 7, 'object'), '');
+    if (objectName) rawAlignments.set(objectName, columns);
 
     const rmsdPre = rmsPaired(mob, tgt);
     const sup = superpose(mob, tgt);
     applySuperposition(objectsFrom(ctx, mobMols), state, sup);
     ctx.publish();
     // [rmsd, n_atoms, n_cycles, rmsd_pre, n_pre, raw_score, n_residues]
-    return [sup.rms, n, 0, rmsdPre, n, 0, n];
+    return [sup.rms, n, 0, rmsdPre, n, 0, nRes];
   };
   ctx.command('align', align);
 
@@ -536,7 +595,7 @@ export function registerAlign(ctx: RegistrarCtx): void {
   // super(mobile, target, ...) — STRUCTURE-based superposition: pairs guide Cα
   // by structural position (ignoring residue names), Kabsch-fits and carries the
   // whole mobile object. Unlike `align` it needs no sequence similarity.
-  ctx.command('super', (args, kwargs): Json => {
+  const superFn = (args: unknown[], kwargs: Record<string, unknown>): Json => {
     const mobileSel = str(pick(args, kwargs, 0, 'mobile'), '');
     const targetSel = str(pick(args, kwargs, 1, 'target'), '');
     const state = Math.max(1, Math.trunc(num(pick(args, kwargs, 8, 'mobile_state'), 1)) || 1);
@@ -547,13 +606,14 @@ export function registerAlign(ctx: RegistrarCtx): void {
     applySuperposition(objectsFrom(ctx, p.mobMols), state, sup);
     ctx.publish();
     return [sup.rms, p.n, 0, rmsdPre, p.n, 0, p.n];
-  });
+  };
+  ctx.command('super', superFn);
 
   /* -------------------------------- cealign ------------------------------ */
   // cealign(target, mobile, ...) — the CE structural aligner. NOTE the argument
   // order: TARGET first, MOBILE second (fitting.py). Transforms the mobile onto
   // the target and returns {alignment_length, RMSD, rotation_matrix}.
-  ctx.command('cealign', (args, kwargs): Json => {
+  const cealignFn = (args: unknown[], kwargs: Record<string, unknown>): Json => {
     const targetSel = str(pick(args, kwargs, 0, 'target'), '');
     const mobileSel = str(pick(args, kwargs, 1, 'mobile'), '');
     const state = Math.max(1, Math.trunc(num(pick(args, kwargs, 3, 'mobile_state'), 1)) || 1);
@@ -571,7 +631,8 @@ export function registerAlign(ctx: RegistrarCtx): void {
         [sup.r[6] as number, sup.r[7] as number, sup.r[8] as number],
       ],
     };
-  });
+  };
+  ctx.command('cealign', cealignFn);
 
   /* -------------------------------- usalign ------------------------------ */
   // usalign(mobile, target, ...) — TM-align-style superposition. Returns the
@@ -580,11 +641,18 @@ export function registerAlign(ctx: RegistrarCtx): void {
   ctx.command('usalign', (args, kwargs): Json => {
     const mobileSel = str(pick(args, kwargs, 0, 'mobile'), '');
     const targetSel = str(pick(args, kwargs, 1, 'target'), '');
-    const p = caPairsByOrder(mobileSel, targetSel, 1);
+    const state = Math.max(1, Math.trunc(num(pick(args, kwargs, 2, 'mobile_state'), 1)) || 1);
+    const transform = Math.trunc(num(pick(args, kwargs, 5, 'transform'), 1));
+    const p = caPairsByOrder(mobileSel, targetSel, state);
     if (p.n === 0) {
       return { tm_score_target: 0, tm_score_mobile: 0, RMSD: 0, alignment_length: 0, seq_identity: 0 };
     }
     const sup = superpose(p.mob, p.tgt);
+    // transform=1 (default): carry the mobile object(s) onto the target.
+    if (transform) {
+      applySuperposition(objectsFrom(ctx, p.mobMols), state, sup);
+      ctx.publish();
+    }
     const d0 = (L: number): number => Math.max(0.5, 1.24 * Math.cbrt(Math.max(L - 15, 0)) - 1.8);
     const d0t = d0(p.Ltgt);
     const d0m = d0(p.Lmob);
@@ -643,30 +711,102 @@ export function registerAlign(ctx: RegistrarCtx): void {
   });
 
   /* ---------------------------- alignto / extra_fit ---------------------- */
-  // alignto(target, method, …) — superpose every OTHER loaded object onto target.
-  ctx.command('alignto', (args, kwargs): Json => {
-    const target = str(pick(args, kwargs, 0, 'target'), '');
-    const out: Json[] = [];
-    for (const mol of ctx.executive.moleculesInOrder()) {
-      if (mol.name === target) continue;
-      const rms = superOnto(mol.name, target);
-      if (rms >= 0) out.push([mol.name, rms, 0, 0, 0, 0, 0]);
+  // The fitting methods `extra_fit`/`alignto` can dispatch to. Each takes the
+  // mobile/target selection (by keyword, so cealign's reversed positional order
+  // is irrelevant) and carries the mobile object onto the target.
+  const methods: Record<
+    string,
+    (args: unknown[], kwargs: Record<string, unknown>) => Json
+  > = { align, super: superFn, cealign: cealignFn, fit };
+
+  /** Fold trailing `key=value` string tokens (as the console parser hands them
+   *  over — it never splits kwargs itself) into `kwargs`. The wrapper verbs
+   *  `alignto`/`extra_fit` take object/method names positionally and everything
+   *  else as `key=value`, so `alignto ala, method=align` behaves like real
+   *  PyMOL's keyword dispatch. */
+  const foldKwargs = (
+    args: unknown[],
+    kwargs: Record<string, unknown>,
+  ): { pos: unknown[]; kw: Record<string, unknown> } => {
+    const pos: unknown[] = [];
+    const kw: Record<string, unknown> = { ...kwargs };
+    for (const a of args) {
+      if (typeof a === 'string') {
+        const m = /^([A-Za-z_]\w*)=(.*)$/.exec(a.trim());
+        if (m) {
+          kw[m[1] as string] = m[2];
+          continue;
+        }
+      }
+      pos.push(a);
     }
-    ctx.publish();
-    return out;
-  });
+    return { pos, kw };
+  };
+
+  /** Run `method` for one mobile object against a target selection and extract
+   *  its post-fit RMS from whatever shape the method returns (list / dict /
+   *  scalar). Returns -1 when nothing was paired. */
+  const runMethod = (
+    method: string,
+    mobileSel: string,
+    targetSel: string,
+    kwargs: Record<string, unknown>,
+  ): number => {
+    const fn = methods[method] ?? superFn;
+    const res = fn([], { ...kwargs, mobile: mobileSel, target: targetSel });
+    if (Array.isArray(res)) return res.length ? Number(res[0]) : -1;
+    if (res && typeof res === 'object' && 'RMSD' in (res as Record<string, unknown>)) {
+      return Number((res as Record<string, unknown>).RMSD);
+    }
+    if (typeof res === 'number') return res;
+    return -1;
+  };
+
   // extra_fit(selection, reference, method, …) — superpose every non-reference
-  // object present in `selection` onto `reference`.
-  ctx.command('extra_fit', (args, kwargs): Json => {
+  // object present in `selection` onto `reference` using `method` (default
+  // `align`, matching PyMOL). A thin dispatcher over the method commands.
+  const extraFit = (rawArgs: unknown[], rawKwargs: Record<string, unknown>): Json => {
+    const { pos: args, kw: kwargs } = foldKwargs(rawArgs, rawKwargs);
     const selection = str(pick(args, kwargs, 0, 'selection'), 'all') || 'all';
-    const reference = str(pick(args, kwargs, 1, 'reference'), '');
-    const objs = new Set<string>();
-    for (const ua of ctx.executive.atomsMatching(selection)) objs.add(ua.objName);
+    let reference = str(pick(args, kwargs, 1, 'reference'), '');
+    const method = str(pick(args, kwargs, 2, 'method'), 'align') || 'align';
+    // Objects touched by the selection, in load order.
+    const objs: string[] = [];
+    const seen = new Set<string>();
+    for (const ua of ctx.executive.atomsMatching(selection)) {
+      if (!seen.has(ua.objName)) {
+        seen.add(ua.objName);
+        objs.push(ua.objName);
+      }
+    }
+    if (!reference && objs.length) reference = objs[0] as string;
     const out: Json[] = [];
     for (const name of objs) {
       if (name === reference) continue;
-      const rms = superOnto(name, reference);
+      const rms = runMethod(method, name, reference, kwargs);
       if (rms >= 0) out.push([name, rms]);
+    }
+    ctx.publish();
+    return out;
+  };
+  ctx.command('extra_fit', extraFit);
+
+  // alignto(target, method, selection, …) — superpose every OTHER public object
+  // onto `target`. A wrapper over `extra_fit` (default method `cealign`).
+  ctx.command('alignto', (rawArgs, rawKwargs): Json => {
+    const { pos: args, kw: kwargs } = foldKwargs(rawArgs, rawKwargs);
+    const target = str(pick(args, kwargs, 0, 'target'), '');
+    const method = str(pick(args, kwargs, 1, 'method'), 'cealign') || 'cealign';
+    const selection = str(pick(args, kwargs, 2, 'selection'), '');
+    if (selection) {
+      return extraFit([selection, target, method], kwargs);
+    }
+    // Default: all public objects, in load order.
+    const out: Json[] = [];
+    for (const mol of ctx.executive.moleculesInOrder()) {
+      if (mol.name === target) continue;
+      const rms = runMethod(method, mol.name, target, kwargs);
+      if (rms >= 0) out.push([mol.name, rms]);
     }
     ctx.publish();
     return out;
@@ -731,6 +871,12 @@ export function registerAlign(ctx: RegistrarCtx): void {
   });
 
   /* --------------------------- get_raw_alignment ------------------------- */
-  // get_raw_alignment(name) — the per-atom alignment map; a `[]` stub here.
-  ctx.command('get_raw_alignment', (): Json => []);
+  // get_raw_alignment(name, active_only=0) — the per-atom alignment relations of
+  // an alignment object, as a list of columns of (object, index) tuples. Reads
+  // back whatever `align`/`super`/… recorded when called with object=<name>.
+  ctx.command('get_raw_alignment', (args, kwargs): Json => {
+    const name = str(pick(args, kwargs, 0, 'name'), '');
+    const cols = name ? rawAlignments.get(name) : undefined;
+    return (cols ?? []) as unknown as Json;
+  });
 }

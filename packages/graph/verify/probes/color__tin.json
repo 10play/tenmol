@@ -1,0 +1,23 @@
+{
+  "id": "color__tin",
+  "feature": "tin",
+  "kind": "color",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "color tin, ala" }
+  ],
+  "checks": [
+    { "call": ["get_color_index", "tin"], "label": "color index of tin" },
+    { "call": ["get_color_tuple", "tin"], "label": "rgb tuple of tin" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    5325,
+    [
+      0.4000000059604645,
+      0.5019607543945312,
+      0.5019607543945312
+    ]
+  ]
+}

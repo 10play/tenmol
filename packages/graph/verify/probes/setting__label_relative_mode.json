@@ -1,0 +1,12 @@
+{
+  "id": "setting__label_relative_mode", "feature": "label_relative_mode", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set label_relative_mode, 2"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","label_relative_mode"],"label":"label_relative_mode after set 2"}
+  ],
+  "expected": [
+    2
+  ]
+}

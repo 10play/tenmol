@@ -1,0 +1,25 @@
+{
+  "id": "command__unset",
+  "feature": "unset",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "set sphere_scale, 0.5" },
+    { "do": "set line_width, 3" },
+    { "do": "set cartoon_transparency, 0.25, ala" },
+    { "do": "unset sphere_scale" },
+    { "do": "unset cartoon_transparency, ala" }
+  ],
+  "checks": [
+    { "call": ["get_setting_float", "sphere_scale"], "label": "global sphere_scale restored to default (1.0)" },
+    { "call": ["get_setting_float", "line_width"], "label": "unrelated line_width still 3" },
+    { "call": ["get_setting_float", "cartoon_transparency", "ala"], "label": "per-object cartoon_transparency override cleared (0.0)" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    3,
+    0
+  ]
+}

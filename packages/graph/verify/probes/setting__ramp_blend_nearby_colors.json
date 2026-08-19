@@ -1,0 +1,10 @@
+{"id":"setting__ramp_blend_nearby_colors","feature":"ramp_blend_nearby_colors","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set ramp_blend_nearby_colors, 1, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","ramp_blend_nearby_colors"],"label":"ramp_blend_nearby_colors global default (no prior set)"},
+   {"call":["get_setting_boolean","ramp_blend_nearby_colors","ala"],"label":"ramp_blend_nearby_colors per-object after set 1"}
+ ],
+ "expected": [false, true]}

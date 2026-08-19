@@ -1,0 +1,16 @@
+{
+  "id": "setting__image_dots_per_inch", "feature": "image_dots_per_inch", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set image_dots_per_inch, 300, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","image_dots_per_inch"],"label":"global image_dots_per_inch default (no prior set)"},
+    {"call":["get_setting_float","image_dots_per_inch","ala"],"label":"per-object image_dots_per_inch after set 300"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0,
+    300
+  ]
+}

@@ -56,8 +56,15 @@ function setCoord(ex: Executive, i: number, xyz: [number, number, number]): void
   set[i * 3 + 2] = xyz[2];
 }
 
-describe('controlflow: undo/redo of coordinate mutations', () => {
-  it('push_undo then a mutation then undo restores the original coordinates', () => {
+describe('controlflow: undo/redo are inert (match real PyMOL)', () => {
+  // Coordinate undo is NOT ported. Real (open-source, headless) PyMOL only rolls
+  // back the object *currently being edited* through the picking Editor
+  // (`ExecutiveUndo` acts on `ExecutiveGetLastObjectEdited`, which scripting
+  // never sets). Verified against real PyMOL via the differential oracle:
+  //   load; push_undo m; translate [10,0,0], m; undo  ->  atom STAYS translated.
+  // So push_undo / undo / redo succeed inertly (return null) without touching
+  // coordinates — a scripted mutation is NOT rolled back.
+  it('push_undo then a mutation then undo does NOT restore (stays mutated)', () => {
     const { ex, call } = harness();
     expect(ex.molecule('m')!.coord(0, 1)).toEqual([0, 0, 0]);
 
@@ -66,58 +73,32 @@ describe('controlflow: undo/redo of coordinate mutations', () => {
     setCoord(ex, 0, [9, 9, 9]);
     expect(ex.molecule('m')!.coord(0, 1)).toEqual([9, 9, 9]);
 
-    // undo -> back to the origin; returns the number of atoms restored (2).
-    expect(call('undo')).toBe(2);
-    expect(ex.molecule('m')!.coord(0, 1)).toEqual([0, 0, 0]);
+    // undo is a no-op returning null; the coordinate stays at the mutated value.
+    expect(call('undo')).toBeNull();
+    expect(ex.molecule('m')!.coord(0, 1)).toEqual([9, 9, 9]);
     expect(ex.molecule('m')!.coord(1, 1)).toEqual([1, 2, 3]);
   });
 
-  it('redo re-applies the undone mutation', () => {
+  it('redo is a no-op that changes nothing', () => {
     const { ex, call } = harness();
     call('push_undo', 'all', 1);
     setCoord(ex, 0, [9, 9, 9]);
     call('undo');
-    expect(ex.molecule('m')!.coord(0, 1)).toEqual([0, 0, 0]);
-
-    expect(call('redo')).toBe(2);
+    expect(call('redo')).toBeNull();
     expect(ex.molecule('m')!.coord(0, 1)).toEqual([9, 9, 9]);
   });
 
-  it('undo/redo round-trips repeatedly', () => {
-    const { ex, call } = harness();
-    call('push_undo', 'all', 1);
-    setCoord(ex, 1, [-5, -5, -5]);
-    call('undo');
-    expect(ex.molecule('m')!.coord(1, 1)).toEqual([1, 2, 3]);
-    call('redo');
-    expect(ex.molecule('m')!.coord(1, 1)).toEqual([-5, -5, -5]);
-    call('undo');
-    expect(ex.molecule('m')!.coord(1, 1)).toEqual([1, 2, 3]);
-  });
-
-  it('undo with an empty history is a safe no-op returning null', () => {
+  it('undo/redo with no history are safe no-ops returning null', () => {
     const { call } = harness();
     expect(call('undo')).toBeNull();
     expect(call('redo')).toBeNull();
   });
 
-  it('a new push_undo invalidates the redo branch', () => {
+  it('push_undo returns null and does not itself alter coordinates', () => {
     const { ex, call } = harness();
-    call('push_undo', 'all', 1);
-    setCoord(ex, 0, [9, 9, 9]);
-    call('undo'); // origin, redo branch now holds (9,9,9)
-    call('push_undo', 'all', 1); // records origin, clears redo
-    expect(call('redo')).toBeNull();
-  });
-
-  it('push_undo can snapshot a sub-selection only', () => {
-    const { ex, call } = harness();
-    call('push_undo', 'elem O', 1); // atom 2 only
-    setCoord(ex, 0, [7, 7, 7]); // move atom 1 (NOT snapshotted)
-    setCoord(ex, 1, [8, 8, 8]); // move atom 2 (snapshotted)
-    expect(call('undo')).toBe(1); // only atom 2 restored
-    expect(ex.molecule('m')!.coord(0, 1)).toEqual([7, 7, 7]); // untouched
-    expect(ex.molecule('m')!.coord(1, 1)).toEqual([1, 2, 3]); // restored
+    expect(call('push_undo', 'elem O', 1)).toBeNull();
+    expect(ex.molecule('m')!.coord(0, 1)).toEqual([0, 0, 0]);
+    expect(ex.molecule('m')!.coord(1, 1)).toEqual([1, 2, 3]);
   });
 });
 
@@ -158,9 +139,13 @@ describe('controlflow: sandboxed no-ops never touch the real system', () => {
     expect(call('system', 'rm -rf /')).toBeNull();
   });
 
-  it('sync/abort/accept/ending/splash/update/rebuild_all/api are inert nulls', () => {
+  // `ending` moved to system.ts (it now jumps to the last movie frame rather
+  // than being an inert no-op), so it is no longer registered by controlflow.
+  // `update` likewise moved to system.ts (a real coordinate-transfer port), so
+  // controlflow no longer registers it either.
+  it('sync/abort/accept/splash/rebuild_all/api are inert nulls', () => {
     const { call } = harness();
-    for (const cmd of ['sync', 'abort', 'accept', 'ending', 'splash', 'update', 'rebuild_all', 'api']) {
+    for (const cmd of ['sync', 'abort', 'accept', 'splash', 'rebuild_all', 'api']) {
       expect(call(cmd)).toBeNull();
     }
   });

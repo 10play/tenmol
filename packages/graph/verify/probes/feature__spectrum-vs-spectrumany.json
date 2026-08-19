@@ -1,0 +1,23 @@
+{
+  "id": "feature__spectrum-vs-spectrumany",
+  "feature": "spectrum-vs-spectrumany",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom af1"},
+    {"do": "pseudoatom af2"},
+    {"do": "pseudoatom bf1"},
+    {"do": "pseudoatom bf2"},
+    {"call": ["spectrum", "count", "blue_red", "(af1 or af2)"]},
+    {"call": ["spectrum", "count", "blue red", "(bf1 or bf2)"]}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "(af1 or af2)"], "label": "fast-path group size"},
+    {"call": ["count_atoms", "(bf1 or bf2)"], "label": "spectrumany group size"},
+    {"call": ["count_atoms", "(af1 or af2) and color c083"], "label": "fast path (named palette + alpha expr) lands on registered blue_red band slot c083"},
+    {"call": ["count_atoms", "(af1 or af2) and color c166"], "label": "fast path lands on registered blue_red band slot c166 (red endpoint)"},
+    {"call": ["count_atoms", "(bf1 or bf2) and color c083"], "label": "spectrumany fallback (colour list) writes inline 0x40RRGGBB, never the c083 band slot"}
+  ],
+  "expected": [2, 2, 1, 1, 0],
+  "tol": 0
+}

@@ -1,0 +1,21 @@
+{
+  "id": "command__reference",
+  "feature": "reference",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m, pos=[1.5, 2.5, 3.5]" },
+    { "do": "reference store, all" },
+    { "do": "translate [5, 0, 0], all, camera=0" },
+    { "do": "reference recall, all" }
+  ],
+  "checks": [
+    { "call": ["get_atom_coords", "all"], "label": "coords after store+translate+recall (reference recall restores stored baseline)" },
+    { "call": ["count_atoms", "all"], "label": "atom count unchanged by reference ops" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1.5, 2.5, 3.5],
+    1
+  ]
+}

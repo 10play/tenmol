@@ -1,0 +1,15 @@
+{
+  "id": "feature__cSculptPlan",
+  "feature": "cSculptPlan",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    { "do": "set sculpt_field_mask, 8" }
+  ],
+  "checks": [
+    { "call": ["get_setting_int", "sculpt_field_mask"], "label": "cSculptPlan bit (0x008=8) isolated as active mask" },
+    { "call": ["get_setting_float", "sculpt_plan_weight"], "label": "planarity restraint weight default" }
+  ],
+  "tol": 1e-3,
+  "expected": [8, 1]
+}

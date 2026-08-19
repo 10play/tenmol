@@ -1,0 +1,19 @@
+{
+  "id": "setting__ray_blend_blue",
+  "feature": "ray_blend_blue",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set ray_blend_blue, 0.42, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_blend_blue"],"label":"global default (no prior set) -> 0.14"},
+    {"call":["get_setting_float","ray_blend_blue","m"],"label":"per-object set 0.42 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.14,
+    0.42
+  ]
+}

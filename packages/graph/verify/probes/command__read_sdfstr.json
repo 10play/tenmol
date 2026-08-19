@@ -1,0 +1,21 @@
+{
+  "id": "command__read_sdfstr", "feature": "read_sdfstr", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call":["read_sdfstr", "water\n  tenmol\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7570    0.5860    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7570    0.5860    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  1  3  1  0\nM  END\n$$$$\n", "cmpd"]}
+  ],
+  "checks": [
+    {"call":["count_atoms","cmpd"],"label":"total atoms loaded from sdf string"},
+    {"call":["count_atoms","cmpd and elem O"],"label":"oxygen atoms parsed"},
+    {"call":["count_atoms","cmpd and elem H"],"label":"hydrogen atoms parsed"},
+    {"call":["get_names"],"label":"object registered under given name"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    3,
+    1,
+    2,
+    [
+      "cmpd"
+    ]
+  ]
+}

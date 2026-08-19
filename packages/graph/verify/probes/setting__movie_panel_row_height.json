@@ -1,0 +1,13 @@
+{
+  "id": "setting__movie_panel_row_height", "feature": "movie_panel_row_height", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set movie_panel_row_height, 22, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","movie_panel_row_height"],"label":"global default (no prior set) -> 15"},
+    {"call":["get_setting_int","movie_panel_row_height","m"],"label":"per-object set 22 roundtrip"}
+  ],
+  "tol": 0,
+  "expected": [15, 22]
+}

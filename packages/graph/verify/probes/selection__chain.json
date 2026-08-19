@@ -1,0 +1,8 @@
+{"id":"selection__chain","feature":"chain","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","chain A"],"label":"chain A = atoms in chain A"},
+   {"call":["count_atoms","chain A+B"],"label":"chain A+B = atoms in chains A or B"},
+   {"call":["count_atoms","c. B"],"label":"c. B alias = atoms in chain B"}
+ ],
+ "expected":[1479,1479,0]}

@@ -1,0 +1,18 @@
+{
+  "id": "setting__seq_view",
+  "feature": "seq_view",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set seq_view, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","seq_view"],"label":"global default (unset) -> false (REC_b 353 default 0)"},
+    {"call":["get_setting_boolean","seq_view","m"],"label":"per-object set to 1 -> true (roundtrip)"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

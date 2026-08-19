@@ -1,0 +1,24 @@
+{
+  "id": "color__tellurium", "feature": "tellurium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color tellurium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","tellurium"],"label":"tellurium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","tellurium"],"label":"tellurium palette index"},
+    {"call":["count_atoms","color tellurium"],"label":"atoms colored tellurium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.8313725590705872,
+      0.47843137383461,
+      0
+    ],
+    5327,
+    1,
+    1
+  ]
+}

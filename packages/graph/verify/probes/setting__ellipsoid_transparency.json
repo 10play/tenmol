@@ -1,0 +1,11 @@
+{"id":"setting__ellipsoid_transparency","feature":"ellipsoid_transparency","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set ellipsoid_transparency, 0.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","ellipsoid_transparency"],"label":"ellipsoid_transparency global default (no prior set)"},
+   {"call":["get_setting_float","ellipsoid_transparency","ala"],"label":"ellipsoid_transparency per-object after set 0.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [0, 0.5]}

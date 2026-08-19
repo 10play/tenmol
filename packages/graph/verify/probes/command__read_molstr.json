@@ -1,0 +1,43 @@
+{
+  "id": "command__read_molstr",
+  "feature": "read_molstr",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_molstr",
+        "water\n  tenmol\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9572    0.0000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.2400    0.9270    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0  0  0  0\n  1  3  1  0  0  0  0\nM  END\n",
+        "wat"
+      ],
+      "label": "load a 3-atom water MOL block from a string"
+    }
+  ],
+  "checks": [
+    {
+      "call": ["count_atoms", "wat"],
+      "label": "total atoms parsed from MOL block"
+    },
+    {
+      "call": ["count_atoms", "wat and elem O"],
+      "label": "oxygen atoms parsed"
+    },
+    {
+      "call": ["count_atoms", "wat and elem H"],
+      "label": "hydrogen atoms parsed"
+    },
+    {
+      "call": ["get_names", "objects"],
+      "label": "object created by read_molstr"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    3,
+    1,
+    2,
+    [
+      "wat"
+    ]
+  ]
+}

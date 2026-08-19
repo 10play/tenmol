@@ -1,0 +1,17 @@
+{
+  "id": "setting__group_full_member_names", "feature": "group_full_member_names", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set group_full_member_names, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","group_full_member_names"],"label":"global default (unset) -> false"},
+    {"call":["get_setting_boolean","group_full_member_names","m"],"label":"per-object set to 1 -> true"},
+    {"call":["get_setting_int","group_full_member_names","m"],"label":"per-object int after set 1 -> 1"}
+  ],
+  "expected": [
+    false,
+    true,
+    1
+  ]
+}

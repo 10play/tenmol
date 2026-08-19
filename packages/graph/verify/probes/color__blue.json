@@ -1,0 +1,25 @@
+{
+  "id": "color__blue", "feature": "blue", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"pseudoatom p2"},
+    {"do":"color blue, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","blue"],"label":"blue palette index"},
+    {"call":["get_color_tuple","blue"],"label":"blue RGB tuple","tol":1e-3},
+    {"call":["count_atoms","color blue"],"label":"atoms colored blue"},
+    {"call":["count_atoms","p1 or p2"],"label":"total atoms"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2,
+    [
+      0,
+      0,
+      1
+    ],
+    1,
+    2
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "command__disable", "feature": "disable", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"pseudoatom p2"},
+    {"do":"disable p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","enabled"],"label":"atoms in enabled objects after disabling p1"},
+    {"call":["count_atoms","p1"],"label":"p1 still exists"},
+    {"call":["count_atoms","all"],"label":"total atoms unchanged"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    1,
+    2
+  ]
+}

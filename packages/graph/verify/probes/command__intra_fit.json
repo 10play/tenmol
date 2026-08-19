@@ -1,0 +1,82 @@
+{
+  "id": "command__intra_fit",
+  "feature": "intra_fit",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_pdbstr",
+        "MODEL        1\nATOM      1  N  ALA A   1       0.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA ALA A   1       1.000   0.000   0.000  1.00  0.00           C\nATOM      3  C  ALA A   1       2.000   1.000   0.000  1.00  0.00           C\nATOM      4  O  ALA A   1       2.000   2.000   0.000  1.00  0.00           O\nATOM      5  CB ALA A   1       1.000  -1.000   1.000  1.00  0.00           C\nATOM      6  N  ALA A   2       3.000   1.000   0.000  1.00  0.00           N\nATOM      7  CA ALA A   2       4.000   0.000   0.000  1.00  0.00           C\nATOM      8  C  ALA A   2       5.000   1.000   0.000  1.00  0.00           C\nATOM      9  O  ALA A   2       5.000   2.000   0.000  1.00  0.00           O\nATOM     10  CB ALA A   2       4.000  -1.000   1.000  1.00  0.00           C\nATOM     11  N  ALA A   3       6.000   1.000   0.000  1.00  0.00           N\nATOM     12  CA ALA A   3       7.000   0.000   1.000  1.00  0.00           C\nATOM     13  C  ALA A   3       8.000   1.000   1.000  1.00  0.00           C\nATOM     14  O  ALA A   3       8.000   2.000   1.000  1.00  0.00           O\nATOM     15  CB ALA A   3       7.000  -1.000   2.000  1.00  0.00           C\nENDMDL\nMODEL        2\nATOM      1  N  ALA A   1      10.000  -4.000   6.000  1.00  0.00           N\nATOM      2  CA ALA A   1      11.000  -4.000   6.000  1.00  0.00           C\nATOM      3  C  ALA A   1      12.000  -3.000   6.000  1.00  0.00           C\nATOM      4  O  ALA A   1      12.000  -2.000   6.000  1.00  0.00           O\nATOM      5  CB ALA A   1      11.000  -5.000   7.000  1.00  0.00           C\nATOM      6  N  ALA A   2      13.000  -3.000   6.000  1.00  0.00           N\nATOM      7  CA ALA A   2      14.000  -4.000   6.000  1.00  0.00           C\nATOM      8  C  ALA A   2      15.000  -3.000   6.000  1.00  0.00           C\nATOM      9  O  ALA A   2      15.000  -2.000   6.000  1.00  0.00           O\nATOM     10  CB ALA A   2      14.000  -5.000   7.000  1.00  0.00           C\nATOM     11  N  ALA A   3      16.000  -3.000   6.000  1.00  0.00           N\nATOM     12  CA ALA A   3      17.000  -4.000   7.000  1.00  0.00           C\nATOM     13  C  ALA A   3      18.000  -3.000   7.000  1.00  0.00           C\nATOM     14  O  ALA A   3      18.000  -2.000   7.000  1.00  0.00           O\nATOM     15  CB ALA A   3      17.000  -5.000   8.000  1.00  0.00           C\nENDMDL\nEND",
+        "t"
+      ]
+    },
+    {
+      "call": [
+        "intra_fit",
+        "t"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_extent",
+        "t",
+        2
+      ],
+      "label": "state 2 extent after fit matches reference state extent",
+      "tol": 0.01
+    },
+    {
+      "call": [
+        "get_extent",
+        "t",
+        1
+      ],
+      "label": "reference state 1 extent unchanged",
+      "tol": 0.01
+    },
+    {
+      "call": [
+        "get_atom_coords",
+        "t and name CA and resi 2",
+        2
+      ],
+      "label": "CA2 in state 2 superposes onto its reference position",
+      "tol": 0.01
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    [
+      [
+        0,
+        -0.9999999403953552,
+        -1.1920928955078125e-07
+      ],
+      [
+        8,
+        2,
+        2
+      ]
+    ],
+    [
+      [
+        0,
+        -1,
+        0
+      ],
+      [
+        8,
+        2,
+        2
+      ]
+    ],
+    [
+      4,
+      5.960464477539063e-08,
+      -2.9802322387695312e-08
+    ]
+  ]
+}

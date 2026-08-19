@@ -1,0 +1,15 @@
+{
+  "id": "setting__connect_bonded", "feature": "connect_bonded", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set connect_bonded, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","connect_bonded"],"label":"global connect_bonded default (no prior set)"},
+    {"call":["get_setting_boolean","connect_bonded","ala"],"label":"per-object connect_bonded after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

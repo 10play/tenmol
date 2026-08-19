@@ -1,0 +1,19 @@
+{
+  "id": "feature__colour-by-rep",
+  "feature": "colour-by-rep",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cartoon_color, red, ala"},
+    {"do":"set stick_color, blue, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cartoon_color","ala"],"label":"cartoon_color rep setting written as red index"},
+    {"call":["get_setting_int","stick_color","ala"],"label":"stick_color rep setting written as blue index"},
+    {"call":["get_color_index","red"],"label":"red palette index"},
+    {"call":["count_atoms","color red"],"label":"atom colours untouched by by-rep setting"}
+  ],
+  "tol": 0,
+  "expected": [4, 2, 4, 0]
+}

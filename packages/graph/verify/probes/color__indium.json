@@ -1,0 +1,22 @@
+{
+  "id": "color__indium", "feature": "indium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color indium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color indium"],"label":"atoms colored indium"},
+    {"call":["get_color_index","indium"],"label":"indium palette index"},
+    {"call":["get_color_tuple","indium"],"label":"indium rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5324,
+    [
+      0.6509804129600525,
+      0.4588235318660736,
+      0.45098039507865906
+    ]
+  ]
+}

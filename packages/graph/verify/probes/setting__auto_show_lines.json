@@ -1,0 +1,15 @@
+{
+  "id": "setting__auto_show_lines",
+  "feature": "auto_show_lines",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set auto_show_lines, 0"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","auto_show_lines"],"label":"after set to 0 -> false (roundtrip; default is 1/true)"}
+  ],
+  "expected": [
+    false
+  ]
+}

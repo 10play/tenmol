@@ -1,0 +1,15 @@
+{
+  "id": "setting__editor_auto_origin", "feature": "editor_auto_origin", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set editor_auto_origin, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","editor_auto_origin"],"label":"global editor_auto_origin default (unset)"},
+    {"call":["get_setting_boolean","editor_auto_origin","ala"],"label":"per-object editor_auto_origin after set 0 (roundtrip)"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

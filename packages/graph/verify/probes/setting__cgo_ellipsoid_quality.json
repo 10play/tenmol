@@ -1,0 +1,15 @@
+{
+  "id": "setting__cgo_ellipsoid_quality", "feature": "cgo_ellipsoid_quality", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cgo_ellipsoid_quality, 3, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cgo_ellipsoid_quality"],"label":"cgo_ellipsoid_quality global default (no prior set)"},
+    {"call":["get_setting_int","cgo_ellipsoid_quality","ala"],"label":"cgo_ellipsoid_quality per-object after set 3"}
+  ],
+  "expected": [
+    -1,
+    3
+  ]
+}

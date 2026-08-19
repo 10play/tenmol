@@ -1,0 +1,11 @@
+{"id":"setting__png_file_gamma","feature":"png_file_gamma","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set png_file_gamma, 2.2, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","png_file_gamma"],"label":"png_file_gamma global default (no prior set)"},
+   {"call":["get_setting_float","png_file_gamma","ala"],"label":"png_file_gamma per-object after set 2.2 (roundtrip)"}
+ ],
+ "tol": 1e-6,
+ "expected": [1, 2.2]}

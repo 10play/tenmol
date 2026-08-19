@@ -1,0 +1,19 @@
+{
+  "id": "feature__session-format",
+  "feature": "session-format",
+  "kind": "file-io",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "save /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/graph/verify/.work/feature__session-format.out.pse"},
+    {"do": "delete all"},
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/graph/verify/.work/feature__session-format.out.pse"}
+  ],
+  "checks": [
+    {"call": ["get_names"], "label": "objects restored from the reloaded .pse session"},
+    {"call": ["count_atoms", "all"], "label": "atoms restored from the reloaded .pse session"},
+    {"call": ["count_atoms", "m and chain A and name CA"], "label": "chain/name detail survived the .pse session roundtrip"}
+  ],
+  "tol": 0,
+  "expected": [["m"], 5684, 186]
+}

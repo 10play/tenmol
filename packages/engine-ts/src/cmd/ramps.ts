@@ -263,7 +263,21 @@ export function registerRamps(ctx: RegistrarCtx): void {
 
   ctx.command('volume_color', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs.name);
-    const flat = parseNumberList(args[1] ?? kwargs.ramp ?? kwargs.color);
+    const rampArg = args[1] ?? kwargs.ramp ?? kwargs.color;
+    // Empty `ramp` ⇒ getter (colorramping.py:123 `volume_color(name)`): return
+    // the volume's value→RGBA transfer function as a flat [value, r, g, b, alpha]
+    // * N list with RGB in 0..1, exactly the shape `_cmd.volume_color` reads back.
+    if (rampArg == null || (typeof rampArg === 'string' && rampArg.trim() === '')) {
+      const ramp = VOLUME_RAMPS.get(name);
+      if (!ramp) return [];
+      const out: number[] = [];
+      for (let i = 0; i < ramp.colors.length; i++) {
+        const c = ramp.colors[i]!;
+        out.push(ramp.range[i]!, c[0], c[1], c[2], c[3]);
+      }
+      return out;
+    }
+    const flat = parseNumberList(rampArg);
     defineVolumeRamp(name, flat);
     ctx.publish();
     return name;

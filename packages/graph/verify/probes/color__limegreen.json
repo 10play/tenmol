@@ -1,0 +1,22 @@
+{
+  "id": "color__limegreen", "feature": "limegreen", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color limegreen, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color limegreen"],"label":"atoms colored limegreen"},
+    {"call":["get_color_index","limegreen"],"label":"limegreen palette index"},
+    {"call":["get_color_tuple","limegreen"],"label":"limegreen rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    15,
+    [
+      0,
+      1,
+      0.5
+    ]
+  ]
+}

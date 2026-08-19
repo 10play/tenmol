@@ -1,0 +1,19 @@
+{
+  "id": "setting__spheroid_fill",
+  "feature": "spheroid_fill",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set spheroid_fill, 0.75, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","spheroid_fill"],"label":"global default (no prior set) -> 1.3"},
+    {"call":["get_setting_float","spheroid_fill","m"],"label":"per-object set 0.75 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1.3,
+    0.75
+  ]
+}

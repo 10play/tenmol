@@ -1,0 +1,19 @@
+{
+  "id": "setting__surface_optimize_subsets",
+  "feature": "surface_optimize_subsets",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set surface_optimize_subsets, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","surface_optimize_subsets"],"label":"global default (unset) -> true"},
+    {"call":["get_setting_boolean","surface_optimize_subsets","m"],"label":"per-object set to 0 -> false"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    true,
+    false
+  ]
+}

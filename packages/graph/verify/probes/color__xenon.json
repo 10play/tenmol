@@ -1,0 +1,24 @@
+{
+  "id": "color__xenon", "feature": "xenon", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color xenon, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","xenon"],"label":"xenon RGB tuple","tol":1e-6},
+    {"call":["get_color_index","xenon"],"label":"xenon palette index"},
+    {"call":["count_atoms","color xenon"],"label":"atoms colored xenon"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.25882354378700256,
+      0.6196078658103943,
+      0.6901960968971252
+    ],
+    5329,
+    1,
+    1
+  ]
+}

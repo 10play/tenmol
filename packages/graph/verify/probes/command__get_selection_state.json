@@ -1,0 +1,17 @@
+{
+  "id": "command__get_selection_state",
+  "feature": "get_selection_state",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "pseudoatom pa" }
+  ],
+  "checks": [
+    { "call": ["get_selection_state", "ala"], "label": "selection state of single-state fragment ala" },
+    { "call": ["get_selection_state", "pa"], "label": "selection state of single-state pseudoatom pa" },
+    { "call": ["get_selection_state", "none"], "label": "selection state of empty selection" }
+  ],
+  "tol": 1e-3,
+  "expected": [1, 1, 1]
+}

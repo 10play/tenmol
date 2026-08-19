@@ -1,0 +1,12 @@
+{
+  "id": "setting__max_ups", "feature": "max_ups", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set max_ups, 30, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","max_ups"],"label":"global max_ups default (no prior set)"},
+    {"call":["get_setting_int","max_ups","ala"],"label":"per-object max_ups after set 30"}
+  ],
+  "expected": [0, 30]
+}

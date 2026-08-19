@@ -1,0 +1,15 @@
+{
+  "id": "setting__nvidia_bugs", "feature": "nvidia_bugs", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set nvidia_bugs, 1, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","nvidia_bugs"],"label":"global nvidia_bugs default (no prior global set)"},
+    {"call":["get_setting_int","nvidia_bugs","m"],"label":"per-object nvidia_bugs after set 1"}
+  ],
+  "expected": [
+    0,
+    1
+  ]
+}

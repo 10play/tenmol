@@ -1,0 +1,10 @@
+{"id":"setting__cache_display","feature":"cache_display","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set cache_display, 0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_boolean","cache_display"],"label":"cache_display global default (no prior set)"},
+   {"call":["get_setting_boolean","cache_display","ala"],"label":"cache_display per-object after set 0"}
+ ],
+ "expected": [true, false]}

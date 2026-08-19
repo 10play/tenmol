@@ -1,0 +1,11 @@
+{"id":"setting__volume_layers","feature":"volume_layers","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set volume_layers, 128, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","volume_layers"],"label":"volume_layers global default (no prior set)"},
+   {"call":["get_setting_float","volume_layers","ala"],"label":"volume_layers per-object after set 128"}
+ ],
+ "tol": 1e-6,
+ "expected": [256, 128]}

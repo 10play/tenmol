@@ -1,0 +1,17 @@
+{
+  "id": "command__edit",
+  "feature": "edit",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "edit name CA, name CB" }
+  ],
+  "checks": [
+    { "call": ["count_atoms", "pk1"], "label": "pk1 has the first picked atom" },
+    { "call": ["count_atoms", "pk2"], "label": "pk2 has the second picked atom" },
+    { "call": ["count_atoms", "pkbond"], "label": "pkbond spans the picked bond" }
+  ],
+  "tol": 1e-3,
+  "expected": [1, 1, 2]
+}

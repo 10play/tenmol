@@ -1,0 +1,118 @@
+{
+  "id": "command__index",
+  "feature": "index",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "index",
+        "m and index 1"
+      ],
+      "label": "index of first atom"
+    },
+    {
+      "call": [
+        "index",
+        "m and name CA and resi 1-3"
+      ],
+      "label": "index tuples for CA of resi 1-3"
+    },
+    {
+      "call": [
+        "count_atoms",
+        "m and index 5-10"
+      ],
+      "label": "count atoms selected by index range"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    [
+      [
+        "m",
+        1
+      ]
+    ],
+    [
+      [
+        "m",
+        217
+      ],
+      [
+        "m",
+        225
+      ],
+      [
+        "m",
+        233
+      ],
+      [
+        "m",
+        1986
+      ],
+      [
+        "m",
+        1990
+      ],
+      [
+        "m",
+        1995
+      ],
+      [
+        "m",
+        2726
+      ],
+      [
+        "m",
+        2730
+      ],
+      [
+        "m",
+        2735
+      ],
+      [
+        "m",
+        3466
+      ],
+      [
+        "m",
+        3470
+      ],
+      [
+        "m",
+        3475
+      ],
+      [
+        "m",
+        4206
+      ],
+      [
+        "m",
+        4210
+      ],
+      [
+        "m",
+        4215
+      ],
+      [
+        "m",
+        4946
+      ],
+      [
+        "m",
+        4950
+      ],
+      [
+        "m",
+        4955
+      ]
+    ],
+    6
+  ]
+}

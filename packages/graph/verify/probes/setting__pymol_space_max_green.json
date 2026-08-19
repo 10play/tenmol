@@ -1,0 +1,16 @@
+{
+  "id": "setting__pymol_space_max_green", "feature": "pymol_space_max_green", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set pymol_space_max_green, 0.3, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","pymol_space_max_green"],"label":"global pymol_space_max_green default (no prior set)"},
+    {"call":["get_setting_float","pymol_space_max_green","m"],"label":"per-object pymol_space_max_green after set 0.3"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.75,
+    0.3
+  ]
+}

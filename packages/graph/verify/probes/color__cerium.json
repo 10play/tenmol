@@ -1,0 +1,22 @@
+{
+  "id": "color__cerium", "feature": "cerium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color cerium, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color cerium"],"label":"atoms colored cerium"},
+    {"call":["get_color_index","cerium"],"label":"cerium palette index"},
+    {"call":["get_color_tuple","cerium"],"label":"cerium RGB tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5333,
+    [
+      1,
+      1,
+      0.7803921699523926
+    ]
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "feature__supported-formats", "feature": "supported-formats", "kind": "feature", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/small02.pdb, mpdb"},
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/small03.mol2, mmol2"},
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/small01.mol, mmol"}
+  ],
+  "checks": [
+    {"call":["get_names"],"label":"objects created from three formats"},
+    {"call":["count_atoms","mpdb"],"label":"atoms from .pdb dispatch"},
+    {"call":["count_atoms","mmol2"],"label":"atoms from .mol2 dispatch"},
+    {"call":["count_atoms","mmol"],"label":"atoms from .mol dispatch"}
+  ],
+  "tol": 0,
+  "expected": [
+    ["mpdb", "mmol2", "mmol"],
+    36,
+    389,
+    36
+  ]
+}

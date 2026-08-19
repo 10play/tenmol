@@ -1,0 +1,15 @@
+{
+  "id": "command__get_sasa_relative", "feature": "get_sasa_relative", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "get_sasa_relative chain A and resi 1-10"}
+  ],
+  "checks": [
+    {"label": "atoms whose relative SASA loaded into b is exposed (>0.5)", "call": ["count_atoms", "chain A and resi 1-10 and b > 0.5"]},
+    {"label": "atoms with relative SASA b < 0.2 (buried)", "call": ["count_atoms", "chain A and resi 1-10 and b < 0.2"]},
+    {"label": "all b values loaded into 0..1 range (b <= 1.0001)", "call": ["count_atoms", "chain A and resi 1-10 and b < 1.0001"]},
+    {"label": "total atoms in analysed selection (bookkeeping)", "call": ["count_atoms", "chain A and resi 1-10"]}
+  ],
+  "expected": [8, 64, 87, 87],
+  "tol": 1e-3
+}

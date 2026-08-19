@@ -1,0 +1,10 @@
+{
+  "id": "command__show", "feature": "show", "kind": "command", "probeKind": "visual",
+  "ops": [{"do":"fragment ala"},{"do":"hide everything"},{"do":"show spheres"}],
+  "checks": [
+    {"call":["count_atoms","rep spheres"],"label":"atoms shown as spheres"},
+    {"call":["count_atoms","ala"],"label":"total atoms"},
+    {"call":["count_atoms","rep lines"],"label":"atoms shown as lines"}
+  ],
+  "expected": [10, 10, 0], "tol": 0
+}

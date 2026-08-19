@@ -1,0 +1,24 @@
+{
+  "id": "color__seaborgium", "feature": "seaborgium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color seaborgium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","seaborgium"],"label":"seaborgium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","seaborgium"],"label":"seaborgium palette index"},
+    {"call":["count_atoms","color seaborgium"],"label":"atoms colored seaborgium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.8509804010391235,
+      0,
+      0.2705882489681244
+    ],
+    5381,
+    1,
+    1
+  ]
+}

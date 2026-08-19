@@ -1,0 +1,19 @@
+{
+  "id": "command__rename", "feature": "rename", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom m, name=C, elem=C, resi=1, chain=A, pos=[0,0,0]"},
+    {"do":"pseudoatom m, name=C, elem=C, resi=1, chain=A, pos=[1,0,0]"},
+    {"do":"pseudoatom m, name=C, elem=C, resi=1, chain=A, pos=[2,0,0]"},
+    {"do":"rename m, force=1"},
+    {"do":"sort"}
+  ],
+  "checks": [
+    {"call":["count_atoms","m and name C"],"label":"atoms still colliding on name C after rename"},
+    {"call":["count_atoms","all"],"label":"total atoms unchanged"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    0,
+    3
+  ]
+}

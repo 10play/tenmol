@@ -21,139 +21,8 @@
  * the atom. `iterate_state`/`alter_state` additionally expose x/y/z.
  */
 import type { Json } from '@tenmol/protocol';
-import type { ObjectMolecule } from '../model/molecule';
+import { assignSecondaryStructure } from '../model/secondary-structure';
 import type { RegistrarCtx } from './registrar';
-
-type Vec3 = [number, number, number];
-
-/* ------------------------------ vector math ------------------------------ */
-
-function sub(a: Vec3, b: Vec3): Vec3 {
-  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-}
-function cross(a: Vec3, b: Vec3): Vec3 {
-  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-}
-function dot(a: Vec3, b: Vec3): number {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
-function norm(a: Vec3): Vec3 {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
-  return [a[0] / l, a[1] / l, a[2] / l];
-}
-
-/**
- * Signed dihedral angle (degrees) about the p2->p3 axis, in [-180, 180], in the
- * IUPAC convention PyMOL uses — so a right-handed alpha helix reads (phi, psi) ≈
- * (-57, -47) and a beta strand ≈ (-120, +130), which is what {@link classify}
- * expects. (The bare `atan2(y, x)` here is the negated convention; the leading
- * minus restores the IUPAC sign.)
- */
-function dihedral(p1: Vec3, p2: Vec3, p3: Vec3, p4: Vec3): number {
-  const b1 = sub(p2, p1);
-  const b2 = sub(p3, p2);
-  const b3 = sub(p4, p3);
-  const n1 = cross(b1, b2);
-  const n2 = cross(b2, b3);
-  const m1 = cross(n1, norm(b2));
-  const x = dot(n1, n2);
-  const y = dot(m1, n2);
-  return (-Math.atan2(y, x) * 180) / Math.PI;
-}
-
-/* ------------------------------ secondary structure ---------------------- */
-
-/** One polymer residue's backbone, in chain order. */
-interface Residue {
-  chain: string;
-  segi: string;
-  atomIdx: number[];
-  n?: Vec3;
-  ca?: Vec3;
-  c?: Vec3;
-}
-
-/**
- * Classify a residue from its (phi, psi) backbone dihedrals. Ranges are widened
- * around the ideal alpha-helix (-57, -47) and beta-strand (-120, 130) so a real
- * protein's helices and strands are detected; this is a heuristic, not exact
- * PyMOL `SSTypeAssignment` (which uses a full H-bond pattern search).
- */
-function classify(phi: number | undefined, psi: number | undefined): string {
-  if (phi === undefined || psi === undefined) return '';
-  if (phi >= -120 && phi <= -30 && psi >= -80 && psi <= 10) return 'H';
-  if (phi >= -180 && phi <= -50 && (psi >= 80 || psi <= -170)) return 'S';
-  return '';
-}
-
-/** Assign `.ss` on every polymer atom of `mol` from backbone phi/psi geometry. */
-function assignSS(mol: ObjectMolecule, state: number): void {
-  // Group atoms into residues in load order (a PDB lists residues sequentially).
-  const residues: Residue[] = [];
-  const byKey = new Map<string, Residue>();
-  for (let i = 0; i < mol.atoms.length; i++) {
-    const a = mol.atoms[i]!;
-    const key = `${a.chain}|${a.segi}|${a.resi}`;
-    let res = byKey.get(key);
-    if (!res) {
-      res = { chain: a.chain, segi: a.segi, atomIdx: [] };
-      byKey.set(key, res);
-      residues.push(res);
-    }
-    res.atomIdx.push(i);
-    const name = a.name.toUpperCase();
-    if (name === 'N') res.n = mol.coord(i, state);
-    else if (name === 'CA') res.ca = mol.coord(i, state);
-    else if (name === 'C') res.c = mol.coord(i, state);
-  }
-
-  // Reset ss on everything we are about to (re)assign.
-  for (const res of residues) for (const i of res.atomIdx) mol.atoms[i]!.ss = '';
-
-  // Per-residue phi/psi using the previous/next residue when they are the
-  // sequential chain neighbour (same chain + segment).
-  const codes: string[] = residues.map(() => '');
-  for (let i = 0; i < residues.length; i++) {
-    const res = residues[i]!;
-    if (!res.n || !res.ca || !res.c) continue;
-    const prev = residues[i - 1];
-    const next = residues[i + 1];
-    const sameChain = (r?: Residue): boolean =>
-      !!r && r.chain === res.chain && r.segi === res.segi;
-    let phi: number | undefined;
-    let psi: number | undefined;
-    if (sameChain(prev) && prev!.c) phi = dihedral(prev!.c, res.n, res.ca, res.c);
-    if (sameChain(next) && next!.n) psi = dihedral(res.n, res.ca, res.c, next!.n);
-    codes[i] = classify(phi, psi);
-  }
-
-  // Run-length smoothing: a helix needs >=3 consecutive H, a strand >=2
-  // consecutive S; shorter runs are noise -> loop. This prevents isolated
-  // residues from being called helix/strand.
-  smoothRuns(codes, 'H', 3);
-  smoothRuns(codes, 'S', 2);
-
-  for (let i = 0; i < residues.length; i++) {
-    const ss = codes[i]!;
-    if (ss === '') continue;
-    for (const idx of residues[i]!.atomIdx) mol.atoms[idx]!.ss = ss;
-  }
-}
-
-/** Drop runs of `code` shorter than `minLen` (set them back to loop). */
-function smoothRuns(codes: string[], code: string, minLen: number): void {
-  let i = 0;
-  while (i < codes.length) {
-    if (codes[i] !== code) {
-      i++;
-      continue;
-    }
-    let j = i;
-    while (j < codes.length && codes[j] === code) j++;
-    if (j - i < minLen) for (let k = i; k < j; k++) codes[k] = '';
-    i = j;
-  }
-}
 
 /* ------------------------------ iterate / alter -------------------------- */
 
@@ -172,6 +41,7 @@ const ATOM_FIELDS = [
   'color',
   'ss',
   'id',
+  'custom',
 ] as const;
 
 /** Fields that must be coerced to a number when written back by `alter`. */
@@ -187,7 +57,7 @@ function compileExpr(expr: string, extraParams: string[]): (...a: unknown[]) => 
   // map to the camelCase AtomInfo keys on write-back (see runPerAtom).
   const params = [
     ...ATOM_FIELDS, 'index', 'hetatm', 'model',
-    'formal_charge', 'partial_charge', ...extraParams, 'stored',
+    'formal_charge', 'partial_charge', 'p', 'properties', ...extraParams, 'stored',
   ];
   const body = `${expr}\n;return [${ATOM_FIELDS.join(',')},formal_charge,partial_charge];`;
 
@@ -240,14 +110,28 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
   });
 
   // ---- dss ---------------------------------------------------------------
-  ctx.command('dss', (args) => {
+  ctx.command('dss', (args, kwargs) => {
     const sel = sel0(args[0]);
-    const state = Number(args[1] ?? 0) || 0;
-    const objNames = new Set<string>();
-    for (const ua of ex.atomsMatching(sel)) objNames.add(ua.objName);
-    for (const name of objNames) {
+    const state = Number(args[1] ?? kwargs.state ?? 0) || 0;
+    const preserve = Number(args[3] ?? kwargs.preserve ?? 0) !== 0;
+    // Per object, the target Cα atoms are those in the selection; H-bond context
+    // is the whole object. Mirrors SelectorAssignSS (single-object path).
+    const targets = new Map<string, Set<number>>();
+    for (const ua of ex.atomsMatching(sel)) {
+      let set = targets.get(ua.objName);
+      if (!set) {
+        set = new Set<number>();
+        targets.set(ua.objName, set);
+      }
+      set.add(ua.index);
+    }
+    for (const [name, set] of targets) {
       const mol = ex.molecule(name);
-      if (mol) assignSS(mol, state > 0 ? state : 1);
+      if (!mol) continue;
+      // state 0 => all states (consensus); otherwise the single 1-based state.
+      const states =
+        state > 0 ? [state - 1] : Array.from({ length: Math.max(1, mol.nstate) }, (_, i) => i);
+      assignSecondaryStructure(mol, states, preserve, (i) => set.has(i));
     }
     ctx.publish();
     return null;
@@ -266,9 +150,17 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
     const matched = ex.atomsMatching(sel);
     for (const ua of matched) {
       const a = ua.atom;
-      const base: unknown[] = ATOM_FIELDS.map((f) => a[f]);
+      // `custom` is optional on the record and defaults to '' (PyMOL keeps it a
+      // string), so expose it as such to the expression body.
+      const base: unknown[] = ATOM_FIELDS.map((f) => (f === 'custom' ? a.custom ?? '' : a[f]));
       base.push(ua.index + 1, a.hetatm, ua.objName);
       base.push(a.formalCharge ?? 0, a.partialCharge ?? 0);
+      // `p` / `properties` — the atom's custom-property namespace (PyMOL exposes
+      // both names for it). For `alter` we hand over the live store so
+      // `p.foo = ...` / `properties['foo'] = ...` persist; for read-only
+      // `iterate` an empty stand-in when the atom has none.
+      const propStore = opts.writeBack ? (a.properties ??= {}) : a.properties ?? {};
+      base.push(propStore, propStore);
       if (withCoords) {
         const mol = ex.molecule(ua.objName)!;
         const [x, y, z] = mol.coord(ua.index, opts.state && opts.state > 0 ? opts.state : 1);
@@ -277,6 +169,8 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
       base.push(stored);
       const result = fn(...base);
       if (opts.writeBack) {
+        const prevResi = a.resi;
+        const prevResv = a.resv;
         for (let k = 0; k < ATOM_FIELDS.length; k++) {
           const field = ATOM_FIELDS[k]!;
           const raw = result[k];
@@ -285,9 +179,19 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
             rec[field] = Number(raw);
           } else if (field === 'ss' || field === 'name' || field === 'resn' ||
                      field === 'resi' || field === 'chain' || field === 'segi' ||
-                     field === 'alt' || field === 'elem') {
+                     field === 'alt' || field === 'elem' || field === 'custom') {
             rec[field] = String(raw);
           }
+        }
+        // `resi` and `resv` are two views of one property in PyMOL (P.cpp
+        // ATOM_PROP_RESI/RESV): writing `resi` reparses `resv`+inscode, and
+        // writing `resv` regenerates the `resi` text. Reconcile whichever one
+        // the expression touched so canonical sorting (which keys on `resv`)
+        // and range selections stay consistent. `resi` wins if both changed.
+        if (a.resi !== prevResi) {
+          a.resv = parseInt(a.resi, 10) || 0;
+        } else if (a.resv !== prevResv) {
+          a.resi = String(a.resv);
         }
         // Charges are appended after ATOM_FIELDS in the returned tuple; map the
         // snake_case body names back to the camelCase AtomInfo keys.

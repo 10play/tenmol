@@ -1,0 +1,15 @@
+{
+  "id": "setting__atom_name_wildcard",
+  "feature": "atom_name_wildcard",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set atom_name_wildcard, %"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","atom_name_wildcard"],"label":"atom_name_wildcard text after set %"}
+  ],
+  "expected": [
+    "%"
+  ]
+}

@@ -155,7 +155,7 @@ function setup(pdb = PDB): {
 /* ------------------------------------------------------------------------ */
 
 describe('analysis subsystem', () => {
-  it('dss detects a helix and a strand', () => {
+  it('dss detects a helix (H-bond based, Cα-only) and needs a partner for a strand', () => {
     const { call, ssCount, ex } = setup();
     // Before dss, nothing is assigned.
     expect(ssCount('H')).toBe(0);
@@ -165,19 +165,29 @@ describe('analysis subsystem', () => {
 
     const helixAtoms = ssCount('H');
     const strandAtoms = ssCount('S');
-    expect(helixAtoms).toBeGreaterThan(0);
-    expect(strandAtoms).toBeGreaterThan(0);
+    // Values verified against real PyMOL's `dss` on this exact synthetic PDB
+    // (oracle: 6 H atoms, 0 S atoms). PyMOL writes `ss` onto the Cα ATOM ONLY —
+    // not the whole residue — so the count equals the number of helical
+    // residues, and its assignment is H-bond based: the 8-residue helix forms
+    // i,i+4 backbone H-bonds and reads back as 6 interior helical residues
+    // (the two ends fall outside the i+3/4/5 pattern). An isolated β-strand has
+    // NO partner strand, so it forms no β-ladder H-bonds and PyMOL assigns it
+    // no `S` at all (a faithful port, unlike the old pure-φ/ψ heuristic).
+    expect(helixAtoms).toBe(6);
+    expect(strandAtoms).toBe(0);
 
-    // Helix H atoms belong to chain A; strand S atoms to chain B.
+    // Every H atom is a Cα in chain A.
     for (const ua of ex.atomsMatching('all')) {
-      if (ua.atom.ss === 'H') expect(ua.atom.chain).toBe('A');
-      if (ua.atom.ss === 'S') expect(ua.atom.chain).toBe('B');
+      if (ua.atom.ss === 'H') {
+        expect(ua.atom.chain).toBe('A');
+        expect(ua.atom.name).toBe('CA');
+      }
     }
-    // A whole residue is labelled together: all 4 atoms of a helical residue.
+    // One label per residue (Cα-only), so H count === number of helical residues.
     const helixResis = new Set(
       ex.atomsMatching('all').filter((u) => u.atom.ss === 'H').map((u) => u.atom.resi),
     );
-    expect(helixAtoms).toBe(helixResis.size * 4);
+    expect(helixAtoms).toBe(helixResis.size);
   });
 
   it('get_chains returns sorted distinct chains', () => {

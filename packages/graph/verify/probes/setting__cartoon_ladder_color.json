@@ -1,0 +1,15 @@
+{
+  "id": "setting__cartoon_ladder_color", "feature": "cartoon_ladder_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set cartoon_ladder_color, blue"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cartoon_ladder_color"],"label":"cartoon_ladder_color after set blue -> blue color index"},
+    {"call":["get_color_index","blue"],"label":"blue color index (oracle vs engine)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    2,
+    2
+  ]
+}

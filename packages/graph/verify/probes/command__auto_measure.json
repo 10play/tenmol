@@ -1,0 +1,19 @@
+{
+  "id": "command__auto_measure", "feature": "auto_measure", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"edit (ala and name N), (ala and name CA)"},
+    {"call":["auto_measure"]}
+  ],
+  "checks": [
+    {"call":["get_setting_int","dist_counter"],"label":"dist_counter incremented by auto_measure distance"},
+    {"call":["get_names"],"label":"dist01 measurement object created"},
+    {"call":["get_names","selections"],"label":"picks cleared by unpick after measure"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    ["ala", "dist01"],
+    ["_pkbase1", "_pkfrag1", "_pkbase2", "_pkfrag2"]
+  ]
+}

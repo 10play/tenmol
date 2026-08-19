@@ -1,0 +1,12 @@
+{
+  "id": "setting__movie_rock", "feature": "movie_rock", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set movie_rock, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","movie_rock"],"label":"global movie_rock after set 1"}
+  ],
+  "expected": [
+    1
+  ]
+}

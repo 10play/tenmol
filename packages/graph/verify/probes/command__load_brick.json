@@ -1,0 +1,14 @@
+{
+  "id": "command__load_brick", "feature": "load_brick", "kind": "command", "probeKind": "state",
+  "ops": [],
+  "checks": [
+    {"call": ["load_brick", null, "mybrick"], "label": "load_brick returns None"},
+    {"call": ["load_brick", null, "b"], "label": "load_brick keyword name returns None"},
+    {"call": ["get_names"], "label": "object names after load_brick"},
+    {"call": ["get_type", "mybrick"], "label": "brick object type"},
+    {"call": ["get_type", "b_"], "label": "keyword-legalized brick object type"},
+    {"call": ["count_atoms", "all"], "label": "brick contributes no atoms"}
+  ],
+  "tol": 0,
+  "expected": [null, null, ["mybrick", "b_"], "object:map", "object:map", 0]
+}

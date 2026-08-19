@@ -1,0 +1,15 @@
+{
+  "id": "setting__stick_round_nub", "feature": "stick_round_nub", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set stick_round_nub, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","stick_round_nub"],"label":"global stick_round_nub default (no prior set)"},
+    {"call":["get_setting_int","stick_round_nub","ala"],"label":"per-object stick_round_nub after set 1"}
+  ],
+  "expected": [
+    0,
+    1
+  ]
+}

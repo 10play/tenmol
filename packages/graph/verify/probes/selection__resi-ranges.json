@@ -1,0 +1,8 @@
+{"id":"selection__resi-ranges","feature":"resi-ranges","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","resi 10-20"],"label":"resi 10-20 = inclusive numeric range"},
+   {"call":["count_atoms","resi 1-5+50-55"],"label":"resi 1-5+50-55 = two ranges unioned"},
+   {"call":["count_atoms","resi 10-20+30-40"],"label":"resi 10-20+30-40 = doc example, two ranges"}
+ ],
+ "expected":[483,545,1008]}

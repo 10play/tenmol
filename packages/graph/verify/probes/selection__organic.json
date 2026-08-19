@@ -1,0 +1,8 @@
+{"id":"selection__organic","feature":"organic","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/testing/data/1rx1.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","organic"],"label":"organic keyword = non-polymer non-solvent carbon-containing groups"},
+   {"call":["count_atoms","org."],"label":"org. alias = organic"},
+   {"call":["count_atoms","organic and elem C"],"label":"organic intersect carbon"}
+ ],
+ "expected":[48,48,21]}

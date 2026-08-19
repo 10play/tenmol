@@ -1,0 +1,12 @@
+{"id":"selection__color","feature":"color","kind":"selection","probeKind":"state",
+ "ops":[
+   {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"color red, chain A"},
+   {"do":"color blue, chain B"}
+ ],
+ "checks":[
+   {"call":["count_atoms","color red"],"label":"atoms with color red (chain A)"},
+   {"call":["count_atoms","color blue"],"label":"atoms with color blue (chain B)"},
+   {"call":["count_atoms","color yellow"],"label":"atoms with color yellow (none)"}
+ ],
+ "expected":[1479, 0, 0]}

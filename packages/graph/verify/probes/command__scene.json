@@ -1,0 +1,24 @@
+{
+  "id": "command__scene",
+  "feature": "scene",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "call": ["set_view", [0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, -60, 1, 2, 3, 30, 90, -25]] },
+    { "do": "scene S1, store, message=first view" },
+    { "do": "turn x, 90" },
+    { "do": "scene S1, recall, animate=0" }
+  ],
+  "checks": [
+    { "call": ["get_view"], "label": "view restored to explicitly stored scene S1", "tol": 1e-3 },
+    { "call": ["get_scene_list"], "label": "stored scene names" },
+    { "call": ["get_scene_message", "S1"], "label": "message stored with scene S1" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, -60, 1, 2, 3, 30, 90, -25],
+    ["S1"],
+    "first view"
+  ]
+}

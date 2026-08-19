@@ -1,0 +1,18 @@
+{
+  "id": "command__get_angle",
+  "feature": "get_angle",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom pa, pos=[1,0,0]"},
+    {"do": "pseudoatom pb, pos=[0,0,0]"},
+    {"do": "pseudoatom pc, pos=[0,1,0]"}
+  ],
+  "checks": [
+    {"call": ["get_angle", "pa", "pb", "pc"], "label": "angle 90 deg between three pseudoatoms", "tol": 1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    90
+  ]
+}

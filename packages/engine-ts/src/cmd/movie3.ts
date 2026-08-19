@@ -11,14 +11,12 @@
  * calls `cmd.mset(...)` / `cmd.mview(...)`.
  *
  * PORTING NOTES / LIMITS (why some verbs are only partially faithful):
- *  - The engine's `mset` (cmd/system.ts) takes only the frame *specification*
- *    and REPLACES the whole movie; it ignores PyMOL's `start`/`freeze`
- *    insert-in-place arguments. And `get_movie_length` / `count_frames` are
- *    fixed getters that report 0 (the real per-frame table lives in system.ts
- *    but is not exposed as a length getter). Consequently the `add_*` verbs,
- *    whose Python default is `start = get_movie_length() + 1`, always resolve
- *    `start = 1` and effectively (re)build the frame table from frame 1 rather
- *    than appending. The keyframe (`mview`) side effects are fully faithful.
+ *  - The engine's `mset` (cmd/system.ts) honours PyMOL's 1-based `start` frame
+ *    (splicing the spec in at `start` — truncate + append, per C
+ *    `MovieAppendSequence`), so the `add_*` verbs, whose Python default is
+ *    `start = get_movie_length() + 1`, genuinely append to the timeline. The
+ *    `freeze` flag is a no-op here (no auto-interpolate side effect to suppress).
+ *    The keyframe (`mview`) side effects are fully faithful.
  *  - The camera-loop verbs (`roll`, `rock`, `tdroll`, `zoom`, `screw`,
  *    `nutate`) drive per-frame motion through `mdo`, which is a documented
  *    no-op in the browser engine (cmd/extras.ts — the frame-table command store
@@ -72,9 +70,12 @@ export function registerMovieNs(ctx: RegistrarCtx): void {
 
   // Small typed shims over the composed verbs, so the ports below read like the
   // Python (`cmd.mset(...)`, `cmd.turn(...)`, `cmd.mview("store", ...)`).
-  const mset = (spec: string, start = 0, kwargs: Record<string, unknown> = {}): void => {
-    // NOTE: the engine's mset ignores `start`/`freeze` and replaces the movie;
-    // we still pass them for fidelity with movie.py.
+  const mset = (spec: string, start = 1, kwargs: Record<string, unknown> = {}): void => {
+    // `start` is the 1-based frame to write at (PyMOL `mset` default frame=1,
+    // i.e. rebuild from the beginning). The engine's `mset` honours it, splicing
+    // the spec in at `start` instead of always replacing — that is what lets the
+    // add_* generators append (they pass start=get_movie_length()+1). `freeze`
+    // is passed via kwargs for fidelity (no auto-interpolate side effect here).
     ctx.call('mset', [spec, start], kwargs);
   };
   const turn = (axis: string, angle: number): void => {

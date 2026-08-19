@@ -1,0 +1,22 @@
+{
+  "id": "color__nitrogen", "feature": "nitrogen", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color nitrogen, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color nitrogen"],"label":"atoms colored nitrogen"},
+    {"call":["get_color_index","nitrogen"],"label":"nitrogen palette index"},
+    {"call":["get_color_tuple","nitrogen"],"label":"nitrogen RGB tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    27,
+    [
+      0.20000000298023224,
+      0.20000000298023224,
+      1
+    ]
+  ]
+}

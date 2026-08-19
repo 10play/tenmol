@@ -1,0 +1,22 @@
+{
+  "id": "color__neon", "feature": "neon", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color neon, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color neon"],"label":"atoms colored neon"},
+    {"call":["get_color_index","neon"],"label":"neon palette index"},
+    {"call":["get_color_tuple","neon"],"label":"neon RGB tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5286,
+    [
+      0.7019608020782471,
+      0.8901960849761963,
+      0.9607843160629272
+    ]
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "command__turn",
+  "feature": "turn",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "call": ["set_view", [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50, 0, 0, 0, 40, 60, -20]] },
+    { "do": "turn x, 90" },
+    { "do": "turn y, 45" },
+    { "do": "turn z, 30" }
+  ],
+  "checks": [
+    { "call": ["get_view"], "label": "view rotation matrix (elems 0-8) after turn x90/y45/z30 from identity baseline; translation/clip unchanged" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      0.6123723387718201,
+      0.3535533547401428,
+      -0.7071067094802856,
+      0.6123723983764648,
+      0.3535533547401428,
+      0.7071067690849304,
+      0.4999999701976776,
+      -0.8660253882408142,
+      -3.0908619663705394e-8,
+      0,
+      0,
+      -50,
+      0,
+      0,
+      0,
+      40,
+      60,
+      -20
+    ]
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "setting__cgo_debug", "feature": "cgo_debug", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set cgo_debug, 2, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","cgo_debug"],"label":"global cgo_debug default (no prior set) -> 0"},
+    {"call":["get_setting_int","cgo_debug","ala"],"label":"per-object cgo_debug after set 2"}
+  ],
+  "expected": [
+    0,
+    2
+  ]
+}

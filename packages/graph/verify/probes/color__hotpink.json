@@ -1,0 +1,21 @@
+{
+  "id": "color__hotpink",
+  "feature": "hotpink",
+  "kind": "color",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "color hotpink, ala" }
+  ],
+  "checks": [
+    { "call": ["get_color_tuple", "hotpink"], "label": "hotpink RGB tuple", "tol": 1e-3 },
+    { "call": ["get_color_index", "hotpink"], "label": "hotpink color index" },
+    { "call": ["count_atoms", "ala"], "label": "atoms in ala fragment" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [1, 0, 0.5],
+    12,
+    10
+  ]
+}

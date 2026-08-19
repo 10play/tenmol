@@ -1,0 +1,22 @@
+{
+  "id": "color__magenta", "feature": "magenta", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color magenta, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color magenta"],"label":"atoms colored magenta"},
+    {"call":["get_color_index","magenta"],"label":"magenta palette index"},
+    {"call":["get_color_tuple","magenta"],"label":"magenta rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    8,
+    [
+      1,
+      0,
+      1
+    ]
+  ]
+}

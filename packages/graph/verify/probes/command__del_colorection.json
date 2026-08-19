@@ -1,0 +1,19 @@
+{
+  "id": "command__del_colorection",
+  "feature": "del_colorection",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "pseudoatom pa1"},
+    {"do": "color red, pa1"},
+    {"call": ["get_colorection", "cc"]},
+    {"call": ["del_colorection", [4, 0], "cc"]}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "color red"], "label": "pa1 still red after del"},
+    {"call": ["count_atoms", "all"], "label": "atom count unchanged by del"},
+    {"call": ["get_color_index", "red"], "label": "red palette index"}
+  ],
+  "expected": [1, 1, 4],
+  "tol": 0
+}

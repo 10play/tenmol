@@ -1,0 +1,19 @@
+{
+  "id": "setting__gradient_normal_min_dot",
+  "feature": "gradient_normal_min_dot",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set gradient_normal_min_dot, 0.42, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","gradient_normal_min_dot"],"label":"global default (unset) -> 0.70"},
+    {"call":["get_setting_float","gradient_normal_min_dot","m"],"label":"per-object set 0.42 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.7,
+    0.42
+  ]
+}

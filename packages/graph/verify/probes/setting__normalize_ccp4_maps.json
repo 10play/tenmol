@@ -1,0 +1,18 @@
+{
+  "id": "setting__normalize_ccp4_maps",
+  "feature": "normalize_ccp4_maps",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set normalize_ccp4_maps, 0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","normalize_ccp4_maps"],"label":"global default (unset) -> true"},
+    {"call":["get_setting_boolean","normalize_ccp4_maps","m"],"label":"per-object set to 0 -> false"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

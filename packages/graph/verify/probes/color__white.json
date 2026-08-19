@@ -1,0 +1,22 @@
+{
+  "id": "color__white", "feature": "white", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color white, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","white"],"label":"white RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color white"],"label":"atoms colored white"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      1,
+      1,
+      1
+    ],
+    1,
+    1
+  ]
+}

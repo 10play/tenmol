@@ -1,0 +1,16 @@
+{
+  "id": "setting__halogen_bond_as_donor_min_donor_angle", "feature": "halogen_bond_as_donor_min_donor_angle", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set halogen_bond_as_donor_min_donor_angle, 130.0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","halogen_bond_as_donor_min_donor_angle"],"label":"global default (no prior set) -> 140.0"},
+    {"call":["get_setting_float","halogen_bond_as_donor_min_donor_angle","m"],"label":"per-object set 130.0 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    140,
+    130
+  ]
+}

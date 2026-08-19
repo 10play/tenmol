@@ -1,0 +1,16 @@
+{
+  "id": "setting__ray_trace_slope_factor",
+  "feature": "ray_trace_slope_factor",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "set ray_trace_slope_factor, 1.75"}
+  ],
+  "checks": [
+    {"call": ["get_setting_float", "ray_trace_slope_factor"], "label": "ray_trace_slope_factor after set 1.75 (default 0.6)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1.75
+  ]
+}

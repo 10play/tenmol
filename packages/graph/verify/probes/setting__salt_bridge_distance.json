@@ -1,0 +1,13 @@
+{
+  "id": "setting__salt_bridge_distance", "feature": "salt_bridge_distance", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set salt_bridge_distance, 3.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","salt_bridge_distance"],"label":"global salt_bridge_distance after set 3.5 (roundtrip; default 5.0)"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    3.5
+  ]
+}

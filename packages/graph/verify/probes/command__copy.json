@@ -1,0 +1,25 @@
+{
+  "id": "command__copy",
+  "feature": "copy",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"call": ["copy", "ala_copy", "ala"]}
+  ],
+  "checks": [
+    {"call": ["get_names"], "label": "object list now has original + copy"},
+    {"call": ["count_atoms", "ala_copy"], "label": "copy has same atom count as source"},
+    {"call": ["count_atoms", "ala"], "label": "source object untouched"},
+    {"call": ["get_distance", "ala_copy and name CA", "ala and name CA"], "label": "copy CA superimposes exactly on source CA", "tol": 0.001},
+    {"call": ["get_distance", "ala_copy and name N", "ala and name N"], "label": "copy N superimposes exactly on source N", "tol": 0.001}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["ala", "ala_copy"],
+    10,
+    10,
+    0,
+    0
+  ]
+}

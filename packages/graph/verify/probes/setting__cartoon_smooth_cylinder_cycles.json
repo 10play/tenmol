@@ -1,0 +1,18 @@
+{
+  "id": "setting__cartoon_smooth_cylinder_cycles",
+  "feature": "cartoon_smooth_cylinder_cycles",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "set cartoon_smooth_cylinder_cycles, 7, m"}
+  ],
+  "checks": [
+    {"call": ["get_setting_int", "cartoon_smooth_cylinder_cycles"], "label": "global default (unset) -> 3"},
+    {"call": ["get_setting_int", "cartoon_smooth_cylinder_cycles", "m"], "label": "per-object set to 7 -> 7"}
+  ],
+  "expected": [
+    3,
+    7
+  ]
+}

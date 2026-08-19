@@ -1,0 +1,24 @@
+{
+  "id": "command__get_names",
+  "feature": "get_names",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do": "fragment ala"},
+    {"do": "select mysel, chain A"}
+  ],
+  "checks": [
+    {"call": ["get_names", "objects"], "label": "object names"},
+    {"call": ["get_names", "selections"], "label": "selection names"},
+    {"call": ["get_names", "public_objects"], "label": "default public objects"},
+    {"call": ["get_names", "all"], "label": "all names"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    ["m", "ala"],
+    ["mysel"],
+    ["m", "ala"],
+    ["m", "ala", "mysel"]
+  ]
+}

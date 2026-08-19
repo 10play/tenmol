@@ -1,0 +1,11 @@
+{"id":"setting__line_width","feature":"line_width","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set line_width, 3.0, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","line_width"],"label":"line_width global default (no prior set)"},
+   {"call":["get_setting_float","line_width","ala"],"label":"line_width per-object after set 3.0"}
+ ],
+ "tol": 1e-6,
+ "expected": [1.49, 3]}

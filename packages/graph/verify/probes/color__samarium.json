@@ -1,0 +1,24 @@
+{
+  "id": "color__samarium", "feature": "samarium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color samarium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","samarium"],"label":"samarium RGB tuple","tol":1e-6},
+    {"call":["get_color_index","samarium"],"label":"samarium palette index"},
+    {"call":["count_atoms","color samarium"],"label":"atoms colored samarium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.5607843399047852,
+      1,
+      0.7803921699523926
+    ],
+    5337,
+    1,
+    1
+  ]
+}

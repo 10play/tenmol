@@ -1,0 +1,22 @@
+{
+  "id": "color__gray", "feature": "gray", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color gray, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","gray"],"label":"gray RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color gray"],"label":"atoms colored gray"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.5,
+      0.5,
+      0.5
+    ],
+    1,
+    1
+  ]
+}

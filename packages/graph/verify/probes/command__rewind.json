@@ -1,0 +1,21 @@
+{
+  "id": "command__rewind",
+  "feature": "rewind",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "fragment ala" },
+    { "do": "mset 1 x5" },
+    { "do": "frame 4" },
+    { "do": "rewind" }
+  ],
+  "checks": [
+    { "call": ["get_frame"], "label": "current frame after rewind" },
+    { "call": ["count_frames"], "label": "movie length unchanged" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    1,
+    5
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "command__backward", "feature": "backward", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"call": ["pseudoatom", "m"], "kwargs": {"pos": [0, 0, 0]}},
+    {"do": "mset 1 x10"},
+    {"do": "frame 5"},
+    {"do": "backward"}
+  ],
+  "checks": [
+    {"call": ["get_frame"], "label": "frame index after backward from frame 5 (expect 4)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    4
+  ]
+}

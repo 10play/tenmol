@@ -1,0 +1,22 @@
+{
+  "id": "command__sculpt_purge",
+  "feature": "sculpt_purge",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "sculpt_activate ala"},
+    {"call": ["sculpt_purge"]}
+  ],
+  "checks": [
+    {"call": ["count_atoms", "ala"], "label": "atoms intact after purge"},
+    {"call": ["get_distance", "ala and name CA", "ala and name CB"], "label": "CA-CB bond unmoved by sculpt_purge"},
+    {"call": ["get_distance", "ala and name C", "ala and name O"], "label": "C-O bond unmoved by sculpt_purge"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    10,
+    1.538316249847412,
+    1.2368391752243042
+  ]
+}

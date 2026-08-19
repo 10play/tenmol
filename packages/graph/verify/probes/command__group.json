@@ -1,0 +1,17 @@
+{
+  "id": "command__group", "feature": "group", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom pa1"},
+    {"do":"pseudoatom pa2"},
+    {"do":"pseudoatom pa3"},
+    {"do":"group grp, pa1 pa2"},
+    {"do":"group grp, pa3, add"}
+  ],
+  "checks": [
+    {"call":["count_atoms","pa1"],"label":"sanity: single member object has 1 atom"},
+    {"call":["count_atoms","grp"],"label":"group used as selection spans all member atoms"},
+    {"call":["get_names","objects"],"label":"object names include the group container"}
+  ],
+  "tol": 1e-3,
+  "expected": [1, 3, ["pa1", "pa2", "pa3", "grp"]]
+}

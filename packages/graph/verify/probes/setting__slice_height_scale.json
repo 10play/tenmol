@@ -1,0 +1,16 @@
+{
+  "id": "setting__slice_height_scale", "feature": "slice_height_scale", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set slice_height_scale, 2.5, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","slice_height_scale"],"label":"global slice_height_scale default (no prior set)"},
+    {"call":["get_setting_float","slice_height_scale","ala"],"label":"per-object slice_height_scale after set 2.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    2.5
+  ]
+}

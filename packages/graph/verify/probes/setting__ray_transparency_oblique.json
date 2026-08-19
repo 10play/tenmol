@@ -1,0 +1,13 @@
+{
+  "id": "setting__ray_transparency_oblique", "feature": "ray_transparency_oblique", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set ray_transparency_oblique, 0.5"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","ray_transparency_oblique"],"label":"global ray_transparency_oblique after set 0.5"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.5
+  ]
+}

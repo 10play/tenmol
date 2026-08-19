@@ -1,0 +1,22 @@
+{
+  "id": "color__paleyellow", "feature": "paleyellow", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color paleyellow, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","paleyellow"],"label":"paleyellow RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color paleyellow"],"label":"atoms colored paleyellow"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      1,
+      1,
+      0.5
+    ],
+    1,
+    1
+  ]
+}

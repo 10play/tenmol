@@ -1,0 +1,23 @@
+{
+  "id": "feature__camera-framing", "feature": "camera-framing", "kind": "command", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p, pos=[10,0,0]"},
+    {"do":"pseudoatom p, pos=[-10,0,0]"},
+    {"do":"pseudoatom p, pos=[0,6,0]"},
+    {"do":"zoom p, 5"}
+  ],
+  "checks": [
+    {"call":["get_view"],"label":"view after zoom p with buffer 5 (origin at COM, camera pulled back to frame selection)","tol":1e-3}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    [
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 1,
+      0, 0, -85.06922912597656,
+      0, 2, 0,
+      67.06922912597656, 103.06922912597656, -20
+    ]
+  ]
+}

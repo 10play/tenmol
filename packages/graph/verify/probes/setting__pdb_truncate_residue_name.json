@@ -1,0 +1,15 @@
+{
+  "id": "setting__pdb_truncate_residue_name", "feature": "pdb_truncate_residue_name", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set pdb_truncate_residue_name, 1, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","pdb_truncate_residue_name"],"label":"global pdb_truncate_residue_name default (no prior global set)"},
+    {"call":["get_setting_boolean","pdb_truncate_residue_name","ala"],"label":"per-object pdb_truncate_residue_name after set 1"}
+  ],
+  "expected": [
+    false,
+    true
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "command__get_property",
+  "feature": "get_property",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m" },
+    { "call": ["set_property", "Title", "hello", "m"] }
+  ],
+  "checks": [
+    { "call": ["get_property", "Title", "m"], "label": "read back set string property" },
+    { "call": ["get_property", "Missing", "m"], "label": "missing property returns None" }
+  ],
+  "tol": 1e-3,
+  "expected": [
+    "hello",
+    null
+  ]
+}

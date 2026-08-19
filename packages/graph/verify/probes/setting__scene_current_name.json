@@ -1,0 +1,20 @@
+{
+  "id": "setting__scene_current_name",
+  "feature": "scene_current_name",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "set scene_current_name, F1_view"
+    }
+  ],
+  "checks": [
+    {
+      "call": ["get_setting_text", "scene_current_name"],
+      "label": "after set -> F1_view (non-numeric string roundtrip)"
+    }
+  ],
+  "expected": [
+    "F1_view"
+  ]
+}

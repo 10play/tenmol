@@ -1,0 +1,13 @@
+{
+  "id": "setting__seq_view_location", "feature": "seq_view_location", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set seq_view_location, 1"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","seq_view_location"],"label":"global seq_view_location after set 1 (roundtrip; default 0)"}
+  ],
+  "tol": 0,
+  "expected": [
+    1
+  ]
+}

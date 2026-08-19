@@ -1,0 +1,15 @@
+{
+  "id": "setting__auto_dss", "feature": "auto_dss", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set auto_dss, 0, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_boolean","auto_dss"],"label":"global auto_dss default (no prior set)"},
+    {"call":["get_setting_boolean","auto_dss","ala"],"label":"per-object auto_dss after set 0"}
+  ],
+  "expected": [
+    true,
+    false
+  ]
+}

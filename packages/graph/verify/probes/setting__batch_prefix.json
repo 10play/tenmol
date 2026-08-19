@@ -1,0 +1,35 @@
+{
+  "id": "setting__batch_prefix",
+  "feature": "batch_prefix",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {
+      "do": "load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"
+    },
+    {
+      "do": "set batch_prefix, tmp_render, m"
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_setting_text",
+        "batch_prefix"
+      ],
+      "label": "global default -> tmp_pymol"
+    },
+    {
+      "call": [
+        "get_setting_text",
+        "batch_prefix",
+        "m"
+      ],
+      "label": "per-object set roundtrip -> tmp_render"
+    }
+  ],
+  "expected": [
+    "tmp_pymol",
+    "tmp_render"
+  ]
+}

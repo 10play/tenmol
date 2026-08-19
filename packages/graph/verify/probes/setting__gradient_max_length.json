@@ -1,0 +1,19 @@
+{
+  "id": "setting__gradient_max_length",
+  "feature": "gradient_max_length",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set gradient_max_length, 42.5, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","gradient_max_length"],"label":"global default (no prior set) -> 100.0"},
+    {"call":["get_setting_float","gradient_max_length","m"],"label":"per-object set 42.5 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    100,
+    42.5
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "color__uranium", "feature": "uranium", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color uranium, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","uranium"],"label":"uranium RGB tuple","tol":1e-6},
+    {"call":["count_atoms","color uranium"],"label":"atoms colored uranium"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0,
+      0.5607843399047852,
+      1
+    ],
+    1,
+    1
+  ]
+}

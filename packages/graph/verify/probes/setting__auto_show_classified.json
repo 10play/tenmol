@@ -1,0 +1,15 @@
+{
+  "id": "setting__auto_show_classified", "feature": "auto_show_classified", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set auto_show_classified, 2, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","auto_show_classified"],"label":"global auto_show_classified default (no prior set)"},
+    {"call":["get_setting_int","auto_show_classified","ala"],"label":"per-object auto_show_classified after set 2"}
+  ],
+  "expected": [
+    -1,
+    2
+  ]
+}

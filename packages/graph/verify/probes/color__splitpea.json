@@ -1,0 +1,22 @@
+{
+  "id": "color__splitpea", "feature": "splitpea", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color splitpea, p1"}
+  ],
+  "checks": [
+    {"call":["count_atoms","color splitpea"],"label":"atoms colored splitpea"},
+    {"call":["get_color_index","splitpea"],"label":"splitpea palette index"},
+    {"call":["get_color_tuple","splitpea"],"label":"splitpea rgb tuple","tol":1e-6}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1,
+    5267,
+    [
+      0.5199999809265137,
+      0.75,
+      0
+    ]
+  ]
+}

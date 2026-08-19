@@ -1,0 +1,17 @@
+{
+  "id": "command__minsert",
+  "feature": "minsert",
+  "kind": "command",
+  "probeKind": "state",
+  "ops": [
+    { "do": "pseudoatom m" },
+    { "do": "mset 1 x10" },
+    { "do": "minsert 5" }
+  ],
+  "checks": [
+    { "call": ["count_frames"], "label": "movie frames after mset(10)+minsert(5) grow to 15" },
+    { "call": ["get_movie_length"], "label": "explicitly-defined movie length is 15" }
+  ],
+  "tol": 1e-3,
+  "expected": [15, 15]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "setting__idle_delay",
+  "feature": "idle_delay",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+    {"do":"set idle_delay, 3.0, m"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","idle_delay"],"label":"global default (no prior set) -> 1.5"},
+    {"call":["get_setting_float","idle_delay","m"],"label":"per-object set 3.0 roundtrip"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    1.5,
+    3
+  ]
+}

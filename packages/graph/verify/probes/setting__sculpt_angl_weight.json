@@ -1,0 +1,11 @@
+{"id":"setting__sculpt_angl_weight","feature":"sculpt_angl_weight","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set sculpt_angl_weight, 2.5, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","sculpt_angl_weight"],"label":"sculpt_angl_weight global default (no prior set)"},
+   {"call":["get_setting_float","sculpt_angl_weight","ala"],"label":"sculpt_angl_weight per-object after set 2.5"}
+ ],
+ "tol": 1e-6,
+ "expected": [1, 2.5]}

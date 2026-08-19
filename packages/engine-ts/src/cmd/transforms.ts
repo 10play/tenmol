@@ -72,6 +72,11 @@ function transpose3(m: Mat3): Mat3 {
   ];
 }
 
+/** Row-major homogeneous 4×4 identity as a flat 16-list. */
+function identity44(): number[] {
+  return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+}
+
 /* ------------------------------ arg parsing ------------------------------ */
 
 /** Positional arg `i`, falling back to the named kwarg. */
@@ -233,39 +238,143 @@ export function registerTransforms(ctx: RegistrarCtx): void {
     const sel = ctx.str(pick(args, kwargs, 1, 'selection'), 'all') || 'all';
     const state = num(pick(args, kwargs, 2, 'state'), 0);
     const camera = flag(pick(args, kwargs, 3, 'camera'), true);
+    const objectRaw = pick(args, kwargs, 4, 'object');
+    const object = objectRaw == null ? '' : ctx.str(objectRaw);
     const v = view.get();
     // camera=1 (default): the vector is in camera space; map it to model space.
     const vec = camera ? transform3(transpose3(v.slice(0, 9)), vecRaw) : vecRaw;
+    // object set (object_mode=0): the selection is ignored; instead of moving the
+    // atoms, PyMOL updates the object's TTT display matrix (ObjectTranslateTTT).
+    if (object) {
+      const mol = ctx.executive.molecule(object);
+      if (!mol) return null;
+      if (!mol.ttt) mol.ttt = identity44();
+      mol.ttt[3]! += vec[0];
+      mol.ttt[7]! += vec[1];
+      mol.ttt[11]! += vec[2];
+      ctx.publish();
+      return null;
+    }
     applyCoords(sel, state, (p) => [p[0] + vec[0], p[1] + vec[1], p[2] + vec[2]]);
     ctx.publish();
     return null;
   });
 
+  /* --------------------------- get_object_ttt --------------------------- */
+  // get_object_ttt(object, quiet=1) — return the object's TTT (transient)
+  // display matrix as a flat row-major 16-list, or null when no TTT is set
+  // (PyMOL's TTTFlag false) or the object is unknown. Ports ObjectGetTTT with
+  // state=-1 (the only state real PyMOL supports here).
+  ctx.command('get_object_ttt', (args, kwargs): Json => {
+    const name = ctx.str(pick(args, kwargs, 0, 'object'));
+    const mol = ctx.executive.molecule(name);
+    if (!mol || !mol.ttt) return null;
+    return mol.ttt.slice() as Json;
+  });
+
   /* ------------------------------- center ------------------------------- */
-  // center(selection='all', state=0, origin=1) — pivot on the selection centroid.
+  // center(selection='all', state=0, origin=1) — translate the window, clipping
+  // slab and origin to the centre of the selection. Ports ExecutiveCenter:
+  // `SceneOriginSet(center, preserve=0)` (when origin=1) followed by
+  // `SceneRelocate(center)` (`packages/engine/layer1/Scene.cpp`). The camera
+  // DISTANCE and slab THICKNESS are preserved; the front/back clip planes are
+  // recomputed symmetric about the new distance.
   ctx.command('center', (args, kwargs): Json => {
     const sel = ctx.str(pick(args, kwargs, 0, 'selection'), 'all') || 'all';
+    const originFlag = flag(pick(args, kwargs, 2, 'origin'), true);
     const sphere = ctx.executive.selectionSphere(sel);
     if (!sphere) return null;
+    const loc = sphere.center;
     const v = view.get();
-    v[12] = sphere.center[0];
-    v[13] = sphere.center[1];
-    v[14] = sphere.center[2];
-    // Recentre the pivot on screen (Pos x/y -> 0), as PyMOL's `center` does.
-    v[9] = 0;
-    v[10] = 0;
+    // origin=1 (default): move the rotation origin to the selection centre with
+    // no compensating shift (SceneOriginSet, preserve=0). origin=0 leaves it.
+    if (originFlag) {
+      v[12] = loc[0];
+      v[13] = loc[1];
+      v[14] = loc[2];
+    }
+    // SceneRelocate: re-aim the camera at `loc`, preserving the camera distance.
+    const rot = v.slice(0, 9);
+    let dist = v[11] as number;
+    if (dist > -5) dist = -5; // keep the camera in front (>= 1 bond visible)
+    const o: [number, number, number] = [v[12] as number, v[13] as number, v[14] as number];
+    // v0 = origin - location, mapped model -> camera space by the view 3x3.
+    const pos = transform3(rot, [o[0] - loc[0], o[1] - loc[1], o[2] - loc[2]]);
+    const slab = (v[16] as number) - (v[15] as number);
+    pos[2] = dist;
+    v[9] = pos[0];
+    v[10] = pos[1];
+    v[11] = pos[2];
+    v[15] = -pos[2] - slab * 0.5;
+    v[16] = -pos[2] + slab * 0.5;
     view.set(v);
     ctx.emitView();
     return null;
   });
 
   /* ------------------------------- origin ------------------------------- */
-  // origin(selection='all', object=None, state=0) — set the rotation origin
-  // WITHOUT moving the camera (the object stays put on screen).
+  // origin(selection='(all)', object=None, position=None, state=0) — set the
+  // centre of rotation WITHOUT moving the camera (the object stays put on
+  // screen). Ports ExecutiveOrigin + SceneOriginSet(preserve=1).
+  //   - position=[x,y,z] overrides the selection with an explicit pivot.
+  //   - object=<name> stores the pivot on that object (TTT origin) instead of
+  //     touching the scene.
   ctx.command('origin', (args, kwargs): Json => {
-    const sel = ctx.str(pick(args, kwargs, 0, 'selection'), 'all') || 'all';
-    const sphere = ctx.executive.selectionSphere(sel);
-    if (!sphere) return null;
+    // The console parser keeps every `key=value` token positional (it cannot
+    // infer kwargs without a signature). Fold `origin`'s named parameters back
+    // into kwargs here so console lines like `origin position=[1,2,3]` behave
+    // exactly as in real PyMOL.
+    const PARAMS = new Set(['selection', 'object', 'position', 'state']);
+    const kw: Record<string, unknown> = { ...kwargs };
+    const positional: unknown[] = [];
+    for (const a of args) {
+      if (typeof a === 'string') {
+        const eq = a.indexOf('=');
+        const key = eq > 0 ? a.slice(0, eq).trim() : '';
+        if (eq > 0 && PARAMS.has(key)) {
+          kw[key] = a.slice(eq + 1).trim();
+          continue;
+        }
+      }
+      positional.push(a);
+    }
+
+    const objName = ctx.str(pick(positional, kw, 1, 'object'), '');
+    const position = parseTriple(pick(positional, kw, 2, 'position'));
+
+    // Determine the centre: explicit position wins over the selection (matching
+    // viewing.py, which blanks the selection when position is supplied).
+    let center: [number, number, number] | null = null;
+    if (position) {
+      center = position;
+    } else {
+      const sel = ctx.str(pick(positional, kw, 0, 'selection'), 'all') || 'all';
+      const sphere = ctx.executive.selectionSphere(sel);
+      if (sphere) center = [sphere.center[0], sphere.center[1], sphere.center[2]];
+    }
+    if (!center) return null;
+
+    if (objName) {
+      // ObjectSetTTTOrigin: store the pivot on the object's TTT, not the scene.
+      const mol = ctx.executive.molecule(objName);
+      if (!mol) return null;
+      if (!mol.ttt) mol.ttt = identity44();
+      const homo = mol.ttt;
+      // post = (homo as 3x3) * origin
+      const post: [number, number, number] = [
+        homo[0]! * center[0] + homo[1]! * center[1] + homo[2]! * center[2],
+        homo[4]! * center[0] + homo[5]! * center[1] + homo[6]! * center[2],
+        homo[8]! * center[0] + homo[9]! * center[1] + homo[10]! * center[2],
+      ];
+      homo[3]! += post[0];
+      homo[7]! += post[1];
+      homo[11]! += post[2];
+      homo[12] = -center[0];
+      homo[13] = -center[1];
+      homo[14] = -center[2];
+      return null;
+    }
+
     const v = view.get();
     const oldOrigin: [number, number, number] = [
       v[12] as number,
@@ -273,19 +382,20 @@ export function registerTransforms(ctx: RegistrarCtx): void {
       v[14] as number,
     ];
     // Preserve on-screen position: shift the camera-space Pos by the origin
-    // delta rotated into camera space (PyMOL SceneOriginSet, preserve=1).
+    // delta rotated into camera space (SceneOriginSet, preserve=1 does
+    // `Pos += R * (origin - oldOrigin)`).
     const delta: [number, number, number] = [
-      sphere.center[0] - oldOrigin[0],
-      sphere.center[1] - oldOrigin[1],
-      sphere.center[2] - oldOrigin[2],
+      center[0] - oldOrigin[0],
+      center[1] - oldOrigin[1],
+      center[2] - oldOrigin[2],
     ];
     const camDelta = transform3(v.slice(0, 9), delta);
-    v[9] = (v[9] as number) - camDelta[0];
-    v[10] = (v[10] as number) - camDelta[1];
-    v[11] = (v[11] as number) - camDelta[2];
-    v[12] = sphere.center[0];
-    v[13] = sphere.center[1];
-    v[14] = sphere.center[2];
+    v[9] = (v[9] as number) + camDelta[0];
+    v[10] = (v[10] as number) + camDelta[1];
+    v[11] = (v[11] as number) + camDelta[2];
+    v[12] = center[0];
+    v[13] = center[1];
+    v[14] = center[2];
     view.set(v);
     ctx.emitView();
     return null;

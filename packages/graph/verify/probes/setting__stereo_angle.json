@@ -1,0 +1,11 @@
+{"id":"setting__stereo_angle","feature":"stereo_angle","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set stereo_angle, 10, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_float","stereo_angle"],"label":"stereo_angle global default (no prior set)"},
+   {"call":["get_setting_float","stereo_angle","ala"],"label":"stereo_angle per-object after set 10"}
+ ],
+ "tol": 1e-6,
+ "expected": [2.1, 10]}

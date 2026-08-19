@@ -40,12 +40,16 @@ export function splitCommands(line: string): string[] {
 
 /**
  * Split `s` on every top-level `sep` character — one not inside a single- or
- * double-quoted run. Quotes are left in place (callers strip them per token).
+ * double-quoted run, and not inside a `[]`/`{}`/`()` bracket group. Quotes and
+ * brackets are left in place (callers strip quotes per token). Respecting
+ * brackets keeps list-valued args like `pos=[1.5,0,0]` a single token instead of
+ * shattering on the interior commas.
  */
 function splitTopLevel(s: string, sep: string): string[] {
   const out: string[] = [];
   let buf = '';
   let quote = '';
+  let depth = 0;
   for (const ch of s) {
     if (quote) {
       if (ch === quote) quote = '';
@@ -53,7 +57,13 @@ function splitTopLevel(s: string, sep: string): string[] {
     } else if (ch === '"' || ch === "'") {
       quote = ch;
       buf += ch;
-    } else if (ch === sep) {
+    } else if (ch === '[' || ch === '{' || ch === '(') {
+      depth++;
+      buf += ch;
+    } else if (ch === ']' || ch === '}' || ch === ')') {
+      if (depth > 0) depth--;
+      buf += ch;
+    } else if (ch === sep && depth === 0) {
       out.push(buf);
       buf = '';
     } else {
@@ -83,12 +93,16 @@ export function parseCommand(command: string): ParsedCommand {
   // Every comma-separated token is POSITIONAL. `key=value` is deliberately NOT
   // split into kwargs — see the `kwargs` doc above: `=` is valid selection and
   // `alter`/`iterate` expression syntax, so splitting it corrupts those args.
+  // An INTERIOR empty token is a meaningful positional placeholder — PyMOL's
+  // `unset_deep , ala` passes settings='' with object='ala'. Preserve those, but
+  // strip a run of TRAILING empties (a dangling comma) so `color red,` still
+  // defaults its selection instead of forcing it to the empty string.
   const args: string[] = [];
   if (rest !== '') {
     for (const raw of splitTopLevel(rest, ',')) {
-      const token = raw.trim();
-      if (token !== '') args.push(unquote(token));
+      args.push(unquote(raw.trim()));
     }
+    while (args.length > 0 && args[args.length - 1] === '') args.pop();
   }
   return { keyword, args, kwargs: {} };
 }

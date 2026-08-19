@@ -1,0 +1,24 @@
+{
+  "id": "color__silicon", "feature": "silicon", "kind": "color", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color silicon, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_tuple","silicon"],"label":"silicon RGB tuple","tol":1e-6},
+    {"call":["get_color_index","silicon"],"label":"silicon palette index"},
+    {"call":["count_atoms","color silicon"],"label":"atoms colored silicon"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    [
+      0.9411764740943909,
+      0.7843137383460999,
+      0.6274510025978088
+    ],
+    5290,
+    1,
+    1
+  ]
+}

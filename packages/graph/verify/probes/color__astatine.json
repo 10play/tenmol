@@ -1,0 +1,18 @@
+{
+  "id": "color__astatine", "feature": "astatine", "kind": "coloring", "probeKind": "state",
+  "ops": [
+    {"do":"pseudoatom p1"},
+    {"do":"color astatine, p1"}
+  ],
+  "checks": [
+    {"call":["get_color_index","astatine"],"label":"astatine palette index"},
+    {"call":["count_atoms","color astatine"],"label":"atoms colored astatine"},
+    {"call":["count_atoms","p1"],"label":"pseudoatom exists"}
+  ],
+  "tol": 0,
+  "expected": [
+    5360,
+    1,
+    1
+  ]
+}

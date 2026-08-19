@@ -1,0 +1,25 @@
+{
+  "id": "color__americium",
+  "feature": "americium",
+  "kind": "color",
+  "probeKind": "state",
+  "ops": [
+    {"do": "fragment ala"},
+    {"do": "color americium, ala"}
+  ],
+  "checks": [
+    {"call": ["get_color_index", "americium"], "label": "americium color index"},
+    {"call": ["get_color_tuple", "americium"], "label": "americium rgb tuple"},
+    {"call": ["count_atoms", "color americium"], "label": "atoms colored americium"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    5370,
+    [
+      0.3294117748737335,
+      0.3607843220233917,
+      0.9490196108818054
+    ],
+    10
+  ]
+}

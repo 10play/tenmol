@@ -1,0 +1,15 @@
+{
+  "id": "setting__nb_spheres_use_shader",
+  "feature": "nb_spheres_use_shader",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set nb_spheres_use_shader, 2"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","nb_spheres_use_shader"],"label":"global nb_spheres_use_shader after set 2"}
+  ],
+  "expected": [
+    2
+  ]
+}

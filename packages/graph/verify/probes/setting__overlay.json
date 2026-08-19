@@ -1,0 +1,12 @@
+{
+  "id": "setting__overlay", "feature": "overlay", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set overlay, 5"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","overlay"],"label":"global overlay after set 5"}
+  ],
+  "expected": [
+    5
+  ]
+}

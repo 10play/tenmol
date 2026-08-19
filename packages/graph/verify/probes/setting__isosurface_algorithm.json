@@ -1,0 +1,11 @@
+{"id":"setting__isosurface_algorithm","feature":"isosurface_algorithm","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"},
+   {"do":"set isosurface_algorithm, 2, m"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","isosurface_algorithm"],"label":"isosurface_algorithm global default (unset) -> 0"},
+   {"call":["get_setting_int","isosurface_algorithm","m"],"label":"isosurface_algorithm per-object after set 2 -> 2"}
+ ],
+ "tol": 1e-6,
+ "expected": [0, 2]}

@@ -1,0 +1,15 @@
+{
+  "id": "setting__fetch_path",
+  "feature": "fetch_path",
+  "kind": "setting",
+  "probeKind": "state",
+  "ops": [
+    {"do":"set fetch_path, /tmp/tenmol_fetch_probe"}
+  ],
+  "checks": [
+    {"call":["get_setting_text","fetch_path"],"label":"STRING roundtrip after set /tmp/tenmol_fetch_probe (non-numeric string)"}
+  ],
+  "expected": [
+    "/tmp/tenmol_fetch_probe"
+  ]
+}

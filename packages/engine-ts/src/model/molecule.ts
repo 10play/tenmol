@@ -38,14 +38,36 @@ export class ObjectMolecule {
   readonly atoms: AtomInfo[] = [];
   /** One Float32Array (natom*3) per state; `states[0]` is state 1. */
   readonly states: Float32Array[] = [];
+  /** Per-state title strings (`CoordSet::Name`); `titles[0]` is state 1. A slot
+   *  is `undefined` when no title was ever attached to that state. Written by
+   *  `set_title`, read by `get_title`. */
+  readonly titles: (string | undefined)[] = [];
   /** Undirected bonds: 0-based atom-index pair, plus an optional bond order
    *  (1 single, 2 double, 3 triple, 4 aromatic); absent order ⇒ single. */
   readonly bonds: Array<[number, number, number?]> = [];
+  /** Per-state reference coordinates (PyMOL `CoordSet::RefPos`). Outer index is
+   *  the state index (0-based, parallel to {@link states}); the inner map keys
+   *  are atom indices and its presence marks a slot "specified". Managed by the
+   *  `reference` command (store/recall/validate/swap). Absent slots ⇒ no
+   *  reference stored for that atom. */
+  readonly refPos: Array<Map<number, [number, number, number]>> = [];
   /** Whether the object is enabled (shown) in the executive. */
   enabled = true;
+  /** Object-level colour index (PyMOL's `CObject::Color`). `-1` means "unset":
+   *  a fresh object with no explicit object colour, reported by
+   *  `get_object_color_index` as `0` (PyMOLObject.h default). Molecular loads set
+   *  it via the `auto_color` cycle (`Executive.autoColorObject`); `set_object_color`
+   *  / `color_deep` set it explicitly. */
+  color = -1;
   /** Row-major homogeneous 4×4 recorded by `transform_object` (PyMOL's object
    *  state matrix); absent ⇒ identity. Read by `get_object_matrix`. */
   objectMatrix?: number[];
+  /** PyMOL's TTT (transient) 4×4 display matrix — the transform applied by
+   *  camera/mouse manipulation before the object matrix. Stored row-major with
+   *  the translation in the 4th column (indices 3/7/11), matching PyMOL's
+   *  `CObject::TTT`. Absent ⇒ no TTT set (`TTTFlag` false). Written by
+   *  `translate object=…`; read by `get_object_ttt`. */
+  ttt?: number[];
   /**
    * Unit-cell parameters from `CRYST1`, or `undefined` when the file carried no
    * crystal record. Read by the symmetry commands (`get_symmetry`, `symexp`).
@@ -53,6 +75,19 @@ export class ObjectMolecule {
   cell?: CrystalCell;
   /** Space-group symbol from `CRYST1` (e.g. `'P 21 21 21'`), or `undefined`. */
   spacegroup?: string;
+  /** `CRYST1` Z-value (`CSymmetry::PDBZValue`) — molecules per unit cell. PyMOL
+   *  reads it from a 3-char field (cols 67-69) so a `…30` record yields `3`
+   *  (`ObjectMolecule2.cpp` `ncopy(cc, p, 3)`). Re-emitted by the PDB exporter's
+   *  CRYST1 line; absent ⇒ PyMOL's default of `1`. */
+  pdbZValue?: number;
+  /** Biological-assembly ids from the mmCIF `_pdbx_struct_assembly.id` array
+   *  (e.g. `['1', '2']`), or `undefined` when the file carried no such data.
+   *  Read by `get_assembly_ids`. */
+  assemblyIds?: string[];
+  /** PyMOL's `DiscreteFlag`: set when the object was loaded/created with
+   *  `discrete=1` (each state may carry a distinct atom set). Observable via
+   *  `count_discrete`; toggled by `set_discrete`. */
+  discrete = false;
 
   constructor(readonly name: string) {}
 

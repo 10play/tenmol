@@ -1,0 +1,10 @@
+{"id":"setting__logging","feature":"logging","kind":"setting","probeKind":"state",
+ "ops":[
+   {"do":"fragment ala"},
+   {"do":"set logging, 2, ala"}
+ ],
+ "checks":[
+   {"call":["get_setting_int","logging"],"label":"logging global default (no prior set)"},
+   {"call":["get_setting_int","logging","ala"],"label":"logging per-object after set 2"}
+ ],
+ "expected": [0, 2]}

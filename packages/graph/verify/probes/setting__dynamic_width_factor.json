@@ -1,0 +1,13 @@
+{
+  "id": "setting__dynamic_width_factor", "feature": "dynamic_width_factor", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"set dynamic_width_factor, 0.25"}
+  ],
+  "checks": [
+    {"call":["get_setting_float","dynamic_width_factor"],"label":"global dynamic_width_factor after set 0.25"}
+  ],
+  "tol": 1e-6,
+  "expected": [
+    0.25
+  ]
+}

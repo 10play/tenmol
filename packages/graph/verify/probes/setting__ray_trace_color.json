@@ -1,0 +1,18 @@
+{
+  "id": "setting__ray_trace_color", "feature": "ray_trace_color", "kind": "setting", "probeKind": "state",
+  "ops": [
+    {"do":"fragment ala"},
+    {"do":"set ray_trace_color, blue, ala"}
+  ],
+  "checks": [
+    {"call":["get_setting_int","ray_trace_color"],"label":"ray_trace_color global default (COLOR, expect -6)"},
+    {"call":["get_setting_int","ray_trace_color","ala"],"label":"ray_trace_color after set blue -> blue color index"},
+    {"call":["get_color_index","blue"],"label":"blue color index (oracle vs engine)"}
+  ],
+  "tol": 1e-3,
+  "expected": [
+    -6,
+    2,
+    2
+  ]
+}

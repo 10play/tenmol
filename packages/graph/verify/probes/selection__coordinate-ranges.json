@@ -1,0 +1,8 @@
+{"id":"selection__coordinate-ranges","feature":"coordinate-ranges","kind":"selection","probeKind":"state",
+ "ops":[{"do":"load /home/tenplay/Documents/GitHub/10ground/sessions/map2/tenmol/packages/engine/test/dat/1tii.pdb, m"}],
+ "checks":[
+   {"call":["count_atoms","x > 0"],"label":"x > 0 coordinate range"},
+   {"call":["count_atoms","y < 10"],"label":"y < 10 coordinate range"},
+   {"call":["count_atoms","z > 5 and z < 20"],"label":"z slab 5 < z < 20"}
+ ],
+ "expected":[5684,2382,1916]}
