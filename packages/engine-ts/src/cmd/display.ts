@@ -20,17 +20,11 @@
  *   - `cmd.cartoon` — the `cartoon_type` subtype setting
  *     (`modules/pymol/viewing.py:cartoon`).
  */
-import { Rep, type Json } from '@tenmol/protocol';
+import { Rep, type Json, incentiveOnly } from '@tenmol/protocol';
+import { PymolError } from '@tenmol/backend';
 import { repBit, type AtomInfo } from '../model/atom';
 import type { ObjectMolecule } from '../model/molecule';
-import {
-  colorNames,
-  getColorIndex,
-  REP_COLOR_SETTING_DEFAULTS,
-  rgbForIndex,
-  setColor,
-  type RGB,
-} from '../exec/color';
+import { colorNames, getColorIndex, REP_COLOR_SETTING_DEFAULTS } from '../exec/color';
 import type { RegistrarCtx } from './registrar';
 
 /* --------------------------------------------------------------------------
@@ -60,13 +54,13 @@ const CARTOON_TYPES: Readonly<Record<string, number>> = {
   cylinder: 9,
 };
 
-/** Grey that {@link desaturate} blends toward. */
-const GREY: RGB = [0.5, 0.5, 0.5];
-
-/** Clamp to [0, 1]. */
-function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
+/** Verbatim `str(IncentiveOnlyException)` for `desaturate` — the __init__.py:491
+ *  default text plus the trailing visit block, and the leading `<label>: ` from
+ *  `CmdException.__str__` (matches extras.ts LOAD_MTZ_INCENTIVE_ONLY shape). */
+const DESATURATE_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "desaturate" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
 
 /**
  * Evaluate a PyMOL-style label expression against an atom, as JS. The atom's
@@ -202,28 +196,13 @@ export function registerDisplay(ctx: RegistrarCtx): void {
 
   /* ------------------------------ desaturate ---------------------------- */
 
-  ctx.command('desaturate', (args, kwargs): Json => {
-    const selection = str(args[0] ?? kwargs.selection, 'all') || 'all';
-    const factorRaw = Number(args[1] ?? kwargs.factor ?? 0.5);
-    const factor = Number.isFinite(factorRaw) ? clamp01(factorRaw) : 0.5;
-    const atoms = ex.atomsMatching(selection);
-    // Cache old-index → new-index so identical source colours share one slot.
-    const remap = new Map<number, number>();
-    for (const ua of atoms) {
-      const old = ua.atom.color;
-      let next = remap.get(old);
-      if (next === undefined) {
-        const [r, g, b] = rgbForIndex(old);
-        const nr = clamp01(r * (1 - factor) + GREY[0] * factor);
-        const ng = clamp01(g * (1 - factor) + GREY[1] * factor);
-        const nb = clamp01(b * (1 - factor) + GREY[2] * factor);
-        next = setColor(`desat_${old}_${factor}`, [nr, ng, nb]);
-        remap.set(old, next);
-      }
-      ua.atom.color = next;
-    }
-    ctx.publish();
-    return atoms.length;
+  // `experimenting.desaturate` is incentive-only: Open-Source PyMOL's
+  // `desaturate` immediately `raise pymol.IncentiveOnlyException()`
+  // (experimenting.py:280), so calling `cmd.desaturate` there raises rather than
+  // recolouring. Reproduce the exact `str(IncentiveOnlyException)` the oracle
+  // surfaces so the differential matches (mirrors extras.ts load_mtz).
+  ctx.command('desaturate', (): Json => {
+    throw new PymolError(incentiveOnly('desaturate', DESATURATE_INCENTIVE_ONLY), 'desaturate');
   });
 
   /* -------------------------------- label ------------------------------- */
