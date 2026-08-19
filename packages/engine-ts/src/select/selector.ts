@@ -75,6 +75,10 @@ type Node =
   // whose user-defined property `name` (set via `alter`, read as a float)
   // satisfies the comparison. PyMOL's SELE_PROP.
   | { t: 'propcmp'; name: string; op: CmpOp; value: number }
+  // `state N` — atoms present in coordinate state N (PyMOL SELE_STAs). An atom
+  // matches when its object has a coordset for that 1-based state; -1 means the
+  // object's current state.
+  | { t: 'stateSel'; state: number }
   | { t: 'ref'; name: string }
   | { t: 'not'; a: Node }
   | { t: 'and'; a: Node; b: Node }
@@ -545,6 +549,12 @@ class Parser {
     if (t.includes('/')) return parseSlashMacro(t);
     // `model X` / `m. X` object qualifier.
     if (low === 'model' || low === 'm.') return { t: 'ref', name: this.next() };
+    // `state N` — coordinate-state membership (SELE_STAs).
+    if (low === 'state') {
+      const v = Number(this.next());
+      if (!Number.isFinite(v)) throw new SelectionError("'state' expects a state number");
+      return { t: 'stateSel', state: v };
+    }
     // Numeric property comparison `b > 50`, `q = 1`, `fc. != 0`.
     if (low in NUMERIC_FIELDS && CMP_OPS.has(this.peek() ?? '')) {
       const raw = this.next();
@@ -1214,6 +1224,19 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
         const lhs = typeof raw === 'boolean' ? (raw ? 1 : 0) : Number(raw);
         return Number.isFinite(lhs) && compareOp(lhs, node.op, node.value);
       });
+    case 'stateSel': {
+      // `state N` (SELE_STAs): an atom matches when its object owns a coordset
+      // for the 1-based state N (present in that state). engine-ts coordsets are
+      // dense, so presence reduces to `N <= nstate`. `-1` = current state.
+      const st = node.state;
+      const nstateByObj = new Map<string, number>();
+      for (const o of env.ctx.objects()) nstateByObj.set(o.name, o.nstate);
+      return filter((ua) => {
+        const ns = nstateByObj.get(ua.objName) ?? 0;
+        if (st === -1) return ns >= 1; // current state
+        return st >= 1 && st <= ns;
+      });
+    }
     case 'keyword': {
       const kw = node.kw;
       if (kw === 'enabled') return filter((ua) => env.enabled.has(ua.objName));
