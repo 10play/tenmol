@@ -371,7 +371,8 @@ export function registerMaps(ctx: RegistrarCtx): void {
             m.data[idx(m.dims, x, y, z)] = level;
         }
     ctx.publish();
-    return name;
+    // editing.map_set_border returns the `_cmd` result (None), not the name.
+    return null;
   });
 
   /* ------------------------------- map_set ------------------------------- */

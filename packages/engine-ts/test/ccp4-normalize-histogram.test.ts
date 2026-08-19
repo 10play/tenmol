@@ -47,3 +47,17 @@ describe('CCP4 normalize + get_volume_histogram', () => {
     b.close();
   });
 });
+
+describe('map_set_border', () => {
+  it('zeroes edge voxels and returns None (matches the oracle)', async () => {
+    const b = new LocalBackend();
+    await b.connect();
+    await b.call('load_ccp4map', ['dm', CCP4]);
+    expect(await b.call('map_set_border', ['dm', 0])).toBeNull();
+    // Border voxels are now 0; the sigma-normalized histogram shifts accordingly.
+    const h = (await b.call('get_volume_histogram', ['dm', 6])) as number[];
+    expect(h.slice(4).reduce((a, c) => a + c, 0)).toBe(64000);
+    expect(h[0]).toBeCloseTo(-0.4897, 2);
+    b.close();
+  });
+});
