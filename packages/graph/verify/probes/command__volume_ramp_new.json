@@ -1,0 +1,9 @@
+{
+  "id":"command__volume_ramp_new","feature":"volume_ramp_new","kind":"command","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/pept.pdb, p"}],
+  "checks":[
+    {"call":["volume_ramp_new","myramp",[-1.0,1.0,0.0,0.0,0.3,1.0,1.0,1.0,1.0,1.0]],"label":"volume_ramp_new returns None"},
+    {"call":["get_names"],"label":"a named ramp is not an executive object (get_names unchanged)"}
+  ],
+  "expected":[null,["p"]]
+}

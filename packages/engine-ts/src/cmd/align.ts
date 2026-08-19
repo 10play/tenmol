@@ -879,4 +879,34 @@ export function registerAlign(ctx: RegistrarCtx): void {
     const cols = name ? rawAlignments.get(name) : undefined;
     return (cols ?? []) as unknown as Json;
   });
+
+  /* --------------------------- set_raw_alignment ------------------------- */
+  // set_raw_alignment(name, raw, guide='', state=1) — API-only: build an
+  // alignment object from `raw`, a list of columns, each a list of
+  // (model, index) pairs (1-based atom index). Stored in the same map
+  // `get_raw_alignment` reads (creating.py:set_raw_alignment → _cmd). Columns
+  // and members are normalised to `[objectName, index]`; malformed entries are
+  // skipped so a bad column cannot corrupt the store.
+  ctx.command('set_raw_alignment', (args, kwargs): Json => {
+    const name = str(pick(args, kwargs, 0, 'name'), '');
+    const raw = pick(args, kwargs, 1, 'raw');
+    if (!name) throw new Error('set_raw_alignment: an alignment name is required');
+    const columns: Array<Array<[string, number]>> = [];
+    if (Array.isArray(raw)) {
+      for (const col of raw) {
+        if (!Array.isArray(col)) continue;
+        const members: Array<[string, number]> = [];
+        for (const pair of col) {
+          if (!Array.isArray(pair) || pair.length < 2) continue;
+          const obj = String(pair[0]);
+          const idx = Number(pair[1]);
+          if (obj && Number.isFinite(idx)) members.push([obj, idx]);
+        }
+        if (members.length > 0) columns.push(members);
+      }
+    }
+    rawAlignments.set(name, columns);
+    ctx.publish();
+    return null;
+  });
 }
