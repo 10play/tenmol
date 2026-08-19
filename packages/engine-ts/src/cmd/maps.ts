@@ -18,7 +18,8 @@
  * lives at the bottom of this file; only the triangle table is needed because
  * the per-cube intersected edges are read straight from it.
  */
-import type { Json } from '@tenmol/protocol';
+import { type Json, wireError } from '@tenmol/protocol';
+import { PymolError } from '@tenmol/backend';
 import type { RegistrarCtx } from './registrar';
 
 /* --------------------------------- types --------------------------------- */
@@ -605,6 +606,16 @@ export function registerMaps(ctx: RegistrarCtx): void {
   // ObjectMapCCP4StrToMap). The public `load` reads the file bytes off disk and
   // delegates here so the parsed grid lands in the same store the iso*/volume
   // commands read. Registers the object as `object:map` in the executive.
+  // map_generate(name, reflection_file, amplitudes, phases, …) synthesizes an
+  // x-ray map from an MTZ reflection file. Open-Source PyMOL raises a bare
+  // `pymol.CmdException` when the reflection file cannot be read
+  // (creating.py:55-57 → the bridge renders it as " Error: "). engine-ts has no
+  // MTZ reader, so the command can never produce a map; it raises the same bare
+  // CmdException the oracle surfaces for an unreadable reflection file.
+  ctx.command('map_generate', (): Json => {
+    throw new PymolError(wireError('CmdException', ' Error: '), 'map_generate');
+  });
+
   ctx.command('load_ccp4map', (args, kwargs): Json => {
     const name = toStr(args[0] ?? kwargs.name);
     const bytes = (args[1] ?? kwargs.bytes) as Uint8Array;

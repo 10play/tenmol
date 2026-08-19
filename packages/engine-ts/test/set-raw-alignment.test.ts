@@ -40,3 +40,16 @@ describe('volume_ramp_new', () => {
     b.close();
   });
 });
+
+describe('map_generate', () => {
+  it('raises a bare CmdException (no MTZ reader in the open-source port)', async () => {
+    const { LocalBackend } = await import('@tenmol/engine-ts');
+    const b = new LocalBackend();
+    await b.connect();
+    await expect(b.call('map_generate', ['m1', 'nonexistent.mtz', 'FWT', 'PHWT'])).rejects.toThrow(
+      /Error:/,
+    );
+    expect(await b.call('get_names', [])).toEqual([]);
+    b.close();
+  });
+});
