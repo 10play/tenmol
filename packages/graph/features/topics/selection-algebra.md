@@ -520,8 +520,9 @@ slash macro `:460-486`, evaluator `:791-946`.
 
 Parity note: the TS engine implements the common corpus (property selectors, `and/or/not`, all
 distance operators, `byres/bychain/byobject/bymol/byfragment/byring/bycalpha/neighbor`, `first`,
-`last`, `pepseq`, and most pseudo-selections; `bound_to` is aliased to `neighbor`). Not yet ported:
-`flag`, `rank`, `state`, `custom`, `text_type`, `numeric_type`, `in`, `like`, `extend`, `bysegment`,
-`bycell`, `guide`, `stereo`, `delocalized`, `cartoon_color`, `ribbon_color`, `label`, the `p.` custom
-property selector, `polymer.protein/.nucleic`, `organic`, `inorganic`, `masked`, `protected`, `fixed`,
-`restrained`, `center`, `origin`, and the `x/y/z` coordinate selectors.
+`last`, `pepseq`, `state`, `text_type`, `numeric_type`, `delocalized`, `ss`, and most
+pseudo-selections; `byfragment` returns the editor's picked fragments (empty without them);
+`bound_to` is aliased to `neighbor`). Not yet ported:
+`custom`, `bysegment`, `bycell`, `stereo`, `cartoon_color`, `ribbon_color`, `label`, the `p.` custom
+property selector, `center`, `origin` (need scene-origin tracking), and the H-bond `donors`/`acceptors`
+chemistry.

@@ -7,7 +7,11 @@
     "summary": "The four reserved, click-ordered editor selections that are the implicit default arguments of nearly every editing command.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer3/Editor.h:30", "packages/engine/layer3/Editor.cpp:498", "docs/builder.md#7"],
+    "sourceRefs": [
+      "packages/engine/layer3/Editor.h:30",
+      "packages/engine/layer3/Editor.cpp:498",
+      "docs/builder.md#7"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#the-pk1-pk4-editor-selections"
   },
@@ -19,7 +23,11 @@
     "summary": "Picks atoms or a bond for editing by defining the pk1-pk4 selections without a mouse click.",
     "signature": "edit(selection1='', selection2='none', selection3='none', selection4='none', pkresi=0, pkbond=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:756", "packages/engine/modules/pymol/editing.py:1080", "packages/engine-ts/src/cmd/editing.ts:261"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:756",
+      "packages/engine/modules/pymol/editing.py:1080",
+      "packages/engine-ts/src/cmd/editing.ts:261"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#edit"
   },
@@ -31,7 +39,11 @@
     "summary": "Deletes the pk1, pk2, ... editor selections used for atom picking and molecular editing.",
     "signature": "unpick()",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:4165", "packages/engine/modules/pymol/editing.py:991", "packages/engine-ts/src/cmd/extras.ts:524"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:4165",
+      "packages/engine/modules/pymol/editing.py:991",
+      "packages/engine-ts/src/cmd/extras.ts:524"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/editing-building.md#unpick"
   },
@@ -43,7 +55,10 @@
     "summary": "Protects atoms from transformations performed by the editing features (torsion, drag, sculpt).",
     "signature": "protect(selection='(all)', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:2913", "packages/engine/modules/pymol/editing.py:2763"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:2913",
+      "packages/engine/modules/pymol/editing.py:2763"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#protect"
   },
@@ -55,7 +70,10 @@
     "summary": "Reverses the effect of protect on the indicated atoms.",
     "signature": "deprotect(selection='(all)', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:596", "packages/engine/modules/pymol/editing.py:2796"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:596",
+      "packages/engine/modules/pymol/editing.py:2796"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#deprotect"
   },
@@ -67,7 +85,10 @@
     "summary": "Makes atoms impossible to select with the mouse without affecting command-line selection or transforms.",
     "signature": "mask(selection='(all)', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:2429", "packages/engine/modules/pymol/controlling.py:870"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:2429",
+      "packages/engine/modules/pymol/controlling.py:870"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#mask"
   },
@@ -79,7 +100,10 @@
     "summary": "Reverses the effect of mask so the atoms can be mouse-picked again.",
     "signature": "unmask(selection='(all)', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:4154", "packages/engine/modules/pymol/controlling.py:897"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:4154",
+      "packages/engine/modules/pymol/controlling.py:897"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#unmask"
   },
@@ -91,7 +115,11 @@
     "summary": "Creates a new bond between two single-atom selections (default pk1/pk2), within the same object.",
     "signature": "bond(atom1='pk1', atom2='pk2', order=1, quiet=1, symop='')",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:230", "packages/engine/modules/pymol/editing.py:696", "packages/engine-ts/src/cmd/editing.ts:156"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:230",
+      "packages/engine/modules/pymol/editing.py:696",
+      "packages/engine-ts/src/cmd/editing.ts:156"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#bond"
   },
@@ -103,7 +131,10 @@
     "summary": "Removes all bonds between two selections.",
     "signature": "unbond(atom1='(pk1)', atom2='(pk2)', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:4108", "packages/engine/modules/pymol/editing.py:763"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:4108",
+      "packages/engine/modules/pymol/editing.py:763"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#unbond"
   },
@@ -115,7 +146,10 @@
     "summary": "API-only helper to add a bond between two 1-based atom indices in a named object.",
     "signature": "add_bond(oname, index1, index2, order=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:32", "packages/engine/modules/pymol/editing.py:652"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:32",
+      "packages/engine/modules/pymol/editing.py:652"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#add_bond"
   },
@@ -127,7 +161,10 @@
     "summary": "Cycles the valence of the currently picked bond (single->double->triple->...).",
     "signature": "cycle_valence(h_fill=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:555", "packages/engine/modules/pymol/editing.py:876"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:555",
+      "packages/engine/modules/pymol/editing.py:876"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#cycle_valence"
   },
@@ -139,7 +176,10 @@
     "summary": "Sets the bond order of all bonds between two selections (single/double/triple/aromatic/guess/copy).",
     "signature": "valence(order, selection1=None, selection2=None, source='', target_state=0, source_state=0, reset=1, quiet=1, symop='')",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:4243", "packages/engine/modules/pymol/editing.py:598"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:4243",
+      "packages/engine/modules/pymol/editing.py:598"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#valence"
   },
@@ -151,7 +191,10 @@
     "summary": "Discards all bonds in an object and recomputes them by interatomic distance.",
     "signature": "rebond(oname, state=-1, pbc=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:3125", "packages/engine/modules/pymol/editing.py:678"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:3125",
+      "packages/engine/modules/pymol/editing.py:678"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#rebond"
   },
@@ -163,7 +206,11 @@
     "summary": "Adds a single atom onto the picked atom with a given element, geometry, and valence.",
     "signature": "attach(element, geometry, valence, name='', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:188", "packages/engine/modules/pymol/editing.py:921", "packages/engine-ts/src/cmd/builder.ts:515"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:188",
+      "packages/engine/modules/pymol/editing.py:921",
+      "packages/engine-ts/src/cmd/builder.ts:515"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#attach"
   },
@@ -175,7 +222,11 @@
     "summary": "Replaces the picked atom with a new atom of a different element/geometry/valence.",
     "signature": "replace(element, geometry, valence, h_fill=1, name='', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:3236", "packages/engine/modules/pymol/editing.py:1572", "packages/engine-ts/src/cmd/builder.ts:673"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:3236",
+      "packages/engine/modules/pymol/editing.py:1572",
+      "packages/engine-ts/src/cmd/builder.ts:673"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#replace"
   },
@@ -187,7 +238,11 @@
     "summary": "Joins two objects into one by forming a bond, moving/merging a copy of the first into the second.",
     "signature": "fuse(selection1='(pk1)', selection2='(pk2)', mode=0, recolor=1, move=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:1033", "packages/engine/modules/pymol/editing.py:939", "packages/engine-ts/src/cmd/builder.ts:761"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:1033",
+      "packages/engine/modules/pymol/editing.py:939",
+      "packages/engine-ts/src/cmd/builder.ts:761"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#fuse"
   },
@@ -199,7 +254,11 @@
     "summary": "Builds a peptide object from a one-letter sequence, optionally in a chosen secondary structure.",
     "signature": "fab(input, name=None, mode='peptide', resi=1, chain='', segi='', state=-1, dir=1, hydro=-1, ss=0, async_=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:839", "packages/engine/modules/pymol/editor.py:1062", "packages/engine-ts/src/cmd/editor.ts:569"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:839",
+      "packages/engine/modules/pymol/editor.py:1062",
+      "packages/engine-ts/src/cmd/editor.ts:569"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#fab"
   },
@@ -211,7 +270,11 @@
     "summary": "Builds a nucleic acid object from a one-letter sequence using 3DNA fiber-model fragments.",
     "signature": "fnab(input, name=None, mode='DNA', form='B', dbl_helix=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:971", "packages/engine/modules/pymol/editor.py:1100", "packages/engine-ts/src/cmd/nucleic.ts:165"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:971",
+      "packages/engine/modules/pymol/editor.py:1100",
+      "packages/engine-ts/src/cmd/nucleic.ts:165"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#fnab"
   },
@@ -223,7 +286,11 @@
     "summary": "Retrieves a 3D structure from the built-in fragment library as a new object.",
     "signature": "fragment(name, object=None, origin=1, zoom=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:1001", "packages/engine/modules/pymol/creating.py:943", "packages/engine-ts/src/model/fragments.ts"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:1001",
+      "packages/engine/modules/pymol/creating.py:943",
+      "packages/engine-ts/src/model/fragments.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#fragment"
   },
@@ -235,7 +302,11 @@
     "summary": "Adds a placeholder/marker pseudoatom to a molecular object, creating the object if needed.",
     "signature": "pseudoatom(object='', selection='', name='PS1', resn='PSD', resi='1', chain='P', segi='PSDO', elem='PS', vdw=-1.0, hetatm=1, b=0.0, q=0.0, color='', label='', pos=None, state=0, mode='rms', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:2938", "packages/engine/modules/pymol/creating.py:1091", "packages/engine-ts/src/cmd/editing.ts:490"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:2938",
+      "packages/engine/modules/pymol/creating.py:1091",
+      "packages/engine-ts/src/cmd/editing.ts:490"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#pseudoatom"
   },
@@ -247,7 +318,10 @@
     "summary": "Not a PyMOL command; joining molecular objects is done with fuse (bond+merge) or create/combine.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx", "packages/engine/modules/pymol/editing.py:939"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx",
+      "packages/engine/modules/pymol/editing.py:939"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/editing-building.md#join"
   },
@@ -259,7 +333,10 @@
     "summary": "Eliminates the atoms in a selection from their molecular objects (keeps the object).",
     "signature": "remove(selection, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:3202", "packages/engine/modules/pymol/editing.py:802"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:3202",
+      "packages/engine/modules/pymol/editing.py:802"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#remove"
   },
@@ -271,7 +348,11 @@
     "summary": "Removes the atom or bond currently picked for editing.",
     "signature": "remove_picked(hydrogens=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:3213", "packages/engine/modules/pymol/editing.py:839", "packages/engine-ts/src/cmd/editing.ts:402"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:3213",
+      "packages/engine/modules/pymol/editing.py:839",
+      "packages/engine-ts/src/cmd/editing.ts:402"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#remove_picked"
   },
@@ -283,7 +364,10 @@
     "summary": "Removes whole objects and named selections (not individual atoms).",
     "signature": "delete(name)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:577", "packages/engine/modules/pymol/editing.py"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:577",
+      "packages/engine/modules/pymol/editing.py"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#delete"
   },
@@ -295,7 +379,11 @@
     "summary": "Adds hydrogens onto a molecule based on current heavy-atom valences (fills all open valences).",
     "signature": "h_add(selection='(all)', quiet=1, state=0, legacy=0)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:1762", "packages/engine/modules/pymol/editing.py:1218", "packages/engine-ts/src/cmd/builder.ts:559"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:1762",
+      "packages/engine/modules/pymol/editing.py:1218",
+      "packages/engine-ts/src/cmd/builder.ts:559"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#h_add"
   },
@@ -307,7 +395,11 @@
     "summary": "Removes and replaces the hydrogens on the atom or bond picked for editing.",
     "signature": "h_fill(quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:1775", "packages/engine/modules/pymol/editing.py:1165", "packages/engine-ts/src/cmd/builder.ts:580"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:1775",
+      "packages/engine/modules/pymol/editing.py:1165",
+      "packages/engine-ts/src/cmd/builder.ts:580"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#h_fill"
   },
@@ -319,7 +411,11 @@
     "summary": "Repositions existing hydrogen atoms (unsupported/legacy); used to fix backbone/amide H geometry.",
     "signature": "h_fix(selection='', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:1785", "packages/engine/modules/pymol/editing.py:1197", "packages/engine-ts/src/cmd/extras.ts:526"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:1785",
+      "packages/engine/modules/pymol/editing.py:1197",
+      "packages/engine-ts/src/cmd/extras.ts:526"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/editing-building.md#h_fix"
   },
@@ -331,7 +427,11 @@
     "summary": "Adds hydrogens with pH-dependent protonation states (PROPKA or textbook pKa), unlike h_add.",
     "signature": "protonate(selection='all', pH=7.4, ff='amber', state=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:2924", "packages/engine/modules/pymol/editing.py:1444", "packages/engine-ts/src/cmd/builder.ts:616"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:2924",
+      "packages/engine/modules/pymol/editing.py:1444",
+      "packages/engine-ts/src/cmd/builder.ts:616"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#protonate"
   },
@@ -343,7 +443,11 @@
     "summary": "Changes atomic properties via a Python expression evaluated once per atom.",
     "signature": "alter(selection, expression, quiet=1, space=None)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:93", "packages/engine/modules/pymol/editing.py:1708", "packages/engine-ts/src/cmd/analysis.ts:311"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:93",
+      "packages/engine/modules/pymol/editing.py:1708",
+      "packages/engine-ts/src/cmd/analysis.ts:311"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#alter"
   },
@@ -355,7 +459,11 @@
     "summary": "Changes atom coordinates over a state and selection via a per-coordinate Python expression.",
     "signature": "alter_state(state, selection, expression, quiet=1, space=None, atomic=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:117", "packages/engine/modules/pymol/editing.py:1821", "packages/engine-ts/src/cmd/analysis.ts"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:117",
+      "packages/engine/modules/pymol/editing.py:1821",
+      "packages/engine-ts/src/cmd/analysis.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#alter_state"
   },
@@ -367,7 +475,11 @@
     "summary": "Translates a single picked atom by a vector; the primitive behind interactive atom dragging.",
     "signature": "translate_atom(sele1, v0, v1, v2, state=0, mode=0, log=0)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:4083", "packages/engine/modules/pymol/editing.py:2507", "packages/engine-ts/src/cmd/editing.ts"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:4083",
+      "packages/engine/modules/pymol/editing.py:2507",
+      "packages/engine-ts/src/cmd/editing.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#translate_atom"
   },
@@ -379,7 +491,11 @@
     "summary": "Activates interactive mouse dragging of a selection's atom coordinates.",
     "signature": "drag(selection=None, wizard=1, edit=1, quiet=1, mode=-1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:706", "packages/engine/modules/pymol/editing.py:1020", "packages/engine-ts/src/cmd/extras.ts:522"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:706",
+      "packages/engine/modules/pymol/editing.py:1020",
+      "packages/engine-ts/src/cmd/extras.ts:522"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/editing-building.md#drag"
   },
@@ -391,7 +507,11 @@
     "summary": "Rotates the torsion about the currently picked bond by a delta angle.",
     "signature": "torsion(angle)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:4031", "packages/engine/modules/pymol/editing.py:1135", "packages/engine-ts/src/cmd/editing.ts:314"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:4031",
+      "packages/engine/modules/pymol/editing.py:1135",
+      "packages/engine-ts/src/cmd/editing.ts:314"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#torsion"
   },
@@ -403,7 +523,11 @@
     "summary": "Sets the dihedral angle formed by four bonded acyclic atoms to an absolute value.",
     "signature": "set_dihedral(atom1, atom2, atom3, atom4, angle, state=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:3570", "packages/engine/modules/pymol/editing.py:2564", "packages/engine-ts/src/cmd/editing.ts:540"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:3570",
+      "packages/engine/modules/pymol/editing.py:2564",
+      "packages/engine-ts/src/cmd/editing.ts:540"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#set_dihedral"
   },
@@ -415,7 +539,11 @@
     "summary": "Changes PyMOL's assumed valence/geometry (hybridization) of atoms so H-filling and bonding behave.",
     "signature": "set_geometry(selection, geometry, valence)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:3601", "packages/engine/modules/pymol/editing.py:473", "packages/engine-ts/src/cmd/editor.ts"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:3601",
+      "packages/engine/modules/pymol/editing.py:473",
+      "packages/engine-ts/src/cmd/editor.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#set_geometry"
   },
@@ -427,7 +555,11 @@
     "summary": "Assigns the R/S stereo atom property, requiring a Schrodinger Suite or RDKit backend.",
     "signature": "assign_stereo(selection='all', state=-1, method='', quiet=1, prop='stereo')",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:168", "packages/engine/modules/pymol/stereochemistry/__init__.py:7", "packages/engine-ts/src/cmd/extras.ts:555"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:168",
+      "packages/engine/modules/pymol/stereochemistry/__init__.py:7",
+      "packages/engine-ts/src/cmd/extras.ts:555"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/editing-building.md#assign_stereo"
   },
@@ -439,7 +571,11 @@
     "summary": "Best-effort repair of bond orders/valences/atoms around a modified site (unsupported upstream).",
     "signature": "fix_chemistry(selection1='all', selection2='all', invalidate=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:949", "packages/engine/modules/pymol/editing.py:2851", "packages/engine-ts/src/cmd/editor.ts"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:949",
+      "packages/engine/modules/pymol/editing.py:2851",
+      "packages/engine-ts/src/cmd/editor.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#fix_chemistry"
   },
@@ -448,10 +584,13 @@
     "kind": "command",
     "category": "editing-building",
     "subcategory": "fixing",
-    "summary": "Energy-minimizes a selection with MMFF94; raises IncentiveOnlyException upstream but is implemented in the TS port.",
+    "summary": "MMFF94 energy-minimization 'clean up' of a selection — an incentive-only feature, so Open-Source PyMOL and the TS engine both raise IncentiveOnlyException.",
     "signature": "clean(selection, present='', state=-1, fix='', restrain='', method='mmff', async_=0, save_undo=1, message=None)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:363", "packages/engine/modules/pymol/computing.py:20", "packages/engine-ts/src/cmd/sculpt.ts:394"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/computing.py:20",
+      "packages/engine-ts/src/cmd/sculpt.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#clean"
   },
@@ -463,7 +602,11 @@
     "summary": "Inverts stereochemistry of atom pk1, holding attached atoms pk2 and pk3 immobile.",
     "signature": "invert(quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:1899", "packages/engine/modules/pymol/editing.py:739", "packages/engine-ts/src/cmd/builder.ts:716"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:1899",
+      "packages/engine/modules/pymol/editing.py:739",
+      "packages/engine-ts/src/cmd/builder.ts:716"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#invert"
   },
@@ -475,7 +618,11 @@
     "summary": "Interactive wizard to mutate a residue to another amino acid/nucleotide with rotamer selection.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/wizard/mutagenesis.py", "packages/engine/modules/pymol/wizard/nucmutagenesis.py", "docs/qt-main-window.md:386"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/wizard/mutagenesis.py",
+      "packages/engine/modules/pymol/wizard/nucmutagenesis.py",
+      "docs/qt-main-window.md:386"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/editing-building.md#mutagenesis-wizard"
   },
@@ -487,7 +634,12 @@
     "summary": "The dockable GUI over the editing surface with Chemical/Protein/Nucleic Acid tabs and three action rows, every button issuing cmd.* calls.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pmg_qt/builder.py", "packages/engine/modules/pymol/editor.py", "docs/builder.md", "apps/web/src/features/builder/BuilderPanel.tsx"],
+    "sourceRefs": [
+      "packages/engine/modules/pmg_qt/builder.py",
+      "packages/engine/modules/pymol/editor.py",
+      "docs/builder.md",
+      "apps/web/src/features/builder/BuilderPanel.tsx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#the-builder-panel"
   },
@@ -499,7 +651,11 @@
     "summary": "The Builder's Sculpt/Clean/Fix/Rest group: real-time geometry relaxation with atom pinning and restraint flags.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["docs/builder.md#6.2", "packages/engine/layer5/PyMOL.cpp:2424", "packages/engine-ts/src/cmd/sculpt.ts"],
+    "sourceRefs": [
+      "docs/builder.md#6.2",
+      "packages/engine/layer5/PyMOL.cpp:2424",
+      "packages/engine-ts/src/cmd/sculpt.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/editing-building.md#sculpting-controls"
   }

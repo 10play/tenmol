@@ -3,8 +3,8 @@ name: morph
 kind: command
 category: movies-scenes-states
 subcategory: trajectory interpolation
-summary: Builds a multi-state interpolated trajectory between two (or more) conformations.
-parity: partial
+summary: Interpolated multi-state trajectory between conformations — incentive-only (rigimol and linear); raises IncentiveOnlyException (matched by the TS engine).
+parity: implemented
 ---
 
 ## Purpose

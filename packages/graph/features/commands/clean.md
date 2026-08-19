@@ -3,8 +3,8 @@ name: clean
 kind: command
 category: sculpting-minimization
 subcategory: energy minimization
-summary: Runs MMFF94 energy minimization ("clean up") on a selection.
-parity: partial
+summary: MMFF94 energy-minimization 'clean up' of a selection — incentive-only; raises IncentiveOnlyException (matched by the TS engine).
+parity: implemented
 ---
 
 ## Purpose

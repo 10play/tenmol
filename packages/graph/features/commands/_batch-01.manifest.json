@@ -227,13 +227,12 @@
     "kind": "command",
     "category": "sculpting-minimization",
     "subcategory": "energy minimization",
-    "summary": "Runs MMFF94 energy minimization (\"clean up\") on a selection.",
+    "summary": "MMFF94 energy-minimization 'clean up' of a selection — an incentive-only feature, so Open-Source PyMOL and the TS engine both raise IncentiveOnlyException.",
     "signature": "clean(selection, present='', state=-1, fix='', restrain='', method='mmff', async_=0, save_undo=1, message=None)",
     "default": "",
     "sourceRefs": [
-      "docs/api-reference/commands.mdx:363",
       "packages/engine/modules/pymol/computing.py:20",
-      "packages/engine-ts/src/cmd/editor.ts:394"
+      "packages/engine-ts/src/cmd/sculpt.ts"
     ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/clean.md"

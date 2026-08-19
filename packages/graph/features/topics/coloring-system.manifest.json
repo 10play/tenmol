@@ -7,7 +7,11 @@
     "summary": "Changes the colour of objects or atoms; the primary colour assigner accepting names, indices, hex, specials, or ramp objects.",
     "signature": "color(color, selection='(all)', quiet=1, flags=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1904", "packages/engine-ts/src/exec/executive.ts:216", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1904",
+      "packages/engine-ts/src/exec/executive.ts:216",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#color"
   },
@@ -19,7 +23,11 @@
     "summary": "Unsets all object- and atom-level colour settings then applies a colour, clearing every per-rep override.",
     "signature": "color_deep(color, name='all', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1948", "packages/engine-ts/src/cmd/display.ts:132", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1948",
+      "packages/engine-ts/src/cmd/display.ts:132",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#color_deep"
   },
@@ -31,7 +39,11 @@
     "summary": "Defines a new colour (or redefines an existing one) from RGB components, extending the colour-index table.",
     "signature": "set_color(name, rgb, mode=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:2153", "packages/engine-ts/src/cmd/coloring.ts:285", "packages/engine-ts/src/exec/color.ts:79"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:2153",
+      "packages/engine-ts/src/cmd/coloring.ts:285",
+      "packages/engine-ts/src/exec/color.ts:79"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#set_color"
   },
@@ -43,7 +55,11 @@
     "summary": "Colours atoms with a gradient based on a per-atom property mapped across a named palette or colour list.",
     "signature": "spectrum(expression='count', palette='rainbow', selection='(all)', minimum=None, maximum=None, byres=0, quiet=1, interpolation='rgb')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:2065", "packages/engine-ts/src/cmd/coloring.ts:295", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:2065",
+      "packages/engine-ts/src/cmd/coloring.ts:295",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#spectrum"
   },
@@ -55,7 +71,9 @@
     "summary": "Pure-Python spectrum fallback accepting arbitrary colour lists and rgb/hls/hsv interpolation; drives spectrum for non-alphabetic expressions.",
     "signature": "spectrumany(expression, colors, selection='(all)', minimum=None, maximum=None, quiet=1, interpolation='rgb')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1978"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1978"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/coloring-system.md#spectrumany"
   },
@@ -67,7 +85,11 @@
     "summary": "Forces reapplication of colours to already-built geometry; required after set_color redefines a colour in use.",
     "signature": "recolor(selection='all', representation='everything')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1868", "packages/engine-ts/src/cmd/display.ts:154", "packages/engine-ts/src/cmd/topics.ts:145"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1868",
+      "packages/engine-ts/src/cmd/display.ts:154",
+      "packages/engine-ts/src/cmd/topics.ts:145"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#recolor--recolour"
   },
@@ -76,10 +98,13 @@
     "kind": "command",
     "category": "coloring",
     "subcategory": "colour assign",
-    "summary": "Desaturates the colours in a selection by blending each atom's colour toward grey.",
+    "summary": "Desaturates a selection's colours toward grey — an incentive-only feature, so Open-Source PyMOL and the TS engine both raise IncentiveOnlyException rather than recolouring.",
     "signature": "desaturate(selection='all', a=0.5, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine-ts/src/cmd/display.ts:184", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/experimenting.py:280",
+      "packages/engine-ts/src/cmd/display.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#desaturate"
   },
@@ -91,7 +116,11 @@
     "summary": "Snapshots the current colour of everything under a key, for scene colour capture.",
     "signature": "get_colorection(key)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:907", "packages/engine-ts/src/cmd/misc2.ts:74", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:907",
+      "packages/engine-ts/src/cmd/misc2.ts:74",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#get_colorection"
   },
@@ -103,7 +132,11 @@
     "summary": "Restores atom/object colours from a colorection snapshot captured by get_colorection.",
     "signature": "set_colorection(dict, key)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:911", "packages/engine-ts/src/cmd/misc2.ts:85", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:911",
+      "packages/engine-ts/src/cmd/misc2.ts:85",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#set_colorection"
   },
@@ -115,7 +148,11 @@
     "summary": "Deletes a stored colorection snapshot.",
     "signature": "del_colorection(dict, key)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:915", "packages/engine-ts/src/cmd/misc2.ts:102", "docs/api-reference/commands.mdx"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:915",
+      "packages/engine-ts/src/cmd/misc2.ts:102",
+      "docs/api-reference/commands.mdx"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#del_colorection"
   },
@@ -127,7 +164,11 @@
     "summary": "Creates a colour ramp object mapping a map value or proximity to a colour; usable directly as a colour.",
     "signature": "ramp_new(name, map_name, range=[-1.0, 0.0, 1.0], color=['red', [1.0, 1.0, 1.0], 'blue'], state=1, selection='', beyond=2.0, within=6.0, sigma=2.0, zero=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:374", "packages/engine/layer1/Color.cpp:347", "packages/engine-ts/src/cmd/ramps.ts:178"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:374",
+      "packages/engine/layer1/Color.cpp:347",
+      "packages/engine-ts/src/cmd/ramps.ts:178"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#ramp_new"
   },
@@ -139,7 +180,12 @@
     "summary": "Colour atoms by chemical element (CPK) via the 'atomic' special colour and the util.cb* / cnc helper family, typically keeping a chosen carbon colour.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/util.py:427", "packages/engine/modules/pymol/util.py:512", "packages/engine-ts/src/cmd/coloring.ts:409", "packages/engine-ts/src/cmd/util2.ts:330"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/util.py:427",
+      "packages/engine/modules/pymol/util.py:512",
+      "packages/engine-ts/src/cmd/coloring.ts:409",
+      "packages/engine-ts/src/cmd/util2.ts:330"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#element--cpk-atomic-colouring"
   },
@@ -151,7 +197,12 @@
     "summary": "Assign a distinct colour per chain via util.cbc/color_chains, per object via color_objs, or an N-to-C rainbow per chain via chainbow.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/util.py:771", "packages/engine/modules/pymol/util.py:809", "packages/engine-ts/src/cmd/coloring.ts:429", "packages/engine-ts/src/cmd/util2.ts:419"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/util.py:771",
+      "packages/engine/modules/pymol/util.py:809",
+      "packages/engine-ts/src/cmd/coloring.ts:429",
+      "packages/engine-ts/src/cmd/util2.ts:419"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#colour-by-chain"
   },
@@ -163,7 +214,11 @@
     "summary": "Colour atoms by secondary-structure type (helix/sheet/loop) via util.cbss or spectrum ss.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/util.py:432", "packages/engine/modules/pymol/menu.py:420", "packages/engine-ts/src/cmd/util2.ts:395"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/util.py:432",
+      "packages/engine/modules/pymol/menu.py:420",
+      "packages/engine-ts/src/cmd/util2.ts:395"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#colour-by-secondary-structure"
   },
@@ -175,7 +230,10 @@
     "summary": "Colour a representation independently by writing per-rep colour settings (from rep_setting_lists) rather than atom colours.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/menu.py:428", "packages/engine/modules/pymol/menu.py:482"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/menu.py:428",
+      "packages/engine/modules/pymol/menu.py:482"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/coloring-system.md#colour-by-representation-by-rep"
   },
@@ -187,7 +245,11 @@
     "summary": "The two-tier spectrum dispatch: fast C-backed spectrum for named palettes on alphabetic expressions, pure-Python spectrumany fallback for colour lists, non-alpha expressions, and hls/hsv interpolation.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:2133", "packages/engine/modules/pymol/viewing.py:1978", "packages/engine-ts/src/cmd/coloring.ts:295"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:2133",
+      "packages/engine/modules/pymol/viewing.py:1978",
+      "packages/engine-ts/src/cmd/coloring.ts:295"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/coloring-system.md#spectrum-vs-spectrumany"
   },
@@ -199,7 +261,11 @@
     "summary": "The auto/current special colours and 40-colour cycle (auto_color / auto_color_next) that give each new object or chain a fresh distinguishable colour.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer1/Color.cpp:35", "packages/engine/layer1/Color.cpp:140", "packages/engine/modules/pymol/util.py:27"],
+    "sourceRefs": [
+      "packages/engine/layer1/Color.cpp:35",
+      "packages/engine/layer1/Color.cpp:140",
+      "packages/engine/modules/pymol/util.py:27"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/coloring-system.md#auto-colour-cycle-auto_color--auto_color_next"
   },
@@ -211,7 +277,11 @@
     "summary": "The single flat integer namespace all colour references resolve into (named + generated bands + negative specials + ramp extensions + inline TRGB), and how set_color extends it without breaking frozen indices.",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/layer1/Color.cpp:661", "packages/engine/layer1/Color.h:36", "packages/engine-ts/src/exec/color.ts:79"],
+    "sourceRefs": [
+      "packages/engine/layer1/Color.cpp:661",
+      "packages/engine/layer1/Color.h:36",
+      "packages/engine-ts/src/exec/color.ts:79"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#colour-index-integer-space"
   },
@@ -223,7 +293,10 @@
     "summary": "The 57 named palettes spectrum accepts, each a (prefix, digits, first, last) slice of a generated 1000-colour band (o/s/r/c/w families).",
     "signature": "",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/constants_palette.py:1", "packages/engine-ts/src/cmd/coloring.ts:102"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/constants_palette.py:1",
+      "packages/engine-ts/src/cmd/coloring.ts:102"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/coloring-system.md#built-in-spectrum-palettes"
   }

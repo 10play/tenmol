@@ -7,7 +7,10 @@
     "summary": "Prints a categorised cheat-sheet of PyMOL's most common commands.",
     "signature": "commands()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/helping.py:101", "packages/engine-ts/src/cmd/topics.ts:89"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/helping.py:101",
+      "packages/engine-ts/src/cmd/topics.ts:89"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/commands.md"
   },
@@ -19,7 +22,10 @@
     "summary": "Selects the active mouse configuration ring (three/two/one-button preset family).",
     "signature": "config_mouse(ring='three_button', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/controlling.py:168", "packages/engine-ts/src/cmd/controlflow.ts:235"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/controlling.py:168",
+      "packages/engine-ts/src/cmd/controlflow.ts:235"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/config_mouse.md"
   },
@@ -31,7 +37,9 @@
     "summary": "Internal shortcut-completion helper for contour-related argument names.",
     "signature": "contour_sc(sc, gnot)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx#cmd.contour_sc"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx#cmd.contour_sc"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/contour_sc.md"
   },
@@ -43,7 +51,9 @@
     "summary": "Creates a new object that is an identical copy of an existing object.",
     "signature": "copy(target, source, zoom=-1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:881"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:881"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/copy.md"
   },
@@ -55,7 +65,9 @@
     "summary": "Copies the current rendered image to the system clipboard (incentive/proprietary feature).",
     "signature": "copy_image(quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/exporting.py:35"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/exporting.py:35"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/copy_image.md"
   },
@@ -67,7 +79,10 @@
     "summary": "Copies a selection into an object (all states), renaming chain/segi/ID to avoid conflicts.",
     "signature": "copy_to(name, selection, rename='chain segi ID', zoom=-1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:3122", "packages/engine-ts/src/cmd/extras.ts:351"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:3122",
+      "packages/engine-ts/src/cmd/extras.ts:351"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/copy_to.md"
   },
@@ -79,7 +94,11 @@
     "summary": "Returns the number of atoms matching a selection.",
     "signature": "count_atoms(selection='(all)', quiet=1, state=0, domain='')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:1419", "packages/engine-ts/src/select/selector.ts:1038", "packages/engine-ts/src/exec/executive.ts:198"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:1419",
+      "packages/engine-ts/src/select/selector.ts:1038",
+      "packages/engine-ts/src/exec/executive.ts:198"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/count_atoms.md"
   },
@@ -91,7 +110,10 @@
     "summary": "Counts the number of discrete objects spanned by a selection.",
     "signature": "count_discrete(selection, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:1443", "packages/engine-ts/src/cmd/xform.ts:229"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:1443",
+      "packages/engine-ts/src/cmd/xform.ts:229"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/count_discrete.md"
   },
@@ -103,7 +125,11 @@
     "summary": "Returns the number of frames defined for the PyMOL movie.",
     "signature": "count_frames(quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:759", "packages/engine-ts/src/cmd/system.ts:9", "packages/engine-ts/src/cmd/movie3.ts:92"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:759",
+      "packages/engine-ts/src/cmd/system.ts:9",
+      "packages/engine-ts/src/cmd/movie3.ts:92"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/count_frames.md"
   },
@@ -115,7 +141,10 @@
     "summary": "Returns the number of coordinate states in a selection's object(s).",
     "signature": "count_states(selection='(all)', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:703", "packages/engine-ts/src/cmd/analysis.ts:224"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:703",
+      "packages/engine-ts/src/cmd/analysis.ts:224"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/count_states.md"
   },
@@ -127,7 +156,9 @@
     "summary": "Creates a new molecule object from a selection, or copies states into an existing object.",
     "signature": "create(name, selection, source_state=0, target_state=0, discrete=0, zoom=-1, quiet=1, singletons=0, extract=None, copy_properties=False)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:974"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:974"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/create.md"
   },
@@ -139,7 +170,10 @@
     "summary": "Creates a new curve object (currently only Bezier curves).",
     "signature": "curve_new(name='', curve_type='bezier')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:1210", "packages/engine-ts/src/cmd/movie2.ts:344"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:1210",
+      "packages/engine-ts/src/cmd/movie2.ts:344"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/curve_new.md"
   },
@@ -151,7 +185,10 @@
     "summary": "Cycles the bond order (single/double/triple/aromatic) of the currently picked bond.",
     "signature": "cycle_valence(h_fill=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:876", "packages/engine-ts/src/cmd/builder.ts:655"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:876",
+      "packages/engine-ts/src/cmd/builder.ts:655"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/cycle_valence.md"
   },
@@ -163,7 +200,10 @@
     "summary": "Internal method that declines a session-file security prompt.",
     "signature": "decline()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:48", "packages/engine-ts/src/cmd/extras.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:48",
+      "packages/engine-ts/src/cmd/extras.ts"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/decline.md"
   },
@@ -175,7 +215,10 @@
     "summary": "Deletes a stored colorection (named color-by-selection snapshot) entry.",
     "signature": "del_colorection(dict, key)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:915", "packages/engine-ts/src/cmd/misc2.ts:102"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:915",
+      "packages/engine-ts/src/cmd/misc2.ts:102"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/del_colorection.md"
   },
@@ -187,7 +230,10 @@
     "summary": "Removes objects and named selections (wildcards supported).",
     "signature": "delete(name)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/commanding.py:511", "packages/engine-ts/src/exec/executive.ts:132"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/commanding.py:511",
+      "packages/engine-ts/src/exec/executive.ts:132"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/delete.md"
   },
@@ -199,7 +245,10 @@
     "summary": "Deletes specified states (by number or range) from object(s).",
     "signature": "delete_states(name, states)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/commanding.py:548", "packages/engine-ts/src/cmd/extras.ts:273"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/commanding.py:548",
+      "packages/engine-ts/src/cmd/extras.ts:273"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/delete_states.md"
   },
@@ -211,7 +260,10 @@
     "summary": "Clears the protected flag on atoms, reversing the protect command.",
     "signature": "deprotect(selection='(all)', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2796", "packages/engine-ts/src/cmd/editing.ts:419"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2796",
+      "packages/engine-ts/src/cmd/editing.ts:419"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/deprotect.md"
   },
@@ -220,10 +272,13 @@
     "kind": "command",
     "category": "coloring",
     "subcategory": "color adjustment",
-    "summary": "Desaturates (blends toward grey) the colors of a selection by a given factor.",
+    "summary": "Desaturates a selection's colours toward grey — an incentive-only feature, so Open-Source PyMOL and the TS engine both raise IncentiveOnlyException rather than recolouring.",
     "signature": "desaturate(selection='all', a=0.5, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/experimenting.py:268", "packages/engine-ts/src/cmd/display.ts:184"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/experimenting.py:280",
+      "packages/engine-ts/src/cmd/display.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/desaturate.md"
   },
@@ -235,7 +290,9 @@
     "summary": "Disables (hides) all currently visible named selections.",
     "signature": "deselect()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/selecting.py:27"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/selecting.py:27"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/deselect.md"
   }

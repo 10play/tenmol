@@ -3,7 +3,7 @@ name: desaturate
 kind: command
 category: coloring
 subcategory: color adjustment
-summary: Desaturates (blends toward grey) the colors of a selection by a given factor.
+summary: Desaturates a selection's colours toward grey — incentive-only; raises IncentiveOnlyException (matched by the TS engine).
 parity: implemented
 ---
 

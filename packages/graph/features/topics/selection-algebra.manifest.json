@@ -521,12 +521,12 @@
     "kind": "selection",
     "category": "selecting",
     "subcategory": "expansion operator",
-    "summary": "Expands the selection to the bonded connected fragment (bf.).",
+    "summary": "Expands a selection to the editor's picked fragments (bf.); with no editor fragments defined it selects nothing — NOT the whole connected molecule.",
     "signature": "",
     "default": "",
     "sourceRefs": [
       "packages/engine/layer3/Selector.cpp:426-428",
-      "packages/engine-ts/src/select/selector.ts:286-289"
+      "packages/engine-ts/src/select/selector.ts"
     ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/selection-algebra.md#byfragment"
