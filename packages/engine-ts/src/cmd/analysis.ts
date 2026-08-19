@@ -22,6 +22,7 @@
  */
 import type { Json } from '@tenmol/protocol';
 import { assignSecondaryStructure } from '../model/secondary-structure';
+import { NO_NUMERIC_TYPE } from '../model/atom';
 import type { RegistrarCtx } from './registrar';
 
 /* ------------------------------ iterate / alter -------------------------- */
@@ -57,9 +58,11 @@ function compileExpr(expr: string, extraParams: string[]): (...a: unknown[]) => 
   // map to the camelCase AtomInfo keys on write-back (see runPerAtom).
   const params = [
     ...ATOM_FIELDS, 'index', 'hetatm', 'model',
-    'formal_charge', 'partial_charge', 'p', 'properties', ...extraParams, 'stored',
+    'formal_charge', 'partial_charge', 'numeric_type', 'text_type',
+    'p', 'properties', ...extraParams, 'stored',
   ];
-  const body = `${expr}\n;return [${ATOM_FIELDS.join(',')},formal_charge,partial_charge];`;
+  const body =
+    `${expr}\n;return [${ATOM_FIELDS.join(',')},formal_charge,partial_charge,numeric_type,text_type];`;
 
   const fn = new Function(...params, body) as (...a: unknown[]) => unknown[];
   return fn;
@@ -155,6 +158,8 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
       const base: unknown[] = ATOM_FIELDS.map((f) => (f === 'custom' ? a.custom ?? '' : a[f]));
       base.push(ua.index + 1, a.hetatm, ua.objName);
       base.push(a.formalCharge ?? 0, a.partialCharge ?? 0);
+      // numeric_type ⇒ customType (sentinel when unset), text_type ⇒ textType.
+      base.push(a.customType ?? NO_NUMERIC_TYPE, a.textType ?? '');
       // `p` / `properties` — the atom's custom-property namespace (PyMOL exposes
       // both names for it). For `alter` we hand over the live store so
       // `p.foo = ...` / `properties['foo'] = ...` persist; for read-only
@@ -198,6 +203,9 @@ export function registerAnalysis(ctx: RegistrarCtx): void {
         const rec = a as unknown as Record<string, unknown>;
         rec.formalCharge = Number(result[ATOM_FIELDS.length]);
         rec.partialCharge = Number(result[ATOM_FIELDS.length + 1]);
+        // numeric_type / text_type write back to customType / textType.
+        rec.customType = Number(result[ATOM_FIELDS.length + 2]);
+        rec.textType = String(result[ATOM_FIELDS.length + 3]);
       }
     }
     return matched.length;

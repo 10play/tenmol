@@ -17,6 +17,7 @@
 
 import { REP_NAMES } from '@tenmol/protocol';
 import type { AtomInfo } from '../model/atom';
+import { NO_NUMERIC_TYPE } from '../model/atom';
 import type { ObjectMolecule } from '../model/molecule';
 import { getColorIndex } from '../exec/color';
 
@@ -129,6 +130,8 @@ type PropKey =
   | 'rep'
   | 'flag'
   | 'label'
+  | 'numeric_type'
+  | 'text_type'
   | 'ss';
 type KeywordKey =
   | 'hetatm'
@@ -182,6 +185,12 @@ const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
   'f.': 'flag',
   label: 'label',
   'lab.': 'label',
+  numeric_type: 'numeric_type',
+  'nt.': 'numeric_type',
+  'nt;': 'numeric_type',
+  text_type: 'text_type',
+  'tt.': 'text_type',
+  'tt;': 'text_type',
   ss: 'ss',
 };
 
@@ -596,7 +605,11 @@ function buildProp(key: PropKey, spec: string): Node {
     if (rawPart === '') continue;
     const part = stripEnclosingQuotes(rawPart);
     const m = /^(-?\d+)-(-?\d+)$/.exec(part);
-    if (m && (key === 'resi' || key === 'index' || key === 'id' || key === 'rank')) {
+    if (
+      m &&
+      (key === 'resi' || key === 'index' || key === 'id' || key === 'rank' ||
+        key === 'numeric_type')
+    ) {
       ranges.push([parseInt(m[1]!, 10), parseInt(m[2]!, 10)]);
     } else {
       values.push(part);
@@ -724,6 +737,22 @@ function matchProp(node: Extract<Node, { t: 'prop' }>, ua: UniverseAtom): boolea
         const n = Number(v);
         return Number.isInteger(n) && n >= 0 && n < 32 && ((a.flags ?? 0) & (1 << n)) !== 0;
       });
+    case 'numeric_type': {
+      // `numeric_type N` / `nt. N` — integer-list match on customType (PyMOL
+      // SELE_NTYs → WordMatchInteger). Unset atoms carry NO_NUMERIC_TYPE and
+      // match nothing.
+      const nt = a.customType ?? NO_NUMERIC_TYPE;
+      return (
+        node.values.some((v) => Number(v) === nt) ||
+        node.ranges.some(([lo, hi]) => nt >= lo && nt <= hi)
+      );
+    }
+    case 'text_type':
+      // `text_type S` / `tt. S` — alpha/wildcard list match on textType
+      // (SELE_TTYs); unset ⇒ ''.
+      return node.values.some(
+        (v) => eq(v, a.textType ?? '') || (v === '' && (a.textType ?? '') === ''),
+      );
     case 'ss':
       // 'H' helix, 'S' strand; 'L' (or empty) is loop/unassigned.
       return node.values.some((v) => {
