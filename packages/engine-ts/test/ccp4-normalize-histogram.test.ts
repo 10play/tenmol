@@ -61,3 +61,19 @@ describe('map_set_border', () => {
     b.close();
   });
 });
+
+describe('map_trim', () => {
+  it('crops the grid to a selection + buffer and returns None', async () => {
+    const b = new LocalBackend();
+    await b.connect();
+    await b.call('load_ccp4map', ['dm', CCP4]);
+    await b.call('pseudoatom', ['pa'], { pos: [0, 0, 0] });
+    const before = ((await b.call('get_volume_histogram', ['dm', 6])) as number[]).slice(4).reduce((a, c) => a + c, 0);
+    expect(await b.call('map_trim', ['dm', 'pa', 3.0])).toBeNull();
+    const after = ((await b.call('get_volume_histogram', ['dm', 6])) as number[]).slice(4).reduce((a, c) => a + c, 0);
+    // The trimmed grid holds far fewer voxels than the full 40³ map.
+    expect(after).toBeLessThan(before);
+    expect(after).toBeGreaterThan(0);
+    b.close();
+  });
+});

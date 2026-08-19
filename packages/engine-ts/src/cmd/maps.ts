@@ -307,7 +307,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
         if (p[k]! + buffer > max[k]!) max[k] = p[k]! + buffer;
       }
     }
-    if (!Number.isFinite(min[0])) return name; // nothing to trim to
+    if (!Number.isFinite(min[0])) return null; // nothing to trim to (editing.map_trim → None)
 
     // Grid index window that covers [min,max], clamped to the existing grid.
     const lo: Vec3 = [0, 0, 0];
@@ -337,7 +337,8 @@ export function registerMaps(ctx: RegistrarCtx): void {
     m.dims = newDims;
     m.data = nd;
     ctx.publish();
-    return name;
+    // editing.map_trim returns the `_cmd` result (None), not the name.
+    return null;
   });
 
   ctx.command('map_double', (args, kwargs): Json => {
