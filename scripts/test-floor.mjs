@@ -53,6 +53,30 @@ const at = (flag) => {
 const floor = Number(at('--floor') ?? DEFAULT_FLOOR);
 const fileFloor = Number(at('--file-floor') ?? DEFAULT_FILE_FLOOR);
 
+/** Read a vitest JSON report and print every failing test as `file :: title`.
+ * The `--reporter=json --outputFile` run prints nothing to the console, so
+ * without this a CI failure is just "vitest failed (1)" with no test name. */
+function printFailures(outFile) {
+  try {
+    const r = JSON.parse(readFileSync(outFile, 'utf8'));
+    const failed = [];
+    for (const t of r.testResults ?? []) {
+      for (const a of t.assertionResults ?? []) {
+        if (a.status === 'failed') {
+          const file = (t.name ?? '').replace(REPO + '/', '');
+          failed.push(`${file} :: ${a.fullName ?? a.title ?? '(unnamed)'}`);
+        }
+      }
+    }
+    if (failed.length) {
+      console.error(`\ntest-floor: ${failed.length} failing test(s):`);
+      for (const f of failed) console.error(`  ✗ ${f}`);
+    }
+  } catch {
+    /* no/unparsable report — nothing to surface */
+  }
+}
+
 let report;
 let scratch;
 try {
@@ -64,15 +88,22 @@ try {
     const out = join(scratch, 'vitest.json');
     // `--reporter=json` needs an outputFile or it interleaves with test stdout
     // and the parse fails for a reason that looks nothing like the real one.
-    execFileSync(
-      'pnpm',
-      ['exec', 'vitest', 'run', '--reporter=json', '--outputFile', out],
-      { cwd: REPO, stdio: ['ignore', 'inherit', 'inherit'] },
-    );
+    try {
+      execFileSync(
+        'pnpm',
+        ['exec', 'vitest', 'run', '--reporter=json', '--outputFile', out],
+        { cwd: REPO, stdio: ['ignore', 'inherit', 'inherit'] },
+      );
+    } catch (err) {
+      // vitest exited non-zero. The json reporter wrote nothing to the console,
+      // so surface the actual failing tests from the report before exiting.
+      printFailures(out);
+      console.error(`test-floor: vitest failed (${err.status ?? err.message})`);
+      process.exit(err.status ?? 1);
+    }
     report = JSON.parse(readFileSync(out, 'utf8'));
   }
 } catch (err) {
-  // A non-zero vitest exit is a real test failure; it has already printed.
   console.error(`test-floor: vitest failed (${err.status ?? err.message})`);
   process.exit(err.status ?? 1);
 } finally {
