@@ -39,7 +39,10 @@ interface Probe {
 const PROBE_FILE = process.env['TENMOL_PROBE_FILE'];
 const DIFF_OUT = process.env['TENMOL_DIFF_OUT'];
 const ORACLE_WS = process.env['TENMOL_ORACLE_WS'] || 'ws://100.71.244.15:8002/ws';
-const ORACLE_ORIGIN = process.env['TENMOL_ORACLE_ORIGIN'] || 'http://100.71.244.15:3002';
+// `??` (not `||`) so an explicit empty `TENMOL_ORACLE_ORIGIN=` stays empty and
+// suppresses the Origin header for a local origin-less bridge; unset uses the
+// CI default.
+const ORACLE_ORIGIN = process.env['TENMOL_ORACLE_ORIGIN'] ?? 'http://100.71.244.15:3002';
 
 const suite = PROBE_FILE ? describe : describe.skip;
 
@@ -119,9 +122,12 @@ suite('feature differential (oracle vs engine-ts)', () => {
 
     // Oracle: real PyMOL over the bridge (Node ws needs the allowed Origin header).
     const WS = (await import('ws')).default;
+    // The remote CI bridge validates the Origin header; a local dev bridge
+    // rejects any Origin (403). Send it only when ORACLE_ORIGIN is non-empty so
+    // `TENMOL_ORACLE_ORIGIN=` targets a local origin-less bridge.
     const WsCtor = class extends WS {
       constructor(url: string) {
-        super(url, { origin: ORACLE_ORIGIN });
+        super(url, ORACLE_ORIGIN ? { origin: ORACLE_ORIGIN } : {});
       }
     } as unknown as WebSocketCtor;
     const remote = createRemoteBackend({ url: ORACLE_WS, autoReconnect: false, WebSocketImpl: WsCtor });
