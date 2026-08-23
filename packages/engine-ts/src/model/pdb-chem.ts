@@ -66,7 +66,10 @@ export function assignPdbKnownResidueCharges(mol: ObjectMolecule): void {
     };
 
     // 1) backbone carbonyl C=O of any known protein residue → double bond.
-    if (pair('C', 'O') && KNOWN_PROTEIN.has(resn)) {
+    // AtomInfoKnownProteinResName switches only on resn[0..2], so a 4th char
+    // (forcefield variants like ARGP/HISA/LYSP) is ignored — match the leading
+    // 3 characters, not the whole string.
+    if (pair('C', 'O') && KNOWN_PROTEIN.has(resn.slice(0, 3))) {
       setOrder(2);
       continue;
     }
