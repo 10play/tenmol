@@ -1,0 +1,13 @@
+{
+  "id":"selection__acceptors","feature":"acceptors","kind":"selection","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/1tii.pdb, m"}],
+  "checks":[
+    {"call":["count_atoms","acceptor"],"label":"perceived H-bond acceptors (hb_acceptor)"},
+    {"call":["count_atoms","acc."],"label":"acc. alias"},
+    {"call":["count_atoms","acceptors"],"label":"acceptors plural alias"},
+    {"call":["count_atoms","acceptor and elem O"],"label":"acceptor O (all O, fc<=0)"},
+    {"call":["count_atoms","acceptor and elem N"],"label":"acceptor N (delocalized)"},
+    {"call":["count_atoms","acceptor and name O"],"label":"backbone carbonyl O acceptors"}
+  ],
+  "expected":[1282,1282,1282,1278,4,927]
+}

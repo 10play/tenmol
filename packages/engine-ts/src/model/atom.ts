@@ -46,6 +46,13 @@ export interface AtomInfo {
   color: number;
   /** Secondary structure: 'H' (helix), 'S' (strand), or '' (loop/unassigned). */
   ss: string;
+  /** Perceived H-bond donor flag (PyMOL `AtomInfoType.hb_donor`,
+   *  `ObjectMoleculeInferHBondFromChem`). Read by the `donor`/`don.` selector.
+   *  Absent ⇒ not perceived / false. */
+  hbDonor?: boolean;
+  /** Perceived H-bond acceptor flag (PyMOL `AtomInfoType.hb_acceptor`). Read by
+   *  the `acceptor`/`acc.` selector. Absent ⇒ false. */
+  hbAcceptor?: boolean;
   /** Per-atom label text (PyMOL `label`), or undefined when none is set. */
   label?: string;
   /** Explicit vdw radius override (PyMOL `vdw`), e.g. set by `util.b2vdw`;

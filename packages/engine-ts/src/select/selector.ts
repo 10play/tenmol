@@ -250,7 +250,13 @@ const KEYWORDS: Readonly<Record<string, KeywordKey>> = {
   present: 'present',
   bonded: 'bonded',
   donor: 'donor',
+  donors: 'donor',
+  'don.': 'donor',
+  'hbd.': 'donor',
   acceptor: 'acceptor',
+  acceptors: 'acceptor',
+  'acc.': 'acceptor',
+  'hba.': 'acceptor',
   metals: 'metals',
   masked: 'masked',
   'msk.': 'masked',
@@ -838,9 +844,11 @@ function matchKeyword(kw: KeywordKey, ua: UniverseAtom): boolean {
       // Atoms with coordinates present; every loaded atom qualifies here.
       return true;
     case 'donor':
-      return DONOR_ELEMENTS.has(a.elem);
+      // Perceived hb_donor flag (InferHBondFromChem), set at load; falls back to
+      // the element heuristic only for objects with no perceived chemistry.
+      return a.hbDonor ?? DONOR_ELEMENTS.has(a.elem);
     case 'acceptor':
-      return ACCEPTOR_ELEMENTS.has(a.elem);
+      return a.hbAcceptor ?? ACCEPTOR_ELEMENTS.has(a.elem);
     case 'metals':
       return METAL_ELEMENTS.has(a.elem);
     case 'masked':
