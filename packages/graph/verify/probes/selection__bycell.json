@@ -1,0 +1,10 @@
+{
+  "id":"selection__bycell","feature":"bycell","kind":"selection","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/1tii.pdb, m"}],
+  "checks":[
+    {"call":["count_atoms","bycell (resi 5)"],"label":"bycell: atoms in the same unit cell (floor of frac coords)"},
+    {"call":["count_atoms","bycell (chain A)"],"label":"bycell chain A (fewer — chain A spans fewer cells)"},
+    {"call":["count_atoms","bycell (resn HOH)"],"label":"bycell waters"}
+  ],
+  "expected":[5684,5397,5684]
+}

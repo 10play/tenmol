@@ -97,6 +97,7 @@ type Node =
   | { t: 'pepseq'; seq: string }
   | { t: 'bymol'; a: Node }
   | { t: 'byfragment'; a: Node }
+  | { t: 'bycell'; a: Node }
   | { t: 'byobject'; a: Node }
   | { t: 'bychain'; a: Node }
   | { t: 'bysegment'; a: Node }
@@ -420,6 +421,12 @@ class Parser {
     if (this.isOp(t, 'byfragment', 'byfrag', 'bf.')) {
       this.next();
       return { t: 'byfragment', a: this.parseNot() };
+    }
+    // `bycell` (SELE_BYX1) expands to every atom in the same crystallographic
+    // unit cell (floor of fractional coords) as the operand.
+    if (this.isOp(t, 'bycell')) {
+      this.next();
+      return { t: 'bycell', a: this.parseNot() };
     }
     if (this.isOp(t, 'byobject', 'byobj', 'bo.')) {
       this.next();
@@ -1080,6 +1087,66 @@ function expandGroups(a: Set<number>, keyOf: (i: number) => number[]): Set<numbe
   return s;
 }
 
+/** Cartesian→fractional matrix (row-major) for a crystal cell — the inverse of
+ *  PyMOL's orthogonalisation matrix (`Crystal.realToFrac`). */
+function realToFrac(cell: {
+  a: number; b: number; c: number; alpha: number; beta: number; gamma: number;
+}): number[] {
+  const d2r = Math.PI / 180;
+  const { a, b, c } = cell;
+  const ca = Math.cos(cell.alpha * d2r);
+  const cb = Math.cos(cell.beta * d2r);
+  const cg = Math.cos(cell.gamma * d2r);
+  const sg = Math.sin(cell.gamma * d2r);
+  const vol = a * b * c * Math.sqrt(Math.max(0, 1 - ca * ca - cb * cb - cg * cg + 2 * ca * cb * cg));
+  // Orthogonalisation matrix M (fractional→Cartesian), then invert.
+  const m: number[] = [a, b * cg, c * cb, 0, b * sg, sg === 0 ? 0 : (c * (ca - cb * cg)) / sg,
+    0, 0, sg === 0 ? 0 : vol / (a * b * sg)];
+  const A = m[4]! * m[8]! - m[5]! * m[7]!;
+  const B = -(m[3]! * m[8]! - m[5]! * m[6]!);
+  const C = m[3]! * m[7]! - m[4]! * m[6]!;
+  const det = m[0]! * A + m[1]! * B + m[2]! * C;
+  const iv = det === 0 ? 0 : 1 / det;
+  return [
+    A * iv, (m[2]! * m[7]! - m[1]! * m[8]!) * iv, (m[1]! * m[5]! - m[2]! * m[4]!) * iv,
+    B * iv, (m[0]! * m[8]! - m[2]! * m[6]!) * iv, (m[2]! * m[3]! - m[0]! * m[5]!) * iv,
+    C * iv, (m[1]! * m[6]! - m[0]! * m[7]!) * iv, (m[0]! * m[4]! - m[1]! * m[3]!) * iv,
+  ];
+}
+
+/**
+ * `bycell` (SELE_BYX1): expand a selection to every atom sharing its
+ * crystallographic unit cell — the cell index is `floor` of the atom's
+ * fractional coordinates, per axis. Only atoms in objects that carry symmetry (a
+ * `CRYST1` cell) participate; atoms with no cell are never selected.
+ */
+function byCellAtoms(inner: Set<number>, env: EvalEnv): Set<number> {
+  const fracMat = new Map<string, number[]>();
+  for (const o of env.ctx.objects()) if (o.cell) fracMat.set(o.name, realToFrac(o.cell));
+  const cellKey = (i: number): string | null => {
+    const ua = env.universe[i]!;
+    const m = fracMat.get(ua.objName);
+    if (!m) return null;
+    const [x, y, z] = env.coords[i]!;
+    const fx = m[0]! * x + m[1]! * y + m[2]! * z;
+    const fy = m[3]! * x + m[4]! * y + m[5]! * z;
+    const fz = m[6]! * x + m[7]! * y + m[8]! * z;
+    return `${ua.objName}|${Math.floor(fx)}|${Math.floor(fy)}|${Math.floor(fz)}`;
+  };
+  const keys = new Set<string>();
+  for (const i of inner) {
+    const k = cellKey(i);
+    if (k) keys.add(k);
+  }
+  const out = new Set<number>();
+  if (keys.size === 0) return out;
+  for (let i = 0; i < env.universe.length; i++) {
+    const k = cellKey(i);
+    if (k && keys.has(k)) out.add(i);
+  }
+  return out;
+}
+
 /** PyMOL's ring-finder cap: rings up to 7 members (SelectorRingFinder). */
 const MAX_RING_SIZE = 7;
 
@@ -1380,6 +1447,8 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
       // selection still errors.
       evalSet(node.a, env);
       return new Set();
+    case 'bycell':
+      return byCellAtoms(evalSet(node.a, env), env);
     case 'byobject':
       return expandGroups(evalSet(node.a, env), (i) => env.byObject.get(env.universe[i]!.objName) ?? []);
     case 'bychain':

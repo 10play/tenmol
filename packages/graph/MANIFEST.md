@@ -842,7 +842,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `bonded` | selection | Atoms that participate in at least one bond. | implemented | [doc](features/topics/selection-algebra.md#bonded) |
 | `bound_to` | selection | Atoms directly bonded to the selection, retaining the seed itself (bto.). | implemented | [doc](features/topics/selection-algebra.md#bound_to) |
 | `bycalpha` | selection | The C-alpha atom of every residue the operand touches (bca.). | implemented | [doc](features/topics/selection-algebra.md#bycalpha) |
-| `bycell` | selection | Expands the selection to atoms in the same crystallographic unit-cell neighbourhood. | unknown | [doc](features/topics/selection-algebra.md#bycell) |
+| `bycell` | selection | Expands the selection to atoms in the same crystallographic unit-cell neighbourhood. | implemented | [doc](features/topics/selection-algebra.md#bycell) |
 | `bychain` | selection | Expands the selection to every atom of every chain it touches (bc.). | implemented | [doc](features/topics/selection-algebra.md#bychain) |
 | `byfragment` | selection | Expands a selection to the editor's picked fragments (bf.); with no editor fragments defined it selects nothing — NOT the whole connected molecule. | implemented | [doc](features/topics/selection-algebra.md#byfragment) |
 | `bymol` | selection | Expands the selection to every atom of every bonded molecule it touches (bm.). | implemented | [doc](features/topics/selection-algebra.md#bymol) |

@@ -12174,7 +12174,7 @@
         "packages/engine/layer3/Selector.cpp:668",
         "packages/engine/layer3/Selector.cpp:9069"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#bycell",
       "sidecar": "features/topics/selection-algebra.manifest.json"
     },

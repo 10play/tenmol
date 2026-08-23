@@ -261,8 +261,9 @@ touches. Parallels `bychain`/`byobject`. *Not yet ported to the TS engine.*
 
 ## bycell
 
-`bycell A` — expand `A` to every atom lying in the same **crystallographic unit-cell** neighbourhood,
-using the object's symmetry/cell information. *Not yet ported to the TS engine.*
+`bycell A` — expand `A` to every atom lying in the same **crystallographic unit-cell** (the cell
+index is the floor of the atom's fractional coordinates, from the `CRYST1` cell). Ported to the TS
+engine (SELE_BYX1); atoms in objects without a cell are never selected. Verified against the oracle.
 
 ## extend
 
@@ -525,5 +526,5 @@ distance operators, `byres/bychain/byobject/bymol/byfragment/byring/bycalpha/nei
 `last`, `pepseq`, `state`, `text_type`, `numeric_type`, `delocalized`, `ss`, and most
 pseudo-selections; `byfragment` returns the editor's picked fragments (empty without them);
 `bound_to` is aliased to `neighbor`). Not yet ported:
-`custom`, `bysegment`, `bycell`, `stereo`, `cartoon_color`, `ribbon_color`, `label`, the `p.` custom
+`custom`, `bysegment`, `stereo`, `cartoon_color`, `ribbon_color`, `label`, the `p.` custom
 property selector, and `center`, `origin` (need scene-origin tracking).
