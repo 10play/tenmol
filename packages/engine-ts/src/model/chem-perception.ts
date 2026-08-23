@@ -167,6 +167,13 @@ export function inferHBond(mol: ObjectMolecule): void {
     }
   }
 
+  // NOTE: real `InferChemFromBonds` has a further pass (ObjectMolecule.cpp
+  // :6198-6222) that marks conjugated anionic oxygens — carboxylate OD2/OE2 and
+  // formal-charge -1 phosphate oxygens — as `geom = PLANAR`. It is deliberately
+  // omitted: Stage 2 below never reads `geom` on the oxygen branch, so it has no
+  // observable effect on `hb_donor`/`hb_acceptor`. Port it here if `geom` is
+  // ever consumed for oxygens.
+
   // --- Stage 2: InferHBondFromChem ---
   for (let a = 0; a < n; a++) {
     const ai = atoms[a]!;

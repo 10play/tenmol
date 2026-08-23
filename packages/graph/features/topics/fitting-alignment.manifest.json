@@ -236,20 +236,5 @@
     ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#set_raw_alignment"
-  },
-  {
-    "name": "morph",
-    "kind": "command",
-    "category": "fitting-alignment",
-    "subcategory": "conformation interpolation",
-    "summary": "Interpolated multi-state trajectory between conformations — incentive-only for BOTH rigimol and linear, so Open-Source PyMOL and the TS engine raise IncentiveOnlyException.",
-    "signature": "morph(name, sele1, sele2=None, state1=-1, state2=-1, refinement=3, steps=30, method='rigimol', match='align', quiet=1)",
-    "default": "",
-    "sourceRefs": [
-      "packages/engine/modules/pymol/morphing.py:42",
-      "packages/engine-ts/src/cmd/movie2.ts"
-    ],
-    "parityStatus": "implemented",
-    "doc": "packages/graph/features/topics/fitting-alignment.md#morph"
   }
 ]
