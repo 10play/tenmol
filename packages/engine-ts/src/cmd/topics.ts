@@ -91,8 +91,6 @@ const EDITING_RING_TEXT = `editing_ring action
  * ------------------------------------------------------------------------ */
 
 export function registerTopics(ctx: RegistrarCtx): void {
-  const { executive: ex, str } = ctx;
-
   /* -------------------------- help / topic verbs ------------------------ */
   // Each is a pure read: it returns descriptive help text (never null), so the
   // console shows something useful instead of a `NotPorted` error.
