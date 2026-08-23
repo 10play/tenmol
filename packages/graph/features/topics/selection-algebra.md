@@ -389,14 +389,16 @@ Complement of `sidechain` within `polymer`.
 
 ## donors
 
-`donors` / `don.` / `hbd.` — candidate hydrogen-bond donor atoms (the `hbd.` opcode reads the same
-`hb_donor` chemistry flag). The TS port uses an element heuristic (N, O); PyMOL additionally consults
-valence/hydrogen presence.
+`donors` / `don.` / `hbd.` — candidate hydrogen-bond donor atoms carrying the perceived `hb_donor`
+flag. The TS port reproduces PyMOL's chemistry perception (InferChemFromBonds → InferHBondFromChem):
+donors are atoms with an implicit/explicit hydrogen (metals, amine/hydroxyl/water N and O, …), NOT a
+bare N/O element test — verified against the oracle.
 
 ## acceptors
 
-`acceptors` / `acc.` / `hba.` — candidate hydrogen-bond acceptor atoms (the `hba.` opcode reads the
-same `hb_acceptor` chemistry flag). The TS port uses an element heuristic (N, O, S).
+`acceptors` / `acc.` / `hba.` — candidate hydrogen-bond acceptor atoms carrying the perceived
+`hb_acceptor` flag (every uncharged O, delocalized N, …). Ported via the same perception pass as
+`donors` and verified against the oracle.
 
 ## visible
 
@@ -524,5 +526,4 @@ distance operators, `byres/bychain/byobject/bymol/byfragment/byring/bycalpha/nei
 pseudo-selections; `byfragment` returns the editor's picked fragments (empty without them);
 `bound_to` is aliased to `neighbor`). Not yet ported:
 `custom`, `bysegment`, `bycell`, `stereo`, `cartoon_color`, `ribbon_color`, `label`, the `p.` custom
-property selector, `center`, `origin` (need scene-origin tracking), and the H-bond `donors`/`acceptors`
-chemistry.
+property selector, and `center`, `origin` (need scene-origin tracking).
