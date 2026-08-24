@@ -573,7 +573,8 @@ export function registerMaps(ctx: RegistrarCtx): void {
       const state = toNum(args[5] ?? kwargs.state, 1);
       ctx.call('volume_color', [name, ramp, state], {});
     }
-    return name;
+    // creating.py `volume` returns the `_cmd` result (None), not the name.
+    return null;
   });
 
   /* -------------------------- get_isosurface_stats ----------------------- */

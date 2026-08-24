@@ -1,0 +1,6 @@
+{"id":"representation__volume","feature":"volume","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"load packages/engine/testing/data/h2o-elf-nstart.ccp4, dm"}],
+ "checks":[
+   {"call":["volume","vol","dm"],"label":"volume gadget created from a map, returns None"},
+   {"call":["get_names"],"label":"object:volume gadget registered"}
+ ],"expected":[null,["dm","vol"]],"tol":0}
