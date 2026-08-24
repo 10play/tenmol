@@ -1,0 +1,8 @@
+{
+  "id":"command__volume_panel","feature":"volume_panel","kind":"command","probeKind":"state",
+  "ops":[],
+  "checks":[
+    {"call":["volume_panel","x"],"label":"volume_panel imports pymol.Qt (absent in Open-Source PyMOL) -> ImportError"}
+  ],
+  "expected":[{"__error":"pymol.Qt"}]
+}

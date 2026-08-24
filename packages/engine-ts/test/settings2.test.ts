@@ -227,14 +227,22 @@ describe('settings2: view extras', () => {
     expect(h.call('viewport', [-1, 720])).toEqual([800, 720]);
   });
 
-  it('window / full_screen are no-ops returning null', () => {
+  it('window is a no-op returning null (matches the oracle)', () => {
     const h = makeHarness();
     expect(h.call('window', ['hide'])).toBeNull();
-    expect(h.call('full_screen', [1])).toBeNull();
-    expect(h.call('full_screen', [-1])).toBeNull();
+    expect(h.call('window', ['show'])).toBeNull();
     // `reference` is no longer a settings2 no-op: it moved to the `editing`
     // subsystem as a real per-atom reference-state command (store/recall/
     // validate/swap), verified against real PyMOL by the oracle differential.
+  });
+
+  it('full_screen raises the oracle bare CmdException (GUI-thread bound)', () => {
+    // Off the GUI thread (always, in the headless oracle) `viewing.py` re-`_do`s
+    // the line and it surfaces as a bare `pymol.CmdException`. Verified against
+    // the real-PyMOL oracle; the browser full-screen is a separate UI path.
+    const h = makeHarness();
+    expect(() => h.call('full_screen', [1])).toThrow(/Error:/);
+    expect(() => h.call('full_screen', [-1])).toThrow();
   });
 
   it('get_setting_legacy is an exact alias of get_setting_float', () => {

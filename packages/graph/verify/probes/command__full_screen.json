@@ -1,0 +1,9 @@
+{
+  "id":"command__full_screen","feature":"full_screen","kind":"command","probeKind":"state",
+  "ops":[],
+  "checks":[
+    {"call":["full_screen",1],"label":"full_screen on -> bare pymol.CmdException off the GUI thread (viewing.py:full_screen)"},
+    {"call":["full_screen",-1],"label":"full_screen toggle -> same bare CmdException"}
+  ],
+  "expected":[{"__error":" Error: "},{"__error":" Error: "}]
+}

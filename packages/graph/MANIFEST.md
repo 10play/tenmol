@@ -495,7 +495,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `slice_new` `slice_new(name, map, state=1, source_state=0)` | command | Creates a 2-D slice (cutting plane) object through a map, colored by a ramp. | unknown | [doc](features/topics/maps-volumes.md#slice_new) |
 | `volume` `volume(name, map, ramp='', selection='', buffer=0.0, state=1, carve=None, source_state=0, quiet=1)` | command | Creates a direct volume-rendering object from a map, colored by a named ramp transfer function. | unknown | [doc](features/topics/maps-volumes.md#volume) |
 | `volume_color` `volume_color(name, ramp='', state=-1, quiet=1, _guiupdate=True)` | command | Sets or gets the value-to-RGBA transfer function (color ramp) of a volume object. | implemented | [doc](features/topics/maps-volumes.md#volume_color) |
-| `volume_panel` `volume_panel(name, quiet=1, _noqt=0)` | command | Opens an interactive GUI panel for editing a volume object's color ramp. | partial | [doc](features/commands/volume_panel.md) |
+| `volume_panel` `volume_panel(name, quiet=1, _noqt=0)` | command | Opens an interactive GUI panel for editing a volume object's color ramp. | implemented | [doc](features/commands/volume_panel.md) |
 | `volume_ramp_new` `volume_ramp_new(name, ramp)` | command | Registers a named volume color ramp reusable as a preset when creating or coloring volumes. | implemented | [doc](features/commands/volume_ramp_new.md) |
 | `CCP4` | feature | CCP4/MRC binary electron-density raster format loaded via cmd.load (format='ccp4'); also brix/dsn6/omap. | partial | [doc](features/topics/maps-volumes.md#ccp4) |
 | `DX` | feature | OpenDX/APBS electrostatics grid format (.dx/.dxbin) loaded via cmd.load (format='dx'). | partial | [doc](features/topics/maps-volumes.md#dx) |
@@ -1735,7 +1735,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `bg_colour` `bg_colour(color='black')` | command | British-spelling alias of bg_color; sets the viewport background color. | implemented | [doc](features/commands/bg_colour.md) |
 | `center` `center(selection="all", state=0, origin=1, animate=0)` | command | Translate the window, clipping slab and origin to the centre of an atom selection. | implemented | [doc](features/topics/viewing-camera.md#center) |
 | `clip` `clip(mode, distance, selection=None, state=0)` | command | Alter the near/far clipping-plane positions via near/far/move/slab/atoms modes. | implemented | [doc](features/topics/viewing-camera.md#clip) |
-| `full_screen` `full_screen(toggle=-1)` | command | Enable or disable full-screen mode (GUI-thread bound, platform dependent). | partial | [doc](features/topics/viewing-camera.md#full_screen) |
+| `full_screen` `full_screen(toggle=-1)` | command | Enable or disable full-screen mode (GUI-thread bound, platform dependent). | implemented | [doc](features/topics/viewing-camera.md#full_screen) |
 | `get_clip` `get_clip(quiet=1)` | command | Returns the current positions of the near and far clipping planes. | unknown | [doc](features/commands/get_clip.md) |
 | `get_position` `get_position(quiet=1)` | command | Return the 3D coordinates of the center of the viewer window (camera origin of rotation). | implemented | [doc](features/commands/get_position.md) |
 | `get_view` `get_view(output=1, quiet=1)` | command | Return (and optionally print) the current 18-float view vector for pasting into a script. | implemented | [doc](features/topics/viewing-camera.md#get_view) |
@@ -1752,7 +1752,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `turn` `turn(axis, angle)` | command | Rotates the camera about one of the three primary axes, centered at the origin. | implemented | [doc](features/commands/turn.md) |
 | `view` `view(key, action='recall', animate=-1)` | command | Store, recall or clear named camera views in a per-session dictionary (F1-F12 fallbacks). | implemented | [doc](features/topics/viewing-camera.md#view) |
 | `viewport` `viewport(width=-1, height=-1)` | command | Change the size of the graphics display area (tuple syntax deprecated). | implemented | [doc](features/topics/viewing-camera.md#viewport) |
-| `window` `window(action='show', x=0, y=0, width=0, height=0)` | command | Control visibility and geometry of PyMOL's output window (GUI-shell operation). | partial | [doc](features/topics/viewing-camera.md#window) |
+| `window` `window(action='show', x=0, y=0, width=0, height=0)` | command | Control visibility and geometry of PyMOL's output window (GUI-shell operation). | implemented | [doc](features/topics/viewing-camera.md#window) |
 | `zoom` `zoom(selection="all", buffer=0.0, state=0, complete=0, animate=0)` | command | Scale and translate the window and origin to cover an atom selection, guessing an optimal zoom level. | implemented | [doc](features/topics/viewing-camera.md#zoom) |
 | `depth_cue` | setting | Master switch for the depth-cue fog effect that fades distant geometry. | partial | [doc](features/topics/viewing-camera.md#depth_cue) |
 | `field_of_view` | setting | Vertical field of view in degrees; only visible under perspective projection. | implemented | [doc](features/topics/viewing-camera.md#field_of_view) |

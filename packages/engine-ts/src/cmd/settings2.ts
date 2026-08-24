@@ -18,7 +18,8 @@
  */
 
 import type { Json } from '@tenmol/protocol';
-import { Rep, REP_NAMES } from '@tenmol/protocol';
+import { Rep, REP_NAMES, wireError } from '@tenmol/protocol';
+import { PymolError } from '@tenmol/backend';
 import { repBit } from '../model/atom';
 import { COLOR_SETTINGS, colorSettingText, getColorIndex, REP_COLOR_SETTING_DEFAULTS } from '../exec/color';
 import { SETTING_INDEX_TYPE } from './setting-catalog';
@@ -250,7 +251,6 @@ export function registerSettings2(ctx: RegistrarCtx): void {
   // lives on the executive so `cmd.viewport` (here) and `cmd.get_viewport` (on
   // the Engine) share one source of truth.
   let windowState: string = 'show';
-  let fullScreenState = 0;
 
   /** The default a global setting resets to. */
   const defaultOf = (name: string): SettingValue => {
@@ -610,15 +610,16 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     return null;
   });
 
-  ctx.command('full_screen', (args, kwargs): Json => {
-    const raw = args[0] ?? kwargs['toggle'] ?? 0;
-    const toggle = Number(raw);
-    fullScreenState = toggle === -1 ? (fullScreenState ? 0 : 1) : toggle ? 1 : 0;
-    return null;
+  // `full_screen(toggle)` is GUI-thread bound: `viewing.py` only reaches the
+  // real `_cmd.full_screen` when `is_gui_thread()`, otherwise it re-`_do`s the
+  // command line off-thread, which in the (worker-thread) bridge surfaces as a
+  // bare `pymol.CmdException` (rendered ` Error: `). Match that oracle behaviour
+  // — the browser's own full-screen is a separate UI affordance, not this cmd.
+  ctx.command('full_screen', (): Json => {
+    throw new PymolError(wireError('CmdException', ' Error: '), 'full_screen');
   });
 
-  // Silence unused-var lint for the window/full-screen trackers (state kept for
-  // future scene extras that read the current window mode).
+  // Silence unused-var lint for the window-mode tracker (state kept for future
+  // scene extras that read the current window mode).
   void windowState;
-  void fullScreenState;
 }

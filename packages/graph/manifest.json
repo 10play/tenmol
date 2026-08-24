@@ -6069,7 +6069,7 @@
         "packages/engine/modules/pymol/colorramping.py:183",
         "packages/engine-ts/src/cmd/extras.ts:538"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/volume_panel.md",
       "sidecar": "features/commands/_batch-20.manifest.json"
     },
@@ -9229,7 +9229,7 @@
         "packages/engine/modules/pymol/viewing.py:1329",
         "docs/api-reference/commands.mdx:1025"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/viewing-camera.md#full_screen",
       "sidecar": "features/topics/viewing-camera.manifest.json"
     },
@@ -9510,7 +9510,7 @@
         "packages/engine/modules/pymol/viewing.py:1431",
         "docs/api-reference/commands.mdx:4346"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/viewing-camera.md#window",
       "sidecar": "features/topics/viewing-camera.manifest.json"
     },

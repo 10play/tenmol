@@ -3,12 +3,12 @@ name: volume_panel
 kind: command
 category: maps-volumes
 subcategory: volume GUI
-summary: Opens an interactive GUI panel for editing a volume object's color ramp.
-parity: partial
+summary: Opens an interactive GUI panel for editing a volume object's color ramp; in Open-Source PyMOL it raises ImportError('pymol.Qt').
+parity: implemented
 ---
 
 ## Purpose
-`volume_panel` launches an interactive editor window for tuning a volume object's transfer function by hand — dragging color/alpha control points instead of scripting `volume_color`. It is a GUI convenience with no effect in headless sessions.
+`volume_panel` launches an interactive editor window for tuning a volume object's transfer function by hand — dragging color/alpha control points instead of scripting `volume_color`. It is a GUI convenience: in Open-Source / headless PyMOL the default (`_noqt=0`) path imports `pymol.Qt`, which that build does not ship, so the call raises `ImportError: pymol.Qt`.
 
 ## Syntax
 `volume_panel(name, quiet=1, _noqt=0)`
@@ -33,4 +33,4 @@ volume_panel vol
 - [volume_color](../commands/volume_color.md)
 
 ## Source
-`packages/engine/modules/pymol/colorramping.py:183`. Parity: registered as a documented no-op in `packages/engine-ts/src/cmd/extras.ts` (GUI panel not modelled in the TS engine).
+`packages/engine/modules/pymol/colorramping.py:183`. Parity: `packages/engine-ts/src/cmd/extras.ts` raises `ImportError: pymol.Qt`, matching Open-Source PyMOL — verified against the real-PyMOL oracle (`packages/graph/verify/probes/command__volume_panel.json`). The browser's interactive volume panel is a separate UI surface (`apps/web/src/features/volume`), reached outside this cmd.

@@ -337,7 +337,7 @@
       "apps/web/src/features/volume/",
       "docs/api-reference/commands.mdx"
     ],
-    "parityStatus": "partial",
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/maps-volumes.md#volume_panel"
   },
   {

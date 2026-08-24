@@ -95,6 +95,13 @@ describe('extras — residual command sweep', () => {
     expect(handlers.size).toBeGreaterThanOrEqual(54);
   });
 
+  it('volume_panel raises ImportError: pymol.Qt (Open-Source has no pymol.Qt)', () => {
+    // Verified against the real-PyMOL oracle: the default `_noqt=0` path imports
+    // pymol.Qt, absent in Open-Source PyMOL, so it raises ImportError('pymol.Qt').
+    const { call } = setup();
+    expect(() => call('volume_panel', ['x'])).toThrow(/pymol\.Qt/);
+  });
+
   /* --------------------------- REAL behaviours --------------------------- */
 
   it('mask / unmask / get_mask toggle the per-atom masked flag', () => {

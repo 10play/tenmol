@@ -36,7 +36,7 @@
  */
 
 import type { Json } from '@tenmol/protocol';
-import { incentiveOnly } from '@tenmol/protocol';
+import { incentiveOnly, wireError } from '@tenmol/protocol';
 import { PymolError } from '@tenmol/backend';
 import type { AtomInfo } from '../model/atom';
 import type { Executive } from '../exec/executive';
@@ -747,7 +747,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // `map_set` is real — see cmd/maps.ts (elementwise map arithmetic).
       // `slice_new` is real now — see cmd/maps.ts (registers an object:slice gadget).
       // `volume` is real now — see cmd/maps.ts (registers an object:volume gadget).
-      'volume_panel',
+      // `volume_panel` throws `ImportError: pymol.Qt` — registered below.
       // `spheroid` is real now — see below (averages state groups + collapses NCSet).
       'vdw_fit',
       // misc app / render controls with no state to observe
@@ -772,6 +772,18 @@ export function registerExtras(ctx: RegistrarCtx): void {
     ],
     null,
   );
+
+  // `volume_panel(name)` opens the Qt transfer-function editor. Open-Source
+  // PyMOL has no `pymol.Qt` (it ships only with the incentive GUI), so the
+  // default `_noqt=0` path raises `ImportError: pymol.Qt` — verified against the
+  // real-PyMOL oracle. The browser's own volume panel is a separate UI surface
+  // (apps/web/src/features/volume), reached outside this cmd.
+  ctx.command('volume_panel', () => {
+    throw new PymolError(
+      wireError('PythonError', 'pymol.Qt', { type: 'ImportError' }),
+      'volume_panel',
+    );
+  });
 
   // Return an empty dict: analysis verbs producing a name->value mapping.
   // `cealign`/`usalign` are real now — see cmd/align.ts.

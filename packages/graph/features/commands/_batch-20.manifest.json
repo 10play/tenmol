@@ -7,7 +7,10 @@
     "summary": "Removes all bonds between two atom selections.",
     "signature": "unbond(atom1='(pk1)', atom2='(pk2)', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:763", "docs/api-reference/commands.mdx:4108"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:763",
+      "docs/api-reference/commands.mdx:4108"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/unbond.md"
   },
@@ -19,7 +22,10 @@
     "summary": "Restores the previous conformation of the object currently being edited.",
     "signature": "undo()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:507", "docs/api-reference/commands.mdx:4120"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:507",
+      "docs/api-reference/commands.mdx:4120"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/undo.md"
   },
@@ -31,7 +37,10 @@
     "summary": "Removes an object from a group, returning it to the top level.",
     "signature": "ungroup(members, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:155", "docs/api-reference/commands.mdx:4126"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:155",
+      "docs/api-reference/commands.mdx:4126"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/ungroup.md"
   },
@@ -43,7 +52,10 @@
     "summary": "Renames an atom identifier so its values are unique relative to a reference selection.",
     "signature": "uniquify(identifier, selection, reference='', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:3052", "docs/api-reference/commands.mdx:4137"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:3052",
+      "docs/api-reference/commands.mdx:4137"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/uniquify.md"
   },
@@ -55,7 +67,10 @@
     "summary": "Internal helper that releases the API lock and flushes the command queue.",
     "signature": "unlock(result=None)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/locking.py:40", "docs/api-reference/commands.mdx:4148"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/locking.py:40",
+      "docs/api-reference/commands.mdx:4148"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/unlock.md"
   },
@@ -67,7 +82,10 @@
     "summary": "Reverses the effect of \"mask\" on the indicated atoms, re-enabling mouse picking.",
     "signature": "unmask(selection='(all)', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/controlling.py:897", "docs/api-reference/commands.mdx:4154"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/controlling.py:897",
+      "docs/api-reference/commands.mdx:4154"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/unmask.md"
   },
@@ -79,7 +97,10 @@
     "summary": "Deletes the special \"pk\" atom selections (pk1, pk2, ...) used in picking and editing.",
     "signature": "unpick()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:991", "packages/engine-ts/src/cmd/extras.ts:524"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:991",
+      "packages/engine-ts/src/cmd/extras.ts:524"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/unpick.md"
   },
@@ -91,7 +112,10 @@
     "summary": "Clears a setting and restores its default value (global or per-object/state/atom).",
     "signature": "unset(name, selection='', state=0, updates=1, log=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/setting.py:273", "packages/engine-ts/src/cmd/settings2.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/setting.py:273",
+      "packages/engine-ts/src/cmd/settings2.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/unset.md"
   },
@@ -103,7 +127,10 @@
     "summary": "Removes a per-bond setting for the bonds between two atom selections.",
     "signature": "unset_bond(name, selection1, selection2=None, state=0, updates=1, log=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/setting.py:324", "packages/engine-ts/src/cmd/settings2.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/setting.py:324",
+      "packages/engine-ts/src/cmd/settings2.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/unset_bond.md"
   },
@@ -115,7 +142,10 @@
     "summary": "Unsets all object, object-state, atom, and bond level settings across objects.",
     "signature": "unset_deep(settings='', object='*', updates=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/setting.py:516", "packages/engine-ts/src/cmd/extras.ts:557"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/setting.py:516",
+      "packages/engine-ts/src/cmd/extras.ts:557"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/unset_deep.md"
   },
@@ -127,7 +157,10 @@
     "summary": "Transfers coordinates from a source selection onto a target selection.",
     "signature": "update(target, source, target_state=0, source_state=0, matchmaker=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2521", "docs/api-reference/commands.mdx:4211"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2521",
+      "docs/api-reference/commands.mdx:4211"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/update.md"
   },
@@ -139,7 +172,10 @@
     "summary": "TM-align structural superposition of two structures using length-independent TM-score optimization.",
     "signature": "usalign(mobile, target, mobile_state=1, target_state=1, quiet=1, transform=1, object=None, fast=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:137", "packages/engine-ts/src/cmd/align.ts:580"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:137",
+      "packages/engine-ts/src/cmd/align.ts:580"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/usalign.md"
   },
@@ -151,7 +187,10 @@
     "summary": "Modifies the bond orders (valences) of existing bonds between two atom selections.",
     "signature": "valence(order, selection1=None, selection2=None, source='', target_state=0, source_state=0, reset=1, quiet=1, symop='')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:598", "packages/engine-ts/src/cmd/builder.ts:637"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:598",
+      "packages/engine-ts/src/cmd/builder.ts:637"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/valence.md"
   },
@@ -163,7 +202,10 @@
     "summary": "Unsupported/experimental feature that fits van der Waals radii between two selections.",
     "signature": "vdw_fit(selection1, selection2, state1=1, state2=1, buffer=0.24, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2957", "packages/engine-ts/src/cmd/extras.ts:540"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2957",
+      "packages/engine-ts/src/cmd/extras.ts:540"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/vdw_fit.md"
   },
@@ -175,7 +217,10 @@
     "summary": "Saves and restores named camera views, optionally bound to function keys.",
     "signature": "view(key, action='recall', animate=-1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:783", "docs/api-reference/commands.mdx:4274"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:783",
+      "docs/api-reference/commands.mdx:4274"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/view.md"
   },
@@ -187,7 +232,10 @@
     "summary": "Changes the pixel size of the graphics display area.",
     "signature": "viewport(width=-1, height=-1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1459", "packages/engine-ts/src/cmd/settings2.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1459",
+      "packages/engine-ts/src/cmd/settings2.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/viewport.md"
   },
@@ -199,7 +247,10 @@
     "summary": "Creates a volume object (direct volumetric rendering) from a map object.",
     "signature": "volume(name, map, ramp='', selection='', buffer=0.0, state=1, carve=None, source_state=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:577", "packages/engine-ts/src/cmd/extras.ts:537"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:577",
+      "packages/engine-ts/src/cmd/extras.ts:537"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/volume.md"
   },
@@ -211,7 +262,10 @@
     "summary": "Sets or gets the color/alpha transfer function (ramp) of a volume object.",
     "signature": "volume_color(name, ramp='', state=-1, quiet=1, _guiupdate=True)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/colorramping.py:123", "packages/engine-ts/src/cmd/ramps.ts:264"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/colorramping.py:123",
+      "packages/engine-ts/src/cmd/ramps.ts:264"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/volume_color.md"
   },
@@ -223,8 +277,11 @@
     "summary": "Opens an interactive GUI panel for editing a volume object's color ramp.",
     "signature": "volume_panel(name, quiet=1, _noqt=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/colorramping.py:183", "packages/engine-ts/src/cmd/extras.ts:538"],
-    "parityStatus": "partial",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/colorramping.py:183",
+      "packages/engine-ts/src/cmd/extras.ts:538"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/volume_panel.md"
   },
   {
@@ -235,7 +292,10 @@
     "summary": "Registers a named volume color ramp reusable as a preset when creating or coloring volumes.",
     "signature": "volume_ramp_new(name, ramp)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/colorramping.py:56", "packages/engine-ts/src/cmd/ramps.ts:256"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/colorramping.py:56",
+      "packages/engine-ts/src/cmd/ramps.ts:256"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/volume_ramp_new.md"
   }
