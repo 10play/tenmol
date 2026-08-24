@@ -1,0 +1,10 @@
+{
+  "id":"command__label2","feature":"label2","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"},{"do":"hide everything"}],
+  "checks":[
+    {"call":["label2","name CA","'l2'"],"label":"label2 returns None (aliases label)"},
+    {"call":["count_atoms","rep labels"],"label":"one atom (CA) carries the Label rep"},
+    {"call":["count_atoms","rep labels and name CA"],"label":"the labelled atom is CA"}
+  ],
+  "expected":[null,1,1],"tol":0
+}

@@ -223,7 +223,8 @@ export function registerDisplay(ctx: RegistrarCtx): void {
       }
     }
     ctx.publish();
-    return atoms.length;
+    // `editing.label` returns None (the _cmd result), not a count — matches the oracle.
+    return null;
   });
 
   /** Read back stored labels as `[objName, id, text]` triples (UI/differential). */

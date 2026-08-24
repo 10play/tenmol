@@ -183,8 +183,10 @@ describe('label', () => {
   it('sets the labels rep bit and stores evaluated text', () => {
     const { ex, call } = setup();
     const bit = 1 << Rep.Label;
+    // `label` returns None (matches the real-PyMOL oracle), not a count; the
+    // effect is observed via the Label rep bit + get_label below.
     const n = call('label', ['all', 'resn']);
-    expect(n).toBe(3);
+    expect(n).toBeNull();
     for (const a of ex.molecule('m')!.atoms) {
       expect(a.visRep & bit).toBe(bit);
     }

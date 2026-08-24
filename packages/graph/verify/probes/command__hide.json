@@ -1,0 +1,10 @@
+{
+  "id":"command__hide","feature":"hide","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"},{"do":"show sticks"},{"do":"hide sticks, elem C"}],
+  "checks":[
+    {"call":["count_atoms","rep sticks"],"label":"sticks left after hiding carbons"},
+    {"call":["count_atoms","rep sticks and elem C"],"label":"carbons no longer sticks"},
+    {"call":["count_atoms","ala"],"label":"total (control)"}
+  ],
+  "expected":[7,0,10],"tol":0
+}
