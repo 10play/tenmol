@@ -8,7 +8,7 @@
 import { readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import * as ledger from './ledger.mjs';
-import { PROBES_DIR } from './config.mjs';
+import { PROBES_DIR, REPORTS_DIR } from './config.mjs';
 
 const cmd = process.argv[2];
 const arg = (flag, dflt) => {
@@ -56,7 +56,21 @@ if (cmd === 'remaining') {
       }
     }
   }
-  console.log(`reconciled ${n} record(s) from committed probes`);
+  // A committed report is the durable proof of a BLOCKED feature (investigated,
+  // no oracle ground truth possible — e.g. the oracle segfaults on it). Heal the
+  // ledger so a fresh `seed` does not resurrect it as pending.
+  let b = 0;
+  if (existsSync(REPORTS_DIR)) {
+    for (const f of readdirSync(REPORTS_DIR).filter((x) => x.endsWith('.md'))) {
+      const id = f.replace(/\.md$/, '');
+      const r = ledger.get(id);
+      if (r && !ledger.TERMINAL.has(r.state)) {
+        ledger.update(id, { state: 'blocked', report: join('packages/graph/verify/reports', f), note: 'reconciled from report' });
+        b++;
+      }
+    }
+  }
+  console.log(`reconciled ${n} record(s) from committed probes, ${b} blocked from reports`);
 } else {
   const s = ledger.stats();
   console.log(JSON.stringify(s, null, 2));

@@ -36,10 +36,21 @@ export function route(feature) {
   const cat = feature.category || 'misc';
   const name = feature.name || '';
 
+  const sub = feature.subcategory || '';
+
   // Internal / non-runtime → skip.
   if (kind === 'feature' && cat === 'internal') return { probeKind: 'na', oracleable: false, reason: 'internal helper' };
   if (String(feature.parityStatus) === 'internal') return { probeKind: 'na', oracleable: false, reason: 'internal' };
   if (/^_/.test(name) || NA_NAMES.has(name)) return { probeKind: 'na', oracleable: false, reason: 'non-observable command' };
+
+  // GUI features are provable only by driving the UI — regardless of `kind`.
+  // This must precede the kind switch: a `selection`/`feature` entry in the
+  // ui-gui category (e.g. selection-indicators) is a GUI cue, not a headless
+  // state observable. Likewise a Qt/web "UI panel" feature (Volume Color Map
+  // Editor) is verified in the web app, never against the no-GL/headless oracle.
+  if (UI_CATEGORIES.has(cat)) return { probeKind: 'ui', oracleable: false, reason: 'GUI feature (ui-gui)' };
+  if (kind === 'feature' && /\bUI panel\b/i.test(sub))
+    return { probeKind: 'ui', oracleable: false, reason: 'GUI panel (web/Qt), not oracle state' };
 
   switch (kind) {
     case 'color':
