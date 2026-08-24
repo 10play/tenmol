@@ -1,0 +1,4 @@
+{"id":"command__mpng","feature":"mpng","kind":"command","probeKind":"visual",
+ "ops":[{"do":"fragment ala"}],
+ "checks":[{"call":["mpng","/tmp/tenmol_mov"],"label":"mpng writes movie frames, returns None (no movie -> nothing)"},{"call":["get_names"],"label":"no object created"}],
+ "expected":[null,["ala"]],"tol":0}

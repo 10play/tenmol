@@ -1,0 +1,7 @@
+{"id":"command__set_bond","feature":"set_bond","kind":"command","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"show sticks"}],
+ "checks":[
+   {"call":["set_bond","stick_radius",0.5,"ala","ala"],"label":"set_bond applies a per-bond setting, returns None"},
+   {"call":["count_atoms","ala"],"label":"set_bond mutates no atoms (control)"}
+ ],
+ "expected":[null,10],"tol":0}

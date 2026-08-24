@@ -1,0 +1,4 @@
+{"id":"command__ray","feature":"ray","kind":"command","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"show sticks"}],
+ "checks":[{"call":["ray",50,50],"label":"ray renders (GL/CPU) and returns None"},{"call":["get_names"],"label":"ray creates no object"}],
+ "expected":[null,["ala"]],"tol":0}

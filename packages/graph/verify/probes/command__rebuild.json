@@ -1,0 +1,4 @@
+{"id":"command__rebuild","feature":"rebuild","kind":"command","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"show sticks"}],
+ "checks":[{"call":["rebuild"],"label":"rebuild regenerates geometry, returns None"},{"call":["count_atoms","rep sticks"],"label":"reps intact after rebuild"}],
+ "expected":[null,10],"tol":0}
