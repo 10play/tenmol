@@ -1,0 +1,6 @@
+{"id":"feature__ramp","feature":"ramp","kind":"feature","probeKind":"visual",
+ "ops":[{"do":"load packages/engine/testing/data/1rx1.pdb, m"}],
+ "checks":[
+   {"call":["ramp_new","rmp","m",[0,10],["red","blue"]],"label":"ramp_new creates a colour-ramp gadget, returns None"},
+   {"call":["get_names"],"label":"ramp gadget object registered"}
+ ],"expected":[null,["m","rmp"]],"tol":0}

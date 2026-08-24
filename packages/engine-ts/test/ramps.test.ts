@@ -56,7 +56,8 @@ const rgb = (v: unknown): [number, number, number] => v as [number, number, numb
 describe('ramp_new / ramp_color', () => {
   it('defines a blue→white→red ramp over [0,50,100] and interpolates linearly', () => {
     const h = makeHarness();
-    h.call('ramp_new', ['r1', 'map1', [0, 50, 100], ['blue', 'white', 'red']]);
+    // ramp_new returns None (matches the real-PyMOL oracle), not the ramp name.
+    expect(h.call('ramp_new', ['r1', 'map1', [0, 50, 100], ['blue', 'white', 'red']])).toBeNull();
 
     // 25 is halfway from blue [0,0,1] to white [1,1,1] -> [0.5, 0.5, 1].
     const c25 = rgb(h.call('ramp_color', ['r1', 25]));

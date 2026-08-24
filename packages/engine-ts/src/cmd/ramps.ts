@@ -182,7 +182,8 @@ export function registerRamps(ctx: RegistrarCtx): void {
     defineRamp(name, range, colors);
     ex.registerGadget(name, 'object:ramp');
     ctx.publish();
-    return name;
+    // colorramping.py `ramp_new` returns the `_cmd` result (None), not the name.
+    return null;
   });
 
   /* ----------------------------- ramp_update ---------------------------- */
