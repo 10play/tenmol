@@ -75,6 +75,13 @@ const CALLOUT_INCENTIVE_ONLY =
   '    Please visit http://pymol.org if you are interested in the\n' +
   '    full featured "Incentive PyMOL" version.\n';
 
+// `viewing.focal_blur` (depth-of-field render) is incentive-only in Open-Source
+// PyMOL — the multi-pass accumulation render ships only with Incentive PyMOL.
+const FOCAL_BLUR_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "focal_blur" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
+
 function toNum(v: unknown, dflt: number): number {
   if (v == null || v === '') return dflt;
   const n = Number(v);
@@ -768,7 +775,7 @@ export function registerExtras(ctx: RegistrarCtx): void {
       'copy_image',
       'quit',
       'meter_reset',
-      'focal_blur',
+      // `focal_blur` is incentive-only — registered below (throws).
       'decline',
       'feedback',
       'extend',
@@ -801,12 +808,19 @@ export function registerExtras(ctx: RegistrarCtx): void {
     throw new PymolError(incentiveOnly('callout', CALLOUT_INCENTIVE_ONLY), 'callout');
   });
 
+  // `focal_blur` (depth-of-field) is incentive-only in Open-Source PyMOL.
+  ctx.command('focal_blur', () => {
+    throw new PymolError(incentiveOnly('focal_blur', FOCAL_BLUR_INCENTIVE_ONLY), 'focal_blur');
+  });
+
   // Return an empty dict: analysis verbs producing a name->value mapping.
   // `cealign`/`usalign` are real now — see cmd/align.ts.
   noop(['stereochemistry'], {});
 
-  // Return an empty string: text-export getters.
-  noop(['get_mtl_obj'], '');
+  // `get_mtl_obj` returns the (OBJ, MTL) export pair — empty strings until a
+  // wavefront-obj ray export has run. The real oracle returns a 2-tuple, so the
+  // engine must too (was a single ''); verified empty-pair vs the GL oracle.
+  noop(['get_mtl_obj'], ['', '']);
 
   // Return a pair of empty strings: PovRay exporters (scene, header).
   noop(['get_povray', 'povray'], ['', '']);

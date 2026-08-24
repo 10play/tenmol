@@ -242,7 +242,7 @@
       "packages/engine/modules/pymol/experimenting.py",
       "docs/api-reference/commands.mdx:983"
     ],
-    "parityStatus": "unknown",
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/focal_blur.md"
   },
   {

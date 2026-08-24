@@ -268,7 +268,9 @@ describe('extras — residual command sweep', () => {
     // shaped returns
     // alignto/cealign/pair_fit are real now (cmd/align.ts, parity-superposition)
     expect(call('get_povray')).toEqual(['', '']);
-    expect(call('get_mtl_obj')).toBe('');
+    // get_mtl_obj returns the (OBJ, MTL) pair, matching real PyMOL (verified vs
+    // the GL oracle) — empty strings until a wavefront-obj ray export has run.
+    expect(call('get_mtl_obj')).toEqual(['', '']);
     // `remove_picked` is a real verb now (cmd/editing.ts, parity-noop-stubs.test.ts)
     // no side effects on the model
     expect(ex.molecule('m')!.natom).toBe(before);

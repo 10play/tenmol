@@ -8019,7 +8019,7 @@
         "packages/engine/modules/pymol/experimenting.py",
         "docs/api-reference/commands.mdx:983"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/focal_blur.md",
       "sidecar": "features/commands/_batch-04.manifest.json"
     },
@@ -8103,7 +8103,7 @@
         "packages/engine/modules/pymol/exporting.py:981",
         "packages/engine-ts/src/cmd/extras.ts:569"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/rendering-export.md#get_mtl_obj",
       "sidecar": "features/topics/rendering-export.manifest.json"
     },

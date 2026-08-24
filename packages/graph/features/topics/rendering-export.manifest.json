@@ -90,7 +90,7 @@
       "docs/api-reference/commands.mdx#cmd.focal_blur",
       "packages/engine-ts/src/cmd/extras.ts:28"
     ],
-    "parityStatus": "planned",
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/rendering-export.md#focal_blur"
   },
   {
@@ -187,7 +187,7 @@
       "packages/engine/modules/pymol/exporting.py:981",
       "packages/engine-ts/src/cmd/extras.ts:569"
     ],
-    "parityStatus": "partial",
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/rendering-export.md#get_mtl_obj"
   },
   {

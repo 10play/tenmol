@@ -1,0 +1,6 @@
+{
+  "id":"command__get_mtl_obj","feature":"get_mtl_obj","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"},{"do":"show sticks"}],
+  "checks":[{"call":["get_mtl_obj"],"label":"get_mtl_obj returns the (OBJ, MTL) pair — empty until a wavefront-obj ray export"}],
+  "expected":[["",""]],"tol":0
+}

@@ -1,0 +1,6 @@
+{
+  "id":"command__focal_blur","feature":"focal_blur","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"}],
+  "checks":[{"call":["focal_blur"],"label":"focal_blur (depth-of-field) is incentive-only in Open-Source PyMOL"}],
+  "expected":[{"__error":" Incentive-Only-Error: \"focal_blur\" is not available in Open-Source PyMOL\n\n    Please visit http://pymol.org if you are interested in the\n    full featured \"Incentive PyMOL\" version.\n"}],"tol":0
+}
