@@ -773,6 +773,9 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // `copy_image` copies the rendered frame to the clipboard; headless it is
       // a None no-op (verified vs the GL oracle).
       'copy_image',
+      // `write_html_ref` writes a WebGL HTML reference page to disk — headless
+      // (no filesystem) it is a None no-op, matching the oracle.
+      'write_html_ref',
       'quit',
       'meter_reset',
       // `focal_blur` is incentive-only — registered below (throws).

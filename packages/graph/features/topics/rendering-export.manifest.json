@@ -233,7 +233,7 @@
       "packages/engine/modules/pymol/cmd.py:211",
       "docs/api-reference/commands.mdx#cmd.write_html_ref"
     ],
-    "parityStatus": "unknown",
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/rendering-export.md#write_html_ref"
   },
   {

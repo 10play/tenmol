@@ -8267,7 +8267,7 @@
         "packages/engine/modules/pymol/cmd.py:211",
         "docs/api-reference/commands.mdx#cmd.write_html_ref"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/rendering-export.md#write_html_ref",
       "sidecar": "features/topics/rendering-export.manifest.json"
     },
@@ -8463,7 +8463,7 @@
         "packages/engine/modules/pymol/viewing.py:466",
         "docs/api-reference/commands.mdx:4020"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/toggle.md",
       "sidecar": "features/commands/_batch-19.manifest.json"
     },

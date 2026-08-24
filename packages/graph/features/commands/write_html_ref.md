@@ -4,7 +4,7 @@ kind: command
 category: control-flow-system
 subcategory: documentation
 summary: Writes the PyMOL command reference to an HTML file.
-parity: unknown
+parity: implemented
 ---
 
 ## Purpose
@@ -40,6 +40,7 @@ write_html_ref /tmp/pymol_commands.html
 - [help](../commands/help.md)
 
 ## Source
-`packages/engine/modules/pymol/cmd.py:211`. Parity: unknown — this
-documentation-generation helper has no counterpart in
-`packages/engine-ts/src` and is not tracked in `docs/feature-parity.md`.
+`packages/engine/modules/pymol/cmd.py:211`. Parity: `packages/engine-ts/src/cmd/extras.ts`
+registers `write_html_ref` as a None no-op — it writes an HTML reference page to disk, which
+headless (no filesystem) does nothing and returns `None`, matching the real-PyMOL GL oracle
+(verified — `packages/graph/verify/probes/command__write_html_ref.json`).

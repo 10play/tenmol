@@ -155,11 +155,12 @@ describe('settings2: toggle', () => {
     const caShown = () =>
       h.ex.atomsMatching('name CA').filter((ua) => (ua.atom.visRep & sphereBit) !== 0).length;
     expect(caShown()).toBe(0);
+    // `toggle` returns None (matches the oracle); parity is checked by the rep bit.
     // Two CA atoms; none show spheres -> toggle turns them on.
-    expect(h.call('toggle', ['spheres', 'name CA'])).toBe(1);
+    expect(h.call('toggle', ['spheres', 'name CA'])).toBeNull();
     expect(caShown()).toBe(2);
     // Now shown -> toggle hides them.
-    expect(h.call('toggle', ['spheres', 'name CA'])).toBe(0);
+    expect(h.call('toggle', ['spheres', 'name CA'])).toBeNull();
     expect(caShown()).toBe(0);
   });
 });

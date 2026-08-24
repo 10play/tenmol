@@ -364,7 +364,10 @@ export function registerSettings2(ctx: RegistrarCtx): void {
       if (anyOn) ex.hide(name, sel);
       else ex.show(name, sel);
       ctx.publish();
-      return anyOn ? 0 : 1;
+      // `viewing.toggle` returns None (the _cmd result) — matches the oracle; the
+      // effect is observed via rep membership. (Non-rep names fall through to the
+      // engine's setting-toggle extension below.)
+      return null;
     }
     const next = ex.getSettingFloat(name) !== 0 ? 0 : 1;
     if (!capturedDefaults.has(name)) {
