@@ -5697,7 +5697,7 @@
         "packages/engine/modules/pymol/experimenting.py:246",
         "packages/engine-ts/src/cmd/extras.ts:544"
       ],
-      "parityStatus": "planned",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/callout.md",
       "sidecar": "features/commands/_batch-01.manifest.json"
     },
@@ -7937,7 +7937,7 @@
         "packages/engine/modules/pymol/exporting.py:48",
         "packages/engine-ts/src/cmd/extras.ts:543"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/cache.md",
       "sidecar": "features/commands/_batch-01.manifest.json"
     },
@@ -7954,7 +7954,7 @@
         "packages/engine/modules/pymol/viewing.py:1598",
         "packages/engine-ts/src/cmd/extras.ts:545"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/capture.md",
       "sidecar": "features/commands/_batch-01.manifest.json"
     },
@@ -7970,7 +7970,7 @@
         "packages/engine/modules/pymol/exporting.py:35",
         "docs/api-reference/commands.mdx#cmd.copy_image"
       ],
-      "parityStatus": "planned",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/rendering-export.md#copy_image",
       "sidecar": "features/topics/rendering-export.manifest.json"
     },

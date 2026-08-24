@@ -467,7 +467,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 
 | Feature | Kind | Summary | Parity | Doc |
 | --- | --- | --- | --- | --- |
-| `callout` `callout(name, label, pos='', screen='auto', state=-1, color='front', quiet=1)` | command | Creates a screen-stabilized callout (labeled arrow) object. | planned | [doc](features/commands/callout.md) |
+| `callout` `callout(name, label, pos='', screen='auto', state=-1, color='front', quiet=1)` | command | Creates a screen-stabilized callout (labeled arrow) object. | implemented | [doc](features/commands/callout.md) |
 | `label` `label(selection='(all)', expression='', quiet=1)` | command | Label atoms in a selection by evaluating a per-atom Python expression that yields a string. | implemented | [doc](features/commands/label.md) |
 | `label2` `label2(selection='(all)', expression='', quiet=1)` | command | Variant of label that evaluates a per-atom expression to set atom labels via the label2 path. | implemented | [doc](features/commands/label2.md) |
 
@@ -686,9 +686,9 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 
 | Feature | Kind | Summary | Parity | Doc |
 | --- | --- | --- | --- | --- |
-| `cache` `cache(action='optimize', scenes='', state=-1, quiet=1)` | command | Manages storage of precomputed results such as molecular surfaces. | partial | [doc](features/commands/cache.md) |
-| `capture` `capture(quiet=1)` | command | Captures the current frame as an antialiased OpenGL image. | partial | [doc](features/commands/capture.md) |
-| `copy_image` `copy_image(quiet=1)` | command | Copies the current rendered image to the system clipboard (incentive/proprietary, GUI-thread only). | planned | [doc](features/topics/rendering-export.md#copy_image) |
+| `cache` `cache(action='optimize', scenes='', state=-1, quiet=1)` | command | Manages storage of precomputed results such as molecular surfaces. | implemented | [doc](features/commands/cache.md) |
+| `capture` `capture(quiet=1)` | command | Captures the current frame as an antialiased OpenGL image. | implemented | [doc](features/commands/capture.md) |
+| `copy_image` `copy_image(quiet=1)` | command | Copies the current rendered image to the system clipboard (incentive/proprietary, GUI-thread only). | implemented | [doc](features/topics/rendering-export.md#copy_image) |
 | `draw` `draw(width=0, height=0, antialias=-1, quiet=1)` | command | Creates a fast OpenGL raster of the current frame (no shadows/ray effects); needs a live GL context. | implemented | [doc](features/topics/rendering-export.md#draw) |
 | `dump` `dump(fnam, obj, state=1, quiet=1)` | command | Writes the raw geometry of an isosurface/isomesh/isodot or map object to a plain-text vertex file. | implemented | [doc](features/commands/dump.md) |
 | `focal_blur` `focal_blur(aperture=2.0, samples=10, ray=0, filename='', quiet=1)` | command | Produces a depth-of-field image by averaging several jittered renders, keeping the object at the origin in focus. | unknown | [doc](features/commands/focal_blur.md) |

@@ -67,6 +67,14 @@ const PI_INTERACTIONS_INCENTIVE_ONLY =
   '    Please visit http://pymol.org if you are interested in the\n' +
   '    full featured "Incentive PyMOL" version.\n';
 
+// `viewing.callout` (viewing.py) is incentive-only: Open-Source PyMOL raises
+// `IncentiveOnlyException()` — the 2D annotation callouts ship only with
+// Incentive PyMOL. Same verbatim `str(IncentiveOnlyException)` shape.
+const CALLOUT_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "callout" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
+
 function toNum(v: unknown, dflt: number): number {
   if (v == null || v === '') return dflt;
   const n = Number(v);
@@ -753,8 +761,11 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // misc app / render controls with no state to observe
       'cls',
       'cache',
-      'callout',
+      // `callout` is incentive-only — registered below (throws).
       'capture',
+      // `copy_image` copies the rendered frame to the clipboard; headless it is
+      // a None no-op (verified vs the GL oracle).
+      'copy_image',
       'quit',
       'meter_reset',
       'focal_blur',
@@ -783,6 +794,11 @@ export function registerExtras(ctx: RegistrarCtx): void {
       wireError('PythonError', 'pymol.Qt', { type: 'ImportError' }),
       'volume_panel',
     );
+  });
+
+  // `callout` (2D annotation) is incentive-only in Open-Source PyMOL.
+  ctx.command('callout', () => {
+    throw new PymolError(incentiveOnly('callout', CALLOUT_INCENTIVE_ONLY), 'callout');
   });
 
   // Return an empty dict: analysis verbs producing a name->value mapping.

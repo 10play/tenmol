@@ -102,6 +102,14 @@ describe('extras — residual command sweep', () => {
     expect(() => call('volume_panel', ['x'])).toThrow(/pymol\.Qt/);
   });
 
+  it('callout is incentive-only; copy_image is a None no-op (both vs the GL oracle)', () => {
+    const { call } = setup();
+    // `callout` (2D annotation) ships only with Incentive PyMOL.
+    expect(() => call('callout', ['c1', 'hi', '[0,0,0]'])).toThrow(/Incentive-Only-Error/);
+    // `copy_image` copies the rendered frame to the clipboard — headless None no-op.
+    expect(call('copy_image', [])).toBeNull();
+  });
+
   /* --------------------------- REAL behaviours --------------------------- */
 
   it('mask / unmask / get_mask toggle the per-atom masked flag', () => {

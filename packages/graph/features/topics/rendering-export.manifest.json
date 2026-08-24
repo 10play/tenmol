@@ -7,7 +7,11 @@
     "summary": "Produces a ray-traced image of the current frame with the built-in CPU renderer (shadows, outlines, interior colours, antialiasing).",
     "signature": "ray(width=0, height=0, antialias=-1, angle=0.0, shift=0.0, renderer=-1, quiet=1, async_=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1662", "docs/api-reference/commands.mdx#cmd.ray", "packages/engine-ts/src/cmd/render.ts:133"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1662",
+      "docs/api-reference/commands.mdx#cmd.ray",
+      "packages/engine-ts/src/cmd/render.ts:133"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/rendering-export.md#ray"
   },
@@ -19,7 +23,11 @@
     "summary": "Creates a fast OpenGL raster of the current frame (no shadows/ray effects); needs a live GL context.",
     "signature": "draw(width=0, height=0, antialias=-1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1601", "docs/api-reference/commands.mdx#cmd.draw", "packages/engine-ts/src/cmd/render.ts:139"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1601",
+      "docs/api-reference/commands.mdx#cmd.draw",
+      "packages/engine-ts/src/cmd/render.ts:139"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/rendering-export.md#draw"
   },
@@ -31,7 +39,12 @@
     "summary": "Saves the current display to a PNG file, optionally ray-tracing first and honouring width/height/dpi.",
     "signature": "png(filename, width=0, height=0, dpi=-1.0, ray=0, quiet=1, prior=0, format=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/exporting.py:499", "docs/api-reference/commands.mdx#cmd.png", "packages/engine-ts/src/cmd/render.ts:153", "packages/engine-ts/src/render/png.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/exporting.py:499",
+      "docs/api-reference/commands.mdx#cmd.png",
+      "packages/engine-ts/src/cmd/render.ts:153",
+      "packages/engine-ts/src/render/png.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/rendering-export.md#png"
   },
@@ -43,7 +56,9 @@
     "summary": "Returns the last rendered frame's raw RGBA framebuffer — the headless screen-capture accessor.",
     "signature": "get_image()",
     "default": "",
-    "sourceRefs": ["packages/engine-ts/src/cmd/render.ts:145"],
+    "sourceRefs": [
+      "packages/engine-ts/src/cmd/render.ts:145"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/rendering-export.md#get_image"
   },
@@ -55,8 +70,11 @@
     "summary": "Copies the current rendered image to the system clipboard (incentive/proprietary, GUI-thread only).",
     "signature": "copy_image(quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/exporting.py:35", "docs/api-reference/commands.mdx#cmd.copy_image"],
-    "parityStatus": "planned",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/exporting.py:35",
+      "docs/api-reference/commands.mdx#cmd.copy_image"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/rendering-export.md#copy_image"
   },
   {
@@ -67,7 +85,11 @@
     "summary": "Fakes depth-of-field by averaging jittered renders, keeping the object at the origin in focus (incentive-only).",
     "signature": "focal_blur(aperture=2.0, samples=10, ray=0, filename='', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/experimenting.py:215", "docs/api-reference/commands.mdx#cmd.focal_blur", "packages/engine-ts/src/cmd/extras.ts:28"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/experimenting.py:215",
+      "docs/api-reference/commands.mdx#cmd.focal_blur",
+      "packages/engine-ts/src/cmd/extras.ts:28"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/rendering-export.md#focal_blur"
   },
@@ -79,7 +101,11 @@
     "summary": "Writes the movie as a series of numbered PNG frames, ray-traced or drawn per ray_trace_frames/draw_frames.",
     "signature": "mpng(prefix, first=0, last=0, preserve=0, modal=0, mode=-1, quiet=1, width=0, height=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/moving.py:366", "docs/api-reference/commands.mdx#cmd.mpng", "packages/engine-ts/src/cmd/movie3.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/moving.py:366",
+      "docs/api-reference/commands.mdx#cmd.mpng",
+      "packages/engine-ts/src/cmd/movie3.ts"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/rendering-export.md#mpng"
   },
@@ -91,7 +117,11 @@
     "summary": "Returns a (header, geometry) tuple forming a complete POV-Ray input file for the current scene.",
     "signature": "get_povray()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:547", "docs/api-reference/commands.mdx#cmd.get_povray", "packages/engine-ts/src/cmd/extras.ts:572"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:547",
+      "docs/api-reference/commands.mdx#cmd.get_povray",
+      "packages/engine-ts/src/cmd/extras.ts:572"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/rendering-export.md#get_povray"
   },
@@ -103,7 +133,11 @@
     "summary": "Returns a COLLADA (.dae) XML string of the currently displayed geometry.",
     "signature": "get_collada(version=2)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:648", "docs/api-reference/commands.mdx#cmd.get_collada", "docs/file-io.md:363"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:648",
+      "docs/api-reference/commands.mdx#cmd.get_collada",
+      "docs/file-io.md:363"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/rendering-export.md#get_collada"
   },
@@ -115,7 +149,11 @@
     "summary": "Writes a glTF file by exporting COLLADA then converting it via an external collada2gltf binary.",
     "signature": "get_gltf(filename, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:664", "docs/api-reference/commands.mdx#cmd.get_gltf", "docs/file-io.md:364"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:664",
+      "docs/api-reference/commands.mdx#cmd.get_gltf",
+      "docs/file-io.md:364"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/rendering-export.md#get_gltf"
   },
@@ -127,7 +165,11 @@
     "summary": "Returns an IDTF (U3D/3D-PDF) export of the scene; under development, prints 3D-PDF view params when not quiet.",
     "signature": "get_idtf(quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:563", "docs/api-reference/commands.mdx#cmd.get_idtf", "docs/file-io.md:367"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:563",
+      "docs/api-reference/commands.mdx#cmd.get_idtf",
+      "docs/file-io.md:367"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/rendering-export.md#get_idtf"
   },
@@ -139,7 +181,12 @@
     "summary": "Returns a (mtl, obj) Wavefront tuple for Maya; incomplete — the .MTL half is not implemented.",
     "signature": "get_mtl_obj()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:585", "docs/api-reference/commands.mdx#cmd.get_mtl_obj", "packages/engine/modules/pymol/exporting.py:981", "packages/engine-ts/src/cmd/extras.ts:569"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:585",
+      "docs/api-reference/commands.mdx#cmd.get_mtl_obj",
+      "packages/engine/modules/pymol/exporting.py:981",
+      "packages/engine-ts/src/cmd/extras.ts:569"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/rendering-export.md#get_mtl_obj"
   },
@@ -151,7 +198,11 @@
     "summary": "Returns a VRML2 (.wrl) string of the current display for import into other 3D tools.",
     "signature": "get_vrml(version=2)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:632", "docs/api-reference/commands.mdx#cmd.get_vrml", "docs/file-io.md:365"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:632",
+      "docs/api-reference/commands.mdx#cmd.get_vrml",
+      "docs/file-io.md:365"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/rendering-export.md#get_vrml"
   },
@@ -163,7 +214,10 @@
     "summary": "STL geometry export of surfaces/CGO (reached via save *.stl); raises IncentiveOnlyException in the open build.",
     "signature": "get_stlstr(binary=1, quiet=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/lazyio.py:224", "packages/engine/modules/pymol/exporting.py:1019"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/lazyio.py:224",
+      "packages/engine/modules/pymol/exporting.py:1019"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/rendering-export.md#get_stlstr"
   },
@@ -175,7 +229,10 @@
     "summary": "Writes the full PyMOL command reference (every keyword + docstring) to a self-contained HTML file.",
     "signature": "write_html_ref(file)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/cmd.py:211", "docs/api-reference/commands.mdx#cmd.write_html_ref"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/cmd.py:211",
+      "docs/api-reference/commands.mdx#cmd.write_html_ref"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/rendering-export.md#write_html_ref"
   },
@@ -187,7 +244,10 @@
     "summary": "General antialiasing control for ray/draw: 0=off, 1=adaptive, higher supersamples more.",
     "signature": "",
     "default": "1",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:20", "packages/engine-ts/src/cmd/render.ts:105"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:20",
+      "packages/engine-ts/src/cmd/render.ts:105"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/rendering-export.md#antialias"
   },
@@ -199,7 +259,11 @@
     "summary": "Whether the ray tracer casts shadows (legacy alias ray_shadows).",
     "signature": "",
     "default": "1",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:546", "packages/engine/layer1/SettingInfo.h:76", "packages/engine-ts/src/cmd/render.ts:96"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:546",
+      "packages/engine/layer1/SettingInfo.h:76",
+      "packages/engine-ts/src/cmd/render.ts:96"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/rendering-export.md#ray_shadow"
   },
@@ -211,7 +275,10 @@
     "summary": "Cel-shading/outline style of the built-in ray tracer: 0=normal, 1=colour+outline, 2=B&W outline, 3=quantised.",
     "signature": "",
     "default": "0",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:559", "docs/feature-parity.md:559"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:559",
+      "docs/feature-parity.md:559"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/rendering-export.md#ray_trace_mode"
   },
@@ -223,7 +290,9 @@
     "summary": "Outline/gain colour used by ray_trace_mode 1-3.",
     "signature": "",
     "default": "-6",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:552"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:552"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/rendering-export.md#ray_trace_color"
   },
@@ -235,7 +304,9 @@
     "summary": "Gain parameter for the ray_trace_mode 1-3 outline darkening.",
     "signature": "",
     "default": "0.12",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:558"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:558"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/rendering-export.md#ray_trace_gain"
   },
@@ -247,7 +318,9 @@
     "summary": "Whether the ray-traced background is opaque; -1 defers to opaque_background.",
     "signature": "",
     "default": "-1",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:542"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:542"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/rendering-export.md#ray_opaque_background"
   },
@@ -259,7 +332,10 @@
     "summary": "Whether the background is opaque for GL and (when ray_opaque_background=-1) ray output.",
     "signature": "",
     "default": "on",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:471", "packages/engine-ts/src/cmd/movie3.ts:138"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:471",
+      "packages/engine-ts/src/cmd/movie3.ts:138"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/rendering-export.md#opaque_background"
   },
@@ -271,7 +347,9 @@
     "summary": "Colour of clipped/interior surfaces in the ray tracer; -1 matches the exterior.",
     "signature": "",
     "default": "-1",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:533"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:533"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/rendering-export.md#ray_interior_color"
   },
@@ -283,7 +361,10 @@
     "summary": "Ambient-occlusion method: 0=disabled, 1=atom-based, 2=triangle-based (surfaces).",
     "signature": "",
     "default": "0",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:5", "docs/settings-colors.md:421"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:5",
+      "docs/settings-colors.md:421"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/rendering-export.md#ambient_occlusion_mode"
   },
@@ -295,7 +376,9 @@
     "summary": "Which renderer ray uses when renderer=-1: 0=built-in, 1=PovRay, 2=geometry counter.",
     "signature": "",
     "default": "0",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:524"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:524"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/rendering-export.md#ray_default_renderer"
   },
@@ -307,7 +390,10 @@
     "summary": "When on, mpng/movie export ray-traces every frame instead of drawing it.",
     "signature": "",
     "default": "off",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:557", "packages/engine/modules/pymol/moving.py:431"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:557",
+      "packages/engine/modules/pymol/moving.py:431"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/rendering-export.md#ray_trace_frames"
   },
@@ -319,7 +405,10 @@
     "summary": "DPI written into image files when non-zero; png dpi=-1 falls back to this.",
     "signature": "",
     "default": "0.0",
-    "sourceRefs": ["packages/engine/data/setting_help.csv:311", "packages/engine/modules/pymol/exporting.py:575"],
+    "sourceRefs": [
+      "packages/engine/data/setting_help.csv:311",
+      "packages/engine/modules/pymol/exporting.py:575"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/rendering-export.md#image_dots_per_inch"
   }

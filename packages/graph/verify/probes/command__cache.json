@@ -1,0 +1,9 @@
+{
+  "id":"command__cache","feature":"cache","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"}],
+  "checks":[
+    {"call":["cache","optimize"],"label":"cache optimize returns None"},
+    {"call":["get_names"],"label":"cache touches no objects"}
+  ],
+  "expected":[null,["ala"]],"tol":0
+}

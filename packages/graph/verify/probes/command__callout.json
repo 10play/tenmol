@@ -1,0 +1,8 @@
+{
+  "id":"command__callout","feature":"callout","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"}],
+  "checks":[
+    {"call":["callout","c1","hello","[0,0,0]"],"label":"callout is incentive-only in Open-Source PyMOL"}
+  ],
+  "expected":[{"__error":" Incentive-Only-Error: \"callout\" is not available in Open-Source PyMOL\n\n    Please visit http://pymol.org if you are interested in the\n    full featured \"Incentive PyMOL\" version.\n"}],"tol":0
+}

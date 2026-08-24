@@ -68,7 +68,7 @@
     "sourceRefs": [
       "packages/engine/modules/pymol/exporting.py:35"
     ],
-    "parityStatus": "internal",
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/copy_image.md"
   },
   {
