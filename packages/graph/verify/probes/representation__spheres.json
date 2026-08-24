@@ -1,0 +1,2 @@
+{"id":"representation__spheres","feature":"spheres","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"hide everything"},{"do":"show spheres, elem O"}],"checks":[{"call":["count_atoms","rep spheres"],"label":"O shown as spheres"}],"expected":[1],"tol":0}

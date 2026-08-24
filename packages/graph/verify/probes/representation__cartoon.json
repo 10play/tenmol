@@ -1,0 +1,2 @@
+{"id":"representation__cartoon","feature":"cartoon","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"load packages/engine/testing/data/1rx1.pdb, m"},{"do":"hide everything"},{"do":"show cartoon, chain A and resi 1-30"}],"checks":[{"call":["count_atoms","rep cartoon"],"label":"cartoon rep membership"}],"expected":[228],"tol":0}
