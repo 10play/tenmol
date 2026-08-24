@@ -726,11 +726,45 @@ def _dll(name: str) -> ctypes.CDLL:
     return ctypes.CDLL(name)
 
 
+def _ensure_conda_egl_vendor() -> None:
+    """Point glvnd at a conda/micromamba env's Mesa EGL vendor ICD.
+
+    libglvnd's ``libEGL.so.1`` searches only ``/usr/share/glvnd/egl_vendor.d``
+    and ``/etc/glvnd/egl_vendor.d`` for the vendor ICD JSON.  A conda/micromamba
+    env ships Mesa's ICD at ``$CONDA_PREFIX/share/glvnd/egl_vendor.d/50_mesa.json``
+    which is NOT on that path, so libEGL loads with zero vendors — ``client
+    extensions: (none)`` — and every platform probe fails with "not advertised",
+    even though ``mesa-llvmpipe`` is right there and would give surfaceless
+    software GL.
+
+    When the caller has not already steered glvnd (``__EGL_VENDOR_LIBRARY_DIRS``
+    / ``__EGL_VENDOR_LIBRARY_FILENAMES``), prepend the conda dir so the Mesa ICD
+    is found; the system dirs stay behind it so a real GPU vendor still wins.
+    Linux-only; a no-op with no ``CONDA_PREFIX`` or no such dir.
+    """
+    if sys.platform in ("win32", "darwin"):
+        return
+    if os.environ.get("__EGL_VENDOR_LIBRARY_DIRS") or os.environ.get(
+        "__EGL_VENDOR_LIBRARY_FILENAMES"
+    ):
+        return
+    prefix = os.environ.get("CONDA_PREFIX", "")
+    if not prefix:
+        return
+    conda_dir = os.path.join(prefix, "share", "glvnd", "egl_vendor.d")
+    if not os.path.isdir(conda_dir):
+        return
+    os.environ["__EGL_VENDOR_LIBRARY_DIRS"] = os.pathsep.join(
+        (conda_dir, "/usr/share/glvnd/egl_vendor.d", "/etc/glvnd/egl_vendor.d")
+    )
+
+
 def _load_egl(names: Optional[Sequence[str]] = None) -> _EGL:
     """Load and bind libEGL.  ``names`` overrides the default search order.
 
     ``wgl.py`` passes ``("libEGL.dll",)`` for the ANGLE diagnostic path.
     """
+    _ensure_conda_egl_vendor()
     if names is None:
         override = os.environ.get("TENMOL_EGL_LIB", "").strip()
         names = (override,) if override else EGL_LIB_NAMES
