@@ -1,0 +1,6 @@
+{"id":"representation__slice","feature":"slice","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"load packages/engine/testing/data/h2o-elf-nstart.ccp4, dm"}],
+ "checks":[
+   {"call":["slice_new","sl","dm"],"label":"slice_new creates an object:slice gadget, returns None"},
+   {"call":["get_names"],"label":"object:slice gadget registered"}
+ ],"expected":[null,["dm","sl"]],"tol":0}

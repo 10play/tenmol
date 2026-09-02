@@ -182,7 +182,8 @@ export function registerRamps(ctx: RegistrarCtx): void {
     defineRamp(name, range, colors);
     ex.registerGadget(name, 'object:ramp');
     ctx.publish();
-    return name;
+    // colorramping.py `ramp_new` returns the `_cmd` result (None), not the name.
+    return null;
   });
 
   /* ----------------------------- ramp_update ---------------------------- */
@@ -258,7 +259,9 @@ export function registerRamps(ctx: RegistrarCtx): void {
     const flat = parseNumberList(args[1] ?? kwargs.ramp);
     defineVolumeRamp(name, flat);
     ctx.publish();
-    return name;
+    // colorramping.py `volume_ramp_new` returns the `_cmd` result (None), not the
+    // name — matches the oracle.
+    return null;
   });
 
   ctx.command('volume_color', (args, kwargs): Json => {

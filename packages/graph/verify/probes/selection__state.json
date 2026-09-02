@@ -1,0 +1,18 @@
+{
+  "id":"selection__state","feature":"state","kind":"selection","probeKind":"state",
+  "ops":[
+    {"do":"load packages/engine/test/dat/pept.pdb, p"},
+    {"do":"create multi, p, 1, 1"},
+    {"do":"create multi, p, 1, 2"},
+    {"do":"create multi, p, 1, 3"}
+  ],
+  "checks":[
+    {"call":["count_states","multi"],"label":"multi has 3 states"},
+    {"call":["count_atoms","multi and state 1"],"label":"present in state 1"},
+    {"call":["count_atoms","multi and state 3"],"label":"present in state 3"},
+    {"call":["count_atoms","multi and state 4"],"label":"absent beyond nstate"},
+    {"call":["count_atoms","state 2"],"label":"state 2 across all objects"},
+    {"call":["count_atoms","p and state 2"],"label":"single-state object absent in state 2"}
+  ],
+  "expected":[3,107,107,0,107,0]
+}

@@ -28,7 +28,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | selecting | 92 |
 | editing-building | 60 |
 | ui-gui | 60 |
-| movies-scenes-states | 57 |
+| movies-scenes-states | 58 |
 | sculpting-minimization | 56 |
 | viewing-camera | 39 |
 | representations-display | 38 |
@@ -40,7 +40,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | internal | 28 |
 | presets | 28 |
 | maps-volumes | 26 |
-| fitting-alignment | 19 |
+| fitting-alignment | 18 |
 | objects-groups | 18 |
 | symmetry | 12 |
 | measurement | 10 |
@@ -240,7 +240,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `color_deep` `color_deep(color, name='all', quiet=1)` | command | Unsets all object- and atom-level colour settings then applies a colour, clearing every per-rep override. | implemented | [doc](features/topics/coloring-system.md#color_deep) |
 | `colour` `colour(color, selection='(all)', quiet=1, flags=0)` | command | British-spelling alias of color; changes the color of objects or atoms. | implemented | [doc](features/commands/colour.md) |
 | `del_colorection` `del_colorection(dict, key)` | command | Deletes a stored colorection (named color-by-selection snapshot) entry. | implemented | [doc](features/commands/del_colorection.md) |
-| `desaturate` `desaturate(selection='all', a=0.5, quiet=1)` | command | Desaturates the colours in a selection by blending each atom's colour toward grey. | implemented | [doc](features/topics/coloring-system.md#desaturate) |
+| `desaturate` `desaturate(selection='all', a=0.5, quiet=1)` | command | Desaturates a selection's colours toward grey — an incentive-only feature, so Open-Source PyMOL and the TS engine both raise IncentiveOnlyException rather than recolouring. | implemented | [doc](features/commands/desaturate.md) |
 | `get_color_indices` `get_color_indices(all=0)` | command | Returns the list of (name, index) pairs for the color table. | implemented | [doc](features/commands/get_color_indices.md) |
 | `get_colorection` `get_colorection(key)` | command | Snapshots the current colour of everything under a key, for scene colour capture. | implemented | [doc](features/topics/coloring-system.md#get_colorection) |
 | `get_object_color_index` `get_object_color_index(name)` | command | Returns the integer color index assigned to a named object. | implemented | [doc](features/commands/get_object_color_index.md) |
@@ -312,7 +312,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `assign_stereo` `assign_stereo(selection='all', state=-1, method='', quiet=1, prop='stereo')` | command | Assigns the R/S stereo atom property, requiring a Schrodinger Suite or RDKit backend. | partial | [doc](features/topics/editing-building.md#assign_stereo) |
 | `attach` `attach(element, geometry, valence, name='', quiet=1)` | command | Adds a single new atom onto the currently picked atom with a given geometry and valence. | implemented | [doc](features/commands/attach.md) |
 | `bond` `bond(atom1='pk1', atom2='pk2', order=1, quiet=1, symop='')` | command | Creates a new bond between two single-atom selections (default pk1/pk2), within the same object. | implemented | [doc](features/topics/editing-building.md#bond) |
-| `check` `check(selection=None, preserve=0)` | command | Unsupported stub that would assign forcefield parameters to a selection. | partial | [doc](features/commands/check.md) |
+| `check` `check(selection=None, preserve=0)` | command | Unsupported stub that would assign forcefield parameters to a selection. | implemented | [doc](features/commands/check.md) |
 | `cycle_valence` `cycle_valence(h_fill=1, quiet=1)` | command | Cycles the bond order (single/double/triple/aromatic) of the currently picked bond. | implemented | [doc](features/commands/cycle_valence.md) |
 | `delete` `delete(name)` | command | Removes whole objects and named selections (not individual atoms). | implemented | [doc](features/topics/editing-building.md#delete) |
 | `deprotect` `deprotect(selection='(all)', quiet=1)` | command | Clears the protected flag on atoms, reversing the protect command. | implemented | [doc](features/commands/deprotect.md) |
@@ -407,7 +407,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `supported-formats` | feature | The complete set of molecular, map, session, image and geometry formats PyMOL can read and/or write, dispatched by filename extension. | implemented | [doc](features/topics/file-formats.md#supported-formats-the-master-table) |
 | `fetch_path` | setting | Directory where fetch and download_chem_comp cache downloaded files. | implemented | [doc](features/topics/file-formats.md#fetch_path) |
 
-## fitting-alignment (19)
+## fitting-alignment (18)
 
 | Feature | Kind | Summary | Parity | Doc |
 | --- | --- | --- | --- | --- |
@@ -423,11 +423,10 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `matrix_copy` `matrix_copy(source_name='', target_name='', source_mode=-1, target_mode=-1, source_state=1, target_state=1, target_undo=1, log=0, quiet=1)` | command | Copies an object's transformation matrix onto another object (or into the camera view). | partial | [doc](features/commands/matrix_copy.md) |
 | `matrix_reset` `matrix_reset(name, state=1, mode=-1, log=0, quiet=1)` | command | Resets an object's transformation matrix (representation, TTT/movie, or state matrix). | unknown | [doc](features/commands/matrix_reset.md) |
 | `matrix_transfer` `matrix_transfer(source_name='', target_name='', source_mode=-1, target_mode=-1, source_state=1, target_state=1, target_undo=1, log=0, quiet=1)` | command | Legacy alias of matrix_copy that copies a transformation matrix from one object to another. | unknown | [doc](features/commands/matrix_transfer.md) |
-| `morph` `morph(name, sele1, sele2=None, state1=-1, state2=-1, refinement=3, steps=30, method='rigimol', match='align', quiet=1)` | command | Creates an interpolated multi-state trajectory between two conformations (rigimol incentive-only, or linear). | partial | [doc](features/topics/fitting-alignment.md#morph) |
 | `pair_fit` `pair_fit(*arg, quiet=0)` | command | Superposes explicitly matched sets of atom pairs (mobile/target selections listed two-by-two) and moves the mobile object. | implemented | [doc](features/topics/fitting-alignment.md#pair_fit) |
 | `rms` `rms(mobile, target, mobile_state=0, target_state=0, quiet=1, matchmaker=0, cutoff=2.0, cycles=0, object=None)` | command | Computes the RMS fit between two atom selections without transforming the models. | implemented | [doc](features/commands/rms.md) |
 | `rms_cur` `rms_cur(mobile, target, mobile_state=0, target_state=0, quiet=1, matchmaker=0, cutoff=2.0, cycles=0, object=None)` | command | Computes the RMS difference between two selections as they currently sit, with no fitting. | implemented | [doc](features/topics/fitting-alignment.md#rms_cur) |
-| `set_raw_alignment` `set_raw_alignment(name, raw, guide='', state=1, quiet=1)` | command | API-only command that builds an alignment object from explicit lists of (model, index) atom-pair columns. | unknown | [doc](features/topics/fitting-alignment.md#set_raw_alignment) |
+| `set_raw_alignment` `set_raw_alignment(name, raw, guide='', state=1, quiet=1)` | command | API-only command that builds an alignment object from explicit lists of (model, index) atom-pair columns. | implemented | [doc](features/topics/fitting-alignment.md#set_raw_alignment) |
 | `super` `super(mobile, target, cutoff=2.0, cycles=5, gap=-1.5, extend=-0.7, max_gap=50, object=None, matrix='BLOSUM62', mobile_state=0, target_state=0, quiet=1, max_skip=0, transform=1, reset=0, seq=0.0, radius=12.0, scale=17.0, base=0.65, coord=0.0, expect=6.0, window=3, ante=-1.0)` | command | Residue-based structural superposition weighting sequence, secondary/tertiary structure and coordinates; robust at low sequence identity. | implemented | [doc](features/topics/fitting-alignment.md#super) |
 | `usalign` `usalign(mobile, target, mobile_state=1, target_state=1, quiet=1, transform=1, object=None, fast=0)` | command | TM-align/USalign TM-score-optimised, length-independent superposition using only guide atoms (Cα / C4'). | implemented | [doc](features/topics/fitting-alignment.md#usalign) |
 
@@ -468,7 +467,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 
 | Feature | Kind | Summary | Parity | Doc |
 | --- | --- | --- | --- | --- |
-| `callout` `callout(name, label, pos='', screen='auto', state=-1, color='front', quiet=1)` | command | Creates a screen-stabilized callout (labeled arrow) object. | planned | [doc](features/commands/callout.md) |
+| `callout` `callout(name, label, pos='', screen='auto', state=-1, color='front', quiet=1)` | command | Creates a screen-stabilized callout (labeled arrow) object. | implemented | [doc](features/commands/callout.md) |
 | `label` `label(selection='(all)', expression='', quiet=1)` | command | Label atoms in a selection by evaluating a per-atom Python expression that yields a string. | implemented | [doc](features/commands/label.md) |
 | `label2` `label2(selection='(all)', expression='', quiet=1)` | command | Variant of label that evaluates a per-atom expression to set atom labels via the label2 path. | implemented | [doc](features/commands/label2.md) |
 
@@ -486,7 +485,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `load_map` `load_map(object, name, state, finish, discrete)` | command | Developer helper that loads a ChemPy map object into PyMOL (temporary routine for the Phenix project). | unknown | [doc](features/commands/load_map.md) |
 | `load_mtz` `load_mtz(filename, prefix='', amplitudes='', phases='', weights='None', reso_low=0, reso_high=0, quiet=1)` | command | Load an MTZ reflection file as map object(s); raises IncentiveOnlyException in this open-source build. | partial | [doc](features/commands/load_mtz.md) |
 | `map_double` `map_double(name, state=0)` | command | Resamples a map at twice the current resolution (eight-fold memory increase). | implemented | [doc](features/topics/maps-volumes.md#map_double) |
-| `map_generate` `map_generate(name, reflection_file, amplitudes, phases, weights='None', reso_low=50.0, reso_high=1.0, quiet=1, zoom=1)` | command | Synthesizes an x-ray map object from a reflection (MTZ) file and amplitude/phase columns. | unknown | [doc](features/topics/maps-volumes.md#map_generate) |
+| `map_generate` `map_generate(name, reflection_file, amplitudes, phases, weights='None', reso_low=50.0, reso_high=1.0, quiet=1, zoom=1)` | command | Synthesizes an x-ray map object from a reflection (MTZ) file and amplitude/phase columns. | implemented | [doc](features/topics/maps-volumes.md#map_generate) |
 | `map_halve` `map_halve(name, state=0, smooth=1)` | command | Resamples a map object at half its current resolution (coarser grid), optionally smoothing. | implemented | [doc](features/commands/map_halve.md) |
 | `map_new` `map_new(name, type='gaussian', grid=None, selection='(all)', buffer=None, box=None, state=0, quiet=1, zoom=0, normalize=-1, clamp=[1.0, -1.0], resolution=0.0)` | command | Creates a map object with a built-in generator (Gaussian, VDW, Coulomb, etc.) over a selection. | implemented | [doc](features/commands/map_new.md) |
 | `map_set` `map_set(name, operator, operands='', target_state=0, source_state=0, zoom=0, quiet=1)` | command | Performs elementwise operations on and between map objects (min, max, sum, average, difference, copy, unique). | partial | [doc](features/commands/map_set.md) |
@@ -496,12 +495,12 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `slice_new` `slice_new(name, map, state=1, source_state=0)` | command | Creates a 2-D slice (cutting plane) object through a map, colored by a ramp. | unknown | [doc](features/topics/maps-volumes.md#slice_new) |
 | `volume` `volume(name, map, ramp='', selection='', buffer=0.0, state=1, carve=None, source_state=0, quiet=1)` | command | Creates a direct volume-rendering object from a map, colored by a named ramp transfer function. | unknown | [doc](features/topics/maps-volumes.md#volume) |
 | `volume_color` `volume_color(name, ramp='', state=-1, quiet=1, _guiupdate=True)` | command | Sets or gets the value-to-RGBA transfer function (color ramp) of a volume object. | implemented | [doc](features/topics/maps-volumes.md#volume_color) |
-| `volume_panel` `volume_panel(name, quiet=1, _noqt=0)` | command | Opens an interactive GUI panel for editing a volume object's color ramp. | partial | [doc](features/commands/volume_panel.md) |
+| `volume_panel` `volume_panel(name, quiet=1, _noqt=0)` | command | Opens an interactive GUI panel for editing a volume object's color ramp. | implemented | [doc](features/commands/volume_panel.md) |
 | `volume_ramp_new` `volume_ramp_new(name, ramp)` | command | Registers a named volume color ramp reusable as a preset when creating or coloring volumes. | implemented | [doc](features/commands/volume_ramp_new.md) |
 | `CCP4` | feature | CCP4/MRC binary electron-density raster format loaded via cmd.load (format='ccp4'); also brix/dsn6/omap. | partial | [doc](features/topics/maps-volumes.md#ccp4) |
 | `DX` | feature | OpenDX/APBS electrostatics grid format (.dx/.dxbin) loaded via cmd.load (format='dx'). | partial | [doc](features/topics/maps-volumes.md#dx) |
 | `Volume Color Map Editor` | feature | Interactive panel editing a volume's transfer function: map histogram plot with draggable color/alpha control points on a logarithmic alpha axis. | implemented | [doc](features/topics/maps-volumes.md#volume-color-map-editor) |
-| `XPLOR` | feature | XPLOR/CNS ASCII density map format loaded via cmd.load or the API-only read_xplorstr. | partial | [doc](features/topics/maps-volumes.md#xplor) |
+| `XPLOR` | feature | XPLOR/CNS ASCII density map format loaded via cmd.load or the API-only read_xplorstr. | implemented | [doc](features/topics/maps-volumes.md#xplor) |
 
 ## measurement (10)
 
@@ -518,7 +517,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `overlap` `overlap(selection1, selection2, state1=1, state2=1, adjust=0.0, quiet=1)` | command | Sums pairwise VDW-minus-distance overlap between two atom selections. | implemented | [doc](features/commands/overlap.md) |
 | `pi_interactions` `pi_interactions(name='', selection1='all', selection2='same', state=0, state1=-3, state2=-3, quiet=1, reset=0)` | command | Finds pi-pi and pi-cation interactions (incentive-only in upstream PyMOL). | partial | [doc](features/commands/pi_interactions.md) |
 
-## movies-scenes-states (57)
+## movies-scenes-states (58)
 
 | Feature | Kind | Summary | Parity | Doc |
 | --- | --- | --- | --- | --- |
@@ -551,6 +550,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `minsert` `minsert(count, frame=0, freeze=0, object='', quiet=1)` | command | Inserts blank frames into the movie's camera view and object motions. | planned | [doc](features/commands/minsert.md) |
 | `mmatrix` `mmatrix(action)` | command | Stores, recalls, or clears the camera matrix used for the movie's first frame. | implemented | [doc](features/commands/mmatrix.md) |
 | `mmove` `mmove(target, source=0, count=-1, freeze=0, object='', quiet=1)` | command | Moves key frames and movie commands from one frame position to another. | planned | [doc](features/commands/mmove.md) |
+| `morph` `morph(name, sele1, sele2=None, state1=-1, state2=-1, refinement=3, steps=30, method='rigimol', match='align', quiet=1)` | command | Interpolated multi-state trajectory between conformations — incentive-only for BOTH rigimol and linear, so Open-Source PyMOL and the TS engine raise IncentiveOnlyException. | implemented | [doc](features/commands/morph.md) |
 | `move_on_curve` `move_on_curve(mobile_obj, curve_obj, t)` | command | Positions an object along a named curve at a parametric point t. | implemented | [doc](features/commands/move_on_curve.md) |
 | `movie.produce` `movie.produce(filename, mode='', first=0, last=0, preserve=0, encoder='', quality=-1, quiet=1, width=0, height=0)` | command | Encodes the movie to a video file (mp4/mov/webm/gif/mpg) autodetecting the encoder. | implemented | [doc](features/topics/movies-scenes-states.md#movie-produce) |
 | `mplay` `mplay()` | command | Starts movie playback (backend-paced by movie_fps). | implemented | [doc](features/topics/movies-scenes-states.md#mplay) |
@@ -686,17 +686,17 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 
 | Feature | Kind | Summary | Parity | Doc |
 | --- | --- | --- | --- | --- |
-| `cache` `cache(action='optimize', scenes='', state=-1, quiet=1)` | command | Manages storage of precomputed results such as molecular surfaces. | partial | [doc](features/commands/cache.md) |
-| `capture` `capture(quiet=1)` | command | Captures the current frame as an antialiased OpenGL image. | partial | [doc](features/commands/capture.md) |
-| `copy_image` `copy_image(quiet=1)` | command | Copies the current rendered image to the system clipboard (incentive/proprietary, GUI-thread only). | planned | [doc](features/topics/rendering-export.md#copy_image) |
+| `cache` `cache(action='optimize', scenes='', state=-1, quiet=1)` | command | Manages storage of precomputed results such as molecular surfaces. | implemented | [doc](features/commands/cache.md) |
+| `capture` `capture(quiet=1)` | command | Captures the current frame as an antialiased OpenGL image. | implemented | [doc](features/commands/capture.md) |
+| `copy_image` `copy_image(quiet=1)` | command | Copies the current rendered image to the system clipboard (incentive/proprietary, GUI-thread only). | implemented | [doc](features/topics/rendering-export.md#copy_image) |
 | `draw` `draw(width=0, height=0, antialias=-1, quiet=1)` | command | Creates a fast OpenGL raster of the current frame (no shadows/ray effects); needs a live GL context. | implemented | [doc](features/topics/rendering-export.md#draw) |
 | `dump` `dump(fnam, obj, state=1, quiet=1)` | command | Writes the raw geometry of an isosurface/isomesh/isodot or map object to a plain-text vertex file. | implemented | [doc](features/commands/dump.md) |
-| `focal_blur` `focal_blur(aperture=2.0, samples=10, ray=0, filename='', quiet=1)` | command | Produces a depth-of-field image by averaging several jittered renders, keeping the object at the origin in focus. | unknown | [doc](features/commands/focal_blur.md) |
+| `focal_blur` `focal_blur(aperture=2.0, samples=10, ray=0, filename='', quiet=1)` | command | Produces a depth-of-field image by averaging several jittered renders, keeping the object at the origin in focus. | implemented | [doc](features/commands/focal_blur.md) |
 | `get_collada` `get_collada(version=2)` | command | Returns a COLLADA (.dae) string representing the currently displayed scene. | implemented | [doc](features/commands/get_collada.md) |
 | `get_gltf` `get_gltf(filename, quiet=1)` | command | Writes a glTF file by exporting COLLADA then converting it via an external collada2gltf binary. | unknown | [doc](features/topics/rendering-export.md#get_gltf) |
 | `get_idtf` `get_idtf(quiet=1)` | command | Returns an IDTF (U3D/3D-PDF) export of the scene; under development, prints 3D-PDF view params when not quiet. | unknown | [doc](features/topics/rendering-export.md#get_idtf) |
 | `get_image` `get_image()` | command | Returns the last rendered frame's raw RGBA framebuffer — the headless screen-capture accessor. | implemented | [doc](features/topics/rendering-export.md#get_image) |
-| `get_mtl_obj` `get_mtl_obj()` | command | Returns a (mtl, obj) Wavefront tuple for Maya; incomplete — the .MTL half is not implemented. | partial | [doc](features/topics/rendering-export.md#get_mtl_obj) |
+| `get_mtl_obj` `get_mtl_obj()` | command | Returns a (mtl, obj) Wavefront tuple for Maya; incomplete — the .MTL half is not implemented. | implemented | [doc](features/topics/rendering-export.md#get_mtl_obj) |
 | `get_povray` `get_povray()` | command | Returns a (header, geometry) tuple forming a complete POV-Ray input file for the current scene. | partial | [doc](features/topics/rendering-export.md#get_povray) |
 | `get_renderer` `get_renderer(quiet=1)` | command | Return (and optionally print) the OpenGL vendor / renderer / version strings. | unknown | [doc](features/commands/get_renderer.md) |
 | `get_stlstr` `get_stlstr(binary=1, quiet=0)` | command | STL geometry export of surfaces/CGO (reached via save *.stl); raises IncentiveOnlyException in the open build. | planned | [doc](features/topics/rendering-export.md#get_stlstr) |
@@ -706,7 +706,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `mpng` `mpng(prefix, first=0, last=0, preserve=0, modal=0, mode=-1, quiet=1, width=0, height=0)` | command | Writes the movie as a series of numbered PNG frames, ray-traced or drawn per ray_trace_frames/draw_frames. | partial | [doc](features/topics/rendering-export.md#mpng) |
 | `png` `png(filename, width=0, height=0, dpi=-1.0, ray=0, quiet=1, prior=0, format=0)` | command | Saves the current display to a PNG file, optionally ray-tracing first and honouring width/height/dpi. | implemented | [doc](features/topics/rendering-export.md#png) |
 | `ray` `ray(width=0, height=0, antialias=-1, angle=0.0, shift=0.0, renderer=-1, quiet=1, async_=0)` | command | Produces a ray-traced image of the current frame with the built-in CPU renderer (shadows, outlines, interior colours, antialiasing). | implemented | [doc](features/topics/rendering-export.md#ray) |
-| `write_html_ref` `write_html_ref(file)` | command | Writes the full PyMOL command reference (every keyword + docstring) to a self-contained HTML file. | unknown | [doc](features/topics/rendering-export.md#write_html_ref) |
+| `write_html_ref` `write_html_ref(file)` | command | Writes the full PyMOL command reference (every keyword + docstring) to a self-contained HTML file. | implemented | [doc](features/topics/rendering-export.md#write_html_ref) |
 | `image_dots_per_inch` | setting | DPI written into image files when non-zero; png dpi=-1 falls back to this. | unknown | [doc](features/topics/rendering-export.md#image_dots_per_inch) |
 | `opaque_background` | setting | Whether the background is opaque for GL and (when ray_opaque_background=-1) ray output. | partial | [doc](features/topics/rendering-export.md#opaque_background) |
 | `ray_default_renderer` | setting | Which renderer ray uses when renderer=-1: 0=built-in, 1=PovRay, 2=geometry counter. | partial | [doc](features/topics/rendering-export.md#ray_default_renderer) |
@@ -731,7 +731,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `set_vis` `set_vis(dict)` | command | Restores object/representation visibility state from a visibility dictionary (counterpart of get_vis). | implemented | [doc](features/commands/set_vis.md) |
 | `show` `show(representation='wire', selection='')` | command | Turns on a representation for the atoms/objects in a selection (additive; leaves other representations intact). | implemented | [doc](features/commands/show.md) |
 | `show_as` `show_as(representation='wire', selection='')` | command | Exclusively shows one representation for a selection, hiding all others on those atoms (the 'as' command). | implemented | [doc](features/commands/show_as.md) |
-| `toggle` `toggle(representation='lines', selection='all')` | command | Toggles the visibility of a representation within an atom selection. | unknown | [doc](features/commands/toggle.md) |
+| `toggle` `toggle(representation='lines', selection='all')` | command | Toggles the visibility of a representation within an atom selection. | implemented | [doc](features/commands/toggle.md) |
 | `cartoon arrow` | feature | Rectangle slab with a C-terminal arrowhead - the beta-strand look (cartoon_fancy_sheets). | implemented | [doc](features/topics/representations.md#cartoon-arrow) |
 | `cartoon automatic` | feature | Default cartoon mode picking cross-section per residue from secondary structure (HELIX/SHEET records). | implemented | [doc](features/topics/representations.md#cartoon-automatic) |
 | `cartoon dumbbell` | feature | Flat ribbon edged with round rails (cartoon_dumbbell_length/width/radius). | partial | [doc](features/topics/representations.md#cartoon-dumbbell) |
@@ -763,7 +763,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 
 | Feature | Kind | Summary | Parity | Doc |
 | --- | --- | --- | --- | --- |
-| `clean` `clean(selection, present='', state=-1, fix='', restrain='', method='mmff', async_=0, save_undo=1, message=None)` | command | Run MMFF94 energy minimization on a selection; raises IncentiveOnlyException upstream, ported as covalent idealisation. | implemented | [doc](features/topics/sculpting-minimization.md#clean) |
+| `clean` `clean(selection, present='', state=-1, fix='', restrain='', method='mmff', async_=0, save_undo=1, message=None)` | command | MMFF94 energy-minimization 'clean up' of a selection — an incentive-only feature, so Open-Source PyMOL and the TS engine both raise IncentiveOnlyException. | implemented | [doc](features/commands/clean.md) |
 | `fast_minimize` `fast_minimize(*args, **kwargs)` | command | Unsupported, nonfunctional placeholder that may eventually perform a quick structure clean-up. | internal | [doc](features/commands/fast_minimize.md) |
 | `minimize` `minimize(sele='', iter=500, grad=0.01, interval=50, _setup=1)` | command | Batch energy minimization; upstream stub routing to chempy.tinker, ported as covalent-radius idealisation. | implemented | [doc](features/topics/sculpting-minimization.md#minimize) |
 | `sculpt_activate` `sculpt_activate(object, state=0, match_state=-1, match_by_segment=0)` | command | Enables sculpting for an object and snapshots its current geometry as the reference for restraints. | implemented | [doc](features/topics/sculpting-minimization.md#sculpt_activate) |
@@ -842,9 +842,9 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `bonded` | selection | Atoms that participate in at least one bond. | implemented | [doc](features/topics/selection-algebra.md#bonded) |
 | `bound_to` | selection | Atoms directly bonded to the selection, retaining the seed itself (bto.). | implemented | [doc](features/topics/selection-algebra.md#bound_to) |
 | `bycalpha` | selection | The C-alpha atom of every residue the operand touches (bca.). | implemented | [doc](features/topics/selection-algebra.md#bycalpha) |
-| `bycell` | selection | Expands the selection to atoms in the same crystallographic unit-cell neighbourhood. | unknown | [doc](features/topics/selection-algebra.md#bycell) |
+| `bycell` | selection | Expands the selection to atoms in the same crystallographic unit-cell neighbourhood. | implemented | [doc](features/topics/selection-algebra.md#bycell) |
 | `bychain` | selection | Expands the selection to every atom of every chain it touches (bc.). | implemented | [doc](features/topics/selection-algebra.md#bychain) |
-| `byfragment` | selection | Expands the selection to the bonded connected fragment (bf.). | implemented | [doc](features/topics/selection-algebra.md#byfragment) |
+| `byfragment` | selection | Expands a selection to the editor's picked fragments (bf.); with no editor fragments defined it selects nothing — NOT the whole connected molecule. | implemented | [doc](features/topics/selection-algebra.md#byfragment) |
 | `bymol` | selection | Expands the selection to every atom of every bonded molecule it touches (bm.). | implemented | [doc](features/topics/selection-algebra.md#bymol) |
 | `byobject` | selection | Expands the selection to every atom of every object it touches (bo.). | implemented | [doc](features/topics/selection-algebra.md#byobject) |
 | `byres` | selection | Expands the selection to every atom of every residue it touches (br.). | implemented | [doc](features/topics/selection-algebra.md#byres) |
@@ -856,7 +856,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `color` | selection | Atoms whose colour equals a colour index or name (color <n>). | implemented | [doc](features/topics/selection-algebra.md#color) |
 | `coordinate-ranges` | selection | Numeric comparison on an atom's x/y/z Cartesian coordinate. | unknown | [doc](features/topics/selection-algebra.md#coordinate-ranges) |
 | `custom` | selection | Selects atoms by the custom per-atom annotation string. | unknown | [doc](features/topics/selection-algebra.md#custom) |
-| `delocalized` | selection | Atoms in a delocalized bond where explicit degree differs from valence (deloc.). | unknown | [doc](features/topics/selection-algebra.md#delocalized) |
+| `delocalized` | selection | Atoms in a delocalized bond where explicit degree differs from valence (deloc.). | implemented | [doc](features/topics/selection-algebra.md#delocalized) |
 | `donors` | selection | Candidate hydrogen-bond donor atoms (don.). | implemented | [doc](features/topics/selection-algebra.md#donors) |
 | `elem` | selection | Selects atoms by chemical element symbol (e./symbol/element). | implemented | [doc](features/topics/selection-algebra.md#elem) |
 | `enabled` | selection | Atoms belonging to a currently enabled object. | implemented | [doc](features/topics/selection-algebra.md#enabled) |
@@ -885,7 +885,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `neighbor` | selection | Atoms directly bonded to the selection, excluding it (nbr.). | implemented | [doc](features/topics/selection-algebra.md#neighbor) |
 | `none` | selection | The empty set of atoms. | implemented | [doc](features/topics/selection-algebra.md#none) |
 | `not` | selection | Unary complement of an operand (!). | implemented | [doc](features/topics/selection-algebra.md#not) |
-| `numeric_type` | selection | Selects atoms by integer numeric (atom) type (nt.). | unknown | [doc](features/topics/selection-algebra.md#numeric_type) |
+| `numeric_type` | selection | Selects atoms by integer numeric (atom) type (nt.). | implemented | [doc](features/topics/selection-algebra.md#numeric_type) |
 | `or` | selection | Set union of two operands (\| / +). | implemented | [doc](features/topics/selection-algebra.md#or) |
 | `organic` | selection | Small organic (ligand) molecules (org.). | unknown | [doc](features/topics/selection-algebra.md#organic) |
 | `origin` | selection | A pseudo-atom at the current rotation origin, for distance queries. | unknown | [doc](features/topics/selection-algebra.md#origin) |
@@ -910,9 +910,9 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `slash-macro` | selection | Positional /object/segi/chain/resi/name shorthand ANDing the present fields. | implemented | [doc](features/topics/selection-algebra.md#slash-macro) |
 | `solvent` | selection | Solvent atoms, primarily water (sol.). | implemented | [doc](features/topics/selection-algebra.md#solvent) |
 | `ss` | selection | Selects atoms by secondary-structure type H/S/L. | implemented | [doc](features/topics/selection-algebra.md#ss) |
-| `state` | selection | Selects atoms belonging to a given object state. | unknown | [doc](features/topics/selection-algebra.md#state) |
+| `state` | selection | Selects atoms belonging to a given object state. | implemented | [doc](features/topics/selection-algebra.md#state) |
 | `stereo` | selection | Selects atoms by R/S chirality label. | unknown | [doc](features/topics/selection-algebra.md#stereo) |
-| `text_type` | selection | Selects atoms by MOL2/Tripos text (atom) type (tt.). | unknown | [doc](features/topics/selection-algebra.md#text_type) |
+| `text_type` | selection | Selects atoms by MOL2/Tripos text (atom) type (tt.). | implemented | [doc](features/topics/selection-algebra.md#text_type) |
 | `visible` | selection | Atoms with at least one representation currently shown (v.). | implemented | [doc](features/topics/selection-algebra.md#visible) |
 | `wildcards` | selection | Glob wildcards */? in text property value specs, case-insensitive. | implemented | [doc](features/topics/selection-algebra.md#wildcards) |
 | `within` | selection | Atoms of A within a distance of any atom of B (w.). | implemented | [doc](features/topics/selection-algebra.md#within) |
@@ -1735,7 +1735,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `bg_colour` `bg_colour(color='black')` | command | British-spelling alias of bg_color; sets the viewport background color. | implemented | [doc](features/commands/bg_colour.md) |
 | `center` `center(selection="all", state=0, origin=1, animate=0)` | command | Translate the window, clipping slab and origin to the centre of an atom selection. | implemented | [doc](features/topics/viewing-camera.md#center) |
 | `clip` `clip(mode, distance, selection=None, state=0)` | command | Alter the near/far clipping-plane positions via near/far/move/slab/atoms modes. | implemented | [doc](features/topics/viewing-camera.md#clip) |
-| `full_screen` `full_screen(toggle=-1)` | command | Enable or disable full-screen mode (GUI-thread bound, platform dependent). | partial | [doc](features/topics/viewing-camera.md#full_screen) |
+| `full_screen` `full_screen(toggle=-1)` | command | Enable or disable full-screen mode (GUI-thread bound, platform dependent). | implemented | [doc](features/topics/viewing-camera.md#full_screen) |
 | `get_clip` `get_clip(quiet=1)` | command | Returns the current positions of the near and far clipping planes. | unknown | [doc](features/commands/get_clip.md) |
 | `get_position` `get_position(quiet=1)` | command | Return the 3D coordinates of the center of the viewer window (camera origin of rotation). | implemented | [doc](features/commands/get_position.md) |
 | `get_view` `get_view(output=1, quiet=1)` | command | Return (and optionally print) the current 18-float view vector for pasting into a script. | implemented | [doc](features/topics/viewing-camera.md#get_view) |
@@ -1752,7 +1752,7 @@ Generated from the per-feature deep-dive docs under `features/` — do not hand-
 | `turn` `turn(axis, angle)` | command | Rotates the camera about one of the three primary axes, centered at the origin. | implemented | [doc](features/commands/turn.md) |
 | `view` `view(key, action='recall', animate=-1)` | command | Store, recall or clear named camera views in a per-session dictionary (F1-F12 fallbacks). | implemented | [doc](features/topics/viewing-camera.md#view) |
 | `viewport` `viewport(width=-1, height=-1)` | command | Change the size of the graphics display area (tuple syntax deprecated). | implemented | [doc](features/topics/viewing-camera.md#viewport) |
-| `window` `window(action='show', x=0, y=0, width=0, height=0)` | command | Control visibility and geometry of PyMOL's output window (GUI-shell operation). | partial | [doc](features/topics/viewing-camera.md#window) |
+| `window` `window(action='show', x=0, y=0, width=0, height=0)` | command | Control visibility and geometry of PyMOL's output window (GUI-shell operation). | implemented | [doc](features/topics/viewing-camera.md#window) |
 | `zoom` `zoom(selection="all", buffer=0.0, state=0, complete=0, animate=0)` | command | Scale and translate the window and origin to cover an atom selection, guessing an optimal zoom level. | implemented | [doc](features/topics/viewing-camera.md#zoom) |
 | `depth_cue` | setting | Master switch for the depth-cue fog effect that fades distant geometry. | partial | [doc](features/topics/viewing-camera.md#depth_cue) |
 | `field_of_view` | setting | Vertical field of view in degrees; only visible under perspective projection. | implemented | [doc](features/topics/viewing-camera.md#field_of_view) |

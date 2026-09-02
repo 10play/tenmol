@@ -1,0 +1,9 @@
+{
+  "id":"command__capture","feature":"capture","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"}],
+  "checks":[
+    {"call":["capture"],"label":"capture returns None (headless)"},
+    {"call":["get_names"],"label":"capture creates no object"}
+  ],
+  "expected":[null,["ala"]],"tol":0
+}

@@ -170,7 +170,11 @@ describe('ss selector', () => {
   it('matches H / S / L (loop) and H+S grouping', () => {
     expect(count('ss H')).toBe(5);
     expect(count('ss S')).toBe(4);
-    expect(count('ss L')).toBe(9); // everything with empty ss
+    // PyMOL's `ss L` matches only the literal 'L' ssType, NOT unassigned ''
+    // (SELE_SSTs alpha match). The fixture assigns no 'L', so `ss L` is empty
+    // and the 9 unassigned atoms are selected by `ss ''` instead.
+    expect(count('ss L')).toBe(0);
+    expect(count("ss ''")).toBe(9);
     expect(count('ss H+S')).toBe(9);
   });
 });
@@ -240,10 +244,14 @@ describe('flag and chemistry keywords', () => {
     expect(count('present')).toBe(18);
   });
 
-  it('metals / donor / acceptor (element heuristics)', () => {
+  it('metals / donor / acceptor (perceived H-bond chemistry)', () => {
     expect(count('metals')).toBe(1); // Zn
-    expect(count('donor')).toBe(9); // N + O
-    expect(count('acceptor')).toBe(9); // N + O + S (no S here)
+    // donor/acceptor now use PyMOL's perceived hb_donor/hb_acceptor flags
+    // (InferChemFromBonds → InferHBondFromChem), not a bare N/O element test —
+    // e.g. carbonyl O (a double bond, no implicit H) is an acceptor but not a
+    // donor. Oracle-verified on this exact fixture: 6 donors, 6 acceptors.
+    expect(count('donor')).toBe(6);
+    expect(count('acceptor')).toBe(6);
   });
 
   it('hetatm / solvent / polymer / backbone / sidechain still hold', () => {

@@ -4,7 +4,7 @@ kind: command
 category: rendering-export
 subcategory: depth-of-field
 summary: Produces a depth-of-field image by averaging several jittered renders, keeping the object at the origin in focus.
-parity: unknown
+parity: implemented
 ---
 
 ## Purpose
@@ -35,4 +35,4 @@ focal_blur aperture=5, samples=100, ray=1, filename=dof.png
 - [png](png.md) - save the current image
 
 ## Source
-`packages/engine/modules/pymol/experimenting.py` (`def focal_blur`). Parity: not registered as an engine-ts command.
+`packages/engine/modules/pymol/experimenting.py` (`def focal_blur`). Parity: incentive-only — `packages/engine-ts/src/cmd/extras.ts` raises `IncentiveOnlyException`, matching Open-Source PyMOL (verified against the real-PyMOL GL oracle — `packages/graph/verify/probes/command__focal_blur.json`).

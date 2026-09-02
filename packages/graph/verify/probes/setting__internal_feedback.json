@@ -1,0 +1,4 @@
+{"id":"setting__internal_feedback","feature":"internal_feedback","kind":"setting","probeKind":"state",
+ "ops":[{"do":"set internal_feedback, 3"}],
+ "checks":[{"call":["get_setting_int","internal_feedback"],"label":"internal_feedback set 3 roundtrip"}],
+ "expected":[3]}

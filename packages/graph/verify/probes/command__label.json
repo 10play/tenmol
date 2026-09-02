@@ -1,0 +1,10 @@
+{
+  "id":"command__label","feature":"label","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"},{"do":"hide everything"},{"do":"label name CA, 'lab'"}],
+  "checks":[
+    {"call":["count_atoms","rep labels"],"label":"one atom (CA) carries the Label rep"},
+    {"call":["count_atoms","rep labels and name CA"],"label":"the labelled atom is CA"},
+    {"call":["count_atoms","ala"],"label":"total (control)"}
+  ],
+  "expected":[1,1,10],"tol":0
+}

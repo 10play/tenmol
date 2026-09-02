@@ -121,9 +121,9 @@ Runs energy minimization on a selection using an **MMFF94** force field.
 
 **Gotcha:** in this open-source tree `cmd.clean` raises `pymol.IncentiveOnlyException`
 (`computing.py:20`), so the Builder "Clean" button and `CleanWizard` are non-functional against the
-real engine. The TypeScript port supplies an open-source substitute: `clean(selection, state,
-cycles=100)` idealises toward covalent-radius bond lengths (same restraint minimiser as `minimize`,
-fewer default cycles). `clean_electro_mode` (global int, default `1`) is the Builder's
+real engine. The TypeScript port matches upstream: `clean` raises the identical incentive-only error
+(`packages/engine-ts/src/cmd/sculpt.ts`), consistent with the Builder panel already reporting
+`clean_available = false`. `clean_electro_mode` (global int, default `1`) is the Builder's
 "Electrostatics term for Clean" toggle.
 
 ## Force-field terms & the sculpt_field_mask flags

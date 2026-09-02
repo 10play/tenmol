@@ -36,7 +36,7 @@
  */
 
 import type { Json } from '@tenmol/protocol';
-import { incentiveOnly } from '@tenmol/protocol';
+import { incentiveOnly, wireError } from '@tenmol/protocol';
 import { PymolError } from '@tenmol/backend';
 import type { AtomInfo } from '../model/atom';
 import type { Executive } from '../exec/executive';
@@ -64,6 +64,21 @@ const LOAD_MTZ_INCENTIVE_ONLY =
 // as LOAD_MTZ_INCENTIVE_ONLY, with the function's own name.
 const PI_INTERACTIONS_INCENTIVE_ONLY =
   ' Incentive-Only-Error: "pi_interactions" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
+
+// `viewing.callout` (viewing.py) is incentive-only: Open-Source PyMOL raises
+// `IncentiveOnlyException()` — the 2D annotation callouts ship only with
+// Incentive PyMOL. Same verbatim `str(IncentiveOnlyException)` shape.
+const CALLOUT_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "callout" is not available in Open-Source PyMOL\n\n' +
+  '    Please visit http://pymol.org if you are interested in the\n' +
+  '    full featured "Incentive PyMOL" version.\n';
+
+// `viewing.focal_blur` (depth-of-field render) is incentive-only in Open-Source
+// PyMOL — the multi-pass accumulation render ships only with Incentive PyMOL.
+const FOCAL_BLUR_INCENTIVE_ONLY =
+  ' Incentive-Only-Error: "focal_blur" is not available in Open-Source PyMOL\n\n' +
   '    Please visit http://pymol.org if you are interested in the\n' +
   '    full featured "Incentive PyMOL" version.\n';
 
@@ -747,17 +762,23 @@ export function registerExtras(ctx: RegistrarCtx): void {
       // `map_set` is real — see cmd/maps.ts (elementwise map arithmetic).
       // `slice_new` is real now — see cmd/maps.ts (registers an object:slice gadget).
       // `volume` is real now — see cmd/maps.ts (registers an object:volume gadget).
-      'volume_panel',
+      // `volume_panel` throws `ImportError: pymol.Qt` — registered below.
       // `spheroid` is real now — see below (averages state groups + collapses NCSet).
       'vdw_fit',
       // misc app / render controls with no state to observe
       'cls',
       'cache',
-      'callout',
+      // `callout` is incentive-only — registered below (throws).
       'capture',
+      // `copy_image` copies the rendered frame to the clipboard; headless it is
+      // a None no-op (verified vs the GL oracle).
+      'copy_image',
+      // `write_html_ref` writes a WebGL HTML reference page to disk — headless
+      // (no filesystem) it is a None no-op, matching the oracle.
+      'write_html_ref',
       'quit',
       'meter_reset',
-      'focal_blur',
+      // `focal_blur` is incentive-only — registered below (throws).
       'decline',
       'feedback',
       'extend',
@@ -773,12 +794,36 @@ export function registerExtras(ctx: RegistrarCtx): void {
     null,
   );
 
+  // `volume_panel(name)` opens the Qt transfer-function editor. Open-Source
+  // PyMOL has no `pymol.Qt` (it ships only with the incentive GUI), so the
+  // default `_noqt=0` path raises `ImportError: pymol.Qt` — verified against the
+  // real-PyMOL oracle. The browser's own volume panel is a separate UI surface
+  // (apps/web/src/features/volume), reached outside this cmd.
+  ctx.command('volume_panel', () => {
+    throw new PymolError(
+      wireError('PythonError', 'pymol.Qt', { type: 'ImportError' }),
+      'volume_panel',
+    );
+  });
+
+  // `callout` (2D annotation) is incentive-only in Open-Source PyMOL.
+  ctx.command('callout', () => {
+    throw new PymolError(incentiveOnly('callout', CALLOUT_INCENTIVE_ONLY), 'callout');
+  });
+
+  // `focal_blur` (depth-of-field) is incentive-only in Open-Source PyMOL.
+  ctx.command('focal_blur', () => {
+    throw new PymolError(incentiveOnly('focal_blur', FOCAL_BLUR_INCENTIVE_ONLY), 'focal_blur');
+  });
+
   // Return an empty dict: analysis verbs producing a name->value mapping.
   // `cealign`/`usalign` are real now — see cmd/align.ts.
   noop(['stereochemistry'], {});
 
-  // Return an empty string: text-export getters.
-  noop(['get_mtl_obj'], '');
+  // `get_mtl_obj` returns the (OBJ, MTL) export pair — empty strings until a
+  // wavefront-obj ray export has run. The real oracle returns a 2-tuple, so the
+  // engine must too (was a single ''); verified empty-pair vs the GL oracle.
+  noop(['get_mtl_obj'], ['', '']);
 
   // Return a pair of empty strings: PovRay exporters (scene, header).
   noop(['get_povray', 'povray'], ['', '']);

@@ -1,0 +1,13 @@
+{
+  "id":"selection__donors","feature":"donors","kind":"selection","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/1tii.pdb, m"}],
+  "checks":[
+    {"call":["count_atoms","donor"],"label":"perceived H-bond donors (hb_donor)"},
+    {"call":["count_atoms","don."],"label":"don. alias"},
+    {"call":["count_atoms","donors"],"label":"donors plural alias"},
+    {"call":["count_atoms","donor and elem N"],"label":"donor N (implicit-H amines)"},
+    {"call":["count_atoms","donor and elem O"],"label":"donor O (hydroxyls + waters)"},
+    {"call":["count_atoms","donor and name N"],"label":"backbone amide N donors"}
+  ],
+  "expected":[1276,1276,1276,924,352,684]
+}

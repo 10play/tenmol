@@ -7,7 +7,11 @@
     "summary": "Sequence-alignment-driven structural superposition with outlier-rejection cycles; best for proteins with >30% identity.",
     "signature": "align(mobile, target, cutoff=2.0, cycles=5, gap=-10.0, extend=-0.5, max_gap=50, object=None, matrix='BLOSUM62', mobile_state=0, target_state=0, quiet=1, max_skip=0, transform=1, reset=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:372", "docs/api-reference/commands.mdx:45", "packages/engine-ts/src/cmd/align.ts:499"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:372",
+      "docs/api-reference/commands.mdx:45",
+      "packages/engine-ts/src/cmd/align.ts:499"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#align"
   },
@@ -19,7 +23,11 @@
     "summary": "Residue-based structural superposition weighting sequence, secondary/tertiary structure and coordinates; robust at low sequence identity.",
     "signature": "super(mobile, target, cutoff=2.0, cycles=5, gap=-1.5, extend=-0.7, max_gap=50, object=None, matrix='BLOSUM62', mobile_state=0, target_state=0, quiet=1, max_skip=0, transform=1, reset=0, seq=0.0, radius=12.0, scale=17.0, base=0.65, coord=0.0, expect=6.0, window=3, ante=-1.0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:308", "docs/api-reference/commands.mdx:3935", "packages/engine-ts/src/cmd/align.ts:539"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:308",
+      "docs/api-reference/commands.mdx:3935",
+      "packages/engine-ts/src/cmd/align.ts:539"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#super"
   },
@@ -31,7 +39,11 @@
     "summary": "CE (Combinatorial Extension) pure-structure aligner needing no sequence similarity; target is the first argument.",
     "signature": "cealign(target, mobile, target_state=1, mobile_state=1, quiet=1, guide=1, d0=3.0, d1=4.0, window=8, gap_max=30, transform=1, object=None)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:27", "docs/api-reference/commands.mdx:308", "packages/engine-ts/src/cmd/align.ts:556"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:27",
+      "docs/api-reference/commands.mdx:308",
+      "packages/engine-ts/src/cmd/align.ts:556"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#cealign"
   },
@@ -43,7 +55,11 @@
     "summary": "TM-align/USalign TM-score-optimised, length-independent superposition using only guide atoms (Cα / C4').",
     "signature": "usalign(mobile, target, mobile_state=1, target_state=1, quiet=1, transform=1, object=None, fast=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:137", "docs/api-reference/commands.mdx:4226", "packages/engine-ts/src/cmd/align.ts:580"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:137",
+      "docs/api-reference/commands.mdx:4226",
+      "packages/engine-ts/src/cmd/align.ts:580"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#usalign"
   },
@@ -55,7 +71,11 @@
     "summary": "Superimposes and moves the mobile model onto the target using only matching atoms; returns the post-fit RMS.",
     "signature": "fit(mobile, target, mobile_state=0, target_state=0, quiet=1, matchmaker=0, cutoff=2.0, cycles=0, object=None)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:609", "docs/api-reference/commands.mdx:931", "packages/engine-ts/src/cmd/align.ts:487"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:609",
+      "docs/api-reference/commands.mdx:931",
+      "packages/engine-ts/src/cmd/align.ts:487"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#fit"
   },
@@ -67,7 +87,11 @@
     "summary": "Computes the best-fit RMS between two selections without moving the models.",
     "signature": "rms(mobile, target, mobile_state=0, target_state=0, quiet=1, matchmaker=0, cutoff=2.0, cycles=0, object=None)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:686", "docs/api-reference/commands.mdx:3281", "packages/engine-ts/src/cmd/align.ts:478"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:686",
+      "docs/api-reference/commands.mdx:3281",
+      "packages/engine-ts/src/cmd/align.ts:478"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#rms"
   },
@@ -79,7 +103,11 @@
     "summary": "Computes the RMS difference between two selections as they currently sit, with no fitting.",
     "signature": "rms_cur(mobile, target, mobile_state=0, target_state=0, quiet=1, matchmaker=0, cutoff=2.0, cycles=0, object=None)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:732", "docs/api-reference/commands.mdx:3299", "packages/engine-ts/src/cmd/align.ts:471"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:732",
+      "docs/api-reference/commands.mdx:3299",
+      "packages/engine-ts/src/cmd/align.ts:471"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#rms_cur"
   },
@@ -91,7 +119,11 @@
     "summary": "Fits all states of an object onto a reference state and moves them; returns the per-state RMS array.",
     "signature": "intra_fit(selection, state=1, quiet=1, mix=0, pbc=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:462", "docs/api-reference/commands.mdx:1861", "packages/engine-ts/src/cmd/align.ts:704"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:462",
+      "docs/api-reference/commands.mdx:1861",
+      "packages/engine-ts/src/cmd/align.ts:704"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#intra_fit"
   },
@@ -103,7 +135,11 @@
     "summary": "Computes best-fit RMS for all states of an object relative to a reference state, leaving coordinates unchanged.",
     "signature": "intra_rms(selection, state=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:522", "docs/api-reference/commands.mdx:1875", "packages/engine-ts/src/cmd/align.ts:679"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:522",
+      "docs/api-reference/commands.mdx:1875",
+      "packages/engine-ts/src/cmd/align.ts:679"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#intra_rms"
   },
@@ -115,7 +151,10 @@
     "summary": "Computes RMS for all states of an object relative to a reference state with no fitting (state analogue of rms_cur).",
     "signature": "intra_rms_cur(selection, state=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:566", "docs/api-reference/commands.mdx:1887"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:566",
+      "docs/api-reference/commands.mdx:1887"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/topics/fitting-alignment.md#intra_rms_cur"
   },
@@ -127,7 +166,11 @@
     "summary": "Superposes explicitly matched sets of atom pairs (mobile/target selections listed two-by-two) and moves the mobile object.",
     "signature": "pair_fit(*arg, quiet=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:776", "docs/api-reference/commands.mdx:2822", "packages/engine-ts/src/cmd/align.ts:612"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:776",
+      "docs/api-reference/commands.mdx:2822",
+      "packages/engine-ts/src/cmd/align.ts:612"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#pair_fit"
   },
@@ -139,7 +182,11 @@
     "summary": "Fits every object in a selection onto a reference object using a chosen alignment method (multi-object analogue of intra_fit).",
     "signature": "extra_fit(selection='(all)', reference='', method='align', zoom=1, quiet=0, **kwargs)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:203", "docs/api-reference/commands.mdx:814", "packages/engine-ts/src/cmd/align.ts:660"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:203",
+      "docs/api-reference/commands.mdx:814",
+      "packages/engine-ts/src/cmd/align.ts:660"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#extra_fit"
   },
@@ -151,7 +198,11 @@
     "summary": "Aligns all other loaded objects onto a target object using a chosen method (wrapper over extra_fit; defaults to cealign).",
     "signature": "alignto(target='', method='cealign', selection='', quiet=1, **kwargs)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:265", "docs/api-reference/commands.mdx:69", "packages/engine-ts/src/cmd/align.ts:647"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:265",
+      "docs/api-reference/commands.mdx:69",
+      "packages/engine-ts/src/cmd/align.ts:647"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#alignto"
   },
@@ -163,7 +214,11 @@
     "summary": "Returns the per-atom alignment relationships of an alignment object as a list of columns of (object, index) tuples.",
     "signature": "get_raw_alignment(name='', active_only=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/querying.py:1487", "docs/api-reference/commands.mdx:1481", "packages/engine-ts/src/cmd/align.ts:735"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/querying.py:1487",
+      "docs/api-reference/commands.mdx:1481",
+      "packages/engine-ts/src/cmd/align.ts:735"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/fitting-alignment.md#get_raw_alignment"
   },
@@ -175,20 +230,11 @@
     "summary": "API-only command that builds an alignment object from explicit lists of (model, index) atom-pair columns.",
     "signature": "set_raw_alignment(name, raw, guide='', state=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:648", "docs/api-reference/commands.mdx:3672"],
-    "parityStatus": "unknown",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:648",
+      "docs/api-reference/commands.mdx:3672"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/fitting-alignment.md#set_raw_alignment"
-  },
-  {
-    "name": "morph",
-    "kind": "command",
-    "category": "fitting-alignment",
-    "subcategory": "conformation interpolation",
-    "summary": "Creates an interpolated multi-state trajectory between two conformations (rigimol incentive-only, or linear).",
-    "signature": "morph(name, sele1, sele2=None, state1=-1, state2=-1, refinement=3, steps=30, method='rigimol', match='align', quiet=1)",
-    "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/morphing.py:12", "docs/api-reference/commands.mdx:2601", "packages/engine-ts/src/cmd/movie2.ts:374"],
-    "parityStatus": "partial",
-    "doc": "packages/graph/features/topics/fitting-alignment.md#morph"
   }
 ]

@@ -1,0 +1,2 @@
+{"id":"representation__mesh","feature":"mesh","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"hide everything"},{"do":"show mesh, elem N"}],"checks":[{"call":["count_atoms","rep mesh"],"label":"N shown as mesh"}],"expected":[1],"tol":0}

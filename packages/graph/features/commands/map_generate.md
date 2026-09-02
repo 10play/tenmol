@@ -4,7 +4,7 @@ kind: command
 category: maps-volumes
 subcategory: map synthesis
 summary: Synthesizes an electron-density map object from reflection data (amplitudes and phases).
-parity: unknown
+parity: implemented
 ---
 
 ## Purpose
@@ -40,4 +40,4 @@ map_generate fofc, data.mtz, /FDIFF, /PHDIFF, reso_low=30, reso_high=2.0
 - [load](../commands/load.md)
 
 ## Source
-`packages/engine/modules/pymol/creating.py:176`. Parity: not present in `packages/engine-ts/src` (depends on MTZ reflection parsing and FFT synthesis).
+`packages/engine/modules/pymol/creating.py:176`. Parity: registered in `packages/engine-ts/src/cmd/maps.ts` as a blanket stub — engine-ts has no MTZ reflection reader, so it raises the same bare `CmdException` Open-Source PyMOL surfaces for an unreadable reflection file, for every call.

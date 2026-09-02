@@ -1,0 +1,10 @@
+{
+  "id":"command__window","feature":"window","kind":"command","probeKind":"state",
+  "ops":[],
+  "checks":[
+    {"call":["window","show"],"label":"window show returns None (GUI-shell no-op headless)"},
+    {"call":["window","hide"],"label":"window hide returns None"},
+    {"call":["get_names"],"label":"window touches no objects"}
+  ],
+  "expected":[null,null,[]]
+}

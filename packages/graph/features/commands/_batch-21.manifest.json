@@ -7,7 +7,12 @@
     "summary": "Controls the visibility, position, and size of PyMOL's output window.",
     "signature": "window(action='show', x=0, y=0, width=0, height=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1431", "packages/engine/modules/pymol/constants.py:150", "docs/api-reference/commands.mdx:4346", "docs/feature-parity.md"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1431",
+      "packages/engine/modules/pymol/constants.py:150",
+      "docs/api-reference/commands.mdx:4346",
+      "docs/feature-parity.md"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/window.md"
   },
@@ -19,7 +24,12 @@
     "summary": "Launches one of PyMOL's built-in interactive wizards.",
     "signature": "wizard(name=None, *arg, **kwd)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/wizarding.py:62", "packages/engine-ts/src/cmd/wizards.ts:105", "docs/api-reference/commands.mdx:4358", "docs/feature-parity.md"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/wizarding.py:62",
+      "packages/engine-ts/src/cmd/wizards.ts:105",
+      "docs/api-reference/commands.mdx:4358",
+      "docs/feature-parity.md"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/wizard.md"
   },
@@ -31,8 +41,11 @@
     "summary": "Writes the PyMOL command reference to an HTML file.",
     "signature": "write_html_ref(file)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/cmd.py:211", "docs/api-reference/commands.mdx:4366"],
-    "parityStatus": "unknown",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/cmd.py:211",
+      "docs/api-reference/commands.mdx:4366"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/write_html_ref.md"
   },
   {
@@ -43,7 +56,11 @@
     "summary": "Scales and translates the view and origin to cover an atom selection.",
     "signature": "zoom(selection='all', buffer=0.0, state=0, complete=0, animate=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:66", "packages/engine-ts/src/view/view.ts:117", "docs/api-reference/commands.mdx:4372"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:66",
+      "packages/engine-ts/src/view/view.ts:117",
+      "docs/api-reference/commands.mdx:4372"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/zoom.md"
   }

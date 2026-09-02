@@ -1,0 +1,9 @@
+{
+  "id":"command__copy_image","feature":"copy_image","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"}],
+  "checks":[
+    {"call":["copy_image"],"label":"copy_image to clipboard returns None (headless no-op)"},
+    {"call":["get_names"],"label":"copy_image creates no object"}
+  ],
+  "expected":[null,["ala"]],"tol":0
+}

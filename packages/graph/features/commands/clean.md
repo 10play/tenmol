@@ -3,8 +3,8 @@ name: clean
 kind: command
 category: sculpting-minimization
 subcategory: energy minimization
-summary: Runs MMFF94 energy minimization ("clean up") on a selection.
-parity: partial
+summary: MMFF94 energy-minimization 'clean up' of a selection — incentive-only; raises IncentiveOnlyException (matched by the TS engine).
+parity: implemented
 ---
 
 ## Purpose
@@ -45,5 +45,8 @@ clean resi 50-60, fix=(not resi 50-60)
 
 ## Source
 `packages/engine/modules/pymol/computing.py:20` (raises
-`IncentiveOnlyException`). The TS port registers `clean` mapped to an
-`idealize` geometry pass (`packages/engine-ts/src/cmd/editor.ts`).
+`IncentiveOnlyException` — MMFF94 `clean` ships only in Incentive PyMOL). The TS
+port matches upstream by raising the identical incentive-only error
+(`packages/engine-ts/src/cmd/sculpt.ts`, `ctx.command('clean', …)`), verified
+against the real-PyMOL oracle; the builder panel already reports the same reason
+(`clean_available = false`).

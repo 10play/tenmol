@@ -1,0 +1,2 @@
+{"id":"representation__dots","feature":"dots","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"hide everything"},{"do":"show dots, elem C"}],"checks":[{"call":["count_atoms","rep dots"],"label":"C shown as dots"}],"expected":[3],"tol":0}

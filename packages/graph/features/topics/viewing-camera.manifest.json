@@ -7,7 +7,11 @@
     "summary": "Scale and translate the window and origin to cover an atom selection, guessing an optimal zoom level.",
     "signature": "zoom(selection=\"all\", buffer=0.0, state=0, complete=0, animate=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:66", "docs/api-reference/commands.mdx:4372", "packages/engine-ts/src/view/view.ts:117"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:66",
+      "docs/api-reference/commands.mdx:4372",
+      "packages/engine-ts/src/view/view.ts:117"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#zoom"
   },
@@ -19,7 +23,11 @@
     "summary": "Align the selection's principal components with the XYZ axes and frame it.",
     "signature": "orient(selection=\"(all)\", state=0, animate=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:310", "docs/api-reference/commands.mdx:2784", "packages/engine-ts/src/view/view.ts:131"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:310",
+      "docs/api-reference/commands.mdx:2784",
+      "packages/engine-ts/src/view/view.ts:131"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#orient"
   },
@@ -31,7 +39,11 @@
     "summary": "Translate the window, clipping slab and origin to the centre of an atom selection.",
     "signature": "center(selection=\"all\", state=0, origin=1, animate=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:134", "docs/api-reference/commands.mdx:329", "packages/engine-ts/src/cmd/transforms.ts:246"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:134",
+      "docs/api-reference/commands.mdx:329",
+      "packages/engine-ts/src/cmd/transforms.ts:246"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#center"
   },
@@ -43,7 +55,11 @@
     "summary": "Set the centre of rotation about a selection, an explicit position, or an object.",
     "signature": "origin(selection=\"(all)\", object=None, position=None, state=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:256", "docs/api-reference/commands.mdx:2796", "packages/engine-ts/src/cmd/transforms.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:256",
+      "docs/api-reference/commands.mdx:2796",
+      "packages/engine-ts/src/cmd/transforms.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#origin"
   },
@@ -55,7 +71,11 @@
     "summary": "Reset the rotation to identity, origin to centre of mass and zoom to all objects (or reset an object's matrix).",
     "signature": "reset(object='')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1774", "docs/api-reference/commands.mdx:3259", "packages/engine-ts/src/cmd/system.ts:110"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1774",
+      "docs/api-reference/commands.mdx:3259",
+      "packages/engine-ts/src/cmd/system.ts:110"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#reset"
   },
@@ -67,7 +87,11 @@
     "summary": "Rotate the camera about one of the three primary axes, centred at the origin.",
     "signature": "turn(axis, angle)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1300", "docs/api-reference/commands.mdx:4095", "packages/engine-ts/src/view/view.ts:106"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1300",
+      "docs/api-reference/commands.mdx:4095",
+      "packages/engine-ts/src/view/view.ts:106"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#turn"
   },
@@ -79,7 +103,11 @@
     "summary": "Translate the camera along one of the three primary axes (a z move carries the clip planes).",
     "signature": "move(axis, distance)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:352", "docs/api-reference/commands.mdx:2627", "packages/engine-ts/src/cmd/transforms.ts:201"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:352",
+      "docs/api-reference/commands.mdx:2627",
+      "packages/engine-ts/src/cmd/transforms.ts:201"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#move"
   },
@@ -91,7 +119,11 @@
     "summary": "Rotate the atomic coordinates of a selection about an axis, or modify an object's matrix.",
     "signature": "rotate(axis='x', angle=0.0, selection=\"all\", state=-1, camera=1, object=None, origin=None, object_mode=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2002", "docs/api-reference/commands.mdx:3325", "packages/engine-ts/src/cmd/transforms.ts:175"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2002",
+      "docs/api-reference/commands.mdx:3325",
+      "packages/engine-ts/src/cmd/transforms.ts:175"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#rotate"
   },
@@ -103,7 +135,11 @@
     "summary": "Translate the atomic coordinates of a selection, or modify an object's matrix.",
     "signature": "translate(vector=[0.0,0.0,0.0], selection=\"all\", state=-1, camera=1, object=None, object_mode=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:1896", "docs/api-reference/commands.mdx:4070", "packages/engine-ts/src/cmd/transforms.ts:225"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:1896",
+      "docs/api-reference/commands.mdx:4070",
+      "packages/engine-ts/src/cmd/transforms.ts:225"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#translate"
   },
@@ -115,7 +151,11 @@
     "summary": "Alter the near/far clipping-plane positions via near/far/move/slab/atoms modes.",
     "signature": "clip(mode, distance, selection=None, state=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:181", "docs/api-reference/commands.mdx:379", "packages/engine-ts/src/cmd/transforms.ts:296"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:181",
+      "docs/api-reference/commands.mdx:379",
+      "packages/engine-ts/src/cmd/transforms.ts:296"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#clip"
   },
@@ -127,7 +167,10 @@
     "summary": "Return the current positions of the clipping planes.",
     "signature": "get_clip(quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:228", "docs/api-reference/commands.mdx:1172"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:228",
+      "docs/api-reference/commands.mdx:1172"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#clip"
   },
@@ -139,7 +182,11 @@
     "summary": "Aim an object (or the camera) so its forward z axis faces the centre of a target object.",
     "signature": "look_at(target_obj, mobile_obj='_Camera')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2141", "docs/api-reference/commands.mdx:2283", "packages/engine-ts/src/cmd/extras.ts:435"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2141",
+      "docs/api-reference/commands.mdx:2283",
+      "packages/engine-ts/src/cmd/extras.ts:435"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#look_at"
   },
@@ -151,7 +198,11 @@
     "summary": "Return (and optionally print) the current 18-float view vector for pasting into a script.",
     "signature": "get_view(output=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:634", "docs/api-reference/commands.mdx:1669", "packages/engine-ts/src/view/view.ts:95"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:634",
+      "docs/api-reference/commands.mdx:1669",
+      "packages/engine-ts/src/view/view.ts:95"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#get_view"
   },
@@ -163,7 +214,11 @@
     "summary": "Set the full viewing state (rotation, origins, clip planes, orthoscopic flag) from 18 floats.",
     "signature": "set_view(view, animate=0, quiet=1, hand=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:734", "docs/api-reference/commands.mdx:3740", "packages/engine-ts/src/view/view.ts:99"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:734",
+      "docs/api-reference/commands.mdx:3740",
+      "packages/engine-ts/src/view/view.ts:99"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#set_view"
   },
@@ -175,7 +230,10 @@
     "summary": "Store, recall or clear named camera views in a per-session dictionary (F1-F12 fallbacks).",
     "signature": "view(key, action='recall', animate=-1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:783", "docs/api-reference/commands.mdx:4274"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:783",
+      "docs/api-reference/commands.mdx:4274"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#view"
   },
@@ -187,7 +245,11 @@
     "summary": "Return (and optionally print) the screen viewport size as (width, height).",
     "signature": "get_viewport(output=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:853", "docs/api-reference/commands.mdx:1680", "packages/engine-ts/src/cmd/render.ts:118"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:853",
+      "docs/api-reference/commands.mdx:1680",
+      "packages/engine-ts/src/cmd/render.ts:118"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#get_viewport"
   },
@@ -199,7 +261,10 @@
     "summary": "Change the size of the graphics display area (tuple syntax deprecated).",
     "signature": "viewport(width=-1, height=-1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1459", "docs/api-reference/commands.mdx:4286"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1459",
+      "docs/api-reference/commands.mdx:4286"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#viewport"
   },
@@ -211,8 +276,11 @@
     "summary": "Control visibility and geometry of PyMOL's output window (GUI-shell operation).",
     "signature": "window(action='show', x=0, y=0, width=0, height=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1431", "docs/api-reference/commands.mdx:4346"],
-    "parityStatus": "partial",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1431",
+      "docs/api-reference/commands.mdx:4346"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#window"
   },
   {
@@ -223,8 +291,11 @@
     "summary": "Enable or disable full-screen mode (GUI-thread bound, platform dependent).",
     "signature": "full_screen(toggle=-1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1329", "docs/api-reference/commands.mdx:1025"],
-    "parityStatus": "partial",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1329",
+      "docs/api-reference/commands.mdx:1025"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#full_screen"
   },
   {
@@ -235,7 +306,11 @@
     "summary": "Activate or deactivate stereo display and choose the stereo mode.",
     "signature": "stereo(toggle='on', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1266", "docs/api-reference/commands.mdx:3926", "packages/engine-ts/src/cmd/extras.ts:477"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1266",
+      "docs/api-reference/commands.mdx:3926",
+      "packages/engine-ts/src/cmd/extras.ts:477"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/viewing-camera.md#stereo"
   },
@@ -247,7 +322,11 @@
     "summary": "Toggle live camera rocking (idle-loop sweep/spin/nutate, honouring the sweep_* settings).",
     "signature": "rock(mode=-1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1360", "docs/api-reference/commands.mdx:3317", "packages/engine-ts/src/cmd/movie2.ts:312"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1360",
+      "docs/api-reference/commands.mdx:3317",
+      "packages/engine-ts/src/cmd/movie2.ts:312"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#rock"
   },
@@ -259,7 +338,11 @@
     "summary": "Set the scene background colour by name or number.",
     "signature": "bg_color(color=\"black\")",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1488", "docs/api-reference/commands.mdx:208", "packages/engine-ts/src/cmd/render.ts:43"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1488",
+      "docs/api-reference/commands.mdx:208",
+      "packages/engine-ts/src/cmd/render.ts:43"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#bg_color"
   },
@@ -271,7 +354,11 @@
     "summary": "Mark the scene as needing a redraw (internal/legacy invalidation hook).",
     "signature": "dirty()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1795", "docs/api-reference/commands.mdx:641", "packages/engine-ts/src/cmd/misc2.ts:66"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1795",
+      "docs/api-reference/commands.mdx:641",
+      "packages/engine-ts/src/cmd/misc2.ts:66"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#dirty"
   },
@@ -283,7 +370,11 @@
     "summary": "Force PyMOL to recreate geometric objects that may have gone out of sync.",
     "signature": "rebuild(selection='all', representation='everything')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1837", "docs/api-reference/commands.mdx:3135", "packages/engine-ts/src/cmd/display.ts:13"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1837",
+      "docs/api-reference/commands.mdx:3135",
+      "packages/engine-ts/src/cmd/display.ts:13"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#rebuild"
   },
@@ -295,7 +386,11 @@
     "summary": "Redraw the scene as soon as the OS allows, without regenerating geometry.",
     "signature": "refresh()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1750", "docs/api-reference/commands.mdx:3183", "packages/engine-ts/src/cmd/extras.ts:463"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1750",
+      "docs/api-reference/commands.mdx:3183",
+      "packages/engine-ts/src/cmd/extras.ts:463"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#refresh"
   },
@@ -307,7 +402,11 @@
     "summary": "Vertical field of view in degrees; only visible under perspective projection.",
     "signature": "",
     "default": "20.0",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:237", "packages/engine/data/setting_help.csv", "packages/engine-ts/src/view/view.ts:27"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:237",
+      "packages/engine/data/setting_help.csv",
+      "packages/engine-ts/src/view/view.ts:27"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#field_of_view"
   },
@@ -319,7 +418,11 @@
     "summary": "Use orthographic (parallel) projection instead of the perspective transform.",
     "signature": "",
     "default": "0",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:107", "packages/engine/data/setting_help.csv", "packages/engine-ts/src/render/camera.ts"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:107",
+      "packages/engine/data/setting_help.csv",
+      "packages/engine-ts/src/render/camera.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#orthoscopic"
   },
@@ -331,7 +434,10 @@
     "summary": "Master switch for the depth-cue fog effect that fades distant geometry.",
     "signature": "",
     "default": "1",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:168", "packages/engine/data/setting_help.csv"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:168",
+      "packages/engine/data/setting_help.csv"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/viewing-camera.md#depth_cue"
   },
@@ -343,7 +449,11 @@
     "summary": "Fog density used by the depth-cue effect (0 = none, 1 = full).",
     "signature": "",
     "default": "1.0",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:172", "packages/engine/data/setting_help.csv", "packages/engine-ts/src/render/raytrace.ts"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:172",
+      "packages/engine/data/setting_help.csv",
+      "packages/engine-ts/src/render/raytrace.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#fog"
   },
@@ -355,7 +465,10 @@
     "summary": "Where the fog begins, as a fraction between the near and far clip planes.",
     "signature": "",
     "default": "0.45",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:277", "packages/engine/data/setting_help.csv"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:277",
+      "packages/engine/data/setting_help.csv"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/viewing-camera.md#fog_start"
   },
@@ -367,7 +480,10 @@
     "summary": "Colour of surface interiors (cut faces) in ray-traced images; -1 uses the object colour.",
     "signature": "",
     "default": "-1",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:325", "packages/engine/data/setting_help.csv"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:325",
+      "packages/engine/data/setting_help.csv"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/viewing-camera.md#ray_interior_color"
   },
@@ -379,7 +495,10 @@
     "summary": "How interior faces are generated by the ray tracer.",
     "signature": "",
     "default": "0",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:576", "packages/engine/data/setting_help.csv"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:576",
+      "packages/engine/data/setting_help.csv"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/viewing-camera.md#ray_interior_color"
   },
@@ -391,7 +510,10 @@
     "summary": "Light both faces of a triangle or only the front face; -1 is automatic.",
     "signature": "",
     "default": "-1",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:241", "packages/engine/data/setting_help.csv"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:241",
+      "packages/engine/data/setting_help.csv"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/viewing-camera.md#two_sided_lighting"
   },
@@ -403,7 +525,11 @@
     "summary": "Uniform ambient lighting level applied to every surface.",
     "signature": "",
     "default": "0.14",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:91", "packages/engine/data/setting_help.csv", "packages/engine-ts/src/render/raytrace.ts"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:91",
+      "packages/engine/data/setting_help.csv",
+      "packages/engine-ts/src/render/raytrace.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#ambient"
   },
@@ -415,7 +541,11 @@
     "summary": "Amount of light emitted from the camera direction (head-on key light, no shadows).",
     "signature": "",
     "default": "0.45",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:92", "packages/engine/data/setting_help.csv", "packages/engine-ts/src/render/raytrace.ts"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:92",
+      "packages/engine/data/setting_help.csv",
+      "packages/engine-ts/src/render/raytrace.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#direct"
   },
@@ -427,7 +557,11 @@
     "summary": "Aggregate intensity of the movable (directional) light sources.",
     "signature": "",
     "default": "0.45",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:93", "packages/engine/data/setting_help.csv", "packages/engine-ts/src/render/raytrace.ts"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:93",
+      "packages/engine/data/setting_help.csv",
+      "packages/engine-ts/src/render/raytrace.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#reflect"
   },
@@ -439,7 +573,11 @@
     "summary": "Specular (highlight) intensity for the movable light sources.",
     "signature": "",
     "default": "1.0",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:169", "packages/engine/data/setting_help.csv", "packages/engine-ts/src/render/raytrace.ts"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:169",
+      "packages/engine/data/setting_help.csv",
+      "packages/engine-ts/src/render/raytrace.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#specular"
   },
@@ -451,7 +589,11 @@
     "summary": "Effective specular highlight strength when specular is 1.0.",
     "signature": "",
     "default": "0.5",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:399", "packages/engine/data/setting_help.csv", "packages/engine-ts/src/render/raytrace.ts"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:399",
+      "packages/engine/data/setting_help.csv",
+      "packages/engine-ts/src/render/raytrace.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#specular_intensity"
   },
@@ -463,7 +605,11 @@
     "summary": "Specular exponent for the movable light sources; higher = tighter highlights.",
     "signature": "",
     "default": "55.0",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:170", "packages/engine/data/setting_help.csv", "packages/engine-ts/src/render/raytrace.ts"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:170",
+      "packages/engine/data/setting_help.csv",
+      "packages/engine-ts/src/render/raytrace.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/topics/viewing-camera.md#shininess"
   },
@@ -475,7 +621,10 @@
     "summary": "Number of light sources including the camera source (1-10).",
     "signature": "",
     "default": "2",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:555", "packages/engine/data/setting_help.csv"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:555",
+      "packages/engine/data/setting_help.csv"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/topics/viewing-camera.md#light_count"
   },
@@ -487,7 +636,10 @@
     "summary": "How many movable lights contribute specular reflections; -1 derives from light_count.",
     "signature": "",
     "default": "-1",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:592", "packages/engine/data/setting_help.csv"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:592",
+      "packages/engine/data/setting_help.csv"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/viewing-camera.md#spec_count"
   },
@@ -499,7 +651,10 @@
     "summary": "Specularity power coefficient for the ray tracer; <0 falls back to shininess.",
     "signature": "",
     "default": "-1.0",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:109", "packages/engine/data/setting_help.csv"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:109",
+      "packages/engine/data/setting_help.csv"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/viewing-camera.md#spec_power"
   },
@@ -511,7 +666,10 @@
     "summary": "Specular intensity for the ray tracer; <0 falls back to specular_intensity.",
     "signature": "",
     "default": "-1.0",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:108", "packages/engine/data/setting_help.csv"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:108",
+      "packages/engine/data/setting_help.csv"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/viewing-camera.md#spec_reflect"
   },
@@ -523,7 +681,10 @@
     "summary": "Reflective exponent for the movable light sources.",
     "signature": "",
     "default": "1.0",
-    "sourceRefs": ["packages/engine/layer1/SettingInfo.h:238", "packages/engine/data/setting_help.csv"],
+    "sourceRefs": [
+      "packages/engine/layer1/SettingInfo.h:238",
+      "packages/engine/data/setting_help.csv"
+    ],
     "parityStatus": "planned",
     "doc": "packages/graph/features/topics/viewing-camera.md#reflect_power"
   }

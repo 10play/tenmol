@@ -95,6 +95,21 @@ describe('extras — residual command sweep', () => {
     expect(handlers.size).toBeGreaterThanOrEqual(54);
   });
 
+  it('volume_panel raises ImportError: pymol.Qt (Open-Source has no pymol.Qt)', () => {
+    // Verified against the real-PyMOL oracle: the default `_noqt=0` path imports
+    // pymol.Qt, absent in Open-Source PyMOL, so it raises ImportError('pymol.Qt').
+    const { call } = setup();
+    expect(() => call('volume_panel', ['x'])).toThrow(/pymol\.Qt/);
+  });
+
+  it('callout is incentive-only; copy_image is a None no-op (both vs the GL oracle)', () => {
+    const { call } = setup();
+    // `callout` (2D annotation) ships only with Incentive PyMOL.
+    expect(() => call('callout', ['c1', 'hi', '[0,0,0]'])).toThrow(/Incentive-Only-Error/);
+    // `copy_image` copies the rendered frame to the clipboard — headless None no-op.
+    expect(call('copy_image', [])).toBeNull();
+  });
+
   /* --------------------------- REAL behaviours --------------------------- */
 
   it('mask / unmask / get_mask toggle the per-atom masked flag', () => {
@@ -253,7 +268,9 @@ describe('extras — residual command sweep', () => {
     // shaped returns
     // alignto/cealign/pair_fit are real now (cmd/align.ts, parity-superposition)
     expect(call('get_povray')).toEqual(['', '']);
-    expect(call('get_mtl_obj')).toBe('');
+    // get_mtl_obj returns the (OBJ, MTL) pair, matching real PyMOL (verified vs
+    // the GL oracle) — empty strings until a wavefront-obj ray export has run.
+    expect(call('get_mtl_obj')).toEqual(['', '']);
     // `remove_picked` is a real verb now (cmd/editing.ts, parity-noop-stubs.test.ts)
     // no side effects on the model
     expect(ex.molecule('m')!.natom).toBe(before);

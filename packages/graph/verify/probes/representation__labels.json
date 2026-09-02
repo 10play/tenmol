@@ -1,0 +1,2 @@
+{"id":"representation__labels","feature":"labels","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"load packages/engine/testing/data/1rx1.pdb, m"},{"do":"hide everything"},{"do":"label chain A and resi 5 and name CA, 'x'"}],"checks":[{"call":["count_atoms","rep labels"],"label":"labels rep membership"}],"expected":[1],"tol":0}

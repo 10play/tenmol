@@ -46,6 +46,13 @@ export interface AtomInfo {
   color: number;
   /** Secondary structure: 'H' (helix), 'S' (strand), or '' (loop/unassigned). */
   ss: string;
+  /** Perceived H-bond donor flag (PyMOL `AtomInfoType.hb_donor`,
+   *  `ObjectMoleculeInferHBondFromChem`). Read by the `donor`/`don.` selector.
+   *  Absent ⇒ not perceived / false. */
+  hbDonor?: boolean;
+  /** Perceived H-bond acceptor flag (PyMOL `AtomInfoType.hb_acceptor`). Read by
+   *  the `acceptor`/`acc.` selector. Absent ⇒ false. */
+  hbAcceptor?: boolean;
   /** Per-atom label text (PyMOL `label`), or undefined when none is set. */
   label?: string;
   /** Explicit vdw radius override (PyMOL `vdw`), e.g. set by `util.b2vdw`;
@@ -84,11 +91,20 @@ export interface AtomInfo {
    */
   protected?: boolean;
   /**
-   * Internal atom-typing index (PyMOL `AtomInfoType.customType`). Assigned by
-   * upstream typing passes and read by the experimental `get_bond_print` debug
-   * dump; unassigned atoms are `-1` (the upstream default). Absent ⇒ -1.
+   * Internal atom-typing index (PyMOL `AtomInfoType.customType`). This is also
+   * the atom's `numeric_type`: set via `alter sele, numeric_type=N` (P.cpp
+   * ATOM_PROP_NUMERIC_TYPE) and matched by the `numeric_type`/`nt.` selector
+   * (Selector.cpp SELE_NTYs → `WordMatchInteger`). Unassigned atoms are
+   * {@link NO_NUMERIC_TYPE} (`cAtomInfoNoType`, -9999). Absent ⇒ that sentinel.
    */
   customType?: number;
+  /**
+   * MOL2/Tripos "text type" (PyMOL `AtomInfoType.textType`). Set via
+   * `alter sele, text_type='C.ar'` (P.cpp ATOM_PROP_TEXT_TYPE) and matched by the
+   * `text_type`/`tt.` selector (Selector.cpp SELE_TTYs → alpha/wildcard list).
+   * Absent ⇒ empty string.
+   */
+  textType?: string;
   /**
    * Custom atom-level properties (PyMOL's per-atom `Property` list in
    * `layer2/AtomInfo.h`). Set via `cmd.set_atom_property` and reached in
@@ -106,6 +122,9 @@ export interface AtomInfo {
    */
   atomSettings?: Record<string, number | string>;
 }
+
+/** `cAtomInfoNoType` (AtomInfo.h:214) — the sentinel for an unset `numeric_type`. */
+export const NO_NUMERIC_TYPE = -9999;
 
 /** `1 << rep` — the visRep bit for a representation. */
 export function repBit(rep: number): number {

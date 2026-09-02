@@ -1,0 +1,6 @@
+{
+  "id":"command__mdump","feature":"mdump","kind":"command","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/pept.pdb, p"},{"do":"mset 1 x3"}],
+  "checks":[{"call":["mdump"],"label":"mdump prints movie commands to feedback, returns None"}],
+  "expected":[null]
+}

@@ -4,7 +4,7 @@ kind: command
 category: rendering-export
 subcategory: image export
 summary: Copies the current rendered image to the system clipboard (incentive/proprietary feature).
-parity: internal
+parity: implemented
 ---
 
 ## Purpose
@@ -31,4 +31,4 @@ copy_image quiet=0
 - [ray](../commands/ray.md)
 
 ## Source
-`packages/engine/modules/pymol/exporting.py:35` (`def copy_image`, marked "incentive feature / proprietary"). No TypeScript port. Internal/proprietary.
+`packages/engine/modules/pymol/exporting.py:35` (`def copy_image`, marked "incentive feature / proprietary"). Parity: headless (no clipboard/GUI thread) the call is a None no-op — both the real-PyMOL oracle and `packages/engine-ts/src/cmd/extras.ts` return `None` (verified — `packages/graph/verify/probes/command__copy_image.json`).

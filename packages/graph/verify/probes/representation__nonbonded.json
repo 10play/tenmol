@@ -1,0 +1,2 @@
+{"id":"representation__nonbonded","feature":"nonbonded","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"hide everything"},{"do":"show nonbonded, elem H"}],"checks":[{"call":["count_atoms","rep nonbonded"],"label":"H shown as nonbonded"}],"expected":[5],"tol":0}

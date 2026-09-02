@@ -7,7 +7,11 @@
     "summary": "Sets a named object-level property (metadata) on one or more objects.",
     "signature": "set_property(name, value, object='*', state=0, proptype=-1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/properties.py:123", "docs/api-reference/commands.mdx:3657", "packages/engine-ts/src/cmd/props.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/properties.py:123",
+      "docs/api-reference/commands.mdx:3657",
+      "packages/engine-ts/src/cmd/props.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/set_property.md"
   },
@@ -19,8 +23,11 @@
     "summary": "API-only builder that constructs an alignment object from raw lists of (model, index) column tuples.",
     "signature": "set_raw_alignment(name, raw, guide='', state=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:648", "docs/api-reference/commands.mdx:3672"],
-    "parityStatus": "unknown",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:648",
+      "docs/api-reference/commands.mdx:3672"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/set_raw_alignment.md"
   },
   {
@@ -31,7 +38,10 @@
     "summary": "Sets the text message/annotation associated with a named scene.",
     "signature": "set_scene_message(name, message)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:931", "docs/api-reference/commands.mdx:3686"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:931",
+      "docs/api-reference/commands.mdx:3686"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/set_scene_message.md"
   },
@@ -43,7 +53,11 @@
     "summary": "Restores PyMOL state from an in-memory session object (the loader behind reading .pse files).",
     "signature": "set_session(session, partial=0, quiet=1, cache=1, steal=-1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/importing.py", "docs/api-reference/commands.mdx:3693", "packages/engine-ts/src/cmd/exporters.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/importing.py",
+      "docs/api-reference/commands.mdx:3693",
+      "packages/engine-ts/src/cmd/exporters.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/set_session.md"
   },
@@ -55,7 +69,11 @@
     "summary": "API-only command to reorder the states of a multi-state object via an index array.",
     "signature": "set_state_order(name, order, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:350", "docs/api-reference/commands.mdx:3703", "packages/engine-ts/src/cmd/xform.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:350",
+      "docs/api-reference/commands.mdx:3703",
+      "packages/engine-ts/src/cmd/xform.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/set_state_order.md"
   },
@@ -67,7 +85,11 @@
     "summary": "Defines or redefines the unit-cell dimensions and space group of a molecule or map object.",
     "signature": "set_symmetry(selection, a, b, c, alpha, beta, gamma, spacegroup='P1', state=-1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:379", "docs/api-reference/commands.mdx:3713", "packages/engine-ts/src/cmd/symmetry.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:379",
+      "docs/api-reference/commands.mdx:3713",
+      "packages/engine-ts/src/cmd/symmetry.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/set_symmetry.md"
   },
@@ -79,7 +101,10 @@
     "summary": "Attaches a text label to a particular state of an object, shown next to the object name when that state is active.",
     "signature": "set_title(object, state, text)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2194", "docs/api-reference/commands.mdx:3730"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2194",
+      "docs/api-reference/commands.mdx:3730"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/set_title.md"
   },
@@ -91,7 +116,11 @@
     "summary": "Restores the full camera state (rotation, position, origin, clipping planes, orthoscopic flag) from an 18-float view sequence.",
     "signature": "set_view(view, animate=0, quiet=1, hand=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:734", "docs/api-reference/commands.mdx:3740", "packages/engine-ts/src/view/view.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:734",
+      "docs/api-reference/commands.mdx:3740",
+      "packages/engine-ts/src/view/view.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/set_view.md"
   },
@@ -103,7 +132,11 @@
     "summary": "Restores object/representation visibility state from a visibility dictionary (counterpart of get_vis).",
     "signature": "set_vis(dict)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:903", "docs/api-reference/commands.mdx:3753", "packages/engine-ts/src/cmd/display.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:903",
+      "docs/api-reference/commands.mdx:3753",
+      "packages/engine-ts/src/cmd/display.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/set_vis.md"
   },
@@ -115,7 +148,11 @@
     "summary": "Internal command that installs a wizard instance as the active wizard, optionally replacing the current one.",
     "signature": "set_wizard(wizard=None, replace=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/wizarding.py:110", "docs/api-reference/commands.mdx:3759", "packages/engine-ts/src/cmd/wizards.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/wizarding.py:110",
+      "docs/api-reference/commands.mdx:3759",
+      "packages/engine-ts/src/cmd/wizards.ts"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/set_wizard.md"
   },
@@ -127,7 +164,11 @@
     "summary": "Internal command that replaces the entire wizard stack with a supplied list.",
     "signature": "set_wizard_stack(stack=[])",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/wizarding.py:120", "docs/api-reference/commands.mdx:3766", "packages/engine-ts/src/cmd/wizards.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/wizarding.py:120",
+      "docs/api-reference/commands.mdx:3766",
+      "packages/engine-ts/src/cmd/wizards.ts"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/set_wizard_stack.md"
   },
@@ -139,7 +180,11 @@
     "summary": "Turns on a representation for the atoms/objects in a selection (additive; leaves other representations intact).",
     "signature": "show(representation='wire', selection='')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:520", "docs/api-reference/commands.mdx:3772", "packages/engine-ts/src/cmd/display.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:520",
+      "docs/api-reference/commands.mdx:3772",
+      "packages/engine-ts/src/cmd/display.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/show.md"
   },
@@ -151,7 +196,11 @@
     "summary": "Exclusively shows one representation for a selection, hiding all others on those atoms (the 'as' command).",
     "signature": "show_as(representation='wire', selection='')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:557", "docs/api-reference/commands.mdx:3783", "packages/engine-ts/src/exec/executive.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:557",
+      "docs/api-reference/commands.mdx:3783",
+      "packages/engine-ts/src/exec/executive.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/show_as.md"
   },
@@ -163,7 +212,11 @@
     "summary": "Internal helper that prints help text for a command keyword (backs the 'help' command).",
     "signature": "show_help(cmmd)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/helping.py", "docs/api-reference/commands.mdx:3794", "packages/engine-ts/src/cmd/topics.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/helping.py",
+      "docs/api-reference/commands.mdx:3794",
+      "packages/engine-ts/src/cmd/topics.ts"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/show_help.md"
   },
@@ -175,7 +228,11 @@
     "summary": "Preset that draws structures as color-by-chain ribbons with lines/sticks for cysteines and ligands.",
     "signature": "simple(selection='(all)')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/preset.py", "docs/api-reference/commands.mdx:3800", "packages/engine-ts/src/cmd/preset.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/preset.py",
+      "docs/api-reference/commands.mdx:3800",
+      "packages/engine-ts/src/cmd/preset.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/simple.md"
   },
@@ -187,7 +244,11 @@
     "summary": "Creates a 2D slice object that samples a map object as a colored plane.",
     "signature": "slice_new(name, map, state=1, source_state=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py", "docs/api-reference/commands.mdx:3806", "packages/engine-ts/src/cmd/extras.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py",
+      "docs/api-reference/commands.mdx:3806",
+      "packages/engine-ts/src/cmd/extras.ts"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/slice_new.md"
   },
@@ -199,7 +260,11 @@
     "summary": "Applies a moving-window average across coordinate states to damp high-frequency motion in a trajectory.",
     "signature": "smooth(selection='all', passes=1, window=5, first=1, last=0, ends=0, quiet=1, cutoff=-1, pbc=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:274", "docs/api-reference/commands.mdx:3819", "packages/engine-ts/src/cmd/movie2.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:274",
+      "docs/api-reference/commands.mdx:3819",
+      "packages/engine-ts/src/cmd/movie2.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/smooth.md"
   },
@@ -211,7 +276,10 @@
     "summary": "Reorders atoms within objects into canonical order, typically after alter has changed naming properties.",
     "signature": "sort(object='')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:1541", "docs/api-reference/commands.mdx:3837"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:1541",
+      "docs/api-reference/commands.mdx:3837"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/sort.md"
   },
@@ -223,7 +291,11 @@
     "summary": "Selects the working color palette/space (rgb, cmyk, or pymol) to keep on-screen colors print/video-safe.",
     "signature": "space(space='', gamma=1.0, quiet=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/importing.py", "docs/api-reference/commands.mdx:3847", "packages/engine-ts/src/cmd/system.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/importing.py",
+      "docs/api-reference/commands.mdx:3847",
+      "packages/engine-ts/src/cmd/system.ts"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/space.md"
   },
@@ -235,7 +307,11 @@
     "summary": "Launches a Python script in a new background thread that runs concurrently with the interpreter.",
     "signature": "spawn(filename, namespace='module')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/parsing.py", "docs/api-reference/commands.mdx:3859", "packages/engine-ts/src/cmd/controlflow.ts"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/parsing.py",
+      "docs/api-reference/commands.mdx:3859",
+      "packages/engine-ts/src/cmd/controlflow.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/spawn.md"
   }

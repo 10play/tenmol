@@ -7,7 +7,11 @@
     "summary": "Colors atoms with a spectrum of colors based on an atomic property such as count, B-factor, occupancy, or partial charge.",
     "signature": "spectrum(expression='count', palette='rainbow', selection='(all)', minimum=None, maximum=None, byres=0, quiet=1, interpolation='rgb')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:2065", "docs/api-reference/commands.mdx:3870", "packages/engine-ts/src/cmd/coloring.ts:387"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:2065",
+      "docs/api-reference/commands.mdx:3870",
+      "packages/engine-ts/src/cmd/coloring.ts:387"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/spectrum.md"
   },
@@ -19,7 +23,11 @@
     "summary": "Averages trajectory frames to build an ellipsoid-like approximation of an atom's anisotropic motion.",
     "signature": "spheroid(object='', average=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/experimenting.py:35", "docs/api-reference/commands.mdx:3885", "packages/engine-ts/src/cmd/extras.ts:539"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/experimenting.py:35",
+      "docs/api-reference/commands.mdx:3885",
+      "packages/engine-ts/src/cmd/extras.ts:539"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/spheroid.md"
   },
@@ -31,7 +39,11 @@
     "summary": "Shows the PyMOL splash screen / startup information.",
     "signature": "splash(mode=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/commanding.py:297", "docs/api-reference/commands.mdx:3894", "packages/engine-ts/src/cmd/system.ts:127"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/commanding.py:297",
+      "docs/api-reference/commands.mdx:3894",
+      "packages/engine-ts/src/cmd/system.ts:127"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/splash.md"
   },
@@ -43,7 +55,10 @@
     "summary": "Creates a single new object for each chain found in a selection.",
     "signature": "split_chains(selection='(all)', prefix=None, group=None, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2979", "docs/api-reference/commands.mdx:3900"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2979",
+      "docs/api-reference/commands.mdx:3900"
+    ],
     "parityStatus": "unknown",
     "doc": "packages/graph/features/commands/split_chains.md"
   },
@@ -55,7 +70,11 @@
     "summary": "Separates a multi-state molecular object into a set of single-state objects.",
     "signature": "split_states(object, first=1, last=0, prefix=None)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:175", "docs/api-reference/commands.mdx:3913", "packages/engine-ts/src/cmd/extras.ts:288"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:175",
+      "docs/api-reference/commands.mdx:3913",
+      "packages/engine-ts/src/cmd/extras.ts:288"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/split_states.md"
   },
@@ -67,7 +86,11 @@
     "summary": "Activates or deactivates stereo 3D display mode.",
     "signature": "stereo(toggle='on', quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1266", "docs/api-reference/commands.mdx:3926", "packages/engine-ts/src/cmd/extras.ts:477"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1266",
+      "docs/api-reference/commands.mdx:3926",
+      "packages/engine-ts/src/cmd/extras.ts:477"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/stereo.md"
   },
@@ -79,7 +102,11 @@
     "summary": "Performs a residue-based, sequence-independent structural superposition with iterative outlier refinement.",
     "signature": "super(mobile, target, cutoff=2.0, cycles=5, gap=-1.5, extend=-0.7, max_gap=50, object=None, matrix='BLOSUM62', mobile_state=0, target_state=0, quiet=1, max_skip=0, transform=1, reset=0, seq=0.0, radius=12.0, scale=17.0, base=0.65, coord=0.0, expect=6.0, window=3, ante=-1.0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/fitting.py:308", "docs/api-reference/commands.mdx:3935", "packages/engine-ts/src/cmd/align.ts:539"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/fitting.py:308",
+      "docs/api-reference/commands.mdx:3935",
+      "packages/engine-ts/src/cmd/align.ts:539"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/super.md"
   },
@@ -91,7 +118,11 @@
     "summary": "Creates all symmetry-related copies of an object that fall within a cutoff distance of an atom selection.",
     "signature": "symexp(prefix, object, selection, cutoff, segi=0, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/creating.py:909", "docs/api-reference/commands.mdx:3967", "packages/engine-ts/src/cmd/symmetry.ts:200"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/creating.py:909",
+      "docs/api-reference/commands.mdx:3967",
+      "packages/engine-ts/src/cmd/symmetry.ts:200"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/symexp.md"
   },
@@ -103,7 +134,11 @@
     "summary": "Copies symmetry information (unit cell and space group) from one object to another.",
     "signature": "symmetry_copy(source_name, target_name, source_state=1, target_state=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:412", "docs/api-reference/commands.mdx:3982", "packages/engine-ts/src/cmd/symmetry.ts:181"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:412",
+      "docs/api-reference/commands.mdx:3982",
+      "packages/engine-ts/src/cmd/symmetry.ts:181"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/symmetry_copy.md"
   },
@@ -115,7 +150,11 @@
     "summary": "API-only barrier that blocks until all queued commands have finished executing, with a timeout.",
     "signature": "sync(timeout=1.0, poll=0.05)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/commanding.py:382", "docs/api-reference/commands.mdx:3994", "packages/engine-ts/src/cmd/system.ts:126"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/commanding.py:382",
+      "docs/api-reference/commands.mdx:3994",
+      "packages/engine-ts/src/cmd/system.ts:126"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/sync.md"
   },
@@ -127,7 +166,11 @@
     "summary": "Applies the 'technical' visual preset — chainbow ribbon, colored ligands, non-bonded atoms and hydrogen-bond dashes.",
     "signature": "technical(selection='(all)')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/preset.py:283", "docs/api-reference/commands.mdx:4005", "packages/engine-ts/src/cmd/preset.ts:408"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/preset.py:283",
+      "docs/api-reference/commands.mdx:4005",
+      "packages/engine-ts/src/cmd/preset.ts:408"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/technical.md"
   },
@@ -139,7 +182,10 @@
     "summary": "Unsupported internal development/test routine that dispatches to a C-core test entry point.",
     "signature": "test(group=0, index=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/experimenting.py:193", "docs/api-reference/commands.mdx:4011"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/experimenting.py:193",
+      "docs/api-reference/commands.mdx:4011"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/test.md"
   },
@@ -151,8 +197,11 @@
     "summary": "Toggles the visibility of a representation within an atom selection.",
     "signature": "toggle(representation='lines', selection='all')",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:466", "docs/api-reference/commands.mdx:4020"],
-    "parityStatus": "unknown",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:466",
+      "docs/api-reference/commands.mdx:4020"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/toggle.md"
   },
   {
@@ -163,7 +212,11 @@
     "summary": "Rotates the torsion about the bond currently picked for editing.",
     "signature": "torsion(angle)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:1135", "docs/api-reference/commands.mdx:4031", "packages/engine-ts/src/cmd/editing.ts:314"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:1135",
+      "docs/api-reference/commands.mdx:4031",
+      "packages/engine-ts/src/cmd/editing.ts:314"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/torsion.md"
   },
@@ -175,7 +228,11 @@
     "summary": "API-only function that applies a 4x4 transformation matrix to an object (or its TTT matrix).",
     "signature": "transform_object(name, matrix, state=-1, log=0, selection='', homogenous=0, transpose=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2344", "docs/api-reference/commands.mdx:4041", "packages/engine-ts/src/cmd/xform.ts:91"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2344",
+      "docs/api-reference/commands.mdx:4041",
+      "packages/engine-ts/src/cmd/xform.ts:91"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/transform_object.md"
   },
@@ -187,7 +244,11 @@
     "summary": "Applies a 4x4 transformation matrix to the atomic coordinates of a selection.",
     "signature": "transform_selection(selection, matrix, state=-1, log=0, homogenous=0, transpose=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2284", "docs/api-reference/commands.mdx:4057", "packages/engine-ts/src/cmd/xform.ts:116"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2284",
+      "docs/api-reference/commands.mdx:4057",
+      "packages/engine-ts/src/cmd/xform.ts:116"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/transform_selection.md"
   },
@@ -199,7 +260,11 @@
     "summary": "Translates the atomic coordinates of a selection, or modifies an object's display/TTT matrix.",
     "signature": "translate(vector=[0.0, 0.0, 0.0], selection='all', state=-1, camera=1, object=None, object_mode=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:1896", "docs/api-reference/commands.mdx:4070", "packages/engine-ts/src/cmd/transforms.ts:230"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:1896",
+      "docs/api-reference/commands.mdx:4070",
+      "packages/engine-ts/src/cmd/transforms.ts:230"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/translate.md"
   },
@@ -211,7 +276,11 @@
     "summary": "Shifts the coordinates of the atoms matched by a selection by an explicit x/y/z vector.",
     "signature": "translate_atom(sele1, v0, v1, v2, state=0, mode=0, log=0)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/editing.py:2507", "docs/api-reference/commands.mdx:4083", "packages/engine-ts/src/cmd/editing.ts:460"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/editing.py:2507",
+      "docs/api-reference/commands.mdx:4083",
+      "packages/engine-ts/src/cmd/editing.ts:460"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/translate_atom.md"
   },
@@ -223,7 +292,11 @@
     "summary": "Rotates the camera about one of the three primary axes, centered at the origin.",
     "signature": "turn(axis, angle)",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/viewing.py:1300", "docs/api-reference/commands.mdx:4095", "packages/engine-ts/src/view/view.ts:107"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/viewing.py:1300",
+      "docs/api-reference/commands.mdx:4095",
+      "packages/engine-ts/src/view/view.ts:107"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/turn.md"
   },
@@ -235,7 +308,10 @@
     "summary": "Internal helper that re-enables flushing of the command queue when the API lock is released.",
     "signature": "unblock_flush()",
     "default": "",
-    "sourceRefs": ["packages/engine/modules/pymol/locking.py:36", "docs/api-reference/commands.mdx:4106"],
+    "sourceRefs": [
+      "packages/engine/modules/pymol/locking.py:36",
+      "docs/api-reference/commands.mdx:4106"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/unblock_flush.md"
   }

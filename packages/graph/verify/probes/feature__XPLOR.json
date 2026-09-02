@@ -1,0 +1,55 @@
+{
+  "id": "feature__XPLOR",
+  "feature": "XPLOR",
+  "kind": "feature",
+  "probeKind": "state",
+  "ops": [
+    {
+      "call": [
+        "read_xplorstr",
+        "\n       1\nREMARK test map\n       2       0       1       2       0       1       2       0       1\n 1.00000E+01 1.00000E+01 1.00000E+01 9.00000E+01 9.00000E+01 9.00000E+01\nZYX\n       0\n 0.00000E+00 1.00000E+00 2.00000E+00 3.00000E+00\n       1\n 4.00000E+00 5.00000E+00 6.00000E+00 7.00000E+00\n   -9999\n 3.50000E+00 1.50000E+00\n",
+        "xm"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "call": [
+        "get_names"
+      ],
+      "label": "XPLOR ASCII map loads as an object"
+    },
+    {
+      "call": [
+        "get_type",
+        "xm"
+      ],
+      "label": "object:map"
+    },
+    {
+      "call": [
+        "get_volume_histogram",
+        "xm",
+        4
+      ],
+      "label": "grid values parsed (min,max,mean,stdev + 4 bins)"
+    }
+  ],
+  "tol": 0.001,
+  "expected": [
+    [
+      "xm"
+    ],
+    "object:map",
+    [
+      0,
+      7,
+      3.5,
+      2.291287899017334,
+      3,
+      2,
+      2,
+      1
+    ]
+  ]
+}

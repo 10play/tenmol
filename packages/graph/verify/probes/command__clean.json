@@ -1,0 +1,6 @@
+{
+  "id":"command__clean","feature":"clean","kind":"command","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/pept.pdb, p"}],
+  "checks":[{"call":["clean","p"],"label":"clean raises IncentiveOnlyException in Open-Source PyMOL"}],
+  "expected":[{"__error":" Incentive-Only-Error: \"clean\" is not available in Open-Source PyMOL\n\n    Please visit http://pymol.org if you are interested in the\n    full featured \"Incentive PyMOL\" version.\n"}]
+}

@@ -1,0 +1,8 @@
+{"id":"command__toggle","feature":"toggle","kind":"command","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"hide everything"}],
+ "checks":[
+   {"call":["toggle","sticks","ala"],"label":"toggle sticks on returns None"},
+   {"call":["count_atoms","rep sticks"],"label":"sticks shown after toggle"},
+   {"call":["toggle","sticks","ala"],"label":"toggle sticks off returns None"},
+   {"call":["count_atoms","rep sticks"],"label":"sticks hidden after 2nd toggle"}
+ ],"expected":[null,10,null,0],"tol":0}

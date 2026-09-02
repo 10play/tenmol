@@ -17,6 +17,7 @@
 
 import { REP_NAMES } from '@tenmol/protocol';
 import type { AtomInfo } from '../model/atom';
+import { NO_NUMERIC_TYPE } from '../model/atom';
 import type { ObjectMolecule } from '../model/molecule';
 import { getColorIndex } from '../exec/color';
 
@@ -74,6 +75,10 @@ type Node =
   // whose user-defined property `name` (set via `alter`, read as a float)
   // satisfies the comparison. PyMOL's SELE_PROP.
   | { t: 'propcmp'; name: string; op: CmpOp; value: number }
+  // `state N` — atoms present in coordinate state N (PyMOL SELE_STAs). An atom
+  // matches when its object has a coordset for that 1-based state; -1 means the
+  // object's current state.
+  | { t: 'stateSel'; state: number }
   | { t: 'ref'; name: string }
   | { t: 'not'; a: Node }
   | { t: 'and'; a: Node; b: Node }
@@ -91,6 +96,8 @@ type Node =
   | { t: 'byring'; a: Node }
   | { t: 'pepseq'; seq: string }
   | { t: 'bymol'; a: Node }
+  | { t: 'byfragment'; a: Node }
+  | { t: 'bycell'; a: Node }
   | { t: 'byobject'; a: Node }
   | { t: 'bychain'; a: Node }
   | { t: 'bysegment'; a: Node }
@@ -129,6 +136,8 @@ type PropKey =
   | 'rep'
   | 'flag'
   | 'label'
+  | 'numeric_type'
+  | 'text_type'
   | 'ss';
 type KeywordKey =
   | 'hetatm'
@@ -152,6 +161,7 @@ type KeywordKey =
   | 'protected'
   | 'fixed'
   | 'restrained'
+  | 'delocalized'
   | 'guide';
 
 const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
@@ -182,6 +192,12 @@ const PROP_ALIASES: Readonly<Record<string, PropKey>> = {
   'f.': 'flag',
   label: 'label',
   'lab.': 'label',
+  numeric_type: 'numeric_type',
+  'nt.': 'numeric_type',
+  'nt;': 'numeric_type',
+  text_type: 'text_type',
+  'tt.': 'text_type',
+  'tt;': 'text_type',
   ss: 'ss',
 };
 
@@ -235,7 +251,13 @@ const KEYWORDS: Readonly<Record<string, KeywordKey>> = {
   present: 'present',
   bonded: 'bonded',
   donor: 'donor',
+  donors: 'donor',
+  'don.': 'donor',
+  'hbd.': 'donor',
   acceptor: 'acceptor',
+  acceptors: 'acceptor',
+  'acc.': 'acceptor',
+  'hba.': 'acceptor',
   metals: 'metals',
   masked: 'masked',
   'msk.': 'masked',
@@ -244,6 +266,8 @@ const KEYWORDS: Readonly<Record<string, KeywordKey>> = {
   'fxd.': 'fixed',
   restrained: 'restrained',
   'rst.': 'restrained',
+  delocalized: 'delocalized',
+  'deloc.': 'delocalized',
   guide: 'guide',
 };
 
@@ -387,9 +411,22 @@ class Parser {
       this.next();
       return { t: 'byres', a: this.parseNot() };
     }
-    if (this.isOp(t, 'bymol', 'bymolecule', 'bm.', 'byfragment')) {
+    if (this.isOp(t, 'bymol', 'bymolecule', 'bm.')) {
       this.next();
       return { t: 'bymol', a: this.parseNot() };
+    }
+    // `byfragment`/`byfrag`/`bf.` (SELE_BYF1) expands to the editor's picked
+    // fragments (EditorGetNFrag). With no editor fragments defined it selects
+    // NOTHING — the only state engine-ts models — so it is NOT `bymol`.
+    if (this.isOp(t, 'byfragment', 'byfrag', 'bf.')) {
+      this.next();
+      return { t: 'byfragment', a: this.parseNot() };
+    }
+    // `bycell` (SELE_BYX1) expands to every atom in the same crystallographic
+    // unit cell (floor of fractional coords) as the operand.
+    if (this.isOp(t, 'bycell')) {
+      this.next();
+      return { t: 'bycell', a: this.parseNot() };
     }
     if (this.isOp(t, 'byobject', 'byobj', 'bo.')) {
       this.next();
@@ -536,6 +573,12 @@ class Parser {
     if (t.includes('/')) return parseSlashMacro(t);
     // `model X` / `m. X` object qualifier.
     if (low === 'model' || low === 'm.') return { t: 'ref', name: this.next() };
+    // `state N` — coordinate-state membership (SELE_STAs).
+    if (low === 'state') {
+      const v = Number(this.next());
+      if (!Number.isFinite(v)) throw new SelectionError("'state' expects a state number");
+      return { t: 'stateSel', state: v };
+    }
     // Numeric property comparison `b > 50`, `q = 1`, `fc. != 0`.
     if (low in NUMERIC_FIELDS && CMP_OPS.has(this.peek() ?? '')) {
       const raw = this.next();
@@ -596,7 +639,11 @@ function buildProp(key: PropKey, spec: string): Node {
     if (rawPart === '') continue;
     const part = stripEnclosingQuotes(rawPart);
     const m = /^(-?\d+)-(-?\d+)$/.exec(part);
-    if (m && (key === 'resi' || key === 'index' || key === 'id' || key === 'rank')) {
+    if (
+      m &&
+      (key === 'resi' || key === 'index' || key === 'id' || key === 'rank' ||
+        key === 'numeric_type')
+    ) {
       ranges.push([parseInt(m[1]!, 10), parseInt(m[2]!, 10)]);
     } else {
       values.push(part);
@@ -724,13 +771,28 @@ function matchProp(node: Extract<Node, { t: 'prop' }>, ua: UniverseAtom): boolea
         const n = Number(v);
         return Number.isInteger(n) && n >= 0 && n < 32 && ((a.flags ?? 0) & (1 << n)) !== 0;
       });
+    case 'numeric_type': {
+      // `numeric_type N` / `nt. N` — integer-list match on customType (PyMOL
+      // SELE_NTYs → WordMatchInteger). Unset atoms carry NO_NUMERIC_TYPE and
+      // match nothing.
+      const nt = a.customType ?? NO_NUMERIC_TYPE;
+      return (
+        node.values.some((v) => Number(v) === nt) ||
+        node.ranges.some(([lo, hi]) => nt >= lo && nt <= hi)
+      );
+    }
+    case 'text_type':
+      // `text_type S` / `tt. S` — alpha/wildcard list match on textType
+      // (SELE_TTYs); unset ⇒ ''.
+      return node.values.some(
+        (v) => eq(v, a.textType ?? '') || (v === '' && (a.textType ?? '') === ''),
+      );
     case 'ss':
-      // 'H' helix, 'S' strand; 'L' (or empty) is loop/unassigned.
-      return node.values.some((v) => {
-        const u = v.toUpperCase();
-        const s = a.ss.toUpperCase();
-        return u === 'L' ? s === '' || s === 'L' : s === u;
-      });
+      // `ss <type>` (SELE_SSTs) — alpha/wildcard match on the literal ssType
+      // string ('H'/'S'/'L'/…). PyMOL does NOT fold an unassigned '' into 'L':
+      // `ss L` selects only atoms whose ss is exactly 'L', and `ss ''` selects
+      // the unassigned ones. (Case-insensitive, like other alpha selectors.)
+      return node.values.some((v) => eq(v, a.ss) || (v === '' && a.ss === ''));
   }
 }
 
@@ -789,9 +851,11 @@ function matchKeyword(kw: KeywordKey, ua: UniverseAtom): boolean {
       // Atoms with coordinates present; every loaded atom qualifies here.
       return true;
     case 'donor':
-      return DONOR_ELEMENTS.has(a.elem);
+      // Perceived hb_donor flag (InferHBondFromChem), set at load; falls back to
+      // the element heuristic only for objects with no perceived chemistry.
+      return a.hbDonor ?? DONOR_ELEMENTS.has(a.elem);
     case 'acceptor':
-      return ACCEPTOR_ELEMENTS.has(a.elem);
+      return a.hbAcceptor ?? ACCEPTOR_ELEMENTS.has(a.elem);
     case 'metals':
       return METAL_ELEMENTS.has(a.elem);
     case 'masked':
@@ -811,6 +875,7 @@ function matchKeyword(kw: KeywordKey, ua: UniverseAtom): boolean {
     case 'enabled':
     case 'bonded':
     case 'guide':
+    case 'delocalized':
     case 'organic':
     case 'inorganic':
     case 'polymerProtein':
@@ -988,6 +1053,8 @@ interface EvalEnv {
   byComponent: Map<number, number[]>;
   /** bonded neighbours (universe indices) per universe atom. */
   adj: number[][];
+  /** summed bond orders per universe atom (for `delocalized`). */
+  valence: Float64Array;
   /** VDW radius per universe atom (for `gap`). */
   vdw: number[];
   /** Names of enabled objects (for `enabled`). */
@@ -1018,6 +1085,66 @@ function expandGroups(a: Set<number>, keyOf: (i: number) => number[]): Set<numbe
   const s = new Set<number>();
   for (const i of a) for (const j of keyOf(i)) s.add(j);
   return s;
+}
+
+/** Cartesian→fractional matrix (row-major) for a crystal cell — the inverse of
+ *  PyMOL's orthogonalisation matrix (`Crystal.realToFrac`). */
+function realToFrac(cell: {
+  a: number; b: number; c: number; alpha: number; beta: number; gamma: number;
+}): number[] {
+  const d2r = Math.PI / 180;
+  const { a, b, c } = cell;
+  const ca = Math.cos(cell.alpha * d2r);
+  const cb = Math.cos(cell.beta * d2r);
+  const cg = Math.cos(cell.gamma * d2r);
+  const sg = Math.sin(cell.gamma * d2r);
+  const vol = a * b * c * Math.sqrt(Math.max(0, 1 - ca * ca - cb * cb - cg * cg + 2 * ca * cb * cg));
+  // Orthogonalisation matrix M (fractional→Cartesian), then invert.
+  const m: number[] = [a, b * cg, c * cb, 0, b * sg, sg === 0 ? 0 : (c * (ca - cb * cg)) / sg,
+    0, 0, sg === 0 ? 0 : vol / (a * b * sg)];
+  const A = m[4]! * m[8]! - m[5]! * m[7]!;
+  const B = -(m[3]! * m[8]! - m[5]! * m[6]!);
+  const C = m[3]! * m[7]! - m[4]! * m[6]!;
+  const det = m[0]! * A + m[1]! * B + m[2]! * C;
+  const iv = det === 0 ? 0 : 1 / det;
+  return [
+    A * iv, (m[2]! * m[7]! - m[1]! * m[8]!) * iv, (m[1]! * m[5]! - m[2]! * m[4]!) * iv,
+    B * iv, (m[0]! * m[8]! - m[2]! * m[6]!) * iv, (m[2]! * m[3]! - m[0]! * m[5]!) * iv,
+    C * iv, (m[1]! * m[6]! - m[0]! * m[7]!) * iv, (m[0]! * m[4]! - m[1]! * m[3]!) * iv,
+  ];
+}
+
+/**
+ * `bycell` (SELE_BYX1): expand a selection to every atom sharing its
+ * crystallographic unit cell — the cell index is `floor` of the atom's
+ * fractional coordinates, per axis. Only atoms in objects that carry symmetry (a
+ * `CRYST1` cell) participate; atoms with no cell are never selected.
+ */
+function byCellAtoms(inner: Set<number>, env: EvalEnv): Set<number> {
+  const fracMat = new Map<string, number[]>();
+  for (const o of env.ctx.objects()) if (o.cell) fracMat.set(o.name, realToFrac(o.cell));
+  const cellKey = (i: number): string | null => {
+    const ua = env.universe[i]!;
+    const m = fracMat.get(ua.objName);
+    if (!m) return null;
+    const [x, y, z] = env.coords[i]!;
+    const fx = m[0]! * x + m[1]! * y + m[2]! * z;
+    const fy = m[3]! * x + m[4]! * y + m[5]! * z;
+    const fz = m[6]! * x + m[7]! * y + m[8]! * z;
+    return `${ua.objName}|${Math.floor(fx)}|${Math.floor(fy)}|${Math.floor(fz)}`;
+  };
+  const keys = new Set<string>();
+  for (const i of inner) {
+    const k = cellKey(i);
+    if (k) keys.add(k);
+  }
+  const out = new Set<number>();
+  if (keys.size === 0) return out;
+  for (let i = 0; i < env.universe.length; i++) {
+    const k = cellKey(i);
+    if (k && keys.has(k)) out.add(i);
+  }
+  return out;
 }
 
 /** PyMOL's ring-finder cap: rings up to 7 members (SelectorRingFinder). */
@@ -1185,6 +1312,19 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
         const lhs = typeof raw === 'boolean' ? (raw ? 1 : 0) : Number(raw);
         return Number.isFinite(lhs) && compareOp(lhs, node.op, node.value);
       });
+    case 'stateSel': {
+      // `state N` (SELE_STAs): an atom matches when its object owns a coordset
+      // for the 1-based state N (present in that state). engine-ts coordsets are
+      // dense, so presence reduces to `N <= nstate`. `-1` = current state.
+      const st = node.state;
+      const nstateByObj = new Map<string, number>();
+      for (const o of env.ctx.objects()) nstateByObj.set(o.name, o.nstate);
+      return filter((ua) => {
+        const ns = nstateByObj.get(ua.objName) ?? 0;
+        if (st === -1) return ns >= 1; // current state
+        return st >= 1 && st <= ns;
+      });
+    }
     case 'keyword': {
       const kw = node.kw;
       if (kw === 'enabled') return filter((ua) => env.enabled.has(ua.objName));
@@ -1194,6 +1334,19 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
         return s;
       }
       if (kw === 'guide') return guideAtoms(env);
+      if (kw === 'delocalized') {
+        // `delocalized`/`deloc.` (SELE_DESz): degree/valence is non-integer, i.e.
+        // the atom participates in a partial/multiple bond. Matches
+        // floor(deg/val) != deg/val (Selector.cpp:7530), NaN (unbonded 0/0)
+        // included, exactly as PyMOL.
+        const s = new Set<number>();
+        for (let i = 0; i < n; i++) {
+          const deg = env.adj[i]?.length ?? 0;
+          const deloc = deg / env.valence[i]!;
+          if (Math.floor(deloc) !== deloc) s.add(i);
+        }
+        return s;
+      }
       if (kw === 'organic' || kw === 'inorganic') return orgInoAtoms(kw, env);
       if (kw === 'polymerProtein' || kw === 'polymerNucleic') return polymerClassAtoms(kw, env);
       return filter((ua) => matchKeyword(kw, ua));
@@ -1287,6 +1440,15 @@ function evalSet(node: Node, env: EvalEnv): Set<number> {
     }
     case 'bymol':
       return expandGroups(evalSet(node.a, env), (i) => env.byComponent.get(env.component[i]!) ?? []);
+    case 'byfragment':
+      // Editor picked-fragment membership (SELE_BYF1). engine-ts models no
+      // editor fragments, so — like PyMOL with EditorGetNFrag()==0 — this always
+      // selects nothing. The operand is still evaluated so a malformed inner
+      // selection still errors.
+      evalSet(node.a, env);
+      return new Set();
+    case 'bycell':
+      return byCellAtoms(evalSet(node.a, env), env);
     case 'byobject':
       return expandGroups(evalSet(node.a, env), (i) => env.byObject.get(env.universe[i]!.objName) ?? []);
     case 'bychain':
@@ -1438,7 +1600,10 @@ export function selectAtoms(expr: string, ctx: SelectorContext): UniverseAtom[] 
   }
 
   // Bond adjacency and covalent connected components, both across the universe.
+  // `valence` accumulates each atom's summed bond orders (default order 1) for
+  // the `delocalized` selector (degree/valence non-integer ⇒ a partial bond).
   const adj: number[][] = Array.from({ length: n }, () => []);
+  const valence = new Float64Array(n);
   const parent = new Int32Array(n);
   for (let i = 0; i < n; i++) parent[i] = i;
   const find = (x: number): number => {
@@ -1450,10 +1615,14 @@ export function selectAtoms(expr: string, ctx: SelectorContext): UniverseAtom[] 
   };
   for (const o of objects) {
     const base = objBase.get(o.name)!;
-    for (const [i, j] of o.bonds) {
+    for (const bnd of o.bonds) {
+      const i = bnd[0], j = bnd[1];
+      const order = bnd[2] ?? 1;
       const ui = base + i, uj = base + j;
       adj[ui]!.push(uj);
       adj[uj]!.push(ui);
+      valence[ui]! += order;
+      valence[uj]! += order;
       const ri = find(ui), rj = find(uj);
       if (ri !== rj) parent[ri] = rj;
     }
@@ -1472,7 +1641,7 @@ export function selectAtoms(expr: string, ctx: SelectorContext): UniverseAtom[] 
   for (const o of objects) if (o.enabled) enabled.add(o.name);
 
   const set = evalSet(ast, {
-    universe, ctx, coords, vdw, byRes, byChain, bySegment, byObject, component, byComponent, adj, enabled,
+    universe, ctx, coords, vdw, byRes, byChain, bySegment, byObject, component, byComponent, adj, valence, enabled,
   });
   return [...set].sort((x, y) => x - y).map((i) => universe[i]!);
 }

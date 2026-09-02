@@ -1,0 +1,6 @@
+{"id":"representation__dashes","feature":"dashes","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"load packages/engine/testing/data/1rx1.pdb, m"},{"do":"distance d1, chain A and name CA and resi 1, chain A and name CA and resi 2"}],
+ "checks":[
+   {"call":["get_names"],"label":"distance object (drawn with the dashes rep) is created"},
+   {"call":["count_atoms","rep dashes"],"label":"dashes is a measurement-object rep, not an atom rep (0 atoms)"}
+ ],"expected":[["m","d1"],0],"tol":0}

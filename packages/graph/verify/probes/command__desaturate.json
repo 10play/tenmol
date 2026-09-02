@@ -1,0 +1,6 @@
+{
+  "id":"command__desaturate","feature":"desaturate","kind":"command","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/pept.pdb, p"}],
+  "checks":[{"call":["desaturate","p"],"label":"desaturate raises IncentiveOnlyException in Open-Source PyMOL"}],
+  "expected":[{"__error":" Incentive-Only-Error: \"desaturate\" is not available in Open-Source PyMOL\n\n    Please visit http://pymol.org if you are interested in the\n    full featured \"Incentive PyMOL\" version.\n"}]
+}

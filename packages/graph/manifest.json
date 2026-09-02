@@ -2769,17 +2769,17 @@
       "name": "desaturate",
       "kind": "command",
       "category": "coloring",
-      "subcategory": "colour assign",
-      "summary": "Desaturates the colours in a selection by blending each atom's colour toward grey.",
+      "subcategory": "color adjustment",
+      "summary": "Desaturates a selection's colours toward grey — an incentive-only feature, so Open-Source PyMOL and the TS engine both raise IncentiveOnlyException rather than recolouring.",
       "signature": "desaturate(selection='all', a=0.5, quiet=1)",
       "default": "",
       "sourceRefs": [
-        "packages/engine-ts/src/cmd/display.ts:184",
-        "docs/api-reference/commands.mdx"
+        "packages/engine/modules/pymol/experimenting.py:280",
+        "packages/engine-ts/src/cmd/display.ts"
       ],
       "parityStatus": "implemented",
-      "doc": "packages/graph/features/topics/coloring-system.md#desaturate",
-      "sidecar": "features/topics/coloring-system.manifest.json"
+      "doc": "packages/graph/features/commands/desaturate.md",
+      "sidecar": "features/commands/_batch-02.manifest.json"
     },
     {
       "name": "get_color_indices",
@@ -3639,7 +3639,7 @@
         "packages/engine/modules/pymol/experimenting.py:73",
         "packages/engine-ts/src/cmd/topics.ts:99"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/check.md",
       "sidecar": "features/commands/_batch-01.manifest.json"
     },
@@ -5147,23 +5147,6 @@
       "sidecar": "features/commands/_batch-12.manifest.json"
     },
     {
-      "name": "morph",
-      "kind": "command",
-      "category": "fitting-alignment",
-      "subcategory": "conformation interpolation",
-      "summary": "Creates an interpolated multi-state trajectory between two conformations (rigimol incentive-only, or linear).",
-      "signature": "morph(name, sele1, sele2=None, state1=-1, state2=-1, refinement=3, steps=30, method='rigimol', match='align', quiet=1)",
-      "default": "",
-      "sourceRefs": [
-        "packages/engine/modules/pymol/morphing.py:12",
-        "docs/api-reference/commands.mdx:2601",
-        "packages/engine-ts/src/cmd/movie2.ts:374"
-      ],
-      "parityStatus": "partial",
-      "doc": "packages/graph/features/topics/fitting-alignment.md#morph",
-      "sidecar": "features/topics/fitting-alignment.manifest.json"
-    },
-    {
       "name": "pair_fit",
       "kind": "command",
       "category": "fitting-alignment",
@@ -5226,7 +5209,7 @@
         "packages/engine/modules/pymol/creating.py:648",
         "docs/api-reference/commands.mdx:3672"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/fitting-alignment.md#set_raw_alignment",
       "sidecar": "features/topics/fitting-alignment.manifest.json"
     },
@@ -5714,7 +5697,7 @@
         "packages/engine/modules/pymol/experimenting.py:246",
         "packages/engine-ts/src/cmd/extras.ts:544"
       ],
-      "parityStatus": "planned",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/callout.md",
       "sidecar": "features/commands/_batch-01.manifest.json"
     },
@@ -5926,7 +5909,7 @@
         "packages/engine/modules/pymol/creating.py:176",
         "docs/api-reference/commands.mdx"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/maps-volumes.md#map_generate",
       "sidecar": "features/topics/maps-volumes.manifest.json"
     },
@@ -6086,7 +6069,7 @@
         "packages/engine/modules/pymol/colorramping.py:183",
         "packages/engine-ts/src/cmd/extras.ts:538"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/volume_panel.md",
       "sidecar": "features/commands/_batch-20.manifest.json"
     },
@@ -6729,6 +6712,22 @@
       ],
       "parityStatus": "planned",
       "doc": "packages/graph/features/commands/mmove.md",
+      "sidecar": "features/commands/_batch-13.manifest.json"
+    },
+    {
+      "name": "morph",
+      "kind": "command",
+      "category": "movies-scenes-states",
+      "subcategory": "trajectory interpolation",
+      "summary": "Interpolated multi-state trajectory between conformations — incentive-only for BOTH rigimol and linear, so Open-Source PyMOL and the TS engine raise IncentiveOnlyException.",
+      "signature": "morph(name, sele1, sele2=None, state1=-1, state2=-1, refinement=3, steps=30, method='rigimol', match='align', quiet=1)",
+      "default": "",
+      "sourceRefs": [
+        "packages/engine/modules/pymol/morphing.py:42",
+        "packages/engine-ts/src/cmd/movie2.ts"
+      ],
+      "parityStatus": "implemented",
+      "doc": "packages/graph/features/commands/morph.md",
       "sidecar": "features/commands/_batch-13.manifest.json"
     },
     {
@@ -7938,7 +7937,7 @@
         "packages/engine/modules/pymol/exporting.py:48",
         "packages/engine-ts/src/cmd/extras.ts:543"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/cache.md",
       "sidecar": "features/commands/_batch-01.manifest.json"
     },
@@ -7955,7 +7954,7 @@
         "packages/engine/modules/pymol/viewing.py:1598",
         "packages/engine-ts/src/cmd/extras.ts:545"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/capture.md",
       "sidecar": "features/commands/_batch-01.manifest.json"
     },
@@ -7971,7 +7970,7 @@
         "packages/engine/modules/pymol/exporting.py:35",
         "docs/api-reference/commands.mdx#cmd.copy_image"
       ],
-      "parityStatus": "planned",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/rendering-export.md#copy_image",
       "sidecar": "features/topics/rendering-export.manifest.json"
     },
@@ -8020,7 +8019,7 @@
         "packages/engine/modules/pymol/experimenting.py",
         "docs/api-reference/commands.mdx:983"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/focal_blur.md",
       "sidecar": "features/commands/_batch-04.manifest.json"
     },
@@ -8104,7 +8103,7 @@
         "packages/engine/modules/pymol/exporting.py:981",
         "packages/engine-ts/src/cmd/extras.ts:569"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/rendering-export.md#get_mtl_obj",
       "sidecar": "features/topics/rendering-export.manifest.json"
     },
@@ -8268,7 +8267,7 @@
         "packages/engine/modules/pymol/cmd.py:211",
         "docs/api-reference/commands.mdx#cmd.write_html_ref"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/rendering-export.md#write_html_ref",
       "sidecar": "features/topics/rendering-export.manifest.json"
     },
@@ -8464,7 +8463,7 @@
         "packages/engine/modules/pymol/viewing.py:466",
         "docs/api-reference/commands.mdx:4020"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/commands/toggle.md",
       "sidecar": "features/commands/_batch-19.manifest.json"
     },
@@ -8472,18 +8471,17 @@
       "name": "clean",
       "kind": "command",
       "category": "sculpting-minimization",
-      "subcategory": "batch minimisation",
-      "summary": "Run MMFF94 energy minimization on a selection; raises IncentiveOnlyException upstream, ported as covalent idealisation.",
+      "subcategory": "energy minimization",
+      "summary": "MMFF94 energy-minimization 'clean up' of a selection — an incentive-only feature, so Open-Source PyMOL and the TS engine both raise IncentiveOnlyException.",
       "signature": "clean(selection, present='', state=-1, fix='', restrain='', method='mmff', async_=0, save_undo=1, message=None)",
       "default": "",
       "sourceRefs": [
         "packages/engine/modules/pymol/computing.py:20",
-        "packages/engine-ts/src/cmd/sculpt.ts:394",
-        "docs/api-reference/commands.mdx:363"
+        "packages/engine-ts/src/cmd/sculpt.ts"
       ],
       "parityStatus": "implemented",
-      "doc": "packages/graph/features/topics/sculpting-minimization.md#clean",
-      "sidecar": "features/topics/sculpting-minimization.manifest.json"
+      "doc": "packages/graph/features/commands/clean.md",
+      "sidecar": "features/commands/_batch-01.manifest.json"
     },
     {
       "name": "fast_minimize",
@@ -9231,7 +9229,7 @@
         "packages/engine/modules/pymol/viewing.py:1329",
         "docs/api-reference/commands.mdx:1025"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/viewing-camera.md#full_screen",
       "sidecar": "features/topics/viewing-camera.manifest.json"
     },
@@ -9512,7 +9510,7 @@
         "packages/engine/modules/pymol/viewing.py:1431",
         "docs/api-reference/commands.mdx:4346"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/viewing-camera.md#window",
       "sidecar": "features/topics/viewing-camera.manifest.json"
     },
@@ -9944,7 +9942,7 @@
         "packages/engine/modules/pymol/importing.py:1074-1095",
         "packages/engine/modules/pymol/importing.py:694"
       ],
-      "parityStatus": "partial",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/maps-volumes.md#xplor",
       "sidecar": "features/topics/maps-volumes.manifest.json"
     },
@@ -12176,7 +12174,7 @@
         "packages/engine/layer3/Selector.cpp:668",
         "packages/engine/layer3/Selector.cpp:9069"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#bycell",
       "sidecar": "features/topics/selection-algebra.manifest.json"
     },
@@ -12201,12 +12199,12 @@
       "kind": "selection",
       "category": "selecting",
       "subcategory": "expansion operator",
-      "summary": "Expands the selection to the bonded connected fragment (bf.).",
+      "summary": "Expands a selection to the editor's picked fragments (bf.); with no editor fragments defined it selects nothing — NOT the whole connected molecule.",
       "signature": "",
       "default": "",
       "sourceRefs": [
         "packages/engine/layer3/Selector.cpp:426-428",
-        "packages/engine-ts/src/select/selector.ts:286-289"
+        "packages/engine-ts/src/select/selector.ts"
       ],
       "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#byfragment",
@@ -12397,7 +12395,7 @@
         "packages/engine/layer3/Selector.cpp:609-610",
         "packages/engine/layer3/Selector.cpp:7526-7532"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#delocalized",
       "sidecar": "features/topics/selection-algebra.manifest.json"
     },
@@ -12854,7 +12852,7 @@
       "sourceRefs": [
         "packages/engine/layer3/Selector.cpp:552-554"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#numeric_type",
       "sidecar": "features/topics/selection-algebra.manifest.json"
     },
@@ -13244,7 +13242,7 @@
       "sourceRefs": [
         "packages/engine/layer3/Selector.cpp:576"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#state",
       "sidecar": "features/topics/selection-algebra.manifest.json"
     },
@@ -13275,7 +13273,7 @@
       "sourceRefs": [
         "packages/engine/layer3/Selector.cpp:556-559"
       ],
-      "parityStatus": "unknown",
+      "parityStatus": "implemented",
       "doc": "packages/graph/features/topics/selection-algebra.md#text_type",
       "sidecar": "features/topics/selection-algebra.manifest.json"
     },

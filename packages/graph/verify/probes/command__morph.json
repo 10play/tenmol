@@ -1,0 +1,6 @@
+{
+  "id":"command__morph","feature":"morph","kind":"command","probeKind":"state",
+  "ops":[{"do":"load packages/engine/test/dat/pept.pdb, p1"},{"do":"create p2, p1"}],
+  "checks":[{"call":["morph","mm","p1","p2"],"label":"morph raises IncentiveOnlyException (rigimol AND linear are gated)"}],
+  "expected":[{"__error":" Incentive-Only-Error: \"morph\" is not available in Open-Source PyMOL\n\n    Please visit http://pymol.org if you are interested in the\n    full featured \"Incentive PyMOL\" version.\n"}]
+}

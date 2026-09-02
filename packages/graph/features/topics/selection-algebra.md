@@ -104,8 +104,11 @@ two-operand selector, not a value list).
 
 ## ss
 
-`ss <type>` — match by secondary-structure assignment: `H` (helix), `S` (strand/sheet), `L` or `''`
-(loop/unassigned). Multi-valued: `ss H+S`. Assignments come from `dss` or the loaded file.
+`ss <type>` — match by secondary-structure assignment: `H` (helix), `S` (strand/sheet), `L` (loop).
+Multi-valued: `ss H+S`. Assignments come from `dss` or the loaded file. Matching is a literal
+alpha-list compare on the ssType string: PyMOL does **not** fold an unassigned `''` into `L`, so
+`ss L` selects only atoms explicitly assigned `L`, while `ss ''` selects the unassigned ones (ported
+to the TS engine to match this).
 
 ## index
 
@@ -125,8 +128,9 @@ re-sorting). Accepts `+`-lists and ranges. *Not yet ported to the TS engine.*
 
 ## state
 
-`state <n>` — match atoms belonging to object state `n` (used with multi-state / trajectory objects).
-*Not yet ported to the TS engine.*
+`state <n>` — match atoms belonging to object state `n` (used with multi-state / trajectory objects);
+`-1` is the object's current state. An atom matches when its object owns a coordinate set for that
+state. Ported to the TS engine (SELE_STAs).
 
 ## custom
 
@@ -136,12 +140,15 @@ column). *Not yet ported to the TS engine.*
 ## text_type
 
 `text_type <v>` / `tt. <v>` — match by the MOL2/Tripos "text type" (atom type string), e.g.
-`text_type C.ar`. *Not yet ported to the TS engine.*
+`text_type C.ar`. Alpha/wildcard list match (SELE_TTYs) on the `textType` field, settable via
+`alter sele, text_type='C.ar'`. Ported to the TS engine.
 
 ## numeric_type
 
 `numeric_type <v>` / `nt. <v>` — match by the integer atom "numeric type" (legacy AMBER/type code).
-*Not yet ported to the TS engine.*
+Integer-list/range match (SELE_NTYs) on the `customType` field, settable via
+`alter sele, numeric_type=N`; unset atoms carry the `cAtomInfoNoType` sentinel and match nothing.
+Ported to the TS engine.
 
 ## and
 
@@ -220,8 +227,10 @@ The most-used expander: `byres (resn LIG around 5)` grabs whole neighbouring res
 
 ## byfragment
 
-`byfragment A` / `byfrag A` / `bf. A` — expand `A` to the connected fragment reachable by bonds. In the
-TS port this shares the connected-component implementation with `bymol`.
+`byfragment A` / `byfrag A` / `bf. A` — expand `A` to the editor's picked fragments (SELE_BYF1,
+`EditorGetNFrag`), NOT the whole connected molecule. With no editor fragments defined it selects
+nothing — the only state the TS engine models (so it is distinct from `bymol`, verified against the
+oracle to return 0 on a freshly loaded structure).
 
 ## byring
 
@@ -252,8 +261,9 @@ touches. Parallels `bychain`/`byobject`. *Not yet ported to the TS engine.*
 
 ## bycell
 
-`bycell A` — expand `A` to every atom lying in the same **crystallographic unit-cell** neighbourhood,
-using the object's symmetry/cell information. *Not yet ported to the TS engine.*
+`bycell A` — expand `A` to every atom lying in the same **crystallographic unit-cell** (the cell
+index is the floor of the atom's fractional coordinates, from the `CRYST1` cell). Ported to the TS
+engine (SELE_BYX1); atoms in objects without a cell are never selected. Verified against the oracle.
 
 ## extend
 
@@ -290,7 +300,9 @@ like other text selectors. *Not yet ported to the TS engine.*
 ## delocalized
 
 `delocalized` / `deloc.` — atoms participating in a delocalized (non-integer-order) bond, i.e. where
-explicit degree ≠ explicit valence (aromatic/resonant systems). *Not yet ported to the TS engine.*
+`floor(degree/valence) != degree/valence` (aromatic/resonant systems). Ported to the TS engine
+(SELE_DESz), driven by the bond-order perception in the PDB loader (backbone carbonyls, aromatic
+rings, guanidinium, nucleobases — the order half of `assign_pdb_known_residue`).
 
 ## cartoon_color
 
@@ -378,14 +390,16 @@ Complement of `sidechain` within `polymer`.
 
 ## donors
 
-`donors` / `don.` / `hbd.` — candidate hydrogen-bond donor atoms (the `hbd.` opcode reads the same
-`hb_donor` chemistry flag). The TS port uses an element heuristic (N, O); PyMOL additionally consults
-valence/hydrogen presence.
+`donors` / `don.` / `hbd.` — candidate hydrogen-bond donor atoms carrying the perceived `hb_donor`
+flag. The TS port reproduces PyMOL's chemistry perception (InferChemFromBonds → InferHBondFromChem):
+donors are atoms with an implicit/explicit hydrogen (metals, amine/hydroxyl/water N and O, …), NOT a
+bare N/O element test — verified against the oracle.
 
 ## acceptors
 
-`acceptors` / `acc.` / `hba.` — candidate hydrogen-bond acceptor atoms (the `hba.` opcode reads the
-same `hb_acceptor` chemistry flag). The TS port uses an element heuristic (N, O, S).
+`acceptors` / `acc.` / `hba.` — candidate hydrogen-bond acceptor atoms carrying the perceived
+`hb_acceptor` flag (every uncharged O, delocalized N, …). Ported via the same perception pass as
+`donors` and verified against the oracle.
 
 ## visible
 
@@ -509,8 +523,8 @@ slash macro `:460-486`, evaluator `:791-946`.
 
 Parity note: the TS engine implements the common corpus (property selectors, `and/or/not`, all
 distance operators, `byres/bychain/byobject/bymol/byfragment/byring/bycalpha/neighbor`, `first`,
-`last`, `pepseq`, and most pseudo-selections; `bound_to` is aliased to `neighbor`). Not yet ported:
-`flag`, `rank`, `state`, `custom`, `text_type`, `numeric_type`, `in`, `like`, `extend`, `bysegment`,
-`bycell`, `guide`, `stereo`, `delocalized`, `cartoon_color`, `ribbon_color`, `label`, the `p.` custom
-property selector, `polymer.protein/.nucleic`, `organic`, `inorganic`, `masked`, `protected`, `fixed`,
-`restrained`, `center`, `origin`, and the `x/y/z` coordinate selectors.
+`last`, `pepseq`, `state`, `text_type`, `numeric_type`, `delocalized`, `ss`, and most
+pseudo-selections; `byfragment` returns the editor's picked fragments (empty without them);
+`bound_to` is aliased to `neighbor`). Not yet ported:
+`custom`, `bysegment`, `stereo`, `cartoon_color`, `ribbon_color`, `label`, the `p.` custom
+property selector, and `center`, `origin` (need scene-origin tracking).

@@ -1,0 +1,104 @@
+{
+ "id": "preset__classified",
+ "feature": "classified",
+ "kind": "preset",
+ "probeKind": "visual",
+ "ops": [
+  {
+   "do": "load packages/engine/testing/data/1rx1.pdb, m"
+  }
+ ],
+ "checks": [
+  {
+   "call": [
+    "preset.classified",
+    "all"
+   ],
+   "label": "apply preset.classified"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "rep cartoon"
+   ],
+   "label": "cartoon"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "rep sticks"
+   ],
+   "label": "sticks"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "rep lines"
+   ],
+   "label": "lines"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "rep spheres"
+   ],
+   "label": "spheres"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "rep surface"
+   ],
+   "label": "surface"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "rep nonbonded"
+   ],
+   "label": "nonbonded"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "rep ribbon"
+   ],
+   "label": "ribbon"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "rep dots"
+   ],
+   "label": "dots"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "rep nb_spheres"
+   ],
+   "label": "nb_spheres"
+  },
+  {
+   "call": [
+    "count_atoms",
+    "rep mesh"
+   ],
+   "label": "mesh"
+  }
+ ],
+ "expected": [
+  null,
+  1268,
+  48,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "tol": 0
+}

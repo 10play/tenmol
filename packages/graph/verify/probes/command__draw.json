@@ -1,0 +1,9 @@
+{
+  "id":"command__draw","feature":"draw","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"}],
+  "checks":[
+    {"call":["draw",100,100],"label":"draw renders offscreen (GL) and returns None"},
+    {"call":["get_names"],"label":"draw creates no object"}
+  ],
+  "expected":[null,["ala"]],"tol":0
+}

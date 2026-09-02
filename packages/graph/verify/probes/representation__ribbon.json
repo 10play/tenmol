@@ -1,0 +1,2 @@
+{"id":"representation__ribbon","feature":"ribbon","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"load packages/engine/testing/data/1rx1.pdb, m"},{"do":"hide everything"},{"do":"show ribbon, chain A and resi 40-60"}],"checks":[{"call":["count_atoms","rep ribbon"],"label":"ribbon rep membership"}],"expected":[169],"tol":0}

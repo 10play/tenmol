@@ -1,0 +1,6 @@
+{"id":"command__write_html_ref","feature":"write_html_ref","kind":"command","probeKind":"visual",
+ "ops":[{"do":"fragment ala"}],
+ "checks":[
+   {"call":["write_html_ref","/tmp/tenmol_ref.html"],"label":"write_html_ref writes to disk, returns None (headless no-op)"},
+   {"call":["get_names"],"label":"no object created"}
+ ],"expected":[null,["ala"]],"tol":0}

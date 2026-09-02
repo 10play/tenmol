@@ -23,7 +23,7 @@
  */
 
 import { PymolError } from '@tenmol/backend';
-import { incentiveOnly } from '@tenmol/protocol';
+import { incentiveOnly, wireError } from '@tenmol/protocol';
 import type { Json } from '@tenmol/protocol';
 import type { RegistrarCtx } from './registrar';
 
@@ -91,8 +91,6 @@ const EDITING_RING_TEXT = `editing_ring action
  * ------------------------------------------------------------------------ */
 
 export function registerTopics(ctx: RegistrarCtx): void {
-  const { executive: ex, str } = ctx;
-
   /* -------------------------- help / topic verbs ------------------------ */
   // Each is a pure read: it returns descriptive help text (never null), so the
   // console shows something useful instead of a `NotPorted` error.
@@ -107,40 +105,16 @@ export function registerTopics(ctx: RegistrarCtx): void {
   ctx.command('editing_ring', (): Json => EDITING_RING_TEXT);
 
   /* -------------------------------- check ------------------------------- */
-  // A minimal but real structure check: report the atom and bond counts of a
-  // selection (bonds counted only when BOTH endpoints are selected), grouped by
-  // the objects the selection touches. PyMOL's own `check` is an unsupported
-  // forcefield stub; this honest summary is more useful and never throws.
-  ctx.command('check', (args): Json => {
-    const selection = str(args[0], 'all') || 'all';
-    const atoms = ex.atomsMatching(selection);
-
-    // Selected 0-based atom indices, per object.
-    const selByObj = new Map<string, Set<number>>();
-    for (const ua of atoms) {
-      let set = selByObj.get(ua.objName);
-      if (!set) {
-        set = new Set<number>();
-        selByObj.set(ua.objName, set);
-      }
-      set.add(ua.index);
-    }
-
-    // Bonds fully inside the selection, summed across the touched objects.
-    let bondCount = 0;
-    for (const [name, sel] of selByObj) {
-      const mol = ex.molecule(name);
-      if (!mol) continue;
-      for (const [a, b] of mol.bonds) {
-        if (sel.has(a) && sel.has(b)) bondCount++;
-      }
-    }
-
-    const nObj = selByObj.size;
-    const objs = [...selByObj.keys()].join(', ');
-    return `check: ${atoms.length} atom(s), ${bondCount} bond(s) across ${nObj} object(s)${
-      nObj > 0 ? ` [${objs}]` : ''
-    }`;
+  // `experimenting.check` (experimenting.py:73) does `from chempy.tinker import
+  // realtime`, which pulls in the compiled `molobj` module that is NOT part of
+  // Open-Source PyMOL — so `cmd.check` raises `ModuleNotFoundError: No module
+  // named 'molobj'` for every call. Reproduce that exact error (verified against
+  // the real-PyMOL oracle) rather than a divergent working summary.
+  ctx.command('check', (): Json => {
+    throw new PymolError(
+      wireError('PythonError', "No module named 'molobj'", { type: 'ModuleNotFoundError' }),
+      'check',
+    );
   });
 
   /* ------------------------------- aliases ------------------------------ */

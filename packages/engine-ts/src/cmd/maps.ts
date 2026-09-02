@@ -18,7 +18,8 @@
  * lives at the bottom of this file; only the triangle table is needed because
  * the per-cube intersected edges are read straight from it.
  */
-import type { Json } from '@tenmol/protocol';
+import { type Json, wireError } from '@tenmol/protocol';
+import { PymolError } from '@tenmol/backend';
 import type { RegistrarCtx } from './registrar';
 
 /* --------------------------------- types --------------------------------- */
@@ -211,32 +212,50 @@ export function registerMaps(ctx: RegistrarCtx): void {
       dmax = 0;
     }
     const mean = n > 0 ? sum / n : 0;
+    // PyMOL's ObjectMapStateGetHistogram uses the POPULATION stdev (÷cnt).
     const variance = n > 0 ? Math.max(0, sumSq / n - mean * mean) : 0;
     const stdev = Math.sqrt(variance);
 
-    // Histogram range: explicit `range` arg (unless it is the (0,0) sentinel),
-    // otherwise the full data range.
+    // Histogram range: an explicit `range` arg wins; otherwise the data is
+    // trimmed to (mean − limit·stdev, mean + limit·stdev) clamped to the data
+    // extremes, where `limit` is the `volume_data_range` setting (default 5.0).
+    // `limit <= 0` disables the trim. Mirrors ObjectMapStateGetHistogram
+    // (layer2/ObjectMap.cpp:291-334).
     const rng = (args[2] ?? kwargs.range) as unknown;
-    let lo = dmin;
-    let hi = dmax;
+    let minHis = dmin;
+    let maxHis = dmax;
+    let usedArg = false;
     if (Array.isArray(rng) && rng.length >= 2) {
       const r0 = Number(rng[0]);
       const r1 = Number(rng[1]);
-      if (Number.isFinite(r0) && Number.isFinite(r1) && !(r0 === 0 && r1 === 0)) {
-        lo = r0;
-        hi = r1;
+      if (Number.isFinite(r0) && Number.isFinite(r1) && r0 !== r1) {
+        minHis = r0;
+        maxHis = r1;
+        usedArg = true;
+      }
+    }
+    if (!usedArg) {
+      const limit = toNum(ex.getSetting('volume_data_range'), 5);
+      if (limit > 0) {
+        minHis = Math.max(dmin, mean - limit * stdev);
+        maxHis = Math.min(dmax, mean + limit * stdev);
       }
     }
 
+    // PyMOL bins with irange = (n_points − 1)/(max − min) and a truncating cast;
+    // values outside [minHis, maxHis] land outside [0, bins) and are dropped.
     const counts = new Array<number>(bins).fill(0);
-    const span = hi - lo;
-    for (const v of m.data) {
-      let b = span > 0 ? Math.floor(((v - lo) / span) * bins) : 0;
-      if (b < 0) b = 0;
-      if (b >= bins) b = bins - 1;
-      counts[b] = (counts[b] ?? 0) + 1;
+    const span = maxHis - minHis;
+    if (span > 0) {
+      const irange = (bins - 1) / span;
+      for (const v of m.data) {
+        const b = Math.trunc(irange * (v - minHis));
+        if (b >= 0 && b < bins) counts[b] = (counts[b] ?? 0) + 1;
+      }
+    } else {
+      counts[0] = n;
     }
-    return [dmin, dmax, mean, stdev, ...counts];
+    return [minHis, maxHis, mean, stdev, ...counts];
   });
 
   /* ------------------------------- isolevel ------------------------------ */
@@ -288,7 +307,7 @@ export function registerMaps(ctx: RegistrarCtx): void {
         if (p[k]! + buffer > max[k]!) max[k] = p[k]! + buffer;
       }
     }
-    if (!Number.isFinite(min[0])) return name; // nothing to trim to
+    if (!Number.isFinite(min[0])) return null; // nothing to trim to (editing.map_trim → None)
 
     // Grid index window that covers [min,max], clamped to the existing grid.
     const lo: Vec3 = [0, 0, 0];
@@ -318,7 +337,8 @@ export function registerMaps(ctx: RegistrarCtx): void {
     m.dims = newDims;
     m.data = nd;
     ctx.publish();
-    return name;
+    // editing.map_trim returns the `_cmd` result (None), not the name.
+    return null;
   });
 
   ctx.command('map_double', (args, kwargs): Json => {
@@ -352,7 +372,8 @@ export function registerMaps(ctx: RegistrarCtx): void {
             m.data[idx(m.dims, x, y, z)] = level;
         }
     ctx.publish();
-    return name;
+    // editing.map_set_border returns the `_cmd` result (None), not the name.
+    return null;
   });
 
   /* ------------------------------- map_set ------------------------------- */
@@ -552,7 +573,8 @@ export function registerMaps(ctx: RegistrarCtx): void {
       const state = toNum(args[5] ?? kwargs.state, 1);
       ctx.call('volume_color', [name, ramp, state], {});
     }
-    return name;
+    // creating.py `volume` returns the `_cmd` result (None), not the name.
+    return null;
   });
 
   /* -------------------------- get_isosurface_stats ----------------------- */
@@ -587,10 +609,26 @@ export function registerMaps(ctx: RegistrarCtx): void {
   // ObjectMapCCP4StrToMap). The public `load` reads the file bytes off disk and
   // delegates here so the parsed grid lands in the same store the iso*/volume
   // commands read. Registers the object as `object:map` in the executive.
+  // map_generate(name, reflection_file, amplitudes, phases, …) synthesizes an
+  // x-ray map from an MTZ reflection file. Open-Source PyMOL raises a bare
+  // `pymol.CmdException` when the reflection file cannot be read
+  // (creating.py:55-57 → the bridge renders it as " Error: "). engine-ts has NO
+  // MTZ reader at all, so this is a BLANKET stub: it raises that same bare
+  // CmdException for *every* call, not a targeted read-failure check. When real
+  // MTZ parsing lands, gate the raise on an actual unreadable-file test.
+  ctx.command('map_generate', (): Json => {
+    throw new PymolError(wireError('CmdException', ' Error: '), 'map_generate');
+  });
+
   ctx.command('load_ccp4map', (args, kwargs): Json => {
     const name = toStr(args[0] ?? kwargs.name);
     const bytes = (args[1] ?? kwargs.bytes) as Uint8Array;
     const m = parseCcp4(bytes, name);
+    // PyMOL normalizes CCP4/MRC density on load when `normalize_ccp4_maps` is on
+    // (default): each voxel becomes (d − mean)/σ, using the SAMPLE stdev (÷n−1),
+    // σ floored at 1e-6→1 (ObjectMap.cpp:2532-2545, 2614). This is why map
+    // observables read in σ units rather than raw grid values.
+    if (toNum(ex.getSetting('normalize_ccp4_maps'), 1) !== 0) normalizeMap(m);
     putMap(m);
     ctx.publish();
     return name;
@@ -821,6 +859,29 @@ function parseDx(text: string, name: string): VolMap {
  * Density follows at byte 1024+NSYMBT, column-fastest. The grid is treated as
  * orthorhombic (spacing = cell_axis / sampling); skewed cells are not modelled.
  */
+/**
+ * In-place sigma normalization of a map's density: `d → (d − mean)/σ`, matching
+ * PyMOL's `normalize_ccp4_maps` load path (ObjectMap.cpp:2532-2545). The stdev
+ * is the SAMPLE deviation (÷n−1) and is floored (σ<1e-6 → 1) so a constant map
+ * is left centred rather than divided by ~0.
+ */
+function normalizeMap(m: VolMap): void {
+  const d = m.data;
+  const n = d.length;
+  if (n < 2) return;
+  let sum = 0;
+  let sumsq = 0;
+  for (let i = 0; i < n; i++) {
+    const v = d[i]!;
+    sum += v;
+    sumsq += v * v;
+  }
+  const mean = sum / n;
+  let stdev = Math.sqrt(Math.max(0, (sumsq - (sum * sum) / n) / (n - 1)));
+  if (stdev < 0.000001) stdev = 1;
+  for (let i = 0; i < n; i++) d[i] = (d[i]! - mean) / stdev;
+}
+
 function parseCcp4(bytes: Uint8Array, name: string): VolMap {
   if (bytes.length < 1024) throw new Error('load: CCP4/MRC file is too small for a header');
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

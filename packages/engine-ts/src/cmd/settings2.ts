@@ -18,7 +18,8 @@
  */
 
 import type { Json } from '@tenmol/protocol';
-import { Rep, REP_NAMES } from '@tenmol/protocol';
+import { Rep, REP_NAMES, wireError } from '@tenmol/protocol';
+import { PymolError } from '@tenmol/backend';
 import { repBit } from '../model/atom';
 import { COLOR_SETTINGS, colorSettingText, getColorIndex, REP_COLOR_SETTING_DEFAULTS } from '../exec/color';
 import { SETTING_INDEX_TYPE } from './setting-catalog';
@@ -212,6 +213,13 @@ function coerceSettingValue(name: string, raw: unknown, str: RegistrarCtx['str']
     const vec = parseFloat3(raw);
     if (vec) return vec;
   }
+  // String-typed settings (`REC_s`, e.g. `assembly`, `label_font_id` names)
+  // store the value verbatim as text — PyMOL's `SettingSetFromString`
+  // cSetting_string branch keeps the string, so `set assembly, 1` stores "1",
+  // not the number 1 (verified vs the oracle: get_setting_tuple -> [6, ['1']]).
+  if (SETTING_INDEX_TYPE[name]?.[1] === cSetting_string) {
+    return str(raw);
+  }
   const v = coerceValue(raw, str);
   if (typeof v === 'string') {
     // Boolean/int settings accept the word keywords on/yes/true/off/no/false
@@ -243,7 +251,6 @@ export function registerSettings2(ctx: RegistrarCtx): void {
   // lives on the executive so `cmd.viewport` (here) and `cmd.get_viewport` (on
   // the Engine) share one source of truth.
   let windowState: string = 'show';
-  let fullScreenState = 0;
 
   /** The default a global setting resets to. */
   const defaultOf = (name: string): SettingValue => {
@@ -357,7 +364,10 @@ export function registerSettings2(ctx: RegistrarCtx): void {
       if (anyOn) ex.hide(name, sel);
       else ex.show(name, sel);
       ctx.publish();
-      return anyOn ? 0 : 1;
+      // `viewing.toggle` returns None (the _cmd result) — matches the oracle; the
+      // effect is observed via rep membership. (Non-rep names fall through to the
+      // engine's setting-toggle extension below.)
+      return null;
     }
     const next = ex.getSettingFloat(name) !== 0 ? 0 : 1;
     if (!capturedDefaults.has(name)) {
@@ -567,18 +577,21 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     return settingText(name, v);
   });
   // `cmd.get_setting_tuple(name, selection, state)` -> `(type, value_tuple)`.
-  // For a float3 setting PyMOL returns `[4, [x, y, z]]` (type tag
-  // cSetting_float3 = 4, then the 3-float vector) — verified vs the oracle for
-  // both the default and after a `set`. Scalar settings keep the engine's
-  // existing single-element shape.
+  // PyMOL always answers `[typeCode, [values…]]` (Setting.cpp SettingGetTuple):
+  // a float3 setting gives `[4, [x, y, z]]`, and every scalar setting gives
+  // `[type, [value]]` — colours (type 5) hold the packed colour value, strings
+  // (type 6) the string, ints/floats/bools the number. Verified vs the oracle
+  // (bg_rgb → [5,[1073741824]], ribbon_color → [5,[-1]], assembly → [6,['']]).
   ctx.command('get_setting_tuple', (args, kwargs): Json => {
     const name = str(args[0] ?? kwargs['name']);
     const v = resolveSetting(name, str(args[1] ?? kwargs['selection'] ?? ''));
-    if (SETTING_INDEX_TYPE[name]?.[1] === cSetting_float3) {
+    const type = SETTING_INDEX_TYPE[name]?.[1] ?? 0;
+    if (type === cSetting_float3) {
       const vec = Array.isArray(v) ? v : [0, 0, 0];
       return [cSetting_float3, [vec[0] ?? 0, vec[1] ?? 0, vec[2] ?? 0]] as Json;
     }
-    return [v ?? 0] as Json;
+    const val = v ?? (type === cSetting_string ? '' : 0);
+    return [type, [val]] as Json;
   });
 
   /* ------------------------------- view extras ---------------------------- */
@@ -600,15 +613,16 @@ export function registerSettings2(ctx: RegistrarCtx): void {
     return null;
   });
 
-  ctx.command('full_screen', (args, kwargs): Json => {
-    const raw = args[0] ?? kwargs['toggle'] ?? 0;
-    const toggle = Number(raw);
-    fullScreenState = toggle === -1 ? (fullScreenState ? 0 : 1) : toggle ? 1 : 0;
-    return null;
+  // `full_screen(toggle)` is GUI-thread bound: `viewing.py` only reaches the
+  // real `_cmd.full_screen` when `is_gui_thread()`, otherwise it re-`_do`s the
+  // command line off-thread, which in the (worker-thread) bridge surfaces as a
+  // bare `pymol.CmdException` (rendered ` Error: `). Match that oracle behaviour
+  // — the browser's own full-screen is a separate UI affordance, not this cmd.
+  ctx.command('full_screen', (): Json => {
+    throw new PymolError(wireError('CmdException', ' Error: '), 'full_screen');
   });
 
-  // Silence unused-var lint for the window/full-screen trackers (state kept for
-  // future scene extras that read the current window mode).
+  // Silence unused-var lint for the window-mode tracker (state kept for future
+  // scene extras that read the current window mode).
   void windowState;
-  void fullScreenState;
 }

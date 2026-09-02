@@ -85,9 +85,12 @@ describe('misc2 — preset aliases / label2 / get_phipsi / dirty / colorection',
     expect(await viaAlias.call('get_label', ['all'])).toEqual(
       await viaLabel.call('get_label', ['all']),
     );
-    // chain A of the fixture is 5 atoms — the label rep is now set on them.
+    // `label`/`label2` return None (matches the oracle), so parity is by effect:
+    // chain A of the fixture is 5 atoms — the Label rep is set on all of them,
+    // identically via the alias and the base command.
+    expect(nAlias).toBeNull();
     expect(await count(viaAlias, 'rep labels')).toBe(await count(viaLabel, 'rep labels'));
-    expect(Number(nAlias)).toBe(5);
+    expect(await count(viaAlias, 'rep labels')).toBe(5);
   });
 
   it('get_phipsi returns an (object, index) -> (phi, psi) dict', async () => {

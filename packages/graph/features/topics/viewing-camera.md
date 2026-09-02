@@ -183,12 +183,19 @@ Off the GUI thread the call is deferred through `cmd.do`.
 `window` controls the visibility and geometry of PyMOL's output window. Signature:
 `window(action='show', x=0, y=0, width=0, height=0)`. `action` is one of the window verbs (show,
 hide, position, size, box, ...). This is a GUI-shell operation routed to the Qt window when present.
+Parity: with no GUI window the command is a no-op returning `None`; `packages/engine-ts/src/cmd/settings2.ts`
+returns `null`, matching the real-PyMOL oracle (verified — `packages/graph/verify/probes/command__window.json`).
 
 ## full_screen
 
 `full_screen` enables or disables full-screen mode. Signature: `full_screen(toggle=-1)` — `-1`
 toggles, or pass `on`/`off`. Must run on the GUI thread, otherwise it is deferred through `cmd.do`.
 Behaviour varies by platform; the window maximise button is a reliable fallback.
+Parity: off the GUI thread — always, in the headless oracle and the bridge worker — `viewing.py`
+re-`_do`s the line and it surfaces as a bare `pymol.CmdException`; `packages/engine-ts/src/cmd/settings2.ts`
+raises the same, verified against the real-PyMOL oracle
+(`packages/graph/verify/probes/command__full_screen.json`). The browser's own full-screen is a
+separate UI affordance, not this cmd.
 
 ## stereo
 

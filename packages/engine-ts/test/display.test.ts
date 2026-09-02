@@ -3,7 +3,7 @@ import { Executive } from '../src/exec/executive';
 import { parsePdb } from '../src/model/pdb';
 import { Rep } from '@tenmol/protocol';
 import { registerDisplay } from '../src/cmd/display';
-import { getColorIndex, getColorTuple } from '../src/exec/color';
+import { getColorIndex } from '../src/exec/color';
 import type { CommandHandler, RegistrarCtx } from '../src/cmd/registrar';
 
 /* ------------------------------------------------------------------------ */
@@ -167,36 +167,15 @@ describe('space / get_color_space', () => {
 });
 
 describe('desaturate', () => {
-  it('moves a pure-red atom halfway toward grey', () => {
-    const { ex, call } = setup();
-    ex.color('red', 'all'); // index 4 -> [1,0,0]
-    const n = call('desaturate', ['all', 0.5]);
-    expect(n).toBe(3);
-    // New colour = red*0.5 + grey(0.5)*0.5 = [0.75, 0.25, 0.25].
-    const idx = ex.molecule('m')!.atoms[0]!.color;
-    expect(idx).not.toBe(getColorIndex('red'));
-    const rgb = getColorTuple(idx)!;
-    expect(rgb[0]).toBeCloseTo(0.75, 6);
-    expect(rgb[1]).toBeCloseTo(0.25, 6);
-    expect(rgb[2]).toBeCloseTo(0.25, 6);
-  });
-
-  it('shares one new colour slot for atoms of the same source colour', () => {
+  // Open-Source PyMOL's `desaturate` raises IncentiveOnlyException
+  // (experimenting.py:280); engine-ts reproduces that exact error rather than
+  // recolouring, so it matches the oracle. See probe selection/… coloring__desaturate.
+  it('raises the incentive-only error instead of recolouring', () => {
     const { ex, call } = setup();
     ex.color('red', 'all');
-    call('desaturate', ['all', 0.25]);
-    const colors = ex.molecule('m')!.atoms.map((a) => a.color);
-    expect(new Set(colors).size).toBe(1); // all were red -> one shared slot
-  });
-
-  it('factor 0 leaves the colour visually unchanged', () => {
-    const { ex, call } = setup();
-    ex.color('blue', 'all'); // [0,0,1]
-    call('desaturate', ['all', 0]);
-    const rgb = getColorTuple(ex.molecule('m')!.atoms[0]!.color)!;
-    expect(rgb[0]).toBeCloseTo(0, 6);
-    expect(rgb[1]).toBeCloseTo(0, 6);
-    expect(rgb[2]).toBeCloseTo(1, 6);
+    expect(() => call('desaturate', ['all', 0.5])).toThrow(/not available in Open-Source PyMOL/);
+    // Colours are left untouched (still red) since the command aborts.
+    expect(ex.molecule('m')!.atoms[0]!.color).toBe(getColorIndex('red'));
   });
 });
 
@@ -204,8 +183,10 @@ describe('label', () => {
   it('sets the labels rep bit and stores evaluated text', () => {
     const { ex, call } = setup();
     const bit = 1 << Rep.Label;
+    // `label` returns None (matches the real-PyMOL oracle), not a count; the
+    // effect is observed via the Label rep bit + get_label below.
     const n = call('label', ['all', 'resn']);
-    expect(n).toBe(3);
+    expect(n).toBeNull();
     for (const a of ex.molecule('m')!.atoms) {
       expect(a.visRep & bit).toBe(bit);
     }

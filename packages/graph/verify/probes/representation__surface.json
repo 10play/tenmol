@@ -1,0 +1,2 @@
+{"id":"representation__surface","feature":"surface","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"hide everything"},{"do":"show surface, elem O"}],"checks":[{"call":["count_atoms","rep surface"],"label":"O shown as surface"}],"expected":[1],"tol":0}

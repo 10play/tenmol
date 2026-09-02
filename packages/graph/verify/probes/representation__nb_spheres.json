@@ -1,0 +1,2 @@
+{"id":"representation__nb_spheres","feature":"nb_spheres","kind":"representation","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"hide everything"},{"do":"show nb_spheres, elem H"}],"checks":[{"call":["count_atoms","rep nb_spheres"],"label":"H shown as nb_spheres"}],"expected":[5],"tol":0}

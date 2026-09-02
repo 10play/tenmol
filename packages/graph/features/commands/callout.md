@@ -4,7 +4,7 @@ kind: command
 category: labeling
 subcategory: callout
 summary: Creates a screen-stabilized callout (labeled arrow) object.
-parity: planned
+parity: implemented
 ---
 
 ## Purpose
@@ -45,5 +45,6 @@ callout title, "Figure 1", screen=[-0.9, 0.9]
 
 ## Source
 `packages/engine/modules/pymol/experimenting.py:246` (raises
-`IncentiveOnlyException`). Registered as an accepted no-op in
-`packages/engine-ts/src/cmd/extras.ts`.
+`IncentiveOnlyException`). Parity: `packages/engine-ts/src/cmd/extras.ts` raises the same
+`IncentiveOnlyException`, verified against the real-PyMOL (GL) oracle
+(`packages/graph/verify/probes/command__callout.json`).

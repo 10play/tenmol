@@ -1,0 +1,10 @@
+{
+  "id":"command__as","feature":"as","kind":"command","probeKind":"visual",
+  "ops":[{"do":"fragment ala"},{"do":"hide everything"},{"do":"show_as sticks"}],
+  "checks":[
+    {"call":["count_atoms","rep sticks"],"label":"show_as sticks: all atoms as sticks"},
+    {"call":["count_atoms","rep lines"],"label":"show_as replaced the prior reps (lines cleared)"},
+    {"call":["count_atoms","ala"],"label":"total atoms (control)"}
+  ],
+  "expected":[10,0,10],"tol":0
+}

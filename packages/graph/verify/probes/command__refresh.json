@@ -1,0 +1,4 @@
+{"id":"command__refresh","feature":"refresh","kind":"command","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"show sticks"}],
+ "checks":[{"call":["refresh"],"label":"refresh flushes pending geometry, returns None"},{"call":["count_atoms","rep sticks"],"label":"reps intact after refresh"}],
+ "expected":[null,10],"tol":0}

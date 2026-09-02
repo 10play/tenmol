@@ -7,7 +7,11 @@
     "summary": "Sets the viewport background color.",
     "signature": "bg_color(color='black')",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:208", "packages/engine/modules/pymol/viewing.py:1488", "packages/engine-ts/src/cmd/render.ts:144"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:208",
+      "packages/engine/modules/pymol/viewing.py:1488",
+      "packages/engine-ts/src/cmd/render.ts:144"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/bg_color.md"
   },
@@ -19,7 +23,11 @@
     "summary": "British-spelling alias of bg_color; sets the viewport background color.",
     "signature": "bg_colour(color='black')",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:218", "packages/engine/modules/pymol/viewing.py:1488", "packages/engine-ts/src/cmd/render.ts:144"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:218",
+      "packages/engine/modules/pymol/viewing.py:1488",
+      "packages/engine-ts/src/cmd/render.ts:144"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/bg_colour.md"
   },
@@ -31,7 +39,10 @@
     "summary": "Internal API-lock helper that suppresses command-queue flushing.",
     "signature": "block_flush()",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:228", "packages/engine/modules/pymol/locking.py:32"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:228",
+      "packages/engine/modules/pymol/locking.py:32"
+    ],
     "parityStatus": "internal",
     "doc": "packages/graph/features/commands/block_flush.md"
   },
@@ -43,7 +54,11 @@
     "summary": "Creates a new bond between two single-atom selections in the same object.",
     "signature": "bond(atom1='pk1', atom2='pk2', order=1, quiet=1, symop='')",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:230", "packages/engine/modules/pymol/editing.py:696", "packages/engine-ts/src/cmd/editing.ts"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:230",
+      "packages/engine/modules/pymol/editing.py:696",
+      "packages/engine-ts/src/cmd/editing.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/bond.md"
   },
@@ -55,7 +70,11 @@
     "summary": "Redefines what a mouse button plus modifier does in the viewport.",
     "signature": "button(button, modifier, action)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:244", "packages/engine/modules/pymol/controlling.py:799", "packages/engine-ts/src/backend.ts"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:244",
+      "packages/engine/modules/pymol/controlling.py:799",
+      "packages/engine-ts/src/backend.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/button.md"
   },
@@ -67,8 +86,12 @@
     "summary": "Manages storage of precomputed results such as molecular surfaces.",
     "signature": "cache(action='optimize', scenes='', state=-1, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:256", "packages/engine/modules/pymol/exporting.py:48", "packages/engine-ts/src/cmd/extras.ts:543"],
-    "parityStatus": "partial",
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:256",
+      "packages/engine/modules/pymol/exporting.py:48",
+      "packages/engine-ts/src/cmd/extras.ts:543"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/cache.md"
   },
   {
@@ -79,8 +102,12 @@
     "summary": "Creates a screen-stabilized callout (labeled arrow) object.",
     "signature": "callout(name, label, pos='', screen='auto', state=-1, color='front', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:267", "packages/engine/modules/pymol/experimenting.py:246", "packages/engine-ts/src/cmd/extras.ts:544"],
-    "parityStatus": "planned",
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:267",
+      "packages/engine/modules/pymol/experimenting.py:246",
+      "packages/engine-ts/src/cmd/extras.ts:544"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/callout.md"
   },
   {
@@ -91,8 +118,12 @@
     "summary": "Captures the current frame as an antialiased OpenGL image.",
     "signature": "capture(quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:281", "packages/engine/modules/pymol/viewing.py:1598", "packages/engine-ts/src/cmd/extras.ts:545"],
-    "parityStatus": "partial",
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:281",
+      "packages/engine/modules/pymol/viewing.py:1598",
+      "packages/engine-ts/src/cmd/extras.ts:545"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/capture.md"
   },
   {
@@ -103,7 +134,11 @@
     "summary": "Overrides the cartoon sub-type (loop, tube, arrow, putty, ...) for a selection.",
     "signature": "cartoon(type, selection='(all)')",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:287", "packages/engine/modules/pymol/viewing.py:1543", "packages/engine-ts/src/cmd/preset.ts"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:287",
+      "packages/engine/modules/pymol/viewing.py:1543",
+      "packages/engine-ts/src/cmd/preset.ts"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/cartoon.md"
   },
@@ -115,7 +150,11 @@
     "summary": "Changes the current working directory.",
     "signature": "cd(dir='~', complain=1, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:296", "packages/engine/modules/pymol/externing.py:32", "packages/engine-ts/src/cmd/system.ts:122"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:296",
+      "packages/engine/modules/pymol/externing.py:32",
+      "packages/engine-ts/src/cmd/system.ts:122"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/cd.md"
   },
@@ -127,7 +166,11 @@
     "summary": "Aligns two proteins using the sequence-independent CE algorithm.",
     "signature": "cealign(target, mobile, target_state=1, mobile_state=1, quiet=1, guide=1, d0=3.0, d1=4.0, window=8, gap_max=30, transform=1, object=None)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:308", "packages/engine/modules/pymol/fitting.py:27", "packages/engine-ts/src/cmd/extras.ts:556"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:308",
+      "packages/engine/modules/pymol/fitting.py:27",
+      "packages/engine-ts/src/cmd/extras.ts:556"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/cealign.md"
   },
@@ -139,7 +182,11 @@
     "summary": "Translates the view, clipping slab, and origin to the center of a selection.",
     "signature": "center(selection='all', state=0, origin=1, animate=0)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:329", "packages/engine/modules/pymol/viewing.py:134", "packages/engine-ts/src/cmd/transforms.ts:246"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:329",
+      "packages/engine/modules/pymol/viewing.py:134",
+      "packages/engine-ts/src/cmd/transforms.ts:246"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/center.md"
   },
@@ -151,7 +198,11 @@
     "summary": "Computes the mass- and occupancy-weighted center of mass of a selection.",
     "signature": "centerofmass(selection='(all)', state=-1, quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:342", "packages/engine/modules/pymol/querying.py:1534", "packages/engine-ts/src/cmd/misc.ts:236"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:342",
+      "packages/engine/modules/pymol/querying.py:1534",
+      "packages/engine-ts/src/cmd/misc.ts:236"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/centerofmass.md"
   },
@@ -163,8 +214,12 @@
     "summary": "Unsupported stub that would assign forcefield parameters to a selection.",
     "signature": "check(selection=None, preserve=0)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:354", "packages/engine/modules/pymol/experimenting.py:73", "packages/engine-ts/src/cmd/topics.ts:99"],
-    "parityStatus": "partial",
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:354",
+      "packages/engine/modules/pymol/experimenting.py:73",
+      "packages/engine-ts/src/cmd/topics.ts:99"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/check.md"
   },
   {
@@ -172,11 +227,14 @@
     "kind": "command",
     "category": "sculpting-minimization",
     "subcategory": "energy minimization",
-    "summary": "Runs MMFF94 energy minimization (\"clean up\") on a selection.",
+    "summary": "MMFF94 energy-minimization 'clean up' of a selection — an incentive-only feature, so Open-Source PyMOL and the TS engine both raise IncentiveOnlyException.",
     "signature": "clean(selection, present='', state=-1, fix='', restrain='', method='mmff', async_=0, save_undo=1, message=None)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:363", "packages/engine/modules/pymol/computing.py:20", "packages/engine-ts/src/cmd/editor.ts:394"],
-    "parityStatus": "partial",
+    "sourceRefs": [
+      "packages/engine/modules/pymol/computing.py:20",
+      "packages/engine-ts/src/cmd/sculpt.ts"
+    ],
+    "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/clean.md"
   },
   {
@@ -187,7 +245,11 @@
     "summary": "Moves the near/far clipping planes or sets the slab thickness.",
     "signature": "clip(mode, distance, selection=None, state=0)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:379", "packages/engine/modules/pymol/viewing.py:181", "packages/engine-ts/src/cmd/transforms.ts:296"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:379",
+      "packages/engine/modules/pymol/viewing.py:181",
+      "packages/engine-ts/src/cmd/transforms.ts:296"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/clip.md"
   },
@@ -199,7 +261,11 @@
     "summary": "Clears the text output buffer.",
     "signature": "cls()",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:392", "packages/engine/modules/pymol/commanding.py:231", "packages/engine-ts/src/cmd/extras.ts:542"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:392",
+      "packages/engine/modules/pymol/commanding.py:231",
+      "packages/engine-ts/src/cmd/extras.ts:542"
+    ],
     "parityStatus": "partial",
     "doc": "packages/graph/features/commands/cls.md"
   },
@@ -211,7 +277,11 @@
     "summary": "Changes the color of objects or atoms.",
     "signature": "color(color, selection='(all)', quiet=1, flags=0)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:396", "packages/engine/modules/pymol/viewing.py:1904", "packages/engine-ts/src/cmd/topics.ts:172"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:396",
+      "packages/engine/modules/pymol/viewing.py:1904",
+      "packages/engine-ts/src/cmd/topics.ts:172"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/color.md"
   },
@@ -223,7 +293,11 @@
     "summary": "Clears all object/atom-level color settings, then applies one color.",
     "signature": "color_deep(color, name='all', quiet=1)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:409", "packages/engine/modules/pymol/viewing.py:1948", "packages/engine-ts/src/cmd/util2.ts:132"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:409",
+      "packages/engine/modules/pymol/viewing.py:1948",
+      "packages/engine-ts/src/cmd/util2.ts:132"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/color_deep.md"
   },
@@ -235,7 +309,11 @@
     "summary": "British-spelling alias of color; changes the color of objects or atoms.",
     "signature": "colour(color, selection='(all)', quiet=1, flags=0)",
     "default": "",
-    "sourceRefs": ["docs/api-reference/commands.mdx:421", "packages/engine/modules/pymol/viewing.py:1904", "packages/engine-ts/src/cmd/topics.ts:172"],
+    "sourceRefs": [
+      "docs/api-reference/commands.mdx:421",
+      "packages/engine/modules/pymol/viewing.py:1904",
+      "packages/engine-ts/src/cmd/topics.ts:172"
+    ],
     "parityStatus": "implemented",
     "doc": "packages/graph/features/commands/colour.md"
   }

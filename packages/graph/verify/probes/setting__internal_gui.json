@@ -1,0 +1,4 @@
+{"id":"setting__internal_gui","feature":"internal_gui","kind":"setting","probeKind":"state",
+ "ops":[{"do":"set internal_gui, 0"}],
+ "checks":[{"call":["get_setting_int","internal_gui"],"label":"internal_gui set 0 roundtrip"}],
+ "expected":[0]}

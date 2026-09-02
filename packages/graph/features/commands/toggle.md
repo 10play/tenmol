@@ -4,7 +4,7 @@ kind: command
 category: representations-display
 subcategory: representation visibility
 summary: Toggles the visibility of a representation within an atom selection.
-parity: unknown
+parity: implemented
 ---
 
 ## Purpose
@@ -39,6 +39,7 @@ toggle object, myObj
 - [hide](../commands/hide.md)
 
 ## Source
-`packages/engine/modules/pymol/viewing.py:466`. Parity: unknown — no dedicated
-`toggle` representation command was found in `packages/engine-ts/src` (distinct
-from the `stereo`/`rock` toggle arguments).
+`packages/engine/modules/pymol/viewing.py:466`. Parity: `packages/engine-ts/src/cmd/settings2.ts`
+registers `toggle` — it flips a representation's visibility across the selection and returns
+`None`, matching the real-PyMOL GL oracle (verified — `packages/graph/verify/probes/command__toggle.json`).
+Non-representation names fall through to an engine-only setting-toggle extension.

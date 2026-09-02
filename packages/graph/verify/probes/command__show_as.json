@@ -1,0 +1,8 @@
+{"id":"command__show_as","feature":"show_as","kind":"command","probeKind":"visual",
+ "ops":[{"do":"fragment ala"},{"do":"show sticks"},{"do":"show_as spheres, elem C"}],
+ "checks":[
+   {"call":["count_atoms","rep spheres"],"label":"carbons shown as spheres"},
+   {"call":["count_atoms","rep sticks and elem C"],"label":"show_as replaced sticks on carbons"},
+   {"call":["count_atoms","rep sticks"],"label":"non-carbon sticks untouched"}
+ ],
+ "expected":[3,0,7],"tol":0}

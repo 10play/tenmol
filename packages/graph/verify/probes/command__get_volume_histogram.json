@@ -1,0 +1,9 @@
+{
+  "id":"command__get_volume_histogram","feature":"get_volume_histogram","kind":"command","probeKind":"state",
+  "ops":[{"do":"load packages/engine/testing/data/h2o-elf-nstart.ccp4, dm"}],
+  "checks":[
+    {"call":["get_volume_histogram","dm",10],"label":"10-bin histogram over sigma-normalized CCP4 map: [min,max,mean,stdev, 10 counts]"}
+  ],
+  "tol":0.01,
+  "expected":[[-0.48972979187965393,4.999814987182617,-3.4258746950399654e-07,0.999963104724884,53511,3570,1778,1192,889,767,694,791,620,188]]
+}
