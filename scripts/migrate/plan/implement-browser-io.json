@@ -35,6 +35,39 @@
         { "gate": "test:files-regress", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files", "apps/web/src/features/menubar"] }
       ],
       "deps": ["I0.download-helper"]
+    },
+    {
+      "id": "I2.save-session",
+      "title": "File > Save Session / Save Session As... (and the Ctrl+S twin) serialize cmd.get_session and download it (no cmd.tenmol_files.*, no `save <path>`)",
+      "instructions": "Rewrite FilesPanel.sessionSaveAs and both the session-save/session-save-as menu items, plus the Ctrl+S branch in FileDropTarget, to obtain the snapshot with `await session.call('cmd.get_session')` and save it via `downloadText(name, JSON.stringify(snap), 'application/octet-stream')`. Filename comes from window.prompt defaulting to .pse (the engine reload path keys off .pse/.psw). Drop ensure/setInitialdir/recentAdd/PathPicker/api.sessionFile and never `save <path>` (writes to disk + THROWS in the browser). Works over the remote bridge too, so unconditional.",
+      "postcondition": {
+        "fileContains": [
+          { "path": "apps/web/src/features/files/FilesPanel.tsx", "pattern": "// browser-save: get_session download" },
+          { "path": "apps/web/src/features/files/FileDropTarget.tsx", "pattern": "// browser-save: get_session download" }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        { "gate": "test:save-session", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/wfSaveSession.dom.test.tsx"] },
+        { "gate": "test:files-regress", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files", "apps/web/src/features/menubar"] }
+      ],
+      "deps": ["I1.open-picker"]
+    },
+    {
+      "id": "I3.export-molecule",
+      "title": "File > Export Molecule... seeds the dialog from cmd.get_names and downloads cmd.get_str output (single-file only; multi-file OUT OF SCOPE)",
+      "instructions": "Keep the ExportMoleculeDialog UI but seed its SaveMoleculeInfo from `session.call('cmd.get_names', ['objects'|'public_selections'])` + static setting defaults (no bridge save_molecule_info). On save keep the five pre-save `set` writes as session.run('set …'), pick the format from the chosen filter/extension (pdb/cif/mol/sdf/mol2/xyz/fasta), `const text = await session.call('cmd.get_str', [format, selection, state])`, then `downloadText(`${name}.${ext}`, text)` with a window.prompt name. Drop saveCheck/recentAdd/PathPicker/api.saveMoleculeInfo/api.multiFileNames. Multi-file (multisave/multifilesave) and Export Map/Alignment stay OUT OF SCOPE (bridge-bound or gracefully refused).",
+      "postcondition": {
+        "fileContains": [
+          { "path": "apps/web/src/features/files/FilesPanel.tsx", "pattern": "// browser-export: get_str download" }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        { "gate": "test:export-molecule", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/wfExportMolecule.dom.test.tsx"] },
+        { "gate": "test:files-regress", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files", "apps/web/src/features/menubar"] }
+      ],
+      "deps": ["I2.save-session"]
     }
   ]
 }

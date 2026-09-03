@@ -100,6 +100,10 @@ const LISTING = {
 /** `fn` (without the `cmd.tenmol_files.` prefix) -> canned reply. */
 const REPLIES: Record<string, unknown> = {
   hello: HELLO,
+  // Tasks I2/I3 made Save Session and Export Molecule browser-native: they call
+  // the engine directly (`cmd.get_session`, `cmd.get_names`), not the bridge.
+  'cmd.get_session': { kind: 'tenmol-session', version: 1, objects: [] },
+  'cmd.get_names': ['mol'],
   install_tk_dialogs: { installed: true, already: false },
   dialog_pending: [],
   browse: LISTING,
@@ -420,10 +424,11 @@ describe('row 242 — firing the leaves', () => {
    */
   const CASES: Array<{ path: string[]; dialog: string }> = [
     // `Open...` is NOT here: task I1 made it a browser-native contents load, so
-    // it opens no server dialog — see the dedicated test below.
+    // it opens no server dialog — see the dedicated test below. `Save Session` /
+    // `Save Session As...` are likewise absent: task I2 made them a
+    // `cmd.get_session` download behind `window.prompt`, so they open no server
+    // dialog either — see the dedicated tests below.
     { path: ['Get PDB...'], dialog: 'Get PDB' },
-    { path: ['Save Session'], dialog: 'Save Session As...' },
-    { path: ['Save Session As...'], dialog: 'Save Session As...' },
     { path: ['Export Molecule...'], dialog: 'Export Molecule' },
     { path: ['Export Map...'], dialog: 'Save object:map' },
     { path: ['Export Alignment...'], dialog: 'Save object:alignment' },
@@ -476,18 +481,32 @@ describe('row 242 — firing the leaves', () => {
     expect(feedback()).not.toContain('not built yet');
   });
 
-  it('Save Session with a session file skips the picker and saves it', async () => {
-    REPLIES.session_file = { path: '/work/s.pse', hasPath: true, filters: [] };
+  it('Save Session downloads the get_session snapshot, no server dialog or picker', async () => {
+    // Task I2: browser-only save. `Save Session` prompts for a name and
+    // downloads `cmd.get_session` — it must open NO dialog and NEVER emit the
+    // old on-disk `save …, format=pse` (which THROWS in the browser) nor call
+    // the bridge-only `cmd.tenmol_files.session_file`.
+    const prompt = vi.spyOn(window, 'prompt').mockReturnValue('mysession.pse');
+    // jsdom lacks URL.createObjectURL; the download helper needs it, and a real
+    // <a>.click() tries to navigate (unimplemented in jsdom) — stub both.
+    (URL as unknown as { createObjectURL: unknown }).createObjectURL = () => 'blob:x';
+    (URL as unknown as { revokeObjectURL: unknown }).revokeObjectURL = () => {};
+    const anchorClick = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
     try {
       mount();
       await flush(2);
       await fire(['Save Session']);
-      // `session_save` -> `cmd.save(cmd.get('session_file'), format='pse')`
-      // with no dialog at all (`pymol_qt_gui.py:666-667`).
       expect(dialogLabels()).toEqual([]);
-      expect(ran).toContain('save /work/s.pse, format=pse');
+      expect(calls.map((c) => c.fn)).toContain('cmd.get_session');
+      expect(ran.some((line) => /^save\b/.test(line))).toBe(false);
+      expect(calls.map((c) => c.fn)).not.toContain('cmd.tenmol_files.session_file');
     } finally {
-      REPLIES.session_file = { path: '', hasPath: false, filters: HELLO.filters.session };
+      prompt.mockRestore();
+      anchorClick.mockRestore();
+      delete (URL as unknown as { createObjectURL?: unknown }).createObjectURL;
+      delete (URL as unknown as { revokeObjectURL?: unknown }).revokeObjectURL;
     }
   });
 

@@ -35,7 +35,6 @@ import type {
   MapGenerateInfo,
   MovieDialogInfo,
   MtzDialogInfo,
-  MultiFileTarget,
   PartialGate,
   RecentEntry,
   RenderInfo,
@@ -60,6 +59,7 @@ import {
 import { browserClassification, objectNameForFile, refusalFor } from './globalDrop';
 import { FILES_ACTION_EVENT, FILES_OPEN_PATHS, type FilesActionDetail } from './menuHooks';
 import { ExportMoleculeDialog, SaveObjectDialog, type MoleculeSaveRequest } from './SaveDialogs';
+import { downloadText } from './download';
 import { MovieDialog, PngDialog, RenderPanel } from './ImageDialogs';
 import { FetchDialog, LogDialog, RecentDialog } from './ToolsDialogs';
 import { pngCommands, drawCommand, rayCommands } from './commands';
@@ -427,28 +427,51 @@ export function FilesPanel() {
     input.click();
   }, [say, session]);
 
-  const sessionSaveAs = useCallback(
-    async (existing?: string) => {
-      if (!(await ensure())) return;
-      let target = existing;
-      if (!target) {
-        const result = await pick({
-          mode: 'save',
-          title: 'Save Session As...',
-          filters: hello?.filters.session,
-          accept: 'Save',
-        });
-        if (!result) return;
-        target = first(result.paths);
-        await api.setInitialdir(target);
-      }
-      // `session_save_as` ALWAYS saves format='pse', so .psw differs only by
-      // extension (`pymol_qt_gui.py:668`).
-      await session.run(`save ${target}, format=pse`);
-      await api.recentAdd(target);
-    },
-    [api, ensure, hello, pick, session],
-  );
+  const sessionSaveAs = useCallback(async () => {
+    // browser-save: get_session download
+    //
+    // Browser-only: there is no OS save dialog and no host filesystem, so a
+    // "save" is a download of the engine's session snapshot. `cmd.get_session`
+    // returns the same JSON the engine reloads (works over the remote bridge
+    // too), and `downloadText` never touches `cmd.tenmol_files.*`. No
+    // ensure()/setInitialdir/recentAdd/PathPicker, and never `save <path>`,
+    // which writes to disk and THROWS in the browser. The engine's reload path
+    // keys off the .pse/.psw extension, so default the prompt to `.pse` and
+    // append it when the typed name has neither.
+    const typed = window.prompt('Save session as', 'untitled.pse');
+    if (!typed) return;
+    const name = /\.(pse|psw)$/i.test(typed) ? typed : `${typed}.pse`;
+    const snap = await session.call('cmd.get_session');
+    downloadText(name, JSON.stringify(snap), 'application/octet-stream');
+    say(` saved ${name}`);
+  }, [session, say]);
+
+  /**
+   * Seed the Export Molecule dialog WITHOUT the bridge.
+   *
+   * browser-export: get_str download. The object/selection combos come from
+   * `cmd.get_names` (works on both backends), and the five PDB settings get
+   * static defaults mirroring `SaveMoleculeInfo` — the dialog only needs a valid
+   * shape to open, and the actual `set` writes happen at save time. `states: 1`
+   * is a minimal valid default (the state combo still offers -1/0/1).
+   */
+  const saveMoleculeInfo = useCallback(async (): Promise<SaveMoleculeInfo> => {
+    const objects = await session.call<string[]>('cmd.get_names', ['objects']);
+    const selections = await session.call<string[]>('cmd.get_names', ['public_selections']);
+    return {
+      objects,
+      selections,
+      states: 1,
+      filters: EXPORT_MOLECULE_FILTERS,
+      settings: {
+        no_pdb_conect_nodup: false,
+        pdb_conect_all: false,
+        no_ignore_pdb_segi: false,
+        pdb_retain_ids: false,
+        retain_order: false,
+      },
+    };
+  }, [session]);
 
   const menu: MenuItem[] = useMemo(
     () => [
@@ -494,23 +517,23 @@ export function FilesPanel() {
       },
       { id: 'sep1', separator: true },
       {
+        // browser-save: get_session download — both items serialize + download
+        // the session snapshot. There is no persistent "current file" in the
+        // browser, so Save Session and Save Session As… behave identically.
         id: 'session-save',
         label: 'Save Session',
         shortcut: '⌃S',
-        run: async () => {
-          if (!(await ensure())) return;
-          const info = await api.sessionFile();
-          await sessionSaveAs(info.hasPath ? info.path : undefined);
-        },
+        run: sessionSaveAs,
       },
-      { id: 'session-save-as', label: 'Save Session As…', run: () => sessionSaveAs() },
+      { id: 'session-save-as', label: 'Save Session As…', run: sessionSaveAs },
       { id: 'sep2', separator: true },
       {
         id: 'export-molecule',
         label: 'Export Molecule…',
         run: async () => {
-          if (!(await ensure())) return;
-          setDialog({ kind: 'export-molecule', info: await api.saveMoleculeInfo() });
+          // browser-export: get_str download — seed the dialog from the engine,
+          // not the bridge (`api.saveMoleculeInfo`).
+          setDialog({ kind: 'export-molecule', info: await saveMoleculeInfo() });
         },
       },
       {
@@ -664,7 +687,7 @@ export function FilesPanel() {
         run: async () => undefined,
       },
     ],
-    [api, ensure, fileOpen, hello, pick, session, sessionSaveAs],
+    [api, ensure, fileOpen, hello, pick, saveMoleculeInfo, session, sessionSaveAs],
   );
 
   /* ------------------------------------------------ the menu bar's leaves */
@@ -1199,6 +1222,7 @@ export function FilesPanel() {
   }
 
   async function exportMolecule(request: MoleculeSaveRequest) {
+    // browser-export: get_str download
     setDialog({ kind: 'none' });
     // The five settings are written back before saving (`file_dialogs.py:558-562`).
     const s = request.settings;
@@ -1208,60 +1232,40 @@ export function FilesPanel() {
     await session.run(`set pdb_retain_ids, ${s.pdb_retain_ids ? 1 : 0}`);
     await session.run(`set retain_order, ${s.retain_order ? 1 : 0}`);
 
-    // `cmd.multifilenamegen` is a GENERATOR (`exporting.py:735-781`), so it
-    // cannot be called over the wire — the codec refuses `builtins.generator`.
-    // The bridge consumes it (`panels/files.py: multifilenamegen`).
-    let triples: MultiFileTarget[] = [
-      { filename: '', selection: request.selection, state: request.state },
-    ];
-    if (request.pattern && request.promptEach) {
-      const generated = await api.multiFileNames(
-        request.pattern,
-        request.selection,
-        request.state,
+    // OUT OF SCOPE for browser download: `multisave` writes one multi-object
+    // file, and the "Multiple files" patterns (`multifilesave`/
+    // `cmd.multifilenamegen`) write MANY files — neither maps onto a single
+    // blob download, and `multifilenamegen` is a bridge-only generator anyway.
+    // Refuse gracefully rather than half-implement it.
+    if (request.multisave || request.pattern) {
+      say(
+        ' multi-file / multi-object export is not available in the browser — ' +
+          'export a single object or selection to one file instead',
+        'warning',
       );
-      if (!generated.ok) {
-        say(` ${generated.error}`, 'error');
-        return;
-      }
-      triples = generated.items;
-    } else if (request.pattern) {
-      triples = [
-        { filename: request.pattern, selection: request.selection, state: request.state },
-      ];
+      return;
     }
 
-    const dir = await api.initialdir();
-    for (const { filename: suggested, selection, state } of triples) {
-      const result = await pick({
-        mode: 'save',
-        title: 'Save Molecule As...',
-        // The dialog's chosen filter goes first so the picker preselects it,
-        // but it is also IN `saveMolecule` — hence the dedupe, or React sees
-        // two <option> children with the same key.
-        filters: request.filter
-          ? dedupe([request.filter, ...(hello?.filters.saveMolecule ?? [])])
-          : undefined,
-        initialName: suggested || '',
-        directory: dir,
-        accept: 'Save',
-      });
-      if (!result) return;
-      const target = first(result.paths);
-      await api.setInitialdir(target);
-      if (request.multisave) {
-        await session.run(`multisave ${target}, ${selection}, ${state}`);
-      } else if (baseName(target).includes('{')) {
-        await session.run(`multifilesave ${target}, ${selection}, ${state}`);
-      } else {
-        const check = await api.saveCheck(target, result.filter);
-        if (!check.recognised) {
-          say(` ${check.error}`, 'error');
-          return;
-        }
-        await session.run(`save ${target}, ${selection}, ${state}`);
-        await api.recentAdd(target);
-      }
+    // Single file: derive the format from the dialog's chosen filter, get the
+    // text straight from the engine (`cmd.get_str`, which dispatches pdb ->
+    // get_pdbstr / fasta -> get_fastastr internally) and download it. No
+    // PathPicker, no saveCheck, no recentAdd, no `save <path>` (writes to disk +
+    // THROWS in the browser).
+    const ext = extForFilter(request.filter);
+    const format = formatForExt(ext);
+    const typed = window.prompt('Save molecule as', `${defaultBaseName(request.selection)}.${ext}`);
+    if (!typed) return;
+    const name = /\.[a-z0-9]+$/i.test(typed) ? typed : `${typed}.${ext}`;
+    try {
+      const text = await session.call<string>('cmd.get_str', [
+        format,
+        request.selection,
+        request.state,
+      ]);
+      downloadText(name, text);
+      say(` saved ${name}`);
+    } catch (error) {
+      say(` export failed: ${error instanceof Error ? error.message : String(error)}`, 'error');
     }
   }
 }
@@ -1278,6 +1282,58 @@ interface MenuItem {
 /** `paths[0]` under `noUncheckedIndexedAccess`. */
 function first(paths: readonly string[]): string {
   return paths[0] ?? '';
+}
+
+/**
+ * Static save filters for the browser Export Molecule dialog — one per
+ * single-file format `cmd.get_str` can produce. Replaces the bridge's
+ * `hello.filters.saveMolecule`, which is unreachable in a browser-only build.
+ */
+const EXPORT_MOLECULE_FILTERS = [
+  'PDB File (*.pdb)',
+  'CIF File (*.cif)',
+  'MOL File (*.mol)',
+  'SD File (*.sdf)',
+  'MOL2 File (*.mol2)',
+  'XYZ File (*.xyz)',
+  'FASTA File (*.fasta)',
+];
+
+/** The extension from a picker filter like `PDB File (*.pdb)` (defaults to pdb). */
+function extForFilter(filter: string): string {
+  return (/\*\.([a-z0-9]+)/i.exec(filter)?.[1] ?? 'pdb').toLowerCase();
+}
+
+/**
+ * Map a file extension to the `cmd.get_str` format token. Mirrors the engine's
+ * own `formatFromFilename` (exporters.ts): unknown extensions fall back to pdb.
+ */
+function formatForExt(ext: string): string {
+  switch (ext) {
+    case 'cif':
+    case 'mmcif':
+      return 'cif';
+    case 'xyz':
+      return 'xyz';
+    case 'fasta':
+    case 'fa':
+      return 'fasta';
+    case 'mol':
+      return 'mol';
+    case 'sdf':
+      return 'sdf';
+    case 'mol2':
+      return 'mol2';
+    case 'ent':
+    case 'pdb':
+    default:
+      return 'pdb';
+  }
+}
+
+/** A filesystem-safe default basename from the chosen selection/object name. */
+function defaultBaseName(selection: string): string {
+  return selection.trim().replace(/[^A-Za-z0-9_.-]+/g, '_') || 'molecule';
 }
 
 /**

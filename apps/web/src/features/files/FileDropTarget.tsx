@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 
 import { useSession } from '../../app';
 import { createFilesApi } from './filesApi';
+import { downloadText } from './download';
 import { PluginDialogHost } from './PluginDialogHost';
 import {
   browserClassification,
@@ -220,19 +221,21 @@ export function FileDropTarget() {
         return;
       }
 
+      // browser-save: get_session download
+      //
+      // Ctrl+S is the twin of File ▸ Save Session (`FilesPanel.sessionSaveAs`):
+      // browser-only, so it serializes the engine's session snapshot
+      // (`cmd.get_session`) and downloads it — no `api.sessionFile`, no
+      // `save <path>` (writes to disk + THROWS in the browser). Default the name
+      // to `.pse`, which the engine's reload path keys off.
       void (async () => {
         try {
-          await api.ensure();
-          const file = await api.sessionFile();
-          if (!file.hasPath) {
-            say(
-              ' Ctrl+S: this session has no file yet — use File dialogs ▸ Save Session As…',
-              'warning',
-            );
-            return;
-          }
-          await session.run(`save ${file.path}`);
-          say(` saved ${file.path}`);
+          const typed = window.prompt('Save session as', 'untitled.pse');
+          if (!typed) return;
+          const name = /\.(pse|psw)$/i.test(typed) ? typed : `${typed}.pse`;
+          const snap = await session.call('cmd.get_session');
+          downloadText(name, JSON.stringify(snap), 'application/octet-stream');
+          say(` saved ${name}`);
         } catch (error) {
           say(` save failed: ${error instanceof Error ? error.message : String(error)}`, 'error');
         }
