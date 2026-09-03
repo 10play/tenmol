@@ -47,6 +47,18 @@ function makeSession(): Session {
         if (fn === 'cmd.tenmol_files.hello') {
           return Promise.resolve({ installed: true, filters: {} });
         }
+        // The Draw/Ray panel reads its size/dpi defaults from the bridge before
+        // the (browser-only) save; answer it so that path can be driven.
+        if (fn === 'cmd.tenmol_files.render_info') {
+          return Promise.resolve({
+            width: 640,
+            height: 480,
+            dpi: 300,
+            dpiChoices: [72, 150, 300],
+            units: ['inch', 'cm'],
+            opaqueBackground: true,
+          });
+        }
         return Promise.reject(new Error(`offline: ${fn}`));
       }
       if (fn === 'cmd.png') return Promise.resolve(PNG_BYTES);
@@ -201,5 +213,45 @@ describe('I4 — Export Image ▸ PNG downloads cmd.png bytes', () => {
     expect(calls.some((c) => c.fn === 'cmd.png')).toBe(false);
     expect(downloads).toHaveLength(0);
     expect(tfCalls).toEqual([]);
+  });
+});
+
+/** Open the Draw / Ray panel and wait for it to appear. */
+async function openRenderDialog(): Promise<void> {
+  mount();
+  click('files-menu-button');
+  click('files-menu-render');
+  await flush();
+  const dialog = container.querySelector('[role="dialog"]');
+  if (dialog?.getAttribute('aria-label') !== 'Draw / Ray') {
+    throw new Error('Draw / Ray dialog did not open');
+  }
+}
+
+describe('I4 — Draw/Ray ▸ Save Image to File downloads cmd.png bytes', () => {
+  it('passes the filename only positionally, dpi in kwargs — no duplicate dpi', async () => {
+    promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('render.png');
+    await openRenderDialog();
+
+    // Render first (page 1 → page 2), then save.
+    clickButton('Draw (fast)');
+    await flush();
+    clickButton('Save Image to File');
+    await flush();
+
+    const png = calls.find((c) => c.fn === 'cmd.png');
+    // REGRESSION GUARD: only the filename is positional. Passing `-1` in the
+    // 4th positional slot AND `dpi` as a kwarg makes the real bridge raise
+    // `TypeError: png() got multiple values for argument 'dpi'`.
+    expect(png?.args).toEqual(['']);
+    expect(png?.args).not.toContain(-1);
+    expect(png?.kwargs).toEqual({ prior: 1, dpi: 300 });
+    // The dpi travelled exactly once — as a kwarg, never as a positional.
+    expect(png?.kwargs).toHaveProperty('dpi');
+
+    // The bytes were downloaded as a PNG under the prompted name.
+    expect(downloads).toHaveLength(1);
+    expect(downloads[0]!.download).toBe('render.png');
+    expect(blobs[0]!.type).toBe('image/png');
   });
 });

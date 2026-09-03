@@ -30,6 +30,8 @@ const PDB =
 let acted: Array<{ fn: string; args: readonly unknown[] }>;
 /** Every `cmd.tenmol_files.*` fn the panel called, in order. */
 let tfCalls: string[];
+/** The feedback-store sink, so refusal messages can be asserted. */
+let appendClient: ReturnType<typeof vi.fn>;
 
 function makeSession(): Session {
   return {
@@ -51,7 +53,7 @@ function makeSession(): Session {
       return Promise.reject(new Error(`offline: ${fn}`));
     },
     stores: {
-      feedback: { appendClient: vi.fn() },
+      feedback: { appendClient },
       ui: { get: () => ({ echoActions: false }) },
     },
     conn: { isOpen: true, do: () => Promise.resolve(), on: () => () => {}, sub: () => Promise.resolve() },
@@ -68,6 +70,7 @@ let lastInput: HTMLInputElement | null;
 beforeEach(() => {
   acted = [];
   tfCalls = [];
+  appendClient = vi.fn();
   lastInput = null;
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -165,4 +168,31 @@ describe('I1 — File ▸ Open… loads file contents through the engine', () =>
     expect(acted).toEqual([]);
     expect(tfCalls).toEqual([]);
   });
+
+  // A dialog-needed binary format must NOT be UTF-8-decoded and `cmd.load`ed —
+  // it needs loader options this content-only path cannot supply, and decoding
+  // it would corrupt it. The pre-PR path surfaced this as a dialog-required
+  // message; browser-only keeps that refusal.
+  for (const name of ['reflections.mtz', 'scene.pse']) {
+    it(`does not text-decode + load a dialog-needed ${name}`, async () => {
+      mount();
+      click('files-menu-button');
+      tfCalls = [];
+
+      click('files-menu-open');
+      // If the guard regressed and `.text()` were read, this would throw — the
+      // file deliberately has no readable text stub, proving it is never read.
+      const file = new File(['\x00\x01binary'], name);
+      Object.defineProperty(lastInput, 'files', { value: [file], configurable: true });
+      act(() => lastInput?.dispatchEvent(new Event('change')));
+      await flush();
+
+      // Nothing loaded, and no silent server round-trip either.
+      expect(acted).toEqual([]);
+      expect(tfCalls).toEqual([]);
+      // The user was told a dialog is required (via the feedback store).
+      const messages = appendClient.mock.calls.map((c) => String(c[0]));
+      expect(messages.some((m) => /needs the .* dialog/.test(m))).toBe(true);
+    });
+  }
 });

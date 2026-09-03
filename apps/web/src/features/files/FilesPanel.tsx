@@ -56,7 +56,14 @@ import {
   mapGenerateOutcome,
   type AlnInfo,
 } from './LoadDialogs';
-import { browserClassification, objectNameForFile, refusalFor } from './globalDrop';
+import {
+  browserClassification,
+  classify,
+  dialogNeededFor,
+  dialogRequiredMessage,
+  objectNameForFile,
+  refusalFor,
+} from './globalDrop';
 import { FILES_ACTION_EVENT, FILES_OPEN_PATHS, type FilesActionDetail } from './menuHooks';
 import { ExportMoleculeDialog, SaveObjectDialog, type MoleculeSaveRequest } from './SaveDialogs';
 import { downloadBytes, downloadText } from './download';
@@ -412,6 +419,17 @@ export function FilesPanel() {
           const refusal = refusalFor(browserClassification(file.name), file.name);
           if (refusal !== null) {
             say(refusal, 'warning');
+            continue;
+          }
+          // Dialog-needed formats (session/map/mtz/trajectory/alignment/mae)
+          // are BINARY and/or need loader options the content-only path cannot
+          // supply. Text-decoding + `cmd.load`ing them would silently corrupt
+          // or mis-load them, so refuse here just as the server drop path does —
+          // browser-only cannot drive these modals. Only plain single-molecule
+          // text formats fall through to `file.text()` + `cmd.load`.
+          const dialog = dialogNeededFor(classify(file.name));
+          if (dialog !== null) {
+            say(dialogRequiredMessage(file.name, dialog), 'warning');
             continue;
           }
           const content = await file.text();
@@ -1099,7 +1117,12 @@ export function FilesPanel() {
               const typed = window.prompt('Save image as', 'image.png');
               if (!typed) return;
               const name = /\.png$/i.test(typed) ? typed : `${typed}.png`;
-              const bytes = await session.call<number[]>('cmd.png', ['', 0, 0, -1], {
+              // Filename-only positional args: `dpi` is PyMOL's 4th positional
+              // slot, so passing `-1` there AND `dpi=` as a kwarg makes the real
+              // bridge raise `TypeError: png() got multiple values for argument
+              // 'dpi'`. Pass everything but the filename as kwargs (convention
+              // per panels/files.py::copy_image_png).
+              const bytes = await session.call<number[]>('cmd.png', [''], {
                 prior: 1,
                 dpi,
               });

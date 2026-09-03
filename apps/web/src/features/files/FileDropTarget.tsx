@@ -15,6 +15,7 @@ import { downloadText } from './download';
 import { PluginDialogHost } from './PluginDialogHost';
 import {
   browserClassification,
+  classify,
   dialogNeededFor,
   dialogRequiredMessage,
   objectNameForFile,
@@ -149,15 +150,28 @@ export function FileDropTarget() {
      * `cmd.tenmol_files.*`: read the text and hand it to `cmd.load` (blank
      * format => the engine sniffs), which also works over the remote bridge.
      * The `.pwg`/refusal gate stays FIRST and is engine-independent
-     * (`globalDrop.ts::refusalFor`). Dialog-only formats (traj/map/mtz/mae/
-     * session) keep their `planFromDataTransfer`/`dialogNeededFor` handling on
-     * the URL branch below; only the plain single-molecule load path changed.
+     * (`globalDrop.ts::refusalFor`). Dialog-needed formats (traj/map/mtz/mae/
+     * aln/session) are then turned away with `dialogRequiredMessage` — they are
+     * binary and/or need loader options this content-only path cannot supply,
+     * so text-decoding them would corrupt or mis-load them. Only plain
+     * single-molecule text formats reach `file.text()` + `cmd.load`.
      */
     const uploadAndLoad = async (files: readonly File[]): Promise<void> => {
       for (const file of files) {
         const refusal = refusalFor(browserClassification(file.name), file.name);
         if (refusal !== null) {
           say(refusal, 'warning');
+          continue;
+        }
+        // Dialog-needed formats (session/map/mtz/trajectory/alignment/mae) are
+        // BINARY and/or need loader options the content-only path cannot supply.
+        // Text-decoding + `cmd.load`ing them would silently corrupt or mis-load
+        // them, so refuse here just as `load()` does for a classified server
+        // drop — browser-only cannot drive these modals. Only plain
+        // single-molecule text formats fall through to `file.text()`+`cmd.load`.
+        const dialog = dialogNeededFor(classify(file.name));
+        if (dialog !== null) {
+          say(dialogRequiredMessage(file.name, dialog), 'warning');
           continue;
         }
         const content = await file.text();

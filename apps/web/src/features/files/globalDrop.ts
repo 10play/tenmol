@@ -21,7 +21,7 @@
  * directly.
  */
 
-import type { FileClassification } from '@tenmol/protocol/topics/files';
+import type { FileClassification, LoadDialogKind } from '@tenmol/protocol/topics/files';
 
 /** What a drop resolved to, before anything is sent to PyMOL. */
 export type DropPlan =
@@ -120,6 +120,63 @@ const CLIENT_REFUSED_FORMATS: Record<string, string> = {
     'process (packages/engine/modules/pymol/importing.py:516-615). Run it from a desktop PyMOL ' +
     'if you trust it.',
 };
+
+/**
+ * Extension → the load-dialog branch `classify_filename` would route it to
+ * (`panels/files.py::classify_filename`, mirroring `file_dialogs.py:33-77`).
+ *
+ * The browser Open… / drop paths never call `cmd.tenmol_files.classify`, so
+ * they cannot ask the bridge which modal a file needs. This is the client-side
+ * twin of that dispatch, keyed by extension: every entry here is a format whose
+ * loader wants OPTIONS (traj/map/mtz/aln/mae) or a session decision
+ * (pse/psw) — none of which the content-only `file.text()` + `cmd.load` path
+ * can supply, and most of which are BINARY (mtz/ccp4/dsn6/dcd/mae) that
+ * UTF-8-decoding would silently corrupt. Anything not listed classifies as
+ * `plain` (a single-molecule text format the engine can sniff) or `script`.
+ */
+const EXT_TO_DIALOG: Record<string, LoadDialogKind> = {
+  // trajectory (`file_dialogs.py:46` tests the last four characters)
+  dcd: 'traj',
+  dtr: 'traj',
+  xtc: 'traj',
+  trr: 'traj',
+  // alignment
+  aln: 'aln',
+  fasta: 'aln',
+  fa: 'aln',
+  // Maestro (also `unavailable` — the loader raises in this build)
+  mae: 'mae',
+  // volumetric maps (`ccp4`/`map`, and `brix`/`dsn6`/`o` via the 'o' branch)
+  ccp4: 'map',
+  map: 'map',
+  mrc: 'map',
+  dx: 'map',
+  brix: 'map',
+  omap: 'map',
+  dsn6: 'map',
+  o: 'map',
+  // reflection data
+  mtz: 'mtz',
+  // sessions
+  pse: 'session',
+  psw: 'session',
+  // scripts — no modal, but not a molecule to text-decode either
+  pml: 'script',
+  py: 'script',
+  pym: 'script',
+};
+
+/**
+ * The `dialog` branch a browser File would take, derived from its name with no
+ * `classify` RPC — the client-side twin of `cmd.tenmol_files.classify` so
+ * {@link dialogNeededFor} can gate a browser open exactly as it gates a
+ * classified server open. Unknown/plain-text formats return `dialog: 'plain'`.
+ */
+export function classify(name: string): Pick<FileClassification, 'dialog'> {
+  const base = name.replace(/^.*[/\\]/, '').replace(/\.(gz|bz2)$/i, '');
+  const ext = (/\.([a-z0-9]+)$/i.exec(base)?.[1] ?? '').toLowerCase();
+  return { dialog: EXT_TO_DIALOG[ext] ?? 'plain' };
+}
 
 /**
  * The `refused`/`unavailable` fields for a browser File, derived from its name
