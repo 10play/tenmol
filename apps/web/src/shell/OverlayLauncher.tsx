@@ -21,7 +21,6 @@ import {
   Settings,
   SlidersHorizontal,
   SquarePen,
-  Zap,
 } from 'lucide-react';
 import { isInstalled, slotsForRegion } from '../features/registry';
 import { useStore } from '../app';
@@ -40,7 +39,6 @@ export const LAUNCHER_ICONS: Record<string, LucideIcon> = {
   texteditor: SquarePen,
   compute: Cpu,
   'plugin-manager': Puzzle,
-  apbs: Zap,
 };
 
 /**

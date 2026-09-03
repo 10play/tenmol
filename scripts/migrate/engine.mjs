@@ -180,7 +180,11 @@ export function checkPostcondition(pc) {
  */
 export function runGate(gate, cmd, { timeoutMs = 600_000 } = {}) {
   try {
-    execFileSync(cmd[0], cmd.slice(1), { cwd: REPO, encoding: 'utf8', timeout: timeoutMs, stdio: 'pipe' });
+    // Put a `pnpm` shim on PATH so both the gate command AND any pnpm it shells
+    // out to internally (the `typecheck` script runs `pnpm -r`) resolve here,
+    // where only `corepack` is installed.
+    const env = { ...process.env, PATH: `${join(REPO, 'scripts/migrate/bin')}:${process.env.PATH}` };
+    execFileSync(cmd[0], cmd.slice(1), { cwd: REPO, encoding: 'utf8', timeout: timeoutMs, stdio: 'pipe', env });
     return { gate, status: 'pass', detail: '' };
   } catch (e) {
     const infra = e.code === 'EAGAIN' || e.code === 'ENOMEM' || e.code === 'ENOENT' || e.signal === 'SIGKILL';

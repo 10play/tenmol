@@ -29,6 +29,8 @@ import {
   REPO, STATUS, loadState, record, checkPostcondition, runGate, stateAge,
 } from './engine.mjs';
 
+// `pnpm` resolves via the shim runGate puts on PATH (scripts/migrate/bin/pnpm
+// -> corepack pnpm), which also fixes the typecheck script's nested `pnpm -r`.
 const GATE_CMDS = {
   typecheck: ['pnpm', '-s', 'typecheck'],
   build: ['pnpm', '-s', '--filter', '@tenmol/web', 'build'],
