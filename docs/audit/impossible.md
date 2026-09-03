@@ -41,8 +41,18 @@ but have a real browser-native form, so they are kept and reworked, not deleted.
 
 ### C. NOT A BROWSER LIMIT (mis-tagged or harness-only)
 
-- **settings (62), sequence viewer (36)** — local-engine operations; the audit
-  over-tagged them `remote-backend`. They should just be re-run locally.
+- **settings (62), sequence viewer (36), ray/render (7)** — local-engine
+  operations the audit over-tagged `remote-backend`/`bridge-gl`. Re-tagging as
+  local and re-running them (exploratory) confirmed they RUN in the browser, but
+  the raw verdicts are **not yet trustworthy**: most failures are the same
+  over-strict-spec artifact seen elsewhere — the individual specs (e.g. a Setting
+  tab/row, a seqview format) assume a precondition the spec never establishes
+  (the menu/panel already open), so they time out on a setup selector while the
+  panel-open specs pass. **Follow-up (not done here):** fix these ~105 specs'
+  setup steps, then run them through the audit's adversarial verify pass to get
+  real pass/fail. One lead worth a direct look: whether the **sequence viewer
+  actually renders in local mode** (all 36 seqview specs failed to find their
+  rows) — that may be a genuine local-engine gap rather than a spec artifact.
 - **ray / image render** — `engine-ts/src/cmd/render.ts` already raytraces in-browser;
   only Mode-P (the bridge's offscreen GL) is bridge-specific.
 - **compute suite (ESP/SASA/force-fields)** — pure `pymol.util` math; portable to
