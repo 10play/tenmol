@@ -59,7 +59,7 @@ import {
 import { browserClassification, objectNameForFile, refusalFor } from './globalDrop';
 import { FILES_ACTION_EVENT, FILES_OPEN_PATHS, type FilesActionDetail } from './menuHooks';
 import { ExportMoleculeDialog, SaveObjectDialog, type MoleculeSaveRequest } from './SaveDialogs';
-import { downloadText } from './download';
+import { downloadBytes, downloadText } from './download';
 import { MovieDialog, PngDialog, RenderPanel } from './ImageDialogs';
 import { FetchDialog, LogDialog, RecentDialog } from './ToolsDialogs';
 import { pngCommands, drawCommand, rayCommands } from './commands';
@@ -570,7 +570,8 @@ export function FilesPanel() {
         id: 'png',
         label: 'Export Image As ▸ PNG…',
         run: async () => {
-          if (!(await ensure())) return;
+          // browser-png: cmd.png download — no ensure()/bridge; the dialog only
+          // needs the engine, which cmd.png reaches on both backends.
           setDialog({ kind: 'png' });
         },
       },
@@ -1055,19 +1056,26 @@ export function FilesPanel() {
         <PngDialog
           onClose={() => setDialog({ kind: 'none' })}
           onSave={(rendering) => {
+            // browser-png: cmd.png download
+            //
+            // Browser-only: no OS save dialog, no host filesystem. Run the
+            // dialog's render SETUP lines (`draw 0, 0` / `set opaque_background,
+            // …`, commands.ts:164-172) but NOT the final `png <path>` line — the
+            // browser png disk-write is a no-op. Then pull the pixels straight
+            // from the engine (`cmd.png`, works over the remote bridge too) and
+            // download them. No ensure()/setInitialdir/PathPicker/recentAdd.
             setDialog({ kind: 'none' });
             void (async () => {
-              const result = await pick({
-                mode: 'save',
-                title: 'Save As...',
-                filters: ['PNG File (*.png)'],
-                accept: 'Save',
-              });
-              if (!result) return;
-              await api.setInitialdir(first(result.paths));
-              for (const line of pngCommands(first(result.paths), rendering)) {
-                await session.run(line);
-              }
+              const typed = window.prompt('Save image as', 'image.png');
+              if (!typed) return;
+              const name = /\.png$/i.test(typed) ? typed : `${typed}.png`;
+              const lines = pngCommands('', rendering);
+              // Every line except the trailing `png <path>` is render setup.
+              for (const line of lines.slice(0, -1)) await session.run(line);
+              const ray = rendering >= 2 ? 1 : 0;
+              const bytes = await session.call<number[]>('cmd.png', ['', 0, 0, -1], { ray });
+              downloadBytes(name, Uint8Array.from(bytes), 'image/png');
+              say(` saved ${name}`);
             })();
           }}
         />
@@ -1084,15 +1092,19 @@ export function FilesPanel() {
             })();
           }}
           onSave={(dpi) => {
+            // browser-png: cmd.png download — the render already ran (Draw/Ray),
+            // so read it back with `prior=1` (no re-render) and download the
+            // bytes instead of writing `png <path>` to a disk the browser lacks.
             void (async () => {
-              const result = await pick({
-                mode: 'save',
-                title: 'Save As...',
-                filters: ['PNG File (*.png)'],
-                accept: 'Save',
+              const typed = window.prompt('Save image as', 'image.png');
+              if (!typed) return;
+              const name = /\.png$/i.test(typed) ? typed : `${typed}.png`;
+              const bytes = await session.call<number[]>('cmd.png', ['', 0, 0, -1], {
+                prior: 1,
+                dpi,
               });
-              if (!result) return;
-              await session.run(`png ${first(result.paths)}, dpi=${dpi}, prior=1`);
+              downloadBytes(name, Uint8Array.from(bytes), 'image/png');
+              say(` saved ${name}`);
             })();
           }}
           onClipboard={() => {

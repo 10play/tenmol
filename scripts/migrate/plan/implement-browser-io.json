@@ -68,6 +68,22 @@
         { "gate": "test:files-regress", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files", "apps/web/src/features/menubar"] }
       ],
       "deps": ["I2.save-session"]
+    },
+    {
+      "id": "I4.export-png",
+      "title": "File > Export Image As > PNG... (and the Draw/Ray Save Image to File path) run cmd.png for the bytes and download them (no `png <path>`, no cmd.tenmol_files.*)",
+      "instructions": "Keep the PngDialog UI. On save, run the pre-render setup lines from pngCommands (draw 0,0 / set opaque_background,…) EXCEPT the trailing `png <path>` (a browser no-op), then obtain the bytes with `const bytes = await session.call('cmd.png', ['', 0, 0, -1], { ray })` (ray flag from the dialog's rendering choice, mirroring RenderDialog.tsx:159) and `downloadBytes(name, Uint8Array.from(bytes), 'image/png')` behind a window.prompt (append .png). Apply the same to the Draw/Ray RenderPanel Save Image to File path, which used `png <path>, dpi, prior=1` — read it back with cmd.png prior=1/dpi and download. Drop ensure/setInitialdir/PathPicker/recentAdd. RenderDialog.tsx (features/render) already keeps its server-side cmd.png save deliberately (local desktop full-fs) and is out of files/ scope.",
+      "postcondition": {
+        "fileContains": [
+          { "path": "apps/web/src/features/files/FilesPanel.tsx", "pattern": "// browser-png: cmd.png download" }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        { "gate": "test:export-png", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/wfExportPng.dom.test.tsx"] },
+        { "gate": "test:files-regress", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files"] }
+      ],
+      "deps": ["I3.export-molecule"]
     }
   ]
 }
