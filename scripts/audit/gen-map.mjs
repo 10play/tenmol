@@ -30,7 +30,6 @@ const unverByArea = {};
 for (const u of unver) (unverByArea[u.area] = unverByArea[u.area] ?? []).push(u);
 
 const sev = { blocker: '🔴 blocker', major: '🟠 major', minor: '🟡 minor' };
-const areasByConf = Object.keys(confByArea).sort((a, b) => confByArea[b].length - confByArea[a].length);
 
 let m = '';
 m += '# tenmol web-app — UI audit: map of what does not work\n\n';
@@ -107,7 +106,7 @@ m += '- `scripts/audit/schema.md` — the TestSpec grammar.\n';
 m += '- `scripts/audit/driver.mjs` + `run-shard.mjs` — the executor (boots an isolated vite+browser stack per shard on free ports; safe to parallelize).\n';
 m += '- `docs/audit/specs/*.json` — the enumerated test map (one file per area, the durable coverage contract).\n';
 m += '- `docs/audit/results/*.json` — per-spec verdicts + evidence. `docs/audit/shots/` — a screenshot per spec.\n';
-m += '- `scripts/audit/ui-audit.workflow.mjs` — the full 5-phase agent workflow (inventory → execute → adversarial verify → synthesize).\n\n';
+m += '- `scripts/audit/ui-audit.workflow.js` — the full 5-phase agent workflow (inventory → execute → adversarial verify → synthesize).\n\n';
 m += 'Run one area: `node scripts/audit/run-shard.mjs docs/audit/specs/<area>.json /tmp/out.json /tmp/shots`.\n';
 
 writeFileSync(`${dir}/BROKEN-MAP.md`, m);

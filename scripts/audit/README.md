@@ -30,12 +30,12 @@ coverage contract + a deterministic executor + adversarial verification**:
 | `schema.md` | the `TestSpec` grammar (actions + objective checks) |
 | `driver.mjs` | boots a stack, executes a spec's mini-DSL, captures evidence, returns a verdict |
 | `run-shard.mjs` | CLI: run one `{caps,specs}` shard file → verdicts JSON + screenshots |
-| `ui-audit.workflow.mjs` | the 5-phase multi-agent workflow (inventory → execute → verify → synthesize) |
+| `ui-audit.workflow.js` | the 5-phase multi-agent workflow (inventory → execute → verify → synthesize) |
 | `gen-map.mjs` | render `docs/audit/BROKEN-MAP.md` from the on-disk results |
 
 ## Run it
 
-Whole audit (many agents, hours): `Workflow({scriptPath: 'scripts/audit/ui-audit.workflow.mjs'})`.
+Whole audit (many agents, hours): `Workflow({scriptPath: 'scripts/audit/ui-audit.workflow.js'})`.
 
 One area, no agents (deterministic):
 

@@ -109,6 +109,6 @@ The audit is deterministic and re-runnable. Artifacts:
 - `scripts/audit/driver.mjs` + `run-shard.mjs` — the executor (boots an isolated vite+browser stack per shard on free ports; safe to parallelize).
 - `docs/audit/specs/*.json` — the enumerated test map (one file per area, the durable coverage contract).
 - `docs/audit/results/*.json` — per-spec verdicts + evidence. `docs/audit/shots/` — a screenshot per spec.
-- `scripts/audit/ui-audit.workflow.mjs` — the full 5-phase agent workflow (inventory → execute → adversarial verify → synthesize).
+- `scripts/audit/ui-audit.workflow.js` — the full 5-phase agent workflow (inventory → execute → adversarial verify → synthesize).
 
 Run one area: `node scripts/audit/run-shard.mjs docs/audit/specs/<area>.json /tmp/out.json /tmp/shots`.

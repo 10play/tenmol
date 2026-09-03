@@ -13,6 +13,12 @@
  * shard boots its own.
  */
 
+/*
+ * The `document` reference below is inside a `page.evaluate()` callback that is
+ * serialised and run in the BROWSER, so it legitimately uses `document` even
+ * though this file executes under node — same convention as apps/web/e2e.
+ */
+/* global document */
 import { createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
