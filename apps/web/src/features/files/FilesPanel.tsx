@@ -68,6 +68,7 @@ import {
 import { FILES_ACTION_EVENT, FILES_OPEN_PATHS, type FilesActionDetail } from './menuHooks';
 import { ExportMoleculeDialog, SaveObjectDialog, type MoleculeSaveRequest } from './SaveDialogs';
 import { downloadBytes, downloadText } from './download';
+import { saveSession } from './sessionSave';
 import { MovieDialog, PngDialog, RenderPanel } from './ImageDialogs';
 import { FetchDialog, LogDialog, RecentDialog } from './ToolsDialogs';
 import { pngCommands, drawCommand, rayCommands } from './commands';
@@ -458,18 +459,17 @@ export function FilesPanel() {
     // browser-save: get_session download
     //
     // Browser-only: there is no OS save dialog and no host filesystem, so a
-    // "save" is a download of the engine's session snapshot. `cmd.get_session`
-    // returns the same JSON the engine reloads (works over the remote bridge
-    // too), and `downloadText` never touches `cmd.tenmol_files.*`. No
+    // "save" is a download of the engine's session snapshot. No
     // ensure()/setInitialdir/recentAdd/PathPicker, and never `save <path>`,
     // which writes to disk and THROWS in the browser. The engine's reload path
     // keys off the .pse/.psw extension, so default the prompt to `.pse` and
-    // append it when the typed name has neither.
+    // append it when the typed name has neither. `saveSession` handles both
+    // backends — object snapshot on the local engine, blob handle on the remote
+    // bridge — and is shared with the Ctrl+S accelerator in FileDropTarget.
     const typed = window.prompt('Save session as', 'untitled.pse');
     if (!typed) return;
     const name = /\.(pse|psw)$/i.test(typed) ? typed : `${typed}.pse`;
-    const snap = await session.call('cmd.get_session');
-    downloadText(name, JSON.stringify(snap), 'application/octet-stream');
+    await saveSession(session, name);
     say(` saved ${name}`);
   }, [session, say]);
 

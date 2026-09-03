@@ -28,9 +28,17 @@ const SNAP = { kind: 'tenmol-session', version: 1, objects: [], settings: {}, vi
 let calls: Array<{ fn: string; args: readonly unknown[] }>;
 /** Every `cmd.tenmol_files.*` fn the panel called, in order. */
 let tfCalls: string[];
+/**
+ * What `cmd.get_session` answers. The LOCAL engine returns the object (`SNAP`);
+ * the REMOTE bridge lists `get_session` in `BLOB_RETURNS` and returns a blob
+ * HANDLE instead — a case can swap this to exercise the fetch-the-real-bytes
+ * path.
+ */
+let sessionReply: unknown;
 
 function makeSession(): Session {
   return {
+    config: { httpOrigin: 'http://127.0.0.1:0' },
     act: () => Promise.resolve(undefined),
     run: () => Promise.resolve(),
     call: (fn: string, _args: readonly unknown[] = []) => {
@@ -42,7 +50,7 @@ function makeSession(): Session {
         }
         return Promise.reject(new Error(`offline: ${fn}`));
       }
-      if (fn === 'cmd.get_session') return Promise.resolve(SNAP);
+      if (fn === 'cmd.get_session') return Promise.resolve(sessionReply);
       return Promise.reject(new Error(`offline: ${fn}`));
     },
     stores: {
@@ -58,19 +66,28 @@ let container: HTMLDivElement;
 let root: Root;
 /** The anchors the download helper clicked, in order. */
 let downloads: HTMLAnchorElement[];
+/** The Blobs handed to `URL.createObjectURL`, in order — the downloaded bytes. */
+let blobs: Blob[];
 let clickSpy: { mockRestore(): void };
 let promptSpy: { mockRestore(): void } | undefined;
+let fetchSpy: { mockRestore(): void } | undefined;
 
 beforeEach(() => {
   calls = [];
   tfCalls = [];
+  sessionReply = SNAP;
   downloads = [];
+  blobs = [];
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
   // jsdom implements neither createObjectURL nor revokeObjectURL; the download
-  // helper needs both. Define them (spyOn can't hook a missing method).
-  (URL as unknown as { createObjectURL: unknown }).createObjectURL = () => 'blob:mock';
+  // helper needs both. Define them (spyOn can't hook a missing method). Capture
+  // each Blob so a case can assert on the downloaded bytes.
+  (URL as unknown as { createObjectURL: (b: Blob) => string }).createObjectURL = (b: Blob) => {
+    blobs.push(b);
+    return 'blob:mock';
+  };
   (URL as unknown as { revokeObjectURL: unknown }).revokeObjectURL = () => {};
   clickSpy = vi
     .spyOn(HTMLAnchorElement.prototype, 'click')
@@ -82,6 +99,7 @@ beforeEach(() => {
 afterEach(() => {
   clickSpy.mockRestore();
   promptSpy?.mockRestore();
+  fetchSpy?.mockRestore();
   delete (URL as unknown as { createObjectURL?: unknown }).createObjectURL;
   delete (URL as unknown as { revokeObjectURL?: unknown }).revokeObjectURL;
   act(() => root.unmount());
@@ -145,6 +163,49 @@ describe('I2 — Save Session downloads the get_session snapshot', () => {
 
     expect(downloads).toHaveLength(1);
     expect(downloads[0]!.download).toBe('untitled.pse');
+    expect(tfCalls).toEqual([]);
+  });
+
+  it('over the remote bridge, downloads the FETCHED blob bytes, not the handle JSON', async () => {
+    // On the remote PyMOL bridge `cmd.get_session` is in `BLOB_RETURNS`
+    // (codec.py) and resolves to a blob HANDLE, not the session — the real
+    // `.pse` bytes live behind `handle.url`. JSON-stringifying the handle would
+    // download a tiny stub, so the save must fetch and download the real bytes.
+    const PSE_BYTES = new Uint8Array([0x50, 0x53, 0x45, 0x00, 0x01, 0x02, 0x03]);
+    sessionReply = {
+      __blob__: true,
+      id: 'xyz',
+      url: '/blob/xyz',
+      mime: 'application/octet-stream',
+      size: PSE_BYTES.length,
+    };
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response(PSE_BYTES, { status: 200 }) as unknown as Response,
+      ) as unknown as { mockRestore(): void };
+    promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('remote.pse');
+    mount();
+    click('files-menu-button');
+    tfCalls = [];
+    calls = [];
+
+    click('files-menu-session-save');
+    await flush();
+
+    // The engine still produced the snapshot, and the bytes came from the blob
+    // URL built off `session.config.httpOrigin`.
+    expect(calls.map((c) => c.fn)).toContain('cmd.get_session');
+    expect(globalThis.fetch).toHaveBeenCalledWith('http://127.0.0.1:0/blob/xyz');
+    expect(downloads).toHaveLength(1);
+    expect(downloads[0]!.download).toBe('remote.pse');
+    // The download is the FETCHED bytes, not `JSON.stringify(handle)`: the blob
+    // is exactly the fetched byte length and octet-stream typed, whereas the
+    // stringified handle would be far larger (and JSON text).
+    expect(blobs).toHaveLength(1);
+    expect(blobs[0]!.size).toBe(PSE_BYTES.length);
+    expect(blobs[0]!.type).toBe('application/octet-stream');
+    expect(blobs[0]!.size).not.toBe(JSON.stringify(sessionReply).length);
     expect(tfCalls).toEqual([]);
   });
 

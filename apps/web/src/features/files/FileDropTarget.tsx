@@ -11,7 +11,7 @@ import { useEffect } from 'react';
 
 import { useSession } from '../../app';
 import { createFilesApi } from './filesApi';
-import { downloadText } from './download';
+import { saveSession } from './sessionSave';
 import { PluginDialogHost } from './PluginDialogHost';
 import {
   browserClassification,
@@ -247,17 +247,17 @@ export function FileDropTarget() {
       // browser-save: get_session download
       //
       // Ctrl+S is the twin of File ▸ Save Session (`FilesPanel.sessionSaveAs`):
-      // browser-only, so it serializes the engine's session snapshot
-      // (`cmd.get_session`) and downloads it — no `api.sessionFile`, no
-      // `save <path>` (writes to disk + THROWS in the browser). Default the name
-      // to `.pse`, which the engine's reload path keys off.
+      // browser-only, so it serializes the engine's session snapshot and
+      // downloads it — no `api.sessionFile`, no `save <path>` (writes to disk +
+      // THROWS in the browser). Default the name to `.pse`, which the engine's
+      // reload path keys off. The shared `saveSession` helper handles both
+      // backends (object snapshot locally, blob handle over the remote bridge).
       void (async () => {
         try {
           const typed = window.prompt('Save session as', 'untitled.pse');
           if (!typed) return;
           const name = /\.(pse|psw)$/i.test(typed) ? typed : `${typed}.pse`;
-          const snap = await session.call('cmd.get_session');
-          downloadText(name, JSON.stringify(snap), 'application/octet-stream');
+          await saveSession(session, name);
           say(` saved ${name}`);
         } catch (error) {
           say(` save failed: ${error instanceof Error ? error.message : String(error)}`, 'error');
