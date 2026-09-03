@@ -1,0 +1,468 @@
+{
+  "area": "viewport",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "viewport.hud.stats",
+      "feature": "viewport",
+      "label": "HUD diagnostics readout",
+      "kind": "other",
+      "requires": [],
+      "note": "The always-open diagnostics HUD renders live render-loop stats (dimensions, fps, Mode P / Mode G frame counters). Its presence proves the viewport render loop is running and stats are polling.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".viewport__hud-reps" }],
+      "trigger": [{ "do": "wait", "ms": 300 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "fps" },
+        { "expect": "feedbackMatches", "pattern": "Mode G" },
+        { "expect": "selectorVisible", "selector": ".viewport__hud-reps" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+
+    {
+      "id": "viewport.rep.cartoon.pixel",
+      "feature": "viewport",
+      "label": "Cartoon ▸ P (Mode P / server-rendered)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "With cartoon shown as client-side Mode-G geometry, clicking its P button switches the rep to server-rendered Mode P. The audit backend has no pixel source, so the cartoon geometry should vanish from the canvas — a visible render mutation.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as cartoon" },
+        { "do": "wait", "ms": 700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 0 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "viewport.rep.cartoon.geometry",
+      "feature": "viewport",
+      "label": "Cartoon ▸ G (Mode G / client three.js)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "From Mode P (blank, no pixel source), clicking the cartoon G button switches back to client-side Mode-G geometry; the cartoon should re-appear on the canvas.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as cartoon" },
+        { "do": "wait", "ms": 700 },
+        { "do": "click", "selector": ".viewport__hud-rep button", "nth": 0 },
+        { "do": "wait", "ms": 400 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 1 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+
+    {
+      "id": "viewport.rep.sticks.pixel",
+      "feature": "viewport",
+      "label": "Sticks (Cyl) ▸ P",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Shows sticks as Mode-G geometry, then clicks the sticks P button; the geometry should disappear (no pixel source), proving the per-rep P toggle drives the compositor.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as sticks" },
+        { "do": "wait", "ms": 700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 2 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "viewport.rep.sticks.geometry",
+      "feature": "viewport",
+      "label": "Sticks (Cyl) ▸ G",
+      "kind": "toggle",
+      "requires": [],
+      "note": "From Mode P, clicking the sticks G button restores client-side geometry; sticks should re-appear.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as sticks" },
+        { "do": "wait", "ms": 700 },
+        { "do": "click", "selector": ".viewport__hud-rep button", "nth": 2 },
+        { "do": "wait", "ms": 400 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 3 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+
+    {
+      "id": "viewport.rep.spheres.pixel",
+      "feature": "viewport",
+      "label": "Spheres ▸ P",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Shows spheres as Mode-G geometry, then clicks the spheres P button; geometry should vanish (no pixel source).",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as spheres" },
+        { "do": "wait", "ms": 700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 4 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "viewport.rep.spheres.geometry",
+      "feature": "viewport",
+      "label": "Spheres ▸ G",
+      "kind": "toggle",
+      "requires": [],
+      "note": "From Mode P, clicking the spheres G button restores client-side geometry.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as spheres" },
+        { "do": "wait", "ms": 700 },
+        { "do": "click", "selector": ".viewport__hud-rep button", "nth": 4 },
+        { "do": "wait", "ms": 400 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 5 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+
+    {
+      "id": "viewport.rep.surface.pixel",
+      "feature": "viewport",
+      "label": "Surface ▸ P",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Shows the molecular surface as Mode-G geometry, then clicks the surface P button; if the local engine renders surface geometry it should vanish. A no-op here would flag surface Mode-G as silently absent.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as surface" },
+        { "do": "wait", "ms": 1200 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 6 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "viewport.rep.surface.geometry",
+      "feature": "viewport",
+      "label": "Surface ▸ G",
+      "kind": "toggle",
+      "requires": [],
+      "note": "From Mode P, clicking the surface G button restores client-side surface geometry.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as surface" },
+        { "do": "wait", "ms": 1200 },
+        { "do": "click", "selector": ".viewport__hud-rep button", "nth": 6 },
+        { "do": "wait", "ms": 400 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 7 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+
+    {
+      "id": "viewport.rep.lines.pixel",
+      "feature": "viewport",
+      "label": "Lines ▸ P",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Shows lines as Mode-G geometry, then clicks the lines P button; line geometry should vanish (no pixel source).",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as lines" },
+        { "do": "wait", "ms": 700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 8 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "viewport.rep.lines.geometry",
+      "feature": "viewport",
+      "label": "Lines ▸ G",
+      "kind": "toggle",
+      "requires": [],
+      "note": "From Mode P, clicking the lines G button restores client-side line geometry.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as lines" },
+        { "do": "wait", "ms": 700 },
+        { "do": "click", "selector": ".viewport__hud-rep button", "nth": 8 },
+        { "do": "wait", "ms": 400 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 9 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+
+    {
+      "id": "viewport.rep.ribbon.pixel",
+      "feature": "viewport",
+      "label": "Ribbon ▸ P",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Shows ribbon as Mode-G geometry, then clicks the ribbon P button; if the local engine renders ribbon geometry it should vanish. A no-op would flag ribbon Mode-G as silently absent.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as ribbon" },
+        { "do": "wait", "ms": 900 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 10 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "viewport.rep.ribbon.geometry",
+      "feature": "viewport",
+      "label": "Ribbon ▸ G",
+      "kind": "toggle",
+      "requires": [],
+      "note": "From Mode P, clicking the ribbon G button restores client-side ribbon geometry.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": ".viewport__hud-reps" },
+        { "do": "cmd", "text": "as ribbon" },
+        { "do": "wait", "ms": 900 },
+        { "do": "click", "selector": ".viewport__hud-rep button", "nth": 10 },
+        { "do": "wait", "ms": 400 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-rep button", "nth": 11 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+
+    {
+      "id": "viewport.render.turn.y",
+      "feature": "viewport",
+      "label": "Viewport reflects camera turn (Y)",
+      "kind": "other",
+      "requires": [],
+      "note": "A `turn y, 90` command rotates the PyMOL camera; the viewport must re-render the client-side geometry from the new view. This is the deterministic proxy for the free left-drag rotate gesture, which the audit DSL cannot script.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "as cartoon" },
+        { "do": "wait", "ms": 500 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "turn y, 90" }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "viewport.render.turn.x",
+      "feature": "viewport",
+      "label": "Viewport reflects camera turn (X)",
+      "kind": "other",
+      "requires": [],
+      "note": "A `turn x, 90` command tilts the camera; the viewport must re-render from the new orientation.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "as cartoon" },
+        { "do": "wait", "ms": 500 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "turn x, 90" }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "viewport.render.color",
+      "feature": "viewport",
+      "label": "Viewport reflects a recolor",
+      "kind": "other",
+      "requires": [],
+      "note": "`color red, all` recolours the object; the client-side geometry must repaint with the new atom colours.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "as cartoon" },
+        { "do": "wait", "ms": 500 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "color red, all" }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "viewport.render.bgColor",
+      "feature": "viewport",
+      "label": "Viewport reflects background colour change",
+      "kind": "other",
+      "requires": [],
+      "note": "`bg_color white` changes the scene background; the viewport canvas must repaint with the new clear colour.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "as cartoon" },
+        { "do": "wait", "ms": 500 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "bg_color white" }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "viewport.render.hideAll",
+      "feature": "viewport",
+      "label": "Viewport clears on hide everything",
+      "kind": "other",
+      "requires": [],
+      "note": "`hide everything` removes all representations; the client-side geometry must clear so the canvas goes empty.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "as cartoon" },
+        { "do": "wait", "ms": 500 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "hide everything" }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+
+    {
+      "id": "viewport.canvas.rotate.drag",
+      "feature": "viewport",
+      "label": "Canvas left-drag rotate",
+      "kind": "drag",
+      "requires": [],
+      "note": "Left-button pointer drag on the viewport host rotates the camera (client-side viewSync in local mode). The audit DSL has no drag primitive, so this cannot be driven end-to-end; the deterministic camera behaviour is covered by viewport.render.turn.*. Here we only verify hovering the canvas is inert (no error). LIMITATION: free 3D mouse-drag is not scriptable.",
+      "needsVisual": true,
+      "setup": [{ "do": "waitFor", "selector": ".viewport__host" }],
+      "trigger": [{ "do": "hover", "selector": ".viewport__host" }],
+      "checks": [{ "expect": "noConsoleError" }],
+      "settleMs": 300
+    },
+    {
+      "id": "viewport.canvas.translate.drag",
+      "feature": "viewport",
+      "label": "Canvas middle/right-drag translate",
+      "kind": "drag",
+      "requires": [],
+      "note": "Middle/right-button (or shift+left) pointer drag pans/translates the camera. Not scriptable via the audit DSL; hovering is verified inert. LIMITATION: free 3D mouse-drag is not scriptable.",
+      "needsVisual": true,
+      "setup": [{ "do": "waitFor", "selector": ".viewport__host" }],
+      "trigger": [{ "do": "hover", "selector": ".viewport__host" }],
+      "checks": [{ "expect": "noConsoleError" }],
+      "settleMs": 300
+    },
+    {
+      "id": "viewport.canvas.zoom.wheel",
+      "feature": "viewport",
+      "label": "Canvas wheel zoom",
+      "kind": "other",
+      "requires": [],
+      "note": "Mouse wheel over the canvas is forwarded as a two-frame down/up input to change zoom (and trackpad pinch via ctrl+wheel). The audit DSL has no wheel primitive; hovering is verified inert. LIMITATION: wheel/pinch is not scriptable here.",
+      "needsVisual": true,
+      "setup": [{ "do": "waitFor", "selector": ".viewport__host" }],
+      "trigger": [{ "do": "hover", "selector": ".viewport__host" }],
+      "checks": [{ "expect": "noConsoleError" }],
+      "settleMs": 300
+    },
+    {
+      "id": "viewport.canvas.pick.click",
+      "feature": "viewport",
+      "label": "Canvas click atom pick",
+      "kind": "other",
+      "requires": ["picking"],
+      "note": "A plain left click (no drag) on the canvas picks the atom under the cursor. Backend/offscreen picking is unavailable in the audit environment, so this is recorded BLOCKED rather than driven.",
+      "needsVisual": true,
+      "setup": [{ "do": "waitFor", "selector": ".viewport__host" }],
+      "trigger": [{ "do": "click", "selector": ".viewport__host" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+
+    {
+      "id": "viewport.hud.toggle.collapse",
+      "feature": "viewport",
+      "label": "HUD collapse (× button)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Clicking the HUD toggle when open (shows ×) collapses the diagnostics panel; the rep toggles and stat lines should disappear, leaving only the small toggle handle.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".viewport__hud-toggle" }],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-toggle" }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".viewport__hud-reps" },
+        { "expect": "selectorHidden", "selector": ".viewport__hud-line" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "viewport.hud.toggle.expand",
+      "feature": "viewport",
+      "label": "HUD expand (i button)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Following the collapse spec the HUD is closed (shows i); clicking the toggle re-opens it, restoring the stat lines and rep toggles. Leaves the HUD open for subsequent runs.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".viewport__hud-toggle" }],
+      "trigger": [{ "do": "click", "selector": ".viewport__hud-toggle" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".viewport__hud-reps" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    }
+  ]
+}

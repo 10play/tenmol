@@ -1,0 +1,1628 @@
+{
+  "area": "movie",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "movie.transport.rewind",
+      "feature": "movie",
+      "label": "Transport ▸ rewind (|<)",
+      "kind": "button",
+      "requires": [],
+      "note": "control-bar button 0 -> cmd.rewind(); echoes the equivalent command line",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-rewind]" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.rewind" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.transport.back",
+      "feature": "movie",
+      "label": "Transport ▸ back (<)",
+      "kind": "button",
+      "requires": [],
+      "note": "control-bar button 1 -> cmd.backward(); logs cmd.back()",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-back]" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.back" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.transport.stop",
+      "feature": "movie",
+      "label": "Transport ▸ stop ([])",
+      "kind": "button",
+      "requires": [],
+      "note": "control-bar button 2 -> cmd.mstop() and also clears sculpting/rock",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-stop]" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mstop" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.transport.play",
+      "feature": "movie",
+      "label": "Transport ▸ play/pause (>)",
+      "kind": "button",
+      "requires": [],
+      "note": "control-bar button 3 -> cmd.mplay() when stopped (toggles to pause when playing)",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-play]" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.m(play|stop)" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.transport.play.ctrl",
+      "feature": "movie",
+      "label": "Transport ▸ play with Ctrl (rewind first)",
+      "kind": "button",
+      "requires": [],
+      "note": "Ctrl+click should rewind then play; the audit driver cannot send a modifier with a click, so this drives a plain click and only asserts the play path does not crash. Ctrl-modified path is UNVERIFIED here.",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-play]" }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.transport.forward",
+      "feature": "movie",
+      "label": "Transport ▸ forward (>)",
+      "kind": "button",
+      "requires": [],
+      "note": "control-bar button 4 -> cmd.forward()",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-forward]" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.forward" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.transport.ending",
+      "feature": "movie",
+      "label": "Transport ▸ ending (>|)",
+      "kind": "button",
+      "requires": [],
+      "note": "control-bar button 5 -> cmd.ending()",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-ending]" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.ending" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.transport.ending.ctrl",
+      "feature": "movie",
+      "label": "Transport ▸ ending with Ctrl (middle)",
+      "kind": "button",
+      "requires": [],
+      "note": "Ctrl+click should jump to the middle frame (cmd.middle()); the driver cannot send a modifier so this drives a plain click and only asserts no crash. Ctrl-modified path is UNVERIFIED here.",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-ending]" }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.transport.seq",
+      "feature": "movie",
+      "label": "Transport ▸ seq (sequence-viewer toggle)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "control-bar button 6 -> cmd.set('seq_view', ...)",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-seq]" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "seq_view" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.transport.rock",
+      "feature": "movie",
+      "label": "Transport ▸ rock toggle",
+      "kind": "toggle",
+      "requires": [],
+      "note": "control-bar button 7 -> cmd.rock(1)/cmd.rock(0)",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-rock]" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.rock" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.transport.full",
+      "feature": "movie",
+      "label": "Transport ▸ full (full screen)",
+      "kind": "button",
+      "requires": [],
+      "note": "control-bar button 8 -> browser Fullscreen API; logs cmd.full_screen(). requestFullscreen may reject in headless (swallowed).",
+      "trigger": [{ "do": "click", "selector": "[data-testid=mv-full]" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "full_screen" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.seek.range",
+      "feature": "movie",
+      "label": "Frame scrollbar (range input)",
+      "kind": "input",
+      "requires": [],
+      "note": "the frame range is disabled until a movie exists; setup defines one via mset then seeks -> cmd.set_frame(v, 7)",
+      "setup": [
+        { "do": "cmd", "text": "mset 1 x30" },
+        { "do": "wait", "ms": 300 }
+      ],
+      "trigger": [{ "do": "type", "selector": ".mvpanel__range", "text": "10" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "set_frame" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.tab.timeline",
+      "feature": "movie",
+      "label": "Tab ▸ timeline",
+      "kind": "button",
+      "requires": [],
+      "note": "selects the timeline tab (canvas scrubber)",
+      "setup": [{ "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 }],
+      "trigger": [{ "do": "click", "selector": ".mvpanel__tabs button", "nth": 0 }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvtl" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.tab.edit",
+      "feature": "movie",
+      "label": "Tab ▸ edit",
+      "kind": "button",
+      "requires": [],
+      "note": "selects the editors tab (mset/mdo/mview/range)",
+      "trigger": [{ "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvedit__block" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.tab.menu",
+      "feature": "movie",
+      "label": "Tab ▸ menu",
+      "kind": "button",
+      "requires": [],
+      "note": "selects the Movie menu tab (ported _gui.py tree)",
+      "trigger": [{ "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvmenu" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.tab.sweep",
+      "feature": "movie",
+      "label": "Tab ▸ sweep",
+      "kind": "button",
+      "requires": [],
+      "note": "selects the rock/spin/nutate + camera tab",
+      "trigger": [{ "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvedit__view" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.export.open",
+      "feature": "movie",
+      "label": "Header ▸ export (open dialog)",
+      "kind": "dialog",
+      "requires": [],
+      "note": "opens the Export movie dialog",
+      "trigger": [{ "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvexport" }],
+      "settleMs": 500
+    },
+
+    {
+      "id": "movie.edit.mset.input",
+      "feature": "movie",
+      "label": "Edit ▸ mset spec input",
+      "kind": "input",
+      "requires": [],
+      "note": "typing an mset spec updates the live frame->state preview (msetParser)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".mvedit__block:nth-of-type(1) .mvedit__input", "text": "1 x30 1 -15 15 x30" }
+      ],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mset.btn",
+      "feature": "movie",
+      "label": "Edit ▸ mset button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mset(spec, 1) — defines the movie frame table",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 0 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mset" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.madd.btn",
+      "feature": "movie",
+      "label": "Edit ▸ madd button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.madd(spec) — appends to the frame table",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 1 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.madd" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.purge.btn",
+      "feature": "movie",
+      "label": "Edit ▸ purge button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mset() with no args — purges the whole movie",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 2 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mset" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mdo.input",
+      "feature": "movie",
+      "label": "Edit ▸ frame command input",
+      "kind": "input",
+      "requires": [],
+      "note": "per-frame command text field; effect (input value) is not reflected in body text, so only no-crash is observable via the driver",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".mvedit__block:nth-of-type(2) .mvedit__input", "text": "turn x, 5" }
+      ],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.edit.mdo.btn",
+      "feature": "movie",
+      "label": "Edit ▸ mdo button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mdo(frame, command) — bind a command to the current frame",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" },
+        { "do": "type", "selector": ".mvedit__block:nth-of-type(2) .mvedit__input", "text": "turn x, 5" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(2) button", "nth": 0 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mdo" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mappend.btn",
+      "feature": "movie",
+      "label": "Edit ▸ mappend button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mappend(frame, command)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" },
+        { "do": "type", "selector": ".mvedit__block:nth-of-type(2) .mvedit__input", "text": "turn y, 5" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(2) button", "nth": 1 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mappend" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mdump.btn",
+      "feature": "movie",
+      "label": "Edit ▸ mdump button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mdump() — prints the movie program to the console",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(2) button", "nth": 2 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mdump" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mclear.btn",
+      "feature": "movie",
+      "label": "Edit ▸ mclear button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mclear() — clears cached frame images",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(2) button", "nth": 3 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mclear" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mview.object.select",
+      "feature": "movie",
+      "label": "Edit ▸ mview object select",
+      "kind": "input",
+      "requires": [],
+      "note": "object <select> for mview (camera vs a named object); the driver has no select-option action so this only asserts the control is present",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "waitFor", "selector": ".mvedit__block:nth-of-type(3) select" }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvedit__block:nth-of-type(3) select" }],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.edit.mview.store",
+      "feature": "movie",
+      "label": "Edit ▸ mview store",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mview('store', first=frame) — store a camera keyframe",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(3) button", "nth": 0 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "mview\\('store'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mview.clear",
+      "feature": "movie",
+      "label": "Edit ▸ mview clear",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mview('clear', first=frame)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(3) button", "nth": 1 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "mview\\('clear'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mview.interpolate",
+      "feature": "movie",
+      "label": "Edit ▸ mview interpolate",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mview('interpolate')",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(3) button", "nth": 2 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "mview\\('interpolate'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mview.reinterpolate",
+      "feature": "movie",
+      "label": "Edit ▸ mview reinterpolate",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mview('reinterpolate')",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(3) button", "nth": 3 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "mview\\('reinterpolate'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mview.smooth",
+      "feature": "movie",
+      "label": "Edit ▸ mview smooth",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mview('smooth')",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(3) button", "nth": 4 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "mview\\('smooth'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mview.reset",
+      "feature": "movie",
+      "label": "Edit ▸ mview reset",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mview('reset')",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(3) button", "nth": 5 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "mview\\('reset'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mview.uninterpolate",
+      "feature": "movie",
+      "label": "Edit ▸ mview uninterpolate",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mview('uninterpolate')",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(3) button", "nth": 6 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "mview\\('uninterpolate'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mview.toggle",
+      "feature": "movie",
+      "label": "Edit ▸ mview toggle",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mview('toggle', first=frame)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(3) button", "nth": 7 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "mview\\('toggle'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mview.toggle_interp",
+      "feature": "movie",
+      "label": "Edit ▸ mview toggle_interp",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mview('toggle_interp')",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(3) button", "nth": 8 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "mview\\('toggle_interp'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.mview.purge",
+      "feature": "movie",
+      "label": "Edit ▸ mview purge",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mview('purge')",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(3) button", "nth": 9 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "mview\\('purge'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.range.target.input",
+      "feature": "movie",
+      "label": "Edit ▸ range target input",
+      "kind": "input",
+      "requires": [],
+      "note": "target frame number for mmove/mcopy; input value is not reflected in body text so only no-crash is observable",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".mvedit__block:nth-of-type(4) input[type=number]", "text": "5", "nth": 0 }
+      ],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.edit.range.count.input",
+      "feature": "movie",
+      "label": "Edit ▸ range count input",
+      "kind": "input",
+      "requires": [],
+      "note": "count for mmove/mcopy/minsert/mdelete; input value not reflected in body text",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".mvedit__block:nth-of-type(4) input[type=number]", "text": "3", "nth": 1 }
+      ],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.edit.range.mmove",
+      "feature": "movie",
+      "label": "Edit ▸ mmove button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mmove(target, frame, count) — move a keyframe range",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(4) button", "nth": 0 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mmove" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.range.mcopy",
+      "feature": "movie",
+      "label": "Edit ▸ mcopy button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mcopy(target, frame, count)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(4) button", "nth": 1 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mcopy" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.range.minsert",
+      "feature": "movie",
+      "label": "Edit ▸ minsert button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.minsert(count, frame)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(4) button", "nth": 2 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.minsert" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.edit.range.mdelete",
+      "feature": "movie",
+      "label": "Edit ▸ mdelete button",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mdelete(count, frame)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvedit__block" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(4) button", "nth": 3 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mdelete" }],
+      "settleMs": 400
+    },
+
+    {
+      "id": "movie.sweep.rocking.toggle",
+      "feature": "movie",
+      "label": "Sweep ▸ start/stop rocking",
+      "kind": "toggle",
+      "requires": [],
+      "note": "cmd.rock(1)/cmd.rock(0)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 0 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.rock" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.mode.y",
+      "feature": "movie",
+      "label": "Sweep ▸ Y-rock (sweep_mode 0)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.set('sweep_mode', 0)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 1 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'sweep_mode'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.mode.x",
+      "feature": "movie",
+      "label": "Sweep ▸ X-rock (sweep_mode 1)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.set('sweep_mode', 1)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 2 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'sweep_mode'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.mode.z",
+      "feature": "movie",
+      "label": "Sweep ▸ Z-rock (sweep_mode 2)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.set('sweep_mode', 2)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 3 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'sweep_mode'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.mode.nutate",
+      "feature": "movie",
+      "label": "Sweep ▸ nutate (sweep_mode 3)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.set('sweep_mode', 3)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 4 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'sweep_mode'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.angle.10",
+      "feature": "movie",
+      "label": "Sweep ▸ angle 10",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.set('sweep_angle', 10)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 5 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'sweep_angle'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.angle.30",
+      "feature": "movie",
+      "label": "Sweep ▸ angle 30",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.set('sweep_angle', 30)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 6 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'sweep_angle'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.angle.60",
+      "feature": "movie",
+      "label": "Sweep ▸ angle 60",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.set('sweep_angle', 60)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 7 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'sweep_angle'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.angle.90",
+      "feature": "movie",
+      "label": "Sweep ▸ angle 90",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.set('sweep_angle', 90)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 8 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'sweep_angle'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.angle.0",
+      "feature": "movie",
+      "label": "Sweep ▸ angle 0 (spin)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.set('sweep_angle', 0) — degenerates into a continuous spin",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(1) button", "nth": 9 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'sweep_angle'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.get_view",
+      "feature": "movie",
+      "label": "Sweep ▸ get_view",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.get_view(3) — fills the textarea with 18 floats and echoes them",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(2) button", "nth": 0 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.set_view",
+      "feature": "movie",
+      "label": "Sweep ▸ set_view",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.set_view(<18 floats>) — setup populates the textarea via get_view first",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" },
+        { "do": "click", "selector": ".mvedit__block:nth-of-type(2) button", "nth": 0 },
+        { "do": "wait", "ms": 300 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(2) button", "nth": 1 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "set_view" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.sweep.reset",
+      "feature": "movie",
+      "label": "Sweep ▸ reset (camera)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.reset()",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(2) button", "nth": 2 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.reset" }],
+      "settleMs": 500
+    },
+    {
+      "id": "movie.sweep.zoom",
+      "feature": "movie",
+      "label": "Sweep ▸ zoom",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.zoom(animate=1.0) — moves the camera; viewport pixels should change",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(2) button", "nth": 3 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.zoom" }],
+      "settleMs": 600
+    },
+    {
+      "id": "movie.sweep.orient",
+      "feature": "movie",
+      "label": "Sweep ▸ orient",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.orient(animate=1.0) — reorients the camera",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvedit__block:nth-of-type(2) button", "nth": 4 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.orient" }],
+      "settleMs": 600
+    },
+    {
+      "id": "movie.sweep.view.textarea",
+      "feature": "movie",
+      "label": "Sweep ▸ camera view textarea",
+      "kind": "input",
+      "requires": [],
+      "note": "free-text 18-float / set_view(...) paste box; textarea value is not reflected in body innerText so only no-crash is observable",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 3 },
+        { "do": "waitFor", "selector": ".mvedit__view" }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".mvedit__view", "text": "1 0 0 0 1 0 0 0 1 0 0 -50 0 0 0 40 60 -20" }
+      ],
+      "checks": [],
+      "settleMs": 300
+    },
+
+    {
+      "id": "movie.menu.check.auto_interpolate",
+      "feature": "movie",
+      "label": "Menu ▸ Auto Interpolate",
+      "kind": "toggle",
+      "requires": [],
+      "note": "cmd.set('movie_auto_interpolate', ...)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 6 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'movie_auto_interpolate'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.check.show_panel",
+      "feature": "movie",
+      "label": "Menu ▸ Show Panel",
+      "kind": "toggle",
+      "requires": [],
+      "note": "cmd.set('movie_panel', ...)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 7 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'movie_panel'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.check.loop_frames",
+      "feature": "movie",
+      "label": "Menu ▸ Loop Frames",
+      "kind": "toggle",
+      "requires": [],
+      "note": "cmd.set('movie_loop', ...)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 8 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'movie_loop'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.check.draw_frames",
+      "feature": "movie",
+      "label": "Menu ▸ Draw Frames",
+      "kind": "toggle",
+      "requires": [],
+      "note": "cmd.set('draw_frames', ...)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 9 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'draw_frames'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.check.ray_trace_frames",
+      "feature": "movie",
+      "label": "Menu ▸ Ray Trace Frames",
+      "kind": "toggle",
+      "requires": [],
+      "note": "cmd.set('ray_trace_frames', ...)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 10 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'ray_trace_frames'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.check.cache_frames",
+      "feature": "movie",
+      "label": "Menu ▸ Cache Frame Images",
+      "kind": "toggle",
+      "requires": [],
+      "note": "cmd.set('cache_frames', ...)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 11 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'cache_frames'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.check.static_singletons",
+      "feature": "movie",
+      "label": "Menu ▸ Static Singletons",
+      "kind": "toggle",
+      "requires": [],
+      "note": "cmd.set('static_singletons', ...)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 13 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'static_singletons'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.check.all_states",
+      "feature": "movie",
+      "label": "Menu ▸ Show All States",
+      "kind": "toggle",
+      "requires": [],
+      "note": "cmd.set('all_states', ...)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 14 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'all_states'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.reset",
+      "feature": "movie",
+      "label": "Menu ▸ Reset (mset;rewind)",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "runs the command line 'mset;rewind'; setup defines a movie so purging it changes the frame readout",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "cmd", "text": "mset 1 x30" },
+        { "do": "wait", "ms": 300 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 4 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 500
+    },
+    {
+      "id": "movie.menu.clear_image_cache",
+      "feature": "movie",
+      "label": "Menu ▸ Clear Image Cache",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.mclear()",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 12 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.mclear" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.update_last_program",
+      "feature": "movie",
+      "label": "Menu ▸ Update Last Program",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "re-runs the stored movie_command; a no-op until a Program leaf has been run this session, so standalone it only asserts no crash",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 2 }],
+      "checks": [],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.remove_last_program",
+      "feature": "movie",
+      "label": "Menu ▸ Remove Last Program",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.mdelete(-1, movie_start); a no-op until a Program leaf has been run this session, so standalone it only asserts no crash",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu > ul.mvmenu__list > li > button", "nth": 3 }],
+      "checks": [],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.append.open",
+      "feature": "movie",
+      "label": "Menu ▸ Append (open submenu)",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "expands the Append submenu of 14 add_blank durations",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 0 }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvmenu__sub" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.append.leaf",
+      "feature": "movie",
+      "label": "Menu ▸ Append ▸ 0.25 second",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.movie.add_blank(0.25) — first Append leaf; the 14 durations share the same onCall handler",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 0 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub button.mvmenu__btn", "nth": 0 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "movie\\.add_blank" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.program.open",
+      "feature": "movie",
+      "label": "Menu ▸ Program (open submenu)",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "expands the Program submenu (Camera Loop / Scene Loop / State Loop / State Sweep)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 1 }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvmenu__sub" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.program.camera_loop.open",
+      "feature": "movie",
+      "label": "Menu ▸ Program ▸ Camera Loop (open)",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "second-level open; contains Nutate / X-Rock / X-Roll / Y-Rock / Y-Roll of add_nutate/add_rock/add_roll program leaves",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub > ul.mvmenu__list > li.mvmenu__item--sub > button", "nth": 0 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.program.scene_loop.open",
+      "feature": "movie",
+      "label": "Menu ▸ Program ▸ Scene Loop (open)",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "second-level open; contains Nutate / X-Rock / Y-Rock / Steady add_scenes program leaves",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub > ul.mvmenu__list > li.mvmenu__item--sub > button", "nth": 1 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.program.state_loop.open",
+      "feature": "movie",
+      "label": "Menu ▸ Program ▸ State Loop (open)",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "second-level open; add_state_loop speed/pause program leaves",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub > ul.mvmenu__list > li.mvmenu__item--sub > button", "nth": 2 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.program.state_sweep.open",
+      "feature": "movie",
+      "label": "Menu ▸ Program ▸ State Sweep (open)",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "second-level open; add_state_sweep speed/pause program leaves",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 1 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub > ul.mvmenu__list > li.mvmenu__item--sub > button", "nth": 3 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.frame_rate.open",
+      "feature": "movie",
+      "label": "Menu ▸ Frame Rate (open submenu)",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "expands the Frame Rate submenu (5 FPS radios + Show Frame Rate + Reset Meter)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 2 }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvmenu__sub" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.frame_rate.fps30",
+      "feature": "movie",
+      "label": "Menu ▸ Frame Rate ▸ 30 FPS",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.set('movie_fps', 30) — radio",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub button.mvmenu__btn", "nth": 0 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'movie_fps'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.frame_rate.fps15",
+      "feature": "movie",
+      "label": "Menu ▸ Frame Rate ▸ 15 FPS",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.set('movie_fps', 15) — radio",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub button.mvmenu__btn", "nth": 1 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'movie_fps'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.frame_rate.fps5",
+      "feature": "movie",
+      "label": "Menu ▸ Frame Rate ▸ 5 FPS",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.set('movie_fps', 5) — radio",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub button.mvmenu__btn", "nth": 2 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'movie_fps'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.frame_rate.fps1",
+      "feature": "movie",
+      "label": "Menu ▸ Frame Rate ▸ 1 FPS",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.set('movie_fps', 1) — radio",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub button.mvmenu__btn", "nth": 3 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'movie_fps'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.frame_rate.fps03",
+      "feature": "movie",
+      "label": "Menu ▸ Frame Rate ▸ 0.3 FPS",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.set('movie_fps', 0.3) — radio",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub button.mvmenu__btn", "nth": 4 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'movie_fps'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.frame_rate.show_frame_rate",
+      "feature": "movie",
+      "label": "Menu ▸ Frame Rate ▸ Show Frame Rate",
+      "kind": "toggle",
+      "requires": [],
+      "note": "cmd.set('show_frame_rate', ...) — check item",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub button.mvmenu__btn", "nth": 5 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "'show_frame_rate'" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.menu.frame_rate.reset_meter",
+      "feature": "movie",
+      "label": "Menu ▸ Frame Rate ▸ Reset Meter",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.meter_reset()",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__tabs button", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu" },
+        { "do": "click", "selector": ".mvmenu__item--sub > .mvmenu__btn", "nth": 2 },
+        { "do": "waitFor", "selector": ".mvmenu__sub" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvmenu__sub button.mvmenu__btn", "nth": 6 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "cmd\\.meter_reset" }],
+      "settleMs": 400
+    },
+
+    {
+      "id": "movie.timeline.click_seek",
+      "feature": "movie",
+      "label": "Timeline ▸ left-click a frame (seek)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "left-click/drag on the canvas seeks (cmd.set_frame v,7). The canvas rows come from get_movie_panel(), which is a bridge-only endpoint; in local mode nframes=0 and every pointer handler early-returns, so this cannot be driven locally.",
+      "trigger": [{ "do": "click", "selector": ".mvtl__canvas" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "set_frame" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.timeline.wheel_step",
+      "feature": "movie",
+      "label": "Timeline ▸ wheel (+/- one frame)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "wheel over the canvas steps a frame (cmd.forward/backward). Needs get_movie_panel frames>0 (bridge only).",
+      "trigger": [{ "do": "hover", "selector": ".mvtl__canvas" }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.timeline.rdrag_mmove",
+      "feature": "movie",
+      "label": "Timeline ▸ right-drag (mmove)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "right-drag emits cmd.mmove(target,source,count,object). Free canvas drag on a bridge-only panel; not drivable locally.",
+      "trigger": [{ "do": "hover", "selector": ".mvtl__canvas" }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.timeline.shift_rdrag_mcopy",
+      "feature": "movie",
+      "label": "Timeline ▸ shift+right-drag (mcopy)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "shift+right-drag emits cmd.mcopy(...). Bridge-only panel + modifier drag; not drivable locally.",
+      "trigger": [{ "do": "hover", "selector": ".mvtl__canvas" }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.timeline.ctrl_ldrag_minsert",
+      "feature": "movie",
+      "label": "Timeline ▸ ctrl+left-drag right (minsert)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "ctrl+left-drag inserts blank frames (cmd.minsert). Bridge-only panel + modifier drag; not drivable locally.",
+      "trigger": [{ "do": "hover", "selector": ".mvtl__canvas" }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.timeline.ctrl_ldrag_mdelete",
+      "feature": "movie",
+      "label": "Timeline ▸ ctrl+left-drag left (mdelete)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "ctrl+left-drag the other way deletes frames (cmd.mdelete). Bridge-only panel + modifier drag; not drivable locally.",
+      "trigger": [{ "do": "hover", "selector": ".mvtl__canvas" }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.timeline.ctrl_mdrag_clear",
+      "feature": "movie",
+      "label": "Timeline ▸ ctrl+middle-drag (mview clear)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "ctrl+middle-drag clears keyframes in a span (cmd.mview clear first/last). Bridge-only panel + middle-button drag; not drivable locally.",
+      "trigger": [{ "do": "hover", "selector": ".mvtl__canvas" }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.timeline.ctrl_shift_allrows",
+      "feature": "movie",
+      "label": "Timeline ▸ ctrl+shift-drag (all rows / column mode)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "ctrl+shift drag applies to every row (column mode). Bridge-only panel + modifier drag; not drivable locally.",
+      "trigger": [{ "do": "hover", "selector": ".mvtl__canvas" }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.timeline.ctrl_shift_wheel_rowheight",
+      "feature": "movie",
+      "label": "Timeline ▸ ctrl+shift wheel (row height)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "ctrl+shift wheel writes movie_panel_row_height. Bridge-only panel + modifier wheel; not drivable locally.",
+      "trigger": [{ "do": "hover", "selector": ".mvtl__canvas" }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.timeline.rightclick_contextmenu",
+      "feature": "movie",
+      "label": "Timeline ▸ right-click (Camera/Object Motion menu)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "a right-click with <5px travel opens the Camera/Object Motion context menu (MotionMenu: store/store-with-scene/store-with-state/clear/interpolate/smooth/...). Needs get_movie_panel frames>0 (bridge only), so the whole MotionMenu tree is unreachable in local mode.",
+      "trigger": [{ "do": "hover", "selector": ".mvtl__canvas" }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvpopup" }],
+      "settleMs": 400
+    },
+
+    {
+      "id": "movie.export.close",
+      "feature": "movie",
+      "label": "Export ▸ close",
+      "kind": "button",
+      "requires": [],
+      "note": "closes the export dialog",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport button", "nth": 4 }],
+      "checks": [{ "expect": "selectorHidden", "selector": ".mvexport" }],
+      "settleMs": 400
+    },
+    {
+      "id": "movie.export.width.input",
+      "feature": "movie",
+      "label": "Export ▸ width input",
+      "kind": "input",
+      "requires": [],
+      "note": "output width; value feeds the export, not visible body text, so only no-crash is observable in local (png) mode",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "type", "selector": ".mvexport .mvedit__num", "text": "800", "nth": 0 }],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.height.input",
+      "feature": "movie",
+      "label": "Export ▸ height input",
+      "kind": "input",
+      "requires": [],
+      "note": "output height; value feeds the export, not visible body text",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "type", "selector": ".mvexport .mvedit__num", "text": "600", "nth": 1 }],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.preset.720",
+      "feature": "movie",
+      "label": "Export ▸ 720p preset",
+      "kind": "button",
+      "requires": [],
+      "note": "sets size to a <=16:9 720p box; effect is on the numeric inputs (not body text)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport button", "nth": 0 }],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.preset.480",
+      "feature": "movie",
+      "label": "Export ▸ 480p preset",
+      "kind": "button",
+      "requires": [],
+      "note": "sets size to a <=16:9 480p box",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport button", "nth": 1 }],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.preset.360",
+      "feature": "movie",
+      "label": "Export ▸ 360p preset",
+      "kind": "button",
+      "requires": [],
+      "note": "sets size to a <=16:9 360p box",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport button", "nth": 2 }],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.format.png",
+      "feature": "movie",
+      "label": "Export ▸ format png",
+      "kind": "input",
+      "requires": [],
+      "note": "png radio — the only format enabled without an encoder probe (bridge)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport input[type=radio]", "nth": 0 }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".mvexport" }],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.format.mp4",
+      "feature": "movie",
+      "label": "Export ▸ format mp4",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "mp4 radio is disabled until get_movie_encoders() (bridge) reports ffmpeg/convert; disabled in local mode",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport input[type=radio]", "nth": 1 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.format.webm",
+      "feature": "movie",
+      "label": "Export ▸ format webm",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "webm radio is disabled until the encoder probe (bridge) reports ffmpeg/convert",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport input[type=radio]", "nth": 2 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.format.mpg",
+      "feature": "movie",
+      "label": "Export ▸ format mpg",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "mpg radio is disabled until the encoder probe (bridge) reports mpeg_encode",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport input[type=radio]", "nth": 3 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.format.mov",
+      "feature": "movie",
+      "label": "Export ▸ format mov",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "mov radio is disabled until the encoder probe (bridge) reports ffmpeg/convert",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport input[type=radio]", "nth": 4 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.format.gif",
+      "feature": "movie",
+      "label": "Export ▸ format gif",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "gif radio is disabled until the encoder probe (bridge) reports ffmpeg/convert",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport input[type=radio]", "nth": 5 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.quality.input",
+      "feature": "movie",
+      "label": "Export ▸ quality input",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "quality spinbox is disabled for png and for the convert encoder; only reachable once an encoded format is selected (needs the bridge encoder probe)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "type", "selector": ".mvexport .mvedit__num", "text": "75", "nth": 2 }],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.ray.toggle",
+      "feature": "movie",
+      "label": "Export ▸ ray checkbox",
+      "kind": "toggle",
+      "requires": [],
+      "note": "toggles ray-tracing of each exported frame; checkbox state only (no body-text change)",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport input[type=checkbox]" }],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.prefix.input",
+      "feature": "movie",
+      "label": "Export ▸ output prefix input",
+      "kind": "input",
+      "requires": [],
+      "note": "output path prefix; value feeds the export filename, not visible body text",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "type", "selector": ".mvexport .mvedit__input", "text": "/tmp/tenmol-movie/shot" }],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "movie.export.run",
+      "feature": "movie",
+      "label": "Export ▸ export (run)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "runs cmd.movie_export_png / cmd.movie_produce; both are bridge-only endpoints. In local mode the source reports 'export endpoint unavailable', so real export requires the bridge.",
+      "setup": [
+        { "do": "click", "selector": ".mvpanel__head .mvpanel__tabbtn" },
+        { "do": "waitFor", "selector": ".mvexport" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".mvexport button", "nth": 3 }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "PNG|wrote" }],
+      "settleMs": 800
+    }
+  ]
+}

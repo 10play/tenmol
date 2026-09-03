@@ -1,0 +1,3380 @@
+{
+  "results": [
+    {
+      "id": "builder.open",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=builder-window]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.tables.noDrift",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-window]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=builder-drift]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.tables.noDrift.png",
+      "needsVisual": false,
+      "note": "diffTables compares the client button tables against cmd.builder_tables(); in local mode they are identical, so the drift banner must be absent"
+    },
+    {
+      "id": "builder.tab.chemical",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=tab-chemical]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.tab.chemical.png",
+      "needsVisual": false,
+      "note": "selecting the Chemical tab renders its page (tab-chemical)"
+    },
+    {
+      "id": "builder.tab.protein",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=tab-protein]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.tab.protein.png",
+      "needsVisual": false,
+      "note": "selecting the Protein tab renders its page (tab-protein)"
+    },
+    {
+      "id": "builder.tab.nucleic",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=tab-nucleic]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.tab.nucleic.png",
+      "needsVisual": false,
+      "note": "selecting the Nucleic Acid tab renders its page (tab-nucleic)"
+    },
+    {
+      "id": "builder.tab.dna",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "input[name=builder-dna-form]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.tab.dna.png",
+      "needsVisual": false,
+      "note": "the DNA nested tab exposes the B-form/double-helix radios"
+    },
+    {
+      "id": "builder.tab.rna",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".bbtn[title^='Uracil']",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.tab.rna.png",
+      "needsVisual": false,
+      "note": "the RNA nested tab shows the RNA base buttons (Uracil is RNA-only)"
+    },
+    {
+      "id": "builder.chem.element.h",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.element.h.png",
+      "needsVisual": false,
+      "note": "with nothing picked, the Hydrogen button arms the ReplaceWizard (replace the picked atom's element)"
+    },
+    {
+      "id": "builder.chem.element.c",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.element.c.png",
+      "needsVisual": false,
+      "note": "with nothing picked, the Carbon button arms the ReplaceWizard (replace the picked atom's element)"
+    },
+    {
+      "id": "builder.chem.element.n",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.element.n.png",
+      "needsVisual": false,
+      "note": "with nothing picked, the Nitrogen button arms the ReplaceWizard (replace the picked atom's element)"
+    },
+    {
+      "id": "builder.chem.element.o",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.element.o.png",
+      "needsVisual": false,
+      "note": "with nothing picked, the Oxygen button arms the ReplaceWizard (replace the picked atom's element)"
+    },
+    {
+      "id": "builder.chem.element.p",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.element.p.png",
+      "needsVisual": false,
+      "note": "with nothing picked, the Phosphorus button arms the ReplaceWizard (replace the picked atom's element)"
+    },
+    {
+      "id": "builder.chem.element.s",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.element.s.png",
+      "needsVisual": false,
+      "note": "with nothing picked, the Sulfur button arms the ReplaceWizard (replace the picked atom's element)"
+    },
+    {
+      "id": "builder.chem.element.f",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.element.f.png",
+      "needsVisual": false,
+      "note": "with nothing picked, the Fluorine button arms the ReplaceWizard (replace the picked atom's element)"
+    },
+    {
+      "id": "builder.chem.element.cl",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.element.cl.png",
+      "needsVisual": false,
+      "note": "with nothing picked, the Chlorrine button arms the ReplaceWizard (replace the picked atom's element)"
+    },
+    {
+      "id": "builder.chem.element.br",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.element.br.png",
+      "needsVisual": false,
+      "note": "with nothing picked, the Bromine button arms the ReplaceWizard (replace the picked atom's element)"
+    },
+    {
+      "id": "builder.chem.element.i",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.element.i.png",
+      "needsVisual": false,
+      "note": "with nothing picked, the Iodine button arms the ReplaceWizard (replace the picked atom's element)"
+    },
+    {
+      "id": "builder.chem.frag.cf3",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.frag.cf3.png",
+      "needsVisual": false,
+      "note": "grows the Trifluoromethane fragment onto pk1; with nothing picked it arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.frag.ome",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.frag.ome.png",
+      "needsVisual": false,
+      "note": "grows the Methanol fragment onto pk1; with nothing picked it arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.methyl",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.methyl.png",
+      "needsVisual": false,
+      "note": "grows the Methyl functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.ethylene",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.ethylene.png",
+      "needsVisual": false,
+      "note": "grows the Ethylene functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.acetylene",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.acetylene.png",
+      "needsVisual": false,
+      "note": "grows the Acetylene functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.cyanide",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.cyanide.png",
+      "needsVisual": false,
+      "note": "grows the Cyanide functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.aldehyde",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.aldehyde.png",
+      "needsVisual": false,
+      "note": "grows the Aldehyde functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.formicacid",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.formicacid.png",
+      "needsVisual": false,
+      "note": "grows the Formic Acid functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.c2namide",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.c2namide.png",
+      "needsVisual": false,
+      "note": "grows the C->N amide functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.n2camide",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.n2camide.png",
+      "needsVisual": false,
+      "note": "grows the N->C amide functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.sulfone",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.sulfone.png",
+      "needsVisual": false,
+      "note": "grows the Sulfone functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.phosphite",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.phosphite.png",
+      "needsVisual": false,
+      "note": "grows the Phosphite functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.group.nitro",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /AttachWizard/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": false,
+          "detail": "pattern /AttachWizard/ not found"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.group.nitro.png",
+      "needsVisual": false,
+      "note": "grows the Nitro functional group onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.ring.cyclopropane",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.ring.cyclopropane.png",
+      "needsVisual": false,
+      "note": "grows the Cyclopropane ring fragment onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.ring.cyclobutane",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.ring.cyclobutane.png",
+      "needsVisual": false,
+      "note": "grows the Cyclobutane ring fragment onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.ring.cyclopentane",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.ring.cyclopentane.png",
+      "needsVisual": false,
+      "note": "grows the Cyclopentane ring fragment onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.ring.cyclohexane",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.ring.cyclohexane.png",
+      "needsVisual": false,
+      "note": "grows the Cyclohexane ring fragment onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.ring.cycloheptane",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.ring.cycloheptane.png",
+      "needsVisual": false,
+      "note": "grows the Cycloheptane ring fragment onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.ring.cyclopentadiene",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.ring.cyclopentadiene.png",
+      "needsVisual": false,
+      "note": "grows the Cyclopentadiene ring fragment onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.ring.benzene",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.ring.benzene.png",
+      "needsVisual": false,
+      "note": "grows the Benzene ring fragment onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.ring.indane",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.ring.indane.png",
+      "needsVisual": false,
+      "note": "grows the Indane ring fragment onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.ring.napthylene",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.ring.napthylene.png",
+      "needsVisual": false,
+      "note": "grows the Napthylene ring fragment onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.chem.ring.benzocycloheptane",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.chem.ring.benzocycloheptane.png",
+      "needsVisual": false,
+      "note": "grows the Benzocycloheptane ring fragment onto pk1; nothing picked arms the AttachWizard"
+    },
+    {
+      "id": "builder.protein.aa.ace",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.ace.png",
+      "needsVisual": false,
+      "note": "attaches an Ace residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.ala",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.ala.png",
+      "needsVisual": false,
+      "note": "attaches an Ala residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.arg",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.arg.png",
+      "needsVisual": false,
+      "note": "attaches an Arg residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.asn",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.asn.png",
+      "needsVisual": false,
+      "note": "attaches an Asn residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.asp",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.asp.png",
+      "needsVisual": false,
+      "note": "attaches an Asp residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.cys",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.cys.png",
+      "needsVisual": false,
+      "note": "attaches an Cys residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.gln",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.gln.png",
+      "needsVisual": false,
+      "note": "attaches an Gln residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.glu",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.glu.png",
+      "needsVisual": false,
+      "note": "attaches an Glu residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.gly",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.gly.png",
+      "needsVisual": false,
+      "note": "attaches an Gly residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.his",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.his.png",
+      "needsVisual": false,
+      "note": "attaches an His residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.ile",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.ile.png",
+      "needsVisual": false,
+      "note": "attaches an Ile residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.leu",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.leu.png",
+      "needsVisual": false,
+      "note": "attaches an Leu residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.lys",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.lys.png",
+      "needsVisual": false,
+      "note": "attaches an Lys residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.met",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.met.png",
+      "needsVisual": false,
+      "note": "attaches an Met residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.phe",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.phe.png",
+      "needsVisual": false,
+      "note": "attaches an Phe residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.pro",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.pro.png",
+      "needsVisual": false,
+      "note": "attaches an Pro residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.ser",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.ser.png",
+      "needsVisual": false,
+      "note": "attaches an Ser residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.thr",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.thr.png",
+      "needsVisual": false,
+      "note": "attaches an Thr residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.trp",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.trp.png",
+      "needsVisual": false,
+      "note": "attaches an Trp residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.tyr",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.tyr.png",
+      "needsVisual": false,
+      "note": "attaches an Tyr residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.val",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.val.png",
+      "needsVisual": false,
+      "note": "attaches an Val residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.nme",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.nme.png",
+      "needsVisual": false,
+      "note": "attaches an NMe residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.aa.nhh",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.aa.nhh.png",
+      "needsVisual": false,
+      "note": "attaches an NHH residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard"
+    },
+    {
+      "id": "builder.protein.ss",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "-139",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.protein.ss.png",
+      "needsVisual": true,
+      "note": "changing the SS combo pushes ssChanged and updates the phi/psi note; index 1 (Beta Sheet Anti-Parallel) is phi -139 / psi 135"
+    },
+    {
+      "id": "builder.nucleic.dna.a",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.dna.a.png",
+      "needsVisual": false,
+      "note": "attaches DNA base Deoxyadenosine; without exactly one pick it arms the NucleicAcidWizard"
+    },
+    {
+      "id": "builder.nucleic.dna.c",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.dna.c.png",
+      "needsVisual": false,
+      "note": "attaches DNA base Deoxycytidine; without exactly one pick it arms the NucleicAcidWizard"
+    },
+    {
+      "id": "builder.nucleic.dna.t",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.dna.t.png",
+      "needsVisual": false,
+      "note": "attaches DNA base Deoxythymidine; without exactly one pick it arms the NucleicAcidWizard"
+    },
+    {
+      "id": "builder.nucleic.dna.g",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.dna.g.png",
+      "needsVisual": false,
+      "note": "attaches DNA base Deoxyguanosine; without exactly one pick it arms the NucleicAcidWizard"
+    },
+    {
+      "id": "builder.nucleic.rna.a",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.rna.a.png",
+      "needsVisual": false,
+      "note": "attaches RNA base Adenosine; without exactly one pick it arms the NucleicAcidWizard"
+    },
+    {
+      "id": "builder.nucleic.rna.c",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.rna.c.png",
+      "needsVisual": false,
+      "note": "attaches RNA base Cytosine; without exactly one pick it arms the NucleicAcidWizard"
+    },
+    {
+      "id": "builder.nucleic.rna.u",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.rna.u.png",
+      "needsVisual": false,
+      "note": "attaches RNA base Uracil; without exactly one pick it arms the NucleicAcidWizard"
+    },
+    {
+      "id": "builder.nucleic.rna.g",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.rna.g.png",
+      "needsVisual": false,
+      "note": "attaches RNA base Guanine; without exactly one pick it arms the NucleicAcidWizard"
+    },
+    {
+      "id": "builder.nucleic.form.a",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.form.a.png",
+      "needsVisual": true,
+      "note": "Form A is panel state carried into the next attachNA; clicking it must not error (no immediate visible effect until a base is attached)"
+    },
+    {
+      "id": "builder.nucleic.form.b",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.form.b.png",
+      "needsVisual": true,
+      "note": "Form B is panel state carried into the next attachNA; clicking it must not error (no immediate visible effect until a base is attached)"
+    },
+    {
+      "id": "builder.nucleic.helix.single",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.helix.single.png",
+      "needsVisual": true,
+      "note": "Helix Single is panel state carried into the next attachNA; clicking it must not error (no immediate visible effect until a base is attached)"
+    },
+    {
+      "id": "builder.nucleic.helix.double",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.nucleic.helix.double.png",
+      "needsVisual": true,
+      "note": "Helix Double is panel state carried into the next attachNA; clicking it must not error (no immediate visible effect until a base is attached)"
+    },
+    {
+      "id": "builder.atoms.fixh",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "HydrogenWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.atoms.fixh.png",
+      "needsVisual": false,
+      "note": "'Fix H' with nothing picked arms the HydrogenWizard"
+    },
+    {
+      "id": "builder.atoms.addh",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "HydrogenWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.atoms.addh.png",
+      "needsVisual": false,
+      "note": "'Add H' with nothing picked arms the HydrogenWizard"
+    },
+    {
+      "id": "builder.atoms.invert",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "InvertWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.atoms.invert.png",
+      "needsVisual": false,
+      "note": "'Invert' with nothing picked arms the InvertWizard"
+    },
+    {
+      "id": "builder.atoms.delete",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "RemoveWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.atoms.delete.png",
+      "needsVisual": false,
+      "note": "'Delete (atoms)' with nothing picked arms the RemoveWizard"
+    },
+    {
+      "id": "builder.atoms.charge.pos",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ChargeWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.atoms.charge.pos.png",
+      "needsVisual": false,
+      "note": "'Charge +1' with nothing picked arms the ChargeWizard"
+    },
+    {
+      "id": "builder.atoms.charge.zero",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ChargeWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.atoms.charge.zero.png",
+      "needsVisual": false,
+      "note": "'Charge 0' with nothing picked arms the ChargeWizard"
+    },
+    {
+      "id": "builder.atoms.charge.neg",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ChargeWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.atoms.charge.neg.png",
+      "needsVisual": false,
+      "note": "'Charge -1' with nothing picked arms the ChargeWizard"
+    },
+    {
+      "id": "builder.atoms.removeresn",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "RemoveWizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.atoms.removeresn.png",
+      "needsVisual": false,
+      "note": "'Remove (residue)' with nothing picked arms the RemoveWizard"
+    },
+    {
+      "id": "builder.atoms.clear.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".builder__modal",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Really delete everything",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/builder/builder.atoms.clear.open.png",
+      "needsVisual": false,
+      "note": "Clear opens a full-viewport confirmation modal before deleting everything"
+    },
+    {
+      "id": "builder.atoms.clear.cancel",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.bonds.create",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.bonds.delete",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.bonds.cycle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.bonds.order.single",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.bonds.order.double",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.bonds.order.triple",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.bonds.order.arom",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.model.clean",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.model.sculpt",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.model.fix",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.model.rest",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.settings.elstat",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.settings.bumps",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.settings.undoEnabled",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.settings.undoEnabled.modalNo",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.settings.undoEnabled.modalYes",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.undo.button",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.redo.button",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.key.undo.ctrlz",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.key.redo.ctrlshiftz",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.key.redo.ctrly",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.pick.unpick",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.wizard.dismiss",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.wizard.cancel",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "builder.viewport.pick.multi",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "builder.viewport.pick.bond",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "builder.atoms.clear.confirm",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.quickbuttons button[title=\\'the builder dock\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"quick\" title=\"the builder dock\" class=",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    }
+  ]
+}

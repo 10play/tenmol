@@ -1,0 +1,959 @@
+{
+  "results": [
+    {
+      "id": "mouse.internal-gui.enable",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"butmode\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"butmode-mode\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"butmode-name\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Mouse Mode",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.internal-gui.enable.png",
+      "needsVisual": false,
+      "note": "`set internal_gui, 1` turns on the right-hand column; ShortcutsService portals the ButMode block (data-testid=butmode) into it, printing 'Mouse Mode <name>'."
+    },
+    {
+      "id": "mouse.butmode.mode-name-reflect",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Viewing",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.mode-name-reflect.png",
+      "needsVisual": false,
+      "note": "useMouseMode polls button_mode_name at 4Hz; after `mouse three_button_viewing` the block prints '3-Button Viewing'."
+    },
+    {
+      "id": "mouse.config.three_button_motions",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /3-Button Motions/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Motions",
+          "ok": false,
+          "detail": "pattern /3-Button Motions/ not found"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.config.three_button_motions.png",
+      "needsVisual": false,
+      "note": "First entry of the mouse_config pop-up (MOUSE_CONFIG_MENU). Its command config_mouse('three_button_motions') sets the ring; button_mode_name resolves to '3-Button Motions'. The pop-up itself opens only on right-click (see mouse.butmode.mode.rightclick-menu); this drives the leaf's command directly."
+    },
+    {
+      "id": "mouse.config.three_button_editing",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /3-Button Editing/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Editing",
+          "ok": false,
+          "detail": "pattern /3-Button Editing/ not found"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.config.three_button_editing.png",
+      "needsVisual": false,
+      "note": "Second mouse_config leaf. config_mouse('three_button_editing') → name '3-Button Editing'; single-left binds pkat."
+    },
+    {
+      "id": "mouse.config.three_button_viewing",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Viewing",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.config.three_button_viewing.png",
+      "needsVisual": false,
+      "note": "Third mouse_config leaf. It calls cmd.mouse('three_button_viewing') (a mode OUTSIDE the ring), not config_mouse → name '3-Button Viewing'."
+    },
+    {
+      "id": "mouse.config.three_button_lights",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /3-Button Lights/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Lights",
+          "ok": false,
+          "detail": "pattern /3-Button Lights/ not found"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.config.three_button_lights.png",
+      "needsVisual": false,
+      "note": "Fourth mouse_config leaf. cmd.mouse('three_button_lights') → name '3-Button Lights'."
+    },
+    {
+      "id": "mouse.config.three_button_all_modes",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /3-Button Editing/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Editing",
+          "ok": false,
+          "detail": "pattern /3-Button Editing/ not found"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.config.three_button_all_modes.png",
+      "needsVisual": false,
+      "note": "Fifth mouse_config leaf. config_mouse('three_button_all_modes') selects a 4-mode ring whose first entry is three_button_editing, so button_mode_name resolves to '3-Button Editing' (documented ring resolution, controlling.py)."
+    },
+    {
+      "id": "mouse.config.two_button_editing",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /2-Button Editing/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "2-Button Editing",
+          "ok": false,
+          "detail": "pattern /2-Button Editing/ not found"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.config.two_button_editing.png",
+      "needsVisual": false,
+      "note": "Seventh mouse_config leaf (after the separator). config_mouse('two_button_editing') → name '2-Button Editing'."
+    },
+    {
+      "id": "mouse.config.two_button_viewing",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /2-Button Viewing/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "2-Button Viewing",
+          "ok": false,
+          "detail": "pattern /2-Button Viewing/ not found"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.config.two_button_viewing.png",
+      "needsVisual": false,
+      "note": "Eighth mouse_config leaf. config_mouse('two_button_viewing') → name '2-Button Viewing'."
+    },
+    {
+      "id": "mouse.config.two_button_lights",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /2-Button Lights/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "2-Button Lights",
+          "ok": false,
+          "detail": "pattern /2-Button Lights/ not found"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.config.two_button_lights.png",
+      "needsVisual": false,
+      "note": "Ninth (last) mouse_config leaf. cmd.mouse('two_button_lights') → name '2-Button Lights'."
+    },
+    {
+      "id": "mouse.butmode.mode.cycle-forward",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /3-Button Editing/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Editing",
+          "ok": false,
+          "detail": "pattern /3-Button Editing/ not found"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.mode.cycle-forward.png",
+      "needsVisual": false,
+      "note": "onMouseDown(cycleMode) with a plain left button issues cmd.mouse('forward'), stepping the ring; the printed mode name changes on re-read."
+    },
+    {
+      "id": "mouse.butmode.selection.cycle-forward",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /C-alphas/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "C-alphas",
+          "ok": false,
+          "detail": "pattern /C-alphas/ not found"
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.selection.cycle-forward.png",
+      "needsVisual": false,
+      "note": "In a viewing mode single-left is not pkat, so the bottom line cycles: left-click issues cmd.mouse('select_forward'); from Molecules(5) it advances to C-alphas(6)."
+    },
+    {
+      "id": "mouse.butmode.selection.level-reflect",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Segments",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.selection.level-reflect.png",
+      "needsVisual": false,
+      "note": "Setting mouse_selection_mode, 3 makes the bottom line read 'Selecting Segments' (SELECTION_LEVELS[3])."
+    },
+    {
+      "id": "mouse.butmode.editing.picking-line",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /Picking Atoms/ not found\"; selectorVisible: \"[data-testid=\\\"butmode-selection\\\"][disabled] not visible\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Picking Atoms",
+          "ok": false,
+          "detail": "pattern /Picking Atoms/ not found"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"butmode-selection\"][disabled]",
+          "ok": false,
+          "detail": "[data-testid=\"butmode-selection\"][disabled] not visible"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.editing.picking-line.png",
+      "needsVisual": false,
+      "note": "When single-left resolves to pkat (editing modes), selectionLine() returns 'Picking Atoms (and Joints)' and the line is rendered disabled (does not cycle)."
+    },
+    {
+      "id": "mouse.butmode.grid.show",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"butmode-grid\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Buttons",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wheel",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.grid.show.png",
+      "needsVisual": false,
+      "note": "The grid (data-testid=butmode-grid) is drawn only while mouse_grid is on; it shows the 'Buttons L M R Wheel' header and six labelled rows (& Keys, Shft, Ctrl, CtSh, SnglClk, DblClk)."
+    },
+    {
+      "id": "mouse.butmode.grid.click-cycle",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /3-Button Editing/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Editing",
+          "ok": false,
+          "detail": "pattern /3-Button Editing/ not found"
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.grid.click-cycle.png",
+      "needsVisual": false,
+      "note": "The grid shares the cycleMode handler; a plain left-click issues cmd.mouse('forward') and the mode name changes."
+    },
+    {
+      "id": "mouse.butmode.mode.rightclick-menu",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.mode.rightclick-menu.png",
+      "needsVisual": true,
+      "note": "LIMITATION: the audit DSL's click is left-button only, so button-2 cannot be issued and the pymolMenu pop-up (rows: 3-Button Motions … 2-Button Lights) cannot be opened here. The nine leaf commands are each exercised directly by the mouse.config.* specs. This spec only asserts the block does not throw when clicked."
+    },
+    {
+      "id": "mouse.butmode.mode.shiftclick-reverse",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.mode.shiftclick-reverse.png",
+      "needsVisual": true,
+      "note": "LIMITATION: the DSL cannot hold Shift during a click, so the isForward() inversion (cmd.mouse('backward')) cannot be driven deterministically. Recorded for inventory completeness; hover-only smoke check."
+    },
+    {
+      "id": "mouse.butmode.selection.rightclick-reverse",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.selection.rightclick-reverse.png",
+      "needsVisual": true,
+      "note": "LIMITATION: button-2 is not issuable by the DSL. Behaviour under test (per ButMode.cpp:163-173 and p8a2butmode.dom.test): a right-click on the bottom line issues cmd.mouse('select_backward') and does NOT open mouse_config. Hover-only smoke check here."
+    },
+    {
+      "id": "mouse.butmode.wheel-cycle",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.butmode.wheel-cycle.png",
+      "needsVisual": true,
+      "note": "LIMITATION: the DSL has no wheel action, so onWheel (deltaY>0 → backward, deltaY<0 → forward, Shift inverts) cannot be driven. Recorded for inventory completeness; hover-only smoke check."
+    },
+    {
+      "id": "mouse.config-panel.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Mouse configuration",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/mouse/mouse.config-panel.open.png",
+      "needsVisual": false,
+      "note": "The butmode-config button sets panel='mouse', rendering the MouseConfigPanel inside the [data-testid=mouse-config] dialog with the title 'Mouse configuration'."
+    },
+    {
+      "id": "mouse.config-panel.header-mode",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.note-80slots",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.value-reflect",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.change-undrivable",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.col.left",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.col.middle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.col.right",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.col.wheel",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.col.single_left",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.col.single_middle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.col.single_right",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.col.double_left",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.col.double_middle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.col.double_right",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.row.shft",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.row.ctrl",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.row.ctsh",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.row.alt",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.row.alsh",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.row.ctal",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.cell.row.ctas",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.keyboard-menu-button",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "mouse.config-panel.close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"butmode-config\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcuts",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    }
+  ]
+}

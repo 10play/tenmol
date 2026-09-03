@@ -1,0 +1,501 @@
+{
+  "area": "objects",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "objects.op.all.A",
+      "feature": "objects",
+      "label": "all row · A (Actions) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "Clicking the A op-button on the `all` row opens the RowMenu popup sourced from pymol.menu.all_action; the popup header/source label render synchronously even before the (empty-in-local) leaf payload resolves.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--a", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "all_action" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.all.S",
+      "feature": "objects",
+      "label": "all row · S (Show) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "S op-button on `all` opens the Show popup (pymol.menu.mol_show).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--s", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "mol_show" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.all.H",
+      "feature": "objects",
+      "label": "all row · H (Hide) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "H op-button on `all` opens the Hide popup (pymol.menu.mol_hide).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--h", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "mol_hide" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.all.L",
+      "feature": "objects",
+      "label": "all row · L (Label) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "L op-button on `all` opens the Label popup (pymol.menu.mol_labels).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--l", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "mol_labels" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.all.C",
+      "feature": "objects",
+      "label": "all row · C (Color) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "C op-button on `all` opens the Color popup (pymol.menu.mol_color).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--c", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "mol_color" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.all.M",
+      "feature": "objects",
+      "label": "all row · M (Motion) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "M op-button on `all` opens the camera-motion popup (pymol.menu.camera_motion) — the only row whose M targets camera_motion rather than obj_motion.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--m", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "camera_motion" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.mol.A",
+      "feature": "objects",
+      "label": "molecule row (1crn) · A (Actions) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "A op-button on a molecule row opens pymol.menu.mol_action (distinct from all_action on the `all` row).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--a", "nth": 1 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "mol_action" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.mol.S",
+      "feature": "objects",
+      "label": "molecule row (1crn) · S (Show) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "S op-button on the 1crn row opens the Show popup (pymol.menu.mol_show).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--s", "nth": 1 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "mol_show" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.mol.H",
+      "feature": "objects",
+      "label": "molecule row (1crn) · H (Hide) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "H op-button on the 1crn row opens the Hide popup (pymol.menu.mol_hide).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--h", "nth": 1 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "mol_hide" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.mol.L",
+      "feature": "objects",
+      "label": "molecule row (1crn) · L (Label) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "L op-button on the 1crn row opens the Label popup (pymol.menu.mol_labels). On non-molecule rows (map/mesh/surface/measurement) this button is drawn inert (is-inert) and opens nothing — that variant is not reproducible in the local engine, which only yields molecule rows.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--l", "nth": 1 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "mol_labels" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.mol.C",
+      "feature": "objects",
+      "label": "molecule row (1crn) · C (Color) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "C op-button on the 1crn row opens the Color popup (pymol.menu.mol_color).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--c", "nth": 1 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "mol_color" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.op.mol.M",
+      "feature": "objects",
+      "label": "molecule row (1crn) · M (Motion) button",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "M op-button on the 1crn row opens pymol.menu.obj_motion; the button is additionally tinted by the object's per-frame motion spec level (is-spec-none/interp/key).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__op--m", "nth": 1 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".rowmenu" },
+        { "expect": "feedbackMatches", "pattern": "obj_motion" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.menu.close.escape",
+      "feature": "objects",
+      "label": "RowMenu closes on Escape",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "With a RowMenu open, pressing Escape (window keydown handler in RowMenu) dismisses the popup.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".objrow__op--a", "nth": 1 },
+        { "do": "waitFor", "selector": ".rowmenu", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "press", "key": "Escape" }],
+      "checks": [{ "expect": "selectorHidden", "selector": ".rowmenu" }],
+      "settleMs": 300
+    },
+    {
+      "id": "objects.menu.close.outside",
+      "feature": "objects",
+      "label": "RowMenu closes on outside click",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "With a RowMenu open, a mousedown outside `.rowmenu` (here, the command line input) closes it via the capture-phase document listener.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".objrow__op--a", "nth": 1 },
+        { "do": "waitFor", "selector": ".rowmenu", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "input.cmdline__input" }],
+      "checks": [{ "expect": "selectorHidden", "selector": ".rowmenu" }],
+      "settleMs": 300
+    },
+    {
+      "id": "objects.name.toggle.mol",
+      "feature": "objects",
+      "label": "molecule name button — left click toggles visibility",
+      "kind": "button",
+      "requires": [],
+      "note": "A plain left click on the 1crn name button starts a DeferVisibility drag whose toggle lands on pointer release (applyBand), disabling the object; its cartoon disappears from the viewport. Enabled beforehand for a deterministic on->off transition.",
+      "needsVisual": false,
+      "setup": [{ "do": "cmd", "text": "enable 1crn" }],
+      "trigger": [{ "do": "click", "selector": ".objrow__name", "nth": 1 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.name.toggle.all",
+      "feature": "objects",
+      "label": "all name button — left click toggles all visibility",
+      "kind": "button",
+      "requires": [],
+      "note": "A plain left click on the `all` name button toggles visibility of every object; enabled beforehand so the click disables all and clears the viewport.",
+      "needsVisual": false,
+      "setup": [{ "do": "cmd", "text": "enable all" }],
+      "trigger": [{ "do": "click", "selector": ".objrow__name", "nth": 0 }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.name.shiftClick.immediate",
+      "feature": "objects",
+      "label": "molecule name button — shift+click (ImmediateVisibility)",
+      "kind": "button",
+      "requires": ["picking"],
+      "note": "Shift+left toggles immediately (not deferred to release) and, on drag, applies to each row as the pointer crosses it. The audit driver's click primitive cannot inject keyboard modifiers on a pointer press, so this modified-pointer path is untestable in this harness.",
+      "needsVisual": false,
+      "setup": [{ "do": "cmd", "text": "enable 1crn" }],
+      "trigger": [{ "do": "click", "selector": ".objrow__name", "nth": 1 }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "objects.name.ctrlClick.activate",
+      "feature": "objects",
+      "label": "molecule name button — ctrl+click (HoverActivate + zoom)",
+      "kind": "button",
+      "requires": ["picking"],
+      "note": "Ctrl+left enables only this row (disabling whichever the previous hover activated) and zooms it. The driver cannot inject the ctrl modifier on a pointer press, so this path is untestable here.",
+      "needsVisual": false,
+      "setup": [{ "do": "cmd", "text": "disable 1crn" }],
+      "trigger": [{ "do": "click", "selector": ".objrow__name", "nth": 1 }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "objects.name.ctrlShiftClick.activateZoom",
+      "feature": "objects",
+      "label": "molecule name button — ctrl+shift+click (exclusive activate + zoom)",
+      "kind": "button",
+      "requires": ["picking"],
+      "note": "Ctrl+shift+left disables all, enables only this row, then zooms it. Requires injecting two modifiers on a pointer press, which the driver cannot do.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__name", "nth": 1 }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "objects.name.middleClick.center",
+      "feature": "objects",
+      "label": "molecule name button — middle click (center + activate)",
+      "kind": "button",
+      "requires": ["picking"],
+      "note": "Middle-button press centers on and activates the object, deactivating the previously activated one. The driver's click primitive is left-button only, so the middle-button branch is untestable here.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__name", "nth": 1 }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "objects.name.ctrlMiddleClick.zoom",
+      "feature": "objects",
+      "label": "molecule name button — ctrl+middle click (zoom + activate)",
+      "kind": "button",
+      "requires": ["picking"],
+      "note": "Ctrl+middle zooms to and activates the object. Needs a middle-button press plus ctrl modifier; not drivable by the harness.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__name", "nth": 1 }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "objects.name.ctrlShiftMiddleClick.exclusive",
+      "feature": "objects",
+      "label": "molecule name button — ctrl+shift+middle click (disable all then enable one)",
+      "kind": "button",
+      "requires": ["picking"],
+      "note": "Ctrl+shift+middle disables ALL objects then enables only this one. Needs a middle-button press with two modifiers; not drivable by the harness.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".objrow__name", "nth": 1 }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "objects.row.visibilityBandDrag",
+      "feature": "objects",
+      "label": "left-drag across rows applies a visibility band",
+      "kind": "drag",
+      "requires": ["picking"],
+      "note": "A left press-and-drag down the name column selects a band of rows and applies the deferred visibility toggle to every row between press and release (applyBand). The audit DSL has no pointer-drag primitive, so the multi-row band cannot be exercised.",
+      "needsVisual": false,
+      "setup": [{ "do": "cmd", "text": "create copyB, 1crn" }],
+      "trigger": [{ "do": "click", "selector": ".objrow__name", "nth": 1 }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "objects.row.reorderDrag",
+      "feature": "objects",
+      "label": "right-drag reorders rows (cmd.order)",
+      "kind": "drag",
+      "requires": ["picking"],
+      "note": "A right-button press on a name starts a reorder drag; releasing over another row emits cmd.order(...) with location upper/current (planDrop). The driver has neither a right-button press nor a drag primitive, so reorder is untestable here.",
+      "needsVisual": false,
+      "setup": [{ "do": "cmd", "text": "create copyB, 1crn" }],
+      "trigger": [],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "objects.row.regroupDrag",
+      "feature": "objects",
+      "label": "right-drag onto an open group re-groups / ungroups a row",
+      "kind": "drag",
+      "requires": ["picking"],
+      "note": "Dropping a right-drag onto an open group emits `group <parent>, <child>`; dropping past the last row pops out one group level (ungroup / group into grandparent). Requires both a group (unsupported by the local engine) and a pointer-drag primitive (absent), so untestable here.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [],
+      "checks": [],
+      "settleMs": 300
+    },
+    {
+      "id": "objects.panel.wheelScroll",
+      "feature": "objects",
+      "label": "mouse wheel scrolls the row list by exactly one row",
+      "kind": "other",
+      "requires": ["picking"],
+      "note": "A non-passive wheel handler scrolls the panel by exactly ROW_HEIGHT per notch instead of the browser's pixel delta. The audit DSL has no wheel primitive, and the local engine only produces two rows (below the panel's row floor), so there is nothing to scroll.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [],
+      "checks": [],
+      "settleMs": 200
+    },
+    {
+      "id": "objects.menu.wheelScroll",
+      "feature": "objects",
+      "label": "mouse wheel scrolls an open RowMenu by 10px per notch",
+      "kind": "other",
+      "requires": ["picking"],
+      "note": "RowMenu attaches a non-passive wheel listener that scrolls its body by POP_SCROLL_PX (10px) per notch. No wheel primitive exists in the DSL, and local-engine menus resolve to zero leaves so the body is empty and unscrollable.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [],
+      "checks": [],
+      "settleMs": 200
+    },
+    {
+      "id": "objects.group.collapse",
+      "feature": "objects",
+      "label": "group row [-] button collapses the group",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "The [+]/[-] button on a group row calls cmd.group(name, action='open'|'close') under the panel feed (or a client-side collapse fallback). The local in-browser engine does not implement the `group` command, so no group row can be created and this affordance cannot be exercised without the PyMOL bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "create copyB, 1crn" },
+        { "do": "cmd", "text": "group grpX, 1crn copyB" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".objrow__group:not(.objrow__group--empty)", "nth": 0 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.group.expand",
+      "feature": "objects",
+      "label": "group row [+] button expands the group",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Re-clicking the group toggle re-opens a collapsed group (cmd.group action='open'), making its children rows again. Requires the `group` command, which the local engine lacks.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "create copyB, 1crn" },
+        { "do": "cmd", "text": "group grpX, 1crn copyB" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".objrow__group:not(.objrow__group--empty)", "nth": 0 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.menu.leaf.exec",
+      "feature": "objects",
+      "label": "RowMenu leaf runs its PyMOL command",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "Clicking a leaf calls session.run(command) — the PParse of the pymol.menu command string — and closes the menu. In local mode pymol.menu.<name> resolves to zero items (the popup body is empty), so there is no leaf to click; menu contents require the PyMOL bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".objrow__op--s", "nth": 1 },
+        { "do": "waitFor", "selector": ".rowmenu", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".rowmenu__row[role=menuitem]", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".rowmenu" },
+        { "expect": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.menu.submenu.expand",
+      "feature": "objects",
+      "label": "RowMenu submenu opens on hover / click",
+      "kind": "menu-open",
+      "requires": ["remote-backend"],
+      "note": "A submenu row (aria-haspopup) opens after SUBMENU_DELAY_MS on hover, resolving lazy (lambda:) submenus via source.expand, and places itself on the fitting side (placeChild). Local-engine menus have no items and therefore no submenus, so this needs the PyMOL bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".objrow__op--a", "nth": 1 },
+        { "do": "waitFor", "selector": ".rowmenu", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "hover", "selector": ".rowmenu__row.is-sub", "nth": 0 }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".rowmenu__panel" }],
+      "settleMs": 500
+    },
+    {
+      "id": "objects.menu.repcheck",
+      "feature": "objects",
+      "label": "RowMenu rep leaves show live check marks",
+      "kind": "menu-open",
+      "requires": ["remote-backend"],
+      "note": "Show/Hide rep leaves are ticked (is-rep-on / partial) from the row's live rep bitmask (cmd.get_vis()[name][2]) via repCheck. Requires resolved menu items, which local mode does not provide.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "show sticks" },
+        { "do": "click", "selector": ".objrow__op--s", "nth": 1 },
+        { "do": "waitFor", "selector": ".rowmenu", "ms": 3000 }
+      ],
+      "trigger": [],
+      "checks": [{ "expect": "selectorVisible", "selector": ".rowmenu__row.is-rep-on" }],
+      "settleMs": 500
+    }
+  ]
+}
