@@ -1,0 +1,22 @@
+{
+  "name": "implement-browser-io",
+  "description": "Bucket B of docs/audit/impossible.md: rework File-menu affordances to browser-native forms (bypass cmd.tenmol_files; call the engine directly and download). Tasks added/verified one at a time so each postcondition matches the code actually written.",
+  "tasks": [
+    {
+      "id": "I0.download-helper",
+      "title": "Shared browser blob-download helper (download.ts) + test",
+      "instructions": "New apps/web/src/features/files/download.ts exporting downloadBlob/downloadBytes/downloadText (createObjectURL -> <a download> -> click -> revoke). Verified by download.dom.test.ts.",
+      "postcondition": {
+        "fileContains": [
+          { "path": "apps/web/src/features/files/download.ts", "pattern": "export function downloadBytes" },
+          { "path": "apps/web/src/features/files/download.ts", "pattern": "export function downloadBlob" }
+        ]
+      },
+      "verify": ["postcondition"],
+      "verifyCmds": [
+        { "gate": "test:download", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/download.dom.test.ts"] }
+      ],
+      "deps": []
+    }
+  ]
+}

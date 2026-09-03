@@ -74,6 +74,11 @@ function verifyTask(planName, st, task) {
       results.push({ gate: g, status: 'fail', detail: 'unknown gate' });
     }
   }
+  // Task-specific gates (e.g. a targeted vitest run) — implement tasks verify by
+  // running their own new test, which is faster and more precise than the suite.
+  for (const vc of task.verifyCmds ?? []) {
+    results.push(runGate(vc.gate, vc.cmd));
+  }
   const anyFail = results.some((r) => r.status === 'fail');
   const anyDeferred = results.some((r) => r.status === 'deferred');
   const status = anyFail ? STATUS.FAILED : anyDeferred ? STATUS.APPLIED : STATUS.VERIFIED;
