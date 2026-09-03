@@ -30,6 +30,7 @@ const unverByArea = {};
 for (const u of unver) (unverByArea[u.area] = unverByArea[u.area] ?? []).push(u);
 
 const sev = { blocker: '🔴 blocker', major: '🟠 major', minor: '🟡 minor' };
+const builderCount = confByArea.builder?.length ?? 0; // derived, never hardcoded
 
 let m = '';
 m += '# tenmol web-app — UI audit: map of what does not work\n\n';
@@ -39,7 +40,7 @@ m += '## Headline\n\n';
 m += `- **${totalSpecs}** affordances enumerated across **${Object.keys(perArea).length}** areas.\n`;
 m += `- **${totalPass}** pass · **${totalBlocked}** blocked (untestable in this sandbox — see below) · **${totalRawFail}** raw failures before verification.\n`;
 m += `- Raw failures are dominated by over-strict spec checks. Adversarial re-verification confirmed **${confirmed.length} real defects** out of ${S.verifiedCount ?? '~300'} verified candidates — a ~96% false-positive rejection rate, which is the whole point of the verify layer.\n`;
-m += `- The ${confirmed.length} confirmed defects collapse to **4 distinct root causes** (7 of them are one Builder-dock bug hitting different controls).\n`;
+m += `- The ${confirmed.length} confirmed defects collapse to **4 distinct root causes** (${builderCount} of them are one Builder-dock bug hitting different controls).\n`;
 if (unver.length) m += `- **${unver.length}** actionable low-signal candidates (mostly \`mouse\`/\`shortcuts\`, many "undrivable by design") plus 7 runner-timeout markers were NOT re-verified before the sandbox hit its PID limit — listed in the appendix, not counted as defects.\n`;
 m += '\n';
 
@@ -48,7 +49,7 @@ const groups = [
   { title: '1. `bg_color` never repaints the live viewport', ids: ['viewport.render.bgColor'] },
   { title: '2. Movie frame scrollbar is permanently disabled', ids: ['movie.seek.range'] },
   { title: '3. Scene ▸ Blank throws "No scenes" instead of clearing the view', ids: ['scmenu.blank'] },
-  { title: '4. Builder dock does not open on first click (7 controls unreachable)', ids: confByArea.builder?.map((c) => c.id) ?? [] },
+  { title: `4. Builder dock does not open on first click (${builderCount} controls unreachable)`, ids: confByArea.builder?.map((c) => c.id) ?? [] },
 ];
 for (const g of groups) {
   const recs = confirmed.filter((c) => g.ids.includes(c.id));
