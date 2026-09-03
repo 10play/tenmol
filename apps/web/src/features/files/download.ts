@@ -27,8 +27,12 @@ export function downloadBlob(name: string, blob: Blob): string {
 export function downloadBytes(name: string, bytes: Uint8Array | number[], mime: string): string {
   const u8 = bytes instanceof Uint8Array ? bytes : Uint8Array.from(bytes);
   // Copy into a fresh ArrayBuffer-backed view so the Blob part is a plain
-  // BlobPart regardless of how the caller allocated `bytes`.
-  return downloadBlob(name, new Blob([u8], { type: mime }));
+  // BlobPart regardless of how the caller allocated `bytes` — a `Uint8Array`
+  // over a `SharedArrayBuffer` is not assignable to `BlobPart` under the DOM
+  // lib types.
+  const buffer = new ArrayBuffer(u8.byteLength);
+  new Uint8Array(buffer).set(u8);
+  return downloadBlob(name, new Blob([buffer], { type: mime }));
 }
 
 /** Download text (e.g. a PDB/session string) as `name`. */

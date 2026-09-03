@@ -419,7 +419,8 @@ describe('row 242 — firing the leaves', () => {
    * which is what makes them assertions rather than restatements of our code.
    */
   const CASES: Array<{ path: string[]; dialog: string }> = [
-    { path: ['Open...'], dialog: 'Open file' },
+    // `Open...` is NOT here: task I1 made it a browser-native contents load, so
+    // it opens no server dialog — see the dedicated test below.
     { path: ['Get PDB...'], dialog: 'Get PDB' },
     { path: ['Save Session'], dialog: 'Save Session As...' },
     { path: ['Save Session As...'], dialog: 'Save Session As...' },
@@ -457,6 +458,23 @@ describe('row 242 — firing the leaves', () => {
       expect(feedback()).not.toContain('not built yet');
     });
   }
+
+  it('Open... is now a browser file picker — no server dialog, no plan_open', async () => {
+    mount();
+    await flush(2);
+    expect(isPanelOpen('files')).toBe(false);
+
+    await fire(['Open...']);
+
+    // The hook still mounts the panel, but the browser-native handler opens the
+    // OS file picker and loads file CONTENTS through the engine (task I1): it
+    // must NOT open the server 'Open file' dialog or call the bridge-only
+    // `plan_open`.
+    expect(isPanelOpen('files')).toBe(true);
+    expect(dialogLabels()).not.toContain('Open file');
+    expect(calls.map((c) => c.fn)).not.toContain('cmd.tenmol_files.plan_open');
+    expect(feedback()).not.toContain('not built yet');
+  });
 
   it('Save Session with a session file skips the picker and saves it', async () => {
     REPLIES.session_file = { path: '/work/s.pse', hasPath: true, filters: [] };

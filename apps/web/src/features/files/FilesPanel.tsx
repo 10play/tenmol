@@ -57,7 +57,7 @@ import {
   mapGenerateOutcome,
   type AlnInfo,
 } from './LoadDialogs';
-import { refusalFor } from './globalDrop';
+import { browserClassification, objectNameForFile, refusalFor } from './globalDrop';
 import { FILES_ACTION_EVENT, FILES_OPEN_PATHS, type FilesActionDetail } from './menuHooks';
 import { ExportMoleculeDialog, SaveObjectDialog, type MoleculeSaveRequest } from './SaveDialogs';
 import { MovieDialog, PngDialog, RenderPanel } from './ImageDialogs';
@@ -391,16 +391,41 @@ export function FilesPanel() {
 
   /* --------------------------------------------------------- menu items */
 
-  const fileOpen = useCallback(async () => {
-    if (!(await ensure())) return;
-    const result = await pick({
-      mode: 'open',
-      title: 'Open file',
-      filters: hello?.filters.load,
-      accept: 'Open',
-    });
-    if (result) await openPaths(result.paths);
-  }, [ensure, hello, openPaths, pick]);
+  const fileOpen = useCallback(() => {
+    // browser-open: load file contents
+    //
+    // Browser-only: no `ensure()`, no server `pick`, no `api.*`. Open the OS
+    // file picker, read each file's TEXT, and hand the CONTENTS to the engine
+    // through `cmd.load` (blank format => the engine sniffs). This also works
+    // over the remote bridge — `cmd.load` accepts content on both backends — so
+    // it is unconditional and never routes through `cmd.tenmol_files.*`.
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.onchange = () => {
+      const files = Array.from(input.files ?? []);
+      void (async () => {
+        for (const file of files) {
+          // The `.pwg`/refusal gate is engine-independent and comes FIRST: a
+          // `.pwg` classifies as plain and would otherwise reach `cmd.load`,
+          // which executes its directives (`globalDrop.ts::refusalFor`).
+          const refusal = refusalFor(browserClassification(file.name), file.name);
+          if (refusal !== null) {
+            say(refusal, 'warning');
+            continue;
+          }
+          const content = await file.text();
+          await session.act({
+            fn: 'cmd.load',
+            args: [content, objectNameForFile(file.name), 0, ''],
+            echo: `load ${file.name}`,
+            invalidatesNames: true,
+          });
+        }
+      })();
+    };
+    input.click();
+  }, [say, session]);
 
   const sessionSaveAs = useCallback(
     async (existing?: string) => {

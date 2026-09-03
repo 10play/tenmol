@@ -101,6 +101,53 @@ export function refusalFor(
 }
 
 /**
+ * The client-side refusal set, keyed by extension — the browser-only twin of
+ * the bridge's `panels/files.py::REFUSED_FORMATS`.
+ *
+ * The browser Open… / drop paths load file CONTENTS through the engine and
+ * never call `cmd.tenmol_files.classify`, so nothing populates a
+ * `FileClassification.refused` for them. They recognise the one refused format
+ * from the file's own name instead. Today that is `.pwg`; the message mirrors
+ * `panels/files.py::PWG_REFUSAL` verbatim so the console line is identical on
+ * both paths.
+ */
+const CLIENT_REFUSED_FORMATS: Record<string, string> = {
+  pwg:
+    "'.pwg' is refused by the web client. A .pwg file is a script that can open " +
+    'a listening port, add HTTP headers, publish a document root, import and ' +
+    'run an arbitrary Python module, launch a web browser, report the port to a ' +
+    'remote URL, delete itself, and start a second HTTP server inside this ' +
+    'process (packages/engine/modules/pymol/importing.py:516-615). Run it from a desktop PyMOL ' +
+    'if you trust it.',
+};
+
+/**
+ * The `refused`/`unavailable` fields for a browser File, derived from its name
+ * with no `classify` RPC, so {@link refusalFor} can gate a browser open exactly
+ * as it gates a classified server open.
+ */
+export function browserClassification(
+  name: string,
+): Pick<FileClassification, 'refused' | 'unavailable'> {
+  const ext = (/\.([a-z0-9]+)$/i.exec(name)?.[1] ?? '').toLowerCase();
+  return { refused: CLIENT_REFUSED_FORMATS[ext] ?? null, unavailable: null };
+}
+
+/**
+ * Object name for a browser-opened File: basename minus one extension (and a
+ * `.gz`/`.bz2` wrapper), with the characters PyMOL disallows in object names
+ * mapped to `_`. Mirrors the engine's `filenameToObjectname` (`fileio.ts`) so a
+ * browser open names its object the same way a path load would.
+ */
+export function objectNameForFile(name: string): string {
+  let base = name.replace(/^.*[/\\]/, '');
+  const zip = /\.(gz|bz2)$/i.exec(base);
+  if (zip) base = base.slice(0, -zip[0].length);
+  const dot = base.lastIndexOf('.');
+  return (dot > 0 ? base.slice(0, dot) : base).replace(/[\s'"();:]/g, '_');
+}
+
+/**
  * The console line for a drop that cannot be completed here.
  *
  * Named rather than generic: "this needs the trajectory dialog" tells the user

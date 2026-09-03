@@ -10,11 +10,13 @@
 import { useEffect } from 'react';
 
 import { useSession } from '../../app';
-import { createFilesApi, fileToBase64 } from './filesApi';
+import { createFilesApi } from './filesApi';
 import { PluginDialogHost } from './PluginDialogHost';
 import {
+  browserClassification,
   dialogNeededFor,
   dialogRequiredMessage,
+  objectNameForFile,
   planFromDataTransfer,
   refusalFor,
   windowAccelerator,
@@ -138,21 +140,32 @@ export function FileDropTarget() {
       }
     };
 
-    /** Upload each browser File, then load it — shared by drop and Ctrl+O. */
+    /**
+     * Read each browser File's CONTENTS and load them through the engine —
+     * shared by drop and Ctrl+O.
+     *
+     * browser-open: load file contents. No `api.upload`, no server path, no
+     * `cmd.tenmol_files.*`: read the text and hand it to `cmd.load` (blank
+     * format => the engine sniffs), which also works over the remote bridge.
+     * The `.pwg`/refusal gate stays FIRST and is engine-independent
+     * (`globalDrop.ts::refusalFor`). Dialog-only formats (traj/map/mtz/mae/
+     * session) keep their `planFromDataTransfer`/`dialogNeededFor` handling on
+     * the URL branch below; only the plain single-molecule load path changed.
+     */
     const uploadAndLoad = async (files: readonly File[]): Promise<void> => {
-      try {
-        await api.ensure();
-      } catch (error) {
-        say(` file service unavailable: ${String(error)}`, 'error');
-        return;
-      }
       for (const file of files) {
-        const uploaded = await api.upload(file.name, await fileToBase64(file));
-        if (!uploaded.ok) {
-          say(` upload failed: ${uploaded.error}`, 'error');
+        const refusal = refusalFor(browserClassification(file.name), file.name);
+        if (refusal !== null) {
+          say(refusal, 'warning');
           continue;
         }
-        await load(uploaded.path, file.name);
+        const content = await file.text();
+        await session.act({
+          fn: 'cmd.load',
+          args: [content, objectNameForFile(file.name), 0, ''],
+          echo: `load ${file.name}`,
+          invalidatesNames: true,
+        });
       }
     };
 

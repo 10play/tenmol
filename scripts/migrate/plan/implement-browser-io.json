@@ -17,6 +17,24 @@
         { "gate": "test:download", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/download.dom.test.ts"] }
       ],
       "deps": []
+    },
+    {
+      "id": "I1.open-picker",
+      "title": "File > Open... becomes a browser file picker that loads file CONTENTS via the engine (no cmd.tenmol_files.*)",
+      "instructions": "Rewrite FilesPanel.fileOpen and FileDropTarget.uploadAndLoad to open a real <input type=file>, read await file.text(), and load the contents through session.act cmd.load(content, name, 0, '') (blank format => engine sniffs). Preserve the engine-independent .pwg/refusal guard (globalDrop.refusalFor + new browserClassification). No ensure()/pick/api.upload/plan_open. The traj/map/mtz/mae/.pse modal + presentation pipeline (runStep/loadPlain/enterPresentation) is untouched and still reached via Open Recent / deep link (requestFilesOpen -> openPaths).",
+      "postcondition": {
+        "fileContains": [
+          { "path": "apps/web/src/features/files/FilesPanel.tsx", "pattern": "// browser-open: load file contents" },
+          { "path": "apps/web/src/features/files/globalDrop.ts", "pattern": "export function browserClassification" },
+          { "path": "apps/web/src/features/files/globalDrop.ts", "pattern": "export function objectNameForFile" }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        { "gate": "test:browser-open", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/wfBrowserOpen.dom.test.tsx"] },
+        { "gate": "test:files-regress", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files", "apps/web/src/features/menubar"] }
+      ],
+      "deps": ["I0.download-helper"]
     }
   ]
 }
