@@ -186,7 +186,8 @@ export function classify(name: string): Pick<FileClassification, 'dialog'> {
 export function browserClassification(
   name: string,
 ): Pick<FileClassification, 'refused' | 'unavailable'> {
-  const ext = (/\.([a-z0-9]+)$/i.exec(name)?.[1] ?? '').toLowerCase();
+  const base = name.replace(/^.*[/\\]/, '').replace(/\.(gz|bz2)$/i, '');
+  const ext = (/\.([a-z0-9]+)$/i.exec(base)?.[1] ?? '').toLowerCase();
   return { refused: CLIENT_REFUSED_FORMATS[ext] ?? null, unavailable: null };
 }
 
@@ -215,6 +216,24 @@ export function dialogRequiredMessage(name: string, dialog: string): string {
   return (
     ` ${name} needs the ${dialog} dialog — open File dialogs and use Open…, ` +
     'which asks for the options this format requires.'
+  );
+}
+
+/**
+ * The console line for a script file (`.pml`/`.py`/`.pym`) opened or dropped in
+ * the browser.
+ *
+ * `classify` routes scripts to `dialog: 'script'`, which `dialogNeededFor`
+ * deliberately excludes from the modal set — a desktop open would `cd` and RUN
+ * them. This build cannot execute a script, and handing one to `cmd.load` with
+ * a blank format only throws "could not determine the structure format". So the
+ * browser open/drop paths turn a script away with this, rather than attempting
+ * either.
+ */
+export function scriptUnsupportedMessage(name: string): string {
+  return (
+    ` ${name} is a script — running scripts is not supported in the browser ` +
+    'build. Run it from a desktop PyMOL instead.'
   );
 }
 

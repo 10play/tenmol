@@ -21,6 +21,7 @@ import {
   objectNameForFile,
   planFromDataTransfer,
   refusalFor,
+  scriptUnsupportedMessage,
   windowAccelerator,
 } from './globalDrop';
 import { takeOpenFromLocation } from './deepLink';
@@ -172,6 +173,14 @@ export function FileDropTarget() {
         const dialog = dialogNeededFor(classify(file.name));
         if (dialog !== null) {
           say(dialogRequiredMessage(file.name, dialog), 'warning');
+          continue;
+        }
+        // Scripts (`.pml`/`.py`/`.pym`) are neither refused nor dialog-needed,
+        // so without this they would reach `cmd.load` with a blank format and
+        // throw "could not determine the structure format". The browser build
+        // cannot RUN them, so say so instead of attempting to load or execute.
+        if (classify(file.name).dialog === 'script') {
+          say(scriptUnsupportedMessage(file.name), 'warning');
           continue;
         }
         const content = await file.text();

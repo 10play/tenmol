@@ -195,4 +195,32 @@ describe('I1 — File ▸ Open… loads file contents through the engine', () =>
       expect(messages.some((m) => /needs the .* dialog/.test(m))).toBe(true);
     });
   }
+
+  // A script (`.pml`/`.py`/`.pym`) classifies as `dialog: 'script'`, which is
+  // neither refused nor dialog-needed — so it used to reach `cmd.load` with a
+  // blank format and throw "could not determine the structure format". The
+  // browser build cannot RUN a script, so it must be turned away with a clear
+  // "not supported in the browser" message and NEVER handed to `cmd.load`.
+  for (const name of ['macro.pml', 'setup.py']) {
+    it(`does not load a script ${name}; says scripts are not supported`, async () => {
+      mount();
+      click('files-menu-button');
+      tfCalls = [];
+
+      click('files-menu-open');
+      // No readable text stub: if the guard regressed and `.text()` were read
+      // this would reject, proving the script content is never touched.
+      const file = new File(['load foo.pdb'], name);
+      Object.defineProperty(lastInput, 'files', { value: [file], configurable: true });
+      act(() => lastInput?.dispatchEvent(new Event('change')));
+      await flush();
+
+      // Nothing loaded, and no silent server round-trip.
+      expect(acted).toEqual([]);
+      expect(tfCalls).toEqual([]);
+      // The user was told scripts are not supported in the browser build.
+      const messages = appendClient.mock.calls.map((c) => String(c[0]));
+      expect(messages.some((m) => /not supported in the browser/.test(m))).toBe(true);
+    });
+  }
 });
