@@ -1,0 +1,613 @@
+{
+  "area": "seqview",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "seqview.panel.enable",
+      "feature": "seqview",
+      "label": "Enable sequence viewer (set seq_view, 1)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "The SequenceViewer's only data feed is source.rows() -> cmd.tenmol_seqview, a bridge-only helper (packages/bridge/tenmol_bridge/panels/seqview.py). engine-ts does not port that command, so in local mode the poll throws, payload.visible stays false and the .seqview strip never mounts (verified live: after `set seq_view, 1` no .seqview element appears). The whole area therefore requires the remote PyMOL bridge.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview", "ms": 3000 }
+      ],
+      "checks": [{ "check": "selectorVisible", "selector": ".seqview" }],
+      "settleMs": 600
+    },
+    {
+      "id": "seqview.panel.disable",
+      "feature": "seqview",
+      "label": "Disable sequence viewer (set seq_view, 0)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "seq_view 0 unmounts the strip (rendered = visible && rows>0) and the reservation effect must clear the scene inset it reserved (reserve.ts).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view, 0" }],
+      "checks": [{ "check": "selectorHidden", "selector": ".seqview" }],
+      "settleMs": 600
+    },
+    {
+      "id": "seqview.format.residueCodes",
+      "feature": "seqview",
+      "label": "Format ▸ Residue Codes (seq_view_format 0)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "Header span titled seq_view_format shows FORMAT_NAMES[0] = 'Residue Codes'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview__head", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_format, 0" }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "Residue Codes" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.format.residueNames",
+      "feature": "seqview",
+      "label": "Format ▸ Residue Names (seq_view_format 1)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "Header shows FORMAT_NAMES[1] = 'Residue Names'; each cell widens to the 3-letter code.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview__head", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_format, 1" }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "Residue Names" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.format.atomNames",
+      "feature": "seqview",
+      "label": "Format ▸ Atom Names (seq_view_format 2)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "Header shows FORMAT_NAMES[2] = 'Atom Names'; row expands to thousands of atom columns (virtualised window).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview__head", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_format, 2" }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "Atom Names" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.format.chainIdentifiers",
+      "feature": "seqview",
+      "label": "Format ▸ Chain Identifiers (seq_view_format 3)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "Header shows FORMAT_NAMES[3] = 'Chain Identifiers'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview__head", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_format, 3" }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "Chain Identifiers" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.format.states",
+      "feature": "seqview",
+      "label": "Format ▸ States (seq_view_format 4)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "Header shows FORMAT_NAMES[4] = 'States'. This is the codes==4 mode that flips row.selectable off for non-discrete states.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview__head", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_format, 4" }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "States" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.format.movieFrames",
+      "feature": "seqview",
+      "label": "Format ▸ Movie Frames (seq_view_format 5)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "Header shows FORMAT_NAMES[5] = 'Movie Frames'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview__head", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_format, 5" }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "Movie Frames" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.location.bottom",
+      "feature": "seqview",
+      "label": "Location ▸ Bottom (seq_view_location 1)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "location 1 adds the seqview--bottom modifier class and reserves scene space at the bottom (reserve.ts reservationFor).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_location, 1" }],
+      "checks": [{ "check": "selectorVisible", "selector": ".seqview--bottom" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.location.top",
+      "feature": "seqview",
+      "label": "Location ▸ Top (seq_view_location 0)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "location 0 adds the seqview--top modifier class and reserves scene space at the top.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "cmd", "text": "set seq_view_location, 1" },
+        { "do": "waitFor", "selector": ".seqview", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_location, 0" }],
+      "checks": [{ "check": "selectorVisible", "selector": ".seqview--top" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.overlay.on",
+      "feature": "seqview",
+      "label": "Overlay ON (seq_view_overlay 1)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "overlay 1 adds the seqview--overlay class (draws over the scene) and clears the scene-space reservation (reserve.ts).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_overlay, 1" }],
+      "checks": [{ "check": "selectorVisible", "selector": ".seqview--overlay" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.overlay.off",
+      "feature": "seqview",
+      "label": "Overlay OFF (seq_view_overlay 0)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "overlay 0 removes the seqview--overlay class and re-reserves scene space; viewport canvas shrinks.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "cmd", "text": "set seq_view_overlay, 1" },
+        { "do": "waitFor", "selector": ".seqview--overlay", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_overlay, 0" }],
+      "checks": [{ "check": "selectorHidden", "selector": ".seqview--overlay" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.labelMode.name",
+      "feature": "seqview",
+      "label": "Label mode ▸ object name inline (seq_view_label_mode 0)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "label_mode 0 hides the number/breadcrumb label row and prints /object inline via .seqrow__name.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_label_mode, 0" }],
+      "checks": [{ "check": "selectorVisible", "selector": ".seqrow__name" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.labelMode.first",
+      "feature": "seqview",
+      "label": "Label mode ▸ first row only (seq_view_label_mode 1)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "label_mode 1 draws the label row on the first row only (showLabelRow index===0).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_label_mode, 1" }],
+      "checks": [{ "check": "domChanged" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.labelMode.every",
+      "feature": "seqview",
+      "label": "Label mode ▸ every row (seq_view_label_mode 2)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "label_mode 2 (default) draws a .seqrow__labels row above every sequence row.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "cmd", "text": "set seq_view_label_mode, 0" },
+        { "do": "waitFor", "selector": ".seqview", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_label_mode, 2" }],
+      "checks": [{ "check": "selectorVisible", "selector": ".seqrow__labels" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.gapMode.toggle",
+      "feature": "seqview",
+      "label": "Gap mode (seq_view_gap_mode) toggle",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "seq_view_gap_mode controls whether gap/spacer columns (is-spacer cells) are drawn between residues; changing it re-renders the row.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview__rows", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_gap_mode, 0" }],
+      "checks": [{ "check": "domChanged" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.alignment.unalignedMode",
+      "feature": "seqview",
+      "label": "Aligned view ▸ unaligned mode (seq_view_unaligned_mode)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "Only meaningful under an active alignment (ExecutiveGetActiveAlignment); the header shows UNALIGNED_NAMES[n] e.g. 'staggered'. Needs two objects + an alignment object, so it is bridge-only and also requires aligned data.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "fetch 1cbs, async=0" },
+        { "do": "cmd", "text": "fetch 1hmt, async=0" },
+        { "do": "cmd", "text": "align 1cbs, 1hmt, object=aln" },
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "cmd", "text": "set seq_view_alignment, aln" },
+        { "do": "waitFor", "selector": ".seqview__alignment", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_unaligned_mode, 3" }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "staggered" }],
+      "settleMs": 800
+    },
+    {
+      "id": "seqview.alignment.fillChar",
+      "feature": "seqview",
+      "label": "Aligned view ▸ fill character (seq_view_fill_char)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Under an alignment, gap holes are painted with .seqfill spans repeating seq_view_fill_char; changing the char re-renders the fill.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "fetch 1cbs, async=0" },
+        { "do": "cmd", "text": "fetch 1hmt, async=0" },
+        { "do": "cmd", "text": "align 1cbs, 1hmt, object=aln" },
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "cmd", "text": "set seq_view_alignment, aln" },
+        { "do": "waitFor", "selector": ".seqrow__line--aligned", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "cmd", "text": "set seq_view_fill_char, ." }],
+      "checks": [{ "check": "domChanged" }],
+      "settleMs": 800
+    },
+    {
+      "id": "seqview.cell.leftClick.select",
+      "feature": "seqview",
+      "label": "Cell left-click selects the residue",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "onPointerDown -> click() grammar: a left press on a selectable cell emits toggle(include=true) -> source.select; the cell gains is-selected (inverse video) and a minimap tick. Driver's plain click reproduces the left button.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqrow__line .seqcell", "nth": 2 }],
+      "checks": [{ "check": "selectorVisible", "selector": ".seqcell.is-selected" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.cell.leftClick.deselect",
+      "feature": "seqview",
+      "label": "Cell left-click again deselects (toggle off)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "A fresh press toggles the cell the other way (include = !selected); clicking an already-selected cell removes it from the active selection.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 },
+        { "do": "click", "selector": ".seqrow__line .seqcell", "nth": 2 },
+        { "do": "waitFor", "selector": ".seqcell.is-selected", "ms": 2000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqrow__line .seqcell", "nth": 2 }],
+      "checks": [{ "check": "domChanged" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.cell.ctrlClick.centerSelection",
+      "feature": "seqview",
+      "label": "Cell Ctrl+left-click centers the active selection",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "ctrl+left additionally emits centerSelection -> cmd.center on the active selection (grammar :419-421). LIMITATION: the audit driver's click action carries no modifier keys, so the ctrl branch cannot be driven deterministically; the closest observable is a plain click causing a render change.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqrow__line .seqcell", "nth": 5 }],
+      "checks": [{ "check": "screenshotChanged" }],
+      "settleMs": 600
+    },
+    {
+      "id": "seqview.cell.middleClick.center",
+      "feature": "seqview",
+      "label": "Cell middle-click browses/centers the residue",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Middle button emits browse -> source.center (SeekerSelectionCenter). LIMITATION: driver has no middle-button action; recorded with the closest observable (a click over the cell) and a render check.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqrow__line .seqcell", "nth": 8 }],
+      "checks": [{ "check": "screenshotChanged" }],
+      "settleMs": 600
+    },
+    {
+      "id": "seqview.cell.ctrlMiddleClick.zoom",
+      "feature": "seqview",
+      "label": "Cell Ctrl+middle-click zooms the residue",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "ctrl+middle sets browse.zoom=true -> source.center(zoom=1) (SeekerSelectionCenter zoom). LIMITATION: no middle-button/modifier action in the driver; closest observable is a render change.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqrow__line .seqcell", "nth": 10 }],
+      "checks": [{ "check": "screenshotChanged" }],
+      "settleMs": 600
+    },
+    {
+      "id": "seqview.cell.rightClick.menu",
+      "feature": "seqview",
+      "label": "Cell right-click opens the residue (seq_option) menu",
+      "kind": "menu-open",
+      "requires": ["remote-backend"],
+      "note": "Right button -> click() emits menu('seq_option') -> source.menu builds a pymol.menu tree rendered by RowMenu (.menu__row). LIMITATION: the driver's click is left-button only; the contextmenu/right-button path cannot be driven, so this is recorded as the closest affordance.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqrow__line .seqcell", "nth": 3 }],
+      "checks": [{ "check": "selectorVisible", "selector": ".menu__row[role=menuitem]" }],
+      "settleMs": 600
+    },
+    {
+      "id": "seqview.cell.rightClick.pickSele",
+      "feature": "seqview",
+      "label": "Right-click a selected cell opens the selection (pick_sele) menu",
+      "kind": "menu-open",
+      "requires": ["remote-backend"],
+      "note": "When a cell is IN the active selection and hasActiveSele, right-click emits menu('pick_sele') for the selection itself rather than the residue. LIMITATION: no right-button action in the driver.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 },
+        { "do": "click", "selector": ".seqrow__line .seqcell", "nth": 3 },
+        { "do": "waitFor", "selector": ".seqcell.is-selected", "ms": 2000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqcell.is-selected", "nth": 0 }],
+      "checks": [{ "check": "selectorVisible", "selector": ".menu__row[role=menuitem]" }],
+      "settleMs": 600
+    },
+    {
+      "id": "seqview.cell.drag.rangeSelect",
+      "feature": "seqview",
+      "label": "Left-drag across cells selects a residue range",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "onPointerDown then onPointerEnter with buttons!=0 runs the SeekerDrag reducer (move()) emitting range toggles; dragging back past the anchor UNDOES the outbound leg. LIMITATION: the driver has no press-hold-move drag primitive; recorded as a single click as the closest observable.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqrow__line .seqcell", "nth": 4 }],
+      "checks": [{ "check": "selectorVisible", "selector": ".seqcell.is-selected" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.cell.shiftClick.continuation",
+      "feature": "seqview",
+      "label": "Shift+left-click extends the last drag (range continuation)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "shift+left on the row the last drag was on keeps the anchor and re-runs move() to extend/flip the span (grammar :349-365). LIMITATION: the driver click carries no shift modifier.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 },
+        { "do": "click", "selector": ".seqrow__line .seqcell", "nth": 2 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqrow__line .seqcell", "nth": 6 }],
+      "checks": [{ "check": "domChanged" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.cell.state.setState",
+      "feature": "seqview",
+      "label": "Click a state-carrying cell sets the object state",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "In Movie-Frames/States format a cell carries col->state; clicking it additionally emits setState -> source.setState (SettingSetSmart cSetting_state). Needs a multi-state object; bridge-only.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "cmd", "text": "set seq_view_format, 4" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqrow__line .seqcell", "nth": 1 }],
+      "checks": [{ "check": "screenshotChanged" }],
+      "settleMs": 600
+    },
+    {
+      "id": "seqview.background.doubleClick.clear",
+      "feature": "seqview",
+      "label": "Double left-click empty area clears the selection",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "onBackgroundDown: a left click outside a cell/scrollbar within cDoubleTime emits clear -> source.clear (SeekerClick :328-341). LIMITATION: needs two rapid clicks on the header/empty tail; timing/target is approximate under the driver.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 },
+        { "do": "click", "selector": ".seqrow__line .seqcell", "nth": 2 },
+        { "do": "waitFor", "selector": ".seqcell.is-selected", "ms": 2000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".seqview__head" },
+        { "do": "click", "selector": ".seqview__head" }
+      ],
+      "checks": [{ "check": "domChanged" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.background.rightClick.pickSele",
+      "feature": "seqview",
+      "label": "Right-click empty area opens the active-selection menu",
+      "kind": "menu-open",
+      "requires": ["remote-backend"],
+      "note": "onBackgroundDown: right button with an active selection emits menu('pick_sele', row=-1) (SeekerClick :240-248). LIMITATION: no right-button action in the driver.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 },
+        { "do": "click", "selector": ".seqrow__line .seqcell", "nth": 2 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqview__head" }],
+      "checks": [{ "check": "noConsoleError" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.background.contextmenu.prevented",
+      "feature": "seqview",
+      "label": "Native context menu is suppressed over the strip",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "onContextMenu={preventDefault} on the .seqview container stops the browser menu so PyMOL's own popup can take over. Not directly observable through the driver's action set; recorded for completeness.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqview", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqview" }],
+      "checks": [{ "check": "noPageError" }],
+      "settleMs": 400
+    },
+    {
+      "id": "seqview.wheel.scroll",
+      "feature": "seqview",
+      "label": "Mouse wheel scrolls one column",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "onWheel -> wheel(deltaY) -> scrollBy(+/-1); the header range text (first+1..count/maxCols) and the .seqview__thumb position change. LIMITATION: the driver has no wheel action, so this cannot be driven; recorded with the closest observable.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "cmd", "text": "set seq_view_format, 2" },
+        { "do": "waitFor", "selector": ".seqview", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqview" }],
+      "checks": [{ "check": "noPageError" }],
+      "settleMs": 400
+    },
+    {
+      "id": "seqview.scrollbar.click.scrollTo",
+      "feature": "seqview",
+      "label": "Click the scrollbar/mini-map jumps to that column",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": ".seqview__scroll onPointerDown computes fraction = (clientX-left)/width and scrollTo(fraction*maxCols); the thumb moves and the visible window shifts. A plain click at the element's center reproduces a jump to roughly the middle column.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "cmd", "text": "set seq_view_format, 2" },
+        { "do": "waitFor", "selector": ".seqview__scroll", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".seqview__scroll" }],
+      "checks": [{ "check": "domChanged" }],
+      "settleMs": 500
+    },
+    {
+      "id": "seqview.menu.pick.runCommand",
+      "feature": "seqview",
+      "label": "Right-click menu leaf runs its PyMOL command",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "RowMenu onPick(command) closes the popup and runs session.run(command) then refresh() — the leaves are literal PyMOL command strings from pymol.menu. Reaching it needs the right-click popup first (see seqview.cell.rightClick.menu), which the driver cannot open.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 },
+        { "do": "click", "selector": ".seqrow__line .seqcell", "nth": 3 },
+        { "do": "waitFor", "selector": ".menu__row[role=menuitem]", "ms": 2000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".menu__row[role=menuitem]", "nth": 0 }],
+      "checks": [{ "check": "selectorHidden", "selector": ".menu__row[role=menuitem]" }],
+      "settleMs": 600
+    },
+    {
+      "id": "seqview.menu.expand.lazySubmenu",
+      "feature": "seqview",
+      "label": "Right-click menu lazy submenu expands (SubGetItem)",
+      "kind": "menu-open",
+      "requires": ["remote-backend"],
+      "note": "RowMenu onExpand(path) calls source.menuExpand -> grafts resolved children into the open menu (graftMenu). Reaching it needs the right-click popup first, which the driver cannot open.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 },
+        { "do": "click", "selector": ".seqrow__line .seqcell", "nth": 3 },
+        { "do": "waitFor", "selector": ".menu__row[role=menuitem]", "ms": 2000 }
+      ],
+      "trigger": [{ "do": "hover", "selector": ".menu__row[role=menuitem]", "nth": 1 }],
+      "checks": [{ "check": "domChanged" }],
+      "settleMs": 600
+    },
+    {
+      "id": "seqview.menu.close",
+      "feature": "seqview",
+      "label": "Right-click menu closes on dismiss",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "RowMenu onClose sets menu=null (Escape / click-away). Reaching it needs the right-click popup first, which the driver cannot open.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set seq_view, 1" },
+        { "do": "waitFor", "selector": ".seqrow__line .seqcell", "ms": 3000 },
+        { "do": "click", "selector": ".seqrow__line .seqcell", "nth": 3 },
+        { "do": "waitFor", "selector": ".menu__row[role=menuitem]", "ms": 2000 }
+      ],
+      "trigger": [{ "do": "press", "key": "Escape" }],
+      "checks": [{ "check": "selectorHidden", "selector": ".menu__row[role=menuitem]" }],
+      "settleMs": 500
+    }
+  ]
+}

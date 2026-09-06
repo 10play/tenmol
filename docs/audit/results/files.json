@@ -1,0 +1,1790 @@
+{
+  "results": [
+    {
+      "id": "files.panel.mount-via-hook",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-button\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "file service unavailable",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.panel.mount-via-hook.png",
+      "needsVisual": false,
+      "note": "installFileMenuHooks (FileDropTarget) registers file_open; File ▸ Open… -> requestFilesAction -> openPanel('files') mounts FilesPanel, whose \"File ▾\" strip and (in local mode, no bridge) the \"file service unavailable\" indicator appear."
+    },
+    {
+      "id": "files.strip.menu.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.menu.open.png",
+      "needsVisual": false,
+      "note": "Clicking the panel's own \"File ▾\" button toggles menuOpen and re-runs ensure(); the dropdown of file actions appears."
+    },
+    {
+      "id": "files.strip.menu.escape-close",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"files-menu\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.menu.escape-close.png",
+      "needsVisual": false,
+      "note": "FilesPanel installs a window keydown listener while menuOpen; Escape sets menuOpen=false (QMenu parity)."
+    },
+    {
+      "id": "files.strip.menu.toggle-close",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"files-menu\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.menu.toggle-close.png",
+      "needsVisual": false,
+      "note": "setMenuOpen((v)=>!v): a second press collapses the open dropdown."
+    },
+    {
+      "id": "files.strip.menu.outside-click-close",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"files-menu\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.menu.outside-click-close.png",
+      "needsVisual": false,
+      "note": "A mousedown outside .files__strip closes the dropdown (QMenu click-away parity). Click the menu-bar as the outside target."
+    },
+    {
+      "id": "files.strip.service-unavailable",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".files__error",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "file service unavailable",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.service-unavailable.png",
+      "needsVisual": false,
+      "note": "ensure() bootstraps cmd.tenmol_files via a Python {t:do}; the in-browser TS engine has no such symbol, so ensure rejects and the red \".files__error\" indicator reads \"file service unavailable\". This is the expected local-mode surface and proves the bootstrap error path is wired."
+    },
+    {
+      "id": "files.strip.item.open.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-open\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.open.present.png",
+      "needsVisual": false,
+      "note": "The \"Open…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.recent.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-recent\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.recent.present.png",
+      "needsVisual": false,
+      "note": "The \"Open Recent…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.fetch.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-fetch\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.fetch.present.png",
+      "needsVisual": false,
+      "note": "The \"Get PDB…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.map-generate.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-map-generate\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.map-generate.present.png",
+      "needsVisual": false,
+      "note": "The \"Generate Map from Reflections…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.session-save.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-session-save\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.session-save.present.png",
+      "needsVisual": false,
+      "note": "The \"Save Session\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.session-save-as.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-session-save-as\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.session-save-as.present.png",
+      "needsVisual": false,
+      "note": "The \"Save Session As…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.export-molecule.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-export-molecule\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.export-molecule.present.png",
+      "needsVisual": false,
+      "note": "The \"Export Molecule…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.export-map.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-export-map\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.export-map.present.png",
+      "needsVisual": false,
+      "note": "The \"Export Map…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.export-aln.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-export-aln\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.export-aln.present.png",
+      "needsVisual": false,
+      "note": "The \"Export Alignment…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.png.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-png\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.png.present.png",
+      "needsVisual": false,
+      "note": "The \"Export Image As ▸ PNG…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.movie-mpeg.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-movie-mpeg\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.movie-mpeg.present.png",
+      "needsVisual": false,
+      "note": "The \"Export Movie As ▸ MPEG…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.movie-mov.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-movie-mov\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.movie-mov.present.png",
+      "needsVisual": false,
+      "note": "The \"Export Movie As ▸ Quicktime…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.movie-png.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-movie-png\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.movie-png.present.png",
+      "needsVisual": false,
+      "note": "The \"Export Movie As ▸ PNG Images…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.log.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-log\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.log.present.png",
+      "needsVisual": false,
+      "note": "The \"Log File ▸ …\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.run.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-run\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.run.present.png",
+      "needsVisual": false,
+      "note": "The \"Run Script…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.cd.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-cd\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.cd.present.png",
+      "needsVisual": false,
+      "note": "The \"Working Directory ▸ Change…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.browse.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-browse\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.browse.present.png",
+      "needsVisual": false,
+      "note": "The \"Working Directory ▸ File Browser\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.render.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-render\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.render.present.png",
+      "needsVisual": false,
+      "note": "The \"Draw / Ray…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.new-window.present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-new-window\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.strip.item.new-window.present.png",
+      "needsVisual": false,
+      "note": "The \"New PyMOL Window\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode)."
+    },
+    {
+      "id": "files.strip.item.new-window.disabled-noop",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"files-menu-new-window\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"files__menuitem\" data-testid=\"files-menu-new-window\" title=\"one bridge process, one cl",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "files.action.open",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.recent",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.fetch",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.map-generate",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.session-save",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.session-save-as",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.export-molecule",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.export-map",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.export-aln",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.png",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.movie-mpeg",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.movie-mov",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.movie-png",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.log",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.run",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.cd",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.browse",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.render",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.geo-wrl",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.geo-dae",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.geo-gltf",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.geo-pov",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.action.geo-stl",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.traj.object",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.traj.state",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.traj.start",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.traj.stop",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.traj.interval",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.traj.defer-builds",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.traj.load",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.traj.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.object-name",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.normalize",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.selection",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.buffer",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.carve",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.level",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.volume",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.isomesh",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.isosurface",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.load",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.map.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mae.object-name",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mae.mimic",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mae.object-props",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mae.atom-props",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mae.choice",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mae.load",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mae.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mtz.prefix",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mtz.amplitudes",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mtz.phases",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mtz.weights",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mtz.reso-min",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mtz.reso-max",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mtz.load",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mtz.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mapgen.amplitudes",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mapgen.phases",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mapgen.weights",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mapgen.min-res",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mapgen.max-res",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mapgen.name-prefix",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mapgen.fofc",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mapgen.ok",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.mapgen.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.aln.mapping",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.aln.load",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.aln.cancel-structures",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.partial.discard",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.partial.merge",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.partial.rename",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.partial.new-window",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.partial.ok",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.partial.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.selection",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.state",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.tab-options",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.tab-pdb",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.tab-multi",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.retain-order",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.pdb-conect-nodup",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.pdb-conect-all",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.ignore-segi",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.retain-ids",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.multisave",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.multi-radios",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.prompt-each",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.filter",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.save",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.exportmol.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.saveobject.pick",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.saveobject.save",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.saveobject.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.saveobject.empty-ok",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.png.rendering",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.png.save",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.png.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.width",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.height",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.units",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.dpi",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.lock",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.transparent",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.reset",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.draw",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.ray",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.page2-back",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.clipboard",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.render.save",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.movie.encoder",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.movie.quality",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.movie.format-radios",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.movie.width",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.movie.height",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.movie.presets",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.movie.rendering",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.movie.save",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.movie.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.fetch.code",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.fetch.name",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.fetch.structure",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.fetch.assembly",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.fetch.chain",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.fetch.map-2fofc",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.fetch.map-fofc",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.fetch.change-path",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.fetch.download",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.fetch.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.log.open",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.log.resume",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.log.append",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.log.close-log",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.log.close",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.recent.entry",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.recent.close",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.goto",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.hidden-toggle",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.new-folder",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.place",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.breadcrumb",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.parent",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.dir-row",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.file-row",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.file-dblclick",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.filter",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.name-input",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.accept",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.picker.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.accel.ctrl-s",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "save failed|session has no file|no file yet",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/files/files.accel.ctrl-s.png",
+      "needsVisual": false,
+      "note": "FileDropTarget window keydown: Ctrl/Cmd+S runs ensure()+session_file+save; in local mode ensure() rejects and it reports a save failure to the feedback log — proving the accelerator is installed. (windowAccelerator ignores Ctrl+Alt+S.)"
+    },
+    {
+      "id": "files.accel.ctrl-o",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.drop.window",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.deeplink.open-param",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "files.plugin-dialog.host",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}

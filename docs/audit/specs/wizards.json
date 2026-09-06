@@ -1,0 +1,2931 @@
+{
+  "area": "wizards",
+  "caps": [
+    "local-backend",
+    "webgl",
+    "network"
+  ],
+  "specs": [
+    {
+      "id": "wizards.internal-gui.enable",
+      "feature": "wizards",
+      "label": "Enable internal_gui column → Wizard block mounts",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Typing `set internal_gui, 1` turns the right-hand column on; the wizards feature (launcher bar) mounts inside it.",
+      "setup": [],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-launcher\"]"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizlaunch__toggle"
+        }
+      ],
+      "settleMs": 1500
+    },
+    {
+      "id": "wizards.launcher.toggle-open",
+      "feature": "wizards",
+      "label": "Wizard ▸ launcher toggle opens the wizard menu",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the ▸ Wizard toggle opens the catalog-fed launcher menu (populated from wizards.catalog).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__toggle"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizlaunch__menu"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "All modules"
+        },
+        {
+          "expect": "domChanged"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launcher.all-modules-expand",
+      "feature": "wizards",
+      "label": "All modules (25) expander reveals every bundled wizard",
+      "kind": "button",
+      "requires": [],
+      "note": "The \"▸ All modules (N)\" button expands the full catalog.wizards list.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__item--more"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizlaunch__all"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "annotation"
+        },
+        {
+          "expect": "domChanged"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.all.annotation",
+      "feature": "wizards",
+      "label": "All modules ▸ annotation → wizard annotation",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"annotation\" button dispatches \"wizard annotation\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*annotation"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.appearance",
+      "feature": "wizards",
+      "label": "All modules ▸ appearance → wizard appearance",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"appearance\" button dispatches \"wizard appearance\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*appearance"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.benchmark",
+      "feature": "wizards",
+      "label": "All modules ▸ benchmark → wizard benchmark",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"benchmark\" button dispatches \"wizard benchmark\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*benchmark"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.box",
+      "feature": "wizards",
+      "label": "All modules ▸ box → wizard box",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"box\" button dispatches \"wizard box\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 3
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*box"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.charge",
+      "feature": "wizards",
+      "label": "All modules ▸ charge → wizard charge",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"charge\" button dispatches \"wizard charge\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 4
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "assign a charge"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.cleanup",
+      "feature": "wizards",
+      "label": "All modules ▸ cleanup → wizard cleanup",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"cleanup\" button dispatches \"wizard cleanup\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 5
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "clean up"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.command",
+      "feature": "wizards",
+      "label": "All modules ▸ command → wizard command",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"command\" button dispatches \"wizard command\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 6
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*command"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.demo",
+      "feature": "wizards",
+      "label": "All modules ▸ demo → wizard demo",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"demo\" button dispatches \"wizard demo\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 7
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.density",
+      "feature": "wizards",
+      "label": "All modules ▸ density → wizard density",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"density\" button dispatches \"wizard density\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 8
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "map object to contour"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.distance",
+      "feature": "wizards",
+      "label": "All modules ▸ distance → wizard distance",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"distance\" button dispatches \"wizard distance\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 9
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "two atoms to measure a distance"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.dragging",
+      "feature": "wizards",
+      "label": "All modules ▸ dragging → wizard dragging",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"dragging\" button dispatches \"wizard dragging\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 10
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*dragging"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.filter",
+      "feature": "wizards",
+      "label": "All modules ▸ filter → wizard filter",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"filter\" button dispatches \"wizard filter\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 11
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "classify each molecule"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.label",
+      "feature": "wizards",
+      "label": "All modules ▸ label → wizard label",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"label\" button dispatches \"wizard label\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 12
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "atoms to label"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.measurement",
+      "feature": "wizards",
+      "label": "All modules ▸ measurement → wizard measurement",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"measurement\" button dispatches \"wizard measurement\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 13
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "measure distances"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.message",
+      "feature": "wizards",
+      "label": "All modules ▸ message → wizard message",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"message\" button dispatches \"wizard message\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 14
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*message"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.mutagenesis",
+      "feature": "wizards",
+      "label": "All modules ▸ mutagenesis → wizard mutagenesis",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"mutagenesis\" button dispatches \"wizard mutagenesis\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 15
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "residue to mutate"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.nucmutagenesis",
+      "feature": "wizards",
+      "label": "All modules ▸ nucmutagenesis → wizard nucmutagenesis",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"nucmutagenesis\" button dispatches \"wizard nucmutagenesis\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 16
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*nucmutagenesis"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.openvr",
+      "feature": "wizards",
+      "label": "All modules ▸ openvr → wizard openvr",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"openvr\" button dispatches \"wizard openvr\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 17
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*openvr"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.pair_fit",
+      "feature": "wizards",
+      "label": "All modules ▸ pair_fit → wizard pair_fit",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"pair_fit\" button dispatches \"wizard pair_fit\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 18
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mobile object"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.pseudoatom",
+      "feature": "wizards",
+      "label": "All modules ▸ pseudoatom → wizard pseudoatom",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"pseudoatom\" button dispatches \"wizard pseudoatom\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 19
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*pseudoatom"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.renaming",
+      "feature": "wizards",
+      "label": "All modules ▸ renaming → wizard renaming",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"renaming\" button dispatches \"wizard renaming\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 20
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*renaming"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.sculpting",
+      "feature": "wizards",
+      "label": "All modules ▸ sculpting → wizard sculpting",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"sculpting\" button dispatches \"wizard sculpting\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 21
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "atoms to sculpt"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.security",
+      "feature": "wizards",
+      "label": "All modules ▸ security → wizard security",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"security\" button dispatches \"wizard security\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 22
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*security"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.stereodemo",
+      "feature": "wizards",
+      "label": "All modules ▸ stereodemo → wizard stereodemo",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"stereodemo\" button dispatches \"wizard stereodemo\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 23
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*stereodemo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.all.toggle",
+      "feature": "wizards",
+      "label": "All modules ▸ toggle → wizard toggle",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the \"toggle\" button dispatches \"wizard toggle\"; the wizard pushes onto the stack and its prompt overlay renders.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__all .wizlaunch__item",
+          "nth": 24
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*toggle"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.menu.appearance",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Appearance → wizard appearance",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "The curated menubar item \"Appearance\" runs \"wizard appearance\" via onRun (same command line the Qt menu uses).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__menu > button.wizlaunch__item",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*appearance"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.menu.measurement",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Measurement → wizard measurement",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "The curated menubar item \"Measurement\" runs \"wizard measurement\" via onRun (same command line the Qt menu uses).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__menu > button.wizlaunch__item",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "measure distances"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.menu.pair_fit",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Pair Fitting → wizard pair_fit",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "The curated menubar item \"Pair Fitting\" runs \"wizard pair_fit\" via onRun (same command line the Qt menu uses).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__menu > button.wizlaunch__item",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mobile object"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.menu.density",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Density → wizard density",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "The curated menubar item \"Density\" runs \"wizard density\" via onRun (same command line the Qt menu uses).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__menu > button.wizlaunch__item",
+          "nth": 3
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "map object to contour"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.menu.filter",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Filter → wizard filter",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "The curated menubar item \"Filter\" runs \"wizard filter\" via onRun (same command line the Qt menu uses).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__menu > button.wizlaunch__item",
+          "nth": 4
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "classify each molecule"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.menu.sculpting",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Sculpting → wizard sculpting",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "The curated menubar item \"Sculpting\" runs \"wizard sculpting\" via onRun (same command line the Qt menu uses).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__menu > button.wizlaunch__item",
+          "nth": 5
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "atoms to sculpt"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.menu.label",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Label → wizard label",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "The curated menubar item \"Label\" runs \"wizard label\" via onRun (same command line the Qt menu uses).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__menu > button.wizlaunch__item",
+          "nth": 6
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "atoms to label"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launch.menu.charge",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Charge → wizard charge",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "The curated menubar item \"Charge\" runs \"wizard charge\" via onRun (same command line the Qt menu uses).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__menu > button.wizlaunch__item",
+          "nth": 7
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "assign a charge"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.launcher.submenu.demo-expand",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo submenu expands",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "Clicking the \"▸ Demo\" submenu expander reveals its leaf items (Representations … End Demonstration).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__sub > button.wizlaunch__item",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Representations"
+        },
+        {
+          "expect": "domChanged"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "wizards.launcher.submenu.mutagenesis-expand",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Mutagenesis submenu expands",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "Clicking the \"▸ Mutagenesis\" submenu expander reveals Protein / Nucleic Acids leaves.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__menu",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__sub > button.wizlaunch__item",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Nucleic Acids"
+        },
+        {
+          "expect": "domChanged"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "wizards.launch.demo.reps",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Representations → wizard demo, reps",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Representations\" dispatches \"wizard demo, reps\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, reps"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.cartoon",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Cartoon Ribbons → wizard demo, cartoon",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Cartoon Ribbons\" dispatches \"wizard demo, cartoon\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, cartoon"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.roving",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Roving Detail → wizard demo, roving",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Roving Detail\" dispatches \"wizard demo, roving\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, roving"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.roving_density",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Roving Density → wizard demo, roving_density",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Roving Density\" dispatches \"wizard demo, roving_density\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, roving_density"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.trans",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Transparency → wizard demo, trans",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Transparency\" dispatches \"wizard demo, trans\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, trans"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.ray",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Ray Tracing → wizard demo, ray",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Ray Tracing\" dispatches \"wizard demo, ray\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, ray"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.sculpt",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Sculpting → wizard demo, sculpt",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Sculpting\" dispatches \"wizard demo, sculpt\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, sculpt"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.anime",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Scripted Animation → wizard demo, anime",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Scripted Animation\" dispatches \"wizard demo, anime\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, anime"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.elec",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Electrostatics → wizard demo, elec",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Electrostatics\" dispatches \"wizard demo, elec\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, elec"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.cgo",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Compiled Graphics Objects → wizard demo, cgo",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Compiled Graphics Objects\" dispatches \"wizard demo, cgo\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, cgo"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.raster3d",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ Molscript/Raster3D Input → wizard demo, raster3d",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Demo submenu leaf \"Molscript/Raster3D Input\" dispatches \"wizard demo, raster3d\". Local engine ignores the demo argument, so all variants launch the demo wizard.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard demo, raster3d"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.demo.finish",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Demo ▸ End Demonstration → replace_wizard demo, finish",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "End Demonstration runs \"replace_wizard demo, finish\", swapping the active demo wizard in place.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard demo"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "replace_wizard demo, finish"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*finish"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launch.menu.nucmutagenesis",
+      "feature": "wizards",
+      "label": "Wizard menu ▸ Mutagenesis ▸ Nucleic Acids → wizard nucmutagenesis",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "The Mutagenesis submenu leaf \"Nucleic Acids\" dispatches \"wizard nucmutagenesis\".",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard nucmutagenesis"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*nucmutagenesis"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.panel.prompt-only-message",
+      "feature": "wizards",
+      "label": "Active wizard with no rows shows the prompt-only notice",
+      "kind": "other",
+      "requires": [],
+      "note": "Every local wizard returns get_panel()==[], so the panel renders the \"prompt-only wizard — no panel rows\" fallback.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard message"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "prompt-only wizard"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-panel\"]"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.panel.stack-depth",
+      "feature": "wizards",
+      "label": "Stacked wizards show the \"stack N\" depth badge",
+      "kind": "other",
+      "requires": [],
+      "note": "Pushing two wizards makes depth>1, so the panel head renders the stack-depth badge (WizardPanel §depth).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "cmd",
+          "text": "set_wizard_stack"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard label"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 400
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "stack\\s*2"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizpanel__depth"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.prompt.visible-in-viewport",
+      "feature": "wizards",
+      "label": "Wizard prompt overlay renders (portalled over the viewport)",
+      "kind": "other",
+      "requires": [],
+      "note": "get_prompt() lines render through a portal into .shell__viewport as the green wizard prompt overlay.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "measure distances"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.prompt.hidden-when-no-wizard",
+      "feature": "wizards",
+      "label": "Clearing the stack hides panel + prompt",
+      "kind": "other",
+      "requires": [],
+      "note": "With depth==0 the panel returns null and the prompt (promptMode 0/empty) is suppressed.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        },
+        {
+          "do": "wait",
+          "ms": 400
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "set_wizard_stack"
+        },
+        {
+          "do": "wait",
+          "ms": 400
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"wizard-prompt\"]"
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"wizard-panel\"]"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "wizards.launcher.dismiss",
+      "feature": "wizards",
+      "label": "Dismiss button pops the active wizard",
+      "kind": "button",
+      "requires": [],
+      "note": "The Dismiss button (shown only while active) calls wizards.dismiss → pops the top wizard; a single-wizard stack empties and the panel disappears.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__toggle",
+          "ms": 8000
+        },
+        {
+          "do": "cmd",
+          "text": "set_wizard_stack"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".wizlaunch__dismiss",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizlaunch__dismiss"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"wizard-panel\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "wizards.events.pick-input",
+      "feature": "wizards",
+      "label": "Pick-seam selection input (WizardEventBridge)",
+      "kind": "input",
+      "requires": [
+        "remote-backend",
+        "picking"
+      ],
+      "note": "The pick seam mounts only when event_mask has pick/select bits; the local engine never sets them.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": ".wizevents__input",
+          "text": "ala and name CA"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-events\"]"
+        }
+      ]
+    },
+    {
+      "id": "wizards.events.do-pick",
+      "feature": "wizards",
+      "label": "do_pick button (WizardEventBridge)",
+      "kind": "button",
+      "requires": [
+        "remote-backend",
+        "picking"
+      ],
+      "note": "Sends wizards.event(\"pick\",{selection}). Requires event_mask_pick, absent in local mode.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        },
+        {
+          "do": "type",
+          "selector": ".wizevents__input",
+          "text": "name CA"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizevents__buttons button",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-events\"]"
+        }
+      ]
+    },
+    {
+      "id": "wizards.events.do-pick-bond",
+      "feature": "wizards",
+      "label": "do_pick(bond) button (WizardEventBridge)",
+      "kind": "button",
+      "requires": [
+        "remote-backend",
+        "picking"
+      ],
+      "note": "Sends wizards.event(\"pick\",{selection,bond:true}). Requires event_mask_pick.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        },
+        {
+          "do": "type",
+          "selector": ".wizevents__input",
+          "text": "name CA"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizevents__buttons button",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-events\"]"
+        }
+      ]
+    },
+    {
+      "id": "wizards.events.do-select",
+      "feature": "wizards",
+      "label": "do_select button (WizardEventBridge)",
+      "kind": "button",
+      "requires": [
+        "remote-backend",
+        "picking"
+      ],
+      "note": "Sends wizards.event(\"select\",{name}). Requires event_mask_select.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard filter"
+        },
+        {
+          "do": "type",
+          "selector": ".wizevents__input",
+          "text": "sele"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizevents__buttons button",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-events\"]"
+        }
+      ]
+    },
+    {
+      "id": "wizards.keys.key-capture",
+      "feature": "wizards",
+      "label": "Keyboard capture input (WizardKeyCapture do_key)",
+      "kind": "keyboard",
+      "requires": [
+        "remote-backend"
+      ],
+      "note": "The hidden key-capture input mounts only when event_mask_key is set (line-editor wizards). Local engine reports eventMask 0.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard pseudoatom"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "selector": ".wizkeys__input",
+          "key": "a"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-keys\"]"
+        }
+      ]
+    },
+    {
+      "id": "wizards.panel.button-row-exec",
+      "feature": "wizards",
+      "label": "Type-2 panel button row fires code on release",
+      "kind": "button",
+      "requires": [
+        "remote-backend"
+      ],
+      "note": "get_panel() button rows exist only behind the bridge; the local snapshot panel is always [].",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizrow--button",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizrow--button"
+        }
+      ]
+    },
+    {
+      "id": "wizards.panel.popup-row-open",
+      "feature": "wizards",
+      "label": "Type-3 popup row opens get_menu() on press",
+      "kind": "menu-open",
+      "requires": [
+        "remote-backend"
+      ],
+      "note": "Popup rows call onMenu(code) → wizards.menu; reachable only with a bridge-supplied panel.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizrow--popup",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-menu\"]"
+        }
+      ]
+    },
+    {
+      "id": "wizards.panel.popup-menu-leaf",
+      "feature": "wizards",
+      "label": "Wizard popup menu leaf runs its command",
+      "kind": "menu-command",
+      "requires": [
+        "remote-backend"
+      ],
+      "note": "WizardPopupMenu leaves call onPick(command) → wizards.exec. Requires a popup row to open the menu first.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        },
+        {
+          "do": "click",
+          "selector": ".wizrow--popup",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizmenu__item",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"wizard-menu\"]"
+        }
+      ]
+    },
+    {
+      "id": "wizards.panel.popup-menu-submenu",
+      "feature": "wizards",
+      "label": "Wizard popup submenu expands on hover/click",
+      "kind": "menu-open",
+      "requires": [
+        "remote-backend"
+      ],
+      "note": "Nested get_menu submenus (measurement.py neighbour lists) expand via .wizmenu__item--sub.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        },
+        {
+          "do": "click",
+          "selector": ".wizrow--popup",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".wizmenu__item--sub",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizmenu__flyout"
+        }
+      ]
+    },
+    {
+      "id": "wizards.panel.popup-menu-escape",
+      "feature": "wizards",
+      "label": "Escape closes the wizard popup menu",
+      "kind": "keyboard",
+      "requires": [
+        "remote-backend"
+      ],
+      "note": "WizardPopupMenu closes on Escape / outside click. Requires an open popup, which needs a bridge panel row.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        },
+        {
+          "do": "click",
+          "selector": ".wizrow--popup",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "key": "Escape"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"wizard-menu\"]"
+        }
+      ]
+    },
+    {
+      "id": "wizards.panel.measurement-menu",
+      "feature": "wizards",
+      "label": "Measurement mode popup menu (get_menu ported locally)",
+      "kind": "menu-open",
+      "requires": [
+        "remote-backend"
+      ],
+      "note": "The local engine DOES serve wizards.menu for measurement (mode/object_mode), but no panel row exists to open it in local mode.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        },
+        {
+          "do": "click",
+          "selector": ".wizrow--popup",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Measurement Mode"
+        }
+      ]
+    },
+    {
+      "id": "wizards.panel.text-row",
+      "feature": "wizards",
+      "label": "Type-1 text row renders flat label",
+      "kind": "other",
+      "requires": [
+        "remote-backend"
+      ],
+      "note": "get_panel() text rows render via .wizrow--text; local panel is always empty.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard measurement"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizrow--text"
+        }
+      ]
+    },
+    {
+      "id": "wizards.panel.blank-row",
+      "feature": "wizards",
+      "label": "Type-0 blank row occupies a control-size gap",
+      "kind": "other",
+      "requires": [
+        "remote-backend"
+      ],
+      "note": "get_panel() blank rows render an empty .wizrow--blank spacer; local panel is always empty.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "wizard demo"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizrow--blank"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,672 @@
+{
+  "results": [
+    {
+      "id": "objects.op.all.A",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "all_action",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.all.A.png",
+      "needsVisual": false,
+      "note": "Clicking the A op-button on the `all` row opens the RowMenu popup sourced from pymol.menu.all_action; the popup header/source label render synchronously even before the (empty-in-local) leaf payload resolves."
+    },
+    {
+      "id": "objects.op.all.S",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mol_show",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.all.S.png",
+      "needsVisual": false,
+      "note": "S op-button on `all` opens the Show popup (pymol.menu.mol_show)."
+    },
+    {
+      "id": "objects.op.all.H",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mol_hide",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.all.H.png",
+      "needsVisual": false,
+      "note": "H op-button on `all` opens the Hide popup (pymol.menu.mol_hide)."
+    },
+    {
+      "id": "objects.op.all.L",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mol_labels",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.all.L.png",
+      "needsVisual": false,
+      "note": "L op-button on `all` opens the Label popup (pymol.menu.mol_labels)."
+    },
+    {
+      "id": "objects.op.all.C",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mol_color",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.all.C.png",
+      "needsVisual": false,
+      "note": "C op-button on `all` opens the Color popup (pymol.menu.mol_color)."
+    },
+    {
+      "id": "objects.op.all.M",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "camera_motion",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.all.M.png",
+      "needsVisual": false,
+      "note": "M op-button on `all` opens the camera-motion popup (pymol.menu.camera_motion) — the only row whose M targets camera_motion rather than obj_motion."
+    },
+    {
+      "id": "objects.op.mol.A",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mol_action",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.mol.A.png",
+      "needsVisual": false,
+      "note": "A op-button on a molecule row opens pymol.menu.mol_action (distinct from all_action on the `all` row)."
+    },
+    {
+      "id": "objects.op.mol.S",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mol_show",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.mol.S.png",
+      "needsVisual": false,
+      "note": "S op-button on the 1crn row opens the Show popup (pymol.menu.mol_show)."
+    },
+    {
+      "id": "objects.op.mol.H",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mol_hide",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.mol.H.png",
+      "needsVisual": false,
+      "note": "H op-button on the 1crn row opens the Hide popup (pymol.menu.mol_hide)."
+    },
+    {
+      "id": "objects.op.mol.L",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mol_labels",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.mol.L.png",
+      "needsVisual": false,
+      "note": "L op-button on the 1crn row opens the Label popup (pymol.menu.mol_labels). On non-molecule rows (map/mesh/surface/measurement) this button is drawn inert (is-inert) and opens nothing — that variant is not reproducible in the local engine, which only yields molecule rows."
+    },
+    {
+      "id": "objects.op.mol.C",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mol_color",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.mol.C.png",
+      "needsVisual": false,
+      "note": "C op-button on the 1crn row opens the Color popup (pymol.menu.mol_color)."
+    },
+    {
+      "id": "objects.op.mol.M",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "obj_motion",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.op.mol.M.png",
+      "needsVisual": false,
+      "note": "M op-button on the 1crn row opens pymol.menu.obj_motion; the button is additionally tinted by the object's per-frame motion spec level (is-spec-none/interp/key)."
+    },
+    {
+      "id": "objects.menu.close.escape",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.menu.close.escape.png",
+      "needsVisual": false,
+      "note": "With a RowMenu open, pressing Escape (window keydown handler in RowMenu) dismisses the popup."
+    },
+    {
+      "id": "objects.menu.close.outside",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".rowmenu",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.menu.close.outside.png",
+      "needsVisual": false,
+      "note": "With a RowMenu open, a mousedown outside `.rowmenu` (here, the command line input) closes it via the capture-phase document listener."
+    },
+    {
+      "id": "objects.name.toggle.mol",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.name.toggle.mol.png",
+      "needsVisual": false,
+      "note": "A plain left click on the 1crn name button starts a DeferVisibility drag whose toggle lands on pointer release (applyBand), disabling the object; its cartoon disappears from the viewport. Enabled beforehand for a deterministic on->off transition."
+    },
+    {
+      "id": "objects.name.toggle.all",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/objects/objects.name.toggle.all.png",
+      "needsVisual": false,
+      "note": "A plain left click on the `all` name button toggles visibility of every object; enabled beforehand so the click disables all and clears the viewport."
+    },
+    {
+      "id": "objects.name.shiftClick.immediate",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.name.ctrlClick.activate",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.name.ctrlShiftClick.activateZoom",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.name.middleClick.center",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.name.ctrlMiddleClick.zoom",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.name.ctrlShiftMiddleClick.exclusive",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.row.visibilityBandDrag",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.row.reorderDrag",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.row.regroupDrag",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.panel.wheelScroll",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.menu.wheelScroll",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.group.collapse",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.group.expand",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.menu.leaf.exec",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.menu.submenu.expand",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "objects.menu.repcheck",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}

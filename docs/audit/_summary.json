@@ -1,0 +1,3562 @@
+{
+  "perArea": {
+    "apbs": {
+      "specs": 17,
+      "PASS": 0,
+      "FAIL": 17,
+      "BLOCKED": 0
+    },
+    "builder": {
+      "specs": 113,
+      "PASS": 83,
+      "FAIL": 28,
+      "BLOCKED": 2
+    },
+    "chrome": {
+      "specs": 26,
+      "PASS": 14,
+      "FAIL": 12,
+      "BLOCKED": 0
+    },
+    "colors": {
+      "specs": 110,
+      "PASS": 0,
+      "FAIL": 110,
+      "BLOCKED": 0
+    },
+    "compute": {
+      "specs": 45,
+      "PASS": 0,
+      "FAIL": 40,
+      "BLOCKED": 5
+    },
+    "console": {
+      "specs": 60,
+      "PASS": 38,
+      "FAIL": 18,
+      "BLOCKED": 4
+    },
+    "dialogs": {
+      "specs": 22,
+      "PASS": 14,
+      "FAIL": 1,
+      "BLOCKED": 7
+    },
+    "files": {
+      "specs": 180,
+      "PASS": 26,
+      "FAIL": 1,
+      "BLOCKED": 153
+    },
+    "keyboard": {
+      "specs": 54,
+      "PASS": 2,
+      "FAIL": 42,
+      "BLOCKED": 10
+    },
+    "menubar": {
+      "specs": 665,
+      "PASS": 205,
+      "FAIL": 460,
+      "BLOCKED": 0
+    },
+    "mouse": {
+      "specs": 44,
+      "PASS": 10,
+      "FAIL": 34,
+      "BLOCKED": 0
+    },
+    "movie": {
+      "specs": 112,
+      "PASS": 16,
+      "FAIL": 79,
+      "BLOCKED": 17
+    },
+    "objects": {
+      "specs": 32,
+      "PASS": 16,
+      "FAIL": 0,
+      "BLOCKED": 16
+    },
+    "plugin-manager": {
+      "specs": 33,
+      "PASS": 0,
+      "FAIL": 26,
+      "BLOCKED": 7
+    },
+    "properties": {
+      "specs": 24,
+      "PASS": 1,
+      "FAIL": 22,
+      "BLOCKED": 1
+    },
+    "pymol-menu": {
+      "specs": 18,
+      "PASS": 0,
+      "FAIL": 0,
+      "BLOCKED": 18
+    },
+    "render": {
+      "specs": 20,
+      "PASS": 12,
+      "FAIL": 0,
+      "BLOCKED": 8
+    },
+    "scenes": {
+      "specs": 57,
+      "PASS": 42,
+      "FAIL": 14,
+      "BLOCKED": 1
+    },
+    "seqview": {
+      "specs": 36,
+      "PASS": 0,
+      "FAIL": 0,
+      "BLOCKED": 36
+    },
+    "settings": {
+      "specs": 68,
+      "PASS": 6,
+      "FAIL": 0,
+      "BLOCKED": 62
+    },
+    "shortcuts": {
+      "specs": 25,
+      "PASS": 1,
+      "FAIL": 24,
+      "BLOCKED": 0
+    },
+    "texteditor": {
+      "specs": 30,
+      "PASS": 17,
+      "FAIL": 8,
+      "BLOCKED": 5
+    },
+    "viewport": {
+      "specs": 24,
+      "PASS": 22,
+      "FAIL": 1,
+      "BLOCKED": 1
+    },
+    "volume": {
+      "specs": 44,
+      "PASS": 1,
+      "FAIL": 0,
+      "BLOCKED": 43
+    },
+    "wizards": {
+      "specs": 69,
+      "PASS": 56,
+      "FAIL": 0,
+      "BLOCKED": 13
+    }
+  },
+  "confirmed": [
+    {
+      "id": "viewport.render.bgColor",
+      "area": "viewport",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "`bg_color white` runs without error but the live WebGL viewport never repaints — background stays black.",
+      "repro": "1) Load scene, `as cartoon`. 2) Run `bg_color white`. 3) Observe interactive viewport: backdrop remains black instead of turning white (command echoed, no error). Independently reproduced via scripts/audit/run-shard.mjs on /tmp/verify-viewport_render_bgColor.json → FAIL \"viewport unchanged\".",
+      "evidence": "Fresh screenshot /tmp/vshots/viewport.render.bgColor.png shows black background after `bg_color white` (console shows the command, no console/page errors). Root cause: viewport renderer has setBackground (packages/viewport/src/modeG/renderer.ts:178-181,292-294; viewport.ts:854-855) but the web app never wires the bg_rgb setting to it — background is only ever initialized to null (viewport.ts:195); no bg_rgb→setBackground subscription exists in apps/web/src. Ray path honors bg_rgb (engine-ts/src/cmd/render.ts:42-48,95), so only the interactive canvas is affected."
+    },
+    {
+      "id": "movie.seek.range",
+      "area": "movie",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "Frame scrollbar (range input) stays permanently disabled on the local engine because get_movie_status is a stub that always reports nframes:0, even after mset defines a movie.",
+      "evidence": "Independent reproduction via the audit harness (?backend=local). After setup `mset 1 x30`: cmd.count_frames=30 and cmd.get_movie_length=30 (movie genuinely created), but cmd.get_movie_status returned {frame:1,nframes:0,...}. Panel showed \"FRAME 1/0 · no movie — define one with mset below\" and the range element was <input min=1 max=1 disabled value=1>, so Playwright locator.fill times out. Root cause: packages/engine-ts/src/engine.ts:986 registers get_movie_status as a fixed stub returning nframes:0; registerSystem in packages/engine-ts/src/cmd/system.ts overrides get_frame/count_frames/get_movie_length but NOT get_movie_status. apps/web/src/features/movie/movieSource.ts status() calls cmd.get_movie_status first (ensure() succeeds since the stub does not throw) and only falls back to count_frames if it throws, so MoviePanel.tsx:179 keeps the range disabled (nframes<1) forever. The disabled state is the real bug, not a check/timing artifact.",
+      "repro": "1) Open the app with ?backend=local. 2) In the movie panel run `mset 1 x30` to define a 30-frame movie. 3) Observe the readout still says \"FRAME 1/0 · no movie\" and the .mvpanel__range input remains disabled (max=1), so the frame scrollbar cannot be moved. Engine-internally cmd.count_frames returns 30 but cmd.get_movie_status still returns nframes:0."
+    },
+    {
+      "id": "scmenu.blank",
+      "area": "scenes",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "Scene menu ▸ Blank fails to clear the viewport — it throws \"CmdException: No scenes\" and leaves the molecule fully rendered instead of disabling all objects.",
+      "repro": "1. Load default session (backend tenmol-engine-ts). 2. Open the Scene panel; click the \"Blank\" button (.scmenu .scmenu__row button, nth 12), which runs cmd.scene(\"\", \"recall\"). 3. Observe: the molecule stays fully rendered (viewport unchanged) and the output log shows red \"CmdException: No scenes\". Expected: screen goes blank (all objects disabled, message cleared).",
+      "evidence": "Fresh shard run (/tmp/verify-scmenu_blank.out.json) → FAIL screenshotChanged \"viewport unchanged\". Fresh screenshot /tmp/vshots/scmenu.blank.png: cartoon still fully rendered; output panel shows cmd.scene(\"\", \"recall\") followed by \"CmdException: No scenes\"; SCENES 0, current: (none). This is not a check/timing artifact — the control genuinely errored and did nothing. Frontend maps Blank → sceneActions.blank() = scene(['','recall']) (apps/web/src/features/scenes/sceneActions.ts:82; SceneMenu.tsx:70), whose own comment says recall '' should \"disable all + clear the message\". Reference PyMOL engine MovieScene.cpp:794-806 handles empty-key recall via ExecutiveSetObjVisib(G,\"*\",false,false) (blank screen) and only raises \"No scenes\" (MovieScene.cpp:783,839) for next/previous/start — so the engine-ts backend wrongly hits the No-scenes path for empty-key recall. Note: the prior audit screenshot (21 scenes) also showed the viewport not blanking, so the affordance is broken regardless of scene count."
+    },
+    {
+      "id": "builder.bonds.order.triple",
+      "area": "builder",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "Clicking the \"Builder\" quick button opens the panel slot but the Builder dock window fails to render on cold load, so the Triple-bond control is unreachable.",
+      "repro": "One-spec shard at /tmp/verify-builder_bonds_order_triple.json fails 3/3: \"TimeoutError: page.waitForSelector: Timeout 6000ms exceeded — waiting for [data-testid=builder-window]\", at the setup step (before builder_dismiss), with zero console/page errors — refuting the reported Clear-modal cascade. Live-browser proof: after the click builder-window is absent, but window.dispatchEvent(new Event('tenmol:open-builder')) makes builder-window and the triple-bond .bbtn appear instantly. Root cause: apps/web/src/shell/FeatureSlot.tsx mounts <MountMarker> before <Panel/> in the same Suspense; MountMarker's useEffect calls panelMounted() (apps/web/src/shell/panelHooks.ts) and dispatches tenmol:open-builder before BuilderPanel's addEventListener runs (apps/web/src/features/builder/BuilderPanel.tsx:112-114), so the open-intent is lost.",
+      "evidence": "Deterministic audit FAIL (3 runs) in isolation with no Clear modal; live-browser confirmation that the panel mounts but never opens until the open event is re-dispatched; effect-ordering race in FeatureSlot.tsx / panelHooks.ts / BuilderPanel.tsx:112-114."
+    },
+    {
+      "id": "builder.model.rest",
+      "area": "builder",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "Clicking the \"Builder\" dock quick button from a cold load does not open the Builder dock on the first click (open event fires before the panel's listener is registered), so Model ▸ Rest is unreachable until a second click.",
+      "repro": "1. Load the app fresh. 2. Click the \"the builder dock\" quick button once. 3. Observe: the builder window ([data-testid=builder-window]) never appears — only a stray \"Builder\" launch button mounts; open state stays false. 4. The audit setup's waitFor builder-window times out (6s) before it can click the Rest button. A second click (or dispatching tenmol:open-builder after mount) does open the dock.",
+      "evidence": "Fresh shard result /tmp/verify-builder_model_rest.out.json: FAIL \"driver error: TimeoutError: page.waitForSelector ... [data-testid=builder-window]\"; pageErrors/consoleErrors/netFailures all empty (no Clear modal, no exception — reported cascade reason is wrong). Manual browser repro: after first click .builder-launch present, builder-window absent; dispatching tenmol:open-builder after mount yields builder-window=true, 58 .bbtn, Rest button present. Root cause: FeatureSlot MountMarker effect (apps/web/src/shell/FeatureSlot.tsx:88-104) dispatches OPEN_EVENT via panelMounted BEFORE sibling BuilderPanel useEffect registers the listener (apps/web/src/features/builder/BuilderPanel.tsx:111-115), invoked from QuickButtons openBuilder (apps/web/src/features/console/QuickButtons.tsx:180-183)."
+    },
+    {
+      "id": "builder.model.sculpt",
+      "area": "builder",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "The \"Builder\" quick button deterministically fails to open the Builder dock on the first click (mount-vs-listener race), so Model ▸ Sculpt is unreachable via that affordance on first attempt.",
+      "repro": "1) Fresh app at /?backend=local. 2) Click the quick button `.quickbuttons button[title='the builder dock']` exactly once. 3) Observe: no `[data-testid=builder-window]` / `.flwin` appears within 6s+ (audit setup times out here). The spec never reaches its Sculpt trigger. A second click of the same button opens the dock, and the Sculpt button (`.bbtn[title^='Molecular sculpting']`) is then present and enabled.",
+      "evidence": "Not a \"Clear modal cascade\" — reproduced in full isolation with a one-spec shard (FAIL 3/3 runs, all \"waitForSelector builder-window Timeout 6000ms\"; no console errors, no pageerrors, no netFailures). Instrumented the isolated driver: after one click, `document.body.dataset.features` DOES gain \"builder\" (slot mounts) but `builderWin=false, flwin=0`; dispatching `tenmol:open-builder` manually then opens it (`flwin=1`). Root cause in apps/web: QuickButtons.tsx:180-183 `openBuilder` calls `openPanel('builder', () => dispatchEvent(OPEN_EVENT))`; panelHooks.ts:109-116 `panelMounted` drains that intent from FeatureSlot.tsx's `MountMarker` useEffect, which commits BEFORE the sibling BuilderPanel's own `addEventListener(OPEN_EVENT)` useEffect (BuilderPanel.tsx:111-115) — so the first OPEN_EVENT is dispatched before any listener exists and is lost. On the 2nd click the slot is already mounted so the intent runs synchronously with the listener present → opens. Confirmed by /tmp/debug-builder3.mjs: 1st click {win:false}, 2nd click {win:true, bbtn:56, sculpt:true}. Net user impact: clicking Builder once appears to do nothing (only a secondary \"builder-launch\" button surfaces); this race blocks the one-click open of the entire Builder dock and thus every builder.* spec's setup. Sculpt itself is fine once the dock is open, so the defect is the shared first-click dock-open race, not the Sculpt control."
+    },
+    {
+      "id": "builder.bonds.delete",
+      "area": "builder",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "Clicking the \"Builder\" dock quickbutton fails to open the Builder dock on first click (0/5 live, 0/6 audit-stack), so the Bonds Delete flow is unreachable via its normal path — though the Delete control itself works once the dock is open.",
+      "repro": "1. Fresh load of http://100.101.244.107:3036/?backend=local (or the audit isolated stack). 2. Click the quickbutton `.quickbuttons button[title='the builder dock']` (the \"Builder\" button, bottom-right dock). 3. Observe: no `[data-testid=builder-window]` appears within 6s; instead a small collapsed \"Builder\" `.builder-launch` button shows top-left. Reproduced 0/5 opens on live front and 0/6 in the audit stack. Workaround: click that fallback \"Builder\" button to actually open the dock; then Bonds > Delete correctly arms the UnbondWizard.",
+      "evidence": "Fresh single-spec shard (/tmp/verify-builder_bonds_delete.out.json) FAILED at setup: \"TimeoutError: page.waitForSelector: [data-testid=builder-window] to be visible\" (6000ms), with empty pageErrors/consoleErrors — disproving the reported \"un-dismissed Clear modal cascade\" (single spec, no prior modal). Playwright-core loops: live front 5 fresh contexts = builderWindow 0/5, .builder-launch 1/1 each; audit stack 6 fresh pages = 0/6. After the failed click a visible fallback button (box x=8,y=56,67x28) opens the dock on a 2nd click, and Bonds>Delete then works (builder-wizard visible=true, feedback \"UnbondWizard\", 0 console errors). Root cause: FeatureSlot.tsx renders <MountMarker> before <Panel/>, so panelMounted() dispatches tenmol:open-builder before BuilderPanel (BuilderPanel.tsx:111-115) registers its OPEN_EVENT listener — the open intent is lost and the panel stays open=false (renders .builder-launch at BuilderPanel.tsx:295-305)."
+    },
+    {
+      "id": "builder.settings.bumps",
+      "area": "builder",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "First click on the Builder dock quick-button often opens nothing (lost OPEN_EVENT race), so the Bumps checkbox is unreachable on first interaction; a second click is required.",
+      "repro": "1. Load the app on the default in-browser (local) engine, e.g. http://100.101.244.107:3036/?backend=local. 2. Click the Builder quick-button (.quickbuttons button[title='the builder dock']) once. 3. Observe: no builder window appears ([data-testid=builder-window] absent), no console error. 4. Click Builder a second time -> window opens with the Bumps checkbox. In the freshly-booted audit stack this first-click loss is deterministic (shard fails 4/4 with a 6s waitForSelector timeout during setup, before the Bumps trigger ever runs).",
+      "evidence": "Single-spec shard failed 4/4 runs: 'driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded' waiting for [data-testid=builder-window]; evidence.pageErrors/consoleErrors/netFailures all empty; no screenshot (fails in setup). Reproduced live: fresh load + single Builder click leaves windowVisible=false after 2s with 0 console errors; second click yields windowVisible=true with 3 .builder__actions checkboxes (El-stat/Bumps/Undo). Prior 'Clear modal cascade' reason is disproven -- fails in isolation with no prior spec. Root cause: QuickButtons.tsx openBuilder -> openPanel('builder', dispatch OPEN_EVENT) (panelHooks.ts openPanel/panelMounted 84-116) can drain the intent before BuilderPanel's OPEN_EVENT listener attaches (BuilderPanel.tsx 111-115), losing the first open. The Bumps checkbox itself does not throw once reached."
+    },
+    {
+      "id": "builder.atoms.clear.confirm",
+      "area": "builder",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "The quickbuttons \"Builder\" (the builder dock) button fails to open the Builder window on first click, so the spec's setup times out — a real first-click race, not the reported Clear-modal cascade.",
+      "repro": "1) Load app fresh (http://100.101.244.107:3036). 2) Click the \"Builder\" quick button (.quickbuttons button[title='the builder dock']). 3) Observe: builder feature mounts but only a small \"Builder\" launch pill appears; [data-testid=builder-window] never opens (spec setup waitFor 6000ms times out). 4) Click the button (or the pill) a second time -> window opens. Verified via isolated run-shard (FAIL at setup) and live browser (afterFirstClick_window:false, afterSecondClick_window:true).",
+      "evidence": "run-shard out: driver error TimeoutError waiting for locator('[data-testid=builder-window]') at setup click of quickbuttons builder dock (/tmp/verify-builder_atoms_clear_confirm.out.json). Fresh screenshot /tmp/vshots/diag_after_click.png shows clean scene, no Clear modal (disproves reported cascade reason). Live: first click mounts slot (body.dataset.features gains 'builder') showing .builder-launch pill but no window; second click opens it. Root cause: FeatureSlot.tsx MountMarker effect calls panelMounted() (draining the queued tenmol:open-builder dispatch) before BuilderPanel.tsx attaches its OPEN_EVENT listener, so the first open event is dropped. NOTE: the Clear-confirm Yes control itself was never reached; the defect is the builder failing to open on first click, and it is recoverable via a second click / launch pill."
+    },
+    {
+      "id": "builder.wizard.cancel",
+      "area": "builder",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "Clicking the Builder dock quickbutton reloads the whole page, so the builder window (and its wizard Cancel row) never opens — the spec times out at setup, not because of any Clear modal.",
+      "repro": "1) Open http://100.101.244.107:3036/?backend=local. 2) Click the toolbar Builder button (.quickbuttons button[title='the builder dock']). 3) The builder panel flashes open, then within ~2-4s the page performs a full reload and the panel disappears. Result: [data-testid=builder-window] is never stably present; the wizard Cancel button can never be reached. Confirmed via run-shard (2/2 FAIL: waitForSelector builder-window 6000ms timeout) and by hand (3/3 reloads; window.__mark reset after each Builder click, while a Reset-button control never reloaded).",
+      "evidence": "Shard results /tmp/verify-builder_wizard_cancel.out.json + .out2.json both: \"driver error: TimeoutError ... waiting for locator('[data-testid=builder-window]') to be visible\". Interactive: setting window.__mark before clicking Builder, then re-reading it returns undefined/RELOADED and builder-window absent (repeated 3x); clicking Reset (title='cmd.reset') keeps the marker alive with no reload; no-click idle stays alive 7s. builder-click-verify.png shows the panel does render fully before the reload. data-testid wiring is correct (FloatingWindow.tsx:316 forwards it from BuilderPanel.tsx:334), so the timeout is caused by the page reload, not a bad selector. Reload is client-side/app-driven (Vite front log shows no reopt/reload) and persistent with warm cache — not a dev dep-optimization artifact. Note: reported \"un-dismissed Clear modal (cascade)\" cause is false for this isolated single-spec reproduction."
+    },
+    {
+      "id": "builder.wizard.dismiss",
+      "area": "builder",
+      "confirmed": true,
+      "severity": "major",
+      "summary": "The \"Builder\" quickbutton (the builder dock) does nothing on first click — the builder window never opens, so the spec's setup times out; a second click (or the OverlayLauncher path) opens it.",
+      "repro": "1) Load the app fresh (?backend=local). 2) Click the quickbuttons button titled 'the builder dock' (label \"Builder\") exactly once and wait — even after a 2s settle. Expected: [data-testid=builder-window] appears; Actual: it never appears (deterministic). 3) Click the same button a second time → builder-window appears. The audit spec builder.wizard.dismiss fails at setup step 2 because it clicks once and waits 6s for builder-window (reproduced FAIL at 6s and 45s; the spec never reaches its own wizard-dismiss trigger).",
+      "evidence": "Deterministic harness (/tmp/verify-builder_wizard_dismiss.out.json + /tmp/dbg7.mjs): single-click-after-settle open=false; two-clicks afterFirst=false/afterSecond=true; OverlayLauncher path open=true. No console/page/net errors. A JS element.click() sometimes opens it (fires only 'click'), confirming it is a mount-edge race, not a trusted-vs-synthetic issue. Prior \"Clear modal cascade\" reason is false: reproduced in isolation with zero modals. Root cause: openBuilder() (apps/web/src/features/console/QuickButtons.tsx:180-183) -> openPanel fires OPEN_EVENT immediately (apps/web/src/shell/panelHooks.ts:84-116), but BuilderPanel's OPEN_EVENT listener attaches in a useEffect (apps/web/src/features/builder/BuilderPanel.tsx:67-114) that races panelMounted in FeatureSlot/MountMarker (apps/web/src/shell/FeatureSlot.tsx:88-104), so the first open intent is dropped. Spec: docs/audit/specs/builder.json (id builder.wizard.dismiss)."
+    }
+  ],
+  "confirmedCount": 11,
+  "verifiedCount": 300,
+  "candidateFailTotal": 300,
+  "unverifiedCount": 639,
+  "unverified": [
+    {
+      "area": "apbs",
+      "id": "apbs.script.apbs-workflow-visible",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "apbs",
+      "id": "apbs.copy.script",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "apbs",
+      "id": "apbs.launcher.toggle-open",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "apbs",
+      "id": "apbs.launcher.toggle-close",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "apbs",
+      "id": "apbs.window.close",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "apbs",
+      "id": "apbs.window.shade-restore",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "apbs",
+      "id": "apbs.window.esc-close",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "apbs",
+      "id": "apbs.window.title-doubleclick-shade",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "apbs",
+      "id": "apbs.window.drag-move",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "apbs",
+      "id": "apbs.window.resize-grip",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "builder",
+      "id": "builder.open",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.launcher.volume",
+      "reason": "domChanged: \"no DOM/canvas change\""
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.launcher.properties",
+      "reason": "domChanged: \"no DOM/canvas change\""
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.launcher.texteditor",
+      "reason": "domChanged: \"no DOM/canvas change\""
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.theme.appearance.toggle",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.extgui.dock.bottom",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.extgui.float.toggle",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.extgui.doubleClick",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.gutter.resize",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.console.splitter.resize",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.extgui.close",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.header.extgui.show",
+      "reason": "selectorVisible: \"[data-testid=\\\"extgui\\\"] not visible\""
+    },
+    {
+      "area": "chrome",
+      "id": "chrome.header.extgui.hide",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "compute",
+      "id": "compute.launcher.open",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.window.shade",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.window.resize",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.metric.area",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.metric.mass",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.metric.partialCharges",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.metric.surfaceAtoms",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.metric.labelChains",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.metric.interchain.run",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.interchain.cutoff.input",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.interchain.label.toggle",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.esp.confirmPrompt",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.b2vdw.confirmPrompt",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.massAlign.missingTarget",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.massAlign.enabledOnly.toggle",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.massAlign.note",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.ffCopy.src.input",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.sasaRel.confirmPrompt",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.sasaRel.var.input",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "compute",
+      "id": "compute.sasaRel.vis.toggle",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "dialogs",
+      "id": "dialogs.window.raise",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "files",
+      "id": "files.strip.item.new-window.disabled-noop",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.arrowLeft",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.arrowRight",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.arrowUp",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.arrowDown",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.pageUp",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.pageDown",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.home",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.end",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.insert",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.f1",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.f2",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.f3",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.f4",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.f6",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.f7",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.f8",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.f9",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.special.f10",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.named.escape",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.named.tab",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.named.backspace",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.named.enter",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.named.delete",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.ascii.letter",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.ascii.space",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.ascii.digit",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.ctrl.a",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.ctrl.c",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.ctrl.t",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.alt.a",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.alt.digit3",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.reserved.ctrlShiftI",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.reserved.ctrlShiftJ",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.reserved.ctrlShiftC",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.reserved.ctrlR",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.reserved.f5",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.reserved.f11",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.reserved.f12",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.modifier.shift",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.modifier.control",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.modifier.alt",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "keyboard",
+      "id": "keyboard.modifier.meta",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.file.get-pdb",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.file.save-session",
+      "reason": "domChanged: \"no DOM/canvas change\""
+    },
+    {
+      "area": "menubar",
+      "id": "menu.file.save-session-as",
+      "reason": "domChanged: \"no DOM/canvas change\""
+    },
+    {
+      "area": "menubar",
+      "id": "menu.file.export-molecule",
+      "reason": "domChanged: \"no DOM/canvas change\""
+    },
+    {
+      "area": "menubar",
+      "id": "menu.file.export-map",
+      "reason": "domChanged: \"no DOM/canvas change\""
+    },
+    {
+      "area": "menubar",
+      "id": "menu.file.export-alignment",
+      "reason": "domChanged: \"no DOM/canvas change\""
+    },
+    {
+      "area": "menubar",
+      "id": "menu.file.log-file.open",
+      "reason": "domChanged: \"no DOM/canvas change\""
+    },
+    {
+      "area": "menubar",
+      "id": "menu.file.run-script",
+      "reason": "domChanged: \"no DOM/canvas change\""
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.15-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.15-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.15-deg-over-12-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.30-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.30-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.30-deg-over-12-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.30-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.60-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.60-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.60-deg-over-24-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.nutate.60-deg-over-32-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.30-deg-over-2-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.30-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.30-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.60-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.60-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.60-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.90-deg-over-6-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.90-deg-over-12-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.90-deg-over-24-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.120-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.120-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.120-deg-over-32-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.180-deg-over-12-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.180-deg-over-24-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-rock.180-deg-over-48-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-roll.4-seconds",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-roll.8-seconds",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-roll.16-seconds",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.x-roll.32-seconds",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.30-deg-over-2-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.30-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.30-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.60-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.60-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.60-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.90-deg-over-6-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.90-deg-over-12-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.90-deg-over-24-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.120-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.120-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.120-deg-over-32-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.180-deg-over-12-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.180-deg-over-24-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-rock.180-deg-over-48-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-roll.4-seconds",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-roll.8-seconds",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-roll.16-seconds",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.camera-loop.y-roll.32-seconds",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.30-deg-over-2-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.30-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.30-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.60-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.60-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.60-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.90-deg-over-6-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.90-deg-over-12-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.90-deg-over-24-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.120-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.120-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.nutate.120-deg-over-32-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.30-deg-over-2-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.30-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.30-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.60-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.60-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.60-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.90-deg-over-6-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.90-deg-over-12-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.90-deg-over-24-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.120-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.120-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.x-rock.120-deg-over-32-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.30-deg-over-2-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.30-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.30-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.60-deg-over-4-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.60-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.60-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.90-deg-over-6-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.90-deg-over-12-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.90-deg-over-24-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.120-deg-over-8-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.120-deg-over-16-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.y-rock.120-deg-over-32-sec",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.steady.1-seconds-each",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.steady.2-seconds-each",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.steady.4-seconds-each",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.steady.8-seconds-each",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.steady.12-seconds-each",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.steady.16-seconds-each",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.scene-loop.steady.24-seconds-each",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.full-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.full-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.full-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.full-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-2-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-2-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-2-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-2-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-3-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-3-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-3-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-3-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-4-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-4-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-4-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-4-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-8-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-8-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-8-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-8-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-16-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-16-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-16-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-loop.1-16-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.full-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.full-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.full-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.full-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-2-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-2-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-2-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-2-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-3-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-3-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-3-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-3-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-4-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-4-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-4-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-4-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-8-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-8-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-8-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-8-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-16-speed.no-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-16-speed.1-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-16-speed.2-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.movie.program.state-sweep.1-16-speed.4-second-pause",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for "
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.keyboard-shortcuts",
+      "reason": "selectorVisible: \"[data-dialog=\\\"shortcuts\\\"] not visible\""
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.colors",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.10-point",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.14-point",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.18-point",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.24-point",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.36-point",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.48-point",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.72-point",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.0-3-angstrom",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.0-5-angstrom",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.1-angstrom",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.2-angstrom",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.size.4-angstrom",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.sans",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.sans-oblique",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.sans-bold",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.sans-bold-oblique",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.serif",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.serif-oblique",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.serif-bold",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.serif-bold-oblique",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.mono",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.mono-oblique",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.mono-bold",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.mono-bold-oblique",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.gentium-roman",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.font.gentium-italic",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.color.front",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.color.back",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.show-connectors",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.background-color.none",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.background-color.back",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.label.background-color.front",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.ball-and-stick",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.ball-and-stick-ratio.1-0",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.ball-and-stick-ratio.1-5",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.ball-and-stick-ratio.vdw",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.zero-order-bonds.hide",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.zero-order-bonds.dashed",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.zero-order-bonds.solid",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.zero-order-stick-scale.0-1",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.zero-order-stick-scale.0-2",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.zero-order-stick-scale.0-3",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.zero-order-stick-scale.1-0",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.stick-radius.0-1",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.stick-radius.0-2",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.stick-radius.0-25",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.stick-hydrogen-scale.0-4",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.stick-hydrogen-scale.1-0",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.line-width.1-0",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.line-width.1-49",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.line-width.3-0",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.lines-sticks.lines-as-cylinders",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.filled-rings-round-edges",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.filled-rings-flat-edges",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.filled-rings-with-border",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.spheres",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.base-ladders",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.bases-and-sugars",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed\nBrowser logs:\n\n<"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.bases-only",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.non-protein-rings",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.all-rings",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.transparent-rings",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.rings-and-bases.default",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.side-chain-helper",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.round-helices",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.fancy-helices",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.cylindrical-helices",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.flat-sheets",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.fancy-sheets",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.smooth-loops",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.discrete-colors",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.highlight-color",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.sampling.atom-count-dependent",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.sampling.2",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.sampling.7",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.sampling.14",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.gap-cutoff.0",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.gap-cutoff.5",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.gap-cutoff.10",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.cartoon.gap-cutoff.20",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.ribbon.side-chain-helper",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.ribbon.trace-atoms",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.ribbon.as-lines",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.ribbon.as-cylinders",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.ribbon.cylinder-radius.match-line-width",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.ribbon.cylinder-radius.0-2-angstrom",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.ribbon.cylinder-radius.0-5-angstrom",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.ribbon.cylinder-radius.1-0-angstrom",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.color.white",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.color.light-gray",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.color.gray",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.color.default-atomic",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.dot",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.wireframe",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.solid",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavities-and-pockets-only",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavities-and-pockets-culled",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-radius.7-angstrom",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-radius.3-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-radius.4-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-radius.5-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-radius.6-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-radius.8-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-radius.10-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-radius.20-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-cutoff.1-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-cutoff.2-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-cutoff.3-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-cutoff.4-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.cavity-detection-cutoff.5-solvent-radii",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.exterior-normal",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.solvent-accessible",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.smooth-edges",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.edge-proximity",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.ignore-none",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.ignore-hetatms",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.ignore-hydrogens",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.surface.ignore-unsurfaced",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.volume.pre-integrated-rendering",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.volume.number-of-layers.100",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.volume.number-of-layers.256",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.volume.number-of-layers.500",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.volume.number-of-layers.1000",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.surface.off",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.surface.20",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.surface.40",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.surface.50",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.surface.60",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.surface.80",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.sphere.off",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.sphere.20",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.sphere.40",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.sphere.50",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.sphere.60",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.sphere.80",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.cartoon.off",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.cartoon.20",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.cartoon.40",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.cartoon.50",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.cartoon.60",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.cartoon.80",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.stick.off",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.stick.20",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.stick.40",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.stick.50",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.stick.60",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.stick.80",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.uni-layer",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.multi-layer",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.multi-layer-real-time-oit",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.fast-and-ugly",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.transparency.angle-dependent",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.opengl-2-0-shaders",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.antialias-ray-tracing",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.antialias-real-time.off",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.antialias-real-time.fxaa",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.antialias-real-time.smaa",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.modernize",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.shadows.none",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.shadows.light",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.shadows.medium",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.shadows.heavy",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.shadows.black",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.shadows.matte",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.shadows.soft",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.shadows.occlusion",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.shadows.occlusion2",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.texture.none",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.texture.matte-1",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.texture.matte-2",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.texture.swirl-1",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.texture.swirl-2",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.texture.fiber",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.interior-texture.none",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.interior-texture.matte-1",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.interior-texture.matte-2",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.interior-texture.swirl-1",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.interior-texture.swirl-2",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.interior-texture.fiber",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.memory.use-less-slower",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.memory.use-standard-amount",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.memory.use-more-faster",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.memory.use-even-more",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.memory.use-most",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.cull-backfaces",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.rendering.opaque-interiors",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.pdb-file-loading.ignore-pdb-segment-identifier",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.mmcif-file-loading.use-auth-identifiers",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.mmcif-file-loading.load-assembly-biological-unit",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.mmcif-file-loading.bonding-by-chemical-component-dictionary",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.map-file-loading.normalize-ccp4-maps",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.map-file-loading.normalize-o-maps",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.auto-show.cartoon-sticks-spheres-by-classification",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.auto-show.auto-show-lines",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.auto-show.auto-show-spheres",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.auto-show.auto-show-nonbonded",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.auto-show.auto-show-new-selections",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.auto-show.auto-hide-selections",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.auto-zoom-new-objects",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.auto-remove-hydrogens",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.show-text-esc",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.setting.overlay-text",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.scenes",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.next",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.previous",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.append",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.append.camera",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.append.color",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.append.reps",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.append.reps-color",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.insert-before",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.insert-after",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.update",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.delete",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f1",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f2",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f3",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f4",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f5",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f6",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f7",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f8",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f9",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f10",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f11",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.recall.f12",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f1",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f2",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f3",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f4",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f5",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f6",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f7",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f8",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f9",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f10",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f11",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.store.f12",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f1",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f2",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f3",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f4",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f5",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f6",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f7",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f8",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f9",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f10",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f11",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.clear.f12",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.buttons",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.cache.enable",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.cache.optimize",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.cache.read-only",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.scene.cache.disable",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.selection-mode.atoms",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.selection-mode.residues",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.selection-mode.chains",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.selection-mode.segments",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.selection-mode.objects",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.selection-mode.molecules",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.selection-mode.c-alphas",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.3-button-motions",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.3-button-editing",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.3-button-viewing",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.3-button-lights",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.3-button-all-modes",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.2-button-editing",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.2-button-viewing",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.1-button-viewing-mode",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.emulate-maestro",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.virtual-trackball",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.show-mouse-grid",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.mouse.roving-origin",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.appearance",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.measurement",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.mutagenesis.protein",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.mutagenesis.nucleic-acids",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.pair-fitting",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.density",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.filter",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.sculpting",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.label",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.charge",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.representations",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.cartoon-ribbons",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.roving-detail",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.roving-density",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.transparency",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.ray-tracing",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.sculpting",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.scripted-animation",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.electrostatics",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.compiled-graphics-objects",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.molscript-raster3d-input",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.wizard.demo.end-demonstration",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.plugin.initialize-plugin-system",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.pymol-home-page",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.pymol-product-page",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.pymol-community-wiki",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.pymol-command-reference",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.pymol-3-documentation",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.legacy-online-documentation",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.topics.selection-algebra",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.topics.settings",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.topics.timeline-python-api",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.pymol-mailing-list",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.about-pymol",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.sponsorship-information",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "menubar",
+      "id": "menu.help.how-to-cite-pymol",
+      "reason": "driver error: Error: locator.click: Target page, context or browser has been closed"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config.three_button_motions",
+      "reason": "feedbackMatches: \"pattern /3-Button Motions/ not found\""
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config.three_button_editing",
+      "reason": "feedbackMatches: \"pattern /3-Button Editing/ not found\""
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config.three_button_lights",
+      "reason": "feedbackMatches: \"pattern /3-Button Lights/ not found\""
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config.three_button_all_modes",
+      "reason": "feedbackMatches: \"pattern /3-Button Editing/ not found\""
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config.two_button_editing",
+      "reason": "feedbackMatches: \"pattern /2-Button Editing/ not found\""
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config.two_button_viewing",
+      "reason": "feedbackMatches: \"pattern /2-Button Viewing/ not found\""
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config.two_button_lights",
+      "reason": "feedbackMatches: \"pattern /2-Button Lights/ not found\""
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.butmode.mode.cycle-forward",
+      "reason": "feedbackMatches: \"pattern /3-Button Editing/ not found\""
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.butmode.selection.cycle-forward",
+      "reason": "feedbackMatches: \"pattern /C-alphas/ not found\""
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.butmode.editing.picking-line",
+      "reason": "feedbackMatches: \"pattern /Picking Atoms/ not found\"; selectorVisible: \"[data-testid=\\\"butmode-selec"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.butmode.grid.click-cycle",
+      "reason": "feedbackMatches: \"pattern /3-Button Editing/ not found\""
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.header-mode",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.note-80slots",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.value-reflect",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.change-undrivable",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.col.left",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.col.middle",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.col.right",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.col.wheel",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.col.single_left",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.col.single_middle",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.col.single_right",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.col.double_left",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.col.double_middle",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.col.double_right",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.row.shft",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.row.ctrl",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.row.ctsh",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.row.alt",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.row.alsh",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.row.ctal",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.cell.row.ctas",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.keyboard-menu-button",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "mouse",
+      "id": "mouse.config-panel.close",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.launcher.open",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.launcher.close",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.window.close-x",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.window.close-esc",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.window.shade",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.tab.installed",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.tab.legacy",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.tab.settings",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.tab.paths",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.rescan",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.installed.scan-error",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.settings.verbose-confirm",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.settings.instantsave-confirm",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"; undefined: \"unknown chec"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.settings.confirm-cancel",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.settings.confirm-apply-guard",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"; undefined: \"unknown chec"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.paths.empty-message",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.paths.add",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"; undefined: \"unknown chec"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.paths.add-empty-disabled",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.paths.add-duplicate-disabled",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.paths.remove",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.paths.move-down",
+      "reason": "undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.paths.move-up",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.paths.confirm-cancel",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.legacy.error",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.legacy.empty",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\""
+    },
+    {
+      "area": "plugin-manager",
+      "id": "plugin-manager.legacy.reread",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.mouseconfig.close",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.mouseconfig.open-ksm",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.close",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.filter.substring",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.filter.regex",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.filter.badregex",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.filter.clear",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.refresh",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.row.select",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.row.deselect",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.command.edit-dblclick",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.createnew.open",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.delete.selected",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.delete.created-disappears",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.reset.selected",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.reset.all",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.save",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.create.newkey",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.create.reserved-key",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.create.cancel",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.create.existing-confirm",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.confirm.accept",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.confirm.cancel",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "shortcuts",
+      "id": "shortcuts.editor.confirm.skip-checkbox",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "texteditor",
+      "id": "texteditor.guard.cancel",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "texteditor",
+      "id": "texteditor.guard.no",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "texteditor",
+      "id": "texteditor.guard.yes",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "texteditor",
+      "id": "texteditor.key.ctrl_o",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "texteditor",
+      "id": "texteditor.key.ctrl_s",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "texteditor",
+      "id": "texteditor.key.ctrl_shift_s",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "texteditor",
+      "id": "texteditor.window.resize_grip",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    },
+    {
+      "area": "texteditor",
+      "id": "texteditor.window.close",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for lo"
+    }
+  ],
+  "forwardedByArea": {
+    "viewport": 2,
+    "console": 19,
+    "apbs": 16,
+    "shortcuts": 24,
+    "scenes": 14,
+    "properties": 22,
+    "compute": 20,
+    "mouse": 34,
+    "builder": 27,
+    "movie": 79,
+    "chrome": 3,
+    "colors": 111,
+    "menubar": 2,
+    "dialogs": 1,
+    "seqview": 1,
+    "wizards": 1,
+    "objects": 1
+  },
+  "areaStat": {
+    "viewport": {
+      "fwd": 2,
+      "ver": 1,
+      "conf": 1
+    },
+    "console": {
+      "fwd": 19,
+      "ver": 18,
+      "conf": 0
+    },
+    "apbs": {
+      "fwd": 16,
+      "ver": 7,
+      "conf": 0
+    },
+    "shortcuts": {
+      "fwd": 24,
+      "ver": 0,
+      "conf": 0
+    },
+    "scenes": {
+      "fwd": 14,
+      "ver": 14,
+      "conf": 1
+    },
+    "properties": {
+      "fwd": 22,
+      "ver": 22,
+      "conf": 0
+    },
+    "compute": {
+      "fwd": 20,
+      "ver": 20,
+      "conf": 0
+    },
+    "mouse": {
+      "fwd": 34,
+      "ver": 0,
+      "conf": 0
+    },
+    "builder": {
+      "fwd": 27,
+      "ver": 27,
+      "conf": 8
+    },
+    "movie": {
+      "fwd": 79,
+      "ver": 79,
+      "conf": 1
+    },
+    "chrome": {
+      "fwd": 3,
+      "ver": 0,
+      "conf": 0
+    },
+    "colors": {
+      "fwd": 111,
+      "ver": 110,
+      "conf": 0
+    },
+    "menubar": {
+      "fwd": 2,
+      "ver": 2,
+      "conf": 0
+    },
+    "dialogs": {
+      "fwd": 1,
+      "ver": 0,
+      "conf": 0
+    },
+    "seqview": {
+      "fwd": 1,
+      "ver": 0,
+      "conf": 0
+    },
+    "wizards": {
+      "fwd": 1,
+      "ver": 0,
+      "conf": 0
+    },
+    "objects": {
+      "fwd": 1,
+      "ver": 0,
+      "conf": 0
+    }
+  }
+}

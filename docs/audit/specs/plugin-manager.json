@@ -1,0 +1,752 @@
+{
+  "area": "plugin-manager",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "plugin-manager.launcher.open",
+      "feature": "plugin-manager",
+      "label": "Overlay launcher ▸ Plugin manager (open)",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking the Puzzle launcher toggle opens the Plugin Manager FloatingWindow (togglePanel('plugin-manager')).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-testid=\"plugin-manager-window\"]" },
+        { "check": "feedbackMatches", "pattern": "plugin manager" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "plugin-manager.launcher.close",
+      "feature": "plugin-manager",
+      "label": "Overlay launcher ▸ Plugin manager (toggle closed)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "A second click on the launcher toggle closes the already-open panel.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" }
+      ],
+      "checks": [
+        { "check": "selectorHidden", "selector": "[data-testid=\"plugin-manager-window\"]" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "plugin-manager.window.close-x",
+      "feature": "plugin-manager",
+      "label": "Window ▸ × close button",
+      "kind": "button",
+      "requires": [],
+      "note": "The FloatingWindow × button (aria-label close) closes the panel via closePanel('plugin-manager').",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid=\"plugin-manager-window\"] .flwin__close" }
+      ],
+      "checks": [
+        { "check": "selectorHidden", "selector": "[data-testid=\"plugin-manager-window\"]" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "plugin-manager.window.close-esc",
+      "feature": "plugin-manager",
+      "label": "Window ▸ Esc closes",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "The window auto-focuses on open; Esc from inside it triggers onClose and closes the panel.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "press", "key": "Escape", "selector": "[data-testid=\"plugin-manager-window\"]" }
+      ],
+      "checks": [
+        { "check": "selectorHidden", "selector": "[data-testid=\"plugin-manager-window\"]" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "plugin-manager.window.shade",
+      "feature": "plugin-manager",
+      "label": "Window ▸ shade/restore",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Shared FloatingWindow shade button hides the window body (the .plugmgr content) while keeping the title bar. Generic window chrome, exercised on this panel.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid=\"plugin-manager-window\"] [aria-label=\"shade\"]" }
+      ],
+      "checks": [
+        { "check": "selectorHidden", "selector": ".plugmgr__tabs" },
+        { "check": "selectorVisible", "selector": "[data-testid=\"plugin-manager-window\"]" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.tab.installed",
+      "feature": "plugin-manager",
+      "label": "Tab ▸ Installed Plugins",
+      "kind": "button",
+      "requires": [],
+      "note": "Selecting the Installed Plugins tab shows the plugin table (thead Enabled/Plugin/File).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 2 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 0 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": ".plugmgr__table" },
+        { "check": "feedbackMatches", "pattern": "enabled" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.tab.legacy",
+      "feature": "plugin-manager",
+      "label": "Tab ▸ Legacy Plugins",
+      "kind": "button",
+      "requires": [],
+      "note": "Selecting the Legacy Plugins tab mounts LegacyPlugins, which reads the legacy menu registry over the bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 1 },
+        { "do": "waitFor", "selector": "[data-legacy-menu]", "ms": 2000 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-legacy-menu]" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "plugin-manager.tab.settings",
+      "feature": "plugin-manager",
+      "label": "Tab ▸ Settings",
+      "kind": "button",
+      "requires": [],
+      "note": "Selecting the Settings tab shows the verbose/instantsave preference checkboxes.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 2 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "input[data-plugin-pref=\"verbose\"]" },
+        { "check": "selectorVisible", "selector": "input[data-plugin-pref=\"instantsave\"]" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.tab.paths",
+      "feature": "plugin-manager",
+      "label": "Tab ▸ Startup Paths",
+      "kind": "button",
+      "requires": [],
+      "note": "Selecting the Startup Paths tab shows the user-path list and the add-path row.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-plugin-userpaths]" },
+        { "check": "selectorVisible", "selector": "input[data-plugin-path-input]" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.rescan",
+      "feature": "plugin-manager",
+      "label": "rescan button",
+      "kind": "button",
+      "requires": [],
+      "note": "The rescan button in the tab bar re-runs the registry scan. In local-backend mode plugins.initialize is NotPorted, so the scan surfaces 'plugin scan failed' — this confirms the button drives the scan path without crashing.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".plugmgr__tabs .plugmgr__btn" }
+      ],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "plugin scan failed" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "plugin-manager.installed.scan-error",
+      "feature": "plugin-manager",
+      "label": "Installed ▸ scan-failure banner (local mode)",
+      "kind": "other",
+      "requires": [],
+      "note": "In local-backend mode the plugins.* namespace is unregistered, so loadPluginRegistry throws and the panel shows the 'plugin scan failed' error banner rather than an empty list. Verifies graceful degradation.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "waitFor", "selector": ".plugmgr__error", "ms": 2000 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": ".plugmgr__error" },
+        { "check": "feedbackMatches", "pattern": "plugin scan failed" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "plugin-manager.installed.list",
+      "feature": "plugin-manager",
+      "label": "Installed ▸ discovered plugin rows",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "Listing discovered plugins needs the bridge (plugins.findPlugins/initialize). Expected rows: apbs_gui, lightingsettings_gui. Untestable in local mode -> BLOCKED.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "waitFor", "selector": ".plugmgr__name", "ms": 3000 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": ".plugmgr__name" },
+        { "check": "feedbackNotMatches", "pattern": "scan failed" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "plugin-manager.installed.autoload-toggle",
+      "feature": "plugin-manager",
+      "label": "Installed ▸ per-plugin autoload checkbox",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "The only writable control on this tab; flips PluginInfo.autoload and (with instantsave on) persists ~/.pymolpluginsrc.py. Needs the bridge to have plugin rows to toggle -> BLOCKED locally.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 0 },
+        { "do": "waitFor", "selector": "input[aria-label^=\"load \"]", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "input[aria-label^=\"load \"]" }
+      ],
+      "checks": [
+        { "check": "domChanged" },
+        { "check": "feedbackNotMatches", "pattern": "not initialized|refusing to write" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "plugin-manager.settings.verbose-confirm",
+      "feature": "plugin-manager",
+      "label": "Settings ▸ verbose checkbox → confirm (rewrites disk)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Toggling verbose stages a pending pref and opens the Confirm block. Because instantsave defaults to true, the confirm states it rewrites ~/.pymolpluginsrc.py. The checkbox is controlled and only commits on Apply, so the observable is the confirm dialog.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 2 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "input[data-plugin-pref=\"verbose\"]" }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-plugin-confirm]" },
+        { "check": "feedbackMatches", "pattern": "set verbose to true" },
+        { "check": "feedbackMatches", "pattern": "rewrites" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.settings.instantsave-confirm",
+      "feature": "plugin-manager",
+      "label": "Settings ▸ instantsave checkbox → confirm (session only)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Turning instantsave off is the one write that never reaches disk; the confirm must say the change stays in memory for the session. Verifies writeReachesDisk('instantsave',false)=false wiring.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 2 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "input[data-plugin-pref=\"instantsave\"]" }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-plugin-confirm]" },
+        { "check": "feedbackMatches", "pattern": "set instantsave to false" },
+        { "check": "feedbackMatches", "pattern": "session only" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.settings.confirm-cancel",
+      "feature": "plugin-manager",
+      "label": "Settings ▸ Confirm ▸ Cancel",
+      "kind": "button",
+      "requires": [],
+      "note": "Cancel clears the pending pref and hides the confirm block without writing anything.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 2 },
+        { "do": "click", "selector": "input[data-plugin-pref=\"verbose\"]" },
+        { "do": "waitFor", "selector": "[data-plugin-confirm]", "ms": 1500 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-plugin-cancel]" }
+      ],
+      "checks": [
+        { "check": "selectorHidden", "selector": ".plugmgr__confirm" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.settings.confirm-apply-guard",
+      "feature": "plugin-manager",
+      "label": "Settings ▸ Confirm ▸ Apply (write-guard in local mode)",
+      "kind": "button",
+      "requires": [],
+      "note": "With no bridge the registry never initialized, so the shared write-guard refuses: Apply surfaces the writeError banner 'plugin registry not initialized; refusing to write' and closes the confirm. Verifies the guard fires instead of silently doing nothing.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 2 },
+        { "do": "click", "selector": "input[data-plugin-pref=\"verbose\"]" },
+        { "do": "waitFor", "selector": "[data-plugin-confirm]", "ms": 1500 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-plugin-apply]" }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-plugin-writeerror]" },
+        { "check": "feedbackMatches", "pattern": "registry not initialized" },
+        { "check": "selectorHidden", "selector": ".plugmgr__confirm" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "plugin-manager.settings.confirm-apply-save",
+      "feature": "plugin-manager",
+      "label": "Settings ▸ Confirm ▸ Apply (persist to bridge)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "The successful write path (plugins.pref_set + set_pref_changed) needs the bridge; on a live registry Apply commits the pref with no writeError. BLOCKED locally.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 2 },
+        { "do": "click", "selector": "input[data-plugin-pref=\"verbose\"]" },
+        { "do": "waitFor", "selector": "[data-plugin-confirm]", "ms": 1500 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-plugin-apply]" }
+      ],
+      "checks": [
+        { "check": "selectorHidden", "selector": ".plugmgr__confirm" },
+        { "check": "feedbackNotMatches", "pattern": "registry not initialized|refusing to write" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "plugin-manager.paths.empty-message",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ empty user-path notice",
+      "kind": "other",
+      "requires": [],
+      "note": "get_startup_path(True) is empty on this build (and the local scan yields no user paths), so the list shows the 'no user startup paths' notice rather than editable rows.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 }
+      ],
+      "trigger": [
+        { "do": "waitFor", "selector": "[data-plugin-nouserpaths]", "ms": 1500 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-plugin-nouserpaths]" },
+        { "check": "feedbackMatches", "pattern": "no user startup paths" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.paths.add",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ type + Add",
+      "kind": "input",
+      "requires": [],
+      "note": "Typing a directory enables Add; clicking it stages a draft path (a new editable row appears) and, being a change, opens the Confirm block ('Replace the 0 user startup path(s) with 1').",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/newplugins" },
+        { "do": "click", "selector": "[data-plugin-path-add]" }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-plugin-path-remove=\"0\"]" },
+        { "check": "selectorVisible", "selector": "[data-plugin-confirm]" },
+        { "check": "feedbackMatches", "pattern": "replace the 0 user startup path" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.paths.add-empty-disabled",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ Add disabled on empty input",
+      "kind": "button",
+      "requires": [],
+      "note": "Add is disabled while the input is blank; clicking it must not stage a draft or open a confirm.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-plugin-path-add]" }
+      ],
+      "checks": [
+        { "check": "selectorHidden", "selector": ".plugmgr__confirm" },
+        { "check": "selectorVisible", "selector": "[data-plugin-nouserpaths]" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.paths.add-duplicate-disabled",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ Add disabled on duplicate",
+      "kind": "button",
+      "requires": [],
+      "note": "After adding a path, retyping the same value keeps Add disabled (addPath refuses duplicates), so a second Add does not grow the draft; the confirm still reads 'with 1'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 },
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/dup" },
+        { "do": "click", "selector": "[data-plugin-path-add]" },
+        { "do": "waitFor", "selector": "[data-plugin-confirm]", "ms": 1500 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/dup" },
+        { "do": "click", "selector": "[data-plugin-path-add]" }
+      ],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "replace the 0 user startup path\\(s\\) with 1" },
+        { "check": "feedbackNotMatches", "pattern": "with 2" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.paths.remove",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ remove (✕) a draft path",
+      "kind": "button",
+      "requires": [],
+      "note": "Removing the only staged path empties the draft; since it now matches the (empty) engine list the confirm disappears and the 'no user startup paths' notice returns.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 },
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/removeme" },
+        { "do": "click", "selector": "[data-plugin-path-add]" },
+        { "do": "waitFor", "selector": "[data-plugin-path-remove=\"0\"]", "ms": 1500 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-plugin-path-remove=\"0\"]" }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-plugin-nouserpaths]" },
+        { "check": "selectorHidden", "selector": ".plugmgr__confirm" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.paths.move-down",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ move a draft path down (↓)",
+      "kind": "button",
+      "requires": [],
+      "note": "With two staged paths, the ↓ on the first row reorders the draft (movePath). Order is asserted via DOM change since regex cannot express list order.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 },
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/aaa" },
+        { "do": "click", "selector": "[data-plugin-path-add]" },
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/bbb" },
+        { "do": "click", "selector": "[data-plugin-path-add]" },
+        { "do": "waitFor", "selector": "[data-plugin-path-down=\"0\"]", "ms": 1500 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-plugin-path-down=\"0\"]" }
+      ],
+      "checks": [
+        { "check": "domChanged" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.paths.move-up",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ move a draft path up (↑)",
+      "kind": "button",
+      "requires": [],
+      "note": "With two staged paths, the ↑ on the second row reorders the draft (movePath). Asserted via DOM change.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 },
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/aaa" },
+        { "do": "click", "selector": "[data-plugin-path-add]" },
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/bbb" },
+        { "do": "click", "selector": "[data-plugin-path-add]" },
+        { "do": "waitFor", "selector": "[data-plugin-path-up=\"1\"]", "ms": 1500 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-plugin-path-up=\"1\"]" }
+      ],
+      "checks": [
+        { "check": "domChanged" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.paths.confirm-cancel",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ Confirm ▸ Cancel",
+      "kind": "button",
+      "requires": [],
+      "note": "Cancel discards the draft (setDraft(null)); the list reverts to the engine's (empty) user paths and the confirm block closes.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 },
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/cancelme" },
+        { "do": "click", "selector": "[data-plugin-path-add]" },
+        { "do": "waitFor", "selector": "[data-plugin-confirm]", "ms": 1500 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-plugin-cancel]" }
+      ],
+      "checks": [
+        { "check": "selectorHidden", "selector": ".plugmgr__confirm" },
+        { "check": "selectorVisible", "selector": "[data-plugin-nouserpaths]" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "plugin-manager.paths.confirm-apply",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ Confirm ▸ Apply and save",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Persisting the path list (set_startup_path + re-read verification) needs the bridge; the client write-guard refuses without an initialized registry. BLOCKED locally.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 },
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/persist" },
+        { "do": "click", "selector": "[data-plugin-path-add]" },
+        { "do": "waitFor", "selector": "[data-plugin-confirm]", "ms": 1500 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-plugin-apply]" }
+      ],
+      "checks": [
+        { "check": "selectorHidden", "selector": ".plugmgr__confirm" },
+        { "check": "feedbackNotMatches", "pattern": "registry not initialized|did not apply" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "plugin-manager.paths.apply-session",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ Confirm ▸ Apply (session only)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "The session-only apply button is only rendered when instantsave is on (a live registry). Applies without autosave. BLOCKED locally.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 },
+        { "do": "type", "selector": "input[data-plugin-path-input]", "text": "/tmp/sessiononly" },
+        { "do": "click", "selector": "[data-plugin-path-add]" },
+        { "do": "waitFor", "selector": "[data-plugin-apply-session]", "ms": 1500 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-plugin-apply-session]" }
+      ],
+      "checks": [
+        { "check": "selectorHidden", "selector": ".plugmgr__confirm" },
+        { "check": "feedbackNotMatches", "pattern": "registry not initialized|did not apply" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "plugin-manager.paths.fixed-list",
+      "feature": "plugin-manager",
+      "label": "Startup Paths ▸ fixed installation paths",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "The read-only installation paths (get_startup_path tail, ~2 entries) come from the bridge and carry no edit buttons. Empty in local mode -> BLOCKED.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 3 }
+      ],
+      "trigger": [
+        { "do": "waitFor", "selector": "[data-plugin-fixedpaths] li", "ms": 3000 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-plugin-fixedpaths] li" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "plugin-manager.legacy.error",
+      "feature": "plugin-manager",
+      "label": "Legacy Plugins ▸ registry-unavailable banner (local mode)",
+      "kind": "other",
+      "requires": [],
+      "note": "The legacy registry lives on the bridge (cmd.tenmol_plugins.*). In local mode ensureRegistry/readMenu fail, so the panel shows 'plugin menu registry unavailable'. Verifies honest failure surfacing.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 1 }
+      ],
+      "trigger": [
+        { "do": "waitFor", "selector": "[data-legacy-error]", "ms": 3000 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-legacy-error]" },
+        { "check": "feedbackMatches", "pattern": "menu registry unavailable" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "plugin-manager.legacy.empty",
+      "feature": "plugin-manager",
+      "label": "Legacy Plugins ▸ no-menu-item notice",
+      "kind": "other",
+      "requires": [],
+      "note": "With zero registered leaves the list shows 'no plugin has registered a menu item' and the header count reads '0 menu items'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 1 }
+      ],
+      "trigger": [
+        { "do": "waitFor", "selector": "[data-legacy-empty]", "ms": 3000 }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-legacy-empty]" },
+        { "check": "feedbackMatches", "pattern": "no plugin has registered" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "plugin-manager.legacy.reread",
+      "feature": "plugin-manager",
+      "label": "Legacy Plugins ▸ reread button",
+      "kind": "button",
+      "requires": [],
+      "note": "The reread button re-runs ensureRegistry+readMenu. In local mode the registry stays unavailable; this confirms the control drives the refresh path without throwing.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 1 },
+        { "do": "waitFor", "selector": "[data-legacy-menu]", "ms": 2000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".plugmgr__legacyhead .plugmgr__btn" }
+      ],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "menu registry unavailable|menu item" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "plugin-manager.legacy.leaf-invoke",
+      "feature": "plugin-manager",
+      "label": "Legacy Plugins ▸ invoke a registered leaf",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Clicking a registered legacy leaf RPCs the plugin's Python (cmd.tenmol_plugins.invoke) and shows a 'ran <label>' result. Needs the bridge and a registered plugin -> BLOCKED locally.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[title=\"Plugin manager (read-only in v1)\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"plugin-manager-window\"]", "ms": 4000 },
+        { "do": "click", "selector": ".plugmgr__tab", "nth": 1 },
+        { "do": "waitFor", "selector": ".plugmgr__legacyleaf", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".plugmgr__legacyleaf" }
+      ],
+      "checks": [
+        { "check": "selectorVisible", "selector": "[data-legacy-result]" },
+        { "check": "feedbackNotMatches", "pattern": "failed:" }
+      ],
+      "settleMs": 800
+    }
+  ]
+}

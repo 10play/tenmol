@@ -40,7 +40,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { MenuNode, MenuSettingValue, MenusPayload } from '@tenmol/protocol/topics/menus';
 import { truncateRecentLabel } from '@tenmol/protocol/topics/menus';
-import { useSession } from '../../app';
+import { isLocal, useSession } from '../../app';
 import { menuHooks, subscribeMenuHooks } from '../../shell/panelHooks';
 import { getSettingsTap } from '../../shell/settingsTap';
 import { ToolkitDialogHost, useToolkitHooks } from './toolkitHooks';
@@ -48,7 +48,13 @@ import { MENU_DATA } from './generated/menudata';
 import { createMenuSource } from './menuSource';
 import { DynamicList, MenuList } from './MenuList';
 import { AboutDialog } from './AboutDialog';
-import { HOOK_OWNERS, UNAVAILABLE_COMMANDS, UNAVAILABLE_HOOKS, settingsIn } from './model';
+import {
+  HOOK_OWNERS,
+  UNAVAILABLE_COMMANDS,
+  UNAVAILABLE_HOOKS,
+  pruneMenuForLocal,
+  settingsIn,
+} from './model';
 import {
   RENDER_STATS_FN,
   clientRepsFrom,
@@ -145,15 +151,19 @@ export function MenuBar() {
     [session],
   );
 
-  const menus = useMemo(
-    () =>
-      tree.menus.map((menu) => {
-        if (menu.kind !== 'submenu') return menu;
-        const extra = APPENDED[menu.label];
-        return extra ? { ...menu, items: [...menu.items, ...extra] } : menu;
-      }),
-    [tree],
-  );
+  // The browser-only build has no bridge, so a handful of leaves that only work
+  // over one (Open Recent, the Sequence toggle, the `util.*` render presets,
+  // Initialize Plugin System) are pruned from the tree rather than left to
+  // surface a `NotPorted` line on click. `remote` renders the full tree.
+  const local = isLocal(session);
+  const menus = useMemo(() => {
+    const merged = tree.menus.map((menu) => {
+      if (menu.kind !== 'submenu') return menu;
+      const extra = APPENDED[menu.label];
+      return extra ? { ...menu, items: [...menu.items, ...extra] } : menu;
+    });
+    return local ? pruneMenuForLocal(merged) : merged;
+  }, [tree, local]);
 
   const note = useCallback(
     (text: string, kind?: 'error' | 'warning') =>

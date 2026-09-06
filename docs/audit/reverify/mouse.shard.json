@@ -1,0 +1,1565 @@
+{
+  "area": "mouse",
+  "caps": [
+    "local-backend",
+    "webgl",
+    "network"
+  ],
+  "specs": [
+    {
+      "id": "mouse.config.three_button_motions",
+      "feature": "mouse",
+      "label": "mouse_config ▸ 3-Button Motions (config_mouse three_button_motions)",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "First entry of the mouse_config pop-up (MOUSE_CONFIG_MENU). Its command config_mouse('three_button_motions') sets the ring; button_mode_name resolves to '3-Button Motions'. The pop-up itself opens only on right-click (see mouse.butmode.mode.rightclick-menu); this drives the leaf's command directly.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "config_mouse three_button_motions"
+        },
+        {
+          "do": "wait",
+          "ms": 700
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Motions"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "mouse.config.three_button_editing",
+      "feature": "mouse",
+      "label": "mouse_config ▸ 3-Button Editing (config_mouse three_button_editing)",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Second mouse_config leaf. config_mouse('three_button_editing') → name '3-Button Editing'; single-left binds pkat.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "config_mouse three_button_editing"
+        },
+        {
+          "do": "wait",
+          "ms": 700
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Editing"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "mouse.config.three_button_lights",
+      "feature": "mouse",
+      "label": "mouse_config ▸ 3-Button Lights (mouse three_button_lights)",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Fourth mouse_config leaf. cmd.mouse('three_button_lights') → name '3-Button Lights'.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "mouse three_button_lights"
+        },
+        {
+          "do": "wait",
+          "ms": 700
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Lights"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "mouse.config.three_button_all_modes",
+      "feature": "mouse",
+      "label": "mouse_config ▸ 3-Button All Modes (config_mouse three_button_all_modes)",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Fifth mouse_config leaf. config_mouse('three_button_all_modes') selects a 4-mode ring whose first entry is three_button_editing, so button_mode_name resolves to '3-Button Editing' (documented ring resolution, controlling.py).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        },
+        {
+          "do": "cmd",
+          "text": "mouse three_button_lights"
+        },
+        {
+          "do": "wait",
+          "ms": 400
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "config_mouse three_button_all_modes"
+        },
+        {
+          "do": "wait",
+          "ms": 700
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Editing"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "mouse.config.two_button_editing",
+      "feature": "mouse",
+      "label": "mouse_config ▸ 2-Button Editing (config_mouse two_button_editing)",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Seventh mouse_config leaf (after the separator). config_mouse('two_button_editing') → name '2-Button Editing'.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "config_mouse two_button_editing"
+        },
+        {
+          "do": "wait",
+          "ms": 700
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "2-Button Editing"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "mouse.config.two_button_viewing",
+      "feature": "mouse",
+      "label": "mouse_config ▸ 2-Button Viewing (config_mouse two_button_viewing)",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Eighth mouse_config leaf. config_mouse('two_button_viewing') → name '2-Button Viewing'.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "config_mouse two_button_viewing"
+        },
+        {
+          "do": "wait",
+          "ms": 700
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "2-Button Viewing"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "mouse.config.two_button_lights",
+      "feature": "mouse",
+      "label": "mouse_config ▸ 2-Button Lights (mouse two_button_lights)",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Ninth (last) mouse_config leaf. cmd.mouse('two_button_lights') → name '2-Button Lights'.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "mouse two_button_lights"
+        },
+        {
+          "do": "wait",
+          "ms": 700
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "2-Button Lights"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "mouse.butmode.mode.cycle-forward",
+      "feature": "mouse",
+      "label": "ButMode mode line ▸ left-click cycles mode forward",
+      "kind": "button",
+      "requires": [],
+      "note": "onMouseDown(cycleMode) with a plain left button issues cmd.mouse('forward'), stepping the ring; the printed mode name changes on re-read.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        },
+        {
+          "do": "cmd",
+          "text": "mouse three_button_viewing"
+        },
+        {
+          "do": "wait",
+          "ms": 500
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-mode\"]"
+        },
+        {
+          "do": "wait",
+          "ms": 500
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Editing"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "mouse.butmode.selection.cycle-forward",
+      "feature": "mouse",
+      "label": "ButMode selection line ▸ left-click cycles level forward",
+      "kind": "button",
+      "requires": [],
+      "note": "In a viewing mode single-left is not pkat, so the bottom line cycles: left-click issues cmd.mouse('select_forward'); from Molecules(5) it advances to C-alphas(6).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        },
+        {
+          "do": "cmd",
+          "text": "mouse three_button_viewing"
+        },
+        {
+          "do": "cmd",
+          "text": "set mouse_selection_mode, 5"
+        },
+        {
+          "do": "wait",
+          "ms": 500
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-selection\"]"
+        },
+        {
+          "do": "wait",
+          "ms": 500
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "C-alphas"
+        },
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "mouse.butmode.editing.picking-line",
+      "feature": "mouse",
+      "label": "ButMode selection line shows 'Picking Atoms' + is disabled in editing mode",
+      "kind": "other",
+      "requires": [],
+      "note": "When single-left resolves to pkat (editing modes), selectionLine() returns 'Picking Atoms (and Joints)' and the line is rendered disabled (does not cycle).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "cmd",
+          "text": "config_mouse three_button_editing"
+        },
+        {
+          "do": "wait",
+          "ms": 700
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Picking Atoms"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"butmode-selection\"][disabled]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "mouse.butmode.grid.click-cycle",
+      "feature": "mouse",
+      "label": "ButMode grid ▸ left-click cycles mode (like any line above the last two)",
+      "kind": "button",
+      "requires": [],
+      "note": "The grid shares the cycleMode handler; a plain left-click issues cmd.mouse('forward') and the mode name changes.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode\"]",
+          "ms": 8000
+        },
+        {
+          "do": "cmd",
+          "text": "set mouse_grid, 1"
+        },
+        {
+          "do": "cmd",
+          "text": "mouse three_button_viewing"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-grid\"]",
+          "ms": 6000
+        },
+        {
+          "do": "wait",
+          "ms": 400
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-grid\"]"
+        },
+        {
+          "do": "wait",
+          "ms": 500
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3-Button Editing"
+        },
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "mouse.config-panel.header-mode",
+      "feature": "mouse",
+      "label": "Mouse config header shows the live mode_dict key",
+      "kind": "other",
+      "requires": [],
+      "note": "The panel header prints 'Mouse configuration — 3-Button Viewing (three_button_viewing)'; the mode key is read live from useMouseMode.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "cmd",
+          "text": "mouse three_button_viewing"
+        },
+        {
+          "do": "wait",
+          "ms": 500
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "three_button_viewing"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "mouse.config-panel.note-80slots",
+      "feature": "mouse",
+      "label": "Mouse config honesty note (80 slots / no reader) renders",
+      "kind": "other",
+      "requires": [],
+      "note": "The panel's note explains the matrix is 8 modifiers x 10 buttons = 80 slots and that PyMOL exposes no reader for the table.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "80 slots"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "no reader"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "mouse.config-panel.cell.value-reflect",
+      "feature": "mouse",
+      "label": "Mouse config cell left/none reads the mode's binding (Rota)",
+      "kind": "other",
+      "requires": [],
+      "note": "In a viewing mode the left/none slot binds 'rota', so the cell-left/none dropdown shows the 'Rota' action.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "cmd",
+          "text": "mouse three_button_viewing"
+        },
+        {
+          "do": "wait",
+          "ms": 500
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-left/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-left/none\"]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Rota"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "mouse.config-panel.cell.change-undrivable",
+      "feature": "mouse",
+      "label": "Mouse config cell dropdown ▸ selecting an action issues cmd.button",
+      "kind": "input",
+      "requires": [],
+      "note": "LIMITATION: each cell is a native <select>; the audit DSL has no select-option action, so changing a binding (which fires write() → cmd.button(button,modifier,action)) cannot be driven. Additionally there is no ButModeGet reader, so an externally issued `button` cmd would not visibly update the cell. Recorded for inventory; asserts the control renders and is interactive.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "hover",
+          "selector": "[data-testid=\"cell-left/none\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-left/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "mouse.config-panel.cell.col.left",
+      "feature": "mouse",
+      "label": "Mouse config column: L (left) button cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'left' button column exists at modifier none (cell-left/none).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-left/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-left/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.col.middle",
+      "feature": "mouse",
+      "label": "Mouse config column: M (middle) button cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'middle' button column exists at modifier none (cell-middle/none).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-middle/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-middle/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.col.right",
+      "feature": "mouse",
+      "label": "Mouse config column: R (right) button cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'right' button column exists at modifier none (cell-right/none).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-right/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-right/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.col.wheel",
+      "feature": "mouse",
+      "label": "Mouse config column: Wheel button cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'wheel' button column exists at modifier none (cell-wheel/none).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-wheel/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-wheel/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.col.single_left",
+      "feature": "mouse",
+      "label": "Mouse config column: Sgl L (single_left) button cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'single_left' button column exists at modifier none (cell-single_left/none).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-single_left/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-single_left/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.col.single_middle",
+      "feature": "mouse",
+      "label": "Mouse config column: Sgl M (single_middle) button cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'single_middle' button column exists at modifier none (cell-single_middle/none).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-single_middle/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-single_middle/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.col.single_right",
+      "feature": "mouse",
+      "label": "Mouse config column: Sgl R (single_right) button cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'single_right' button column exists at modifier none (cell-single_right/none).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-single_right/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-single_right/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.col.double_left",
+      "feature": "mouse",
+      "label": "Mouse config column: Dbl L (double_left) button cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'double_left' button column exists at modifier none (cell-double_left/none).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-double_left/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-double_left/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.col.double_middle",
+      "feature": "mouse",
+      "label": "Mouse config column: Dbl M (double_middle) button cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'double_middle' button column exists at modifier none (cell-double_middle/none).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-double_middle/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-double_middle/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.col.double_right",
+      "feature": "mouse",
+      "label": "Mouse config column: Dbl R (double_right) button cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'double_right' button column exists at modifier none (cell-double_right/none).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-double_right/none\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-double_right/none\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.row.shft",
+      "feature": "mouse",
+      "label": "Mouse config row: Shft modifier cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'shft' modifier row exists at the left column (cell-left/shft).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-left/shft\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-left/shft\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.row.ctrl",
+      "feature": "mouse",
+      "label": "Mouse config row: Ctrl modifier cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'ctrl' modifier row exists at the left column (cell-left/ctrl).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-left/ctrl\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-left/ctrl\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.row.ctsh",
+      "feature": "mouse",
+      "label": "Mouse config row: CtSh modifier cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'ctsh' (Ctrl+Shift) modifier row exists at the left column (cell-left/ctsh).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-left/ctsh\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-left/ctsh\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.row.alt",
+      "feature": "mouse",
+      "label": "Mouse config row: Alt modifier cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'alt' modifier row exists at the left column (cell-left/alt).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-left/alt\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-left/alt\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.row.alsh",
+      "feature": "mouse",
+      "label": "Mouse config row: AlSh modifier cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'alsh' (Alt+Shift) modifier row exists at the left column (cell-left/alsh).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-left/alsh\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-left/alsh\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.row.ctal",
+      "feature": "mouse",
+      "label": "Mouse config row: CtAl modifier cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'ctal' (Ctrl+Alt) modifier row exists at the left column (cell-left/ctal).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-left/ctal\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-left/ctal\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.cell.row.ctas",
+      "feature": "mouse",
+      "label": "Mouse config row: CtAS modifier cell present",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'ctas' (Ctrl+Alt+Shift) modifier row exists at the left column (cell-left/ctas).",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"cell-left/ctas\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cell-left/ctas\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "mouse.config-panel.keyboard-menu-button",
+      "feature": "mouse",
+      "label": "Mouse config ▸ 'Keyboard Shortcut Menu…' opens the shortcut editor",
+      "kind": "button",
+      "requires": [],
+      "note": "The footer button switches panel='keys', mounting ShortcutEditor ([data-testid=shortcut-editor]). The editor belongs to the shortcuts feature but is reached from the mouse config modal.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".scmodal__buttons button"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"shortcut-editor\"]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"shortcut-editor\"]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Keyboard Shortcut Menu"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "mouse.config-panel.close",
+      "feature": "mouse",
+      "label": "Mouse config ▸ × closes the dialog",
+      "kind": "button",
+      "requires": [],
+      "note": "The × button sets panel='none', unmounting the mouse-config dialog.",
+      "setup": [
+        {
+          "do": "cmd",
+          "text": "set internal_gui, 1"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"butmode-config\"]",
+          "ms": 8000
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"butmode-config\"]"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"mouse-config\"]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"mouse-config\"] .scmodal__x"
+        },
+        {
+          "do": "wait",
+          "ms": 400
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"mouse-config\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    }
+  ]
+}

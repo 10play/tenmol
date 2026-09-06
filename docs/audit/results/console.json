@@ -1,0 +1,1243 @@
+{
+  "results": [
+    {
+      "id": "console.bar.ortho.toggle-on",
+      "verdict": "FAIL",
+      "reason": "selectorVisible: \"[data-testid=\\\"ortho-console\\\"] not visible\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"ortho-console\"]",
+          "ok": false,
+          "detail": "[data-testid=\"ortho-console\"] not visible"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.bar.ortho.toggle-on.png",
+      "needsVisual": false,
+      "note": "Turns on PyMOL's in-viewport console; the portalled overlay [data-testid=ortho-console] should appear over the viewport."
+    },
+    {
+      "id": "console.bar.ortho.toggle-off",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"ortho-console\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.bar.ortho.toggle-off.png",
+      "needsVisual": false,
+      "note": "Toggling ortho on then off must hide the in-viewport console overlay again."
+    },
+    {
+      "id": "console.bar.follow.toggle",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.bar.follow.toggle.png",
+      "needsVisual": false,
+      "note": "Toggles ui.followOutput (sticky autoscroll). Only the button's is-on class flips — not body text or the canvas — so this is verified as an error-free handler; the visual state change is not observable through the audit's objective checks."
+    },
+    {
+      "id": "console.bar.font.select",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".console__bar-font",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.bar.font.select.png",
+      "needsVisual": false,
+      "note": "Native <select> offering default/Monaco/Consolas/Menlo/monospace; changes the --pm-font-mono var scoped to the dock. A native select's value cannot be driven by the audit DSL (no select-option action), so only the control's presence is asserted."
+    },
+    {
+      "id": "console.bar.fontsize.decrease",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.bar.fontsize.decrease.png",
+      "needsVisual": false,
+      "note": "Decreases consoleFontSize by 0.5 (floor 9), applied as inline fontSize on the feedback pane. The size change is neither body text nor canvas, so only the error-free handler is verified."
+    },
+    {
+      "id": "console.bar.fontsize.increase",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.bar.fontsize.increase.png",
+      "needsVisual": false,
+      "note": "Increases consoleFontSize by 0.5 (ceil 20). Same observability limit as A-."
+    },
+    {
+      "id": "console.bar.clear",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ortho 0/256",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.bar.clear.png",
+      "needsVisual": false,
+      "note": "Clears the client feedback scrollback and the ortho ring; the bar counter must fall to 'ortho 0/256'."
+    },
+    {
+      "id": "console.bar.splash",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"ortho-console\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.bar.splash.png",
+      "needsVisual": false,
+      "note": "cmd.splash(0) plus store.setVisible(true)+splash flag: forces the in-viewport console visible over the scene, so the ortho overlay should appear."
+    },
+    {
+      "id": "console.cmdline.submit-enter",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.submit-enter.png",
+      "needsVisual": false,
+      "note": "Enter on a non-empty line runs the command via session.run; 'bg_color red' repaints the viewport, so the canvas must change."
+    },
+    {
+      "id": "console.cmdline.submit-feedback",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "atoms",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.submit-feedback.png",
+      "needsVisual": false,
+      "note": "count_atoms on preloaded 1crn should print an ' … atoms' summary line into the feedback pane."
+    },
+    {
+      "id": "console.cmdline.tab-complete",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.tab-complete.png",
+      "needsVisual": false,
+      "note": "Tab is always swallowed (never moves focus) and, when connected, calls cmd._parser.complete. Completion needs PyMOL's parser/keyword table (a bridge grant); the value applied is not observable via body text, so only the handler running without a page error is verified."
+    },
+    {
+      "id": "console.cmdline.history-up",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.history-up.png",
+      "needsVisual": false,
+      "note": "ArrowUp walks history back into the input value. The recalled value lands in the input's value (not body text or canvas), so it is not observable through the objective checks; the handler is verified error-free."
+    },
+    {
+      "id": "console.cmdline.history-down",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.history-down.png",
+      "needsVisual": false,
+      "note": "ArrowDown walks history forward. Same input-value observability limit as ArrowUp."
+    },
+    {
+      "id": "console.cmdline.history-backsearch",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.history-backsearch.png",
+      "needsVisual": false,
+      "note": "Ctrl+ArrowUp scans history backwards for the first entry sharing the typed prefix. Result lands in the input value; only handler safety is objectively verifiable."
+    },
+    {
+      "id": "console.cmdline.ctrl-chord",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.ctrl-chord.png",
+      "needsVisual": false,
+      "note": "A non-browser-claimed Ctrl chord (e.g. Ctrl+B) is forwarded to cmd._ctrl('B') so set_key bindings fire from the focused prompt. The call is a no-op unless a binding exists; handler must not throw."
+    },
+    {
+      "id": "console.cmdline.ctrlshift-chord",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.ctrlshift-chord.png",
+      "needsVisual": false,
+      "note": "Ctrl+Shift+B is forwarded to cmd._ctsh('B'). Verified error-free."
+    },
+    {
+      "id": "console.cmdline.alt-chord",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.alt-chord.png",
+      "needsVisual": false,
+      "note": "Alt+B (no ctrl) is forwarded to cmd._alt('B'). Verified error-free."
+    },
+    {
+      "id": "console.cmdline.browser-chord-passthrough",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.browser-chord-passthrough.png",
+      "needsVisual": false,
+      "note": "Ctrl+C/X/V/A/R/W/T/N/P/F are intentionally NOT forwarded to cmd._ctrl so the browser keeps copy/paste/etc. Pressing Ctrl+C must not raise an error or hijack the copy."
+    },
+    {
+      "id": "console.cmdline.drop-file",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "console.cmdline.drag-preview",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.cmdline.drag-preview.png",
+      "needsVisual": false,
+      "note": "dragenter inserts and selects the dragged text at the cursor before drop (dragMove is a deliberate no-op). The HTML5 drag data store is protected during dragenter and the audit DSL has no drag primitive, so the preview cannot be driven deterministically; recorded for completeness."
+    },
+    {
+      "id": "console.quick.reset",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.reset.png",
+      "needsVisual": false,
+      "note": "cmd.reset — restores the default view; the viewport should change."
+    },
+    {
+      "id": "console.quick.zoom",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.zoom.png",
+      "needsVisual": false,
+      "note": "cmd.zoom(animate=1.0) — animates the camera to fit; viewport changes."
+    },
+    {
+      "id": "console.quick.orient",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.orient.png",
+      "needsVisual": false,
+      "note": "cmd.orient(animate=1.0) — aligns to principal axes; viewport changes."
+    },
+    {
+      "id": "console.quick.drawray",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.drawray.png",
+      "needsVisual": false,
+      "note": "WidgetMenu wrapping render_dialog. If features/render has registered the render_dialog hook it opens the form; otherwise it appends a warning explaining the missing open seam. Either way the DOM must react."
+    },
+    {
+      "id": "console.quick.unpick",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.unpick.png",
+      "needsVisual": false,
+      "note": "cmd.unpick — clears the editor pick; command echoes to the console."
+    },
+    {
+      "id": "console.quick.deselect",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.deselect.png",
+      "needsVisual": false,
+      "note": "cmd.deselect — drops the active selection; command echoes to the console."
+    },
+    {
+      "id": "console.quick.rock",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.rock.png",
+      "needsVisual": false,
+      "note": "cmd.rock — toggles the rocking animation; command echoes to the console."
+    },
+    {
+      "id": "console.quick.getview",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "get_view",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.getview.png",
+      "needsVisual": false,
+      "note": "Runs get_view 2, quiet=0, then copies get_view(3) to the clipboard, appending a confirmation or (headless) a clipboard-warning line. Either outcome adds feedback text."
+    },
+    {
+      "id": "console.quick.rewind",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.rewind.png",
+      "needsVisual": false,
+      "note": "cmd.rewind — movie transport to frame 1; command echoes to the console."
+    },
+    {
+      "id": "console.quick.backward",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.backward.png",
+      "needsVisual": false,
+      "note": "cmd.backward — step one movie frame back; command echoes to the console."
+    },
+    {
+      "id": "console.quick.mstop",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.mstop.png",
+      "needsVisual": false,
+      "note": "cmd.mstop — stop movie playback; command echoes to the console."
+    },
+    {
+      "id": "console.quick.mplay",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.mplay.png",
+      "needsVisual": false,
+      "note": "cmd.mplay — start movie playback; command echoes to the console."
+    },
+    {
+      "id": "console.quick.forward",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.forward.png",
+      "needsVisual": false,
+      "note": "cmd.forward — step one movie frame forward; command echoes to the console."
+    },
+    {
+      "id": "console.quick.ending",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.ending.png",
+      "needsVisual": false,
+      "note": "cmd.ending — jump to the last movie frame; command echoes to the console."
+    },
+    {
+      "id": "console.quick.mclear",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.mclear.png",
+      "needsVisual": false,
+      "note": "cmd.mclear — clear the movie cache; command echoes to the console."
+    },
+    {
+      "id": "console.quick.builder",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.builder.png",
+      "needsVisual": false,
+      "note": "Lazily imports features/builder and opens the builder dock via openPanel; the DOM should change as the panel mounts."
+    },
+    {
+      "id": "console.quick.properties",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.properties.png",
+      "needsVisual": false,
+      "note": "Lazily imports features/dialogs and opens the properties dialog via openPanel; the DOM should change as the dialog mounts."
+    },
+    {
+      "id": "console.quick.rebuild",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.quick.rebuild.png",
+      "needsVisual": false,
+      "note": "cmd.rebuild — regenerate all geometry; command echoes and the scene re-renders."
+    },
+    {
+      "id": "console.quick.abort",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "console.busy.overlay",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "console.feedback.focus-proxy",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.feedback.focus-proxy.png",
+      "needsVisual": false,
+      "note": "The focus proxy: clicking the output pane with no text selected focuses input#command_line. Focus is not one of the objective checks, so only handler safety is verified."
+    },
+    {
+      "id": "console.feedback.show-earlier",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/console/console.feedback.show-earlier.png",
+      "needsVisual": false,
+      "note": "The windowing affordance .feedback__more-btn lifts the 1200-line render window. It only appears once more than 1200 feedback lines exist; that volume is not reachable deterministically in the audit, so this is recorded for completeness."
+    },
+    {
+      "id": "console.ortho.insert",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.backspace",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" class=\"ortho\" role=\"textbox\" aria-multiline=\"true\" data-testid=\"ortho-console\" aria-label=\"tenmol in-viewport comm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.submit",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.escape",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" class=\"ortho\" role=\"textbox\" aria-multiline=\"true\" data-testid=\"ortho-console\" aria-label=\"tenmol in-viewport comm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.history",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.home-end",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" class=\"ortho\" role=\"textbox\" aria-multiline=\"true\" data-testid=\"ortho-console\" aria-label=\"tenmol in-viewport comm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.truncate",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.delete",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" class=\"ortho\" role=\"textbox\" aria-multiline=\"true\" data-testid=\"ortho-console\" aria-label=\"tenmol in-viewport comm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.tab-complete",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.paste",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" class=\"ortho\" role=\"textbox\" aria-multiline=\"true\" data-testid=\"ortho-console\" aria-label=\"tenmol in-viewport comm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.space-special",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.ctrl-chord",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" class=\"ortho\" role=\"textbox\" aria-multiline=\"true\" data-testid=\"ortho-console\" aria-label=\"tenmol in-viewport comm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.alt-chord",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.ctsh-chord",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" class=\"ortho\" role=\"textbox\" aria-multiline=\"true\" data-testid=\"ortho-console\" aria-label=\"tenmol in-viewport comm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.arrows-cursor",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.click-focus",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" class=\"ortho\" role=\"textbox\" aria-multiline=\"true\" data-testid=\"ortho-console\" aria-label=\"tenmol in-viewport comm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.ortho.paste-event",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"ortho-console\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "console.loop.marquee",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}

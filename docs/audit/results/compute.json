@@ -1,0 +1,824 @@
+{
+  "results": [
+    {
+      "id": "compute.launcher.open",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-testid=\"compute-window\"]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.launcher.open.png",
+      "needsVisual": false,
+      "note": "The compute slot (registry order 90, region overlay) has no menu entry; it is reached only from the overlay-launcher ToggleButton (OverlayLauncher.tsx, icon Cpu, title 'Compute', class overlay-launcher__btn). Clicking it calls togglePanel('compute') which mounts the lazy FloatingWindow (data-testid compute-window)."
+    },
+    {
+      "id": "compute.window.close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"compute-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.window.shade",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.window.shade.png",
+      "needsVisual": false,
+      "note": "FloatingWindow's shade button (title 'shade'/'restore') collapses the window to its title bar (minimised state), hiding the .compute body. domChanged catches the body content dropping out of the layout."
+    },
+    {
+      "id": "compute.window.dragTitle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"compute-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.window.resize",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.window.resize.png",
+      "needsVisual": true,
+      "note": "FloatingWindow .flwin__grip has onPointerDown for resize (min 320x320). LIMITATION: the driver cannot drag the grip; recorded with a hover on the grip and a no-error check as the closest observable."
+    },
+    {
+      "id": "compute.selection.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#cp-sel') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.metric.area",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "pattern": "Å",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "unavailable|cannot|unknown|error|exception",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.metric.area.png",
+      "needsVisual": false,
+      "note": "util.get_area is ported to engine-ts (cmd/util2.ts) — Shrake-Rupley over the selection's object context. Returns a number rendered as '<n> Å²' in the result cell."
+    },
+    {
+      "id": "compute.metric.sasa",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.compute__table .compute__btn') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.metric.mass",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "pattern": "Da",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "unavailable|cannot|unknown|error|exception",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.metric.mass.png",
+      "needsVisual": false,
+      "note": "util.compute_mass is ported to engine-ts (sums the atomic-mass table). Result cell shows '<n> Da'."
+    },
+    {
+      "id": "compute.metric.formalCharges",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.compute__table .compute__btn') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.metric.partialCharges",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "unavailable|cannot|unknown|error|exception",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.metric.partialCharges.png",
+      "needsVisual": false,
+      "note": "util.sum_partial_charges is ported to engine-ts. Returns a float (precision 4), no unit. Affirmed by domChanged + no error string."
+    },
+    {
+      "id": "compute.metric.surfaceResidues",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.compute__table .compute__btn') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.metric.surfaceAtoms",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "pattern": "exposed",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "unavailable|cannot|unknown|error|exception",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.metric.surfaceAtoms.png",
+      "needsVisual": false,
+      "note": "util.find_surface_atoms is ported to engine-ts; selects exposed atoms into 'exposed' and returns that name. Result cell shows 'selection \"exposed\"'."
+    },
+    {
+      "id": "compute.metric.phipsi",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.compute__table .compute__btn') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.metric.labelChains",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "pattern": "done",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "unavailable|cannot|unknown|error|exception",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.metric.labelChains.png",
+      "needsVisual": true,
+      "note": "util.label_chains is ported to engine-ts (labelBy chain). Kind 'action' -> result cell shows 'done'; scene gains per-chain labels."
+    },
+    {
+      "id": "compute.metric.labelSegments",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.compute__table .compute__btn') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.metric.interchain.run",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "pattern": "done",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "unavailable|cannot|unknown|error|exception",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.metric.interchain.run.png",
+      "needsVisual": false,
+      "note": "util.interchain_distances is ported to engine-ts. The panel pre-fills the required cutoff (3.5 Å) so the call never sends the ruinous 'no cutoff' default. Kind 'action' -> 'done'. buildArgs order is [name, selection, cutoff, mode, label, reset]; no missing params, so it runs without a confirm."
+    },
+    {
+      "id": "compute.interchain.name.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#cp-interchain-name') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.interchain.cutoff.input",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "pattern": "done",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "unavailable|cannot|unknown|error|exception",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.interchain.cutoff.input.png",
+      "needsVisual": false,
+      "note": "Number field #cp-interchain-cutoff (default 3.5). A cleared field falls back to the default in buildArgs (empty != 0); typing a finite value passes it through. Verified by running the helper afterwards."
+    },
+    {
+      "id": "compute.interchain.mode.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#cp-interchain-mode') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.interchain.label.toggle",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "#cp-interchain-label:checked",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.interchain.label.toggle.png",
+      "needsVisual": false,
+      "note": "Checkbox #cp-interchain-label (default false). buildArgs sends booleans as 0/1. Clicking it checks the box; asserted via the :checked pseudo-selector being visible."
+    },
+    {
+      "id": "compute.interchain.reset.toggle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#cp-interchain-reset:checked') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.esp.confirmPrompt",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": ".compute__confirm",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "modifies the structure",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.esp.confirmPrompt.png",
+      "needsVisual": false,
+      "note": "esp is kind 'destructive' (is-danger button). press() opens the confirm alertdialog (.compute__confirm) BEFORE any backend call, showing the 'This MODIFIES the structure...' warning and a 'Modify structure and run' button. The prompt is pure client state and works in local mode."
+    },
+    {
+      "id": "compute.esp.cancel",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.compute__table .compute__btn') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.esp.run",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "compute.b2vdw.confirmPrompt",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": ".compute__confirm",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "overwrites the vdw radius",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.b2vdw.confirmPrompt.png",
+      "needsVisual": false,
+      "note": "b2vdw is kind 'action' but carries a warning, so press() routes through the confirm dialog (button label 'Overwrite and run', warning 'This overwrites the VDW radius...'). Client-side prompt, local."
+    },
+    {
+      "id": "compute.b2vdw.run",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.compute__table .compute__btn') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.massAlign.missingTarget",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "pattern": "fill in",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.massAlign.missingTarget.png",
+      "needsVisual": false,
+      "note": "mass_align declares a required text param 'target object' (default ''). missingParams flags it, so pressing with the field blank writes 'fill in: target object' into the result cell and makes NO backend call. Pure client validation."
+    },
+    {
+      "id": "compute.massAlign.run",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#cp-mass_align-target') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.massAlign.enabledOnly.toggle",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "#cp-mass_align-enabled_only:checked",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.massAlign.enabledOnly.toggle.png",
+      "needsVisual": false,
+      "note": "Checkbox #cp-mass_align-enabled_only (default false). Clicking checks it; asserted via the :checked selector."
+    },
+    {
+      "id": "compute.massAlign.maxGap.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#cp-mass_align-max_gap') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.massAlign.note",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "pattern": "upstream bug",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.massAlign.note.png",
+      "needsVisual": false,
+      "note": "mass_align carries a note rendered as .compute__note-inline under the button warning that upstream util.py:256 fails when the scene holds any non-molecule object. Static hint, asserted visible."
+    },
+    {
+      "id": "compute.ffCopy.missingParams",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.compute__table .compute__btn') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.ffCopy.src.input",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.ffCopy.src.input.png",
+      "needsVisual": false,
+      "note": "Text field #cp-ff_copy-src ('from'). Local UI accepts the value; the actual copy needs the bridge (see compute.ffCopy.run). LIMITATION: an input's controlled value is not reflected in body text, so with only the field filled the objective assertion is limited to no-error; the value's effect is exercised in the run spec."
+    },
+    {
+      "id": "compute.ffCopy.dst.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#cp-ff_copy-dst') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.ffCopy.run",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "compute.shaders.run",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "compute.sasaRel.confirmPrompt",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": ".compute__confirm",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "writes the computed value",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.sasaRel.confirmPrompt.png",
+      "needsVisual": false,
+      "note": "sasa_rel is kind 'table' with a warning, so press() opens the confirm dialog ('Overwrite and run', warning 'This writes the computed value onto every atom...'). Client-side, local."
+    },
+    {
+      "id": "compute.sasaRel.run",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "compute.sasaRel.seleClick",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "compute.sasaRel.state.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#cp-sasa_rel-state') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.sasaRel.var.input",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.sasaRel.var.input.png",
+      "needsVisual": false,
+      "note": "Text field #cp-sasa_rel-var (default 'b') names the atom property the value is written onto. Same standalone limitation as the state field."
+    },
+    {
+      "id": "compute.sasaRel.subsele.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#cp-sasa_rel-subsele') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "compute.sasaRel.vis.toggle",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "#cp-sasa_rel-vis:checked",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/compute/compute.sasaRel.vis.toggle.png",
+      "needsVisual": false,
+      "note": "Checkbox #cp-sasa_rel-vis (default false) toggles the 'label and colour' visualisation flag. Clicking checks it; asserted via the :checked selector (local UI state)."
+    },
+    {
+      "id": "compute.footer.note",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.compute__note') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    }
+  ]
+}

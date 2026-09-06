@@ -1,0 +1,2123 @@
+{
+  "results": [
+    {
+      "id": "wizards.internal-gui.enable",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-launcher\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizlaunch__toggle",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.internal-gui.enable.png",
+      "needsVisual": false,
+      "note": "Typing `set internal_gui, 1` turns the right-hand column on; the wizards feature (launcher bar) mounts inside it."
+    },
+    {
+      "id": "wizards.launcher.toggle-open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizlaunch__menu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "All modules",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launcher.toggle-open.png",
+      "needsVisual": false,
+      "note": "Clicking the ▸ Wizard toggle opens the catalog-fed launcher menu (populated from wizards.catalog)."
+    },
+    {
+      "id": "wizards.launcher.all-modules-expand",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizlaunch__all",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "annotation",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launcher.all-modules-expand.png",
+      "needsVisual": false,
+      "note": "The \"▸ All modules (N)\" button expands the full catalog.wizards list."
+    },
+    {
+      "id": "wizards.launch.all.annotation",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*annotation",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.annotation.png",
+      "needsVisual": false,
+      "note": "Clicking the \"annotation\" button dispatches \"wizard annotation\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.appearance",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*appearance",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.appearance.png",
+      "needsVisual": false,
+      "note": "Clicking the \"appearance\" button dispatches \"wizard appearance\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.benchmark",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*benchmark",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.benchmark.png",
+      "needsVisual": false,
+      "note": "Clicking the \"benchmark\" button dispatches \"wizard benchmark\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.box",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*box",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.box.png",
+      "needsVisual": false,
+      "note": "Clicking the \"box\" button dispatches \"wizard box\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.charge",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "assign a charge",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.charge.png",
+      "needsVisual": false,
+      "note": "Clicking the \"charge\" button dispatches \"wizard charge\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.cleanup",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "clean up",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.cleanup.png",
+      "needsVisual": false,
+      "note": "Clicking the \"cleanup\" button dispatches \"wizard cleanup\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.command",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*command",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.command.png",
+      "needsVisual": false,
+      "note": "Clicking the \"command\" button dispatches \"wizard command\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.demo",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.demo.png",
+      "needsVisual": false,
+      "note": "Clicking the \"demo\" button dispatches \"wizard demo\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.density",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "map object to contour",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.density.png",
+      "needsVisual": false,
+      "note": "Clicking the \"density\" button dispatches \"wizard density\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.distance",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "two atoms to measure a distance",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.distance.png",
+      "needsVisual": false,
+      "note": "Clicking the \"distance\" button dispatches \"wizard distance\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.dragging",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*dragging",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.dragging.png",
+      "needsVisual": false,
+      "note": "Clicking the \"dragging\" button dispatches \"wizard dragging\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.filter",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "classify each molecule",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.filter.png",
+      "needsVisual": false,
+      "note": "Clicking the \"filter\" button dispatches \"wizard filter\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.label",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "atoms to label",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.label.png",
+      "needsVisual": false,
+      "note": "Clicking the \"label\" button dispatches \"wizard label\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.measurement",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "measure distances",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.measurement.png",
+      "needsVisual": false,
+      "note": "Clicking the \"measurement\" button dispatches \"wizard measurement\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.message",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*message",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.message.png",
+      "needsVisual": false,
+      "note": "Clicking the \"message\" button dispatches \"wizard message\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.mutagenesis",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "residue to mutate",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.mutagenesis.png",
+      "needsVisual": false,
+      "note": "Clicking the \"mutagenesis\" button dispatches \"wizard mutagenesis\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.nucmutagenesis",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*nucmutagenesis",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.nucmutagenesis.png",
+      "needsVisual": false,
+      "note": "Clicking the \"nucmutagenesis\" button dispatches \"wizard nucmutagenesis\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.openvr",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*openvr",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.openvr.png",
+      "needsVisual": false,
+      "note": "Clicking the \"openvr\" button dispatches \"wizard openvr\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.pair_fit",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mobile object",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.pair_fit.png",
+      "needsVisual": false,
+      "note": "Clicking the \"pair_fit\" button dispatches \"wizard pair_fit\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.pseudoatom",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*pseudoatom",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.pseudoatom.png",
+      "needsVisual": false,
+      "note": "Clicking the \"pseudoatom\" button dispatches \"wizard pseudoatom\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.renaming",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*renaming",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.renaming.png",
+      "needsVisual": false,
+      "note": "Clicking the \"renaming\" button dispatches \"wizard renaming\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.sculpting",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "atoms to sculpt",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.sculpting.png",
+      "needsVisual": false,
+      "note": "Clicking the \"sculpting\" button dispatches \"wizard sculpting\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.security",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*security",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.security.png",
+      "needsVisual": false,
+      "note": "Clicking the \"security\" button dispatches \"wizard security\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.stereodemo",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*stereodemo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.stereodemo.png",
+      "needsVisual": false,
+      "note": "Clicking the \"stereodemo\" button dispatches \"wizard stereodemo\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.all.toggle",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*toggle",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.all.toggle.png",
+      "needsVisual": false,
+      "note": "Clicking the \"toggle\" button dispatches \"wizard toggle\"; the wizard pushes onto the stack and its prompt overlay renders."
+    },
+    {
+      "id": "wizards.launch.menu.appearance",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*appearance",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.menu.appearance.png",
+      "needsVisual": false,
+      "note": "The curated menubar item \"Appearance\" runs \"wizard appearance\" via onRun (same command line the Qt menu uses)."
+    },
+    {
+      "id": "wizards.launch.menu.measurement",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "measure distances",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.menu.measurement.png",
+      "needsVisual": false,
+      "note": "The curated menubar item \"Measurement\" runs \"wizard measurement\" via onRun (same command line the Qt menu uses)."
+    },
+    {
+      "id": "wizards.launch.menu.pair_fit",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "mobile object",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.menu.pair_fit.png",
+      "needsVisual": false,
+      "note": "The curated menubar item \"Pair Fitting\" runs \"wizard pair_fit\" via onRun (same command line the Qt menu uses)."
+    },
+    {
+      "id": "wizards.launch.menu.density",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "map object to contour",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.menu.density.png",
+      "needsVisual": false,
+      "note": "The curated menubar item \"Density\" runs \"wizard density\" via onRun (same command line the Qt menu uses)."
+    },
+    {
+      "id": "wizards.launch.menu.filter",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "classify each molecule",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.menu.filter.png",
+      "needsVisual": false,
+      "note": "The curated menubar item \"Filter\" runs \"wizard filter\" via onRun (same command line the Qt menu uses)."
+    },
+    {
+      "id": "wizards.launch.menu.sculpting",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "atoms to sculpt",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.menu.sculpting.png",
+      "needsVisual": false,
+      "note": "The curated menubar item \"Sculpting\" runs \"wizard sculpting\" via onRun (same command line the Qt menu uses)."
+    },
+    {
+      "id": "wizards.launch.menu.label",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "atoms to label",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.menu.label.png",
+      "needsVisual": false,
+      "note": "The curated menubar item \"Label\" runs \"wizard label\" via onRun (same command line the Qt menu uses)."
+    },
+    {
+      "id": "wizards.launch.menu.charge",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "assign a charge",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.menu.charge.png",
+      "needsVisual": false,
+      "note": "The curated menubar item \"Charge\" runs \"wizard charge\" via onRun (same command line the Qt menu uses)."
+    },
+    {
+      "id": "wizards.launcher.submenu.demo-expand",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Representations",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launcher.submenu.demo-expand.png",
+      "needsVisual": false,
+      "note": "Clicking the \"▸ Demo\" submenu expander reveals its leaf items (Representations … End Demonstration)."
+    },
+    {
+      "id": "wizards.launcher.submenu.mutagenesis-expand",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Nucleic Acids",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launcher.submenu.mutagenesis-expand.png",
+      "needsVisual": false,
+      "note": "Clicking the \"▸ Mutagenesis\" submenu expander reveals Protein / Nucleic Acids leaves."
+    },
+    {
+      "id": "wizards.launch.demo.reps",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.reps.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Representations\" dispatches \"wizard demo, reps\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.cartoon",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.cartoon.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Cartoon Ribbons\" dispatches \"wizard demo, cartoon\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.roving",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.roving.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Roving Detail\" dispatches \"wizard demo, roving\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.roving_density",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.roving_density.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Roving Density\" dispatches \"wizard demo, roving_density\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.trans",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.trans.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Transparency\" dispatches \"wizard demo, trans\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.ray",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.ray.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Ray Tracing\" dispatches \"wizard demo, ray\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.sculpt",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.sculpt.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Sculpting\" dispatches \"wizard demo, sculpt\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.anime",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.anime.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Scripted Animation\" dispatches \"wizard demo, anime\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.elec",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.elec.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Electrostatics\" dispatches \"wizard demo, elec\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.cgo",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.cgo.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Compiled Graphics Objects\" dispatches \"wizard demo, cgo\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.raster3d",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*demo",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.raster3d.png",
+      "needsVisual": false,
+      "note": "Demo submenu leaf \"Molscript/Raster3D Input\" dispatches \"wizard demo, raster3d\". Local engine ignores the demo argument, so all variants launch the demo wizard."
+    },
+    {
+      "id": "wizards.launch.demo.finish",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*finish",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.demo.finish.png",
+      "needsVisual": false,
+      "note": "End Demonstration runs \"replace_wizard demo, finish\", swapping the active demo wizard in place."
+    },
+    {
+      "id": "wizards.launch.menu.nucmutagenesis",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Wizard:\\s*nucmutagenesis",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launch.menu.nucmutagenesis.png",
+      "needsVisual": false,
+      "note": "The Mutagenesis submenu leaf \"Nucleic Acids\" dispatches \"wizard nucmutagenesis\"."
+    },
+    {
+      "id": "wizards.panel.prompt-only-message",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "prompt-only wizard",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-panel\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.panel.prompt-only-message.png",
+      "needsVisual": false,
+      "note": "Every local wizard returns get_panel()==[], so the panel renders the \"prompt-only wizard — no panel rows\" fallback."
+    },
+    {
+      "id": "wizards.panel.stack-depth",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "stack\\s*2",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".wizpanel__depth",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.panel.stack-depth.png",
+      "needsVisual": false,
+      "note": "Pushing two wizards makes depth>1, so the panel head renders the stack-depth badge (WizardPanel §depth)."
+    },
+    {
+      "id": "wizards.prompt.visible-in-viewport",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "measure distances",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.prompt.visible-in-viewport.png",
+      "needsVisual": false,
+      "note": "get_prompt() lines render through a portal into .shell__viewport as the green wizard prompt overlay."
+    },
+    {
+      "id": "wizards.prompt.hidden-when-no-wizard",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"wizard-prompt\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"wizard-panel\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.prompt.hidden-when-no-wizard.png",
+      "needsVisual": false,
+      "note": "With depth==0 the panel returns null and the prompt (promptMode 0/empty) is suppressed."
+    },
+    {
+      "id": "wizards.launcher.dismiss",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"wizard-panel\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/wizards/wizards.launcher.dismiss.png",
+      "needsVisual": false,
+      "note": "The Dismiss button (shown only while active) calls wizards.dismiss → pops the top wizard; a single-wizard stack empties and the panel disappears."
+    },
+    {
+      "id": "wizards.events.pick-input",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend,picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.events.do-pick",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend,picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.events.do-pick-bond",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend,picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.events.do-select",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend,picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.keys.key-capture",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.panel.button-row-exec",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.panel.popup-row-open",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.panel.popup-menu-leaf",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.panel.popup-menu-submenu",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.panel.popup-menu-escape",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.panel.measurement-menu",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.panel.text-row",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "wizards.panel.blank-row",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}

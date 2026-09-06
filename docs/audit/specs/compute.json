@@ -1,0 +1,835 @@
+{
+  "area": "compute",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "compute.launcher.open",
+      "feature": "compute",
+      "label": "Overlay launcher ▸ Compute opens the panel",
+      "kind": "toggle",
+      "requires": [],
+      "note": "The compute slot (registry order 90, region overlay) has no menu entry; it is reached only from the overlay-launcher ToggleButton (OverlayLauncher.tsx, icon Cpu, title 'Compute', class overlay-launcher__btn). Clicking it calls togglePanel('compute') which mounts the lazy FloatingWindow (data-testid compute-window).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"compute-window\"]", "ms": 3000 }
+      ],
+      "checks": [{ "check": "selectorVisible", "selector": "[data-testid=\"compute-window\"]" }],
+      "settleMs": 500
+    },
+    {
+      "id": "compute.window.close",
+      "feature": "compute",
+      "label": "Compute window ▸ close button",
+      "kind": "button",
+      "requires": [],
+      "note": "FloatingWindow renders a close IconButton (title/aria-label 'close') that calls onClose -> closePanel('compute'), unmounting the slot.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"compute-window\"]", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid=\"compute-window\"] button[title=\"close\"]" }
+      ],
+      "checks": [{ "check": "selectorHidden", "selector": "[data-testid=\"compute-window\"]" }],
+      "settleMs": 500
+    },
+    {
+      "id": "compute.window.shade",
+      "feature": "compute",
+      "label": "Compute window ▸ shade/restore (minimise) button",
+      "kind": "toggle",
+      "requires": [],
+      "note": "FloatingWindow's shade button (title 'shade'/'restore') collapses the window to its title bar (minimised state), hiding the .compute body. domChanged catches the body content dropping out of the layout.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"compute-window\"]", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid=\"compute-window\"] button[title=\"shade\"]" }
+      ],
+      "checks": [{ "check": "domChanged" }],
+      "settleMs": 500
+    },
+    {
+      "id": "compute.window.dragTitle",
+      "feature": "compute",
+      "label": "Compute window ▸ drag the title bar to move it",
+      "kind": "drag",
+      "requires": [],
+      "note": "FloatingWindow .flwin__title has onPointerDown for drag-move (clamped on-screen, persisted under persistKey 'compute'). LIMITATION: the audit driver has no press-hold-move primitive, so the free drag cannot be reproduced; recorded with a plain click on the title bar and a no-error check as the closest observable.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"compute-window\"]", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"compute-window\"] .flwin__title" }],
+      "checks": [{ "check": "noPageError" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.window.resize",
+      "feature": "compute",
+      "label": "Compute window ▸ resize grip",
+      "kind": "drag",
+      "requires": [],
+      "note": "FloatingWindow .flwin__grip has onPointerDown for resize (min 320x320). LIMITATION: the driver cannot drag the grip; recorded with a hover on the grip and a no-error check as the closest observable.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "[data-testid=\"compute-window\"]", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "hover", "selector": "[data-testid=\"compute-window\"] .flwin__grip" }],
+      "checks": [{ "check": "noPageError" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.selection.input",
+      "feature": "compute",
+      "label": "Selection box drives the metric call",
+      "kind": "input",
+      "requires": [],
+      "note": "The shared selection TextInput (#cp-sel, default 'polymer') is passed as the selection arg of every helper via buildArgs. Typing a narrower selection and running Molecular surface area proves the value flows into util.get_area (result cell shows a number + Å²).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-sel", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "#cp-sel", "text": "name CA" },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 0 }
+      ],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "Å" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.area",
+      "feature": "compute",
+      "label": "Molecular surface area (util.get_area)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.get_area is ported to engine-ts (cmd/util2.ts) — Shrake-Rupley over the selection's object context. Returns a number rendered as '<n> Å²' in the result cell.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 0 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "Å" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.sasa",
+      "feature": "compute",
+      "label": "Solvent-accessible surface area (util.get_sasa)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.get_sasa is ported to engine-ts (dot_solvent forced on). Result cell shows '<n> Å²'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 1 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "Å" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.mass",
+      "feature": "compute",
+      "label": "Mass (util.compute_mass)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.compute_mass is ported to engine-ts (sums the atomic-mass table). Result cell shows '<n> Da'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 2 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "Da" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.formalCharges",
+      "feature": "compute",
+      "label": "Sum of formal charges (util.sum_formal_charges)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.sum_formal_charges is ported to engine-ts. Returns an integer (precision 0), no unit; the result cell text changes from empty to the number. Affirmed by domChanged + no error string.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 3 }],
+      "checks": [
+        { "check": "domChanged" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.partialCharges",
+      "feature": "compute",
+      "label": "Sum of partial charges (util.sum_partial_charges)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.sum_partial_charges is ported to engine-ts. Returns a float (precision 4), no unit. Affirmed by domChanged + no error string.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 4 }],
+      "checks": [
+        { "check": "domChanged" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.surfaceResidues",
+      "feature": "compute",
+      "label": "Find surface residues (util.find_surface_residues)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.find_surface_residues is ported to engine-ts; it selects exposed residues into 'exposed' and returns that name. Kind 'selection' -> result cell shows 'selection \"exposed\"'. quiet is not passed (false).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 5 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "exposed" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.surfaceAtoms",
+      "feature": "compute",
+      "label": "Find surface atoms (util.find_surface_atoms)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.find_surface_atoms is ported to engine-ts; selects exposed atoms into 'exposed' and returns that name. Result cell shows 'selection \"exposed\"'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 6 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "exposed" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.phipsi",
+      "feature": "compute",
+      "label": "Phi / psi of a residue (util.phipsi)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.phipsi is ported to engine-ts; returns (phi, psi) of the first residue of the selection, either possibly null at a chain terminus. formatResult renders 'phi <a>, psi <b>' (n/a for a null angle). Affirmed by feedbackMatches 'phi'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 11 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "phi" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.labelChains",
+      "feature": "compute",
+      "label": "Label chains (util.label_chains)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.label_chains is ported to engine-ts (labelBy chain). Kind 'action' -> result cell shows 'done'; scene gains per-chain labels.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 9 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.labelSegments",
+      "feature": "compute",
+      "label": "Label segments (util.label_segments)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.label_segments is ported to engine-ts (labelBy segi). Kind 'action' -> result cell shows 'done'.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 10 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.metric.interchain.run",
+      "feature": "compute",
+      "label": "Interchain distances (util.interchain_distances) with default cutoff",
+      "kind": "button",
+      "requires": [],
+      "note": "util.interchain_distances is ported to engine-ts. The panel pre-fills the required cutoff (3.5 Å) so the call never sends the ruinous 'no cutoff' default. Kind 'action' -> 'done'. buildArgs order is [name, selection, cutoff, mode, label, reset]; no missing params, so it runs without a confirm.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 13 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "compute.interchain.name.input",
+      "feature": "compute",
+      "label": "Interchain ▸ distance object name field",
+      "kind": "input",
+      "requires": [],
+      "note": "Text field #cp-interchain-name (default 'interchain') names the output distance object; it is the first positional arg. Typing a name then running the helper proves the value flows into the call.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-interchain-name", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "#cp-interchain-name", "text": "xd" },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 13 }
+      ],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "compute.interchain.cutoff.input",
+      "feature": "compute",
+      "label": "Interchain ▸ cutoff (Å) number field",
+      "kind": "input",
+      "requires": [],
+      "note": "Number field #cp-interchain-cutoff (default 3.5). A cleared field falls back to the default in buildArgs (empty != 0); typing a finite value passes it through. Verified by running the helper afterwards.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-interchain-cutoff", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "#cp-interchain-cutoff", "text": "4" },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 13 }
+      ],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "compute.interchain.mode.input",
+      "feature": "compute",
+      "label": "Interchain ▸ mode number field",
+      "kind": "input",
+      "requires": [],
+      "note": "Number field #cp-interchain-mode (default 0). Verified by running the helper afterwards.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-interchain-mode", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "#cp-interchain-mode", "text": "0" },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 13 }
+      ],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "compute.interchain.label.toggle",
+      "feature": "compute",
+      "label": "Interchain ▸ show labels checkbox",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Checkbox #cp-interchain-label (default false). buildArgs sends booleans as 0/1. Clicking it checks the box; asserted via the :checked pseudo-selector being visible.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-interchain-label", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "#cp-interchain-label" }],
+      "checks": [{ "check": "selectorVisible", "selector": "#cp-interchain-label:checked" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.interchain.reset.toggle",
+      "feature": "compute",
+      "label": "Interchain ▸ reset first checkbox",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Checkbox #cp-interchain-reset (default true). Clicking it unchecks the box; asserted via the :checked selector no longer being visible.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-interchain-reset:checked", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "#cp-interchain-reset" }],
+      "checks": [{ "check": "selectorHidden", "selector": "#cp-interchain-reset:checked" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.esp.confirmPrompt",
+      "feature": "compute",
+      "label": "Protein vacuum ESP ▸ destructive confirm prompt",
+      "kind": "button",
+      "requires": [],
+      "note": "esp is kind 'destructive' (is-danger button). press() opens the confirm alertdialog (.compute__confirm) BEFORE any backend call, showing the 'This MODIFIES the structure...' warning and a 'Modify structure and run' button. The prompt is pure client state and works in local mode.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 7 }],
+      "checks": [
+        { "check": "selectorVisible", "selector": ".compute__confirm" },
+        { "check": "feedbackMatches", "pattern": "modifies the structure" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "compute.esp.cancel",
+      "feature": "compute",
+      "label": "Protein vacuum ESP ▸ Cancel dismisses the prompt",
+      "kind": "button",
+      "requires": [],
+      "note": "The confirm dialog's Cancel button (.compute__confirm .compute__btn nth 0) sets confirming=null, closing the dialog without running anything.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 7 },
+        { "do": "waitFor", "selector": ".compute__confirm", "ms": 2000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__confirm .compute__btn", "nth": 0 }],
+      "checks": [{ "check": "selectorHidden", "selector": ".compute__confirm" }],
+      "settleMs": 500
+    },
+    {
+      "id": "compute.esp.run",
+      "feature": "compute",
+      "label": "Protein vacuum ESP ▸ confirm and run (util.protein_vacuum_esp)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "util.protein_vacuum_esp is NOT ported to engine-ts (only protein_assign_charges_and_radii is). In local mode the confirmed call has no handler and errors. On the real bridge it deletes alt-confs/unassigned residues and creates _e_chg/_e_map/_e_pot, and the diagnostics it prints are captured into the .compute__diag details next to the result (origin=='server' lines only, which local feedback does not produce).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 7 },
+        { "do": "waitFor", "selector": ".compute__confirm", "ms": 2000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__confirm .compute__btn", "nth": 1 }],
+      "checks": [
+        { "check": "domChanged" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 1200
+    },
+    {
+      "id": "compute.b2vdw.confirmPrompt",
+      "feature": "compute",
+      "label": "B-factors to VDW radii ▸ overwrite confirm prompt",
+      "kind": "button",
+      "requires": [],
+      "note": "b2vdw is kind 'action' but carries a warning, so press() routes through the confirm dialog (button label 'Overwrite and run', warning 'This overwrites the VDW radius...'). Client-side prompt, local.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 12 }],
+      "checks": [
+        { "check": "selectorVisible", "selector": ".compute__confirm" },
+        { "check": "feedbackMatches", "pattern": "overwrites the vdw radius" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "compute.b2vdw.run",
+      "feature": "compute",
+      "label": "B-factors to VDW radii ▸ confirm and run (util.b2vdw)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.b2vdw IS ported to engine-ts (copies each atom's B into its vdw override). Confirming ('Overwrite and run') runs it; kind 'action' -> result cell 'done'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 12 },
+        { "do": "waitFor", "selector": ".compute__confirm", "ms": 2000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__confirm .compute__btn", "nth": 1 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "compute.massAlign.missingTarget",
+      "feature": "compute",
+      "label": "Align all objects to target ▸ empty target validation",
+      "kind": "button",
+      "requires": [],
+      "note": "mass_align declares a required text param 'target object' (default ''). missingParams flags it, so pressing with the field blank writes 'fill in: target object' into the result cell and makes NO backend call. Pure client validation.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 14 }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "fill in" }],
+      "settleMs": 500
+    },
+    {
+      "id": "compute.massAlign.run",
+      "feature": "compute",
+      "label": "Align all objects to target ▸ run with a target (util.mass_align)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.mass_align is ported to engine-ts. With the preloaded object as target and no other objects loaded there is nothing else to align, so it returns 0 and the cell shows 'done' (kind 'action'). This exercises both the target input and the run path.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-mass_align-target", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "#cp-mass_align-target", "text": "1crn" },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 14 }
+      ],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "compute.massAlign.enabledOnly.toggle",
+      "feature": "compute",
+      "label": "Align all objects ▸ enabled objects only checkbox",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Checkbox #cp-mass_align-enabled_only (default false). Clicking checks it; asserted via the :checked selector.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-mass_align-enabled_only", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "#cp-mass_align-enabled_only" }],
+      "checks": [{ "check": "selectorVisible", "selector": "#cp-mass_align-enabled_only:checked" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.massAlign.maxGap.input",
+      "feature": "compute",
+      "label": "Align all objects ▸ max gap number field",
+      "kind": "input",
+      "requires": [],
+      "note": "Number field #cp-mass_align-max_gap (default 50). Typing a value then running (with a target) proves it is accepted without error.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-mass_align-max_gap", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "#cp-mass_align-max_gap", "text": "40" },
+        { "do": "type", "selector": "#cp-mass_align-target", "text": "1crn" },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 14 }
+      ],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "compute.massAlign.note",
+      "feature": "compute",
+      "label": "Align all objects ▸ inline upstream-bug note",
+      "kind": "other",
+      "requires": [],
+      "note": "mass_align carries a note rendered as .compute__note-inline under the button warning that upstream util.py:256 fails when the scene holds any non-molecule object. Static hint, asserted visible.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "waitFor", "selector": ".compute__note-inline", "ms": 2000 }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "upstream bug" }],
+      "settleMs": 300
+    },
+    {
+      "id": "compute.ffCopy.missingParams",
+      "feature": "compute",
+      "label": "Copy force-field parameters ▸ empty from/to validation",
+      "kind": "button",
+      "requires": [],
+      "note": "ff_copy declares two required text params ('from', 'to', both default ''). Pressing with them blank writes 'fill in: from, to' into the result cell and makes NO backend call. Pure client validation, local.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 15 }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "fill in" }],
+      "settleMs": 500
+    },
+    {
+      "id": "compute.ffCopy.src.input",
+      "feature": "compute",
+      "label": "Copy force-field parameters ▸ from field",
+      "kind": "input",
+      "requires": [],
+      "note": "Text field #cp-ff_copy-src ('from'). Local UI accepts the value; the actual copy needs the bridge (see compute.ffCopy.run). LIMITATION: an input's controlled value is not reflected in body text, so with only the field filled the objective assertion is limited to no-error; the value's effect is exercised in the run spec.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-ff_copy-src", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "type", "selector": "#cp-ff_copy-src", "text": "polymer" }],
+      "checks": [{ "check": "noConsoleError" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.ffCopy.dst.input",
+      "feature": "compute",
+      "label": "Copy force-field parameters ▸ to field",
+      "kind": "input",
+      "requires": [],
+      "note": "Text field #cp-ff_copy-dst ('to'). Same limitation as the 'from' field; value effect is exercised in the run spec.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-ff_copy-dst", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "type", "selector": "#cp-ff_copy-dst", "text": "polymer" }],
+      "checks": [{ "check": "noConsoleError" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.ffCopy.run",
+      "feature": "compute",
+      "label": "Copy force-field parameters ▸ run (util.ff_copy)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "util.ff_copy is NOT ported to engine-ts, so the call has no local handler. On the bridge it copies FF params by atom name from src to dst. With both fields filled, missingParams passes and the call is dispatched.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-ff_copy-src", "ms": 3000 },
+        { "do": "type", "selector": "#cp-ff_copy-src", "text": "polymer" },
+        { "do": "type", "selector": "#cp-ff_copy-dst", "text": "polymer" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 15 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "compute.shaders.run",
+      "feature": "compute",
+      "label": "Enable all shaders (util.enable_all_shaders)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "util.enable_all_shaders is NOT ported to engine-ts (takes no args), so there is no local handler; in local mode the call errors. On the bridge it flips the shader settings. No confirm and no params, so pressing dispatches directly.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 16 }],
+      "checks": [
+        { "check": "feedbackMatches", "pattern": "done" },
+        { "check": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|exception" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "compute.sasaRel.confirmPrompt",
+      "feature": "compute",
+      "label": "Relative SASA per residue ▸ overwrite confirm prompt",
+      "kind": "button",
+      "requires": [],
+      "note": "sasa_rel is kind 'table' with a warning, so press() opens the confirm dialog ('Overwrite and run', warning 'This writes the computed value onto every atom...'). Client-side, local.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__table .compute__btn", "nth": 8 }],
+      "checks": [
+        { "check": "selectorVisible", "selector": ".compute__confirm" },
+        { "check": "feedbackMatches", "pattern": "writes the computed value" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "compute.sasaRel.run",
+      "feature": "compute",
+      "label": "Relative SASA per residue ▸ confirm and run (cmd.tenmol_compute.sasa_relative)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Confirming calls cmd.tenmol_compute.hello and, on failure, sends the Python bootstrap 'import tenmol_bridge.panels.compute as _tc; _tc.install()'. Both the shim namespace and the Python 'do' are bridge-only; engine-ts has a 'get_sasa_relative' command but NOT cmd.tenmol_compute.*, so this is untestable in local mode. On the bridge the reply renders the per-residue .compute__sasa table.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 8 },
+        { "do": "waitFor", "selector": ".compute__confirm", "ms": 2000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__confirm .compute__btn", "nth": 1 }],
+      "checks": [{ "check": "selectorVisible", "selector": ".compute__sasa" }],
+      "settleMs": 1500
+    },
+    {
+      "id": "compute.sasaRel.seleClick",
+      "feature": "compute",
+      "label": "Relative SASA per residue ▸ click a residue key to select it",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Each SasaTable row renders a .compute__sasa-sele button whose click runs `select sele, <sele>` (the row's spelled-out 4-tuple key). Reaching it requires the table, which needs the bridge shim (see compute.sasaRel.run).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__table .compute__btn", "ms": 3000 },
+        { "do": "click", "selector": ".compute__table .compute__btn", "nth": 8 },
+        { "do": "waitFor", "selector": ".compute__confirm", "ms": 2000 },
+        { "do": "click", "selector": ".compute__confirm .compute__btn", "nth": 1 },
+        { "do": "waitFor", "selector": ".compute__sasa-sele", "ms": 4000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".compute__sasa-sele", "nth": 0 }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "select" }],
+      "settleMs": 700
+    },
+    {
+      "id": "compute.sasaRel.state.input",
+      "feature": "compute",
+      "label": "Relative SASA ▸ state number field",
+      "kind": "input",
+      "requires": [],
+      "note": "Number field #cp-sasa_rel-state (default 1) feeds the state positional arg. Local UI accepts it; the run needs the bridge. LIMITATION: input value is client state not in body text, so a standalone objective check is limited to no-error.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-sasa_rel-state", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "type", "selector": "#cp-sasa_rel-state", "text": "1" }],
+      "checks": [{ "check": "noConsoleError" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.sasaRel.var.input",
+      "feature": "compute",
+      "label": "Relative SASA ▸ property (var) text field",
+      "kind": "input",
+      "requires": [],
+      "note": "Text field #cp-sasa_rel-var (default 'b') names the atom property the value is written onto. Same standalone limitation as the state field.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-sasa_rel-var", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "type", "selector": "#cp-sasa_rel-var", "text": "q" }],
+      "checks": [{ "check": "noConsoleError" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.sasaRel.subsele.input",
+      "feature": "compute",
+      "label": "Relative SASA ▸ sub-selection text field",
+      "kind": "input",
+      "requires": [],
+      "note": "Text field #cp-sasa_rel-subsele (default 'all'). Same standalone limitation as the other sasa_rel fields.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-sasa_rel-subsele", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "type", "selector": "#cp-sasa_rel-subsele", "text": "polymer" }],
+      "checks": [{ "check": "noConsoleError" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.sasaRel.vis.toggle",
+      "feature": "compute",
+      "label": "Relative SASA ▸ label and colour checkbox",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Checkbox #cp-sasa_rel-vis (default false) toggles the 'label and colour' visualisation flag. Clicking checks it; asserted via the :checked selector (local UI state).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": "#cp-sasa_rel-vis", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "#cp-sasa_rel-vis" }],
+      "checks": [{ "check": "selectorVisible", "selector": "#cp-sasa_rel-vis:checked" }],
+      "settleMs": 400
+    },
+    {
+      "id": "compute.footer.note",
+      "feature": "compute",
+      "label": "Panel footer explanatory note",
+      "kind": "other",
+      "requires": [],
+      "note": "The panel footer (.compute__note) explains that whatever PyMOL printed while a helper ran is captured next to its result and that failures are shown inline. Static copy, asserted visible.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" },
+        { "do": "waitFor", "selector": ".compute__note", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "waitFor", "selector": ".compute__note", "ms": 2000 }],
+      "checks": [{ "check": "feedbackMatches", "pattern": "each helper" }],
+      "settleMs": 300
+    }
+  ]
+}

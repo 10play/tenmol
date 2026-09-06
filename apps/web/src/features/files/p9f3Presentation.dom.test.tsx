@@ -6,10 +6,12 @@
  * `presentation_preset` (grep finds only `filesApi.ts` and its unit test), so
  * both the fix and the preset are an RPC with no caller".
  *
- * This drives the only route that reaches `cmd.load` for a session file — the
- * File ▾ ▸ Open… picker (`FilesPanel.runStep` → partial gate → `loadPlain`) —
- * and asserts the whole macOS-handler sequence in the order
- * `pymol_qt_gui.py:1140-1160` runs it: plan, preset, THEN load.
+ * This drives the route that reaches `cmd.load` for a session file. Since task
+ * I1 made File ▾ ▸ Open… a browser-native contents load, the session pipeline
+ * (`FilesPanel.runStep` → partial gate → `loadPlain`) is now entered through
+ * Open Recent / a deep link (`requestFilesOpen` → `openPaths`), which still
+ * classifies a server path — and asserts the whole macOS-handler sequence in
+ * the order `pymol_qt_gui.py:1140-1160` runs it: plan, preset, THEN load.
  *
  * MUTATION-TESTED: deleting the `enterPresentation(...)` call from `loadPlain`
  * makes four of these five fail; making it ask the plan's `presentation` flag
@@ -22,6 +24,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FilesPanel } from './FilesPanel';
+import { FILES_ACTION_EVENT, FILES_OPEN_PATHS } from './menuHooks';
 
 const appendClient = vi.fn();
 const run = vi.fn().mockResolvedValue(undefined);
@@ -150,28 +153,29 @@ const settle = async () => {
 };
 
 const buttons = () => [...container.querySelectorAll('button')];
-const click = (match: (b: HTMLButtonElement) => boolean, what: string) => {
-  const button = buttons().find(match);
-  expect(button, `no button: ${what}`).toBeTruthy();
-  act(() => button?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
-};
 const names = () => call.mock.calls.map((c) => c[0] as string);
 const said = () => appendClient.mock.calls.map((c) => String(c[0]));
 
-/** File ▾ ▸ Open… ▸ pick `name` ▸ Open. */
+/**
+ * Open `/work/name` through Open Recent / a deep link — the route that still
+ * classifies a server path in a browser-only build (`requestFilesOpen` →
+ * `openPaths` → `plan_open` → partial gate → `loadPlain`). The File ▾ ▸ Open…
+ * picker now loads browser file CONTENTS directly (task I1), so it no longer
+ * reaches this session pipeline.
+ */
 async function openViaPicker(name: string) {
   act(() => root.render(<FilesPanel />));
   await settle();
-  click((b) => b.textContent === 'File ▾', 'the File menu button');
-  await settle();
-  click((b) => b.getAttribute('data-testid') === 'files-menu-open', 'Open…');
-  await settle();
-  const row = [...container.querySelectorAll('.fpick__row')].find((b) =>
-    (b.textContent ?? '').startsWith(name),
+  // The event `requestFilesOpen` dispatches once the overlay slot has mounted —
+  // fired directly here because this harness renders `FilesPanel` without the
+  // panelHooks Host that would otherwise drain the intent.
+  act(() =>
+    window.dispatchEvent(
+      new CustomEvent(FILES_ACTION_EVENT, {
+        detail: { action: FILES_OPEN_PATHS, paths: [`/work/${name}`] },
+      }),
+    ),
   );
-  expect(row, `no listing row for ${name}`).toBeTruthy();
-  act(() => row?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
-  click((b) => b.textContent === 'Open', 'the picker accept button');
   await settle();
 }
 

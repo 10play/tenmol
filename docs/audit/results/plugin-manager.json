@@ -1,0 +1,593 @@
+{
+  "results": [
+    {
+      "id": "plugin-manager.launcher.open",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-testid=\"plugin-manager-window\"]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "plugin manager",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.launcher.open.png",
+      "needsVisual": false,
+      "note": "Clicking the Puzzle launcher toggle opens the Plugin Manager FloatingWindow (togglePanel('plugin-manager'))."
+    },
+    {
+      "id": "plugin-manager.launcher.close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.window.close-x",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-testid=\"plugin-manager-window\"]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.window.close-x.png",
+      "needsVisual": false,
+      "note": "The FloatingWindow × button (aria-label close) closes the panel via closePanel('plugin-manager')."
+    },
+    {
+      "id": "plugin-manager.window.close-esc",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-testid=\"plugin-manager-window\"]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.window.close-esc.png",
+      "needsVisual": false,
+      "note": "The window auto-focuses on open; Esc from inside it triggers onClose and closes the panel."
+    },
+    {
+      "id": "plugin-manager.window.shade",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": ".plugmgr__tabs",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "selector": "[data-testid=\"plugin-manager-window\"]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.window.shade.png",
+      "needsVisual": false,
+      "note": "Shared FloatingWindow shade button hides the window body (the .plugmgr content) while keeping the title bar. Generic window chrome, exercised on this panel."
+    },
+    {
+      "id": "plugin-manager.tab.installed",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.tab.legacy",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-legacy-menu]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.tab.legacy.png",
+      "needsVisual": false,
+      "note": "Selecting the Legacy Plugins tab mounts LegacyPlugins, which reads the legacy menu registry over the bridge."
+    },
+    {
+      "id": "plugin-manager.tab.settings",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.tab.paths",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-plugin-userpaths]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "selector": "input[data-plugin-path-input]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.tab.paths.png",
+      "needsVisual": false,
+      "note": "Selecting the Startup Paths tab shows the user-path list and the add-path row."
+    },
+    {
+      "id": "plugin-manager.rescan",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.installed.scan-error",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": ".plugmgr__error",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "plugin scan failed",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.installed.scan-error.png",
+      "needsVisual": false,
+      "note": "In local-backend mode the plugins.* namespace is unregistered, so loadPluginRegistry throws and the panel shows the 'plugin scan failed' error banner rather than an empty list. Verifies graceful degradation."
+    },
+    {
+      "id": "plugin-manager.installed.list",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "plugin-manager.installed.autoload-toggle",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "plugin-manager.settings.verbose-confirm",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.settings.instantsave-confirm",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-plugin-confirm]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "set instantsave to false",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "session only",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.settings.instantsave-confirm.png",
+      "needsVisual": false,
+      "note": "Turning instantsave off is the one write that never reaches disk; the confirm must say the change stays in memory for the session. Verifies writeReachesDisk('instantsave',false)=false wiring."
+    },
+    {
+      "id": "plugin-manager.settings.confirm-cancel",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.settings.confirm-apply-guard",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-plugin-writeerror]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "registry not initialized",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "selector": ".plugmgr__confirm",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.settings.confirm-apply-guard.png",
+      "needsVisual": false,
+      "note": "With no bridge the registry never initialized, so the shared write-guard refuses: Apply surfaces the writeError banner 'plugin registry not initialized; refusing to write' and closes the confirm. Verifies the guard fires instead of silently doing nothing."
+    },
+    {
+      "id": "plugin-manager.settings.confirm-apply-save",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "plugin-manager.paths.empty-message",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.paths.add",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-plugin-path-remove=\"0\"]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "selector": "[data-plugin-confirm]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "replace the 0 user startup path",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.paths.add.png",
+      "needsVisual": false,
+      "note": "Typing a directory enables Add; clicking it stages a draft path (a new editable row appears) and, being a change, opens the Confirm block ('Replace the 0 user startup path(s) with 1')."
+    },
+    {
+      "id": "plugin-manager.paths.add-empty-disabled",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.paths.add-duplicate-disabled",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-plugin-path-add]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" data-slot=\"button\" data-variant=\"bare\" data-tone=\"default\" data-plugin-path-add=\"\" class=\"inline-flex items-",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.paths.remove",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.paths.move-down",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.paths.move-down.png",
+      "needsVisual": false,
+      "note": "With two staged paths, the ↓ on the first row reorders the draft (movePath). Order is asserted via DOM change since regex cannot express list order."
+    },
+    {
+      "id": "plugin-manager.paths.move-up",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.paths.confirm-cancel",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": ".plugmgr__confirm",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "selector": "[data-plugin-nouserpaths]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.paths.confirm-cancel.png",
+      "needsVisual": false,
+      "note": "Cancel discards the draft (setDraft(null)); the list reverts to the engine's (empty) user paths and the confirm block closes."
+    },
+    {
+      "id": "plugin-manager.paths.confirm-apply",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "plugin-manager.paths.apply-session",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "plugin-manager.paths.fixed-list",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "plugin-manager.legacy.error",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.legacy.empty",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"; undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-legacy-empty]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        },
+        {
+          "pattern": "no plugin has registered",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/plugin-manager/plugin-manager.legacy.empty.png",
+      "needsVisual": false,
+      "note": "With zero registered leaves the list shows 'no plugin has registered a menu item' and the header count reads '0 menu items'."
+    },
+    {
+      "id": "plugin-manager.legacy.reread",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 4000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"plugin-manager-window\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "plugin-manager.legacy.leaf-invoke",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}

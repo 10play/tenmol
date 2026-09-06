@@ -1,0 +1,543 @@
+{
+  "area": "shortcuts",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "shortcuts.butmode.config.open",
+      "feature": "shortcuts",
+      "label": "ButMode ▸ Mouse & Keys…",
+      "kind": "button",
+      "requires": [],
+      "note": "The 'Mouse & Keys…' button portalled into the internal-gui column opens the Mouse configuration modal.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": "[data-testid='butmode-config']" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid='mouse-config']" },
+        { "expect": "feedbackMatches", "pattern": "Mouse configuration" }
+      ]
+    },
+    {
+      "id": "shortcuts.mouseconfig.close",
+      "feature": "shortcuts",
+      "label": "Mouse configuration ▸ Close (×)",
+      "kind": "button",
+      "requires": [],
+      "note": "The × in the Mouse configuration modal head dismisses it.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-testid='mouse-config'] .scmodal__x" }],
+      "checks": [{ "expect": "selectorHidden", "selector": "[data-testid='mouse-config']" }]
+    },
+    {
+      "id": "shortcuts.mouseconfig.open-ksm",
+      "feature": "shortcuts",
+      "label": "Mouse configuration ▸ Keyboard Shortcut Menu…",
+      "kind": "button",
+      "requires": [],
+      "note": "The button under the mouse matrix opens the Keyboard Shortcut Menu, replacing the mouse modal.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-editor']" },
+        { "expect": "feedbackMatches", "pattern": "Keyboard Shortcut Menu" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.close",
+      "feature": "shortcuts",
+      "label": "Keyboard Shortcut Menu ▸ Close (×)",
+      "kind": "button",
+      "requires": [],
+      "note": "The × in the editor head calls onClose and returns to the scene.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-testid='shortcut-editor'] .scmodal__x" }],
+      "checks": [{ "expect": "selectorHidden", "selector": "[data-testid='shortcut-editor']" }]
+    },
+    {
+      "id": "shortcuts.editor.filter.substring",
+      "feature": "shortcuts",
+      "label": "Filter — substring narrows the table",
+      "kind": "input",
+      "requires": [],
+      "note": "Typing 'CTRL-A' narrows the three-column table so CTRL-A stays and unrelated rows (key 'left') are hidden.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-testid='shortcut-filter']", "text": "CTRL-A" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-row-CTRL-A']" },
+        { "expect": "selectorHidden", "selector": "[data-testid='shortcut-row-left']" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.filter.regex",
+      "feature": "shortcuts",
+      "label": "Filter — treated as a regex",
+      "kind": "input",
+      "requires": [],
+      "note": "The filter is a case-insensitive regex; '^CTRL-(A|C)$' keeps only CTRL-A and CTRL-C.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "[data-testid='shortcut-filter']", "text": "^CTRL-(A|C)$" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-row-CTRL-A']" },
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-row-CTRL-C']" },
+        { "expect": "selectorHidden", "selector": "[data-testid='shortcut-row-left']" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.filter.badregex",
+      "feature": "shortcuts",
+      "label": "Filter — half-typed regex must not throw",
+      "kind": "input",
+      "requires": [],
+      "note": "An invalid intermediate regex ('[') must narrow the table, not blow up the dialog with a SyntaxError.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-testid='shortcut-filter']", "text": "[" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-editor']" },
+        { "expect": "selectorHidden", "selector": "[data-testid='shortcut-row-CTRL-A']" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.filter.clear",
+      "feature": "shortcuts",
+      "label": "Filter — clearing restores every row",
+      "kind": "input",
+      "requires": [],
+      "note": "Emptying the filter after a narrow shows the full default table again.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "type", "selector": "[data-testid='shortcut-filter']", "text": "CTRL-A" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-testid='shortcut-filter']", "text": "" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-row-left']" },
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-row-CTRL-A']" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.refresh",
+      "feature": "shortcuts",
+      "label": "Refresh — re-read live bindings",
+      "kind": "button",
+      "requires": [],
+      "note": "Refresh asks the bridge panel for live bindings. In local mode the bridge module is absent, so it falls back to the default table and SAYS so in the status line.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-testid='shortcut-editor'] .scmodal__toolbar button" }],
+      "settleMs": 700,
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "table refreshed|default table instead|could not read the live bindings"
+        }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.row.select",
+      "feature": "shortcuts",
+      "label": "Row click — select a binding",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Clicking a table row toggles it selected (is-selected background), which enables the Selected buttons.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-testid='shortcut-row-CTRL-A']" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-editor'] tr.is-selected" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.row.deselect",
+      "feature": "shortcuts",
+      "label": "Row click again — deselect",
+      "kind": "toggle",
+      "requires": [],
+      "note": "A second click on a selected row clears the selection.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-row-CTRL-A']" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-testid='shortcut-row-CTRL-A']" }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-testid='shortcut-editor'] tr.is-selected" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.command.edit-dblclick",
+      "feature": "shortcuts",
+      "label": "Command cell — double-click to edit (LIMITATION)",
+      "kind": "other",
+      "requires": [],
+      "note": "Only the Command cell is editable, via double-click. The audit driver has no dblclick primitive (two clicks just toggle selection), so the inline editor cannot be opened deterministically; this spec asserts that plain clicks do NOT spuriously open an editor and documents the coverage gap. Inline-edit behaviour is exercised by the DOM unit tests (p13editor / p13shortcutEditor).",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-row-CTRL-A'] td", "nth": 1 },
+        { "do": "click", "selector": "[data-testid='shortcut-row-CTRL-A'] td", "nth": 1 }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-testid='shortcut-editor'] input.scmodal__edit" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.createnew.open",
+      "feature": "shortcuts",
+      "label": "Create New — open the create form",
+      "kind": "button",
+      "requires": [],
+      "note": "Create New reveals the key-capture + command form.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 0 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-create']" },
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-capture']" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.delete.selected",
+      "feature": "shortcuts",
+      "label": "Delete Selected — unbind a default (reads Deleted)",
+      "kind": "button",
+      "requires": [],
+      "note": "Deleting a selected DEFAULT binding issues set_key(key,'') and the row survives reading 'Deleted' in both columns. Delete Selected is disabled until a row is selected.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-row-CTRL-A']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 1 }
+      ],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "Deleted" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.delete.created-disappears",
+      "feature": "shortcuts",
+      "label": "Delete Selected — a created binding disappears",
+      "kind": "button",
+      "requires": [],
+      "note": "Unlike a default, a session-created binding is removed from the table on delete instead of reading 'Deleted'.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-create']" },
+        { "do": "press", "key": "Control+j", "selector": "[data-testid='shortcut-capture']" },
+        { "do": "type", "selector": "[data-testid='shortcut-command']", "text": "orient" },
+        { "do": "click", "selector": "[data-testid='shortcut-create'] .scmodal__buttons button", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-row-CTRL-J']" },
+        { "do": "click", "selector": "[data-testid='shortcut-row-CTRL-J']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 1 }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-testid='shortcut-row-CTRL-J']" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.reset.selected",
+      "feature": "shortcuts",
+      "label": "Reset Selected — restore default command",
+      "kind": "button",
+      "requires": [],
+      "note": "Reset Selected re-issues set_key(key, default) for the selected row and reports 'key -> command'. Disabled until a row is selected.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-row-CTRL-A']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 2 }
+      ],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "CTRL-A ->" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.reset.all",
+      "feature": "shortcuts",
+      "label": "Reset All — restore every binding",
+      "kind": "button",
+      "requires": [],
+      "note": "Reset All re-seeds the table and reports 'all key bindings restored to their defaults'.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 3 }
+      ],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "restored to their defaults" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.save",
+      "feature": "shortcuts",
+      "label": "Save — persist bindings",
+      "kind": "button",
+      "requires": [],
+      "note": "Save calls save_shortcut.save_shortcuts with the 3-element per-key list. In local mode persistence may not be wired, but the button must give feedback either way (success path '~/.pymol/shortcuts_save.json' or graceful 'Save failed … live in PyMOL either way'). A silent no-op is a defect.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 4 }
+      ],
+      "settleMs": 600,
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "shortcuts_save.json|Save failed|live in PyMOL" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.create.newkey",
+      "feature": "shortcuts",
+      "label": "Create New — bind an unused chord",
+      "kind": "button",
+      "requires": [],
+      "note": "Capturing CTRL-J (unused), typing a command and pressing Create binds it and adds a new row, proving the live key-capture field records the chord.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-create']" },
+        { "do": "press", "key": "Control+j", "selector": "[data-testid='shortcut-capture']" },
+        { "do": "type", "selector": "[data-testid='shortcut-command']", "text": "orient" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-create'] .scmodal__buttons button", "nth": 0 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-row-CTRL-J']" },
+        { "expect": "selectorHidden", "selector": "[data-testid='shortcut-create']" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.create.reserved-key",
+      "feature": "shortcuts",
+      "label": "Create New — reserved key silently rejected (LIMITATION)",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "The capture field silently refuses the six reserved chords (CTRL-S/E/O/M, up, down). Its value is a readOnly input not present in body text, so the audit cannot read it directly; this spec presses CTRL-S and asserts no error and no status message appears — needsVisual to confirm the capture field stayed empty. Full behaviour covered by the DOM unit tests.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-create']" }
+      ],
+      "trigger": [{ "do": "press", "key": "Control+s", "selector": "[data-testid='shortcut-capture']" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-create']" },
+        { "expect": "feedbackNotMatches", "pattern": "error|cannot|invalid|reserved" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.create.cancel",
+      "feature": "shortcuts",
+      "label": "Create New ▸ Cancel — dismiss the form",
+      "kind": "button",
+      "requires": [],
+      "note": "The Cancel button in the create form closes it without binding anything.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-create']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-create'] .scmodal__buttons button", "nth": 1 }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-testid='shortcut-create']" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.create.existing-confirm",
+      "feature": "shortcuts",
+      "label": "Create New over an existing key — asks to overwrite",
+      "kind": "dialog",
+      "requires": [],
+      "note": "Creating over a bound key (CTRL-A) raises the overwrite confirm alertdialog before any set_key.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-create']" },
+        { "do": "press", "key": "Control+a", "selector": "[data-testid='shortcut-capture']" },
+        { "do": "type", "selector": "[data-testid='shortcut-command']", "text": "zoom" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-create'] .scmodal__buttons button", "nth": 0 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[role='alertdialog']" },
+        { "expect": "feedbackMatches", "pattern": "already bound|Overwrite" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.confirm.accept",
+      "feature": "shortcuts",
+      "label": "Overwrite confirm ▸ Confirm",
+      "kind": "button",
+      "requires": [],
+      "note": "Confirm issues the overwrite set_key and closes the dialog and form, reporting 'key -> command'.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-create']" },
+        { "do": "press", "key": "Control+a", "selector": "[data-testid='shortcut-capture']" },
+        { "do": "type", "selector": "[data-testid='shortcut-command']", "text": "zoom" },
+        { "do": "click", "selector": "[data-testid='shortcut-create'] .scmodal__buttons button", "nth": 0 },
+        { "do": "waitFor", "selector": "[role='alertdialog']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[role='alertdialog'] .scmodal__buttons button", "nth": 0 }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[role='alertdialog']" },
+        { "expect": "feedbackMatches", "pattern": "CTRL-A ->" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.confirm.cancel",
+      "feature": "shortcuts",
+      "label": "Overwrite confirm ▸ Cancel",
+      "kind": "button",
+      "requires": [],
+      "note": "The confirm's own Cancel dismisses the dialog and binds nothing; the create form stays open.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-create']" },
+        { "do": "press", "key": "Control+a", "selector": "[data-testid='shortcut-capture']" },
+        { "do": "type", "selector": "[data-testid='shortcut-command']", "text": "zoom" },
+        { "do": "click", "selector": "[data-testid='shortcut-create'] .scmodal__buttons button", "nth": 0 },
+        { "do": "waitFor", "selector": "[role='alertdialog']" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[role='alertdialog'] .scmodal__buttons button", "nth": 1 }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[role='alertdialog']" },
+        { "expect": "selectorVisible", "selector": "[data-testid='shortcut-create']" }
+      ]
+    },
+    {
+      "id": "shortcuts.editor.confirm.skip-checkbox",
+      "feature": "shortcuts",
+      "label": "Overwrite confirm ▸ 'do not show this again'",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Ticking the 'do not show this again' checkbox and confirming makes the NEXT overwrite of an existing key skip the dialog entirely.",
+      "setup": [
+        { "do": "click", "selector": "[data-testid='butmode-config']" },
+        { "do": "waitFor", "selector": "[data-testid='mouse-config']" },
+        { "do": "click", "selector": "[data-testid='mouse-config'] > .scmodal__buttons > button" },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-editor']" },
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-create']" },
+        { "do": "press", "key": "Control+a", "selector": "[data-testid='shortcut-capture']" },
+        { "do": "type", "selector": "[data-testid='shortcut-command']", "text": "zoom" },
+        { "do": "click", "selector": "[data-testid='shortcut-create'] .scmodal__buttons button", "nth": 0 },
+        { "do": "waitFor", "selector": "[role='alertdialog']" },
+        { "do": "click", "selector": "[role='alertdialog'] input[type='checkbox']" },
+        { "do": "click", "selector": "[role='alertdialog'] .scmodal__buttons button", "nth": 0 },
+        { "do": "click", "selector": "[data-testid='shortcut-editor'] > .scmodal__buttons > button", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid='shortcut-create']" },
+        { "do": "press", "key": "Control+c", "selector": "[data-testid='shortcut-capture']" },
+        { "do": "type", "selector": "[data-testid='shortcut-command']", "text": "turn x, 90" }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-testid='shortcut-create'] .scmodal__buttons button", "nth": 0 }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[role='alertdialog']" },
+        { "expect": "selectorHidden", "selector": "[data-testid='shortcut-create']" },
+        { "expect": "feedbackMatches", "pattern": "CTRL-C ->" }
+      ]
+    }
+  ]
+}

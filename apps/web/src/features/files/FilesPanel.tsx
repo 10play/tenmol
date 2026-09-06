@@ -35,7 +35,6 @@ import type {
   MapGenerateInfo,
   MovieDialogInfo,
   MtzDialogInfo,
-  MultiFileTarget,
   PartialGate,
   RecentEntry,
   RenderInfo,
@@ -57,9 +56,20 @@ import {
   mapGenerateOutcome,
   type AlnInfo,
 } from './LoadDialogs';
-import { refusalFor } from './globalDrop';
+import {
+  browserClassification,
+  classify,
+  dialogNeededFor,
+  dialogRequiredMessage,
+  objectNameForFile,
+  loadFormatForFile,
+  refusalFor,
+  scriptUnsupportedMessage,
+} from './globalDrop';
 import { FILES_ACTION_EVENT, FILES_OPEN_PATHS, type FilesActionDetail } from './menuHooks';
 import { ExportMoleculeDialog, SaveObjectDialog, type MoleculeSaveRequest } from './SaveDialogs';
+import { downloadBytes, downloadText } from './download';
+import { saveSession } from './sessionSave';
 import { MovieDialog, PngDialog, RenderPanel } from './ImageDialogs';
 import { FetchDialog, LogDialog, RecentDialog } from './ToolsDialogs';
 import { pngCommands, drawCommand, rayCommands } from './commands';
@@ -391,39 +401,126 @@ export function FilesPanel() {
 
   /* --------------------------------------------------------- menu items */
 
-  const fileOpen = useCallback(async () => {
-    if (!(await ensure())) return;
-    const result = await pick({
-      mode: 'open',
-      title: 'Open file',
-      filters: hello?.filters.load,
-      accept: 'Open',
-    });
-    if (result) await openPaths(result.paths);
-  }, [ensure, hello, openPaths, pick]);
+  const fileOpen = useCallback(() => {
+    // browser-open: load file contents
+    //
+    // Browser-only: no `ensure()`, no server `pick`, no `api.*`. Open the OS
+    // file picker, read each file's TEXT, and hand the CONTENTS to the engine
+    // through `cmd.load_raw(content, format, object)` — the one content-loader
+    // BOTH backends implement (real PyMOL's `cmd.load` takes a filesystem PATH,
+    // not content, so it silently fails over the bridge). Never routes through
+    // `cmd.tenmol_files.*`, so it is unconditional across backends.
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.onchange = () => {
+      const files = Array.from(input.files ?? []);
+      void (async () => {
+        for (const file of files) {
+          // The `.pwg`/refusal gate is engine-independent and comes FIRST: a
+          // `.pwg` classifies as plain and would otherwise reach `cmd.load`,
+          // which executes its directives (`globalDrop.ts::refusalFor`).
+          const refusal = refusalFor(browserClassification(file.name), file.name);
+          if (refusal !== null) {
+            say(refusal, 'warning');
+            continue;
+          }
+          // Dialog-needed formats (session/map/mtz/trajectory/alignment/mae)
+          // are BINARY and/or need loader options the content-only path cannot
+          // supply. Text-decoding + `cmd.load`ing them would silently corrupt
+          // or mis-load them, so refuse here just as the server drop path does —
+          // browser-only cannot drive these modals. Only plain single-molecule
+          // text formats fall through to `file.text()` + `cmd.load`.
+          const dialog = dialogNeededFor(classify(file.name));
+          if (dialog !== null) {
+            say(dialogRequiredMessage(file.name, dialog), 'warning');
+            continue;
+          }
+          // Scripts (`.pml`/`.py`/`.pym`) are neither refused nor dialog-needed,
+          // so without this they would reach `cmd.load` with a blank format and
+          // throw "could not determine the structure format". The browser build
+          // cannot RUN them, so say so instead of attempting to load or execute.
+          if (classify(file.name).dialog === 'script') {
+            say(scriptUnsupportedMessage(file.name), 'warning');
+            continue;
+          }
+          const content = await file.text();
+          await session.act({
+            fn: 'cmd.load_raw',
+            args: [content, loadFormatForFile(file.name), objectNameForFile(file.name)],
+            echo: `load ${file.name}`,
+            invalidatesNames: true,
+          });
+        }
+      })();
+    };
+    input.click();
+  }, [say, session]);
 
-  const sessionSaveAs = useCallback(
-    async (existing?: string) => {
-      if (!(await ensure())) return;
-      let target = existing;
-      if (!target) {
-        const result = await pick({
-          mode: 'save',
-          title: 'Save Session As...',
-          filters: hello?.filters.session,
-          accept: 'Save',
-        });
-        if (!result) return;
-        target = first(result.paths);
-        await api.setInitialdir(target);
-      }
-      // `session_save_as` ALWAYS saves format='pse', so .psw differs only by
-      // extension (`pymol_qt_gui.py:668`).
-      await session.run(`save ${target}, format=pse`);
-      await api.recentAdd(target);
-    },
-    [api, ensure, hello, pick, session],
-  );
+  const sessionSaveAs = useCallback(async () => {
+    // browser-save: get_session download
+    //
+    // Browser-only: there is no OS save dialog and no host filesystem, so a
+    // "save" is a download of the engine's session snapshot. No
+    // ensure()/setInitialdir/recentAdd/PathPicker, and never `save <path>`,
+    // which writes to disk and THROWS in the browser. The engine's reload path
+    // keys off the .pse/.psw extension, so default the prompt to `.pse` and
+    // append it when the typed name has neither. `saveSession` handles both
+    // backends — object snapshot on the local engine, blob handle on the remote
+    // bridge — and is shared with the Ctrl+S accelerator in FileDropTarget.
+    const typed = window.prompt('Save session as', 'untitled.pse');
+    if (!typed) return;
+    const name = /\.(pse|psw)$/i.test(typed) ? typed : `${typed}.pse`;
+    // `session.call` (via `saveSession` -> `cmd.get_session`) REJECTS silently
+    // — no console self-report, unlike `session.run`/`session.act` — so a save
+    // failure must be caught and surfaced here (mirrors FileDropTarget's Ctrl+S).
+    try {
+      await saveSession(session, name);
+      say(` saved ${name}`);
+    } catch (error) {
+      say(` save failed: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    }
+  }, [session, say]);
+
+  /**
+   * Seed the Export Molecule dialog WITHOUT the bridge.
+   *
+   * browser-export: get_str download. The object/selection combos come from
+   * `cmd.get_names` (works on both backends), and the five PDB settings get
+   * static defaults mirroring `SaveMoleculeInfo` — the dialog only needs a valid
+   * shape to open, and the actual `set` writes happen at save time. `states: 1`
+   * is a minimal valid default (the state combo still offers -1/0/1).
+   */
+  const saveMoleculeInfo = useCallback(async (): Promise<SaveMoleculeInfo> => {
+    // `session.call` REJECTS silently (no console self-report, unlike
+    // `session.run`/`session.act`), so a failed `cmd.get_names` would otherwise
+    // be a no-op: no dialog, no error. Catch it, report, and open the dialog
+    // with empty combos so the failure is visible rather than swallowed.
+    let objects: string[] = [];
+    let selections: string[] = [];
+    try {
+      objects = await session.call<string[]>('cmd.get_names', ['objects']);
+      selections = await session.call<string[]>('cmd.get_names', ['public_selections']);
+    } catch (error) {
+      say(
+        ` export molecule failed: ${error instanceof Error ? error.message : String(error)}`,
+        'error',
+      );
+    }
+    return {
+      objects,
+      selections,
+      states: 1,
+      filters: EXPORT_MOLECULE_FILTERS,
+      settings: {
+        no_pdb_conect_nodup: false,
+        pdb_conect_all: false,
+        no_ignore_pdb_segi: false,
+        pdb_retain_ids: false,
+        retain_order: false,
+      },
+    };
+  }, [session, say]);
 
   const menu: MenuItem[] = useMemo(
     () => [
@@ -469,23 +566,23 @@ export function FilesPanel() {
       },
       { id: 'sep1', separator: true },
       {
+        // browser-save: get_session download — both items serialize + download
+        // the session snapshot. There is no persistent "current file" in the
+        // browser, so Save Session and Save Session As… behave identically.
         id: 'session-save',
         label: 'Save Session',
         shortcut: '⌃S',
-        run: async () => {
-          if (!(await ensure())) return;
-          const info = await api.sessionFile();
-          await sessionSaveAs(info.hasPath ? info.path : undefined);
-        },
+        run: sessionSaveAs,
       },
-      { id: 'session-save-as', label: 'Save Session As…', run: () => sessionSaveAs() },
+      { id: 'session-save-as', label: 'Save Session As…', run: sessionSaveAs },
       { id: 'sep2', separator: true },
       {
         id: 'export-molecule',
         label: 'Export Molecule…',
         run: async () => {
-          if (!(await ensure())) return;
-          setDialog({ kind: 'export-molecule', info: await api.saveMoleculeInfo() });
+          // browser-export: get_str download — seed the dialog from the engine,
+          // not the bridge (`api.saveMoleculeInfo`).
+          setDialog({ kind: 'export-molecule', info: await saveMoleculeInfo() });
         },
       },
       {
@@ -522,7 +619,8 @@ export function FilesPanel() {
         id: 'png',
         label: 'Export Image As ▸ PNG…',
         run: async () => {
-          if (!(await ensure())) return;
+          // browser-png: cmd.png download — no ensure()/bridge; the dialog only
+          // needs the engine, which cmd.png reaches on both backends.
           setDialog({ kind: 'png' });
         },
       },
@@ -639,7 +737,7 @@ export function FilesPanel() {
         run: async () => undefined,
       },
     ],
-    [api, ensure, fileOpen, hello, pick, session, sessionSaveAs],
+    [api, ensure, fileOpen, hello, pick, saveMoleculeInfo, session, sessionSaveAs],
   );
 
   /* ------------------------------------------------ the menu bar's leaves */
@@ -1007,18 +1105,35 @@ export function FilesPanel() {
         <PngDialog
           onClose={() => setDialog({ kind: 'none' })}
           onSave={(rendering) => {
+            // browser-png: cmd.png download
+            //
+            // Browser-only: no OS save dialog, no host filesystem. Run the
+            // dialog's render SETUP lines (`draw 0, 0` / `set opaque_background,
+            // …`, commands.ts:164-172) but NOT the final `png <path>` line — the
+            // browser png disk-write is a no-op. Then pull the pixels straight
+            // from the engine (`cmd.png`, works over the remote bridge too) and
+            // download them. No ensure()/setInitialdir/PathPicker/recentAdd.
             setDialog({ kind: 'none' });
             void (async () => {
-              const result = await pick({
-                mode: 'save',
-                title: 'Save As...',
-                filters: ['PNG File (*.png)'],
-                accept: 'Save',
-              });
-              if (!result) return;
-              await api.setInitialdir(first(result.paths));
-              for (const line of pngCommands(first(result.paths), rendering)) {
-                await session.run(line);
+              const typed = window.prompt('Save image as', 'image.png');
+              if (!typed) return;
+              const name = /\.png$/i.test(typed) ? typed : `${typed}.png`;
+              // `session.call('cmd.png', …)` REJECTS silently (and `session.run`
+              // for the setup lines can too); wrap so a failed export reports
+              // instead of leaving a no-op.
+              try {
+                const lines = pngCommands('', rendering);
+                // Every line except the trailing `png <path>` is render setup.
+                for (const line of lines.slice(0, -1)) await session.run(line);
+                const ray = rendering >= 2 ? 1 : 0;
+                const bytes = await session.call<number[]>('cmd.png', ['', 0, 0, -1], { ray });
+                downloadBytes(name, Uint8Array.from(bytes), 'image/png');
+                say(` saved ${name}`);
+              } catch (error) {
+                say(
+                  ` png export failed: ${error instanceof Error ? error.message : String(error)}`,
+                  'error',
+                );
               }
             })();
           }}
@@ -1036,15 +1151,33 @@ export function FilesPanel() {
             })();
           }}
           onSave={(dpi) => {
+            // browser-png: cmd.png download — the render already ran (Draw/Ray),
+            // so read it back with `prior=1` (no re-render) and download the
+            // bytes instead of writing `png <path>` to a disk the browser lacks.
             void (async () => {
-              const result = await pick({
-                mode: 'save',
-                title: 'Save As...',
-                filters: ['PNG File (*.png)'],
-                accept: 'Save',
-              });
-              if (!result) return;
-              await session.run(`png ${first(result.paths)}, dpi=${dpi}, prior=1`);
+              const typed = window.prompt('Save image as', 'image.png');
+              if (!typed) return;
+              const name = /\.png$/i.test(typed) ? typed : `${typed}.png`;
+              // `session.call('cmd.png', …)` REJECTS silently, so wrap and report
+              // rather than leaving the Save button a no-op on failure.
+              try {
+                // Filename-only positional args: `dpi` is PyMOL's 4th positional
+                // slot, so passing `-1` there AND `dpi=` as a kwarg makes the real
+                // bridge raise `TypeError: png() got multiple values for argument
+                // 'dpi'`. Pass everything but the filename as kwargs (convention
+                // per panels/files.py::copy_image_png).
+                const bytes = await session.call<number[]>('cmd.png', [''], {
+                  prior: 1,
+                  dpi,
+                });
+                downloadBytes(name, Uint8Array.from(bytes), 'image/png');
+                say(` saved ${name}`);
+              } catch (error) {
+                say(
+                  ` png export failed: ${error instanceof Error ? error.message : String(error)}`,
+                  'error',
+                );
+              }
             })();
           }}
           onClipboard={() => {
@@ -1174,6 +1307,7 @@ export function FilesPanel() {
   }
 
   async function exportMolecule(request: MoleculeSaveRequest) {
+    // browser-export: get_str download
     setDialog({ kind: 'none' });
     // The five settings are written back before saving (`file_dialogs.py:558-562`).
     const s = request.settings;
@@ -1183,60 +1317,40 @@ export function FilesPanel() {
     await session.run(`set pdb_retain_ids, ${s.pdb_retain_ids ? 1 : 0}`);
     await session.run(`set retain_order, ${s.retain_order ? 1 : 0}`);
 
-    // `cmd.multifilenamegen` is a GENERATOR (`exporting.py:735-781`), so it
-    // cannot be called over the wire — the codec refuses `builtins.generator`.
-    // The bridge consumes it (`panels/files.py: multifilenamegen`).
-    let triples: MultiFileTarget[] = [
-      { filename: '', selection: request.selection, state: request.state },
-    ];
-    if (request.pattern && request.promptEach) {
-      const generated = await api.multiFileNames(
-        request.pattern,
-        request.selection,
-        request.state,
+    // OUT OF SCOPE for browser download: `multisave` writes one multi-object
+    // file, and the "Multiple files" patterns (`multifilesave`/
+    // `cmd.multifilenamegen`) write MANY files — neither maps onto a single
+    // blob download, and `multifilenamegen` is a bridge-only generator anyway.
+    // Refuse gracefully rather than half-implement it.
+    if (request.multisave || request.pattern) {
+      say(
+        ' multi-file / multi-object export is not available in the browser — ' +
+          'export a single object or selection to one file instead',
+        'warning',
       );
-      if (!generated.ok) {
-        say(` ${generated.error}`, 'error');
-        return;
-      }
-      triples = generated.items;
-    } else if (request.pattern) {
-      triples = [
-        { filename: request.pattern, selection: request.selection, state: request.state },
-      ];
+      return;
     }
 
-    const dir = await api.initialdir();
-    for (const { filename: suggested, selection, state } of triples) {
-      const result = await pick({
-        mode: 'save',
-        title: 'Save Molecule As...',
-        // The dialog's chosen filter goes first so the picker preselects it,
-        // but it is also IN `saveMolecule` — hence the dedupe, or React sees
-        // two <option> children with the same key.
-        filters: request.filter
-          ? dedupe([request.filter, ...(hello?.filters.saveMolecule ?? [])])
-          : undefined,
-        initialName: suggested || '',
-        directory: dir,
-        accept: 'Save',
-      });
-      if (!result) return;
-      const target = first(result.paths);
-      await api.setInitialdir(target);
-      if (request.multisave) {
-        await session.run(`multisave ${target}, ${selection}, ${state}`);
-      } else if (baseName(target).includes('{')) {
-        await session.run(`multifilesave ${target}, ${selection}, ${state}`);
-      } else {
-        const check = await api.saveCheck(target, result.filter);
-        if (!check.recognised) {
-          say(` ${check.error}`, 'error');
-          return;
-        }
-        await session.run(`save ${target}, ${selection}, ${state}`);
-        await api.recentAdd(target);
-      }
+    // Single file: derive the format from the dialog's chosen filter, get the
+    // text straight from the engine (`cmd.get_str`, which dispatches pdb ->
+    // get_pdbstr / fasta -> get_fastastr internally) and download it. No
+    // PathPicker, no saveCheck, no recentAdd, no `save <path>` (writes to disk +
+    // THROWS in the browser).
+    const ext = extForFilter(request.filter);
+    const format = formatForExt(ext);
+    const typed = window.prompt('Save molecule as', `${defaultBaseName(request.selection)}.${ext}`);
+    if (!typed) return;
+    const name = /\.[a-z0-9]+$/i.test(typed) ? typed : `${typed}.${ext}`;
+    try {
+      const text = await session.call<string>('cmd.get_str', [
+        format,
+        request.selection,
+        request.state,
+      ]);
+      downloadText(name, text);
+      say(` saved ${name}`);
+    } catch (error) {
+      say(` export failed: ${error instanceof Error ? error.message : String(error)}`, 'error');
     }
   }
 }
@@ -1253,6 +1367,58 @@ interface MenuItem {
 /** `paths[0]` under `noUncheckedIndexedAccess`. */
 function first(paths: readonly string[]): string {
   return paths[0] ?? '';
+}
+
+/**
+ * Static save filters for the browser Export Molecule dialog — one per
+ * single-file format `cmd.get_str` can produce. Replaces the bridge's
+ * `hello.filters.saveMolecule`, which is unreachable in a browser-only build.
+ */
+const EXPORT_MOLECULE_FILTERS = [
+  'PDB File (*.pdb)',
+  'CIF File (*.cif)',
+  'MOL File (*.mol)',
+  'SD File (*.sdf)',
+  'MOL2 File (*.mol2)',
+  'XYZ File (*.xyz)',
+  'FASTA File (*.fasta)',
+];
+
+/** The extension from a picker filter like `PDB File (*.pdb)` (defaults to pdb). */
+function extForFilter(filter: string): string {
+  return (/\*\.([a-z0-9]+)/i.exec(filter)?.[1] ?? 'pdb').toLowerCase();
+}
+
+/**
+ * Map a file extension to the `cmd.get_str` format token. Mirrors the engine's
+ * own `formatFromFilename` (exporters.ts): unknown extensions fall back to pdb.
+ */
+function formatForExt(ext: string): string {
+  switch (ext) {
+    case 'cif':
+    case 'mmcif':
+      return 'cif';
+    case 'xyz':
+      return 'xyz';
+    case 'fasta':
+    case 'fa':
+      return 'fasta';
+    case 'mol':
+      return 'mol';
+    case 'sdf':
+      return 'sdf';
+    case 'mol2':
+      return 'mol2';
+    case 'ent':
+    case 'pdb':
+    default:
+      return 'pdb';
+  }
+}
+
+/** A filesystem-safe default basename from the chosen selection/object name. */
+function defaultBaseName(selection: string): string {
+  return selection.trim().replace(/[^A-Za-z0-9_.-]+/g, '_') || 'molecule';
 }
 
 /**

@@ -1,0 +1,1484 @@
+{
+  "results": [
+    {
+      "id": "scenes.header.add",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.header.add.png",
+      "needsVisual": false,
+      "note": "The + button runs cmd.scene('new','store',quiet=0); a new scene row/button appears."
+    },
+    {
+      "id": "scenes.header.previous",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "current:\\s*F1\\b",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.header.previous.png",
+      "needsVisual": false,
+      "note": "Recalls the previous scene; the 'current:' readout changes from F2 to F1."
+    },
+    {
+      "id": "scenes.header.next",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "current:\\s*F2\\b",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.header.next.png",
+      "needsVisual": false,
+      "note": "Recalls the next scene; after recalling F1 the readout advances to F2."
+    },
+    {
+      "id": "scenes.header.sort",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.header.sort.png",
+      "needsVisual": false,
+      "note": "Alphabetically reorders the scene bin; zzz/aaa stored out of order flip, changing the row order."
+    },
+    {
+      "id": "scenes.button.recall.left",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "current:\\s*F1\\b",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scbar__btn.is-current",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.button.recall.left.png",
+      "needsVisual": false,
+      "note": "Left-click-release over the same button recalls that scene; the button gains is-current and the readout shows it."
+    },
+    {
+      "id": "scenes.button.browse.middle",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scbar__btn",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.button.browse.middle.png",
+      "needsVisual": false,
+      "note": "LIMITATION: middle-button press + drag ('rapid browse', Ctrl forces animate=0) cannot be driven by the audit DSL, which only issues left-clicks. This records the affordance's presence only."
+    },
+    {
+      "id": "scenes.button.menu.right",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "scenes.button.reorder.drag",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scbar__btn",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.button.reorder.drag.png",
+      "needsVisual": false,
+      "note": "LIMITATION: right-button drag across buttons emits per-row scene_order calls. A multi-button drag across overlapping absolute buttons is not expressible in the DSL; presence only."
+    },
+    {
+      "id": "scenes.button.scroll.wheel",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scbar",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.button.scroll.wheel.png",
+      "needsVisual": false,
+      "note": "LIMITATION: onWheel adjusts skip only when a scrollbar exists (list longer than n_disp). The DSL has no wheel action; presence only."
+    },
+    {
+      "id": "scenes.row.select",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scrow.is-selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.row.select.png",
+      "needsVisual": false,
+      "note": "Clicking a row sets it selected (is-selected)."
+    },
+    {
+      "id": "scenes.row.recall.dblclick",
+      "verdict": "FAIL",
+      "reason": "feedbackMatches: \"pattern /current:\\\\s*recalltest\\\\b/ not found\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "current:\\s*recalltest\\b",
+          "ok": false,
+          "detail": "pattern /current:\\s*recalltest\\b/ not found"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.row.recall.dblclick.png",
+      "needsVisual": false,
+      "note": "Double-clicking a row recalls it. The DSL has no dblclick primitive; two sequential real clicks are used and rely on the browser synthesising dblclick."
+    },
+    {
+      "id": "scenes.row.rename.open",
+      "verdict": "FAIL",
+      "reason": "selectorVisible: \".scrow__rename not visible\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scrow__rename",
+          "ok": false,
+          "detail": ".scrow__rename not visible"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.row.rename.open.png",
+      "needsVisual": false,
+      "note": "Double-clicking the name button opens the inline rename TextInput. Two sequential clicks stand in for the dblclick primitive the DSL lacks."
+    },
+    {
+      "id": "scenes.row.rename.valid",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scrow__rename') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scenes.row.rename.space",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scrow__rename') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scenes.row.rename.blank",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scrow__rename') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scenes.row.rename.escape",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scrow__rename') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scenes.row.message",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.row.message.png",
+      "needsVisual": false,
+      "note": "Typing in the message input calls cmd.set_scene_message (ported locally) without error. NOTE: the display round-trip needs get_scene_panel (bridge-only), so the fallback shows an empty value; this asserts the write does not throw."
+    },
+    {
+      "id": "scenes.row.update",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scpanel__rows .scrow:has-text(\"updtest\")",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.row.update.png",
+      "needsVisual": false,
+      "note": "Updates the stored scene to the current view; must not throw and the row remains."
+    },
+    {
+      "id": "scenes.row.delete",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".scpanel__rows .scrow:has-text(\"deltest\")",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.row.delete.png",
+      "needsVisual": false,
+      "note": "Deletes the scene; the row disappears."
+    },
+    {
+      "id": "scenes.row.handle.keyboard",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.row.handle.keyboard.png",
+      "needsVisual": false,
+      "note": "ArrowDown on the reorder handle moves the scene one slot down via cmd.scene_order; the row order changes."
+    },
+    {
+      "id": "scenes.row.handle.drag",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scrow__handle",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scenes.row.handle.drag.png",
+      "needsVisual": false,
+      "note": "LIMITATION: a pointer-capture drag of the handle across rows (issuing one cmd.scene_order on release) is not expressible in the DSL; presence only. Keyboard equivalent is covered by scenes.row.handle.keyboard."
+    },
+    {
+      "id": "scmenu.previous",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "current:\\s*F1\\b",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.previous.png",
+      "needsVisual": false,
+      "note": "Recalls the previous scene."
+    },
+    {
+      "id": "scmenu.next",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "current:\\s*F2\\b",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.next.png",
+      "needsVisual": false,
+      "note": "Recalls the next scene."
+    },
+    {
+      "id": "scmenu.append",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.append.png",
+      "needsVisual": false,
+      "note": "Stores a new scene at the end; a new row appears."
+    },
+    {
+      "id": "scmenu.append.submenu",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scmenu__sub button:has-text(\"Camera\")",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.append.submenu.png",
+      "needsVisual": false,
+      "note": "Toggles open the Camera/Color/Reps/Reps+Color submenu."
+    },
+    {
+      "id": "scmenu.append.camera",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scmenu__sub button:has-text(\"Camera\")') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scmenu.append.color",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.append.color.png",
+      "needsVisual": false,
+      "note": "Runs 'scene new, store, view=0, rep=0' (color-only store)."
+    },
+    {
+      "id": "scmenu.append.reps",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scmenu__sub button:has-text(\"Camera\")') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scmenu.append.repscolor",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.append.repscolor.png",
+      "needsVisual": false,
+      "note": "Runs 'scene new, store, view=0' (reps+color store)."
+    },
+    {
+      "id": "scmenu.insertbefore",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.insertbefore.png",
+      "needsVisual": false,
+      "note": "Stores a new scene and orders it before the current one; a new row appears."
+    },
+    {
+      "id": "scmenu.insertafter",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.insertafter.png",
+      "needsVisual": false,
+      "note": "Stores a new scene and orders it after the current one; a new row appears."
+    },
+    {
+      "id": "scmenu.update",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scmenu",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.update.png",
+      "needsVisual": false,
+      "note": "Updates the current scene to the present view; must not throw."
+    },
+    {
+      "id": "scmenu.delete",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".scpanel__rows .scrow:has-text(\"deltwo\")",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.delete.png",
+      "needsVisual": false,
+      "note": "Deletes the current scene; its row disappears."
+    },
+    {
+      "id": "scmenu.recall.submenu",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scmenu__sub--keys button",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.recall.submenu.png",
+      "needsVisual": false,
+      "note": "Opens the twelve F-key recall buttons."
+    },
+    {
+      "id": "scmenu.recall.f1",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scmenu__sub--keys button') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scmenu.store.submenu",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scmenu__sub--keys button",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.store.submenu.png",
+      "needsVisual": false,
+      "note": "Opens the twelve F-key store buttons."
+    },
+    {
+      "id": "scmenu.store.f3",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scmenu__sub--keys button') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scmenu.clear.submenu",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scmenu__sub--keys button",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.clear.submenu.png",
+      "needsVisual": false,
+      "note": "Opens the twelve F-key clear buttons."
+    },
+    {
+      "id": "scmenu.clear.f3",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scmenu__sub--keys button') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scmenu.cache.submenu",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".scmenu__sub button:has-text(\"enable\")",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.cache.submenu.png",
+      "needsVisual": false,
+      "note": "Opens enable/optimize/read_only/disable."
+    },
+    {
+      "id": "scmenu.cache.enable",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scmenu__sub button:has-text(\"enable\")') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scmenu.cache.optimize",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.cache.optimize.png",
+      "needsVisual": false,
+      "note": "cmd.cache('optimize'); must not throw."
+    },
+    {
+      "id": "scmenu.cache.readonly",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.scmenu__sub button:has-text(\"enable\")') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "scmenu.cache.disable",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.cache.disable.png",
+      "needsVisual": false,
+      "note": "cmd.cache('disable'); must not throw."
+    },
+    {
+      "id": "scmenu.blank",
+      "verdict": "FAIL",
+      "reason": "screenshotChanged: \"viewport unchanged\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": false,
+          "detail": "viewport unchanged"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.blank.png",
+      "needsVisual": false,
+      "note": "Disables all objects and clears the message; the viewport goes blank."
+    },
+    {
+      "id": "scmenu.buttons.toggle",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".scbar",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/scmenu.buttons.toggle.png",
+      "needsVisual": false,
+      "note": "Unticking Buttons writes scene_buttons=0, which hides the button strip overlay. Placed last because it leaves the overlay hidden for the rest of the session."
+    },
+    {
+      "id": "views.store.button",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".vwrow__name:has-text(\"viewstorea\")",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.store.button.png",
+      "needsVisual": false,
+      "note": "Typing a name and clicking store saves the current camera; the view appears in the list."
+    },
+    {
+      "id": "views.store.enter",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".vwrow__name:has-text(\"viewenter\")",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.store.enter.png",
+      "needsVisual": false,
+      "note": "Enter in the name input stores the view, same as the store button."
+    },
+    {
+      "id": "views.name.blank",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".vwlist__err",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "view name cannot be blank",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.name.blank.png",
+      "needsVisual": false,
+      "note": "An empty view name shows 'a view name cannot be blank' and makes no backend call."
+    },
+    {
+      "id": "views.name.space",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".vwlist__err",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "cannot contain spaces",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.name.space.png",
+      "needsVisual": false,
+      "note": "'a b' shows 'a view name cannot contain spaces'."
+    },
+    {
+      "id": "views.name.underscore",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".vwlist__err",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "cannot start with",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.name.underscore.png",
+      "needsVisual": false,
+      "note": "'_x' shows 'a view name cannot start with \"_\"' (Shortcut drops _-prefixed keys)."
+    },
+    {
+      "id": "views.name.star",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".vwlist__err",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "means all views",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.name.star.png",
+      "needsVisual": false,
+      "note": "'*' shows '\"*\" means all views, it cannot be a name'."
+    },
+    {
+      "id": "views.recall",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.recall.png",
+      "needsVisual": false,
+      "note": "Storing at one camera then turning away and clicking the view recalls it, moving the camera back (viewport changes)."
+    },
+    {
+      "id": "views.recall.ctrl",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.recall.ctrl.png",
+      "needsVisual": false,
+      "note": "LIMITATION: ctrl/meta-click selects recallInstant (animate=0). The DSL cannot send keyboard modifiers with a click, so a plain (animated) recall is exercised instead; this documents the modifier path."
+    },
+    {
+      "id": "views.delete",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".vwrow__name:has-text(\"viewdel\")",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.delete.png",
+      "needsVisual": false,
+      "note": "The × button runs cmd.view(name,'clear'); the row disappears."
+    },
+    {
+      "id": "views.clearall",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".vwrow",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.clearall.png",
+      "needsVisual": false,
+      "note": "Removes every named view; the list empties."
+    },
+    {
+      "id": "views.refresh",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".vwlist",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/scenes/views.refresh.png",
+      "needsVisual": false,
+      "note": "Re-runs the failing-probe listing; the panel stays rendered without error."
+    }
+  ]
+}

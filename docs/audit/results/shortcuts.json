@@ -1,0 +1,324 @@
+{
+  "results": [
+    {
+      "id": "shortcuts.butmode.config.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid='mouse-config']",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Mouse configuration",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/shortcuts/shortcuts.butmode.config.open.png",
+      "needsVisual": false,
+      "note": "The 'Mouse & Keys…' button portalled into the internal-gui column opens the Mouse configuration modal."
+    },
+    {
+      "id": "shortcuts.mouseconfig.close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.mouseconfig.open-ksm",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.filter.substring",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.filter.regex",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.filter.badregex",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.filter.clear",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.refresh",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.row.select",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.row.deselect",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.command.edit-dblclick",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.createnew.open",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.delete.selected",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.delete.created-disappears",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.reset.selected",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.reset.all",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.save",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.create.newkey",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.create.reserved-key",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.create.cancel",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.create.existing-confirm",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.confirm.accept",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.confirm.cancel",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "shortcuts.editor.confirm.skip-checkbox",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\\'butmode-config\\']').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"butmode__config\" data-testid=\"butmode-config\" title=\"mouse configuration matrix and keyboard shortcu",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    }
+  ]
+}

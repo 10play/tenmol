@@ -1,0 +1,5 @@
+# Per-spec screenshots are bulky evidence (100M+); regenerate with run-shard.mjs.
+# Curated confirmed-defect screenshots live in evidence/ and ARE committed.
+shots/
+reverify/shots-*/
+reverify/*.out.json
