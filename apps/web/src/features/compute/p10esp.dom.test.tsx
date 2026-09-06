@@ -49,7 +49,7 @@ const SESSION = {
   stores: { feedback },
 };
 
-vi.mock('../../app', () => ({ useSession: () => SESSION }));
+vi.mock('../../app', () => ({ useSession: () => SESSION, isLocal: () => false }));
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

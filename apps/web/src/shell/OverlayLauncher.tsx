@@ -23,9 +23,18 @@ import {
   SquarePen,
 } from 'lucide-react';
 import { isInstalled, slotsForRegion } from '../features/registry';
-import { useStore } from '../app';
+import { isLocal, useSession, useStore } from '../app';
 import { ToggleButton } from '../ui';
 import { panelsStore, togglePanel } from './panelHooks';
+
+/**
+ * Overlay panels whose ENTIRE surface is served by the bridge, so they have
+ * nothing to show in the browser-only build (`backend === 'local'`) — their
+ * launcher is omitted there rather than opening onto a "not ported" panel. A
+ * panel that only partially depends on the bridge (Compute, Settings) keeps its
+ * launcher and gates its own content; it is NOT listed here.
+ */
+const LOCAL_UNSUPPORTED_PANELS: ReadonlySet<string> = new Set(['plugin-manager']);
 
 /** Lucide icons for the overlay-launcher panels, keyed by feature slot id. */
 export const LAUNCHER_ICONS: Record<string, LucideIcon> = {
@@ -47,8 +56,12 @@ export const LAUNCHER_ICONS: Record<string, LucideIcon> = {
  * `iconOnly`) so tooltips, a11y and the class-name tests are unaffected.
  */
 export function LauncherButtons({ iconOnly = false }: { iconOnly?: boolean }) {
+  const session = useSession();
+  const local = isLocal(session);
   const open = useStore(panelsStore(), (state) => state.open);
-  const slots = slotsForRegion('overlay').filter((slot) => isInstalled(slot.id));
+  const slots = slotsForRegion('overlay')
+    .filter((slot) => isInstalled(slot.id))
+    .filter((slot) => !(local && LOCAL_UNSUPPORTED_PANELS.has(slot.id)));
   return (
     <>
       {slots.map((slot) => (

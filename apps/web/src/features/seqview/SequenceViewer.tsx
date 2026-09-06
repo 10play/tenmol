@@ -20,7 +20,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PanelMenuNode, SeqviewCell, SeqviewPayload, SeqviewRow } from '@tenmol/protocol';
-import { useSession, useStore } from '../../app';
+import { isLocal, useSession, useStore } from '../../app';
 import { RowMenu } from '../objects/RowMenu';
 import { createSeqviewSource, type SeqviewMenuPayload, type SeqviewSource } from './source';
 import { Button, click, move, wheel, type Mods, type SeqAction, type SeqDrag } from './grammar';
@@ -64,6 +64,11 @@ const EMPTY: SeqviewPayload = {
 /** PyMOL's `CSeq` sequence viewer as virtualised DOM: renders the visible column window, or nothing when no object has `seq_view` on. */
 export function SequenceViewer(): React.JSX.Element | null {
   const session = useSession();
+  // The viewer's rows come from the bridge panel `cmd.tenmol_seqview`, which the
+  // in-browser engine has not ported. In the browser-only build it renders
+  // nothing and never polls (the Display ▸ Sequence toggle is gated too); over a
+  // bridge it works unchanged.
+  const local = isLocal(session);
   const phase = useStore(session.stores.connection, (s) => s.phase);
   const echo = useStore(session.stores.ui, (s) => s.echoActions);
 
@@ -128,7 +133,7 @@ export function SequenceViewer(): React.JSX.Element | null {
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     const tick = async () => {
-      if (stopped) return;
+      if (stopped || local) return;
       if (phase === 'open') {
         try {
           const next = await source.rows(firstRef.current, WINDOW);
@@ -144,12 +149,12 @@ export function SequenceViewer(): React.JSX.Element | null {
       timer = setTimeout(() => void tick(), 1000 / hz);
     };
 
-    void tick();
+    if (!local) void tick();
     return () => {
       stopped = true;
       if (timer !== null) clearTimeout(timer);
     };
-  }, [adopt, source, phase]);
+  }, [adopt, source, phase, local]);
 
   // A reconnect may be a different bridge process: the panel is not installed
   // there until we bootstrap it again.

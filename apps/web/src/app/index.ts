@@ -10,6 +10,6 @@
 
 export { default as App } from './App';
 export { BridgeProvider, SessionContext } from './BridgeProvider';
-export { getSession, errorText, type Session, type SessionStores } from './session';
+export { getSession, isLocal, errorText, type Session, type SessionStores } from './session';
 export { resolveBridgeConfig, withToken, type BridgeConfig } from './config';
 export { useSession, useStore, useShallowStore, useStoreState } from './hooks';

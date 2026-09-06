@@ -94,6 +94,92 @@ export const UNAVAILABLE_COMMANDS: Readonly<Record<string, string>> = {
 };
 
 /* ------------------------------------------------------------------ *
+ * Local-backend gating
+ * ------------------------------------------------------------------ */
+
+/**
+ * `cmd.*` symbols behind menu `call` leaves that the in-browser engine has NOT
+ * ported: clicking such a leaf in the browser-only build surfaces
+ * `<fn>: not ported by @tenmol/engine-ts yet` in the console (they work over the
+ * bridge). Proven by `scripts/audit/unsupported-probe.mjs`; gated out of the
+ * rendered tree when `backend === 'local'` (see {@link pruneMenuForLocal}).
+ */
+export const LOCAL_UNSUPPORTED_CALL_FNS: ReadonlySet<string> = new Set([
+  'cmd.util.ray_shadows', // Setting ▸ Rendering ▸ Shadows ▸ …
+  'cmd.util.modernize_rendering', // Setting ▸ Rendering ▸ Modernize
+]);
+
+/** Menu hooks that only work over the bridge (they open a bridge-only surface). */
+export const LOCAL_UNSUPPORTED_HOOKS: ReadonlySet<string> = new Set([
+  'initializePlugins', // Plugin ▸ Initialize Plugin System — opens the (remote-only) plugin manager
+]);
+
+/** True when this leaf reaches a surface the browser-only build cannot serve. */
+export function isLocalUnsupportedNode(node: MenuNode): boolean {
+  // `Open Recent...` reads the bridge's `~/.pymol/recent.db` (`tenmol_menus`).
+  if (node.kind === 'dynamic') return true;
+  // `Display ▸ Sequence` toggles `seq_view`, whose viewer is bridge-served.
+  if (node.kind === 'check' && node.setting === 'seq_view') return true;
+  if (node.kind !== 'command') return false;
+  const action = node.action;
+  if (action.type === 'call') return action.calls.some((call) => LOCAL_UNSUPPORTED_CALL_FNS.has(call.fn));
+  if (action.type === 'hook') return LOCAL_UNSUPPORTED_HOOKS.has(action.hook);
+  return false;
+}
+
+/** Trim separators that a prune left leading, trailing or doubled. */
+function tidySeparators(nodes: readonly MenuNode[]): MenuNode[] {
+  const out: MenuNode[] = [];
+  for (const node of nodes) {
+    if (node.kind === 'separator' && (out.length === 0 || out[out.length - 1]?.kind === 'separator')) {
+      continue;
+    }
+    out.push(node);
+  }
+  while (out.length > 0 && out[out.length - 1]?.kind === 'separator') out.pop();
+  return out;
+}
+
+/**
+ * The menu tree with every {@link isLocalUnsupportedNode} leaf removed, and any
+ * submenu this empties removed with it. Node identity is preserved wherever a
+ * subtree is unchanged, so React bails on the untouched branches.
+ */
+export function pruneMenuForLocal(nodes: readonly MenuNode[]): MenuNode[] {
+  const out: MenuNode[] = [];
+  let changed = false;
+  for (const node of nodes) {
+    if (isLocalUnsupportedNode(node)) {
+      changed = true;
+      continue;
+    }
+    if (node.kind === 'submenu') {
+      const items = pruneMenuForLocal(node.items);
+      if (!items.some((child) => child.kind !== 'separator')) {
+        changed = true; // nothing usable left in this submenu
+        continue;
+      }
+      // Compare by element identity, not length: a grandchild pruned out of a
+      // nested submenu leaves this level's COUNT unchanged but its content not.
+      // `pruneMenuForLocal` returns the same node references where nothing moved.
+      const same =
+        items.length === node.items.length && items.every((child, i) => child === node.items[i]);
+      if (same) {
+        out.push(node);
+      } else {
+        changed = true;
+        out.push({ ...node, items });
+      }
+      continue;
+    }
+    out.push(node);
+  }
+  const tidied = tidySeparators(out);
+  if (tidied.length !== out.length) changed = true;
+  return changed ? tidied : [...nodes];
+}
+
+/* ------------------------------------------------------------------ *
  * Setting state
  * ------------------------------------------------------------------ */
 
