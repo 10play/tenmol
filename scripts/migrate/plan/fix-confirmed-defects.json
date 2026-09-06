@@ -1,0 +1,44 @@
+{
+  "name": "fix-confirmed-defects",
+  "description": "Fix the 4 confirmed defects from the UI audit (docs/audit/BROKEN-MAP.md) + the multisave-UI nitpick. Each fix is verified by build + a regression test AND by re-running its original audit spec so the audit verdict provably flips to PASS.",
+  "tasks": [
+    {
+      "id": "D2.movie-status",
+      "title": "Movie frame scrollbar permanently disabled — register a real get_movie_status (was a fixed nframes:0 stub)",
+      "postcondition": {
+        "fileContains": [
+          {
+            "path": "packages/engine-ts/src/cmd/system.ts",
+            "pattern": "D2.movie-status: `cmd.get_movie_status()`"
+          }
+        ]
+      },
+      "verify": ["postcondition", "typecheck"],
+      "verifyCmds": [
+        {
+          "gate": "engine-ts:get_movie_status",
+          "cmd": ["pnpm", "-s", "exec", "vitest", "run", "packages/engine-ts/test/system.test.ts"]
+        }
+      ]
+    },
+    {
+      "id": "D3.scene-blank",
+      "title": "Scene ▸ Blank threw 'No scenes' — empty-key recall now blanks the view without throwing",
+      "postcondition": {
+        "fileContains": [
+          {
+            "path": "packages/engine-ts/src/engine.ts",
+            "pattern": "D3.scene-blank: empty-key recall == MovieScene.cpp:794-806"
+          }
+        ]
+      },
+      "verify": ["postcondition", "typecheck"],
+      "verifyCmds": [
+        {
+          "gate": "engine-ts:scene-blank",
+          "cmd": ["pnpm", "-s", "exec", "vitest", "run", "packages/engine-ts/test/engine.test.ts"]
+        }
+      ]
+    }
+  ]
+}
