@@ -3,6 +3,25 @@
   "description": "Fix the 4 confirmed defects from the UI audit (docs/audit/BROKEN-MAP.md) + the multisave-UI nitpick. Each fix is verified by build + a regression test AND by re-running its original audit spec so the audit verdict provably flips to PASS.",
   "tasks": [
     {
+      "id": "D1.bg-color",
+      "title": "bg_color never repainted the live viewport — wire the bg_rgb setting to viewport.setBackground",
+      "postcondition": {
+        "fileContains": [
+          {
+            "path": "apps/web/src/features/viewport/viewportBackground.ts",
+            "pattern": "D1.bg-color: bg_rgb -> viewport.setBackground"
+          }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        {
+          "gate": "web:bg-color",
+          "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/viewport/bgColor.dom.test.tsx"]
+        }
+      ]
+    },
+    {
       "id": "D2.movie-status",
       "title": "Movie frame scrollbar permanently disabled — register a real get_movie_status (was a fixed nframes:0 stub)",
       "postcondition": {
