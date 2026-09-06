@@ -205,6 +205,29 @@ export function objectNameForFile(name: string): string {
   return (dot > 0 ? base.slice(0, dot) : base).replace(/[\s'"();:]/g, '_');
 }
 
+/** Extension → PyMOL `load_raw` format string for the plain molecule formats. */
+const LOAD_FORMAT_BY_EXT: Readonly<Record<string, string>> = {
+  pdb: 'pdb', ent: 'pdb', pdb1: 'pdb', pqr: 'pqr', pdbqt: 'pdbqt',
+  cif: 'cif', mmcif: 'cif', mcif: 'cif',
+  mol: 'mol', sdf: 'sdf', mol2: 'mol2', xyz: 'xyz',
+};
+
+/**
+ * The PyMOL `load_raw` FORMAT for a browser-opened file, from its extension.
+ *
+ * A browser open has file CONTENTS, not a path. `cmd.load_raw(content, format,
+ * object)` is the one content-loader BOTH backends implement (engine-ts
+ * `fileio.ts`; real PyMOL `importing.py`), so it works over the bridge too —
+ * unlike `cmd.load`, whose first argument is a filesystem PATH in real PyMOL
+ * (it silently fails to load raw content there). Unknown extensions fall back to
+ * the bare extension as the format (best effort).
+ */
+export function loadFormatForFile(name: string): string {
+  const base = name.replace(/^.*[/\\]/, '').replace(/\.(gz|bz2)$/i, '');
+  const ext = (/\.([a-z0-9]+)$/i.exec(base)?.[1] ?? '').toLowerCase();
+  return LOAD_FORMAT_BY_EXT[ext] ?? ext;
+}
+
 /**
  * The console line for a drop that cannot be completed here.
  *

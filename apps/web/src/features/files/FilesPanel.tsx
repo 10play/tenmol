@@ -62,6 +62,7 @@ import {
   dialogNeededFor,
   dialogRequiredMessage,
   objectNameForFile,
+  loadFormatForFile,
   refusalFor,
   scriptUnsupportedMessage,
 } from './globalDrop';
@@ -405,9 +406,10 @@ export function FilesPanel() {
     //
     // Browser-only: no `ensure()`, no server `pick`, no `api.*`. Open the OS
     // file picker, read each file's TEXT, and hand the CONTENTS to the engine
-    // through `cmd.load` (blank format => the engine sniffs). This also works
-    // over the remote bridge — `cmd.load` accepts content on both backends — so
-    // it is unconditional and never routes through `cmd.tenmol_files.*`.
+    // through `cmd.load_raw(content, format, object)` — the one content-loader
+    // BOTH backends implement (real PyMOL's `cmd.load` takes a filesystem PATH,
+    // not content, so it silently fails over the bridge). Never routes through
+    // `cmd.tenmol_files.*`, so it is unconditional across backends.
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
@@ -444,8 +446,8 @@ export function FilesPanel() {
           }
           const content = await file.text();
           await session.act({
-            fn: 'cmd.load',
-            args: [content, objectNameForFile(file.name), 0, ''],
+            fn: 'cmd.load_raw',
+            args: [content, loadFormatForFile(file.name), objectNameForFile(file.name)],
             echo: `load ${file.name}`,
             invalidatesNames: true,
           });

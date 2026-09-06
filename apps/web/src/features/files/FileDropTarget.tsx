@@ -19,6 +19,7 @@ import {
   dialogNeededFor,
   dialogRequiredMessage,
   objectNameForFile,
+  loadFormatForFile,
   planFromDataTransfer,
   refusalFor,
   scriptUnsupportedMessage,
@@ -185,8 +186,10 @@ export function FileDropTarget() {
         }
         const content = await file.text();
         await session.act({
-          fn: 'cmd.load',
-          args: [content, objectNameForFile(file.name), 0, ''],
+          // load_raw(content, format, object): the one content-loader both
+          // backends implement — real PyMOL's cmd.load takes a PATH, not content.
+          fn: 'cmd.load_raw',
+          args: [content, loadFormatForFile(file.name), objectNameForFile(file.name)],
           echo: `load ${file.name}`,
           invalidatesNames: true,
         });

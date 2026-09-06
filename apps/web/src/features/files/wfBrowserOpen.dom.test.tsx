@@ -130,7 +130,7 @@ function fileWithText(content: string, name: string): File {
 }
 
 describe('I1 — File ▸ Open… loads file contents through the engine', () => {
-  it('reads the picked file and calls cmd.load with its CONTENTS, no cmd.tenmol_files.*', async () => {
+  it('reads the picked file and calls cmd.load_raw with its CONTENTS + format, no cmd.tenmol_files.*', async () => {
     mount();
     // Open the menu (this bootstraps `hello`); then forget that so the
     // assertion below is scoped to the OPEN action alone.
@@ -146,9 +146,10 @@ describe('I1 — File ▸ Open… loads file contents through the engine', () =>
     act(() => lastInput?.dispatchEvent(new Event('change')));
     await flush();
 
-    // The engine saw the CONTENTS (with a sniffed format), not a server path.
+    // The engine saw the CONTENTS via load_raw (content, format, object) — the
+    // one content-loader both backends implement — not a server path.
     expect(acted).toEqual([
-      { fn: 'cmd.load', args: [PDB, '1abc', 0, ''] },
+      { fn: 'cmd.load_raw', args: [PDB, 'pdb', '1abc'] },
     ]);
     // …and the open action never touched the bridge-only module.
     expect(tfCalls).toEqual([]);
