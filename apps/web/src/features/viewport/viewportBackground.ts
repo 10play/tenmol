@@ -128,7 +128,8 @@ export function useViewportBackground(
   getTarget: () => BackgroundTarget | null,
 ): void {
   // `getTarget` is a fresh closure each render but only reads a ref, so it is
-  // safe to omit from the deps; including it would re-arm the poll every render.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // deliberately omitted from the deps; including it would re-arm the poll every
+  // render. (This repo's eslint config does not enable react-hooks/exhaustive-deps,
+  // so no disable directive is used — one would error as an unknown rule.)
   useEffect(() => startBackgroundSync(session, getTarget), [session]);
 }
