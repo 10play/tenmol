@@ -1049,6 +1049,7 @@ export function FilesPanel() {
       {dialog.kind === 'export-molecule' && (
         <ExportMoleculeDialog
           info={dialog.info}
+          backend={session.config?.backend}
           onClose={() => setDialog({ kind: 'none' })}
           onSave={(request) => {
             void exportMolecule(request);

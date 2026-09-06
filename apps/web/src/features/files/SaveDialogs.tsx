@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import type { SaveMoleculeInfo } from '@tenmol/protocol/topics/files';
+import type { BackendKind } from '../../app/config';
 import { Check, Field, Modal } from './Modal';
 
 /** The parameters the Export Molecule dialog collects for one save. */
@@ -27,11 +28,22 @@ export function ExportMoleculeDialog({
   info,
   onSave,
   onClose,
+  backend = 'local',
 }: {
   info: SaveMoleculeInfo;
   onSave: (request: MoleculeSaveRequest) => void;
   onClose: () => void;
+  /**
+   * Which engine backs this page. The multi-file / multi-object controls
+   * (`multisave`, the "Multiple files" patterns) can only produce many files
+   * over the bridge; the browser can't turn one download into several, so
+   * `exportMolecule` refuses them on `'local'`. Don't even offer them there.
+   */
+  backend?: BackendKind;
 }) {
+  // Browser-only build: no bridge to write multiple files, so the multi-file
+  // controls would always end in a refusal — hide them entirely.
+  const browserOnly = backend === 'local';
   // `input_selection` is an editable combo seeded with 'enabled', 'all' from
   // the .ui and then all objects + public selections; blank means the
   // placeholder, which is the first entry ('enabled').
@@ -131,13 +143,15 @@ export function ExportMoleculeDialog({
         <button type="button" className={tab === 'pdb' ? 'is-on' : ''} onClick={() => setTab('pdb')}>
           PDB
         </button>
-        <button
-          type="button"
-          className={tab === 'multi' ? 'is-on' : ''}
-          onClick={() => setTab('multi')}
-        >
-          Multiple files
-        </button>
+        {!browserOnly && (
+          <button
+            type="button"
+            className={tab === 'multi' ? 'is-on' : ''}
+            onClick={() => setTab('multi')}
+          >
+            Multiple files
+          </button>
+        )}
       </div>
 
       {tab === 'options' && (
@@ -175,16 +189,18 @@ export function ExportMoleculeDialog({
             onChange={(v) => setSettings({ ...settings, pdb_retain_ids: v })}
             hint="setting pdb_retain_ids"
           />
-          <Check
-            label="Write HEADER for every object"
-            checked={multisave}
-            onChange={setMultisave}
-            hint="cmd.multisave — pdb/cif only"
-          />
+          {!browserOnly && (
+            <Check
+              label="Write HEADER for every object"
+              checked={multisave}
+              onChange={setMultisave}
+              hint="cmd.multisave — pdb/cif only"
+            />
+          )}
         </>
       )}
 
-      {tab === 'multi' && (
+      {tab === 'multi' && !browserOnly && (
         <>
           <p className="fdlg__text">Write objects or states to …</p>
           <label className="fdlg__radio">
