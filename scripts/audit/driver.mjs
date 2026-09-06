@@ -71,6 +71,20 @@ export async function resetApp(page) {
   // Close any stray overlay/menu by pressing Escape a couple of times.
   await page.keyboard.press('Escape').catch(() => {});
   await page.keyboard.press('Escape').catch(() => {});
+  // Normalise the Ray/Draw dialog to a known state (collapsed, on the setup
+  // page). The render feature keeps its own component state across specs — a
+  // Draw/Ray leaves the dialog EXPANDED on the RESULT page — so without this the
+  // next spec's `.render__tab` click would time out (the tab only exists while
+  // the dialog is collapsed). Guarded by `isVisible`, so this is a fast no-op in
+  // every shard that never opens the dialog.
+  if (await page.locator('.render__path').first().isVisible().catch(() => false)) {
+    // On the result page: `< Back` returns to the setup page (the only button
+    // in `.render__actions` there).
+    await page.locator('.render__actions .render__btn').first().click({ timeout: 1000 }).catch(() => {});
+  }
+  if (await page.locator('.render__collapse').first().isVisible().catch(() => false)) {
+    await page.locator('.render__collapse').first().click({ timeout: 1000 }).catch(() => {});
+  }
 }
 
 async function bodyText(page) {

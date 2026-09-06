@@ -41,20 +41,52 @@ but have a real browser-native form, so they are kept and reworked, not deleted.
 
 ### C. NOT A BROWSER LIMIT (mis-tagged or harness-only)
 
-- **settings (62), sequence viewer (36), ray/render (7)** — local-engine
-  operations the audit over-tagged `remote-backend`/`bridge-gl`. Re-tagging as
-  local and re-running them (exploratory) confirmed they RUN in the browser, but
-  the raw verdicts are **not yet trustworthy**: most failures are the same
-  over-strict-spec artifact seen elsewhere — the individual specs (e.g. a Setting
-  tab/row, a seqview format) assume a precondition the spec never establishes
-  (the menu/panel already open), so they time out on a setup selector while the
-  panel-open specs pass. **Follow-up (not done here):** fix these ~105 specs'
-  setup steps, then run them through the audit's adversarial verify pass to get
-  real pass/fail. One lead worth a direct look: whether the **sequence viewer
-  actually renders in local mode** (all 36 seqview specs failed to find their
-  rows) — that may be a genuine local-engine gap rather than a spec artifact.
-- **ray / image render** — `engine-ts/src/cmd/render.ts` already raytraces in-browser;
-  only Mode-P (the bridge's offscreen GL) is bridge-specific.
+Bucket C was resolved by *verifying* each area against the live local engine
+(`?backend=local`) rather than trusting the exploratory re-tag. The three areas
+split cleanly, and only one was actually mis-tagged:
+
+- **ray / image render (was 8 blocked → now 1)** — GENUINELY MIS-TAGGED, now
+  reclaimed. `engine-ts/src/cmd/render.ts` raytraces in-browser AND the engine
+  serves `_bridge.draw` / `_bridge.ray` / `cmd.png` locally (verified: `cmd.png`
+  returns a real PNG in local mode). The 8 draw/ray/result specs carried
+  `remote-backend`+`bridge-gl` on the stale belief that `_bridge` was
+  bridge-only; those tags are removed. After also fixing a setup artifact (a
+  Draw/Ray leaves the dialog on the RESULT page, which broke the next spec's
+  `.render__tab` precondition — normalised in the driver's `resetApp`), the shard
+  is **19 PASS / 1 BLOCKED**. The one remaining BLOCKED is `render.result.save`,
+  which writes a host-path PNG via `cmd.png(path)` and correctly keeps
+  `file-service`.
+
+- **sequence viewer (36) — GENUINE ENGINE-TS GAP, not a spec artifact.** Verified
+  live: after `set seq_view, 1` no `.seqview` element ever mounts. The
+  `SequenceViewer`'s only data feed is `source.rows()` →
+  `cmd.tenmol_seqview` (`apps/web/src/features/seqview/source.ts`), which is a
+  **bridge-only Python panel** (`packages/bridge/tenmol_bridge/panels/seqview.py`,
+  ~1.6k lines). `@tenmol/engine-ts` does not port that command — a direct call
+  returns `PymolError: cmd.tenmol_seqview: not ported by @tenmol/engine-ts yet`.
+  So the bootstrap probe throws, the poll errors, `payload.visible` stays false
+  and the strip renders `null`. This is NOT a small D1-style wiring gap (the web
+  app is fully wired; it is the *data producer* that is missing) — reclaiming it
+  means porting the whole Seeker/Seq sequence pipeline (align_rows, column
+  offsets, selection toggles, menus) to TS. The 36 specs therefore keep
+  `remote-backend` and stay BLOCKED (the honest verdict). **What's missing /
+  where:** a TS implementation of `cmd.tenmol_seqview` (`rows`/`select`/
+  `select_range`/`center`/`set_state`/`clear`/`menu`/`menu_expand`) in
+  `packages/engine-ts`, mirroring `packages/bridge/tenmol_bridge/panels/seqview.py`.
+
+- **settings (62 of 68) — GENUINE ENGINE-TS GAP.** Verified live: the settings
+  windows open, but the body reads *"settings service unavailable:
+  setting.tenmol_settings_status: not ported by @tenmol/engine-ts yet"*. The
+  catalogue/values/scope tap (`setting.tenmol_settings_*`) is a bridge-only panel
+  (`packages/bridge/tenmol_bridge/panels/settings.py`); engine-ts does not port
+  it, so without a catalogue the Setting-menu tabs/rows, the Advanced table and
+  the Lighting presets never render and every content spec times out on its setup
+  selector. A stripped-tag re-run confirmed this end-to-end: **6 PASS / 62 FAIL**
+  (the 6 that pass are exactly the panel/window open-close specs, already tagged
+  local). The 62 content specs keep `remote-backend` and stay BLOCKED. **What's
+  missing / where:** a TS implementation of the `setting.tenmol_settings_*`
+  service in `packages/engine-ts`, mirroring
+  `packages/bridge/tenmol_bridge/panels/settings.py`.
 - **compute suite (ESP/SASA/force-fields)** — pure `pymol.util` math; portable to
   TS, unimplemented today but not a hard wall.
 - **picking (34)** — WebGL raycast is feasible; the audit blocked it because the
@@ -64,5 +96,8 @@ but have a real browser-native form, so they are kept and reworked, not deleted.
 
 Only bucket **A** is removed, via `scripts/migrate/plan/remove-impossible.json`,
 executed through the crash-safe harness (`scripts/migrate/`). Bucket B is the
-follow-up *implement* phase; bucket C just needs a local re-run of the audit with
-corrected `requires` tags.
+follow-up *implement* phase. Bucket C was **resolved**: only ray/render was truly
+mis-tagged (re-tagged local, now 19 PASS / 1 BLOCKED); the sequence viewer and
+the 62 settings content specs are genuine `@tenmol/engine-ts` port gaps (their
+`cmd.tenmol_seqview` / `setting.tenmol_settings_*` data services are bridge-only
+and "not ported yet"), so they correctly keep `remote-backend` and stay BLOCKED.
