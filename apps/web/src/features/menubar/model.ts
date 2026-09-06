@@ -176,7 +176,9 @@ export function pruneMenuForLocal(nodes: readonly MenuNode[]): MenuNode[] {
   }
   const tidied = tidySeparators(out);
   if (tidied.length !== out.length) changed = true;
-  return changed ? tidied : [...nodes];
+  // Return the SAME array reference when nothing was pruned, so React bails on
+  // the whole branch (the docstring's identity guarantee). Callers never mutate.
+  return changed ? tidied : (nodes as MenuNode[]);
 }
 
 /* ------------------------------------------------------------------ *

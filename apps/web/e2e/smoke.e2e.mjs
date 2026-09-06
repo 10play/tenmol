@@ -445,10 +445,11 @@ export const tests = [
       ]);
       await chooser.setFiles(join(REPO, PDB));
 
-      // `fileOpen` reads `file.text()` then `cmd.load(content, '1tii', 0, '')`
-      // (the object name is derived from the filename by `objectNameForFile`),
-      // so the structure appears under `1tii` once the load round-trips. Poll
-      // rather than sleep — the read + load is async and host-speed dependent.
+      // `fileOpen` reads `file.text()` then `cmd.load_raw(content, 'pdb', '1tii')`
+      // (format from the extension, object name from `objectNameForFile`), so the
+      // structure appears under `1tii` once the load round-trips. load_raw is the
+      // one content-loader both backends implement. Poll rather than sleep — the
+      // read + load is async and host-speed dependent.
       const after = await until(page, 'cmd.get_names("objects")', (v) => v.includes('1tii'));
       assert(after.includes('1tii'), `object never loaded (before=${before} after=${after})`);
       await page.close();
