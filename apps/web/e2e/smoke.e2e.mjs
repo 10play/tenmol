@@ -405,54 +405,51 @@ export const tests = [
   },
   {
     /**
-     * The browser cannot open a native file dialog, so File > Open is a
-     * BRIDGE-SERVED path browser over the real filesystem. This pins the whole
-     * round trip: navigate, list, select, and land an object in PyMOL.
+     * File > Open is now a BROWSER-NATIVE file picker, not a bridge-served path
+     * browser. The I1 rework replaced the server PathPicker with a `<input
+     * type=file>`: `fileOpen` (`FilesPanel.tsx`, anchor `browser-open: load file
+     * contents`) opens the OS chooser, reads each file's TEXT, and hands the
+     * CONTENTS to the engine via `cmd.load` — which works on BOTH backends, so
+     * this still exercises the flow the remote bridge sees. This spec drives it
+     * with Playwright's `filechooser` event and asserts the object lands in
+     * PyMOL.
+     *
+     * NOT VERIFIED LOCALLY: the e2e suite needs a real bridge (see harness.mjs),
+     * which is unavailable in the sandbox this was written in. It is written to
+     * the new `fileOpen` wiring and the Playwright filechooser API; run under
+     * `pnpm e2e` where a bridge exists.
      */
-    name: 'File > Open loads a structure through the bridge-served path picker',
+    name: 'File > Open loads a structure through the browser file picker',
     async fn({ stack, assert }) {
       const page = await openApp(stack);
       await page.locator(CMDLINE).waitFor({ state: 'visible', timeout: 20_000 });
       const before = await ask(page, 'cmd.get_names("objects")');
 
+      // Reach `File ▾ ▸ Open…` exactly as the old spec did: open the files panel
+      // from the launcher, then its own File strip menu.
       await page.getByRole('button', { name: 'File dialogs', exact: true }).click();
       await page.waitForTimeout(700);
       await page.locator('.files__strip button').first().click();
       await page.waitForTimeout(700);
-      await page.getByText(/^Open…/).first().click();
-      await page.waitForTimeout(1200);
 
-      // Directory rows descend on a SINGLE click (`PathPicker.tsx:267`) and are
-      // rendered with a `▸` prefix, so match on that — an exact-text match on
-      // the bare name matches nothing, and a double click fires two navigations.
-      // `packages/engine/` first: the upstream PyMOL tree, and therefore its `test/dat`
-      // fixtures, moved under it when the repo was reorganised.
-      for (const dir of ['packages', 'engine', 'test', 'dat']) {
-        await page
-          .locator('.fpick__row--dir')
-          .filter({ hasText: new RegExp(`^▸${dir}$`) })
-          .first()
-          .click();
-        await page.waitForTimeout(1200);
-      }
+      // The `Open…` click synchronously creates an `<input type=file>` and calls
+      // `.click()` on it (`fileOpen`), so the OS chooser opens right here —
+      // capture it with `waitForEvent('filechooser')` and hand it a real PDB.
+      // `join(REPO, PDB)` is an ABSOLUTE path so `setFiles` resolves it whatever
+      // the runner's cwd is: this picker reads the file from disk in the browser
+      // process, whereas the bridge-relative form of `PDB` is for `cmd.load`
+      // path arguments on the server.
+      const [chooser] = await Promise.all([
+        page.waitForEvent('filechooser'),
+        page.getByText(/^Open…/).first().click(),
+      ]);
+      await chooser.setFiles(join(REPO, PDB));
 
-      const crumbs = await page.evaluate(() =>
-        [...document.querySelectorAll('.fpick__crumb')].map((c) => c.textContent?.trim()),
-      );
-      assert(crumbs.includes('dat'), `picker did not navigate: ${crumbs.join('/')}`);
-
-      const file = page.locator('.fdlg').getByText('1tii.pdb', { exact: true }).last();
-      assert((await file.count()) > 0, '1tii.pdb not listed in packages/engine/test/dat');
-      await file.click();
-      await page.waitForTimeout(500);
-      await page
-        .locator('.fdlg')
-        .getByRole('button', { name: /^(Open|OK|Load)/ })
-        .first()
-        .click();
-      await page.waitForTimeout(2500);
-
-      const after = await ask(page, 'cmd.get_names("objects")');
+      // `fileOpen` reads `file.text()` then `cmd.load(content, '1tii', 0, '')`
+      // (the object name is derived from the filename by `objectNameForFile`),
+      // so the structure appears under `1tii` once the load round-trips. Poll
+      // rather than sleep — the read + load is async and host-speed dependent.
+      const after = await until(page, 'cmd.get_names("objects")', (v) => v.includes('1tii'));
       assert(after.includes('1tii'), `object never loaded (before=${before} after=${after})`);
       await page.close();
     },

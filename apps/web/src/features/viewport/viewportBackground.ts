@@ -109,7 +109,11 @@ export function startBackgroundSync(
     const target = getTarget();
     if (target === null) return;
     const next = await applyBackgroundOnce(session, target, lastRaw);
-    if (!cancelled) lastRaw = next;
+    // A tick whose `await` was in flight when teardown flipped `cancelled` must
+    // not mutate state that outlives the subscription: bail before stashing
+    // `lastRaw` for a poll that will never fire again.
+    if (cancelled) return;
+    lastRaw = next;
   };
   void tick();
   const timer = setInterval_(() => void tick(), BG_RGB_POLL_MS);

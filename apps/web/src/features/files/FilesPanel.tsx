@@ -469,8 +469,15 @@ export function FilesPanel() {
     const typed = window.prompt('Save session as', 'untitled.pse');
     if (!typed) return;
     const name = /\.(pse|psw)$/i.test(typed) ? typed : `${typed}.pse`;
-    await saveSession(session, name);
-    say(` saved ${name}`);
+    // `session.call` (via `saveSession` -> `cmd.get_session`) REJECTS silently
+    // — no console self-report, unlike `session.run`/`session.act` — so a save
+    // failure must be caught and surfaced here (mirrors FileDropTarget's Ctrl+S).
+    try {
+      await saveSession(session, name);
+      say(` saved ${name}`);
+    } catch (error) {
+      say(` save failed: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    }
   }, [session, say]);
 
   /**
@@ -483,8 +490,21 @@ export function FilesPanel() {
    * is a minimal valid default (the state combo still offers -1/0/1).
    */
   const saveMoleculeInfo = useCallback(async (): Promise<SaveMoleculeInfo> => {
-    const objects = await session.call<string[]>('cmd.get_names', ['objects']);
-    const selections = await session.call<string[]>('cmd.get_names', ['public_selections']);
+    // `session.call` REJECTS silently (no console self-report, unlike
+    // `session.run`/`session.act`), so a failed `cmd.get_names` would otherwise
+    // be a no-op: no dialog, no error. Catch it, report, and open the dialog
+    // with empty combos so the failure is visible rather than swallowed.
+    let objects: string[] = [];
+    let selections: string[] = [];
+    try {
+      objects = await session.call<string[]>('cmd.get_names', ['objects']);
+      selections = await session.call<string[]>('cmd.get_names', ['public_selections']);
+    } catch (error) {
+      say(
+        ` export molecule failed: ${error instanceof Error ? error.message : String(error)}`,
+        'error',
+      );
+    }
     return {
       objects,
       selections,
@@ -498,7 +518,7 @@ export function FilesPanel() {
         retain_order: false,
       },
     };
-  }, [session]);
+  }, [session, say]);
 
   const menu: MenuItem[] = useMemo(
     () => [
@@ -1049,7 +1069,6 @@ export function FilesPanel() {
       {dialog.kind === 'export-molecule' && (
         <ExportMoleculeDialog
           info={dialog.info}
-          backend={session.config?.backend}
           onClose={() => setDialog({ kind: 'none' })}
           onSave={(request) => {
             void exportMolecule(request);
@@ -1097,13 +1116,23 @@ export function FilesPanel() {
               const typed = window.prompt('Save image as', 'image.png');
               if (!typed) return;
               const name = /\.png$/i.test(typed) ? typed : `${typed}.png`;
-              const lines = pngCommands('', rendering);
-              // Every line except the trailing `png <path>` is render setup.
-              for (const line of lines.slice(0, -1)) await session.run(line);
-              const ray = rendering >= 2 ? 1 : 0;
-              const bytes = await session.call<number[]>('cmd.png', ['', 0, 0, -1], { ray });
-              downloadBytes(name, Uint8Array.from(bytes), 'image/png');
-              say(` saved ${name}`);
+              // `session.call('cmd.png', …)` REJECTS silently (and `session.run`
+              // for the setup lines can too); wrap so a failed export reports
+              // instead of leaving a no-op.
+              try {
+                const lines = pngCommands('', rendering);
+                // Every line except the trailing `png <path>` is render setup.
+                for (const line of lines.slice(0, -1)) await session.run(line);
+                const ray = rendering >= 2 ? 1 : 0;
+                const bytes = await session.call<number[]>('cmd.png', ['', 0, 0, -1], { ray });
+                downloadBytes(name, Uint8Array.from(bytes), 'image/png');
+                say(` saved ${name}`);
+              } catch (error) {
+                say(
+                  ` png export failed: ${error instanceof Error ? error.message : String(error)}`,
+                  'error',
+                );
+              }
             })();
           }}
         />
@@ -1127,17 +1156,26 @@ export function FilesPanel() {
               const typed = window.prompt('Save image as', 'image.png');
               if (!typed) return;
               const name = /\.png$/i.test(typed) ? typed : `${typed}.png`;
-              // Filename-only positional args: `dpi` is PyMOL's 4th positional
-              // slot, so passing `-1` there AND `dpi=` as a kwarg makes the real
-              // bridge raise `TypeError: png() got multiple values for argument
-              // 'dpi'`. Pass everything but the filename as kwargs (convention
-              // per panels/files.py::copy_image_png).
-              const bytes = await session.call<number[]>('cmd.png', [''], {
-                prior: 1,
-                dpi,
-              });
-              downloadBytes(name, Uint8Array.from(bytes), 'image/png');
-              say(` saved ${name}`);
+              // `session.call('cmd.png', …)` REJECTS silently, so wrap and report
+              // rather than leaving the Save button a no-op on failure.
+              try {
+                // Filename-only positional args: `dpi` is PyMOL's 4th positional
+                // slot, so passing `-1` there AND `dpi=` as a kwarg makes the real
+                // bridge raise `TypeError: png() got multiple values for argument
+                // 'dpi'`. Pass everything but the filename as kwargs (convention
+                // per panels/files.py::copy_image_png).
+                const bytes = await session.call<number[]>('cmd.png', [''], {
+                  prior: 1,
+                  dpi,
+                });
+                downloadBytes(name, Uint8Array.from(bytes), 'image/png');
+                say(` saved ${name}`);
+              } catch (error) {
+                say(
+                  ` png export failed: ${error instanceof Error ? error.message : String(error)}`,
+                  'error',
+                );
+              }
             })();
           }}
           onClipboard={() => {

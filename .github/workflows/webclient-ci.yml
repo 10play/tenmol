@@ -178,9 +178,10 @@ jobs:
       #
       # `node scripts/parity.mjs` on its own ALWAYS exits 0 -- it only prints.
       # The gate is `--min N`, which fails when fewer than N rows are checked.
-      # N is the current baseline (361 done of 365, after the APBS UI was
-      # descoped to [-] — a conscious product decision, see
-      # docs/audit/impossible.md), so a row regressing from [x] to [ ] or [~]
+      # N is the current baseline (360 done of 365, after BOTH APBS UI rows —
+      # the menu entry AND the dialog — were descoped to [-] as a conscious
+      # product decision, see docs/audit/impossible.md; the dialog row dropped
+      # the baseline 361 -> 360), so a row regressing from [x] to [ ] or [~]
       # is a red build and bumping this number is a conscious decision. Reading
       # docs/feature-parity.md at all is the other half of the gate: a moved or
       # malformed inventory throws here.
@@ -188,7 +189,7 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/parity.mjs
-          node scripts/parity.mjs --min 361
+          node scripts/parity.mjs --min 360
 
       # ---- gate: command/rep coverage scoreboard --------------------------
       #

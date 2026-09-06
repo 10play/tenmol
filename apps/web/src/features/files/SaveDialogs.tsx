@@ -6,9 +6,8 @@
  * `pymol_qt_gui.py:651-671` (`session_save` / `session_save_as`).
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { SaveMoleculeInfo } from '@tenmol/protocol/topics/files';
-import type { BackendKind } from '../../app/config';
 import { Check, Field, Modal } from './Modal';
 
 /** The parameters the Export Molecule dialog collects for one save. */
@@ -23,49 +22,36 @@ export interface MoleculeSaveRequest {
   filter: string;
 }
 
-/** `file_save` (`file_dialogs.py:519-601`). */
+/**
+ * `file_save` (`file_dialogs.py:519-601`).
+ *
+ * The multi-file / multi-object controls (`multisave` and the "Multiple files"
+ * patterns) are GONE from this dialog on both backends: they can only write many
+ * files over the bridge, the old bridge multi-file impl was deleted, and a
+ * browser download can't turn one blob into several — so `exportMolecule`
+ * (`FilesPanel.tsx`) refuses them unconditionally. Offering controls that only
+ * ever refuse is a dead end, so they are not rendered at all; `onSave` reports
+ * the fixed single-file values and `exportMolecule`'s refusal stays as an inert
+ * safety net.
+ */
 export function ExportMoleculeDialog({
   info,
   onSave,
   onClose,
-  backend = 'local',
 }: {
   info: SaveMoleculeInfo;
   onSave: (request: MoleculeSaveRequest) => void;
   onClose: () => void;
-  /**
-   * Which engine backs this page. The multi-file / multi-object controls
-   * (`multisave`, the "Multiple files" patterns) can only produce many files
-   * over the bridge; the browser can't turn one download into several, so
-   * `exportMolecule` refuses them on `'local'`. Don't even offer them there.
-   */
-  backend?: BackendKind;
 }) {
-  // Browser-only build: no bridge to write multiple files, so the multi-file
-  // controls would always end in a refusal — hide them entirely.
-  const browserOnly = backend === 'local';
   // `input_selection` is an editable combo seeded with 'enabled', 'all' from
   // the .ui and then all objects + public selections; blank means the
   // placeholder, which is the first entry ('enabled').
   const names = ['enabled', 'all', ...info.objects, ...info.selections];
   const [selection, setSelection] = useState('');
   const [state, setState] = useState(-1);
-  const [tab, setTab] = useState<'options' | 'pdb' | 'multi'>('options');
+  const [tab, setTab] = useState<'options' | 'pdb'>('options');
   const [settings, setSettings] = useState(info.settings);
-  const [pattern, setPattern] = useState<'' | 'object' | 'state'>('');
-  const [objectFmt, setObjectFmt] = useState('{name}');
-  const [stateFmt, setStateFmt] = useState('{name}_{state}');
-  const [promptEach, setPromptEach] = useState(true);
-  const [multisave, setMultisave] = useState(false);
   const [filter, setFilter] = useState(info.filters[0] ?? 'By Extension (*.*)');
-
-  // "Pressing `input_multi_state` forces the state combo to index 1 = all
-  // states" (`file_dialogs.py:597-598`).
-  useEffect(() => {
-    if (pattern === 'state') setState(0);
-  }, [pattern]);
-
-  const effectivePattern = pattern === 'state' ? stateFmt : pattern === 'object' ? objectFmt : '';
 
   return (
     <Modal
@@ -95,9 +81,11 @@ export function ExportMoleculeDialog({
                 selection: selection || 'enabled',
                 state,
                 settings,
-                pattern: effectivePattern,
-                promptEach,
-                multisave,
+                // Single-file only: the multi-file controls were removed, so
+                // these are constant. `exportMolecule` still guards on them.
+                pattern: '',
+                promptEach: false,
+                multisave: false,
                 filter,
               })
             }
@@ -143,15 +131,6 @@ export function ExportMoleculeDialog({
         <button type="button" className={tab === 'pdb' ? 'is-on' : ''} onClick={() => setTab('pdb')}>
           PDB
         </button>
-        {!browserOnly && (
-          <button
-            type="button"
-            className={tab === 'multi' ? 'is-on' : ''}
-            onClick={() => setTab('multi')}
-          >
-            Multiple files
-          </button>
-        )}
       </div>
 
       {tab === 'options' && (
@@ -188,48 +167,6 @@ export function ExportMoleculeDialog({
             checked={settings.pdb_retain_ids}
             onChange={(v) => setSettings({ ...settings, pdb_retain_ids: v })}
             hint="setting pdb_retain_ids"
-          />
-          {!browserOnly && (
-            <Check
-              label="Write HEADER for every object"
-              checked={multisave}
-              onChange={setMultisave}
-              hint="cmd.multisave — pdb/cif only"
-            />
-          )}
-        </>
-      )}
-
-      {tab === 'multi' && !browserOnly && (
-        <>
-          <p className="fdlg__text">Write objects or states to …</p>
-          <label className="fdlg__radio">
-            <input type="radio" checked={pattern === ''} onChange={() => setPattern('')} />
-            <span>one single file</span>
-          </label>
-          <label className="fdlg__radio">
-            <input
-              type="radio"
-              checked={pattern === 'object'}
-              onChange={() => setPattern('object')}
-            />
-            <span>one file per object</span>
-          </label>
-          {pattern === 'object' && (
-            <input value={objectFmt} onChange={(e) => setObjectFmt(e.target.value)} />
-          )}
-          <label className="fdlg__radio">
-            <input type="radio" checked={pattern === 'state'} onChange={() => setPattern('state')} />
-            <span>one file per object-state</span>
-          </label>
-          {pattern === 'state' && (
-            <input value={stateFmt} onChange={(e) => setStateFmt(e.target.value)} />
-          )}
-          <Check
-            label="Prompt for every file"
-            checked={promptEach}
-            onChange={setPromptEach}
-            hint="cmd.multifilenamegen produces one (file, selection, state) triple per object/state"
           />
         </>
       )}
