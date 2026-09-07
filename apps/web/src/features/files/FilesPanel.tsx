@@ -41,7 +41,7 @@ import type {
   SaveMoleculeInfo,
   TrajDialogInfo,
 } from '@tenmol/protocol/topics/files';
-import { useSession } from '../../app';
+import { isLocal, useSession } from '../../app';
 import { createFilesApi, saveToBrowser, type FilesApi } from './filesApi';
 import { PathPicker, joinPath, type PickerRequest, type PickerResult } from './PathPicker';
 import {
@@ -881,20 +881,30 @@ export function FilesPanel() {
 
   /* ------------------------------------------------------------- render */
 
+  // The compact "File ▾" strip is a stand-in from before the top menu bar
+  // existed; the bar is installed now, so on the browser-only backend this strip
+  // is redundant AND re-surfaces the bridge-only leaves (Open Recent, Export
+  // Map/Alignment, Log File, Working Directory, …) plus the "file service
+  // unavailable" error. Hide it when local; the panel still hosts the dialogs
+  // and the menu-bar action routing. Kept on the bridge, where it works.
+  const local = isLocal(session);
+
   return (
     <>
       <div className="files__strip">
-        <button
-          type="button"
-          className="files__menubtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
-          data-testid="files-menu-button"
-          onClick={() => {
-            setMenuOpen((v) => !v);
-            void ensure();
-          }}
-        >
-          File ▾
-        </button>
+        {!local && (
+          <button
+            type="button"
+            className="files__menubtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text modern:transition-colors modern:hover:bg-btn-hover modern:hover:text-pm-text-bright"
+            data-testid="files-menu-button"
+            onClick={() => {
+              setMenuOpen((v) => !v);
+              void ensure();
+            }}
+          >
+            File ▾
+          </button>
+        )}
         {busy && <span className="files__busy">{busy}</span>}
         {presentation && (
           <button
@@ -907,12 +917,12 @@ export function FilesPanel() {
             Leave presentation ({presentation.label})
           </button>
         )}
-        {error && (
+        {!local && error && (
           <span className="files__error modern:text-danger" title={error}>
             file service unavailable
           </span>
         )}
-        {menuOpen && (
+        {!local && menuOpen && (
           <div
             className="files__menu modern:rounded-md modern:border modern:border-line modern:bg-pm-panel modern:text-pm-text"
             data-testid="files-menu"

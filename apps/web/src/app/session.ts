@@ -93,7 +93,10 @@ export function getSession(): Session {
  * the gate cannot drift feature to feature. `remote` is unaffected.
  */
 export function isLocal(session: Session): boolean {
-  return session.config.backend === 'local';
+  // Optional-chained: a bare test mock may omit `config`. A real session always
+  // has one; a missing config is treated as NOT local (show everything), the
+  // safe default — gating only ever HIDES, so this never surfaces a dead end.
+  return session.config?.backend === 'local';
 }
 
 /**
