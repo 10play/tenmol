@@ -1,0 +1,343 @@
+{
+  "results": [
+    {
+      "id": "volume.cmd.volume_panel.importerror",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "input.cmdline__input",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "volume_panel|importerror|qt",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".volpanel",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/volume/volume.cmd.volume_panel.importerror.png",
+      "needsVisual": false,
+      "note": "The one volume affordance reachable in local mode. cmd.volume_panel is registered by the in-browser engine (packages/engine-ts/src/cmd/extras.ts:802) to raise ImportError: pymol.Qt, exactly as Open-Source PyMOL does, because there is no pymol.Qt. Typing it at the prompt must surface that as feedback and NOT crash the page or open a React window (the browser editor is a separate surface reached via the bridge marker / popup-leaf hook, not this cmd). This proves the command routes to the engine and fails cleanly."
+    },
+    {
+      "id": "volume.open.leaf-hook",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.open.bridge-feedback",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.header.preset.dropdown",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.header.reload",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.header.preset-source-indicator",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.header.watch-indicator",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.header.stop-count",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.footer.get-colors-script",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.footer.get-colors-script.close",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.footer.reset-data-range",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.footer.help",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.footer.help.close",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.footer.realtime.toggle",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.leftclick.add-point",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.ctrl-leftclick.add-triple",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.leftclick.point.colorpicker",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.ctrl-leftclick.point.colorpicker-triple",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.rightclick.point.value-prompt",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.shift-rightclick.point.alpha-prompt",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.middleclick.point.remove",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.shift-leftclick.point.remove",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.ctrl-middleclick.point.remove-triple",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.ctrl-shift-leftclick.point.remove-triple",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.leftdrag.move-point",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.ctrl-leftdrag.move-triple",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.rightdrag.axis-latch",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.ctrl-rightdrag.zoom-band",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.wheel.plot.scale-alpha",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.wheel.vmin-box",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.wheel.vmax-box",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.wheel.amax-box",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.click.vmin-box.prompt",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.click.vmax-box.prompt",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.click.amax-box.prompt",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.canvas.hover.point.enlarge",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.picker.color.change-preview",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.picker.ok",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.picker.cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.prompt.input.type",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.prompt.accept",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.window.title",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.window.minimise",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "volume.window.close",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}

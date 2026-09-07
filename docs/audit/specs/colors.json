@@ -1,0 +1,4062 @@
+{
+  "area": "colors",
+  "caps": [
+    "local-backend",
+    "webgl",
+    "network"
+  ],
+  "specs": [
+    {
+      "id": "colors.launch.open",
+      "feature": "colors",
+      "label": "C launcher — open the Colours window",
+      "kind": "button",
+      "requires": [],
+      "note": "the floating \"C\" button opens the Colours overlay window",
+      "setup": [],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"colors-window\"]"
+        }
+      ]
+    },
+    {
+      "id": "colors.window.close",
+      "feature": "colors",
+      "label": "Colours window — close (×)",
+      "kind": "button",
+      "requires": [],
+      "note": "the × title button closes the window and restores the launcher",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"colors-window\"] .flwin__close"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".colors-launch"
+        }
+      ]
+    },
+    {
+      "id": "colors.window.shade",
+      "feature": "colors",
+      "label": "Colours window — shade/minimise (—)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "the — title button collapses the window body",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"colors-window\"] [aria-label=\"shade\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": ".colors__tabs"
+        }
+      ]
+    },
+    {
+      "id": "colors.reload.refetch",
+      "feature": "colors",
+      "label": "refetch — reload the colour table",
+      "kind": "button",
+      "requires": [],
+      "note": "title-bar \"refetch\" forces refreshPalette(force=true)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".colors__reload"
+        }
+      ],
+      "settleMs": 800,
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.selection.input",
+      "feature": "colors",
+      "label": "selection input — flows into every command",
+      "kind": "input",
+      "requires": [],
+      "note": "typing a selection then clicking a swatch echoes color_deep on that selection",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "type",
+          "selector": ".colors__sele input",
+          "text": "elem C"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__group .cmenu__tile",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "elem C"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.tab.palette",
+      "feature": "colors",
+      "label": "tab — palette",
+      "kind": "toggle",
+      "requires": [],
+      "note": "selecting the palette tab renders its panel",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.tab.bands",
+      "feature": "colors",
+      "label": "tab — bands",
+      "kind": "toggle",
+      "requires": [],
+      "note": "selecting the bands tab renders its panel",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.tab.editor",
+      "feature": "colors",
+      "label": "tab — editor",
+      "kind": "toggle",
+      "requires": [],
+      "note": "selecting the editor tab renders its panel",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.tab.spectrum",
+      "feature": "colors",
+      "label": "tab — spectrum",
+      "kind": "toggle",
+      "requires": [],
+      "note": "selecting the spectrum tab renders its panel",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.tab.ramps",
+      "feature": "colors",
+      "label": "tab — ramps",
+      "kind": "toggle",
+      "requires": [],
+      "note": "selecting the ramps tab renders its panel",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.tab.space",
+      "feature": "colors",
+      "label": "tab — space",
+      "kind": "toggle",
+      "requires": [],
+      "note": "selecting the space tab renders its panel",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 5
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.submenu.by-element",
+      "feature": "colors",
+      "label": "palette submenu — by element",
+      "kind": "toggle",
+      "requires": [],
+      "note": "opening the \"by element\" submenu reveals its rows",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cmenu__sub"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.submenu.by-chain",
+      "feature": "colors",
+      "label": "palette submenu — by chain",
+      "kind": "toggle",
+      "requires": [],
+      "note": "opening the \"by chain\" submenu reveals its rows",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cmenu__sub"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.submenu.by-ss",
+      "feature": "colors",
+      "label": "palette submenu — by ss",
+      "kind": "toggle",
+      "requires": [],
+      "note": "opening the \"by ss\" submenu reveals its rows",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cmenu__sub"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.submenu.by-rep",
+      "feature": "colors",
+      "label": "palette submenu — by rep",
+      "kind": "toggle",
+      "requires": [],
+      "note": "opening the \"by rep\" submenu reveals its rows",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 3
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cmenu__sub"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.submenu.spectrum",
+      "feature": "colors",
+      "label": "palette submenu — spectrum",
+      "kind": "toggle",
+      "requires": [],
+      "note": "opening the \"spectrum\" submenu reveals its rows",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 4
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cmenu__sub"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.submenu.auto",
+      "feature": "colors",
+      "label": "palette submenu — auto",
+      "kind": "toggle",
+      "requires": [],
+      "note": "opening the \"auto\" submenu reveals its rows",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 5
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cmenu__sub"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.submenu.negative",
+      "feature": "colors",
+      "label": "palette submenu — negative",
+      "kind": "toggle",
+      "requires": [],
+      "note": "opening the \"negative\" submenu reveals its rows",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 6
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cmenu__sub"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.swatch.colorDeep",
+      "feature": "colors",
+      "label": "palette swatch — cmd.color_deep",
+      "kind": "button",
+      "requires": [],
+      "note": "clicking a named swatch runs color_deep on the selection and recolours 1crn",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__group .cmenu__tile",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "screenshotChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.elem.page",
+      "feature": "colors",
+      "label": "by element — page switch (set 2)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "the set-1..6 page buttons swap the element tile set",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__page",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.elem.cnc",
+      "feature": "colors",
+      "label": "by element — non-carbon only (util.cnc)",
+      "kind": "button",
+      "requires": [],
+      "note": "colours non-carbon atoms, leaves carbons",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.elem.cba",
+      "feature": "colors",
+      "label": "by element — a carbon tile (util.cba)",
+      "kind": "button",
+      "requires": [],
+      "note": "a set-1 tile runs util.cba: carbons that colour, rest atomic",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__tiles .cmenu__tile",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.elem.cbh",
+      "feature": "colors",
+      "label": "by element — hydrogens tile (util.cbh)",
+      "kind": "button",
+      "requires": [],
+      "note": "on the set-6/H page a tile runs util.cbh colouring hydrogens",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__page",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__tiles .cmenu__tile",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.elem.shortcut.cbag",
+      "feature": "colors",
+      "label": "by element — fixed carbon shortcut (util.cbag)",
+      "kind": "button",
+      "requires": [],
+      "note": "util.cbag colours carbons \"carbon\", object colour untouched",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__tile--shortcut",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.elem.shortcut.cbak",
+      "feature": "colors",
+      "label": "by element — fixed carbon shortcut (util.cbak)",
+      "kind": "button",
+      "requires": [],
+      "note": "the last of the ten cba* verbs (cbak, pink carbons)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__tile--shortcut",
+          "nth": 9
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.chain.colorChains",
+      "feature": "colors",
+      "label": "by chain (elem C) — util.color_chains",
+      "kind": "button",
+      "requires": [],
+      "note": "by chain (elem C) — util.color_chains",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.chain.colorChainsCA",
+      "feature": "colors",
+      "label": "by chain (*/CA) — util.color_chains",
+      "kind": "button",
+      "requires": [],
+      "note": "by chain (*/CA) — util.color_chains",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.chain.colorChainsAll",
+      "feature": "colors",
+      "label": "by chain — util.color_chains",
+      "kind": "button",
+      "requires": [],
+      "note": "by chain — util.color_chains",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.chain.chainbows",
+      "feature": "colors",
+      "label": "chainbows — util.chainbow",
+      "kind": "button",
+      "requires": [],
+      "note": "chainbows — util.chainbow",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 3
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.chain.segiElemC",
+      "feature": "colors",
+      "label": "by segi (elem C) — cmd.spectrum segi",
+      "kind": "button",
+      "requires": [],
+      "note": "by segi (elem C) — cmd.spectrum segi",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 4
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.chain.segi",
+      "feature": "colors",
+      "label": "by segi — cmd.spectrum segi",
+      "kind": "button",
+      "requires": [],
+      "note": "by segi — cmd.spectrum segi",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 5
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.ss.preset0",
+      "feature": "colors",
+      "label": "by ss — preset 0 (util.cbss)",
+      "kind": "button",
+      "requires": [],
+      "note": "colours helix/sheet/loop via util.cbss",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.ss.preset1",
+      "feature": "colors",
+      "label": "by ss — preset 1 (util.cbss)",
+      "kind": "button",
+      "requires": [],
+      "note": "colours helix/sheet/loop via util.cbss",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.ss.preset2",
+      "feature": "colors",
+      "label": "by ss — preset 2 (util.cbss)",
+      "kind": "button",
+      "requires": [],
+      "note": "colours helix/sheet/loop via util.cbss",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.rep.mode.molecule",
+      "feature": "colors",
+      "label": "by rep — mode molecule",
+      "kind": "toggle",
+      "requires": [],
+      "note": "switches the rep-setting list to molecule",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__page",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.rep.mode.measurement",
+      "feature": "colors",
+      "label": "by rep — mode measurement",
+      "kind": "toggle",
+      "requires": [],
+      "note": "switches the rep-setting list to measurement",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__page",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.rep.mode.extra",
+      "feature": "colors",
+      "label": "by rep — mode extra",
+      "kind": "toggle",
+      "requires": [],
+      "note": "switches the rep-setting list to extra",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__page",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.rep.arm",
+      "feature": "colors",
+      "label": "by rep — arm a per-rep colour setting",
+      "kind": "toggle",
+      "requires": [],
+      "note": "clicking a rep row arms it; the armed banner appears",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__reprow .cmenu__row",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cmenu__armed"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.rep.unset",
+      "feature": "colors",
+      "label": "by rep — unset a per-rep colour setting",
+      "kind": "button",
+      "requires": [],
+      "note": "the \"unset\" button runs cmd.unset for that setting",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__unset",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.rep.writeSetting",
+      "feature": "colors",
+      "label": "by rep — armed swatch writes the setting (cmd.set)",
+      "kind": "button",
+      "requires": [],
+      "note": "after arming a rep setting, a swatch click writes cmd.set(setting,...)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 3
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__reprow .cmenu__row",
+          "nth": 0
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__group .cmenu__tile",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.spectrum.row0",
+      "feature": "colors",
+      "label": "spectrum shortcut — rainbow (elem C)",
+      "kind": "button",
+      "requires": [],
+      "note": "rainbow (elem C) via cmd.spectrum / util.color_by_area",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.spectrum.row1",
+      "feature": "colors",
+      "label": "spectrum shortcut — rainbow (*/CA)",
+      "kind": "button",
+      "requires": [],
+      "note": "rainbow (*/CA) via cmd.spectrum / util.color_by_area",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.spectrum.row2",
+      "feature": "colors",
+      "label": "spectrum shortcut — rainbow (byres)",
+      "kind": "button",
+      "requires": [],
+      "note": "rainbow (byres) via cmd.spectrum / util.color_by_area",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.spectrum.row3",
+      "feature": "colors",
+      "label": "spectrum shortcut — b-factors",
+      "kind": "button",
+      "requires": [],
+      "note": "b-factors via cmd.spectrum / util.color_by_area",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 3
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.spectrum.row4",
+      "feature": "colors",
+      "label": "spectrum shortcut — b-factors (*/CA)",
+      "kind": "button",
+      "requires": [],
+      "note": "b-factors (*/CA) via cmd.spectrum / util.color_by_area",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 4
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.spectrum.row5",
+      "feature": "colors",
+      "label": "spectrum shortcut — area (molecular)",
+      "kind": "button",
+      "requires": [],
+      "note": "area (molecular) via cmd.spectrum / util.color_by_area",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 5
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.spectrum.row6",
+      "feature": "colors",
+      "label": "spectrum shortcut — area (solvent)",
+      "kind": "button",
+      "requires": [],
+      "note": "area (solvent) via cmd.spectrum / util.color_by_area",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 6
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.auto.row0",
+      "feature": "colors",
+      "label": "auto — auto (elem C)",
+      "kind": "button",
+      "requires": [],
+      "note": "auto (elem C) via cmd.color auto / util.color_objs",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.auto.row1",
+      "feature": "colors",
+      "label": "auto — auto",
+      "kind": "button",
+      "requires": [],
+      "note": "auto via cmd.color auto / util.color_objs",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.auto.row2",
+      "feature": "colors",
+      "label": "auto — one per object (elem C)",
+      "kind": "button",
+      "requires": [],
+      "note": "one per object (elem C) via cmd.color auto / util.color_objs",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.auto.row3",
+      "feature": "colors",
+      "label": "auto — one per object",
+      "kind": "button",
+      "requires": [],
+      "note": "one per object via cmd.color auto / util.color_objs",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 3
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.negative.rep.mesh",
+      "feature": "colors",
+      "label": "negative — rep mesh",
+      "kind": "toggle",
+      "requires": [],
+      "note": "selects mesh for the *_negative_* settings",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 6
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__page",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.negative.rep.surface",
+      "feature": "colors",
+      "label": "negative — rep surface",
+      "kind": "toggle",
+      "requires": [],
+      "note": "selects surface for the *_negative_* settings",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 6
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__page",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.negative.off",
+      "feature": "colors",
+      "label": "negative — off (set *_negative_visible 0)",
+      "kind": "button",
+      "requires": [],
+      "note": "writes mesh_negative_visible=0 on the selection",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 6
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.negative.arm",
+      "feature": "colors",
+      "label": "negative — arm \"pick a colour below\"",
+      "kind": "toggle",
+      "requires": [],
+      "note": "arms the negative-colour swatch write; armed banner appears",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 6
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cmenu__armed"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.negative.cancel",
+      "feature": "colors",
+      "label": "negative — cancel the armed banner",
+      "kind": "button",
+      "requires": [],
+      "note": "the cancel button in the armed banner disarms it",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 6
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__armed button"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": ".cmenu__armed"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.palette.negative.write",
+      "feature": "colors",
+      "label": "negative — armed swatch writes *_negative_color",
+      "kind": "button",
+      "requires": [],
+      "note": "after arming, a swatch click writes _negative_visible=1 then _negative_color",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__tab",
+          "nth": 6
+        },
+        {
+          "do": "click",
+          "selector": ".cmenu__sub .cmenu__row",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cmenu__group .cmenu__tile",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.bands.region.switch",
+      "feature": "colors",
+      "label": "bands — switch region (grey00-99)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "selecting another region repopulates the tile grid and slot range",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cbands__region",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.bands.region.paged",
+      "feature": "colors",
+      "label": "bands — select a 1000-slot region (s000-999)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "a 1000-slot region exposes pager controls",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cbands__region",
+          "nth": 3
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"cbands-page\"]"
+        }
+      ]
+    },
+    {
+      "id": "colors.bands.page.next",
+      "feature": "colors",
+      "label": "bands — next page ›",
+      "kind": "button",
+      "requires": [],
+      "note": "advances the page within a multi-page region",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 1
+        },
+        {
+          "do": "click",
+          "selector": ".cbands__region",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cbands__pages button",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.bands.page.prev",
+      "feature": "colors",
+      "label": "bands — prev page ‹",
+      "kind": "button",
+      "requires": [],
+      "note": "steps back a page after advancing",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 1
+        },
+        {
+          "do": "click",
+          "selector": ".cbands__region",
+          "nth": 3
+        },
+        {
+          "do": "click",
+          "selector": ".cbands__pages button",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cbands__pages button",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.bands.jump",
+      "feature": "colors",
+      "label": "bands — jump-to-slot input",
+      "kind": "input",
+      "requires": [],
+      "note": "typing an index switches region+page to contain that slot",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"jump to slot\"]",
+          "text": "4300"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.bands.tile.colorDeep",
+      "feature": "colors",
+      "label": "bands — tile runs cmd.color_deep",
+      "kind": "button",
+      "requires": [],
+      "note": "a band tile colours the selection with that generated colour",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cbands__tile",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.filter",
+      "feature": "colors",
+      "label": "editor — filter the named-colour list",
+      "kind": "input",
+      "requires": [],
+      "note": "typing narrows the listbox, changing the visible names",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": ".cedit__filter",
+          "text": "blue"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.list.select",
+      "feature": "colors",
+      "label": "editor — pick a colour from the list",
+      "kind": "button",
+      "requires": [],
+      "note": "clicking a list option sets the name and loads its RGB (hint index changes)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        },
+        {
+          "do": "type",
+          "selector": ".cedit__filter",
+          "text": "blue"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cedit__item",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.name.input",
+      "feature": "colors",
+      "label": "editor — name field (new name switches hint)",
+      "kind": "input",
+      "requires": [],
+      "note": "typing an unknown name flips the hint from \"overwrites index N\" to \"creates a new colour\"",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"input_name\"]",
+          "text": "zznewcolour"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "creates a new colour"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.space.hsv",
+      "feature": "colors",
+      "label": "editor — switch RGB → HSV rows",
+      "kind": "toggle",
+      "requires": [],
+      "note": "the H S V radio replaces the three RGB rows with H/S/V rows",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[aria-label=\"space_hsv\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[aria-label=\"slider_H\"]"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.space.rgb",
+      "feature": "colors",
+      "label": "editor — switch back to RGB rows",
+      "kind": "toggle",
+      "requires": [],
+      "note": "the R G B radio restores the RGB rows",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": "[aria-label=\"space_hsv\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[aria-label=\"space_rgb\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[aria-label=\"slider_R\"]"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.input.R",
+      "feature": "colors",
+      "label": "editor — R spinbox, applied",
+      "kind": "input",
+      "requires": [],
+      "note": "editing the R channel then Apply issues set_color; status confirms",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"input_R\"]",
+          "text": "0.5"
+        },
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.slider.R",
+      "feature": "colors",
+      "label": "editor — R slider (ArrowRight), applied",
+      "kind": "input",
+      "requires": [],
+      "note": "nudging the R slider then Apply issues set_color",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "selector": "[aria-label=\"slider_R\"]",
+          "key": "ArrowRight"
+        },
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.input.G",
+      "feature": "colors",
+      "label": "editor — G spinbox, applied",
+      "kind": "input",
+      "requires": [],
+      "note": "editing the G channel then Apply issues set_color; status confirms",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"input_G\"]",
+          "text": "0.5"
+        },
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.slider.G",
+      "feature": "colors",
+      "label": "editor — G slider (ArrowRight), applied",
+      "kind": "input",
+      "requires": [],
+      "note": "nudging the G slider then Apply issues set_color",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "selector": "[aria-label=\"slider_G\"]",
+          "key": "ArrowRight"
+        },
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.input.B",
+      "feature": "colors",
+      "label": "editor — B spinbox, applied",
+      "kind": "input",
+      "requires": [],
+      "note": "editing the B channel then Apply issues set_color; status confirms",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"input_B\"]",
+          "text": "0.5"
+        },
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.slider.B",
+      "feature": "colors",
+      "label": "editor — B slider (ArrowRight), applied",
+      "kind": "input",
+      "requires": [],
+      "note": "nudging the B slider then Apply issues set_color",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "selector": "[aria-label=\"slider_B\"]",
+          "key": "ArrowRight"
+        },
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.hsv.H",
+      "feature": "colors",
+      "label": "editor — HSV H spinbox, applied",
+      "kind": "input",
+      "requires": [],
+      "note": "in HSV mode, editing H then Apply issues set_color",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": "[aria-label=\"space_hsv\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"input_H\"]",
+          "text": "50"
+        },
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.hsv.S",
+      "feature": "colors",
+      "label": "editor — HSV S spinbox, applied",
+      "kind": "input",
+      "requires": [],
+      "note": "in HSV mode, editing S then Apply issues set_color",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": "[aria-label=\"space_hsv\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"input_S\"]",
+          "text": "50"
+        },
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.hsv.V",
+      "feature": "colors",
+      "label": "editor — HSV V spinbox, applied",
+      "kind": "input",
+      "requires": [],
+      "note": "in HSV mode, editing V then Apply issues set_color",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": "[aria-label=\"space_hsv\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"input_V\"]",
+          "text": "50"
+        },
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.hex.input",
+      "feature": "colors",
+      "label": "editor — hex field, applied",
+      "kind": "input",
+      "requires": [],
+      "note": "typing #00ff00 parses to RGB; Apply then issues set_color",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"input_hex\"]",
+          "text": "#00ff00"
+        },
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.apply.emptyName",
+      "feature": "colors",
+      "label": "editor — Apply with empty name is rejected",
+      "kind": "button",
+      "requires": [],
+      "note": "clearing the name and clicking Apply shows \"name is required\"",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        },
+        {
+          "do": "type",
+          "selector": "[aria-label=\"input_name\"]",
+          "text": ""
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "name is required"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.apply.setColor",
+      "feature": "colors",
+      "label": "editor — Apply a known colour (set_color + recolor)",
+      "kind": "button",
+      "requires": [],
+      "note": "Apply on \"red\" issues cmd.do(set_color/recolor); status confirms",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cedit__apply"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.editor.specials.visible",
+      "feature": "colors",
+      "label": "editor — special-colour chips render",
+      "kind": "other",
+      "requires": [],
+      "note": "the seven special-colour chips are display-only (title tooltips); verify presence",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 200
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cedit__chip"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.mode.palette",
+      "feature": "colors",
+      "label": "spectrum — palette mode",
+      "kind": "toggle",
+      "requires": [],
+      "note": "selects the palette-list mode (byres checkbox + palette list)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        },
+        {
+          "do": "click",
+          "selector": ".cspec__mode",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspec__mode",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cspec__list"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.mode.colors",
+      "feature": "colors",
+      "label": "spectrum — colour-list (spectrumany) mode",
+      "kind": "toggle",
+      "requires": [],
+      "note": "switches to the arbitrary colour-list mode (interpolation select + presets)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspec__mode",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cspec__colors"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.expression",
+      "feature": "colors",
+      "label": "spectrum — expression input flows to cmd.spectrum",
+      "kind": "input",
+      "requires": [],
+      "note": "typing an expression then running echoes it in the spectrum call",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "input[list=\"tenmol-spectrum-expressions\"]",
+          "text": "resi"
+        },
+        {
+          "do": "click",
+          "selector": ".cspec__go"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "resi"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.autoRange.toggle",
+      "feature": "colors",
+      "label": "spectrum — auto range checkbox reveals min/max",
+      "kind": "toggle",
+      "requires": [],
+      "note": "unchecking \"auto range\" reveals the min and max inputs",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspec__check input[type=\"checkbox\"]",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.byres.toggle",
+      "feature": "colors",
+      "label": "spectrum — byres checkbox (palette mode)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "toggles byres, forwarded to cmd.spectrum in palette mode",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspec__check input[type=\"checkbox\"]",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "noPageError"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.palette.filter",
+      "feature": "colors",
+      "label": "spectrum — palette filter",
+      "kind": "input",
+      "requires": [],
+      "note": "typing filters the 60-palette list",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": ".cspec__filter",
+          "text": "blue"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.palette.select",
+      "feature": "colors",
+      "label": "spectrum — choose a palette",
+      "kind": "button",
+      "requires": [],
+      "note": "clicking a palette highlights it (is-on)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspec__palette",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cspec__palette.is-on"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.run",
+      "feature": "colors",
+      "label": "spectrum — run cmd.spectrum (count/rainbow)",
+      "kind": "button",
+      "requires": [],
+      "note": "the spectrum button runs cmd.spectrum(count, rainbow, sele) and recolours",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspec__go"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "screenshotChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.colors.input",
+      "feature": "colors",
+      "label": "spectrum — colour-list input flows to cmd.spectrum",
+      "kind": "input",
+      "requires": [],
+      "note": "in colour-list mode, typed colours appear in the spectrum call",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        },
+        {
+          "do": "click",
+          "selector": ".cspec__mode",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": ".cspec__colors input",
+          "text": "purple orange teal"
+        },
+        {
+          "do": "click",
+          "selector": ".cspec__go"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "purple orange teal"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.colors.preset",
+      "feature": "colors",
+      "label": "spectrum — colour-list preset button",
+      "kind": "button",
+      "requires": [],
+      "note": "a preset fills the colour list; running echoes those colours",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        },
+        {
+          "do": "click",
+          "selector": ".cspec__mode",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspec__presets button",
+          "nth": 0
+        },
+        {
+          "do": "click",
+          "selector": ".cspec__go"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "magenta"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.spectrum.interpolation",
+      "feature": "colors",
+      "label": "spectrum — interpolation select (colour-list mode)",
+      "kind": "input",
+      "requires": [],
+      "note": "the rgb/hls/hsv interpolation dropdown is present in colour-list mode (its value is forwarded to cmd.spectrum; a <select> cannot be driven by the runner primitives)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 3
+        },
+        {
+          "do": "click",
+          "selector": ".cspec__mode",
+          "nth": 1
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cspec__row select"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.name.input",
+      "feature": "colors",
+      "label": "ramp — name input",
+      "kind": "input",
+      "requires": [],
+      "note": "the ramp name field feeds ramp_new; echo carries it",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": ".cramp__editor input",
+          "nth": 0,
+          "text": "zramp9"
+        },
+        {
+          "do": "click",
+          "selector": ".cramp__actions button",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "zramp9"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.map.input",
+      "feature": "colors",
+      "label": "ramp — map object input",
+      "kind": "input",
+      "requires": [],
+      "note": "the map-object field feeds ramp_new; echo carries it",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": ".cramp__editor input",
+          "nth": 1,
+          "text": "zmap9"
+        },
+        {
+          "do": "click",
+          "selector": ".cramp__actions button",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "zmap9"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.spectrum.select",
+      "feature": "colors",
+      "label": "ramp — named spectrum select",
+      "kind": "input",
+      "requires": [],
+      "note": "choosing a named spectrum makes ramp_new use it instead of the stops",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cramp__fields select"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.stop.value",
+      "feature": "colors",
+      "label": "ramp — stop value input",
+      "kind": "input",
+      "requires": [],
+      "note": "editing a stop value changes the gradient bar and ramp_new range",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"stop 0 value\"]",
+          "text": "-5"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noPageError"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.stop.color",
+      "feature": "colors",
+      "label": "ramp — stop colour input",
+      "kind": "input",
+      "requires": [],
+      "note": "editing a stop colour updates the gradient preview",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "[aria-label=\"stop 0 colour\"]",
+          "text": "green"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noPageError"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.stop.remove",
+      "feature": "colors",
+      "label": "ramp — remove a stop (−)",
+      "kind": "button",
+      "requires": [],
+      "note": "the − button drops a stop from the list",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cramp__stop button",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.stop.add",
+      "feature": "colors",
+      "label": "ramp — add a stop (+ stop)",
+      "kind": "button",
+      "requires": [],
+      "note": "the + stop button appends a stop row",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cramp__stops > button"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.create",
+      "feature": "colors",
+      "label": "ramp — ramp_new",
+      "kind": "button",
+      "requires": [],
+      "note": "ramp_new issues cmd.ramp_new and reports status",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cramp__actions button",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cramp__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.update",
+      "feature": "colors",
+      "label": "ramp — ramp_update",
+      "kind": "button",
+      "requires": [],
+      "note": "ramp_update issues cmd.ramp_update and reports status",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cramp__actions button",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".cramp__status"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.volume.input",
+      "feature": "colors",
+      "label": "ramp — volume object input enables presets",
+      "kind": "input",
+      "requires": [],
+      "note": "typing a volume object name un-disables the preset buttons",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": ".cramp__volume input",
+          "text": "zvol9"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noPageError"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.ramps.volume.preset",
+      "feature": "colors",
+      "label": "ramp — volume preset (cmd.volume_color)",
+      "kind": "button",
+      "requires": [],
+      "note": "with a volume named, a preset runs cmd.volume_color(name, preset)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 4
+        },
+        {
+          "do": "type",
+          "selector": ".cramp__volume input",
+          "text": "zvol9"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cramp__presets button",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.space.gamma.input",
+      "feature": "colors",
+      "label": "space — gamma input flows to cmd.space",
+      "kind": "input",
+      "requires": [],
+      "note": "gamma is passed to cmd.space; echo carries the value",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 5
+        },
+        {
+          "do": "type",
+          "selector": ".cspace input",
+          "text": "1.7"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspace__buttons button",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "1.7"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.space.rgb",
+      "feature": "colors",
+      "label": "space — cmd.space(\"rgb\")",
+      "kind": "button",
+      "requires": [],
+      "note": "applies colour space rgb then refetches the palette",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspace__buttons button",
+          "nth": 0
+        }
+      ],
+      "settleMs": 700,
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.space.pymol",
+      "feature": "colors",
+      "label": "space — cmd.space(\"pymol\")",
+      "kind": "button",
+      "requires": [],
+      "note": "applies colour space pymol then refetches the palette",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspace__buttons button",
+          "nth": 1
+        }
+      ],
+      "settleMs": 700,
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.space.cmyk",
+      "feature": "colors",
+      "label": "space — cmd.space(\"cmyk\")",
+      "kind": "button",
+      "requires": [],
+      "note": "applies colour space cmyk then refetches the palette",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspace__buttons button",
+          "nth": 2
+        }
+      ],
+      "settleMs": 700,
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.space.greyscale",
+      "feature": "colors",
+      "label": "space — cmd.space(\"greyscale\")",
+      "kind": "button",
+      "requires": [],
+      "note": "applies colour space greyscale then refetches the palette",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspace__buttons button",
+          "nth": 3
+        }
+      ],
+      "settleMs": 700,
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "colors.space.scheme.select",
+      "feature": "colors",
+      "label": "space — element colour scheme select",
+      "kind": "input",
+      "requires": [],
+      "note": "the scheme dropdown (jmol) feeds util.colors",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".cspace select"
+        }
+      ]
+    },
+    {
+      "id": "colors.space.scheme.apply",
+      "feature": "colors",
+      "label": "space — apply util.colors(scheme)",
+      "kind": "button",
+      "requires": [],
+      "note": "apply runs util.colors(jmol) then refetches the palette",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".colors-launch, .colors__sele-note"
+        },
+        {
+          "do": "click",
+          "selector": ".colors__tab",
+          "nth": 5
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".cspace__buttons button:has-text(\"apply\")"
+        }
+      ],
+      "settleMs": 700,
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    }
+  ]
+}

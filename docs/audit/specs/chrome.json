@@ -1,0 +1,430 @@
+{
+  "area": "chrome",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "chrome.launcher.settings",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Settings",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Modern theme hosts the overlay-panel launcher inline in the status bar (StatusBar ▸ LauncherButtons). Clicking the Settings toggle mounts the settings overlay slot, adding its DOM.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"Settings\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"Settings\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.files",
+      "feature": "shell",
+      "label": "Panel launcher ▸ File dialogs",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the files overlay slot; clicking it mounts the file-dialogs panel.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"File dialogs\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"File dialogs\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.dialogs",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Dialogs",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the dialogs overlay slot.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"Dialogs\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"Dialogs\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.builder",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Builder",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the builder overlay slot.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"Builder\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"Builder\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.colors",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Colours",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the colors overlay slot.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"Colours\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"Colours\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.volume",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Volume",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the volume overlay slot.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"Volume\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"Volume\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.properties",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Properties",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the properties overlay slot.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"Properties\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"Properties\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.texteditor",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Text editor",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the texteditor overlay slot.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"Text editor\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"Text editor\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.compute",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Compute",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the compute overlay slot.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"Compute\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"Compute\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.plugin-manager",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Plugin manager",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the plugin-manager overlay slot.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"Plugin manager (read-only in v1)\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"Plugin manager (read-only in v1)\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.apbs",
+      "feature": "shell",
+      "label": "Panel launcher ▸ APBS",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the apbs overlay slot.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": ".overlay-launcher__btn[title=\"APBS\"]" }],
+      "trigger": [{ "do": "click", "selector": ".overlay-launcher__btn[title=\"APBS\"]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.theme.dropdown.open",
+      "feature": "shell",
+      "label": "Theme switcher ▸ open dropdown",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "The shell-header ThemeToggle trigger (data-testid=theme-toggle) opens a Radix dropdown listing the UI themes. Opening it renders the dropdown content with the 'UI theme' label and the two options.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"theme-toggle\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"theme-toggle\"]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-slot=\"dropdown-menu-content\"]" },
+        { "expect": "feedbackMatches", "pattern": "UI theme" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "chrome.theme.appearance.toggle",
+      "feature": "shell",
+      "label": "Appearance toggle (dark ⇄ light)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "In the modern theme the header shows a Sun/Moon appearance toggle (data-testid=appearance-toggle) that flips data-appearance on <html>. Playwright boots with prefers-color-scheme:light, so the resolved initial appearance is light and one click flips it to dark. needsVisual so a human confirms the light/dark flip regardless of the environment's default.",
+      "needsVisual": true,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"appearance-toggle\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"appearance-toggle\"]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "html[data-appearance=\"dark\"]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "chrome.theme.set.classic",
+      "feature": "shell",
+      "label": "Theme switcher ▸ Classic — PyMOL",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Selecting the 'Classic — PyMOL' checkbox item flips the live look to the classic theme, stamping data-ui-theme=classic on <html> and re-skinning the whole UI without reload.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-testid=\"theme-toggle\"]" },
+        { "do": "waitFor", "selector": "[data-slot=\"dropdown-menu-checkbox-item\"]" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-slot=\"dropdown-menu-checkbox-item\"]", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "html[data-ui-theme=\"classic\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "chrome.theme.set.modern",
+      "feature": "shell",
+      "label": "Theme switcher ▸ Modern — shadcn",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Selecting the 'Modern — shadcn' checkbox item switches back to the modern theme (data-ui-theme=shadcn). Runs after the classic spec, restoring the product default look.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-testid=\"theme-toggle\"]" },
+        { "do": "waitFor", "selector": "[data-slot=\"dropdown-menu-checkbox-item\"]" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-slot=\"dropdown-menu-checkbox-item\"]", "nth": 1 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "html[data-ui-theme=\"shadcn\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "chrome.extgui.ctrlE",
+      "feature": "shell",
+      "label": "External GUI ▸ Ctrl+E toggle dockable",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "The window-level Ctrl+E shortcut (extGuiDock.toggleDockable) floats the External GUI dock and restores its real title bar. From the default docked/no-title-bar state one Ctrl+E yields floating + title bar (data-dock=float, extgui-titlebar visible).",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"extgui\"]" }],
+      "trigger": [{ "do": "press", "key": "Control+E" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid=\"extgui-titlebar\"]" },
+        { "expect": "selectorVisible", "selector": "[data-testid=\"extgui\"][data-dock=\"float\"]" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "chrome.extgui.dock.left",
+      "feature": "shell",
+      "label": "External GUI title bar ▸ dock Left (L)",
+      "kind": "button",
+      "requires": [],
+      "note": "The title bar's L button re-docks the External GUI to the left area (setArea 'left'), flipping the panel to the side layout. Runs after the Ctrl+E spec, so the title bar is already showing.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"extgui-titlebar\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"extgui-titlebar\"] button", "nth": 1 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid=\"extgui\"][data-dock=\"left\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "chrome.extgui.dock.right",
+      "feature": "shell",
+      "label": "External GUI title bar ▸ dock Right (R)",
+      "kind": "button",
+      "requires": [],
+      "note": "The title bar's R button re-docks the External GUI to the right area (setArea 'right').",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"extgui-titlebar\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"extgui-titlebar\"] button", "nth": 2 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid=\"extgui\"][data-dock=\"right\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "chrome.extgui.dock.bottom",
+      "feature": "shell",
+      "label": "External GUI title bar ▸ dock Bottom (B)",
+      "kind": "button",
+      "requires": [],
+      "note": "The title bar's B button re-docks the External GUI to the bottom area (setArea 'bottom').",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"extgui-titlebar\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"extgui-titlebar\"] button", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid=\"extgui\"][data-dock=\"bottom\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "chrome.extgui.float.toggle",
+      "feature": "shell",
+      "label": "External GUI title bar ▸ float/dock toggle",
+      "kind": "toggle",
+      "requires": [],
+      "note": "The title bar's float/dock button calls toggleDockable. From the docked-with-title-bar state it returns to docked-without-title-bar, so the title bar disappears — the observable effect. Runs after the dock.bottom spec.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"extgui-titlebar\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"extgui-titlebar\"] button", "nth": 3 }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-testid=\"extgui-titlebar\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "chrome.extgui.doubleClick",
+      "feature": "shell",
+      "label": "External GUI ▸ double-click gives title bar without floating",
+      "kind": "other",
+      "requires": [],
+      "note": "LIMITATION: ExtGuiFrame.mouseDoubleClickEvent -> toggleDockable(neverFloat=true) adds a title bar without detaching. The audit action DSL has no double-click primitive (only single click), so this affordance cannot be driven deterministically. Recorded with a single click on the panel body and a page-error guard; needsVisual for a human to exercise the real double-click.",
+      "needsVisual": true,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"extgui\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"extgui\"]" }],
+      "checks": [
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "chrome.gutter.resize",
+      "feature": "shell",
+      "label": "internal_gui_width gutter ▸ drag-resize / double-click collapse",
+      "kind": "drag",
+      "requires": [],
+      "note": "LIMITATION: the vertical splitter (data-testid=gutter) resizes the right-hand internal-GUI column on pointer drag and collapses it on double-click (gutterClick/gutterDrag). The audit DSL has no pointer-drag or double-click primitive, so a bare click cannot move the width. Recorded with a click and error guards; needsVisual for a human to drag it. The gutter's presence is asserted so a missing splitter is still caught.",
+      "needsVisual": true,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"gutter\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"gutter\"]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid=\"gutter\"]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "chrome.console.splitter.resize",
+      "feature": "shell",
+      "label": "External GUI height splitter ▸ drag-resize",
+      "kind": "drag",
+      "requires": [],
+      "note": "LIMITATION: the horizontal splitter (.splitter--h) below the bottom-docked External GUI resizes its height on pointer drag (dragConsole). No drag primitive exists in the audit DSL, so a click cannot move it. Recorded with a click and error guards; needsVisual for a human to drag it. Present only while the dock is at the bottom (the default and the state left by the float toggle spec).",
+      "needsVisual": true,
+      "setup": [{ "do": "waitFor", "selector": ".splitter--h" }],
+      "trigger": [{ "do": "click", "selector": ".splitter--h" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".splitter--h" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "chrome.extgui.close",
+      "feature": "shell",
+      "label": "External GUI title bar ▸ Visible (×) close",
+      "kind": "button",
+      "requires": [],
+      "note": "The title bar's × button (toggleVisible) hides the whole External GUI dock. Setup presses Ctrl+E to reveal the title bar first; clicking × removes the extgui element from the layout.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "press", "key": "Control+E" },
+        { "do": "waitFor", "selector": "[data-testid=\"extgui-titlebar\"]" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"extgui-titlebar\"] button", "nth": 4 }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-testid=\"extgui\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "chrome.header.extgui.show",
+      "feature": "shell",
+      "label": "Header ▸ ext gui toggle (show)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "The shell-header 'ext gui' button (data-testid=extgui-visible) is Display ▸ External GUI ▸ Visible. Runs after the close spec left the dock hidden, so this click re-shows it — verifying the show direction of the toggle.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"extgui-visible\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"extgui-visible\"]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid=\"extgui\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "chrome.header.extgui.hide",
+      "feature": "shell",
+      "label": "Header ▸ ext gui toggle (hide)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "The same header 'ext gui' button hiding the dock — runs after the show spec (dock visible), so this click hides it, verifying the hide direction. Placed last because it removes the command line the other specs depend on.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "[data-testid=\"extgui\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"extgui-visible\"]" }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-testid=\"extgui\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    }
+  ]
+}

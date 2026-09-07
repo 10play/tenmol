@@ -1,0 +1,1485 @@
+{
+  "area": "settings",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "settings.panel.open",
+      "feature": "settings",
+      "label": "Overlay launcher ▸ Settings",
+      "kind": "toggle",
+      "requires": [],
+      "note": "The shell overlay launcher (title 'Settings') mounts the settings overlay panel (features/settings/SettingsPanel). Once mounted, the .setlaunch bar with its three window buttons and a status readout appears. This is the entry point to every settings surface, so it runs first and leaves the panel open for the window-open specs that follow.",
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setlaunch" },
+        { "expect": "feedbackMatches", "pattern": "Edit All" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "settings.window.menu.open",
+      "feature": "settings",
+      "label": ".setlaunch ▸ Setting (open the Setting-menu window)",
+      "kind": "button",
+      "requires": [],
+      "note": "First .setlaunch button opens the FloatingWindow hosting the data-driven menu renderer (title = the active tab, default 'Setting'). In local mode the body shows 'settings service unavailable' because the catalogue is bridge-served; the window itself still opens. Relies on settings.panel.open having mounted the panel.",
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".flwin", "ms": 4000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".flwin" },
+        { "expect": "feedbackMatches", "pattern": "settings service unavailable|get_menudata" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.window.table.open",
+      "feature": "settings",
+      "label": ".setlaunch ▸ Edit All… (open the Advanced Settings table window)",
+      "kind": "button",
+      "requires": [],
+      "note": "Second .setlaunch button opens the 'PyMOL Advanced Settings' FloatingWindow. The title bar renders regardless of phase; the body shows the table when ready or 'settings service unavailable' in local mode.",
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".flwin", "ms": 4000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".flwin" },
+        { "expect": "feedbackMatches", "pattern": "Advanced Settings|settings service unavailable" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.window.lighting.open",
+      "feature": "settings",
+      "label": ".setlaunch ▸ Lighting (open the Lighting Settings window)",
+      "kind": "button",
+      "requires": [],
+      "note": "Third .setlaunch button opens the 'Lighting Settings' FloatingWindow. Title bar renders regardless of phase; body shows presets+sliders when ready or the unavailable notice in local mode.",
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".flwin", "ms": 4000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".flwin" },
+        { "expect": "feedbackMatches", "pattern": "Lighting Settings|Presets|settings service unavailable" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.window.close-x",
+      "feature": "settings",
+      "label": "FloatingWindow ▸ × close button",
+      "kind": "button",
+      "requires": [],
+      "note": "The window's × (.flwin__close) fires onClose, which sets the panel's open state back to null and unmounts the window. Enters with the Lighting window still open (from the prior spec; resetApp does not close FloatingWindows because focus has moved to the command line).",
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": ".flwin__close" },
+        { "do": "wait", "ms": 400 }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".flwin" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.window.menu.toggle-close",
+      "feature": "settings",
+      "label": ".setlaunch ▸ Setting toggles its window closed on second click",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Each .setlaunch button toggles its own window: clicking 'Setting' with no window open opens the menu window; clicking it again closes it (setOpen(open==='menu'?null:'menu')). Self-contained: opens then closes within the trigger.",
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".flwin", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "wait", "ms": 400 }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".flwin" }
+      ],
+      "settleMs": 400
+    },
+
+    {
+      "id": "settings.menu.tab.setting",
+      "feature": "settings",
+      "label": "Setting-menu window ▸ tab: Setting",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "First tab switches the renderer to the harvested Setting menu subtree (244 leaves). Tabs only render when the catalogue is ready, so this is bridge-gated.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__tab", "nth": 0 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setmenu__row[data-setting=\"auto_zoom\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.menu.tab.display",
+      "feature": "settings",
+      "label": "Setting-menu window ▸ tab: Display",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "Second tab switches the renderer to the Display menu subtree (Sequence, Internal GUI, Stereo, Zoom/Clip, Background, Quality, Grid, …).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__tab", "nth": 1 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setmenu__row[data-setting=\"seq_view\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.menu.tab.mouse",
+      "feature": "settings",
+      "label": "Setting-menu window ▸ tab: Mouse",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "Third tab switches the renderer to the Mouse menu subtree (Selection Mode radios, N-button motion presets, Virtual Trackball, Roving Origin).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__tab", "nth": 2 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setmenu__row[data-setting=\"virtual_trackball\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.menu.tab.scene",
+      "feature": "settings",
+      "label": "Setting-menu window ▸ tab: Scene",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "Fourth tab switches the renderer to the Scene menu subtree (Scenes…, Next/Previous, Recall/Store/Clear F-keys, Buttons check, Cache commands).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__tab", "nth": 3 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setmenu__row[data-setting=\"scene_buttons\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.menu.provenance",
+      "feature": "settings",
+      "label": "Setting-menu window ▸ get_menudata provenance chip",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "The .setmenu__source chip carries the harvest provenance in its title (menudata source + generator path). Hovering surfaces the tooltip; the chip only renders in the ready menu window.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "hover", "selector": ".setmenu__source" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setmenu__source" },
+        { "expect": "feedbackMatches", "pattern": "get_menudata" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "settings.menu.check.auto_zoom",
+      "feature": "settings",
+      "label": "Setting ▸ Auto-Zoom New Objects (check → auto_zoom)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "A top-level check row toggles auto_zoom via cmd.set. The mark (✓) and aria-checked flip against the LIVE value read back from the settings tap.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__row[data-setting=\"auto_zoom\"]" }
+      ],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "feedbackNotMatches", "pattern": "unavailable|cannot|unknown|error|not in this build" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.menu.check.auto_remove_hydrogens",
+      "feature": "settings",
+      "label": "Setting ▸ Auto-Remove Hydrogens (check → auto_remove_hydrogens)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "Top-level check toggles auto_remove_hydrogens; mark and aria-checked track the live value.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__row[data-setting=\"auto_remove_hydrogens\"]" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.menu.check.text",
+      "feature": "settings",
+      "label": "Setting ▸ Show Text (Esc) (check → text)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "Top-level check toggles the 'text' setting (overlay text display).",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__row[data-setting=\"text\"]" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.menu.check.overlay",
+      "feature": "settings",
+      "label": "Setting ▸ Overlay Text (check → overlay)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "Top-level check toggles the 'overlay' setting.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__row[data-setting=\"overlay\"]" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.menu.submenu.expand-label",
+      "feature": "settings",
+      "label": "Setting ▸ Label (submenu expand/collapse)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "Top-level submenus render collapsed (useState(depth>0)); clicking the header expands it, revealing the nested radio groups (label_size, label_font_id, …). First .setmenu__submenu header on the Setting tab is 'Label'.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__submenu > .setmenu__row--menu", "nth": 0 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-radio-group=\"label_size\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.menu.radio.label-size",
+      "feature": "settings",
+      "label": "Setting ▸ Label ▸ Size ▸ radio (label_size)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "Inside the expanded Label ▸ Size radio group, choosing a member writes label_size via cmd.set; the ● dot follows the live value, not a local selection. Second radio in the label_size group ('14 Point').",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 0 },
+        { "do": "click", "selector": ".setmenu__submenu > .setmenu__row--menu", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-radio-group=\"label_size\"] .setmenu__row", "nth": 1 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.menu.command.edit-all-hook",
+      "feature": "settings",
+      "label": "Setting ▸ Edit All… (command → settings_edit_all_dialog hook)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "The first command row runs the settings_edit_all_dialog hook that SettingsPanel binds itself (localHooks), switching the window to the Advanced Settings table. Proves the panel's own toolkit-seam wiring. First .setmenu__row--command on the Setting tab.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__row--command", "nth": 0 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setadv" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "settings.menu.command.keyboard-shortcuts",
+      "feature": "settings",
+      "label": "Setting ▸ Keyboard Shortcuts… (command → shortcut_menu_edit_dialog hook)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "Second command row targets the shortcut_menu_edit_dialog seam. If no feature has registered that hook it renders DISABLED with an explanatory tooltip (hookNote); if a feature owns it, it opens. Verifies the disabled-vs-live hook path either way. Second .setmenu__row--command.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__row--command", "nth": 1 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.menu.command.colors",
+      "feature": "settings",
+      "label": "Setting ▸ Colors… (command → edit_colors_dialog hook)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "Third command row targets the edit_colors_dialog seam (owned by the colors feature if registered, otherwise disabled). Third .setmenu__row--command.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 0 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__row--command", "nth": 2 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.menu.mouse.radio.selection-mode",
+      "feature": "settings",
+      "label": "Mouse ▸ Selection Mode ▸ radio (mouse_selection_mode)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "On the Mouse tab the Selection Mode radio group writes mouse_selection_mode (Atoms/Residues/Chains/…). Choosing a member writes the setting and moves the ● to the live value. Third radio ('Chains').",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 2 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-radio-group=\"mouse_selection_mode\"] .setmenu__row", "nth": 2 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.menu.display.command.stereo-off",
+      "feature": "settings",
+      "label": "Display ▸ Stereo Mode ▸ command (do: stereo …)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "On the Display tab, Stereo Mode holds 'do'-type command leaves (Anaglyph/Cross-Eye/…/off) that run a raw command line rather than writing a single setting. Exercises the command-node 'do' action branch of the renderer. Requires expanding the Stereo Mode submenu first (nth chosen after expansion).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 1 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__row--command", "nth": 0 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.menu.scene.command.recall",
+      "feature": "settings",
+      "label": "Scene ▸ command (call: scene recall/next)",
+      "kind": "menu-command",
+      "requires": ["remote-backend"],
+      "note": "On the Scene tab the top-level command rows (Scenes…, Next, Previous, Append, …) are 'call'/'hook' leaves. Exercises a Scene-menu command leaf. First .setmenu__row--command (Scenes… hook) or Next; verifies command dispatch from the panel-hosted Scene menu.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 0 },
+        { "do": "waitFor", "selector": ".setmenu__tabs", "ms": 4000 },
+        { "do": "click", "selector": ".setmenu__tab", "nth": 3 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setmenu__row--command", "nth": 1 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+
+    {
+      "id": "settings.table.filter.substring",
+      "feature": "settings",
+      "label": "Advanced table ▸ Filter (substring narrows rows)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Typing into the filter box runs filterSettings over name+help and re-windows the row list; the count 'N / total' drops. Bridge-gated because the 779-row catalogue is bridge-served.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__filter input", "text": "sphere_scale" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setadv__row[data-name=\"sphere_scale\"]" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "settings.table.filter.regex",
+      "feature": "settings",
+      "label": "Advanced table ▸ Filter (regex)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The filter accepts a regex (matched over both columns). '^cartoon_' should narrow to the cartoon_* family.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__filter input", "text": "^cartoon_ring" }
+      ],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "cartoon_ring" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "settings.table.value.text-commit",
+      "feature": "settings",
+      "label": "Advanced table ▸ value cell (type + Enter commits a write)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "A non-boolean value cell is a text field: editing the draft and pressing Enter blurs and commits via source.write(cmd.set)+read-back; the cell snaps to the value PyMOL actually holds. Filter to sphere_scale first to get one editable row.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 },
+        { "do": "type", "selector": ".setadv__filter input", "text": "sphere_scale" },
+        { "do": "wait", "ms": 500 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__c-value input", "text": "0.75" },
+        { "do": "press", "selector": ".setadv__c-value input", "key": "Enter" }
+      ],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "feedbackNotMatches", "pattern": "cannot|rejected|unknown|error" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "settings.table.value.escape-cancel",
+      "feature": "settings",
+      "label": "Advanced table ▸ value cell (Escape discards the draft)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Escape in a value cell resets the draft to null (no write). The cell reverts to the live shown value.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 },
+        { "do": "type", "selector": ".setadv__filter input", "text": "sphere_scale" },
+        { "do": "wait", "ms": 500 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__c-value input", "text": "9.9" },
+        { "do": "press", "selector": ".setadv__c-value input", "key": "Escape" }
+      ],
+      "checks": [
+        { "expect": "feedbackNotMatches", "pattern": "9.9" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.table.value.checkbox",
+      "feature": "settings",
+      "label": "Advanced table ▸ boolean value cell (checkbox toggle)",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "A boolean setting renders its value cell as a checkbox that writes 1/0 through cmd.set. Filter to a boolean setting (orthoscopic) first.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 },
+        { "do": "type", "selector": ".setadv__filter input", "text": "orthoscopic" },
+        { "do": "wait", "ms": 500 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setadv__c-value input[type=\"checkbox\"]" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "settings.table.reset",
+      "feature": "settings",
+      "label": "Advanced table ▸ Reset (⟲ → cmd.unset restores default)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "The per-row ⟲ button calls source.reset (cmd.unset), restoring the compiled default; it is disabled when the value already equals the default. Set a non-default value first so the button is enabled.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 },
+        { "do": "type", "selector": ".setadv__filter input", "text": "sphere_scale" },
+        { "do": "wait", "ms": 500 },
+        { "do": "type", "selector": ".setadv__c-value input", "text": "0.75" },
+        { "do": "press", "selector": ".setadv__c-value input", "key": "Enter" },
+        { "do": "wait", "ms": 600 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setadv__c-reset button" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "settings.table.scope.global",
+      "feature": "settings",
+      "label": "Advanced table ▸ Scope: global (default)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The scope Select offers global/object/object-state/atom/atom-state/bond. 'global' is the default and shows no object/selection sub-control.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setadv__scope select" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setadv__scope select" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "settings.table.scope.object",
+      "feature": "settings",
+      "label": "Advanced table ▸ Scope: object (reveals Object selector)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Choosing 'object' reveals a second Select of object names; reading a whole object scope then re-reads every visible setting for that object.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__scope select", "text": "object" }
+      ],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "Object" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.table.scope.object-state",
+      "feature": "settings",
+      "label": "Advanced table ▸ Scope: object-state (reveals Object + State)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "'object-state' reveals both the Object selector and a numeric State input; per-state values are read for the chosen object+state.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__scope select", "text": "object-state" }
+      ],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "State" },
+        { "expect": "selectorVisible", "selector": ".setadv__scope input[type=\"number\"]" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.table.scope.atom",
+      "feature": "settings",
+      "label": "Advanced table ▸ Scope: atom (reveals Selection input + overrides)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "'atom' reveals the Selection text input and switches the value cells to write-only; the OverridesView strip reports what a selection carries via cmd.iterate.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__scope select", "text": "atom" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setadv__sel" },
+        { "expect": "selectorVisible", "selector": ".setadv__overrides" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.table.scope.atom-state",
+      "feature": "settings",
+      "label": "Advanced table ▸ Scope: atom-state (reveals Selection + State + AtomStateStrip)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "'atom-state' writes go through cmd.alter_state (atomSettings.ts) rather than cmd.set; it reveals Selection + State and the AtomStateStrip that reports the atom count alter_state answered (overrides cannot be listed back).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__scope select", "text": "atom-state" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setadv__overrides[data-scope=\"atom-state\"]" },
+        { "expect": "feedbackMatches", "pattern": "alter_state" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.table.scope.bond",
+      "feature": "settings",
+      "label": "Advanced table ▸ Scope: bond (reveals Selection; writes via set_bond)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "'bond' writes through cmd.set_bond (cmd.set with a selection silently no-ops at bond level); reveals the Selection input with the bond placeholder and a per-bond overrides read via cmd.get_bond.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__scope select", "text": "bond" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setadv__overrides[data-scope=\"bond\"]" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.table.selection-input",
+      "feature": "settings",
+      "label": "Advanced table ▸ Selection input (atom scope)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Typing a selection under the atom scope drives the OverridesView read-back (cmd.iterate over the selection).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 },
+        { "do": "type", "selector": ".setadv__scope select", "text": "atom" },
+        { "do": "wait", "ms": 300 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__sel", "text": "elem C" }
+      ],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "elem C|overrides" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "settings.table.state-input",
+      "feature": "settings",
+      "label": "Advanced table ▸ State number input (object-state scope)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The numeric State input (object-state / atom-state scopes) selects which state's values are read; it clamps to >=1.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 },
+        { "do": "type", "selector": ".setadv__scope select", "text": "object-state" },
+        { "do": "wait", "ms": 300 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".setadv__scope input[type=\"number\"]", "text": "2" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.table.body.scroll",
+      "feature": "settings",
+      "label": "Advanced table ▸ virtualised body scroll",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "The 779-row list is windowed; scrolling .setadv__body updates the visible slice (translateY) so different rows enter the DOM. Verifies the virtualisation without a filter.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "press", "selector": ".setadv__body", "key": "End" },
+        { "do": "wait", "ms": 300 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.table.reinit.everything",
+      "feature": "settings",
+      "label": "Advanced table ▸ Reinitialize ▸ Everything (arms, then runs)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "'Everything' is destructive (deletes every object AND resets settings), so the first click arms it (label -> 'Everything?') and a second confirms and calls cmd.reinitialize('everything'). Two clicks in the trigger cover both steps.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setadv__reinit button[data-what=\"everything\"]" },
+        { "do": "wait", "ms": 300 },
+        { "do": "click", "selector": ".setadv__reinit button[data-what=\"everything\"]" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "settings.table.reinit.everything-arm",
+      "feature": "settings",
+      "label": "Advanced table ▸ Reinitialize ▸ Everything (arm state only)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "A single click on the destructive 'Everything' entry only ARMS it — the label gains a '?' and the button gets .is-armed — without running anything. Confirms the confirm-first guard the Qt File menu lacks.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setadv__reinit button[data-what=\"everything\"]" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setadv__reinit button.is-armed" },
+        { "expect": "feedbackMatches", "pattern": "Everything\\?" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "settings.table.reinit.original",
+      "feature": "settings",
+      "label": "Advanced table ▸ Reinitialize ▸ Original Settings",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Non-destructive: runs cmd.reinitialize('original_settings') then re-bootstraps the catalogue. Note the label/word mismatch — 'Original Settings' maps to the original_settings word.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setadv__reinit button[data-what=\"original_settings\"]" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "settings.table.reinit.stored",
+      "feature": "settings",
+      "label": "Advanced table ▸ Reinitialize ▸ Stored Settings",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Runs cmd.reinitialize('settings') ('Stored Settings' label maps to the settings word) then re-bootstraps.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setadv__reinit button[data-what=\"settings\"]" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "settings.table.reinit.store-current",
+      "feature": "settings",
+      "label": "Advanced table ▸ Reinitialize ▸ Store Current Settings",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Runs cmd.reinitialize('store_defaults') to make the current settings the ones 'Stored Settings' restores.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".setadv__reinit button[data-what=\"store_defaults\"]" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "settings.table.footer.defaults-source",
+      "feature": "settings",
+      "label": "Advanced table ▸ footer defaults/ranges provenance",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "The footer states where defaults + ranges came from (catalogue.meta.defaultsSource / minMaxNote) or warns if unavailable. A passive provenance readout, present once the catalogue loads.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 1 },
+        { "do": "waitFor", "selector": ".setadv", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "waitFor", "selector": ".setadv__foot", "ms": 3000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".setadv__foot" },
+        { "expect": "feedbackMatches", "pattern": "defaults" }
+      ],
+      "settleMs": 300
+    },
+
+    {
+      "id": "settings.lighting.preset.default",
+      "feature": "settings",
+      "label": "Lighting ▸ Preset: Default",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Applies the 17-setting Default preset (main.py:69-137) by writing each named setting through source.write. Bridge-gated (needs the catalogue to map names to metas).",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".lighting__presets button", "nth": 0 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "settings.lighting.preset.metal",
+      "feature": "settings",
+      "label": "Lighting ▸ Preset: Metal",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Applies the Metal preset's setting block.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".lighting__presets button", "nth": 1 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "settings.lighting.preset.plastic",
+      "feature": "settings",
+      "label": "Lighting ▸ Preset: Plastic",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Applies the Plastic preset's setting block.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".lighting__presets button", "nth": 2 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "settings.lighting.preset.rubber",
+      "feature": "settings",
+      "label": "Lighting ▸ Preset: Rubber",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Applies the Rubber preset's setting block.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".lighting__presets button", "nth": 3 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "settings.lighting.preset.xray",
+      "feature": "settings",
+      "label": "Lighting ▸ Preset: X-Ray",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "Applies the X-Ray preset's 17-setting block.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".lighting__presets button", "nth": 4 }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "settings.lighting.num.ambient",
+      "feature": "settings",
+      "label": "Lighting ▸ ambient (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The authoritative number field for ambient (0..1); onChange writes unclamped through cmd.set and reads back.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"ambient value\"]", "text": "0.5" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "settings.lighting.slider.ambient",
+      "feature": "settings",
+      "label": "Lighting ▸ ambient (range slider)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The ambient slider (#light-ambient) is a hint that writes through cmd.set on change; the number field is authoritative and both re-read.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "press", "selector": "#light-ambient", "key": "ArrowRight" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.reflect",
+      "feature": "settings",
+      "label": "Lighting ▸ reflect (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for reflect (-1..1).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"reflect value\"]", "text": "0.6" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.direct",
+      "feature": "settings",
+      "label": "Lighting ▸ direct (number field; label 'direct (+reflect)')",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The 'direct (+reflect)' row's setting name is 'direct' (the parenthetical is split off, main.py:227); number field range -1..1.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"direct value\"]", "text": "0.5" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.spec_direct",
+      "feature": "settings",
+      "label": "Lighting ▸ spec_direct (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for spec_direct (0..1).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"spec_direct value\"]", "text": "0.4" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.spec_direct_power",
+      "feature": "settings",
+      "label": "Lighting ▸ spec_direct_power (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for spec_direct_power (0..100, step 1).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"spec_direct_power value\"]", "text": "60" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.light_count",
+      "feature": "settings",
+      "label": "Lighting ▸ light_count (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for light_count (1..8, step 1).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"light_count value\"]", "text": "3" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.edit_light",
+      "feature": "settings",
+      "label": "Lighting ▸ edit_light (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for edit_light (1..7, step 1) — which placeable light is being edited.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"edit_light value\"]", "text": "2" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.spec_count",
+      "feature": "settings",
+      "label": "Lighting ▸ spec_count (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for spec_count (-1..8, step 1).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"spec_count value\"]", "text": "1" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.shininess",
+      "feature": "settings",
+      "label": "Lighting ▸ shininess (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for shininess (0..100).",
+      "needsVisual": true,
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"shininess value\"]", "text": "40" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.slider.shininess",
+      "feature": "settings",
+      "label": "Lighting ▸ shininess (range slider)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The shininess slider (#light-shininess) writes through cmd.set on change.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "press", "selector": "#light-shininess", "key": "ArrowRight" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.spec_reflect",
+      "feature": "settings",
+      "label": "Lighting ▸ spec_reflect (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for spec_reflect (-0.01..1).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"spec_reflect value\"]", "text": "0.5" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.specular",
+      "feature": "settings",
+      "label": "Lighting ▸ specular (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for specular (0..1).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"specular value\"]", "text": "0.8" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.specular_intensity",
+      "feature": "settings",
+      "label": "Lighting ▸ specular_intensity (number field; label '=specular')",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The 'specular_intensity (=specular)' row's setting name is 'specular_intensity' (parenthetical split off); range 0..1.",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"specular_intensity value\"]", "text": "0.6" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.ambient_occlusion_mode",
+      "feature": "settings",
+      "label": "Lighting ▸ ambient_occlusion_mode (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for ambient_occlusion_mode (0..2, step 1).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"ambient_occlusion_mode value\"]", "text": "1" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.ambient_occlusion_scale",
+      "feature": "settings",
+      "label": "Lighting ▸ ambient_occlusion_scale (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for ambient_occlusion_scale (1..50, step 1).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"ambient_occlusion_scale value\"]", "text": "30" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.ambient_occlusion_smooth",
+      "feature": "settings",
+      "label": "Lighting ▸ ambient_occlusion_smooth (number field)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for ambient_occlusion_smooth (1..20, step 1).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"ambient_occlusion_smooth value\"]", "text": "12" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.power",
+      "feature": "settings",
+      "label": "Lighting ▸ power (number field, ray-trace only)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for power (1..10).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"power value\"]", "text": "2" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "settings.lighting.num.reflect_power",
+      "feature": "settings",
+      "label": "Lighting ▸ reflect_power (number field, ray-trace only)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Number field for reflect_power (1..10).",
+      "setup": [
+        { "do": "click", "selector": "[data-variant=\"launcher\"][title=\"Settings\"]" },
+        { "do": "waitFor", "selector": ".setlaunch", "ms": 4000 },
+        { "do": "click", "selector": ".setlaunch button", "nth": 2 },
+        { "do": "waitFor", "selector": ".lighting", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "input[aria-label=\"reflect_power value\"]", "text": "2" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    }
+  ]
+}

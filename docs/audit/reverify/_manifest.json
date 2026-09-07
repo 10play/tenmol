@@ -1,0 +1,22 @@
+[
+  {
+    "area": "apbs",
+    "shard": "docs/audit/reverify/apbs.shard.json",
+    "n": 9
+  },
+  {
+    "area": "shortcuts",
+    "shard": "docs/audit/reverify/shortcuts.shard.json",
+    "n": 24
+  },
+  {
+    "area": "mouse",
+    "shard": "docs/audit/reverify/mouse.shard.json",
+    "n": 34
+  },
+  {
+    "area": "chrome",
+    "shard": "docs/audit/reverify/chrome.shard.json",
+    "n": 3
+  }
+]

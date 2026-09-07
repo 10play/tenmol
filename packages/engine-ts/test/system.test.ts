@@ -237,6 +237,30 @@ describe('system: movie play flag', () => {
   });
 });
 
+// D2.movie-status: the web movie panel polls `get_movie_status` first and only
+// falls back to `count_frames` if it THROWS. The old engine.ts stub returned a
+// FIXED `nframes: 0` (never throwing), so the frame-range scrollbar stayed
+// disabled forever. registerSystem must override it with the live status.
+describe('system: get_movie_status (D2)', () => {
+  it('reports the true nframes after mset (not the fixed 0 stub)', () => {
+    const { call } = harness();
+    expect(call('mset', '1 x30')).toBe(30);
+    const status = call('get_movie_status') as { nframes: number; frame: number; state: number };
+    expect(status.nframes).toBe(30); // was 0 with the engine.ts stub
+    // Matches count_frames exactly (same movieLength helper).
+    expect(status.nframes).toBe(call('count_frames'));
+  });
+
+  it('frame mirrors get_frame as the movie cursor moves', () => {
+    const { call } = harness();
+    call('mset', '1 x5');
+    call('frame', 3);
+    const status = call('get_movie_status') as { frame: number };
+    expect(status.frame).toBe(3);
+    expect(status.frame).toBe(call('get_frame'));
+  });
+});
+
 describe('system: side effects', () => {
   it('geometry-changing commands publish; camera-only navigation emits view', () => {
     const h = harness();

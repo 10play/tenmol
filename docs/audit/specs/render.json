@@ -1,0 +1,880 @@
+{
+  "area": "render",
+  "caps": [
+    "local-backend",
+    "webgl",
+    "network"
+  ],
+  "specs": [
+    {
+      "id": "render.tab.open",
+      "feature": "render",
+      "label": "Ray / Draw collapsed tab — open dialog",
+      "kind": "button",
+      "requires": [],
+      "note": "The render feature mounts collapsed as a `.render__tab` button in the viewport region; clicking it expands the Draw/Ray setup form (RenderDialog.tsx:225-236, 105). Leaves the dialog OPEN for the specs that follow (state persists across specs on the shared page).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".render"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "#rd-w"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "render.form.lock.off",
+      "feature": "render",
+      "label": "Lock aspect ratio checkbox — turn OFF unlocks the ratio",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Lock is ON by default (useRenderForm INITIAL.lock=true). With lock on, editing width rescales height to preserve aspect; unchecking it (first checkbox) lets width move independently. Base is 1000x750 (aspect 1.333); after unlock, width=2000 keeps height=750 so aspect becomes 2000/750=2.667. The visible aspect span proving the toggle worked (RenderDialog.tsx:302-304, useRenderForm.ts:85-97,111).",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-dpi",
+          "text": "300"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-w",
+          "text": "1000"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render input[data-slot=\"checkbox\"]",
+          "nth": 0
+        },
+        {
+          "do": "type",
+          "selector": "#rd-w",
+          "text": "2000"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "2\\.667"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "render.form.width.px",
+      "feature": "render",
+      "label": "Width (px) input — drives the aspect ratio",
+      "kind": "input",
+      "requires": [],
+      "note": "Width pixel field (#rd-w). Lock is OFF from the previous spec, height set to 768; width=3000 gives aspect 3000/768=3.906, read from the visible aspect span. This is the only text-observable proof a numeric field took effect (the derived unit fields are input values the audit vocabulary cannot read).",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-h",
+          "text": "768"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "#rd-w",
+          "text": "3000"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3\\.906"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "render.form.height.px",
+      "feature": "render",
+      "label": "Height (px) input — drives the aspect ratio",
+      "kind": "input",
+      "requires": [],
+      "note": "Height pixel field (#rd-h). Lock OFF; width reset to 1024, height=1000 gives aspect 1024/1000=1.024 in the aspect span (RenderDialog.tsx:271-278).",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-w",
+          "text": "1024"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "#rd-h",
+          "text": "1000"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "1\\.024"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "render.form.widthUnits",
+      "feature": "render",
+      "label": "Width (physical units) input — converts to pixels via dpi",
+      "kind": "input",
+      "requires": [],
+      "note": "Second grid input = width in physical units. At dpi 300, 10 inches -> 3000 px (unitsToPx). Lock OFF, height=768, so aspect becomes 3000/768=3.906, proving the unit->pixel conversion drove width (useRenderForm.ts:61-64,98-99).",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-dpi",
+          "text": "300"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-h",
+          "text": "768"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": ".render__grid input",
+          "nth": 1,
+          "text": "10"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3\\.906"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "render.form.heightUnits",
+      "feature": "render",
+      "label": "Height (physical units) input — converts to pixels via dpi",
+      "kind": "input",
+      "requires": [],
+      "note": "Fourth grid input = height in physical units. At dpi 300, 10 inches -> 3000 px. Lock OFF, width=1024, so aspect becomes 1024/3000=0.341 (useRenderForm.ts:100-104).",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-dpi",
+          "text": "300"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-w",
+          "text": "1024"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": ".render__grid input",
+          "nth": 3,
+          "text": "10"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "0\\.341"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "render.form.dpi",
+      "feature": "render",
+      "label": "DPI input — accepts a new dots-per-inch value",
+      "kind": "input",
+      "requires": [],
+      "note": "DPI field (#rd-dpi). Per useRenderForm.ts:105-108 changing dpi keeps the SAME pixels (aspect and image size unchanged) and only rescales the derived physical-unit fields — which are input values, not innerText, so the audit's check vocabulary cannot read the effect. This spec verifies the field accepts input without throwing; the numeric conversion itself needs a visual/manual check.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": "#rd-dpi",
+          "text": "600"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "render.form.lock.on",
+      "feature": "render",
+      "label": "Lock aspect ratio checkbox — turn ON preserves the ratio",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Re-checks the lock (first checkbox, currently OFF). Base is set to 1000x400 (aspect 2.5) while unlocked; after locking, changing width to 1500 rescales height to 600 so the aspect span STILL reads 2.5 — the defining behaviour of the lock (useRenderForm.ts:85-91). Leaves lock ON.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-dpi",
+          "text": "300"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-w",
+          "text": "1000"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-h",
+          "text": "400"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render input[data-slot=\"checkbox\"]",
+          "nth": 0
+        },
+        {
+          "do": "type",
+          "selector": "#rd-w",
+          "text": "1500"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "2\\.5:1"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "render.form.transparent",
+      "feature": "render",
+      "label": "Transparent background checkbox — toggles",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Second checkbox. Its only effect is on a Ray render: it sets opaque_background 0/1 before _bridge.ray (RenderDialog.tsx:149-150,315-321). The bound background result cannot be observed in local mode, so this spec only verifies the toggle clicks without error; the rendered transparency needs remote-backend + a visual check.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render input[data-slot=\"checkbox\"]",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render input[data-slot=\"checkbox\"]"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "render.form.units.select",
+      "feature": "render",
+      "label": "Units select (inch / cm) — present and clickable",
+      "kind": "input",
+      "requires": [],
+      "note": "Native <select> switching the physical-unit basis (inch factor 1.0, cm factor 2.54; RenderDialog.tsx:295-301, useRenderForm.ts:109). The audit action DSL has no select-option primitive and Playwright fill() cannot set a native <select>, so this spec confirms the control is present and clickable; changing the option and its effect on the derived-unit fields needs a manual/visual pass.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render select[data-slot=\"select\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".render select[data-slot=\"select\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "render.useViewport",
+      "feature": "render",
+      "label": "Use viewport size button — adopts GL canvas dimensions",
+      "kind": "button",
+      "requires": [],
+      "note": "Calls cmd.get_viewport (works in local mode) and dispatches the viewport size verbatim, lock or no lock (RenderDialog.tsx:131-140,322-324; useRenderForm.ts:115-117). The form is pre-set to a distinctive 2.5:1 aspect (lock ON from prior spec keeps it); adopting the viewport size changes the aspect span to the canvas aspect, a visible DOM change.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-w",
+          "text": "4000"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render__row .render__btn"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "unavailable|cannot|unknown|error"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "render.close",
+      "feature": "render",
+      "label": "Close (x) button — collapse dialog back to tab",
+      "kind": "button",
+      "requires": [],
+      "note": "The title-bar IconButton (aria-label 'close Ray / Draw') collapses the panel back to the `.render__tab` button (RenderDialog.tsx:242-249, 244-246 setExpanded(false)). Runs last so the dialog is open for all preceding specs; leaves it collapsed.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render__collapse"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": "#rd-w"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render__tab"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "render.draw",
+      "feature": "render",
+      "label": "Draw button — real-time GL render",
+      "kind": "button",
+      "requires": [],
+      "note": "Draw calls _bridge.draw(width,height) then reads the image back and shows the result page (RenderDialog.tsx:142-176,328-335). engine-ts now serves _bridge.draw and cmd.png locally (verified: returns a real PNG), so this runs in the browser: it reaches the result page with a '<w>x<h> complete' status and a preview image.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-w",
+          "text": "320"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-h",
+          "text": "240"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render__actions .render__btn",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "draw\\s+\\d+x\\d+\\s+complete"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render__preview"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 1500
+    },
+    {
+      "id": "render.ray",
+      "feature": "render",
+      "label": "Ray button — CPU ray-traced render",
+      "kind": "button",
+      "requires": [],
+      "note": "Ray sets opaque_background from the transparent checkbox, calls _bridge.ray(width,height), reads the PNG back and shows the result page (RenderDialog.tsx:148-168,336-344). engine-ts raytraces in-browser (cmd/render.ts) and serves _bridge.ray locally, so this runs in the browser: result page with 'ray <w>x<h> complete' and a preview.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-w",
+          "text": "320"
+        },
+        {
+          "do": "type",
+          "selector": "#rd-h",
+          "text": "240"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render__btn--primary"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ray\\s+\\d+x\\d+\\s+complete"
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render__preview"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 3000
+    },
+    {
+      "id": "render.result.preview",
+      "feature": "render",
+      "label": "Result page — rendered image preview",
+      "kind": "other",
+      "requires": [],
+      "note": "After a successful Ray/Draw the result page shows the read-back PNG as an <img class=render__preview> (RenderDialog.tsx:355-362). The render runs locally, so the preview appears in the browser.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "click",
+          "selector": ".render__btn--primary"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".render__preview",
+          "ms": 6000
+        }
+      ],
+      "trigger": [],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".render__preview"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "render.result.savePath.input",
+      "feature": "render",
+      "label": "Result page — save path text input",
+      "kind": "input",
+      "requires": [],
+      "note": "The path field on the result page whose value feeds cmd.png(path) (RenderDialog.tsx:363-370). Reachable after a render, which runs locally, so the field is present in the browser.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "click",
+          "selector": ".render__btn--primary"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".render__path",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "type",
+          "selector": ".render__path",
+          "text": "/tmp/out.png"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".render__path"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "render.result.save.emptyPath",
+      "feature": "render",
+      "label": "Result page — Save with empty path shows guidance",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking Save with a blank path is a client-side guard that sets status 'enter a path to save to' (RenderDialog.tsx:208-213,371-373). The savePath field persists across specs (the dialog stays mounted), so the setup explicitly clears it to establish the documented blank-path precondition.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "click",
+          "selector": ".render__btn--primary"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".render__path",
+          "ms": 6000
+        },
+        {
+          "do": "type",
+          "selector": ".render__path",
+          "text": ""
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render__row .render__btn",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "enter a path to save"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "render.result.save",
+      "feature": "render",
+      "label": "Result page — Save image writes server-side PNG",
+      "kind": "button",
+      "requires": [
+        "file-service"
+      ],
+      "note": "Save calls cmd.png(path, prior=1, dpi) to write the just-rendered image to the server filesystem (RenderDialog.tsx:208-221). The render runs locally, but writing to a host path needs the server-side file service, so this stays BLOCKED (requires file-service) in the browser. Expected status 'saved <path>'.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "click",
+          "selector": ".render__btn--primary"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".render__path",
+          "ms": 6000
+        },
+        {
+          "do": "type",
+          "selector": ".render__path",
+          "text": "/tmp/tenmol-render.png"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render__row .render__btn",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "saved\\s+/tmp/tenmol-render\\.png"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 800
+    },
+    {
+      "id": "render.result.copy",
+      "feature": "render",
+      "label": "Result page — Copy image to clipboard",
+      "kind": "button",
+      "requires": [],
+      "note": "Copy calls cmd.tenmol_files.copy_image_png(dpi) and writes the PNG to the clipboard, or reports 'no prior image' / a clipboard failure (RenderDialog.tsx:178-206,374-381). The render runs locally so the result page is reachable in the browser; the clipboard itself depends on a secure context + user gesture, so the status may report a clipboard failure instead of success.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "click",
+          "selector": ".render__btn--primary"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".render__path",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render__row .render__btn",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "copied|clipboard|no prior image"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "render.result.back",
+      "feature": "render",
+      "label": "Result page — Back returns to the setup page",
+      "kind": "button",
+      "requires": [],
+      "note": "The '< Back' button on the result page returns to the size/render setup page (RenderDialog.tsx:383-387 setPage('setup')). Reachable after a render, which runs locally, so this works in the browser. Expected: #rd-w visible again.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".render__tab"
+        },
+        {
+          "do": "waitFor",
+          "selector": "#rd-w"
+        },
+        {
+          "do": "click",
+          "selector": ".render__btn--primary"
+        },
+        {
+          "do": "waitFor",
+          "selector": ".render__preview",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".render__actions .render__btn"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "#rd-w"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    }
+  ]
+}

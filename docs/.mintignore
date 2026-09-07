@@ -15,3 +15,8 @@ UI-MODERNIZATION-MAP.md
 # (an HTML-comment header + a raw Markdown table sitting next to the golden/ref
 # PNGs it scores), not a Mintlify site page — so it must not be MDX-parsed here.
 screenshots/visual/scoreboard.md
+# The UI audit outputs (BROKEN-MAP.md + machine-readable specs/results) link to
+# source files and contain literal HTML/JSX-looking snippets in evidence text;
+# they are GitHub-facing artifacts, not Mintlify site pages, so must not be
+# MDX-parsed or broken-link-checked here.
+audit/

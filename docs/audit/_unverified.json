@@ -1,0 +1,464 @@
+[
+  {
+    "area": "apbs",
+    "id": "apbs.script.apbs-workflow-visible",
+    "label": "APBS workflow recipe block",
+    "reason": "Setup 'Plugin ▸ APBS Electrostatics' menu-open timed out (menu leaf not present "
+  },
+  {
+    "area": "apbs",
+    "id": "apbs.copy.script",
+    "label": "copy script button",
+    "reason": "Setup 'Plugin ▸ APBS Electrostatics' menu-open timed out (menu leaf not present "
+  },
+  {
+    "area": "apbs",
+    "id": "apbs.launcher.toggle-close",
+    "label": "Launcher APBS (Zap) button — close",
+    "reason": "Setup opens the panel via 'Plugin ▸ APBS Electrostatics' menu, which times out ("
+  },
+  {
+    "area": "apbs",
+    "id": "apbs.window.close",
+    "label": "Window × close button",
+    "reason": "Setup 'Plugin ▸ APBS Electrostatics' menu-open timed out (menu leaf not present "
+  },
+  {
+    "area": "apbs",
+    "id": "apbs.window.shade-restore",
+    "label": "Window restore (▢) after shade",
+    "reason": "Setup 'Plugin ▸ APBS Electrostatics' menu-open timed out (menu leaf not present "
+  },
+  {
+    "area": "apbs",
+    "id": "apbs.window.esc-close",
+    "label": "Esc closes window",
+    "reason": "Setup 'Plugin ▸ APBS Electrostatics' menu-open timed out (menu leaf not present "
+  },
+  {
+    "area": "apbs",
+    "id": "apbs.window.title-doubleclick-shade",
+    "label": "Double-click title bar to shade",
+    "reason": "needsVisual spec; setup 'Plugin ▸ APBS Electrostatics' menu-open timed out (menu"
+  },
+  {
+    "area": "apbs",
+    "id": "apbs.window.drag-move",
+    "label": "Drag title bar to move window",
+    "reason": "needsVisual spec; setup 'Plugin ▸ APBS Electrostatics' menu-open timed out (menu"
+  },
+  {
+    "area": "apbs",
+    "id": "apbs.window.resize-grip",
+    "label": "Resize grip (drag)",
+    "reason": "needsVisual spec; setup 'Plugin ▸ APBS Electrostatics' menu-open timed out (menu"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.mouseconfig.close",
+    "label": "Mouse configuration ▸ Close (×)",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config'] (el"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.mouseconfig.open-ksm",
+    "label": "Mouse configuration ▸ Keyboard Shortcut Menu…",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.close",
+    "label": "Keyboard Shortcut Menu ▸ Close (×)",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.filter.substring",
+    "label": "Filter — substring narrows the table",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.filter.regex",
+    "label": "Filter — treated as a regex",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.filter.badregex",
+    "label": "Filter — half-typed regex must not throw",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.filter.clear",
+    "label": "Filter — clearing restores every row",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.refresh",
+    "label": "Refresh — re-read live bindings",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.row.select",
+    "label": "Row click — select a binding",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.row.deselect",
+    "label": "Row click again — deselect",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.command.edit-dblclick",
+    "label": "Command cell — double-click to edit (LIMITATION)",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.createnew.open",
+    "label": "Create New — open the create form",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.delete.selected",
+    "label": "Delete Selected — unbind a default (reads Deleted)",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.delete.created-disappears",
+    "label": "Delete Selected — a created binding disappears",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.reset.selected",
+    "label": "Reset Selected — restore default command",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.reset.all",
+    "label": "Reset All — restore every binding",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.save",
+    "label": "Save — persist bindings",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.create.newkey",
+    "label": "Create New — bind an unused chord",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.create.reserved-key",
+    "label": "Create New — reserved key silently rejected (LIMITATION)",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.create.cancel",
+    "label": "Create New ▸ Cancel — dismiss the form",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.create.existing-confirm",
+    "label": "Create New over an existing key — asks to overwrite",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.confirm.accept",
+    "label": "Overwrite confirm ▸ Confirm",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.confirm.cancel",
+    "label": "Overwrite confirm ▸ Cancel",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "shortcuts",
+    "id": "shortcuts.editor.confirm.skip-checkbox",
+    "label": "Overwrite confirm ▸ 'do not show this again'",
+    "reason": "driver error: locator.click timeout 6000ms on [data-testid='butmode-config']"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config.three_button_motions",
+    "label": "mouse_config ▸ 3-Button Motions (config_mouse three_button_motions)",
+    "reason": "config_mouse three_button_motions ran but Mouse Mode label stayed '3-Button View"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config.three_button_editing",
+    "label": "mouse_config ▸ 3-Button Editing (config_mouse three_button_editing)",
+    "reason": "config_mouse three_button_editing ran but Mouse Mode label stayed '3-Button View"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config.three_button_lights",
+    "label": "mouse_config ▸ 3-Button Lights (mouse three_button_lights)",
+    "reason": "mouse three_button_lights ran but Mouse Mode label stayed '3-Button Viewing'; ex"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config.three_button_all_modes",
+    "label": "mouse_config ▸ 3-Button All Modes (config_mouse three_button_all_modes)",
+    "reason": "config_mouse three_button_all_modes ran but Mouse Mode label stayed '3-Button Vi"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config.two_button_editing",
+    "label": "mouse_config ▸ 2-Button Editing (config_mouse two_button_editing)",
+    "reason": "config_mouse two_button_editing ran but Mouse Mode label stayed '3-Button Viewin"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config.two_button_viewing",
+    "label": "mouse_config ▸ 2-Button Viewing (config_mouse two_button_viewing)",
+    "reason": "config_mouse two_button_viewing ran but Mouse Mode label stayed '3-Button Viewin"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config.two_button_lights",
+    "label": "mouse_config ▸ 2-Button Lights (mouse two_button_lights)",
+    "reason": "mouse two_button_lights ran but Mouse Mode label stayed '3-Button Viewing'; expe"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.butmode.mode.cycle-forward",
+    "label": "ButMode mode line ▸ left-click cycles mode forward",
+    "reason": "cmd.mouse('forward') was issued but Mouse Mode label stayed '3-Button Viewing'; "
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.butmode.selection.cycle-forward",
+    "label": "ButMode selection line ▸ left-click cycles level forward",
+    "reason": "cmd.mouse('select_forward') issued from Molecules(5) but selection line stayed '"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.butmode.editing.picking-line",
+    "label": "ButMode selection line shows 'Picking Atoms' + is disabled in editing mode",
+    "reason": "config_mouse three_button_editing did not take effect (label still '3-Button Vie"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.butmode.grid.click-cycle",
+    "label": "ButMode grid ▸ left-click cycles mode",
+    "reason": "cmd.mouse('forward') issued via grid but Mouse Mode label stayed '3-Button Viewi"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.header-mode",
+    "label": "Mouse config header shows the live mode_dict key",
+    "reason": "Driver timeout clicking [data-testid=butmode-config] (button present but not act"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.note-80slots",
+    "label": "Mouse config honesty note (80 slots / no reader) renders",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.value-reflect",
+    "label": "Mouse config cell left/none reads the mode's binding (Rota)",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.change-undrivable",
+    "label": "Mouse config cell dropdown ▸ selecting an action issues cmd.button",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.col.left",
+    "label": "Mouse config column: L (left) button cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.col.middle",
+    "label": "Mouse config column: M (middle) button cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.col.right",
+    "label": "Mouse config column: R (right) button cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.col.wheel",
+    "label": "Mouse config column: Wheel button cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.col.single_left",
+    "label": "Mouse config column: Sgl L (single_left) button cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.col.single_middle",
+    "label": "Mouse config column: Sgl M (single_middle) button cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.col.single_right",
+    "label": "Mouse config column: Sgl R (single_right) button cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.col.double_left",
+    "label": "Mouse config column: Dbl L (double_left) button cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.col.double_middle",
+    "label": "Mouse config column: Dbl M (double_middle) button cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.col.double_right",
+    "label": "Mouse config column: Dbl R (double_right) button cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.row.shft",
+    "label": "Mouse config row: Shft modifier cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.row.ctrl",
+    "label": "Mouse config row: Ctrl modifier cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.row.ctsh",
+    "label": "Mouse config row: CtSh modifier cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.row.alt",
+    "label": "Mouse config row: Alt modifier cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.row.alsh",
+    "label": "Mouse config row: AlSh modifier cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.row.ctal",
+    "label": "Mouse config row: CtAl modifier cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.cell.row.ctas",
+    "label": "Mouse config row: CtAS modifier cell present",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.keyboard-menu-button",
+    "label": "Mouse config ▸ 'Keyboard Shortcut Menu…' opens the shortcut editor",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "mouse",
+    "id": "mouse.config-panel.close",
+    "label": "Mouse config ▸ × closes the dialog",
+    "reason": "Driver timeout clicking [data-testid=butmode-config]; config matrix never opened"
+  },
+  {
+    "area": "chrome",
+    "id": "chrome.launcher.volume",
+    "label": "Panel launcher ▸ Volume",
+    "reason": "Clicking the Volume overlay-launcher toggles the button to active (aria-pressed="
+  },
+  {
+    "area": "chrome",
+    "id": "chrome.launcher.properties",
+    "label": "Panel launcher ▸ Properties",
+    "reason": "Clicking the Properties overlay-launcher toggles the button active but mounts no"
+  },
+  {
+    "area": "chrome",
+    "id": "chrome.launcher.texteditor",
+    "label": "Panel launcher ▸ Text editor",
+    "reason": "Clicking the Text editor overlay-launcher toggles the button active but mounts n"
+  },
+  {
+    "area": "dialogs",
+    "id": "dialogs.__runner",
+    "label": "Audit runner (dialogs shard)",
+    "reason": "Could not execute the audit shard: the Bash execution environment is completely "
+  },
+  {
+    "area": "colors",
+    "id": "colors.__runner",
+    "label": "run-shard runner",
+    "reason": "Could not execute the audit shard. The Bash tool in this environment is non-func"
+  },
+  {
+    "area": "viewport",
+    "id": "viewport.__runner",
+    "label": "Audit runner failed to execute",
+    "reason": "The Bash/shell environment is non-functional: every command (including trivial `"
+  },
+  {
+    "area": "seqview",
+    "id": "seqview.__runner",
+    "label": "seqview audit runner",
+    "reason": "The run-shard command could not be executed. The sandbox shell is resource-exhau"
+  },
+  {
+    "area": "console",
+    "id": "console.__runner",
+    "label": "run-shard runner",
+    "reason": "run-shard.mjs could not execute: 'vite failed to start: spawn .../node_modules/."
+  },
+  {
+    "area": "wizards",
+    "id": "wizards.__runner",
+    "label": "Run wizards audit shard",
+    "reason": "Could not execute the run-shard command. The Bash tool is entirely non-functiona"
+  },
+  {
+    "area": "objects",
+    "id": "objects.__runner",
+    "label": "run-shard.mjs execution",
+    "reason": "Could not execute the run-shard command: the Bash/shell environment is completel"
+  }
+]

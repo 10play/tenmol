@@ -1,0 +1,563 @@
+{
+  "area": "properties",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "properties.open.launcher",
+      "feature": "properties",
+      "label": "Open Properties inspector (dialogs launcher button)",
+      "kind": "button",
+      "requires": [],
+      "note": "The dialogs launcher strip's Properties button (dialogsStore.open('properties')) mounts the PropertiesPanel window. On open it reads the object list + pk1 and reloads the four-level tree for 1crn.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog='properties']" },
+        { "expect": "selectorVisible", "selector": ".props" },
+        { "expect": "selectorVisible", "selector": "[data-props-tree]" },
+        { "expect": "feedbackMatches", "pattern": "Object-Level" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "properties.open.quickbutton",
+      "feature": "properties",
+      "label": "Open Properties inspector (External-GUI quick button)",
+      "kind": "button",
+      "requires": [],
+      "note": "The console quick-button grid's Properties button (action='properties') opens the same panel via openPanel('properties',...). Selected by its title attribute 'the properties dialog'.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": "[title='the properties dialog']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog='properties']" },
+        { "expect": "feedbackMatches", "pattern": "Atom-Level" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "properties.tree.sections",
+      "feature": "properties",
+      "label": "Property tree renders all four fixed section levels",
+      "kind": "other",
+      "requires": [],
+      "note": "emptyTree() defines Object-Level, Object-State-Level, Atom-Level, Atom-State-Level. All four must render for 1crn (atoms>0 and states>0, so none are hidden).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "Object-Level" },
+        { "expect": "feedbackMatches", "pattern": "Object-State-Level" },
+        { "expect": "feedbackMatches", "pattern": "Atom-Level" },
+        { "expect": "feedbackMatches", "pattern": "Atom-State-Level" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "properties.tree.atom-identifiers",
+      "feature": "properties",
+      "label": "Atom-Level Identifiers populate from cmd.get_model (pk1 atom 1)",
+      "kind": "other",
+      "requires": [],
+      "note": "atomRows() reads get_model('1crn`1') and fills 11 identifier rows. model resolves to '1crn' (read-only), plus resn/chain/resi keys. Proves the atom read path works in local mode.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "resn" },
+        { "expect": "feedbackMatches", "pattern": "chain" },
+        { "expect": "feedbackMatches", "pattern": "oneletter" },
+        { "expect": "feedbackMatches", "pattern": "1crn" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "properties.tree.atom-builtins-present",
+      "feature": "properties",
+      "label": "Atom-Level built-ins from chempy (elem/vdw/b) render values",
+      "kind": "other",
+      "requires": [],
+      "note": "The 11 built-ins chempy carries (elem, q, b, type, vdw, ss, formal_charge, partial_charge, numeric_type, text_type, elec_radius) render without the bridge helper; their key labels must appear in the Properties (built-in) group.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "elem" },
+        { "expect": "feedbackMatches", "pattern": "vdw" },
+        { "expect": "feedbackMatches", "pattern": "partial_charge" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "properties.tree.builtins-unavailable-without-helper",
+      "feature": "properties",
+      "label": "Helper-only rows show 'unavailable' when cmd.tenmol_props is absent",
+      "kind": "other",
+      "requires": [],
+      "note": "In local mode the bridge helper cmd.tenmol_props.atom_extras is NotPorted, so color/reps/flags/label/cartoon/protons/geom/valence built-ins and the atom-settings placeholder render the 'unavailable' fallback rather than throwing. This is the designed degraded path.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".props__unavailable" },
+        { "expect": "feedbackMatches", "pattern": "unavailable" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "properties.tree.atom-settings-placeholder",
+      "feature": "properties",
+      "label": "Atom-Level Settings show the s.* unavailable placeholder",
+      "kind": "other",
+      "requires": [],
+      "note": "PyMOL cannot enumerate per-atom settings (no get_atom_settings; s.all raises), so atomSettingsPlaceholder() emits one 's.*' unavailable row explaining the limitation. The key label 's.' must render.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "s\\." },
+        { "expect": "selectorVisible", "selector": ".props__unavailable" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "properties.tree.astate-builtins",
+      "feature": "properties",
+      "label": "Atom-State-Level built-ins (state/x/y/z) render from coordinates",
+      "kind": "other",
+      "requires": [],
+      "note": "astate rows come from the picked atom's coord: state (read-only) plus editable x/y/z. Section label 'Atom-State-Level' and its rows must render.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "Atom-State-Level" },
+        { "expect": "selectorVisible", "selector": "[data-props-value='astate-builtins/x']" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "properties.tree.object-settings-populated",
+      "feature": "properties",
+      "label": "Object-Level Settings list a per-object override (cmd.get_object_settings)",
+      "kind": "other",
+      "requires": [],
+      "note": "After 'set cartoon_transparency, 0.37, 1crn', get_object_settings('1crn',0) returns the override and the Object-Level > Settings group shows its value 0.37. Proves the settings read path. (Setting names stay numeric because setting.get_name_list is a local stub returning [].)",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set cartoon_transparency, 0.37, 1crn" },
+        { "do": "wait", "ms": 300 },
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-props-refresh]" },
+        { "do": "wait", "ms": 700 }
+      ],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "0\\.37" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "properties.tree.object-ttt-row",
+      "feature": "properties",
+      "label": "Object-Level TTT Matrix row is editable",
+      "kind": "input",
+      "requires": [],
+      "note": "get_object_ttt('1crn') yields the object's TTT (empty when unset); the row is neither read-only nor unavailable, so it renders an editable value input keyed 'object-ttt/TTT Matrix'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-props-row='object-ttt/TTT Matrix']" }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "TTT Matrix" },
+        { "expect": "selectorVisible", "selector": "[data-props-value='object-ttt/TTT Matrix']" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "properties.header.object-select",
+      "feature": "properties",
+      "label": "Header Object combo lists the current object (1crn)",
+      "kind": "input",
+      "requires": [],
+      "note": "The Object <select> (data-props-model) is filled from cmd.get_object_list(); in the audit scene it offers 1crn as its sole option. Only one object exists, so no cross-object switch is observable here.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-props-model]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-props-model]" },
+        { "expect": "feedbackMatches", "pattern": "1crn" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "properties.header.state-input",
+      "feature": "properties",
+      "label": "Header State spinner (clamped 1..count_states)",
+      "kind": "input",
+      "requires": [],
+      "note": "The State number input (data-props-state) is clamped to 1..maxState and drives ostate reads. 1crn is single-state (maxState=1) so a typed value clamps back to 1; this checks the clamp+reload path does not error, not a visible state change.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "[data-props-state]", "text": "3" },
+        { "do": "wait", "ms": 700 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-props-tree]" },
+        { "expect": "noConsoleError" },
+        { "expect": "noNetFailure" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "properties.header.index-input",
+      "feature": "properties",
+      "label": "Header Index spinner moves pk1 and reloads the atom",
+      "kind": "input",
+      "requires": [],
+      "note": "Typing a new atom index (data-props-index) clamps to 1..count_atoms, moves pk1 via cmd.edit and re-reads that atom. The read-only 'index' identifier row (body text) changes 1 -> 5, a DOM mutation.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "[data-props-index]", "text": "5" },
+        { "do": "wait", "ms": 900 }
+      ],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "feedbackMatches", "pattern": "index" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "properties.header.refresh",
+      "feature": "properties",
+      "label": "Header Refresh re-reads the object list and re-syncs from pk1",
+      "kind": "button",
+      "requires": [],
+      "note": "The Refresh tool button (data-props-refresh) calls refreshObjects() then reload(): re-reads get_object_list + pk1 and rebuilds the tree. Must complete without error and keep the tree populated.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-props-refresh]" },
+        { "do": "wait", "ms": 700 }
+      ],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "Object-Level" },
+        { "expect": "selectorVisible", "selector": "[data-props-tree]" },
+        { "expect": "noConsoleError" },
+        { "expect": "noNetFailure" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "properties.header.follow-toggle",
+      "feature": "properties",
+      "label": "Header 'follow pick' checkbox toggles the pk1 poll",
+      "kind": "toggle",
+      "requires": [],
+      "note": "The follow checkbox (data-props-follow, default on) starts/stops the 600ms probePk1 poll. Toggling it off then on has no visible tree effect but must not error; the checkbox remains present and interactive.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-props-follow]" },
+        { "do": "wait", "ms": 300 },
+        { "do": "click", "selector": "[data-props-follow]" },
+        { "do": "wait", "ms": 300 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-props-follow]" },
+        { "expect": "noConsoleError" },
+        { "expect": "noPageError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "properties.edit.ostate-title",
+      "feature": "properties",
+      "label": "Edit Object-State-Level Title (cmd.set_title)",
+      "kind": "input",
+      "requires": [],
+      "note": "The Title row is always editable; blurring/Enter commits via applyEdit -> cmd.set_title(model,state,text) then reloads. set_title is ported to the local engine. Affirmative visibility is limited because the committed title lives in an input value, not body text; the checks confirm no error surfaces in the panel error banner.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "[data-props-value='ostate-title/Title']", "text": "AUDITTITLE" },
+        { "do": "press", "selector": "[data-props-value='ostate-title/Title']", "key": "Enter" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "checks": [
+        { "expect": "feedbackNotMatches", "pattern": "NotPorted|not a command|Error:" },
+        { "expect": "selectorVisible", "selector": "[data-props-tree]" },
+        { "expect": "noConsoleError" },
+        { "expect": "noNetFailure" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "properties.edit.atom-identifier-resn",
+      "feature": "properties",
+      "label": "Edit atom identifier resn (cmd.alter) — derived oneletter updates",
+      "kind": "input",
+      "requires": [],
+      "note": "Editing the resn value input commits via applyEdit -> cmd.alter('pk1', \"resn = 'ALA'\", 0) then reloads. Because oneletter is derived read-only body text, changing resn from THR (oneletter T) to ALA (oneletter A) mutates the tree text.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "[data-props-value='atom-identifiers/resn']", "text": "ALA" },
+        { "do": "press", "selector": "[data-props-value='atom-identifiers/resn']", "key": "Enter" },
+        { "do": "wait", "ms": 900 }
+      ],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "feedbackNotMatches", "pattern": "NotPorted|not a command|Error:" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "properties.edit.astate-x",
+      "feature": "properties",
+      "label": "Edit Atom-State-Level x coordinate (cmd.alter_state)",
+      "kind": "input",
+      "requires": [],
+      "note": "Editing the x value input commits via applyEdit -> cmd.alter_state(state,'pk1','x = 42.0',0) then reloads. alter_state is ported locally. Coordinate change may not visibly move the cartoon (atom 1 is not a CA), so checks focus on no-error plus the tree reloading.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "[data-props-value='astate-builtins/x']", "text": "42.0" },
+        { "do": "press", "selector": "[data-props-value='astate-builtins/x']", "key": "Enter" },
+        { "do": "wait", "ms": 900 }
+      ],
+      "checks": [
+        { "expect": "feedbackNotMatches", "pattern": "NotPorted|not a command|Error:" },
+        { "expect": "selectorVisible", "selector": "[data-props-tree]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "properties.edit.ostate-matrix",
+      "feature": "properties",
+      "label": "Edit Object-State-Level State Matrix (cmd.matrix_reset + safe_eval + transform_object)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The State Matrix edit path calls cmd.safe_eval to parse the typed matrix, which is not ported to the in-browser engine (NotPorted). Requires the PyMOL bridge; recorded BLOCKED in local mode rather than FAIL.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "[data-props-value='ostate-matrix/State Matrix']", "text": "[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]" },
+        { "do": "press", "selector": "[data-props-value='ostate-matrix/State Matrix']", "key": "Enter" },
+        { "do": "wait", "ms": 700 }
+      ],
+      "checks": [
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "properties.row.select",
+      "feature": "properties",
+      "label": "Clicking a tree row selects it (is-selected highlight)",
+      "kind": "other",
+      "requires": [],
+      "note": "onClick={setSelected(id)} adds the is-selected class to the clicked row; no row is selected initially, so .props__row.is-selected becoming visible proves selection works.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-props-row='atom-identifiers/resn']" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".props__row.is-selected" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "properties.row.delete-key-noop",
+      "feature": "properties",
+      "label": "Delete on a selected identifier row is a safe no-op",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "The .props container's onKeyDown handles Delete/Backspace by unsetting the selected row. Identifiers have no unset (applyUnset returns false), so pressing Delete on a selected identifier must not error or reload — it exercises the keyboard path safely.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 },
+        { "do": "click", "selector": "[data-props-row='atom-identifiers/resn']" }
+      ],
+      "trigger": [
+        { "do": "press", "selector": ".props", "key": "Delete" },
+        { "do": "wait", "ms": 400 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".props__row.is-selected" },
+        { "expect": "noConsoleError" },
+        { "expect": "noPageError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "properties.row.backspace-key-noop",
+      "feature": "properties",
+      "label": "Backspace on a selected identifier row is a safe no-op",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Backspace shares the Delete unset path. On an identifier row (no unset semantics) it must be a harmless no-op.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 },
+        { "do": "click", "selector": "[data-props-row='atom-identifiers/chain']" }
+      ],
+      "trigger": [
+        { "do": "press", "selector": ".props", "key": "Backspace" },
+        { "do": "wait", "ms": 400 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".props__row.is-selected" },
+        { "expect": "noConsoleError" },
+        { "expect": "noPageError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "properties.window.shade",
+      "feature": "properties",
+      "label": "Window shade/minimise button hides the panel body",
+      "kind": "toggle",
+      "requires": [],
+      "note": "The DialogWindow title-bar shade button (title='shade') toggles minimised, which unmounts the body (tree + footer). The tree must become hidden.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-dialog='properties'] [title='shade']" },
+        { "do": "wait", "ms": 300 }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-props-tree]" },
+        { "expect": "selectorVisible", "selector": "[data-dialog='properties']" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "properties.window.close",
+      "feature": "properties",
+      "label": "Window close button dismisses the Properties panel",
+      "kind": "button",
+      "requires": [],
+      "note": "The DialogWindow close button (data-close='properties') removes the window from the dialogs store; the dialog must no longer be visible.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "click", "selector": "[data-open='properties']" },
+        { "do": "waitFor", "selector": "[data-dialog='properties']" },
+        { "do": "wait", "ms": 800 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-close='properties']" },
+        { "do": "wait", "ms": 300 }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-dialog='properties']" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 300
+    }
+  ]
+}

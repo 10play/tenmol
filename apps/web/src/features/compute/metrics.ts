@@ -425,3 +425,22 @@ export function formatResult(metric: Metric, value: unknown): string {
 export function runnable(metrics: readonly Metric[] = METRICS): Metric[] {
   return metrics.filter((m) => m.kind !== 'unsupported');
 }
+
+/**
+ * Compute helpers the in-browser engine has NOT ported: they reject with
+ * `not ported by @tenmol/engine-ts yet` in the browser-only build (they work
+ * over the bridge). Proven by `scripts/audit/unsupported-probe.mjs`; their rows
+ * are omitted when `backend === 'local'` — the rest of the catalogue runs
+ * locally and is left intact.
+ */
+export const LOCAL_UNSUPPORTED_METRIC_FNS: ReadonlySet<string> = new Set([
+  'util.protein_vacuum_esp', // Protein vacuum ESP
+  'util.enable_all_shaders', // Enable all shaders
+  'util.ff_copy', // Copy force-field parameters
+  `${COMPUTE_NS}.sasa_relative`, // Relative SASA per residue (bridge shim)
+]);
+
+/** True when `metric` cannot run in the browser-only build. */
+export function isLocalUnsupportedMetric(metric: Metric): boolean {
+  return LOCAL_UNSUPPORTED_METRIC_FNS.has(metric.fn);
+}

@@ -1,0 +1,643 @@
+{
+  "results": [
+    {
+      "id": "settings.panel.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".setlaunch",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Edit All",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/settings/settings.panel.open.png",
+      "needsVisual": false,
+      "note": "The shell overlay launcher (title 'Settings') mounts the settings overlay panel (features/settings/SettingsPanel). Once mounted, the .setlaunch bar with its three window buttons and a status readout appears. This is the entry point to every settings surface, so it runs first and leaves the panel open for the window-open specs that follow."
+    },
+    {
+      "id": "settings.window.menu.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".flwin",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "settings service unavailable|get_menudata",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/settings/settings.window.menu.open.png",
+      "needsVisual": false,
+      "note": "First .setlaunch button opens the FloatingWindow hosting the data-driven menu renderer (title = the active tab, default 'Setting'). In local mode the body shows 'settings service unavailable' because the catalogue is bridge-served; the window itself still opens. Relies on settings.panel.open having mounted the panel."
+    },
+    {
+      "id": "settings.window.table.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".flwin",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Advanced Settings|settings service unavailable",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/settings/settings.window.table.open.png",
+      "needsVisual": false,
+      "note": "Second .setlaunch button opens the 'PyMOL Advanced Settings' FloatingWindow. The title bar renders regardless of phase; the body shows the table when ready or 'settings service unavailable' in local mode."
+    },
+    {
+      "id": "settings.window.lighting.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".flwin",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Lighting Settings|Presets|settings service unavailable",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/settings/settings.window.lighting.open.png",
+      "needsVisual": false,
+      "note": "Third .setlaunch button opens the 'Lighting Settings' FloatingWindow. Title bar renders regardless of phase; body shows presets+sliders when ready or the unavailable notice in local mode."
+    },
+    {
+      "id": "settings.window.close-x",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".flwin",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/settings/settings.window.close-x.png",
+      "needsVisual": false,
+      "note": "The window's × (.flwin__close) fires onClose, which sets the panel's open state back to null and unmounts the window. Enters with the Lighting window still open (from the prior spec; resetApp does not close FloatingWindows because focus has moved to the command line)."
+    },
+    {
+      "id": "settings.window.menu.toggle-close",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".flwin",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/settings/settings.window.menu.toggle-close.png",
+      "needsVisual": false,
+      "note": "Each .setlaunch button toggles its own window: clicking 'Setting' with no window open opens the menu window; clicking it again closes it (setOpen(open==='menu'?null:'menu')). Self-contained: opens then closes within the trigger."
+    },
+    {
+      "id": "settings.menu.tab.setting",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.tab.display",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.tab.mouse",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.tab.scene",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.provenance",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.check.auto_zoom",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.check.auto_remove_hydrogens",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.check.text",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.check.overlay",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.submenu.expand-label",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.radio.label-size",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.command.edit-all-hook",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.command.keyboard-shortcuts",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.command.colors",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.mouse.radio.selection-mode",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.display.command.stereo-off",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.menu.scene.command.recall",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.filter.substring",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.filter.regex",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.value.text-commit",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.value.escape-cancel",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.value.checkbox",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.reset",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.scope.global",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.scope.object",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.scope.object-state",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.scope.atom",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.scope.atom-state",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.scope.bond",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.selection-input",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.state-input",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.body.scroll",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.reinit.everything",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.reinit.everything-arm",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.reinit.original",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.reinit.stored",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.reinit.store-current",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.table.footer.defaults-source",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.preset.default",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.preset.metal",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.preset.plastic",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.preset.rubber",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.preset.xray",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.ambient",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.slider.ambient",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.reflect",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.direct",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.spec_direct",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.spec_direct_power",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.light_count",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.edit_light",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.spec_count",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.shininess",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.slider.shininess",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.spec_reflect",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.specular",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.specular_intensity",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.ambient_occlusion_mode",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.ambient_occlusion_scale",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.ambient_occlusion_smooth",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.power",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "settings.lighting.num.reflect_power",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}

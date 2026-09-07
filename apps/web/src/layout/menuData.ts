@@ -52,7 +52,6 @@ export const MENU_BAR: TopLevelMenu[] = [
       },
       sep,
       { kind: 'command', label: 'Open...', dialog: 'file-open' },
-      { kind: 'recent' },
       { kind: 'command', label: 'Get PDB...', dialog: 'fetch-pdb' },
       sep,
       { kind: 'command', label: 'Save Session', dialog: 'session-save' },
@@ -85,27 +84,7 @@ export const MENU_BAR: TopLevelMenu[] = [
         ],
       },
       sep,
-      {
-        kind: 'menu',
-        label: 'Log File',
-        items: [
-          { kind: 'command', label: 'Open...', dialog: 'log-open' },
-          { kind: 'command', label: 'Resume...', dialog: 'log-resume' },
-          { kind: 'command', label: 'Append...', dialog: 'log-append' },
-          { kind: 'command', label: 'Close', cmd: 'log_close' },
-        ],
-      },
       { kind: 'command', label: 'Run Script...', dialog: 'run-script' },
-      {
-        kind: 'menu',
-        label: 'Working Directory',
-        items: [
-          { kind: 'command', label: 'Change...', dialog: 'cd' },
-          { kind: 'command', label: 'File Browser', dialog: 'file-browser' },
-        ],
-      },
-      sep,
-      { kind: 'command', label: 'Edit pymolrc', dialog: 'edit-pymolrc' },
       sep,
       {
         kind: 'menu',
@@ -443,9 +422,6 @@ export const MENU_BAR: TopLevelMenu[] = [
     label: 'Plugin',
     items: [
       { kind: 'command', label: 'Plugin Manager', dialog: 'plugin-manager' },
-      { kind: 'command', label: 'Install Plugin...', dialog: 'plugin-install' },
-      sep,
-      { kind: 'command', label: 'APBS Electrostatics', dialog: 'apbs' },
     ],
   },
   {

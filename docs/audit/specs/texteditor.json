@@ -1,0 +1,570 @@
+{
+  "area": "texteditor",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "texteditor.menu.edit_pymolrc",
+      "feature": "texteditor",
+      "label": "File ▸ Edit pymolrc — opens the Text Editor window",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "The menubar leaf's edit_pymolrc hook (registered by features/files, resolved by features/texteditor/openEditor) mounts the texteditor overlay slot and opens the `texteditor:@pymolrc` window. In local backend the panel resolves @pymolrc against cmd.tenmol_files, which is not ported, so it surfaces the honest 'not ported' error while still opening a working, editable buffer — the editor window, toolbar, status bar and textarea must all appear.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-area]" },
+        { "expect": "feedbackMatches", "pattern": "PyMOL Text Editor" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 4000
+    },
+    {
+      "id": "texteditor.status.access",
+      "feature": "texteditor",
+      "label": "Access badge settles to a concrete filesystem (bridge fs / browser fs)",
+      "kind": "other",
+      "requires": [],
+      "note": "The [data-txted-access] badge starts at 'probing…' then settles once probeServerFiles resolves. In local backend the probe treats the engine's 'not ported' answer as a live route, so it settles to server → 'bridge fs'. The badge must leave the transient 'probing…' state and show a settled label.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 500 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "bridge fs|browser fs" },
+        { "expect": "selectorVisible", "selector": "[data-txted-access]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 3500
+    },
+    {
+      "id": "texteditor.status.path",
+      "feature": "texteditor",
+      "label": "Path bar shows (unsaved) for an empty buffer",
+      "kind": "other",
+      "requires": [],
+      "note": "The status bar's [data-txted-path] renders the current path, or the literal '(unsaved)' when there is none. In local backend the @pymolrc read fails so the buffer stays pathless; clearing the textarea keeps it that way and the bar must read '(unsaved)'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "" }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "\\(unsaved\\)" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "texteditor.toolbar.save",
+      "feature": "texteditor",
+      "label": "File ▸ Save button (Ctrl+S) — handler runs",
+      "kind": "button",
+      "requires": [],
+      "note": "Save on a pathless buffer delegates to Save As. In local backend access resolves to server, so it opens a native window.prompt('Save As…') which the headless driver auto-dismisses (returns null) → no write, no crash. The affordance under test is that the button exists and its click handler runs without throwing; actual persistence is covered by the file-service BLOCKED spec.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "print(1)" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-txted-save]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-save]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.toolbar.saveas",
+      "feature": "texteditor",
+      "label": "File ▸ Save as … button (Ctrl+Shift+S) — handler runs",
+      "kind": "button",
+      "requires": [],
+      "note": "Save As opens a native window.prompt('Save As…') in server access (auto-dismissed by the headless driver) or a download in browser access. Either way no exception and no console error; the observable write requires the bridge file service (separate BLOCKED spec).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "print(2)" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-txted-saveas]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-saveas]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.toolbar.run.disabled",
+      "feature": "texteditor",
+      "label": "Run button is disabled with no server-loaded path",
+      "kind": "button",
+      "requires": [],
+      "note": "Run is enabled only when there is a path AND access==='server'. In local backend the @pymolrc read fails so the buffer is pathless and Run must render disabled — the correct guarded state, not a defect.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-run][disabled]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "texteditor.syntax.python",
+      "feature": "texteditor",
+      "label": "Syntax ▸ Python radio selects Python highlighting",
+      "kind": "toggle",
+      "requires": [],
+      "note": "The three syntax radios are exclusive (name=syntax-<key>). Clicking Python must check that radio; the buffer then tokenises with the Python highlighter (keywords/strings/comments).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-txted-syntax=\"python\"]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-syntax=\"python\"]:checked" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "texteditor.syntax.pml",
+      "feature": "texteditor",
+      "label": "Syntax ▸ PML radio selects PML highlighting",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Clicking PML must check that radio and switch the underlay to the PML tokeniser (command keyword + argument + # comment + python/embed/skip blocks).",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-txted-syntax=\"pml\"]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-syntax=\"pml\"]:checked" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "texteditor.syntax.plain",
+      "feature": "texteditor",
+      "label": "Syntax ▸ Plain Text radio selects no highlighting",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Plain Text is the no-highlighter mode (parity with PyMOL: only python.py/pml.py exist). Clicking it must check that radio; every line renders as a single plain token.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "click", "selector": "[data-txted-syntax=\"pml\"]" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-txted-syntax=\"plain\"]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-syntax=\"plain\"]:checked" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "texteditor.font.size",
+      "feature": "texteditor",
+      "label": "Font size input changes the editor font size",
+      "kind": "input",
+      "requires": [],
+      "note": "The Font number input (the Qt 'Select Font…' context-menu entry) sets fontSize state, applied inline to .txted__editor. Setting it to 20 enlarges the code surface. The size change is a CSS style on a non-canvas element, so it is not captured by the objective DOM/canvas diff — flagged needsVisual so a screenshot judge confirms the enlargement; the check here verifies the input accepts the value without error.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "one\ntwo\nthree" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-txted-font]", "text": "20" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-font]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "texteditor.font.clamp",
+      "feature": "texteditor",
+      "label": "Font size input clamps out-of-range values (8–24)",
+      "kind": "input",
+      "requires": [],
+      "note": "onChange clamps to Math.min(24, Math.max(8, n||12)). Typing 99 must clamp to 24 (and empty/NaN to 12). The clamped value lives only in the input's value prop (not page text), so this is confirmed visually; the driven check ensures the clamp logic does not throw.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-txted-font]", "text": "99" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-font]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "texteditor.editor.type",
+      "feature": "texteditor",
+      "label": "Typing in the textarea updates the buffer and marks it modified",
+      "kind": "input",
+      "requires": [],
+      "note": "The textarea is the real editable control; the highlighted <pre> underlay mirrors it. Typing changes both (so body text changes) and, because saved!==text, the '• modified' dirty flag appears.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-txted-area]", "text": "color red\nshow sticks" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-dirty]" },
+        { "expect": "feedbackMatches", "pattern": "modified" },
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.status.dirty",
+      "feature": "texteditor",
+      "label": "Dirty indicator '• modified' reflects unsaved edits",
+      "kind": "other",
+      "requires": [],
+      "note": "dirty = text!==saved. After a clean start, typing must reveal the [data-txted-dirty] badge reading '• modified'.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-txted-area]", "text": "edited" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-txted-dirty]" },
+        { "expect": "feedbackMatches", "pattern": "modified" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "texteditor.editor.highlight.pml",
+      "feature": "texteditor",
+      "label": "PML highlighter emits command-keyword and argument tokens",
+      "kind": "other",
+      "requires": [],
+      "note": "With PML syntax selected, a line 'color red' tokenises to a keyword ('color') plus an argument (' red'). The underlay must contain a .tok--keyword span.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "click", "selector": "[data-txted-syntax=\"pml\"]" },
+        { "do": "type", "selector": "[data-txted-area]", "text": "" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-txted-area]", "text": "color red" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".txted__pre .tok--keyword" },
+        { "expect": "selectorVisible", "selector": ".txted__pre .tok--argument" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.editor.highlight.python",
+      "feature": "texteditor",
+      "label": "Python highlighter emits keyword and string tokens",
+      "kind": "other",
+      "requires": [],
+      "note": "With Python syntax selected, 'from pymol import cmd' + a quoted string must produce .tok--keyword (import/from) and .tok--string spans in the underlay.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "click", "selector": "[data-txted-syntax=\"python\"]" },
+        { "do": "type", "selector": "[data-txted-area]", "text": "" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-txted-area]", "text": "from pymol import cmd\nx = \"hi\"" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".txted__pre .tok--keyword" },
+        { "expect": "selectorVisible", "selector": ".txted__pre .tok--string" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.editor.highlight.comment",
+      "feature": "texteditor",
+      "label": "Comment lines render as comment tokens",
+      "kind": "other",
+      "requires": [],
+      "note": "In PML mode a '# ...' line is a comment; the underlay must contain a .tok--comment span.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "click", "selector": "[data-txted-syntax=\"pml\"]" },
+        { "do": "type", "selector": "[data-txted-area]", "text": "" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-txted-area]", "text": "# a comment line" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".txted__pre .tok--comment" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.guard.open.modal",
+      "feature": "texteditor",
+      "label": "Open with unsaved edits raises the Save-changes guard",
+      "kind": "dialog",
+      "requires": [],
+      "note": "check_ask_save (TextEditor.py) guards Open when the buffer is dirty: clicking Open must present the Yes/No/Cancel ConfirmPrompt ('Save changes?') instead of proceeding. Leaves the modal open; the following guard specs dismiss it.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "unsaved work" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-txted-open]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-confirmprompt]" },
+        { "expect": "feedbackMatches", "pattern": "Save changes" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.guard.cancel",
+      "feature": "texteditor",
+      "label": "Save-changes guard · Cancel aborts and closes the modal",
+      "kind": "dialog",
+      "requires": [],
+      "note": "Cancel closes the guard and aborts the pending Open, leaving the (still dirty) buffer untouched. The ConfirmPrompt must disappear.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "unsaved work" },
+        { "do": "click", "selector": "[data-txted-open]" },
+        { "do": "waitFor", "selector": "[data-confirmprompt]", "ms": 4000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-confirmprompt] [data-answer=\"cancel\"]" }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-confirmprompt]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.guard.no",
+      "feature": "texteditor",
+      "label": "Save-changes guard · No proceeds without saving",
+      "kind": "dialog",
+      "requires": [],
+      "note": "No dismisses the guard and continues the pending Open without saving; in local backend the ensuing Open opens a native prompt/picker (auto-handled by the driver). The observable, objective result is that the ConfirmPrompt closes.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "unsaved work" },
+        { "do": "click", "selector": "[data-txted-open]" },
+        { "do": "waitFor", "selector": "[data-confirmprompt]", "ms": 4000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-confirmprompt] [data-answer=\"no\"]" }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-confirmprompt]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "texteditor.guard.yes",
+      "feature": "texteditor",
+      "label": "Save-changes guard · Yes saves then continues",
+      "kind": "dialog",
+      "requires": [],
+      "note": "Yes runs Save and, on completion, continues the pending Open. In local backend the Save routes to a native Save-As prompt and the Open to a native prompt/picker (both auto-handled by the driver); the objective result is the ConfirmPrompt closing without error.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "unsaved work" },
+        { "do": "click", "selector": "[data-txted-open]" },
+        { "do": "waitFor", "selector": "[data-confirmprompt]", "ms": 4000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-confirmprompt] [data-answer=\"yes\"]" }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-confirmprompt]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "texteditor.key.ctrl_o",
+      "feature": "texteditor",
+      "label": "Ctrl+O keyboard shortcut triggers Open",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "onKeyDown maps Ctrl/Cmd+O to the guarded Open. On a clean buffer the guard passes straight through to Open (native prompt/picker in local backend, auto-handled by the driver). The check verifies the shortcut is intercepted (preventDefault) and its handler runs without throwing or logging.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "" }
+      ],
+      "trigger": [{ "do": "press", "selector": "[data-txted-area]", "key": "Control+o" }],
+      "checks": [{ "expect": "noConsoleError" }],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.key.ctrl_s",
+      "feature": "texteditor",
+      "label": "Ctrl+S keyboard shortcut triggers Save",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "onKeyDown maps Ctrl/Cmd+S (no shift) to Save. In local backend a pathless Save routes to Save-As → native prompt (auto-dismissed). Verifies the shortcut is intercepted and the handler runs cleanly.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "print(3)" }
+      ],
+      "trigger": [{ "do": "press", "selector": "[data-txted-area]", "key": "Control+s" }],
+      "checks": [{ "expect": "noConsoleError" }],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.key.ctrl_shift_s",
+      "feature": "texteditor",
+      "label": "Ctrl+Shift+S keyboard shortcut triggers Save As",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "onKeyDown maps Ctrl/Cmd+Shift+S to Save As → native prompt/download in local backend (auto-handled). Verifies the shortcut is intercepted and the handler runs cleanly.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "print(4)" }
+      ],
+      "trigger": [{ "do": "press", "selector": "[data-txted-area]", "key": "Control+Shift+s" }],
+      "checks": [{ "expect": "noConsoleError" }],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.window.resize_grip",
+      "feature": "texteditor",
+      "label": "Editor window exposes a resize grip",
+      "kind": "drag",
+      "requires": [],
+      "note": "The DialogWindow chrome hosting the editor provides a bottom-right pointer-drag resize grip (.dlgwin__grip). Free pointer-drag resize is not expressible in the audit action DSL, so this records the affordance's presence (hoverable grip) rather than the drag itself.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 }
+      ],
+      "trigger": [{ "do": "hover", "selector": ".dlgwin__grip" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".dlgwin__grip" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "texteditor.window.close",
+      "feature": "texteditor",
+      "label": "Editor window close button dismisses the editor",
+      "kind": "button",
+      "requires": [],
+      "note": "The DialogWindow title-bar close button ([data-close=\"texteditor:@pymolrc\"]) removes the window from the dialogs store; the editor and its textarea must disappear.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "menu", "path": ["File", "Edit pymolrc"] },
+        { "do": "waitFor", "selector": "[data-txted-area]", "ms": 8000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-close=\"texteditor:@pymolrc\"]" }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-txted-area]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.toolbar.open.file",
+      "feature": "texteditor",
+      "label": "Open reads a file from the PyMOL host filesystem",
+      "kind": "button",
+      "requires": ["file-service"],
+      "note": "Opening an actual server file (window.prompt path → cmd.tenmol_files.read_text) requires the bridge file service; unavailable in local backend, so the read cannot be exercised end-to-end here. The click handler and its dirty-guard are covered by the guard specs.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": "[data-txted-open]" }],
+      "checks": [{ "expect": "feedbackNotMatches", "pattern": "cannot|error|unavailable" }],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.toolbar.save.persist",
+      "feature": "texteditor",
+      "label": "Save writes the buffer to the PyMOL host filesystem",
+      "kind": "button",
+      "requires": ["file-service"],
+      "note": "Writing to the bridge (cmd.tenmol_files.write_text) and reporting 'wrote <path>' requires the file service. In local backend Save falls back to a native prompt/download, so the server write path is untestable here.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": "[data-txted-save]" }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "wrote " }],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.toolbar.run",
+      "feature": "texteditor",
+      "label": "Run executes the edited script on the PyMOL host",
+      "kind": "button",
+      "requires": ["file-service"],
+      "note": "Run (cmd.run for .py, cmd.do('@path') otherwise) is enabled only when a path is loaded from the server, which needs the bridge file service. In local backend the buffer stays pathless so Run is disabled (covered objectively by texteditor.toolbar.run.disabled) and cannot be exercised.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": "[data-txted-run]" }],
+      "checks": [{ "expect": "noConsoleError" }],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.pymolrc.restart_note",
+      "feature": "texteditor",
+      "label": "pymolrc buffer shows the 'restart to apply' note",
+      "kind": "other",
+      "requires": ["file-service"],
+      "note": "The role=note banner ('pymolrc is read at startup — restart PyMOL to apply…') appears only when the loaded path is a real pymolrc (isPymolrc(path)). That requires resolving/loading the rc file over the bridge; in local backend the load fails so the note never renders.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "menu", "path": ["File", "Edit pymolrc"] }],
+      "checks": [{ "expect": "feedbackMatches", "pattern": "restart PyMOL to apply" }],
+      "settleMs": 500
+    },
+    {
+      "id": "texteditor.pymolrc.chooser",
+      "feature": "texteditor",
+      "label": "Active-pymolrc chooser lets you switch between multiple rc files",
+      "kind": "input",
+      "requires": ["file-service"],
+      "note": "When PyMOL loaded more than one rc file, resolvePymolrc returns >1 candidates and the panel offers a [data-txted-pymolrc] <select> to switch (with the same dirty guard). The candidate list comes from cmd.tenmol_files.pymolrc over the bridge; unavailable in local backend.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [{ "do": "menu", "path": ["File", "Edit pymolrc"] }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-txted-pymolrc]" }],
+      "settleMs": 500
+    }
+  ]
+}

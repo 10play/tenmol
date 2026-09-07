@@ -12,7 +12,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import type { SettingMeta } from '@tenmol/protocol';
 import type { MenuCommandNode, MenuValue } from '@tenmol/protocol/topics/menus';
 import { valueKey } from '@tenmol/stores/settings';
-import { useSession, useStore } from '../../app';
+import { isLocal, useSession, useStore } from '../../app';
 import { FloatingWindow } from '../../ui';
 import { menuHooks, subscribeMenuHooks } from '../../shell/panelHooks';
 import { HOOK_OWNERS, UNAVAILABLE_HOOKS } from '../menubar/model';
@@ -76,6 +76,12 @@ const WINDOW_GEOMETRY: Record<
 /** The settings overlay: Setting menu, advanced settings table, lighting panel, and launcher. */
 export function SettingsPanel() {
   const session = useSession();
+  // The setting catalogue and its live values are bridge-served
+  // (`setting.tenmol_settings_*`), which the in-browser engine has not ported.
+  // The windows still OPEN and CLOSE in the browser-only build — that is a shell
+  // affordance — but their contents are gated to a neutral note instead of the
+  // "settings service unavailable" error the failing bootstrap would show.
+  const local = isLocal(session);
   const service = useMemo(() => getSettingsService(session), [session]);
   const { store, source, poller } = service;
 
@@ -91,11 +97,11 @@ export function SettingsPanel() {
   const external = useSyncExternalStore(subscribeMenuHooks, menuHooks, menuHooks);
 
   useEffect(() => {
-    if (connection !== 'open') return;
+    if (local || connection !== 'open') return;
     void service.ensure();
     poller.start();
     return () => poller.stop();
-  }, [service, poller, connection]);
+  }, [local, service, poller, connection]);
 
   const byName = useMemo(() => {
     const map = new Map<string, SettingMeta>();
@@ -208,8 +214,11 @@ export function SettingsPanel() {
         >
           Lighting
         </button>
-        <span className={`setlaunch__state setlaunch__state--${phase}`} title={error ?? ''}>
-          {phase === 'ready' ? `${catalogue?.count ?? 0} settings` : phase}
+        <span
+          className={`setlaunch__state setlaunch__state--${local ? 'local' : phase}`}
+          title={local ? '' : (error ?? '')}
+        >
+          {local ? 'browser-only' : phase === 'ready' ? `${catalogue?.count ?? 0} settings` : phase}
         </span>
       </div>
 
@@ -238,7 +247,12 @@ export function SettingsPanel() {
           className="modern:bg-pm-panel modern:text-pm-text modern:border-line"
         >
           <div className="setwin__body">
-            {phase !== 'ready' ? (
+            {local ? (
+              <p className="setwin__status modern:text-pm-text-dim">
+                The setting catalogue lives on the PyMOL bridge and is inactive in the browser-only
+                build. Connect to a bridge to edit settings here.
+              </p>
+            ) : phase !== 'ready' ? (
               <p className="setwin__status modern:text-pm-text-dim">
                 {phase === 'error'
                   ? `settings service unavailable: ${error ?? 'unknown error'}`

@@ -1,0 +1,649 @@
+{
+  "results": [
+    {
+      "id": "chrome.launcher.settings",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.settings.png",
+      "needsVisual": false,
+      "note": "Modern theme hosts the overlay-panel launcher inline in the status bar (StatusBar ▸ LauncherButtons). Clicking the Settings toggle mounts the settings overlay slot, adding its DOM."
+    },
+    {
+      "id": "chrome.launcher.files",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.files.png",
+      "needsVisual": false,
+      "note": "Launcher toggle for the files overlay slot; clicking it mounts the file-dialogs panel."
+    },
+    {
+      "id": "chrome.launcher.dialogs",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.dialogs.png",
+      "needsVisual": false,
+      "note": "Launcher toggle for the dialogs overlay slot."
+    },
+    {
+      "id": "chrome.launcher.builder",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.builder.png",
+      "needsVisual": false,
+      "note": "Launcher toggle for the builder overlay slot."
+    },
+    {
+      "id": "chrome.launcher.colors",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.colors.png",
+      "needsVisual": false,
+      "note": "Launcher toggle for the colors overlay slot."
+    },
+    {
+      "id": "chrome.launcher.volume",
+      "verdict": "FAIL",
+      "reason": "domChanged: \"no DOM/canvas change\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": false,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.volume.png",
+      "needsVisual": false,
+      "note": "Launcher toggle for the volume overlay slot."
+    },
+    {
+      "id": "chrome.launcher.properties",
+      "verdict": "FAIL",
+      "reason": "domChanged: \"no DOM/canvas change\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": false,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.properties.png",
+      "needsVisual": false,
+      "note": "Launcher toggle for the properties overlay slot."
+    },
+    {
+      "id": "chrome.launcher.texteditor",
+      "verdict": "FAIL",
+      "reason": "domChanged: \"no DOM/canvas change\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": false,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.texteditor.png",
+      "needsVisual": false,
+      "note": "Launcher toggle for the texteditor overlay slot."
+    },
+    {
+      "id": "chrome.launcher.compute",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.compute.png",
+      "needsVisual": false,
+      "note": "Launcher toggle for the compute overlay slot."
+    },
+    {
+      "id": "chrome.launcher.plugin-manager",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.plugin-manager.png",
+      "needsVisual": false,
+      "note": "Launcher toggle for the plugin-manager overlay slot."
+    },
+    {
+      "id": "chrome.launcher.apbs",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.launcher.apbs.png",
+      "needsVisual": false,
+      "note": "Launcher toggle for the apbs overlay slot."
+    },
+    {
+      "id": "chrome.theme.dropdown.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-slot=\"dropdown-menu-content\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "UI theme",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.theme.dropdown.open.png",
+      "needsVisual": false,
+      "note": "The shell-header ThemeToggle trigger (data-testid=theme-toggle) opens a Radix dropdown listing the UI themes. Opening it renders the dropdown content with the 'UI theme' label and the two options."
+    },
+    {
+      "id": "chrome.theme.appearance.toggle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"appearance-toggle\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "chrome.theme.set.classic",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "html[data-ui-theme=\"classic\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.theme.set.classic.png",
+      "needsVisual": false,
+      "note": "Selecting the 'Classic — PyMOL' checkbox item flips the live look to the classic theme, stamping data-ui-theme=classic on <html> and re-skinning the whole UI without reload."
+    },
+    {
+      "id": "chrome.theme.set.modern",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "html[data-ui-theme=\"shadcn\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.theme.set.modern.png",
+      "needsVisual": false,
+      "note": "Selecting the 'Modern — shadcn' checkbox item switches back to the modern theme (data-ui-theme=shadcn). Runs after the classic spec, restoring the product default look."
+    },
+    {
+      "id": "chrome.extgui.ctrlE",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"extgui-titlebar\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"extgui\"][data-dock=\"float\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.extgui.ctrlE.png",
+      "needsVisual": false,
+      "note": "The window-level Ctrl+E shortcut (extGuiDock.toggleDockable) floats the External GUI dock and restores its real title bar. From the default docked/no-title-bar state one Ctrl+E yields floating + title bar (data-dock=float, extgui-titlebar visible)."
+    },
+    {
+      "id": "chrome.extgui.dock.left",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"extgui\"][data-dock=\"left\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.extgui.dock.left.png",
+      "needsVisual": false,
+      "note": "The title bar's L button re-docks the External GUI to the left area (setArea 'left'), flipping the panel to the side layout. Runs after the Ctrl+E spec, so the title bar is already showing."
+    },
+    {
+      "id": "chrome.extgui.dock.right",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"extgui\"][data-dock=\"right\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.extgui.dock.right.png",
+      "needsVisual": false,
+      "note": "The title bar's R button re-docks the External GUI to the right area (setArea 'right')."
+    },
+    {
+      "id": "chrome.extgui.dock.bottom",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"extgui-titlebar\"] button').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" title=\"dock bottom\" data-variant=\"extgui\" class=\"extgui__btn i",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "chrome.extgui.float.toggle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"extgui-titlebar\"] button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-tone=\"default\" data-variant=\"extgui\" title=\"Toggle dockable [Ctrl+E]\" class=\"e",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "chrome.extgui.doubleClick",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"extgui\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <div data-dock=\"right\" data-testid=\"extgui\" class=\"extgui extgui--right extgui--side modern:border-0 modern:rounded-none modern:shadow-none",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "chrome.gutter.resize",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"gutter\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <div role=\"separator\" data-testid=\"gutter\" aria-orientation=\"vertical\" class=\"splitter splitter--v\" aria-label=\"internal_gui_width\" title=\"",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "chrome.console.splitter.resize",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.splitter--h') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "chrome.extgui.close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"extgui-titlebar\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "chrome.header.extgui.show",
+      "verdict": "FAIL",
+      "reason": "selectorVisible: \"[data-testid=\\\"extgui\\\"] not visible\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"extgui\"]",
+          "ok": false,
+          "detail": "[data-testid=\"extgui\"] not visible"
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/chrome/chrome.header.extgui.show.png",
+      "needsVisual": false,
+      "note": "The shell-header 'ext gui' button (data-testid=extgui-visible) is Display ▸ External GUI ▸ Visible. Runs after the close spec left the dock hidden, so this click re-shows it — verifying the show direction of the toggle."
+    },
+    {
+      "id": "chrome.header.extgui.hide",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: page.waitForSelector: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"extgui\"]') to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    }
+  ]
+}

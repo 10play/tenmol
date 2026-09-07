@@ -1,0 +1,980 @@
+{
+  "area": "scenes",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "scenes.header.add",
+      "feature": "scenes",
+      "label": "Scenes header ▸ + (store new scene)",
+      "kind": "button",
+      "requires": [],
+      "note": "The + button runs cmd.scene('new','store',quiet=0); a new scene row/button appears.",
+      "setup": [{ "do": "wait", "ms": 300 }],
+      "trigger": [{ "do": "click", "selector": ".scpanel__head .scpanel__btn", "nth": 0 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scenes.header.previous",
+      "feature": "scenes",
+      "label": "Scenes header ▸ ‹ (previous scene)",
+      "kind": "button",
+      "requires": [],
+      "note": "Recalls the previous scene; the 'current:' readout changes from F2 to F1.",
+      "setup": [
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "cmd", "text": "scene F2, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scpanel__head .scpanel__btn", "nth": 1 }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "feedbackMatches", "pattern": "current:\\s*F1\\b" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scenes.header.next",
+      "feature": "scenes",
+      "label": "Scenes header ▸ › (next scene)",
+      "kind": "button",
+      "requires": [],
+      "note": "Recalls the next scene; after recalling F1 the readout advances to F2.",
+      "setup": [
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "cmd", "text": "scene F2, store" },
+        { "do": "cmd", "text": "scene F1, recall" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scpanel__head .scpanel__btn", "nth": 2 }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "feedbackMatches", "pattern": "current:\\s*F2\\b" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scenes.header.sort",
+      "feature": "scenes",
+      "label": "Scenes header ▸ sort (cmd.scene_order '*', sort=1)",
+      "kind": "button",
+      "requires": [],
+      "note": "Alphabetically reorders the scene bin; zzz/aaa stored out of order flip, changing the row order.",
+      "setup": [
+        { "do": "cmd", "text": "scene zzz, store" },
+        { "do": "cmd", "text": "scene aaa, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scpanel__head .scpanel__btn", "nth": 3 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scenes.button.recall.left",
+      "feature": "scenes",
+      "label": "Scene button strip ▸ left-click recalls (PressMode 1)",
+      "kind": "button",
+      "requires": [],
+      "note": "Left-click-release over the same button recalls that scene; the button gains is-current and the readout shows it.",
+      "setup": [
+        { "do": "cmd", "text": "set scene_buttons, 1" },
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "cmd", "text": "scene F2, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scbar__btn[data-full-name=\"F1\"]" }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "current:\\s*F1\\b" },
+        { "expect": "selectorVisible", "selector": ".scbar__btn.is-current" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scenes.button.browse.middle",
+      "feature": "scenes",
+      "label": "Scene button strip ▸ middle-drag rapid browse (PressMode 2)",
+      "kind": "other",
+      "requires": [],
+      "note": "LIMITATION: middle-button press + drag ('rapid browse', Ctrl forces animate=0) cannot be driven by the audit DSL, which only issues left-clicks. This records the affordance's presence only.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set scene_buttons, 1" },
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "hover", "selector": ".scbar__btn[data-full-name=\"F1\"]" }],
+      "settleMs": 300,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scbar__btn" }]
+    },
+    {
+      "id": "scenes.button.menu.right",
+      "feature": "scenes",
+      "label": "Scene button strip ▸ right-click opens pymol.menu.scene_menu",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "LIMITATION+BLOCKED: right-button press-release (no drag) calls menu.scene_menu, which is not ported by the local engine ('not ported by @tenmol/engine-ts yet'); and a right-click cannot be sent via the DSL. Requires the PyMOL bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set scene_buttons, 1" },
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "hover", "selector": ".scbar__btn[data-full-name=\"F1\"]" }],
+      "settleMs": 300,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scbar__btn" }]
+    },
+    {
+      "id": "scenes.button.reorder.drag",
+      "feature": "scenes",
+      "label": "Scene button strip ▸ drag to reorder (PressMode 3→4, cmd.scene_order)",
+      "kind": "drag",
+      "requires": [],
+      "note": "LIMITATION: right-button drag across buttons emits per-row scene_order calls. A multi-button drag across overlapping absolute buttons is not expressible in the DSL; presence only.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set scene_buttons, 1" },
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "cmd", "text": "scene F2, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "hover", "selector": ".scbar__btn[data-full-name=\"F1\"]" }],
+      "settleMs": 300,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scbar__btn" }]
+    },
+    {
+      "id": "scenes.button.scroll.wheel",
+      "feature": "scenes",
+      "label": "Scene button strip ▸ wheel scrolls when list overflows (NSkip)",
+      "kind": "other",
+      "requires": [],
+      "note": "LIMITATION: onWheel adjusts skip only when a scrollbar exists (list longer than n_disp). The DSL has no wheel action; presence only.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "set scene_buttons, 1" },
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "hover", "selector": ".scbar" }],
+      "settleMs": 300,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scbar" }]
+    },
+    {
+      "id": "scenes.row.select",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ single click selects",
+      "kind": "button",
+      "requires": [],
+      "note": "Clicking a row sets it selected (is-selected).",
+      "setup": [
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scpanel__rows .scrow", "nth": 0 }],
+      "settleMs": 400,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scrow.is-selected" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scenes.row.recall.dblclick",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ double-click recalls (cmd.scene name,'recall')",
+      "kind": "other",
+      "requires": [],
+      "note": "Double-clicking a row recalls it. The DSL has no dblclick primitive; two sequential real clicks are used and rely on the browser synthesising dblclick.",
+      "setup": [
+        { "do": "cmd", "text": "scene recalltest, store" },
+        { "do": "cmd", "text": "scene othertest, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"recalltest\")" },
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"recalltest\")" }
+      ],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "current:\\s*recalltest\\b" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scenes.row.rename.open",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ double-click name opens inline editor",
+      "kind": "other",
+      "requires": [],
+      "note": "Double-clicking the name button opens the inline rename TextInput. Two sequential clicks stand in for the dblclick primitive the DSL lacks.",
+      "setup": [
+        { "do": "cmd", "text": "scene renopen, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"renopen\") .scrow__name" },
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"renopen\") .scrow__name" }
+      ],
+      "settleMs": 500,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scrow__rename" }]
+    },
+    {
+      "id": "scenes.row.rename.valid",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ rename to a valid name commits (Enter)",
+      "kind": "input",
+      "requires": [],
+      "note": "Typing a valid name and pressing Enter runs cmd.scene(old,'rename',new_key=...); the editor closes and the new name shows.",
+      "setup": [
+        { "do": "cmd", "text": "scene renval, store" },
+        { "do": "wait", "ms": 1700 },
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"renval\") .scrow__name" },
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"renval\") .scrow__name" },
+        { "do": "waitFor", "selector": ".scrow__rename", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".scrow__rename", "text": "renamedok" },
+        { "do": "press", "key": "Enter", "selector": ".scrow__rename" }
+      ],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".scrow__rename" },
+        { "expect": "feedbackMatches", "pattern": "renamedok" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scenes.row.rename.space",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ rename with a space is rejected inline",
+      "kind": "input",
+      "requires": [],
+      "note": "'a b' is refused (scene_order is a space-separated list) with a visible reason; no rename call is made.",
+      "setup": [
+        { "do": "cmd", "text": "scene renspace, store" },
+        { "do": "wait", "ms": 1700 },
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"renspace\") .scrow__name" },
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"renspace\") .scrow__name" },
+        { "do": "waitFor", "selector": ".scrow__rename", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".scrow__rename", "text": "a b" },
+        { "do": "press", "key": "Enter", "selector": ".scrow__rename" }
+      ],
+      "settleMs": 500,
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".scrow__renameerr" },
+        { "expect": "feedbackMatches", "pattern": "cannot contain spaces" }
+      ]
+    },
+    {
+      "id": "scenes.row.rename.blank",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ rename to blank is rejected inline",
+      "kind": "input",
+      "requires": [],
+      "note": "An empty name is refused with 'a scene name cannot be blank'; no rename call is made.",
+      "setup": [
+        { "do": "cmd", "text": "scene renblank, store" },
+        { "do": "wait", "ms": 1700 },
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"renblank\") .scrow__name" },
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"renblank\") .scrow__name" },
+        { "do": "waitFor", "selector": ".scrow__rename", "ms": 3000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".scrow__rename", "text": "" },
+        { "do": "press", "key": "Enter", "selector": ".scrow__rename" }
+      ],
+      "settleMs": 500,
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".scrow__renameerr" },
+        { "expect": "feedbackMatches", "pattern": "cannot be blank" }
+      ]
+    },
+    {
+      "id": "scenes.row.rename.escape",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ Escape cancels the rename editor",
+      "kind": "input",
+      "requires": [],
+      "note": "Escape closes the inline editor without renaming.",
+      "setup": [
+        { "do": "cmd", "text": "scene renesc, store" },
+        { "do": "wait", "ms": 1700 },
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"renesc\") .scrow__name" },
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"renesc\") .scrow__name" },
+        { "do": "waitFor", "selector": ".scrow__rename", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "press", "key": "Escape", "selector": ".scrow__rename" }],
+      "settleMs": 400,
+      "checks": [{ "expect": "selectorHidden", "selector": ".scrow__rename" }]
+    },
+    {
+      "id": "scenes.row.message",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ message field (cmd.set_scene_message)",
+      "kind": "input",
+      "requires": [],
+      "note": "Typing in the message input calls cmd.set_scene_message (ported locally) without error. NOTE: the display round-trip needs get_scene_panel (bridge-only), so the fallback shows an empty value; this asserts the write does not throw.",
+      "setup": [
+        { "do": "cmd", "text": "scene msgtest, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": ".scpanel__rows .scrow:has-text(\"msgtest\") .scrow__message", "text": "hello world" }
+      ],
+      "settleMs": 600,
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scenes.row.update",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ upd (cmd.scene name,'update')",
+      "kind": "button",
+      "requires": [],
+      "note": "Updates the stored scene to the current view; must not throw and the row remains.",
+      "setup": [
+        { "do": "cmd", "text": "scene updtest, store" },
+        { "do": "cmd", "text": "scene updtest, recall" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"updtest\") .scrow__ops button", "nth": 0 }
+      ],
+      "settleMs": 600,
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".scpanel__rows .scrow:has-text(\"updtest\")" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scenes.row.delete",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ del (cmd.scene name,'clear')",
+      "kind": "button",
+      "requires": [],
+      "note": "Deletes the scene; the row disappears.",
+      "setup": [
+        { "do": "cmd", "text": "scene deltest, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": ".scpanel__rows .scrow:has-text(\"deltest\") .scrow__ops button", "nth": 1 }
+      ],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".scpanel__rows .scrow:has-text(\"deltest\")" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scenes.row.handle.keyboard",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ drag handle keyboard reorder (ArrowDown)",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "ArrowDown on the reorder handle moves the scene one slot down via cmd.scene_order; the row order changes.",
+      "setup": [
+        { "do": "cmd", "text": "scene hkA, store" },
+        { "do": "cmd", "text": "scene hkB, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [
+        { "do": "press", "key": "ArrowDown", "selector": ".scpanel__rows .scrow:has-text(\"hkA\") .scrow__handle" }
+      ],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scenes.row.handle.drag",
+      "feature": "scenes",
+      "label": "Scene Panel row ▸ drag handle pointer reorder",
+      "kind": "drag",
+      "requires": [],
+      "note": "LIMITATION: a pointer-capture drag of the handle across rows (issuing one cmd.scene_order on release) is not expressible in the DSL; presence only. Keyboard equivalent is covered by scenes.row.handle.keyboard.",
+      "setup": [
+        { "do": "cmd", "text": "scene hdA, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "hover", "selector": ".scrow__handle", "nth": 0 }],
+      "settleMs": 300,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scrow__handle" }]
+    },
+    {
+      "id": "scmenu.previous",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Previous [PgUp]",
+      "kind": "button",
+      "requires": [],
+      "note": "Recalls the previous scene.",
+      "setup": [
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "cmd", "text": "scene F2, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 0 }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "current:\\s*F1\\b" },
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scmenu.next",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Next [PgDn]",
+      "kind": "button",
+      "requires": [],
+      "note": "Recalls the next scene.",
+      "setup": [
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "cmd", "text": "scene F2, store" },
+        { "do": "cmd", "text": "scene F1, recall" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 1 }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "current:\\s*F2\\b" },
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scmenu.append",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Append (store new)",
+      "kind": "button",
+      "requires": [],
+      "note": "Stores a new scene at the end; a new row appears.",
+      "setup": [{ "do": "wait", "ms": 300 }],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 2 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.append.submenu",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Append… opens the flag submenu",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "Toggles open the Camera/Color/Reps/Reps+Color submenu.",
+      "setup": [{ "do": "wait", "ms": 200 }],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 3 }],
+      "settleMs": 400,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scmenu__sub button:has-text(\"Camera\")" }]
+    },
+    {
+      "id": "scmenu.append.camera",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Append… ▸ Camera",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Runs 'scene new, store, color=0, rep=0' (camera-only store); a new scene is added.",
+      "setup": [
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 3 },
+        { "do": "waitFor", "selector": ".scmenu__sub button:has-text(\"Camera\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub button", "nth": 0 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.append.color",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Append… ▸ Color",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Runs 'scene new, store, view=0, rep=0' (color-only store).",
+      "setup": [
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 3 },
+        { "do": "waitFor", "selector": ".scmenu__sub button:has-text(\"Camera\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub button", "nth": 1 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.append.reps",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Append… ▸ Reps",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Runs 'scene new, store, view=0, color=0' (reps-only store).",
+      "setup": [
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 3 },
+        { "do": "waitFor", "selector": ".scmenu__sub button:has-text(\"Camera\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub button", "nth": 2 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.append.repscolor",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Append… ▸ Reps + Color",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Runs 'scene new, store, view=0' (reps+color store).",
+      "setup": [
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 3 },
+        { "do": "waitFor", "selector": ".scmenu__sub button:has-text(\"Camera\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub button", "nth": 3 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.insertbefore",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Insert Before",
+      "kind": "button",
+      "requires": [],
+      "note": "Stores a new scene and orders it before the current one; a new row appears.",
+      "setup": [
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "cmd", "text": "scene F1, recall" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 4 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.insertafter",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Insert After",
+      "kind": "button",
+      "requires": [],
+      "note": "Stores a new scene and orders it after the current one; a new row appears.",
+      "setup": [
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "cmd", "text": "scene F1, recall" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 5 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.update",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Update (auto)",
+      "kind": "button",
+      "requires": [],
+      "note": "Updates the current scene to the present view; must not throw.",
+      "setup": [
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "cmd", "text": "scene F1, recall" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 6 }],
+      "settleMs": 600,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scmenu" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.delete",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Delete (auto)",
+      "kind": "button",
+      "requires": [],
+      "note": "Deletes the current scene; its row disappears.",
+      "setup": [
+        { "do": "cmd", "text": "scene deltwo, store" },
+        { "do": "wait", "ms": 1700 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 7 }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".scpanel__rows .scrow:has-text(\"deltwo\")" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scmenu.recall.submenu",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Recall… opens the F1–F12 submenu",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "Opens the twelve F-key recall buttons.",
+      "setup": [{ "do": "wait", "ms": 200 }],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 8 }],
+      "settleMs": 400,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scmenu__sub--keys button" }]
+    },
+    {
+      "id": "scmenu.recall.f1",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Recall… ▸ F1",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Recalls scene F1 (cmd.scene('F1','recall')).",
+      "setup": [
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "cmd", "text": "scene F2, store" },
+        { "do": "wait", "ms": 1700 },
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 8 },
+        { "do": "waitFor", "selector": ".scmenu__sub--keys button", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub--keys button", "nth": 0 }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "current:\\s*F1\\b" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scmenu.store.submenu",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Store… opens the F1–F12 submenu",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "Opens the twelve F-key store buttons.",
+      "setup": [{ "do": "wait", "ms": 200 }],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 9 }],
+      "settleMs": 400,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scmenu__sub--keys button" }]
+    },
+    {
+      "id": "scmenu.store.f3",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Store… ▸ F3",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Stores the current view as scene F3 (cmd.scene('F3','store')); an F3 button appears.",
+      "setup": [
+        { "do": "cmd", "text": "set scene_buttons, 1" },
+        { "do": "wait", "ms": 300 },
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 9 },
+        { "do": "waitFor", "selector": ".scmenu__sub--keys button", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub--keys button", "nth": 2 }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".scbar__btn[data-full-name=\"F3\"]" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scmenu.clear.submenu",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Clear… opens the F1–F12 submenu",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "Opens the twelve F-key clear buttons.",
+      "setup": [{ "do": "wait", "ms": 200 }],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 10 }],
+      "settleMs": 400,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scmenu__sub--keys button" }]
+    },
+    {
+      "id": "scmenu.clear.f3",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Clear… ▸ F3",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "Deletes scene F3 (cmd.scene('F3','clear')); the F3 button disappears.",
+      "setup": [
+        { "do": "cmd", "text": "set scene_buttons, 1" },
+        { "do": "cmd", "text": "scene F3, store" },
+        { "do": "wait", "ms": 1700 },
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 10 },
+        { "do": "waitFor", "selector": ".scmenu__sub--keys button", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub--keys button", "nth": 2 }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".scbar__btn[data-full-name=\"F3\"]" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "scmenu.cache.submenu",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Cache… opens the cache submenu",
+      "kind": "menu-open",
+      "requires": [],
+      "note": "Opens enable/optimize/read_only/disable.",
+      "setup": [{ "do": "wait", "ms": 200 }],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 11 }],
+      "settleMs": 400,
+      "checks": [{ "expect": "selectorVisible", "selector": ".scmenu__sub button:has-text(\"enable\")" }]
+    },
+    {
+      "id": "scmenu.cache.enable",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Cache… ▸ enable",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.cache('enable') — a no-op locally; must not throw.",
+      "setup": [
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 11 },
+        { "do": "waitFor", "selector": ".scmenu__sub button:has-text(\"enable\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub button", "nth": 0 }],
+      "settleMs": 400,
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.cache.optimize",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Cache… ▸ optimize",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.cache('optimize'); must not throw.",
+      "setup": [
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 11 },
+        { "do": "waitFor", "selector": ".scmenu__sub button:has-text(\"enable\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub button", "nth": 1 }],
+      "settleMs": 400,
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.cache.readonly",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Cache… ▸ read_only",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.cache('read_only'); must not throw.",
+      "setup": [
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 11 },
+        { "do": "waitFor", "selector": ".scmenu__sub button:has-text(\"enable\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub button", "nth": 2 }],
+      "settleMs": 400,
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.cache.disable",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Cache… ▸ disable",
+      "kind": "menu-command",
+      "requires": [],
+      "note": "cmd.cache('disable'); must not throw.",
+      "setup": [
+        { "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 11 },
+        { "do": "waitFor", "selector": ".scmenu__sub button:has-text(\"enable\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__sub button", "nth": 3 }],
+      "settleMs": 400,
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.blank",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Blank (recall '' — clears the screen)",
+      "kind": "button",
+      "requires": [],
+      "note": "Disables all objects and clears the message; the viewport goes blank.",
+      "setup": [{ "do": "wait", "ms": 300 }],
+      "trigger": [{ "do": "click", "selector": ".scmenu .scmenu__row button", "nth": 12 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "screenshotChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "scmenu.buttons.toggle",
+      "feature": "scenes",
+      "label": "Scene menu ▸ Buttons checkbox (scene_buttons setting)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Unticking Buttons writes scene_buttons=0, which hides the button strip overlay. Placed last because it leaves the overlay hidden for the rest of the session.",
+      "setup": [
+        { "do": "cmd", "text": "scene F1, store" },
+        { "do": "wait", "ms": 1700 },
+        { "do": "waitFor", "selector": ".scbar", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".scmenu__check input" }],
+      "settleMs": 700,
+      "checks": [{ "expect": "selectorHidden", "selector": ".scbar" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "views.store.button",
+      "feature": "scenes",
+      "label": "Views ▸ name input + store button (cmd.view store)",
+      "kind": "input",
+      "requires": [],
+      "note": "Typing a name and clicking store saves the current camera; the view appears in the list.",
+      "setup": [{ "do": "wait", "ms": 300 }],
+      "trigger": [
+        { "do": "type", "selector": ".vwlist__name", "text": "viewstorea" },
+        { "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 0 }
+      ],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".vwrow__name:has-text(\"viewstorea\")" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "views.store.enter",
+      "feature": "scenes",
+      "label": "Views ▸ store via Enter in the name field",
+      "kind": "input",
+      "requires": [],
+      "note": "Enter in the name input stores the view, same as the store button.",
+      "setup": [{ "do": "wait", "ms": 300 }],
+      "trigger": [
+        { "do": "type", "selector": ".vwlist__name", "text": "viewenter" },
+        { "do": "press", "key": "Enter", "selector": ".vwlist__name" }
+      ],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".vwrow__name:has-text(\"viewenter\")" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "views.name.blank",
+      "feature": "scenes",
+      "label": "Views ▸ blank name is rejected inline",
+      "kind": "input",
+      "requires": [],
+      "note": "An empty view name shows 'a view name cannot be blank' and makes no backend call.",
+      "setup": [{ "do": "type", "selector": ".vwlist__name", "text": "" }],
+      "trigger": [{ "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 0 }],
+      "settleMs": 400,
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".vwlist__err" },
+        { "expect": "feedbackMatches", "pattern": "view name cannot be blank" }
+      ]
+    },
+    {
+      "id": "views.name.space",
+      "feature": "scenes",
+      "label": "Views ▸ name with a space is rejected inline",
+      "kind": "input",
+      "requires": [],
+      "note": "'a b' shows 'a view name cannot contain spaces'.",
+      "setup": [{ "do": "wait", "ms": 200 }],
+      "trigger": [
+        { "do": "type", "selector": ".vwlist__name", "text": "a b" },
+        { "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 0 }
+      ],
+      "settleMs": 400,
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".vwlist__err" },
+        { "expect": "feedbackMatches", "pattern": "cannot contain spaces" }
+      ]
+    },
+    {
+      "id": "views.name.underscore",
+      "feature": "scenes",
+      "label": "Views ▸ leading-underscore name is rejected inline",
+      "kind": "input",
+      "requires": [],
+      "note": "'_x' shows 'a view name cannot start with \"_\"' (Shortcut drops _-prefixed keys).",
+      "setup": [{ "do": "wait", "ms": 200 }],
+      "trigger": [
+        { "do": "type", "selector": ".vwlist__name", "text": "_x" },
+        { "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 0 }
+      ],
+      "settleMs": 400,
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".vwlist__err" },
+        { "expect": "feedbackMatches", "pattern": "cannot start with" }
+      ]
+    },
+    {
+      "id": "views.name.star",
+      "feature": "scenes",
+      "label": "Views ▸ '*' name is rejected inline",
+      "kind": "input",
+      "requires": [],
+      "note": "'*' shows '\"*\" means all views, it cannot be a name'.",
+      "setup": [{ "do": "wait", "ms": 200 }],
+      "trigger": [
+        { "do": "type", "selector": ".vwlist__name", "text": "*" },
+        { "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 0 }
+      ],
+      "settleMs": 400,
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".vwlist__err" },
+        { "expect": "feedbackMatches", "pattern": "means all views" }
+      ]
+    },
+    {
+      "id": "views.recall",
+      "feature": "scenes",
+      "label": "Views ▸ click a view name recalls its camera",
+      "kind": "button",
+      "requires": [],
+      "note": "Storing at one camera then turning away and clicking the view recalls it, moving the camera back (viewport changes).",
+      "setup": [
+        { "do": "cmd", "text": "turn x, 35" },
+        { "do": "type", "selector": ".vwlist__name", "text": "viewrecall" },
+        { "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 0 },
+        { "do": "waitFor", "selector": ".vwrow__name:has-text(\"viewrecall\")", "ms": 3000 },
+        { "do": "cmd", "text": "turn y, 70" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".vwrow__name:has-text(\"viewrecall\")" }],
+      "settleMs": 900,
+      "checks": [{ "expect": "screenshotChanged" }, { "expect": "noConsoleError" }]
+    },
+    {
+      "id": "views.recall.ctrl",
+      "feature": "scenes",
+      "label": "Views ▸ ctrl-click a view recalls with no animation",
+      "kind": "other",
+      "requires": [],
+      "note": "LIMITATION: ctrl/meta-click selects recallInstant (animate=0). The DSL cannot send keyboard modifiers with a click, so a plain (animated) recall is exercised instead; this documents the modifier path.",
+      "setup": [
+        { "do": "type", "selector": ".vwlist__name", "text": "viewctrl" },
+        { "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 0 },
+        { "do": "waitFor", "selector": ".vwrow__name:has-text(\"viewctrl\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".vwrow__name:has-text(\"viewctrl\")" }],
+      "settleMs": 700,
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "views.delete",
+      "feature": "scenes",
+      "label": "Views ▸ × deletes a view",
+      "kind": "button",
+      "requires": [],
+      "note": "The × button runs cmd.view(name,'clear'); the row disappears.",
+      "setup": [
+        { "do": "type", "selector": ".vwlist__name", "text": "viewdel" },
+        { "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 0 },
+        { "do": "waitFor", "selector": ".vwrow__name:has-text(\"viewdel\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".vwrow:has-text(\"viewdel\") .vwrow__del" }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".vwrow__name:has-text(\"viewdel\")" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "views.clearall",
+      "feature": "scenes",
+      "label": "Views ▸ clear all (cmd.view '*','clear')",
+      "kind": "button",
+      "requires": [],
+      "note": "Removes every named view; the list empties.",
+      "setup": [
+        { "do": "type", "selector": ".vwlist__name", "text": "viewclr" },
+        { "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 0 },
+        { "do": "waitFor", "selector": ".vwrow__name:has-text(\"viewclr\")", "ms": 3000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 1 }],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".vwrow" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "views.refresh",
+      "feature": "scenes",
+      "label": "Views ▸ ↻ re-reads the view list",
+      "kind": "button",
+      "requires": [],
+      "note": "Re-runs the failing-probe listing; the panel stays rendered without error.",
+      "setup": [{ "do": "wait", "ms": 300 }],
+      "trigger": [{ "do": "click", "selector": ".vwlist__head .scpanel__btn", "nth": 2 }],
+      "settleMs": 600,
+      "checks": [{ "expect": "selectorVisible", "selector": ".vwlist" }, { "expect": "noConsoleError" }]
+    }
+  ]
+}

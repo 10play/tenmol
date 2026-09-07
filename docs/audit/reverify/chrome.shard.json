@@ -1,0 +1,100 @@
+{
+  "area": "chrome",
+  "caps": [
+    "local-backend",
+    "webgl",
+    "network"
+  ],
+  "specs": [
+    {
+      "id": "chrome.launcher.volume",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Volume",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the volume overlay slot.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "waitFor",
+          "selector": ".overlay-launcher__btn[title=\"Volume\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".overlay-launcher__btn[title=\"Volume\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.properties",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Properties",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the properties overlay slot.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "waitFor",
+          "selector": ".overlay-launcher__btn[title=\"Properties\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".overlay-launcher__btn[title=\"Properties\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "id": "chrome.launcher.texteditor",
+      "feature": "shell",
+      "label": "Panel launcher ▸ Text editor",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Launcher toggle for the texteditor overlay slot.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "waitFor",
+          "selector": ".overlay-launcher__btn[title=\"Text editor\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".overlay-launcher__btn[title=\"Text editor\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "domChanged"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    }
+  ]
+}

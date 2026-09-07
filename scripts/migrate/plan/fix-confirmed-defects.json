@@ -1,0 +1,82 @@
+{
+  "name": "fix-confirmed-defects",
+  "description": "Fix the 4 confirmed defects from the UI audit (docs/audit/BROKEN-MAP.md) + the multisave-UI nitpick. Each fix is verified by build + a regression test AND by re-running its original audit spec so the audit verdict provably flips to PASS.",
+  "tasks": [
+    {
+      "id": "D1.bg-color",
+      "title": "bg_color never repainted the live viewport — wire the bg_rgb setting to viewport.setBackground",
+      "postcondition": {
+        "fileContains": [
+          {
+            "path": "apps/web/src/features/viewport/viewportBackground.ts",
+            "pattern": "D1.bg-color: bg_rgb -> viewport.setBackground"
+          }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        {
+          "gate": "web:bg-color",
+          "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/viewport/bgColor.dom.test.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "D2.movie-status",
+      "title": "Movie frame scrollbar permanently disabled — register a real get_movie_status (was a fixed nframes:0 stub)",
+      "postcondition": {
+        "fileContains": [
+          {
+            "path": "packages/engine-ts/src/cmd/system.ts",
+            "pattern": "D2.movie-status: `cmd.get_movie_status()`"
+          }
+        ]
+      },
+      "verify": ["postcondition", "typecheck"],
+      "verifyCmds": [
+        {
+          "gate": "engine-ts:get_movie_status",
+          "cmd": ["pnpm", "-s", "exec", "vitest", "run", "packages/engine-ts/test/system.test.ts"]
+        }
+      ]
+    },
+    {
+      "id": "D3.scene-blank",
+      "title": "Scene ▸ Blank threw 'No scenes' — empty-key recall now blanks the view without throwing",
+      "postcondition": {
+        "fileContains": [
+          {
+            "path": "packages/engine-ts/src/engine.ts",
+            "pattern": "D3.scene-blank: empty-key recall == MovieScene.cpp:794-806"
+          }
+        ]
+      },
+      "verify": ["postcondition", "typecheck"],
+      "verifyCmds": [
+        {
+          "gate": "engine-ts:scene-blank",
+          "cmd": ["pnpm", "-s", "exec", "vitest", "run", "packages/engine-ts/test/engine.test.ts"]
+        }
+      ]
+    },
+    {
+      "id": "D4.builder-race",
+      "title": "Builder dock did not open on first click (mount-vs-listener race) — defer the OPEN_EVENT dispatch to a microtask so BuilderPanel's late-registered listener still receives it",
+      "postcondition": {
+        "fileContains": [
+          {
+            "path": "apps/web/src/features/console/QuickButtons.tsx",
+            "pattern": "D4.builder-race: THE DISPATCH IS A MICROTASK"
+          }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        {
+          "gate": "web:builder-race",
+          "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/console/p8a1quickbuttons.dom.test.tsx"]
+        }
+      ]
+    }
+  ]
+}

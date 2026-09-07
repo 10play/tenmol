@@ -380,6 +380,32 @@ export function registerSystem(ctx: RegistrarCtx): void {
     return r;
   });
 
+  // D2.movie-status: `cmd.get_movie_status()` — the web movie panel's aggregate
+  // poll (apps/web movie/movieSource.ts). engine.ts installs a FIXED stub that
+  // always reports `nframes: 0`, which never throws, so the panel's fallback
+  // (count_frames) never runs and the frame-range scrollbar stays disabled
+  // forever. Registered here (after the builtin, so it wins) it reports the LIVE
+  // status: `nframes` reuses the same `movieLength(ctx)` helper as `count_frames`
+  // and `frame`/`state` mirror `get_frame`/`get_state`. Matches PyMOL's
+  // get_movie_status semantics and the MovieStatus shape the consumer expects.
+  ctx.command('get_movie_status', () => {
+    const rawScene = ex.getSetting('scene_current_name');
+    const sceneCurrent = rawScene ? String(rawScene) : null;
+    const fps = ex.getSettingFloat('movie_fps') || null;
+    return {
+      frame: movie.current,
+      state: stateForFrame(),
+      nframes: movieLength(ctx),
+      length: movie.frames.length,
+      playing: movie.playing,
+      locked: false,
+      rocking: false,
+      fps,
+      sceneCurrent,
+      settings: {},
+    };
+  });
+
   // `cmd.frame(frame)` — set the current display frame (1-based, clamped).
   // Returns the resulting frame (see module note on observability).
   ctx.command('frame', (args) => {

@@ -1,0 +1,4827 @@
+{
+  "area": "files",
+  "caps": [
+    "local-backend",
+    "webgl",
+    "network"
+  ],
+  "specs": [
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.panel.mount-via-hook",
+      "label": "File menu hook mounts the Files dialogs overlay",
+      "kind": "other",
+      "note": "installFileMenuHooks (FileDropTarget) registers file_open; File ▸ Open… -> requestFilesAction -> openPanel('files') mounts FilesPanel, whose \"File ▾\" strip and (in local mode, no bridge) the \"file service unavailable\" indicator appear.",
+      "trigger": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "file service unavailable"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.menu.open",
+      "label": "File ▾ button opens the strip dropdown",
+      "kind": "button",
+      "note": "Clicking the panel's own \"File ▾\" button toggles menuOpen and re-runs ensure(); the dropdown of file actions appears.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu\"]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.menu.escape-close",
+      "label": "Escape closes the strip dropdown",
+      "kind": "keyboard",
+      "note": "FilesPanel installs a window keydown listener while menuOpen; Escape sets menuOpen=false (QMenu parity).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "key": "Escape"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"files-menu\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.menu.toggle-close",
+      "label": "Second File ▾ click closes the dropdown",
+      "kind": "toggle",
+      "note": "setMenuOpen((v)=>!v): a second press collapses the open dropdown.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"files-menu\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.menu.outside-click-close",
+      "label": "Click outside closes the strip dropdown",
+      "kind": "other",
+      "note": "A mousedown outside .files__strip closes the dropdown (QMenu click-away parity). Click the menu-bar as the outside target.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".menubar__menus .menubar__item-wrap button",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=\"files-menu\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.service-unavailable",
+      "label": "File-service-unavailable indicator (local backend)",
+      "kind": "other",
+      "note": "ensure() bootstraps cmd.tenmol_files via a Python {t:do}; the in-browser TS engine has no such symbol, so ensure rejects and the red \".files__error\" indicator reads \"file service unavailable\". This is the expected local-mode surface and proves the bootstrap error path is wired.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".files__error"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "file service unavailable"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.open.present",
+      "label": "Strip item present: Open…",
+      "kind": "other",
+      "note": "The \"Open…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-open\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.recent.present",
+      "label": "Strip item present: Open Recent…",
+      "kind": "other",
+      "note": "The \"Open Recent…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-recent\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.fetch.present",
+      "label": "Strip item present: Get PDB…",
+      "kind": "other",
+      "note": "The \"Get PDB…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-fetch\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.map-generate.present",
+      "label": "Strip item present: Generate Map from Reflections…",
+      "kind": "other",
+      "note": "The \"Generate Map from Reflections…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-map-generate\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.session-save.present",
+      "label": "Strip item present: Save Session",
+      "kind": "other",
+      "note": "The \"Save Session\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-session-save\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.session-save-as.present",
+      "label": "Strip item present: Save Session As…",
+      "kind": "other",
+      "note": "The \"Save Session As…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-session-save-as\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.export-molecule.present",
+      "label": "Strip item present: Export Molecule…",
+      "kind": "other",
+      "note": "The \"Export Molecule…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-export-molecule\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.export-map.present",
+      "label": "Strip item present: Export Map…",
+      "kind": "other",
+      "note": "The \"Export Map…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-export-map\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.export-aln.present",
+      "label": "Strip item present: Export Alignment…",
+      "kind": "other",
+      "note": "The \"Export Alignment…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-export-aln\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.png.present",
+      "label": "Strip item present: Export Image As ▸ PNG…",
+      "kind": "other",
+      "note": "The \"Export Image As ▸ PNG…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-png\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.movie-mpeg.present",
+      "label": "Strip item present: Export Movie As ▸ MPEG…",
+      "kind": "other",
+      "note": "The \"Export Movie As ▸ MPEG…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-movie-mpeg\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.movie-mov.present",
+      "label": "Strip item present: Export Movie As ▸ Quicktime…",
+      "kind": "other",
+      "note": "The \"Export Movie As ▸ Quicktime…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-movie-mov\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.movie-png.present",
+      "label": "Strip item present: Export Movie As ▸ PNG Images…",
+      "kind": "other",
+      "note": "The \"Export Movie As ▸ PNG Images…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-movie-png\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.log.present",
+      "label": "Strip item present: Log File ▸ …",
+      "kind": "other",
+      "note": "The \"Log File ▸ …\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-log\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.run.present",
+      "label": "Strip item present: Run Script…",
+      "kind": "other",
+      "note": "The \"Run Script…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-run\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.cd.present",
+      "label": "Strip item present: Working Directory ▸ Change…",
+      "kind": "other",
+      "note": "The \"Working Directory ▸ Change…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-cd\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.browse.present",
+      "label": "Strip item present: Working Directory ▸ File Browser",
+      "kind": "other",
+      "note": "The \"Working Directory ▸ File Browser\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-browse\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.render.present",
+      "label": "Strip item present: Draw / Ray…",
+      "kind": "other",
+      "note": "The \"Draw / Ray…\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-render\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.new-window.present",
+      "label": "Strip item present: New PyMOL Window",
+      "kind": "other",
+      "note": "The \"New PyMOL Window\" leaf renders in the panel's File ▾ dropdown (menu table is built independent of the bridge, so presence is verifiable in local mode).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 150
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=\"files-menu-new-window\"]"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.strip.item.new-window.disabled-noop",
+      "label": "New PyMOL Window is a disabled no-op",
+      "kind": "button",
+      "note": "new-window carries a disabledReason (\"one bridge, one client\") so the button is disabled; clicking it must not open any dialog/picker.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-new-window\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.open",
+      "label": "File ▾ ▸ open opens PathPicker (multi-select open)",
+      "kind": "dialog",
+      "note": "Selecting \"open\" runs ensure() then opens PathPicker (multi-select open) (title \"Open file\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-open\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Open file"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.recent",
+      "label": "File ▾ ▸ recent opens RecentDialog",
+      "kind": "dialog",
+      "note": "Selecting \"recent\" runs ensure() then opens RecentDialog (title \"Open Recent\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-recent\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Open Recent"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.fetch",
+      "label": "File ▾ ▸ fetch opens FetchDialog (Get PDB)",
+      "kind": "dialog",
+      "note": "Selecting \"fetch\" runs ensure() then opens FetchDialog (Get PDB) (title \"Get PDB\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-fetch\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Get PDB"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.map-generate",
+      "label": "File ▾ ▸ map-generate opens PathPicker for MTZ then MapGenerateDialog",
+      "kind": "dialog",
+      "note": "Selecting \"map-generate\" runs ensure() then opens PathPicker for MTZ then MapGenerateDialog (title \"Reflection file\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-map-generate\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Reflection file"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.session-save",
+      "label": "File ▾ ▸ session-save opens session_file probe then Save-Session-As picker",
+      "kind": "dialog",
+      "note": "Selecting \"session-save\" runs ensure() then opens session_file probe then Save-Session-As picker (title \"Save Session\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-session-save\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Save Session"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.session-save-as",
+      "label": "File ▾ ▸ session-save-as opens PathPicker (save session .pse)",
+      "kind": "dialog",
+      "note": "Selecting \"session-save-as\" runs ensure() then opens PathPicker (save session .pse) (title \"Save Session As\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-session-save-as\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Save Session As"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.export-molecule",
+      "label": "File ▾ ▸ export-molecule opens ExportMoleculeDialog",
+      "kind": "dialog",
+      "note": "Selecting \"export-molecule\" runs ensure() then opens ExportMoleculeDialog (title \"Export Molecule\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-export-molecule\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Export Molecule"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.export-map",
+      "label": "File ▾ ▸ export-map opens SaveObjectDialog (object:map)",
+      "kind": "dialog",
+      "note": "Selecting \"export-map\" runs ensure() then opens SaveObjectDialog (object:map) (title \"Save object:map\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-export-map\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Save object:map"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.export-aln",
+      "label": "File ▾ ▸ export-aln opens SaveObjectDialog (object:alignment)",
+      "kind": "dialog",
+      "note": "Selecting \"export-aln\" runs ensure() then opens SaveObjectDialog (object:alignment) (title \"Save object:alignment\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-export-aln\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Save object:alignment"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.png",
+      "label": "File ▾ ▸ png opens PngDialog",
+      "kind": "dialog",
+      "note": "Selecting \"png\" runs ensure() then opens PngDialog (title \"Save PNG image\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-png\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Save PNG image"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.movie-mpeg",
+      "label": "File ▾ ▸ movie-mpeg opens MovieDialog (no preselect)",
+      "kind": "dialog",
+      "note": "Selecting \"movie-mpeg\" runs ensure() then opens MovieDialog (no preselect) (title \"Export Movie\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-movie-mpeg\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Export Movie"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.movie-mov",
+      "label": "File ▾ ▸ movie-mov opens MovieDialog (Quicktime preselect)",
+      "kind": "dialog",
+      "note": "Selecting \"movie-mov\" runs ensure() then opens MovieDialog (Quicktime preselect) (title \"Export Movie\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-movie-mov\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Export Movie"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.movie-png",
+      "label": "File ▾ ▸ movie-png opens MovieDialog (PNG-images preselect)",
+      "kind": "dialog",
+      "note": "Selecting \"movie-png\" runs ensure() then opens MovieDialog (PNG-images preselect) (title \"Export Movie\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-movie-png\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Export Movie"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.log",
+      "label": "File ▾ ▸ log opens LogDialog hub",
+      "kind": "dialog",
+      "note": "Selecting \"log\" runs ensure() then opens LogDialog hub (title \"Log File\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-log\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Log File"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.run",
+      "label": "File ▾ ▸ run opens PathPicker (Run Script)",
+      "kind": "dialog",
+      "note": "Selecting \"run\" runs ensure() then opens PathPicker (Run Script) (title \"Open file\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-run\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Open file"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.cd",
+      "label": "File ▾ ▸ cd opens PathPicker (choose directory)",
+      "kind": "dialog",
+      "note": "Selecting \"cd\" runs ensure() then opens PathPicker (choose directory) (title \"Change Working Directory\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-cd\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Change Working Directory"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.browse",
+      "label": "File ▾ ▸ browse opens PathPicker (reveal cwd)",
+      "kind": "dialog",
+      "note": "Selecting \"browse\" runs ensure() then opens PathPicker (reveal cwd) (title \"Working directory\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-browse\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Working directory"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.action.render",
+      "label": "File ▾ ▸ render opens RenderPanel (Draw / Ray)",
+      "kind": "dialog",
+      "note": "Selecting \"render\" runs ensure() then opens RenderPanel (Draw / Ray) (title \"Draw / Ray\"). Needs cmd.tenmol_files (bridge file service); BLOCKED under the local backend.",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-render\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Draw / Ray"
+        }
+      ],
+      "settleMs": 600
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "id": "files.action.geo-wrl",
+      "label": "Export Image As ▸ VRML 2 (*.wrl)",
+      "kind": "menu-command",
+      "note": "Built from hello.geometryExports (bridge savefunctions view); the leaf only exists after ensure() succeeds, then opens the save PathPicker and runs \"save <file>, format=wrl\". BLOCKED locally (no hello).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-geo-wrl\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "id": "files.action.geo-dae",
+      "label": "Export Image As ▸ COLLADA (*.dae)",
+      "kind": "menu-command",
+      "note": "Built from hello.geometryExports (bridge savefunctions view); the leaf only exists after ensure() succeeds, then opens the save PathPicker and runs \"save <file>, format=dae\". BLOCKED locally (no hello).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-geo-dae\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "id": "files.action.geo-gltf",
+      "label": "Export Image As ▸ glTF (*.gltf)",
+      "kind": "menu-command",
+      "note": "Built from hello.geometryExports (bridge savefunctions view); the leaf only exists after ensure() succeeds, then opens the save PathPicker and runs \"save <file>, format=gltf\". BLOCKED locally (no hello).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-geo-gltf\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "id": "files.action.geo-pov",
+      "label": "Export Image As ▸ POV-Ray (*.pov)",
+      "kind": "menu-command",
+      "note": "Built from hello.geometryExports (bridge savefunctions view); the leaf only exists after ensure() succeeds, then opens the save PathPicker and runs \"save <file>, format=pov\". BLOCKED locally (no hello).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-geo-pov\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "id": "files.action.geo-stl",
+      "label": "Export Image As ▸ STL (*.stl)",
+      "kind": "menu-command",
+      "note": "Built from hello.geometryExports (bridge savefunctions view); the leaf only exists after ensure() succeeds, then opens the save PathPicker and runs \"save <file>, format=stl\". BLOCKED locally (no hello).",
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "File",
+            "Open..."
+          ]
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-button\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"files-menu-geo-stl\"]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".fdlg__backdrop"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.traj.object",
+      "label": "Trajectory ▸ Target Object select",
+      "kind": "input",
+      "note": "Reached via File ▸ Open… on a trajectory file (.dcd/.trj); TrajDialog. Choose which loaded object the trajectory appends onto (defaults to last object)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.traj.state",
+      "label": "Trajectory ▸ State input",
+      "kind": "input",
+      "note": "Reached via File ▸ Open… on a trajectory file (.dcd/.trj); TrajDialog. state=0 means append; edits the load_traj preview."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.traj.start",
+      "label": "Trajectory ▸ Start frame input",
+      "kind": "input",
+      "note": "Reached via File ▸ Open… on a trajectory file (.dcd/.trj); TrajDialog. start= frame."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.traj.stop",
+      "label": "Trajectory ▸ Stop frame input",
+      "kind": "input",
+      "note": "Reached via File ▸ Open… on a trajectory file (.dcd/.trj); TrajDialog. stop<1 loads the whole trajectory."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.traj.interval",
+      "label": "Trajectory ▸ Interval input",
+      "kind": "input",
+      "note": "Reached via File ▸ Open… on a trajectory file (.dcd/.trj); TrajDialog. interval= stride."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.traj.defer-builds",
+      "label": "Trajectory ▸ defer_builds_mode=3 checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▸ Open… on a trajectory file (.dcd/.trj); TrajDialog. Prepends \"set defer_builds_mode, 3\" to the command."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.traj.load",
+      "label": "Trajectory ▸ Load button",
+      "kind": "button",
+      "note": "Reached via File ▸ Open… on a trajectory file (.dcd/.trj); TrajDialog. Runs the load_traj command string via cmd.do, then resumes the open queue."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.traj.cancel",
+      "label": "Trajectory ▸ Cancel button",
+      "kind": "button",
+      "note": "Reached via File ▸ Open… on a trajectory file (.dcd/.trj); TrajDialog. Closes the modal and resumes the queue (Qt break parity)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.object-name",
+      "label": "Map ▸ Object name input",
+      "kind": "input",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Overrides the default map object name."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.normalize",
+      "label": "Map ▸ normalize checkbox",
+      "kind": "toggle",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Toggles the normalize_ccp4/o setting (mean=0 stdev=1) in the command."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.selection",
+      "label": "Map ▸ selection input (datalist enabled/sele/center)",
+      "kind": "input",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Adds a selection+buffer suffix to volume/isomesh/isosurface."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.buffer",
+      "label": "Map ▸ buffer input",
+      "kind": "input",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Buffer distance around the selection."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.carve",
+      "label": "Map ▸ carve checkbox",
+      "kind": "toggle",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Adds carve=<buffer> to the representation."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.level",
+      "label": "Map ▸ level input",
+      "kind": "input",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Contour level; the volume ramp doubles it."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.volume",
+      "label": "Map ▸ volume checkbox + name",
+      "kind": "toggle",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Emits a volume command with a colour ramp."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.isomesh",
+      "label": "Map ▸ isomesh checkbox + name",
+      "kind": "toggle",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Emits an isomesh command."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.isosurface",
+      "label": "Map ▸ isosurface checkbox + name",
+      "kind": "toggle",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Emits an isosurface command."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.load",
+      "label": "Map ▸ Load button",
+      "kind": "button",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Runs the composed load/volume/isomesh/isosurface command string."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.map.cancel",
+      "label": "Map ▸ Cancel button",
+      "kind": "button",
+      "note": "Reached via Open… on a .ccp4/.map/.xplor map; MapDialog. Dismisses the modal."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mae.object-name",
+      "label": "MAE ▸ Object/group name input",
+      "kind": "input",
+      "note": "Reached via Open… on a Maestro .mae/.maegz; MaeDialog (unavailable in this OSS build)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mae.mimic",
+      "label": "MAE ▸ mimic settings checkbox",
+      "kind": "toggle",
+      "note": "Reached via Open… on a Maestro .mae/.maegz; MaeDialog (unavailable in this OSS build). mimic=1/0 in the command."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mae.object-props",
+      "label": "MAE ▸ Object properties input",
+      "kind": "input",
+      "note": "Reached via Open… on a Maestro .mae/.maegz; MaeDialog (unavailable in this OSS build)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mae.atom-props",
+      "label": "MAE ▸ Atom properties input",
+      "kind": "input",
+      "note": "Reached via Open… on a Maestro .mae/.maegz; MaeDialog (unavailable in this OSS build)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mae.choice",
+      "label": "MAE ▸ Multiple entries select",
+      "kind": "input",
+      "note": "Reached via Open… on a Maestro .mae/.maegz; MaeDialog (unavailable in this OSS build). Picks multiplex/discrete pairing."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mae.load",
+      "label": "MAE ▸ Load button (disabled when unavailable)",
+      "kind": "button",
+      "note": "Reached via Open… on a Maestro .mae/.maegz; MaeDialog (unavailable in this OSS build). Disabled when info.unavailable; otherwise runs the load command."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mae.cancel",
+      "label": "MAE ▸ Cancel button",
+      "kind": "button",
+      "note": "Reached via Open… on a Maestro .mae/.maegz; MaeDialog (unavailable in this OSS build)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mtz.prefix",
+      "label": "MTZ ▸ Prefix input",
+      "kind": "input",
+      "note": "Reached via Open… on a .mtz; MtzDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mtz.amplitudes",
+      "label": "MTZ ▸ Amplitudes select",
+      "kind": "input",
+      "note": "Reached via Open… on a .mtz; MtzDialog. Column choice, guessed by default."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mtz.phases",
+      "label": "MTZ ▸ Phases select",
+      "kind": "input",
+      "note": "Reached via Open… on a .mtz; MtzDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mtz.weights",
+      "label": "MTZ ▸ Weights select",
+      "kind": "input",
+      "note": "Reached via Open… on a .mtz; MtzDialog. Optional (blank first entry)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mtz.reso-min",
+      "label": "MTZ ▸ Resolution min input",
+      "kind": "input",
+      "note": "Reached via Open… on a .mtz; MtzDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mtz.reso-max",
+      "label": "MTZ ▸ Resolution max input",
+      "kind": "input",
+      "note": "Reached via Open… on a .mtz; MtzDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mtz.load",
+      "label": "MTZ ▸ Load button",
+      "kind": "button",
+      "note": "Reached via Open… on a .mtz; MtzDialog. Runs load_mtz with the chosen columns; disabled if unavailable."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mtz.cancel",
+      "label": "MTZ ▸ Cancel button",
+      "kind": "button",
+      "note": "Reached via Open… on a .mtz; MtzDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mapgen.amplitudes",
+      "label": "MapGenerate ▸ Amplitudes select",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Generate Map from Reflections… (picks an MTZ, then this dialog)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mapgen.phases",
+      "label": "MapGenerate ▸ Phases select",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Generate Map from Reflections… (picks an MTZ, then this dialog)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mapgen.weights",
+      "label": "MapGenerate ▸ Weights select",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Generate Map from Reflections… (picks an MTZ, then this dialog). Led by literal \"None\"."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mapgen.min-res",
+      "label": "MapGenerate ▸ Min. Resolution input",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Generate Map from Reflections… (picks an MTZ, then this dialog)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mapgen.max-res",
+      "label": "MapGenerate ▸ Max Resolution input",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Generate Map from Reflections… (picks an MTZ, then this dialog)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mapgen.name-prefix",
+      "label": "MapGenerate ▸ New Map Name Prefix input",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Generate Map from Reflections… (picks an MTZ, then this dialog)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mapgen.fofc",
+      "label": "MapGenerate ▸ FoFc checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Generate Map from Reflections… (picks an MTZ, then this dialog). Switches the target rep between default_2fofc/default_fofc_map_rep."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mapgen.ok",
+      "label": "MapGenerate ▸ OK button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Generate Map from Reflections… (picks an MTZ, then this dialog). Runs cmd.map_generate; blocked when amplitudes/phases empty or build lacks mmlibs. Stays open on failure (autoclose_dialogs)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.mapgen.cancel",
+      "label": "MapGenerate ▸ Cancel button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Generate Map from Reflections… (picks an MTZ, then this dialog)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.aln.mapping",
+      "label": "Alignment ▸ per-record model select(s)",
+      "kind": "input",
+      "note": "Reached via Open… on a .aln/.fasta alignment; AlnDialog. Map each alignment id to a loaded object (pre-filled by difflib argmax)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.aln.load",
+      "label": "Alignment ▸ Load button",
+      "kind": "button",
+      "note": "Reached via Open… on a .aln/.fasta alignment; AlnDialog. Runs load_aln with the id->model mapping."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.aln.cancel-structures",
+      "label": "Alignment ▸ Cancel (load as structures)",
+      "kind": "button",
+      "note": "Reached via Open… on a .aln/.fasta alignment; AlnDialog. On FASTA, loads sequences as extended structures instead."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.partial.discard",
+      "label": "Partial ▸ Discard current session radio",
+      "kind": "input",
+      "note": "Reached via Open… on a .pse when a session is already in progress; PartialDialog. Deletes current objects before load."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.partial.merge",
+      "label": "Partial ▸ Merge (partial load) radio",
+      "kind": "input",
+      "note": "Reached via Open… on a .pse when a session is already in progress; PartialDialog. Loads with partial=1."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.partial.rename",
+      "label": "Partial ▸ Auto-rename duplicates checkbox",
+      "kind": "toggle",
+      "note": "Reached via Open… on a .pse when a session is already in progress; PartialDialog. Only shown under the partial option; writes auto_rename_duplicate_objects."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.partial.new-window",
+      "label": "Partial ▸ Open in new PyMOL Window radio (disabled)",
+      "kind": "input",
+      "note": "Reached via Open… on a .pse when a session is already in progress; PartialDialog. Disabled; OK is blocked while selected."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.partial.ok",
+      "label": "Partial ▸ OK button",
+      "kind": "button",
+      "note": "Reached via Open… on a .pse when a session is already in progress; PartialDialog. Applies the chosen load mode."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.partial.cancel",
+      "label": "Partial ▸ Cancel button",
+      "kind": "button",
+      "note": "Reached via Open… on a .pse when a session is already in progress; PartialDialog. Aborts the whole open queue (Qt break parity)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.selection",
+      "label": "Export Molecule ▸ Selection input (datalist)",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. enabled/all + objects + selections."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.state",
+      "label": "Export Molecule ▸ State select",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. -1 current / 0 all / 1..N."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.tab-options",
+      "label": "Export Molecule ▸ Options tab",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. Shows the retain_order option."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.tab-pdb",
+      "label": "Export Molecule ▸ PDB tab",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. Shows the five PDB CONECT/segi/id/HEADER options."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.tab-multi",
+      "label": "Export Molecule ▸ Multiple files tab",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. Shows the one-file / per-object / per-state radios."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.retain-order",
+      "label": "Export Molecule ▸ Original atom order checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. setting retain_order."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.pdb-conect-nodup",
+      "label": "Export Molecule ▸ duplicate CONECT checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. INVERSE of pdb_conect_nodup."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.pdb-conect-all",
+      "label": "Export Molecule ▸ CONECT for all bonds checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. pdb_conect_all."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.ignore-segi",
+      "label": "Export Molecule ▸ segi column checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. INVERSE of ignore_pdb_segi."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.retain-ids",
+      "label": "Export Molecule ▸ Retain atom ids checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. pdb_retain_ids."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.multisave",
+      "label": "Export Molecule ▸ HEADER per object (multisave) checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. Routes save through cmd.multisave."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.multi-radios",
+      "label": "Export Molecule ▸ single/per-object/per-state radios + patterns",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. Chooses the multi-file naming pattern; per-state forces state=all."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.prompt-each",
+      "label": "Export Molecule ▸ Prompt for every file checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. Uses multifilenamegen to prompt per generated triple."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.filter",
+      "label": "Export Molecule ▸ format filter select",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. Preselects the picker filter."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.save",
+      "label": "Export Molecule ▸ Save… button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog. Opens the save PathPicker(s) and runs save/multisave/multifilesave."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.exportmol.cancel",
+      "label": "Export Molecule ▸ Cancel button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Export Molecule…; ExportMoleculeDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.saveobject.pick",
+      "label": "Save Object ▸ Object select",
+      "kind": "input",
+      "note": "Export Map/Alignment SaveObjectDialog: choose the map/alignment object to write."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.saveobject.save",
+      "label": "Save Object ▸ Save… button",
+      "kind": "button",
+      "note": "Opens the save picker then runs \"save <file>, <name>, -1\"."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.saveobject.cancel",
+      "label": "Save Object ▸ Cancel button",
+      "kind": "button",
+      "note": "Dismisses SaveObjectDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.saveobject.empty-ok",
+      "label": "Save Object ▸ empty-state OK button",
+      "kind": "button",
+      "note": "When no objects of the type exist, a Warning modal with the hint text and an OK button is shown instead."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.png.rendering",
+      "label": "PNG ▸ Rendering mode select",
+      "kind": "input",
+      "note": "PngDialog: draw/opaque-ray/transparent-ray modes (PNG_RENDERING_MODES); chooses the png command shape."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.png.save",
+      "label": "PNG ▸ Save PNG image as … button",
+      "kind": "button",
+      "note": "PngDialog: opens the save picker and runs the pngCommands lines."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.png.cancel",
+      "label": "PNG ▸ Cancel button",
+      "kind": "button",
+      "note": "PngDialog cancel."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.width",
+      "label": "Render ▸ Width input (aspect lock)",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel. Updates height when aspect lock is on; shows cm/inch readout."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.height",
+      "label": "Render ▸ Height input (aspect lock)",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.units",
+      "label": "Render ▸ Units select (cm/inch)",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel. Changes the physical-size readout factor."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.dpi",
+      "label": "Render ▸ at DPI input",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel. Feeds the cm/inch factor and the save dpi."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.lock",
+      "label": "Render ▸ Lock aspect ratio checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.transparent",
+      "label": "Render ▸ transparent background checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel. sets opaque_background for Ray."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.reset",
+      "label": "Render ▸ Reset (viewport size) button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel. Restores width/height to the current viewport."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.draw",
+      "label": "Render ▸ Draw (fast) button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel. Runs \"draw w, h\" and advances to page 2."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.ray",
+      "label": "Render ▸ Ray (slow) button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel. Runs \"set opaque_background,..\" then \"ray w,h,async=1\" and advances to page 2."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.page2-back",
+      "label": "Render ▸ page 2 Back button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel. Returns to the size page."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.clipboard",
+      "label": "Render ▸ Copy Image to Clipboard button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel. Calls cmd._copy_image."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.render.save",
+      "label": "Render ▸ Save Image to File button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Draw / Ray…; RenderPanel. Opens the save picker and runs \"png <file>, dpi=.., prior=1\"."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.movie.encoder",
+      "label": "Movie ▸ Encoder select",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Export Movie As ▸ …; MovieDialog. ffmpeg/mpeg_encode/convert; marks uninstalled encoders and switches the format."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.movie.quality",
+      "label": "Movie ▸ Quality input",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Export Movie As ▸ …; MovieDialog. Disabled for empty/convert encoders."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.movie.format-radios",
+      "label": "Movie ▸ format radios (mp4/mpg/mov/gif/png)",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Export Movie As ▸ …; MovieDialog. Disabled unless the encoder supports the format."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.movie.width",
+      "label": "Movie ▸ Width input",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Export Movie As ▸ …; MovieDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.movie.height",
+      "label": "Movie ▸ Height input",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Export Movie As ▸ …; MovieDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.movie.presets",
+      "label": "Movie ▸ 720p/480p/360p preset buttons",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Export Movie As ▸ …; MovieDialog. movieResolution clamps to 16:9 and even width."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.movie.rendering",
+      "label": "Movie ▸ Draw/Ray rendering radios",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Export Movie As ▸ …; MovieDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.movie.save",
+      "label": "Movie ▸ Save Movie as … button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Export Movie As ▸ …; MovieDialog. PNG -> cmd.mpng; else the produce() bridge wrapper (detaches stdin)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.movie.cancel",
+      "label": "Movie ▸ Cancel button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Export Movie As ▸ …; MovieDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service",
+        "network"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.fetch.code",
+      "label": "Fetch ▸ PDB ID input (4 chars)",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Get PDB…; FetchDialog. Triggers async PDBe assembly/chain lookup; enables Download at length 4."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.fetch.name",
+      "label": "Fetch ▸ Object name input",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Get PDB…; FetchDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.fetch.structure",
+      "label": "Fetch ▸ PDB Structure checkbox",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Get PDB…; FetchDialog. Toggles the fetch <code> line."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service",
+        "network"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.fetch.assembly",
+      "label": "Fetch ▸ Assembly input (datalist from PDBe)",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Get PDB…; FetchDialog. set assembly, \"..\"."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service",
+        "network"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.fetch.chain",
+      "label": "Fetch ▸ Chain input (datalist from PDBe)",
+      "kind": "input",
+      "note": "Reached via File ▾ ▸ Get PDB…; FetchDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.fetch.map-2fofc",
+      "label": "Fetch ▸ 2FoFc Map checkbox + name",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Get PDB…; FetchDialog. Appends \"fetch <code>, type=2fofc\"."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.fetch.map-fofc",
+      "label": "Fetch ▸ FoFc Map checkbox + name",
+      "kind": "toggle",
+      "note": "Reached via File ▾ ▸ Get PDB…; FetchDialog. Appends \"fetch <code>, type=fofc\"."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.fetch.change-path",
+      "label": "Fetch ▸ change… fetch_path link",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Get PDB…; FetchDialog. Opens a directory PathPicker and writes fetch_path."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.fetch.download",
+      "label": "Fetch ▸ Download button (disabled <4 chars)",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Get PDB…; FetchDialog. Runs the fetch command string; disabled until the code is 4 letters."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.fetch.cancel",
+      "label": "Fetch ▸ Cancel button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Get PDB…; FetchDialog."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.log.open",
+      "label": "Log ▸ Open… button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Log File ▸ …; LogDialog hub. Save picker then log_open <file>, w."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.log.resume",
+      "label": "Log ▸ Resume… button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Log File ▸ …; LogDialog hub. Picker then \"resume <file>\"."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.log.append",
+      "label": "Log ▸ Append… button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Log File ▸ …; LogDialog hub. log_open <file>, a."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.log.close-log",
+      "label": "Log ▸ Close log button (disabled when none open)",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Log File ▸ …; LogDialog hub. Runs log_close and refreshes status."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.log.close",
+      "label": "Log ▸ Close (dialog) button",
+      "kind": "button",
+      "note": "Reached via File ▾ ▸ Log File ▸ …; LogDialog hub. Dismisses the hub."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.recent.entry",
+      "label": "Recent ▸ entry row",
+      "kind": "button",
+      "note": "RecentDialog: clicking a row runs the full load_dialog pipeline (openPaths) on that path; missing paths flagged."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.recent.close",
+      "label": "Recent ▸ Close button",
+      "kind": "button",
+      "note": "RecentDialog close."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.goto",
+      "label": "Picker ▸ go-to-path input",
+      "kind": "input",
+      "note": "The shared server-side PathPicker every dialog opens. Enter a path (fpick-goto); the bridge runs it through exp_path (~, $VAR)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.hidden-toggle",
+      "label": "Picker ▸ .hidden dotfiles toggle",
+      "kind": "toggle",
+      "note": "The shared server-side PathPicker every dialog opens. Re-lists including dotfiles."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.new-folder",
+      "label": "Picker ▸ new folder button",
+      "kind": "button",
+      "note": "The shared server-side PathPicker every dialog opens. window.prompt for a name, then mkdir."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.place",
+      "label": "Picker ▸ places shortcut button",
+      "kind": "button",
+      "note": "The shared server-side PathPicker every dialog opens. Jumps to a bridge-provided place (home, cwd, …)."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.breadcrumb",
+      "label": "Picker ▸ breadcrumb segment",
+      "kind": "button",
+      "note": "The shared server-side PathPicker every dialog opens. Navigates to a parent path segment."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.parent",
+      "label": "Picker ▸ parent (..) row",
+      "kind": "button",
+      "note": "The shared server-side PathPicker every dialog opens. Lists the parent directory."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.dir-row",
+      "label": "Picker ▸ directory row",
+      "kind": "button",
+      "note": "The shared server-side PathPicker every dialog opens. Descends into a directory."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.file-row",
+      "label": "Picker ▸ file row (click select / shift multi)",
+      "kind": "button",
+      "note": "The shared server-side PathPicker every dialog opens. open mode: single click selects, ctrl/shift toggles multi-select."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.file-dblclick",
+      "label": "Picker ▸ file row double-click accept",
+      "kind": "other",
+      "note": "The shared server-side PathPicker every dialog opens. Double-click accepts that file immediately."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.filter",
+      "label": "Picker ▸ filter select (Qt filter strings)",
+      "kind": "input",
+      "note": "The shared server-side PathPicker every dialog opens. Filters the listing by the filter globs."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.name-input",
+      "label": "Picker ▸ save name input (Enter accepts)",
+      "kind": "input",
+      "note": "The shared server-side PathPicker every dialog opens. save mode: filename field; Enter triggers accept + overwrite confirm."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.accept",
+      "label": "Picker ▸ accept button (Open/Save/Choose)",
+      "kind": "button",
+      "note": "The shared server-side PathPicker every dialog opens. Resolves the picker; save mode asks a second time before overwriting."
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "id": "files.picker.cancel",
+      "label": "Picker ▸ Cancel button",
+      "kind": "button",
+      "note": "The shared server-side PathPicker every dialog opens. Resolves null; a modal cancel aborts the open queue."
+    },
+    {
+      "feature": "files",
+      "requires": [],
+      "needsVisual": false,
+      "id": "files.accel.ctrl-s",
+      "label": "Ctrl+S window accelerator (session save)",
+      "kind": "keyboard",
+      "note": "FileDropTarget window keydown: Ctrl/Cmd+S runs ensure()+session_file+save; in local mode ensure() rejects and it reports a save failure to the feedback log — proving the accelerator is installed. (windowAccelerator ignores Ctrl+Alt+S.)",
+      "trigger": [
+        {
+          "do": "press",
+          "key": "Control+s"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "save failed|session has no file|no file yet"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 700
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.accel.ctrl-o",
+      "label": "Ctrl+O window accelerator (open file picker)",
+      "kind": "keyboard",
+      "note": "FileDropTarget window keydown: Ctrl/Cmd+O creates a hidden <input type=file> and clicks it, opening the BROWSER file dialog (native, outside the DOM) then upload+load. The native chooser cannot be driven or observed deterministically by Playwright, and the load path needs the bridge — recorded here for inventory; drive/verify manually.",
+      "trigger": [
+        {
+          "do": "press",
+          "key": "Control+o"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": true,
+      "id": "files.drop.window",
+      "label": "Window drag-and-drop file load",
+      "kind": "drag",
+      "note": "FileDropTarget listens for window dragover/drop: a URL drop -> cmd.load; a File drop -> upload then load, with refusals (.pwg) and dialog-required formats reported. Synthesising a real DataTransfer drop with files is not deterministic via the audit driver, and the upload/classify path needs the bridge. Drive/verify manually.",
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "file-service"
+      ],
+      "needsVisual": false,
+      "id": "files.deeplink.open-param",
+      "label": "Deep link ?open=<path> loads a file on start",
+      "kind": "other",
+      "note": "takeOpenFromLocation consumes ?open=<path> once on mount (StrictMode-safe, strips the param) and runs requestFilesOpen -> plan_open. Needs the bridge to classify/load the path; a bare local start has no ?open. Recorded for inventory.",
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "feature": "files",
+      "requires": [
+        "remote-backend"
+      ],
+      "needsVisual": true,
+      "id": "files.plugin-dialog.host",
+      "label": "Plugin file-dialog host (tkinter mimic)",
+      "kind": "other",
+      "note": "PluginDialogHost (always mounted by FileDropTarget) subscribes to the \"dialog\" topic; when a legacy plugin blocks in tkinter.filedialog the bridge pushes a request and this opens the same PathPicker, answering via _bridge.answer_dialog. No bridge -> no dialog events; BLOCKED.",
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 100
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    }
+  ]
+}

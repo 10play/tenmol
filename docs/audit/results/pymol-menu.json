@@ -1,0 +1,130 @@
+{
+  "results": [
+    {
+      "id": "pymol-menu.open.mouseconfig",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.structure.title-head",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.structure.separator",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.leaf.three_button_motions",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.leaf.three_button_editing",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.leaf.three_button_viewing",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.leaf.three_button_lights",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.leaf.three_button_all_modes",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.leaf.two_button_editing",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.leaf.two_button_viewing",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.leaf.two_button_lights",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.dismiss.choose",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.dismiss.escape",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.dismiss.click-outside",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.single-popup",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.position.clamp",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.leafhook.volume-panel",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "pymol-menu.leafhook.throw-contained",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}
