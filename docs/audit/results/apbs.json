@@ -1,0 +1,221 @@
+{
+  "results": [
+    {
+      "id": "apbs.menu.open",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.panel.lead-copy",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.probe.display",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.probe.startup-path-line",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.script.vacuum-visible",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.script.apbs-workflow-visible",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.copy.vacuum",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.copy.script",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.launcher.toggle-open",
+      "verdict": "FAIL",
+      "reason": "undefined: \"unknown check undefined\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "selector": "[data-testid=\"apbs-window\"]",
+          "ok": false,
+          "detail": "unknown check undefined"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/apbs/apbs.launcher.toggle-open.png",
+      "needsVisual": false,
+      "note": "The overlay-launcher toggle (title 'APBS', Zap icon) opens the panel when not already open."
+    },
+    {
+      "id": "apbs.launcher.toggle-close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.window.close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.window.shade",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.window.shade-restore",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.window.esc-close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.window.title-doubleclick-shade",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.window.drag-move",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "apbs.window.resize-grip",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.waitFor: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'APBS Electrostatics' }) }).first() to be visible\u001b[22m\n",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    }
+  ]
+}

@@ -80,6 +80,8 @@ const SESSION = {
 
 vi.mock('../../app', () => ({
   useSession: () => SESSION,
+  // These tests exercise the working (bridge) path, so the viewer is NOT gated.
+  isLocal: () => false,
   useStore: (store: { get: () => unknown }, pick: (s: unknown) => unknown) => pick(store.get()),
 }));
 

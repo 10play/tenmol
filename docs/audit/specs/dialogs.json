@@ -1,0 +1,472 @@
+{
+  "area": "dialogs",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "dialogs.launcher.open",
+      "feature": "dialogs",
+      "label": "Overlay launcher ▸ Dialogs toggle",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Clicking the 'Dialogs' launcher toggle mounts the dialogs overlay slot, which portals the launcher strip (Properties / Advanced settings / Text editor / volume) into the document body. This is the gateway spec: it must run first so the launcher strip stays open for every spec below (panels/windows are module-singleton state that persists across specs on the shared page).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        { "do": "click", "selector": "button[title=\"Dialogs\"]" },
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialogs-launcher]" },
+        { "expect": "selectorVisible", "selector": "[data-open=\"advanced-settings\"]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "dialogs.launcher.properties",
+      "feature": "dialogs",
+      "label": "Launcher ▸ Properties",
+      "kind": "button",
+      "requires": [],
+      "note": "The Properties launcher button calls dialogsStore.open('properties'); DialogsPanel hosts the PropertiesPanel, which draws a DialogWindow keyed 'properties'. Verifies the launcher→store→host wiring even though the panel's own content may report unported reads in local mode.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-open=\"properties\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"properties\"]", "ms": 6000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog=\"properties\"]" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "dialogs.launcher.advanced-settings",
+      "feature": "dialogs",
+      "label": "Launcher ▸ Advanced settings",
+      "kind": "button",
+      "requires": [],
+      "note": "The Advanced settings launcher button opens the AdvancedSettings DialogWindow (keyed 'advanced-settings') with its filter box and Refresh control. The setting table body needs setting.get_name_list (see the remote-backend specs); the window chrome + filter/refresh head render regardless.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"advanced-settings\"]", "ms": 6000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog=\"advanced-settings\"]" },
+        { "expect": "selectorVisible", "selector": "[data-advset-filter]" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "dialogs.launcher.texteditor",
+      "feature": "dialogs",
+      "label": "Launcher ▸ Text editor",
+      "kind": "button",
+      "requires": [],
+      "note": "The Text editor launcher button opens the TextEditorPanel DialogWindow (keyed 'texteditor'). Confirms the launcher opens the editor window; the editor's own file/syntax controls belong to the texteditor area's inventory.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-open=\"texteditor\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"texteditor\"]", "ms": 6000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog=\"texteditor\"]" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "dialogs.launcher.volume-select-present",
+      "feature": "dialogs",
+      "label": "Launcher ▸ volume panel… select",
+      "kind": "input",
+      "requires": [],
+      "note": "The volume-panel <select> is populated from cmd.get_names_of_type('object:volume'). In the local 1crn session there are no volume objects, so the select renders with only the 'volume panel…' placeholder. This spec verifies the control is present and enumerable; actually opening a volume panel is covered by dialogs.launcher.volume-open.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 }
+      ],
+      "trigger": [
+        { "do": "hover", "selector": "[data-open=\"volume\"]" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-open=\"volume\"]" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "dialogs.launcher.volume-open",
+      "feature": "dialogs",
+      "label": "Launcher ▸ open a volume panel",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Selecting a volume name opens the '<name> - Volume Color Map Editor' DialogWindow. Untestable in local mode: the in-browser engine has no volume object (map loading is unavailable), so the select has no option to choose. Recorded BLOCKED; would assert selectorVisible on [data-dialog^='volume:'].",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-open=\"volume\"]" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog^=\"volume:\"]" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "dialogs.window.shade",
+      "feature": "dialogs",
+      "label": "DialogWindow ▸ shade (minimise)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "The title-bar '—' IconButton (title='shade') calls dialogsStore.toggleMinimised: the window collapses to just its title bar (adds .is-minimised, hides body/footer/grip). Setup reopens the advanced-settings window (open() resets minimised=false) so the toggle direction is deterministic.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"advanced-settings\"]", "ms": 6000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__btn[title=\"shade\"]" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog=\"advanced-settings\"].is-minimised" },
+        { "expect": "selectorHidden", "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__body" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "dialogs.window.restore",
+      "feature": "dialogs",
+      "label": "DialogWindow ▸ restore (unshade)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "When minimised the same IconButton shows '▢' (title='restore') and toggling it brings the body/footer/grip back. Setup opens then shades the window so the trigger deterministically restores it.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"advanced-settings\"]", "ms": 6000 },
+        { "do": "click", "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__btn[title=\"shade\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"advanced-settings\"].is-minimised", "ms": 4000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__btn[title=\"restore\"]" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__body" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "dialogs.window.raise",
+      "feature": "dialogs",
+      "label": "DialogWindow ▸ raise on pointer-down",
+      "kind": "other",
+      "requires": [],
+      "note": "onPointerDown anywhere on a window (and on the title bar) calls dialogsStore.raise, allocating a new shared z-index so the clicked window stacks above the other. The z change is written inline and is not reflected in body text or the viewport canvas, so no objective DOM check can confirm the reorder — needsVisual. Setup opens two windows; trigger clicks the lower (properties) title bar.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"properties\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"properties\"]", "ms": 6000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"advanced-settings\"]", "ms": 6000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-dialog=\"properties\"] .dlgwin__title" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog=\"properties\"]" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "dialogs.window.drag-move",
+      "feature": "dialogs",
+      "label": "DialogWindow ▸ drag title to move",
+      "kind": "drag",
+      "requires": [],
+      "note": "The title bar's onPointerDown starts a pointermove/pointerup drag loop that calls dialogsStore.move, repositioning the window (clamped to >=0). The audit action DSL has no pointer-drag primitive, so this free drag cannot be driven deterministically here — recorded with the closest observable (the draggable title is present) and flagged needsVisual. Move is exercised by store.test.ts at the unit level.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"advanced-settings\"]", "ms": 6000 }
+      ],
+      "trigger": [
+        { "do": "hover", "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__title" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__title" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "dialogs.window.resize",
+      "feature": "dialogs",
+      "label": "DialogWindow ▸ resize grip",
+      "kind": "drag",
+      "requires": [],
+      "note": "The bottom-right .dlgwin__grip starts a pointer-drag that calls dialogsStore.resize (min 320x160). Same limitation as drag-move: no pointer-drag primitive in the action DSL, so recorded with the closest observable (the grip is present) and flagged needsVisual. Resize is covered by store.test.ts at the unit level.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"advanced-settings\"]", "ms": 6000 }
+      ],
+      "trigger": [
+        { "do": "hover", "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__grip" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__grip" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "dialogs.window.close",
+      "feature": "dialogs",
+      "label": "DialogWindow ▸ close (×)",
+      "kind": "button",
+      "requires": [],
+      "note": "The title-bar '×' IconButton (data-close=<key>) calls dialogsStore.close, removing the window from the store so it disappears. Placed after the shade/restore/raise specs; later specs that need the window reopen it in their setup.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"advanced-settings\"]", "ms": 6000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-close=\"advanced-settings\"]" }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-dialog=\"advanced-settings\"]" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "dialogs.advset.filter-input",
+      "feature": "dialogs",
+      "label": "Advanced Settings ▸ filter box accepts input",
+      "kind": "input",
+      "requires": [],
+      "note": "The 'filter settings…' TextInput ([data-advset-filter]) narrows the name column by case-insensitive substring. This spec confirms the control renders and accepts typed text in local mode; the effect on the row set (which needs a populated name list) is covered by dialogs.advset.filter-narrows.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-advset-filter]", "ms": 6000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "[data-advset-filter]", "text": "cartoon" }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-advset-filter]" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "dialogs.advset.refresh",
+      "feature": "dialogs",
+      "label": "Advanced Settings ▸ Refresh",
+      "kind": "button",
+      "requires": [],
+      "note": "The Refresh button ([data-advset-refresh]) clears the loaded value cache and the error banner (setLoaded({}); setError('')). In local mode the setting.get_name_list read is unported and populates .advset__error on mount; Refresh should clear that banner, which is the affirmative observable used here.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-advset-refresh]", "ms": 6000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-advset-refresh]" }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-dialog=\"advanced-settings\"] .advset__error" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "dialogs.advset.count-visible",
+      "feature": "dialogs",
+      "label": "Advanced Settings ▸ shown / total count",
+      "kind": "other",
+      "requires": [],
+      "note": "The head shows a '<shown> / <total>' count ([data-advset-count]) reflecting filtered rows vs all setting names. Confirms the counter renders. In local mode both are 0 because the name list is unported; a populated count is asserted by the remote-backend row specs.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"advanced-settings\"]", "ms": 6000 }
+      ],
+      "trigger": [
+        { "do": "waitFor", "selector": "[data-advset-count]", "ms": 4000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-advset-count]" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "dialogs.advset.rows-load",
+      "feature": "dialogs",
+      "label": "Advanced Settings ▸ setting rows populate",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "Rows come from setting.get_name_list() with per-visible-row get_setting_tuple + get lazy fetch. The in-browser engine does not port setting.get_name_list, so the table stays empty in local mode (it surfaces an unported-symbol error instead). Recorded BLOCKED; against the bridge it would show a filtered row such as sphere_scale.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-advset-filter]", "ms": 6000 },
+        { "do": "type", "selector": "[data-advset-filter]", "text": "sphere_scale" }
+      ],
+      "trigger": [
+        { "do": "waitFor", "selector": "[data-advset-row=\"sphere_scale\"]", "ms": 5000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-advset-row=\"sphere_scale\"]" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "dialogs.advset.filter-narrows",
+      "feature": "dialogs",
+      "label": "Advanced Settings ▸ filter narrows the row set",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "Typing a substring should reduce the shown count and the visible rows (Qt uses a regex filter; here a case-insensitive substring over the name column). Requires a populated name list, which needs the bridge — BLOCKED locally. Would assert domChanged after typing the filter.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-advset-filter]", "ms": 6000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "[data-advset-filter]", "text": "ray_" }
+      ],
+      "checks": [
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "dialogs.advset.edit-value",
+      "feature": "dialogs",
+      "label": "Advanced Settings ▸ edit a non-boolean value",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "A non-boolean setting renders as a text field ([data-advset-value=<name>]); onBlur/Enter when changed calls cmd.set(name, value, log=1, quiet=0) then re-reads the row. Needs a populated table (setting.get_name_list), so BLOCKED locally. Would edit sphere_scale to 0.5 and assert no error banner.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-advset-filter]", "ms": 6000 },
+        { "do": "type", "selector": "[data-advset-filter]", "text": "sphere_scale" },
+        { "do": "waitFor", "selector": "[data-advset-value=\"sphere_scale\"]", "ms": 5000 }
+      ],
+      "trigger": [
+        { "do": "type", "selector": "[data-advset-value=\"sphere_scale\"]", "text": "0.5" },
+        { "do": "press", "key": "Enter", "selector": "[data-advset-value=\"sphere_scale\"]" }
+      ],
+      "checks": [
+        { "expect": "feedbackNotMatches", "pattern": "not ported|cannot|unknown|error" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "dialogs.advset.toggle-boolean",
+      "feature": "dialogs",
+      "label": "Advanced Settings ▸ toggle a boolean setting",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "A boolean setting renders as a Checkbox ([data-advset-value=<name>]); onChange calls cmd.set(name, '1'|'0'). Needs a populated table, so BLOCKED locally. Would toggle the 'orthoscopic' checkbox and assert no error.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"advanced-settings\"]" },
+        { "do": "waitFor", "selector": "[data-advset-filter]", "ms": 6000 },
+        { "do": "type", "selector": "[data-advset-filter]", "text": "orthoscopic" },
+        { "do": "waitFor", "selector": "[data-advset-value=\"orthoscopic\"]", "ms": 5000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-advset-value=\"orthoscopic\"]" }
+      ],
+      "checks": [
+        { "expect": "noConsoleError" },
+        { "expect": "feedbackNotMatches", "pattern": "not ported|cannot|unknown|error" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "dialogs.modal.confirm.guard-cancel",
+      "feature": "dialogs",
+      "label": "ConfirmPrompt ▸ Save changes? guard + Cancel",
+      "kind": "dialog",
+      "requires": [],
+      "note": "modals.tsx ConfirmPrompt (Yes/No/Cancel) is the text editor's dirty-buffer guard. Reached here through its consumer: open the Text editor, dirty the buffer ([data-txted-area]), then click Open ([data-txted-open]) — guard() sees dirty and shows the [data-confirmprompt] modal. Trigger clicks Cancel ([data-answer=cancel]); the prompt closes and the editor stays open with no save/open side effect. Yes/No are deliberately not driven because their 'proceed' path opens the browser file picker, which cannot be driven headlessly.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "waitFor", "selector": "[data-dialogs-launcher]", "ms": 10000 },
+        { "do": "click", "selector": "[data-open=\"texteditor\"]" },
+        { "do": "waitFor", "selector": "[data-dialog=\"texteditor\"]", "ms": 6000 },
+        { "do": "type", "selector": "[data-txted-area]", "text": "x = 1" },
+        { "do": "click", "selector": "[data-txted-open]" },
+        { "do": "waitFor", "selector": "[data-confirmprompt]", "ms": 5000 }
+      ],
+      "trigger": [
+        { "do": "click", "selector": "[data-answer=\"cancel\"]" }
+      ],
+      "checks": [
+        { "expect": "selectorHidden", "selector": "[data-confirmprompt]" },
+        { "expect": "selectorVisible", "selector": "[data-dialog=\"texteditor\"]" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "dialogs.modal.number-prompt",
+      "feature": "dialogs",
+      "label": "NumberPrompt ▸ getDouble editor (OK/Cancel/Esc)",
+      "kind": "dialog",
+      "requires": ["remote-backend"],
+      "note": "modals.tsx NumberPrompt is the QInputDialog.getDouble clone used by the Volume Color Map Editor to edit a stop's value/alpha and the vmin/vmax/amax bounds. It is reachable only from an open volume panel, which needs a volume object; the local 1crn session has none, so this is BLOCKED. Would assert selectorVisible [data-numberprompt], type a value, and confirm via [data-accept]/Enter (Esc/Cancel returns onDone(null)).",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        { "do": "waitFor", "selector": "[data-numberprompt]", "ms": 3000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-numberprompt]" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "dialogs.modal.text-dialog",
+      "feature": "dialogs",
+      "label": "TextDialog ▸ read-only script / help box (Copy/Close)",
+      "kind": "dialog",
+      "requires": ["remote-backend"],
+      "note": "modals.tsx TextDialog is the read-only monospace box used by the Volume editor's 'Get colors as script' and Help actions, with Copy (navigator.clipboard) and Close buttons. Reachable only from an open volume panel (no volume object locally), so BLOCKED. Would assert selectorVisible [data-textdialog] and exercise its Copy/Close controls.",
+      "needsVisual": false,
+      "setup": [],
+      "trigger": [
+        { "do": "waitFor", "selector": "[data-textdialog]", "ms": 3000 }
+      ],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-textdialog]" }
+      ],
+      "settleMs": 300
+    }
+  ]
+}

@@ -1,0 +1,468 @@
+{
+  "results": [
+    {
+      "id": "dialogs.launcher.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-dialogs-launcher]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-open=\"advanced-settings\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.launcher.open.png",
+      "needsVisual": false,
+      "note": "Clicking the 'Dialogs' launcher toggle mounts the dialogs overlay slot, which portals the launcher strip (Properties / Advanced settings / Text editor / volume) into the document body. This is the gateway spec: it must run first so the launcher strip stays open for every spec below (panels/windows are module-singleton state that persists across specs on the shared page)."
+    },
+    {
+      "id": "dialogs.launcher.properties",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-dialog=\"properties\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.launcher.properties.png",
+      "needsVisual": false,
+      "note": "The Properties launcher button calls dialogsStore.open('properties'); DialogsPanel hosts the PropertiesPanel, which draws a DialogWindow keyed 'properties'. Verifies the launcher→store→host wiring even though the panel's own content may report unported reads in local mode."
+    },
+    {
+      "id": "dialogs.launcher.advanced-settings",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-dialog=\"advanced-settings\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-advset-filter]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.launcher.advanced-settings.png",
+      "needsVisual": false,
+      "note": "The Advanced settings launcher button opens the AdvancedSettings DialogWindow (keyed 'advanced-settings') with its filter box and Refresh control. The setting table body needs setting.get_name_list (see the remote-backend specs); the window chrome + filter/refresh head render regardless."
+    },
+    {
+      "id": "dialogs.launcher.texteditor",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-dialog=\"texteditor\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.launcher.texteditor.png",
+      "needsVisual": false,
+      "note": "The Text editor launcher button opens the TextEditorPanel DialogWindow (keyed 'texteditor'). Confirms the launcher opens the editor window; the editor's own file/syntax controls belong to the texteditor area's inventory."
+    },
+    {
+      "id": "dialogs.launcher.volume-select-present",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-open=\"volume\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.launcher.volume-select-present.png",
+      "needsVisual": false,
+      "note": "The volume-panel <select> is populated from cmd.get_names_of_type('object:volume'). In the local 1crn session there are no volume objects, so the select renders with only the 'volume panel…' placeholder. This spec verifies the control is present and enumerable; actually opening a volume panel is covered by dialogs.launcher.volume-open."
+    },
+    {
+      "id": "dialogs.launcher.volume-open",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "dialogs.window.shade",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-dialog=\"advanced-settings\"].is-minimised",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__body",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.window.shade.png",
+      "needsVisual": false,
+      "note": "The title-bar '—' IconButton (title='shade') calls dialogsStore.toggleMinimised: the window collapses to just its title bar (adds .is-minimised, hides body/footer/grip). Setup reopens the advanced-settings window (open() resets minimised=false) so the toggle direction is deterministic."
+    },
+    {
+      "id": "dialogs.window.restore",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__body",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.window.restore.png",
+      "needsVisual": false,
+      "note": "When minimised the same IconButton shows '▢' (title='restore') and toggling it brings the body/footer/grip back. Setup opens then shades the window so the trigger deterministically restores it."
+    },
+    {
+      "id": "dialogs.window.raise",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-dialog=\"properties\"] .dlgwin__title').first()\u001b[22m\n\u001b[2m    - locator resolved to <div class=\"dlgwin__title modern:bg-none modern:bg-pm-panel-alt modern:text-pm-text-dim modern:border-line\">…</div>\u001b[22m",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "dialogs.window.drag-move",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__title",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.window.drag-move.png",
+      "needsVisual": true,
+      "note": "The title bar's onPointerDown starts a pointermove/pointerup drag loop that calls dialogsStore.move, repositioning the window (clamped to >=0). The audit action DSL has no pointer-drag primitive, so this free drag cannot be driven deterministically here — recorded with the closest observable (the draggable title is present) and flagged needsVisual. Move is exercised by store.test.ts at the unit level."
+    },
+    {
+      "id": "dialogs.window.resize",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-dialog=\"advanced-settings\"] .dlgwin__grip",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.window.resize.png",
+      "needsVisual": true,
+      "note": "The bottom-right .dlgwin__grip starts a pointer-drag that calls dialogsStore.resize (min 320x160). Same limitation as drag-move: no pointer-drag primitive in the action DSL, so recorded with the closest observable (the grip is present) and flagged needsVisual. Resize is covered by store.test.ts at the unit level."
+    },
+    {
+      "id": "dialogs.window.close",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-dialog=\"advanced-settings\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.window.close.png",
+      "needsVisual": false,
+      "note": "The title-bar '×' IconButton (data-close=<key>) calls dialogsStore.close, removing the window from the store so it disappears. Placed after the shade/restore/raise specs; later specs that need the window reopen it in their setup."
+    },
+    {
+      "id": "dialogs.advset.filter-input",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-advset-filter]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.advset.filter-input.png",
+      "needsVisual": false,
+      "note": "The 'filter settings…' TextInput ([data-advset-filter]) narrows the name column by case-insensitive substring. This spec confirms the control renders and accepts typed text in local mode; the effect on the row set (which needs a populated name list) is covered by dialogs.advset.filter-narrows."
+    },
+    {
+      "id": "dialogs.advset.refresh",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-dialog=\"advanced-settings\"] .advset__error",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.advset.refresh.png",
+      "needsVisual": false,
+      "note": "The Refresh button ([data-advset-refresh]) clears the loaded value cache and the error banner (setLoaded({}); setError('')). In local mode the setting.get_name_list read is unported and populates .advset__error on mount; Refresh should clear that banner, which is the affirmative observable used here."
+    },
+    {
+      "id": "dialogs.advset.count-visible",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-advset-count]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.advset.count-visible.png",
+      "needsVisual": false,
+      "note": "The head shows a '<shown> / <total>' count ([data-advset-count]) reflecting filtered rows vs all setting names. Confirms the counter renders. In local mode both are 0 because the name list is unported; a populated count is asserted by the remote-backend row specs."
+    },
+    {
+      "id": "dialogs.advset.rows-load",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "dialogs.advset.filter-narrows",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "dialogs.advset.edit-value",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "dialogs.advset.toggle-boolean",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "dialogs.modal.confirm.guard-cancel",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-confirmprompt]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-dialog=\"texteditor\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/dialogs/dialogs.modal.confirm.guard-cancel.png",
+      "needsVisual": false,
+      "note": "modals.tsx ConfirmPrompt (Yes/No/Cancel) is the text editor's dirty-buffer guard. Reached here through its consumer: open the Text editor, dirty the buffer ([data-txted-area]), then click Open ([data-txted-open]) — guard() sees dirty and shows the [data-confirmprompt] modal. Trigger clicks Cancel ([data-answer=cancel]); the prompt closes and the editor stays open with no save/open side effect. Yes/No are deliberately not driven because their 'proceed' path opens the browser file picker, which cannot be driven headlessly."
+    },
+    {
+      "id": "dialogs.modal.number-prompt",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "dialogs.modal.text-dialog",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}

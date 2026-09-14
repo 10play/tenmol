@@ -350,6 +350,33 @@ describe('LocalBackend', () => {
     expect(String((err as Error).message)).toMatch(/unknown view:.*Choices:[\s\S]*front[\s\S]*side/);
   });
 
+  // D3.scene-blank: the Scene panel's Blank button runs `cmd.scene('', 'recall')`.
+  // Empty-key recall must blank the screen (disable every object) WITHOUT raising
+  // "No scenes" — that error is reserved for next/previous/start. The old code
+  // coerced the '' key to 'auto' -> 'next', which threw when no scenes existed.
+  it("scene('', 'recall') blanks all objects without throwing when no scenes exist", async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    await backend.call('read_pdbstr', [SMALL_PDB, 'm']);
+    // The freshly-loaded object is enabled (visible).
+    expect(await backend.call('get_names', ['objects', 1])).toContain('m');
+    // No scenes are defined — this must NOT raise "No scenes".
+    await expect(backend.call('scene', ['', 'recall'])).resolves.toBeNull();
+    // Blank screen: every object is now disabled.
+    expect(await backend.call('get_names', ['objects', 1])).toEqual([]);
+    // The current scene name is cleared.
+    expect(await backend.call('get', ['scene_current_name'])).toBe('');
+  });
+
+  it('scene next/previous/start still raise "No scenes" when the bin is empty', async () => {
+    const backend = new LocalBackend();
+    await backend.connect();
+    for (const action of ['next', 'previous', 'start']) {
+      const err = await backend.call('scene', ['', action]).catch((e: unknown) => e);
+      expect(String((err as Error).message)).toMatch(/No scenes/);
+    }
+  });
+
   it('answers benign read symbols instead of NotPorted (clean panels)', async () => {
     const backend = new LocalBackend();
     await backend.connect();

@@ -1,0 +1,613 @@
+{
+  "results": [
+    {
+      "id": "render.tab.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "#rd-w",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.tab.open.png",
+      "needsVisual": false,
+      "note": "The render feature mounts collapsed as a `.render__tab` button in the viewport region; clicking it expands the Draw/Ray setup form (RenderDialog.tsx:225-236, 105). Leaves the dialog OPEN for the specs that follow (state persists across specs on the shared page)."
+    },
+    {
+      "id": "render.form.lock.off",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "2\\.667",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.form.lock.off.png",
+      "needsVisual": false,
+      "note": "Lock is ON by default (useRenderForm INITIAL.lock=true). With lock on, editing width rescales height to preserve aspect; unchecking it (first checkbox) lets width move independently. Base is 1000x750 (aspect 1.333); after unlock, width=2000 keeps height=750 so aspect becomes 2000/750=2.667. The visible aspect span proving the toggle worked (RenderDialog.tsx:302-304, useRenderForm.ts:85-97,111)."
+    },
+    {
+      "id": "render.form.width.px",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3\\.906",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.form.width.px.png",
+      "needsVisual": false,
+      "note": "Width pixel field (#rd-w). Lock is OFF from the previous spec, height set to 768; width=3000 gives aspect 3000/768=3.906, read from the visible aspect span. This is the only text-observable proof a numeric field took effect (the derived unit fields are input values the audit vocabulary cannot read)."
+    },
+    {
+      "id": "render.form.height.px",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "1\\.024",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.form.height.px.png",
+      "needsVisual": false,
+      "note": "Height pixel field (#rd-h). Lock OFF; width reset to 1024, height=1000 gives aspect 1024/1000=1.024 in the aspect span (RenderDialog.tsx:271-278)."
+    },
+    {
+      "id": "render.form.widthUnits",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "3\\.906",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.form.widthUnits.png",
+      "needsVisual": false,
+      "note": "Second grid input = width in physical units. At dpi 300, 10 inches -> 3000 px (unitsToPx). Lock OFF, height=768, so aspect becomes 3000/768=3.906, proving the unit->pixel conversion drove width (useRenderForm.ts:61-64,98-99)."
+    },
+    {
+      "id": "render.form.heightUnits",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "0\\.341",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.form.heightUnits.png",
+      "needsVisual": false,
+      "note": "Fourth grid input = height in physical units. At dpi 300, 10 inches -> 3000 px. Lock OFF, width=1024, so aspect becomes 1024/3000=0.341 (useRenderForm.ts:100-104)."
+    },
+    {
+      "id": "render.form.dpi",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.form.dpi.png",
+      "needsVisual": true,
+      "note": "DPI field (#rd-dpi). Per useRenderForm.ts:105-108 changing dpi keeps the SAME pixels (aspect and image size unchanged) and only rescales the derived physical-unit fields — which are input values, not innerText, so the audit's check vocabulary cannot read the effect. This spec verifies the field accepts input without throwing; the numeric conversion itself needs a visual/manual check."
+    },
+    {
+      "id": "render.form.lock.on",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "2\\.5:1",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.form.lock.on.png",
+      "needsVisual": false,
+      "note": "Re-checks the lock (first checkbox, currently OFF). Base is set to 1000x400 (aspect 2.5) while unlocked; after locking, changing width to 1500 rescales height to 600 so the aspect span STILL reads 2.5 — the defining behaviour of the lock (useRenderForm.ts:85-91). Leaves lock ON."
+    },
+    {
+      "id": "render.form.transparent",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render input[data-slot=\"checkbox\"]",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.form.transparent.png",
+      "needsVisual": true,
+      "note": "Second checkbox. Its only effect is on a Ray render: it sets opaque_background 0/1 before _bridge.ray (RenderDialog.tsx:149-150,315-321). The bound background result cannot be observed in local mode, so this spec only verifies the toggle clicks without error; the rendered transparency needs remote-backend + a visual check."
+    },
+    {
+      "id": "render.form.units.select",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render select[data-slot=\"select\"]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.form.units.select.png",
+      "needsVisual": true,
+      "note": "Native <select> switching the physical-unit basis (inch factor 1.0, cm factor 2.54; RenderDialog.tsx:295-301, useRenderForm.ts:109). The audit action DSL has no select-option primitive and Playwright fill() cannot set a native <select>, so this spec confirms the control is present and clickable; changing the option and its effect on the derived-unit fields needs a manual/visual pass."
+    },
+    {
+      "id": "render.useViewport",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "unavailable|cannot|unknown|error",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.useViewport.png",
+      "needsVisual": false,
+      "note": "Calls cmd.get_viewport (works in local mode) and dispatches the viewport size verbatim, lock or no lock (RenderDialog.tsx:131-140,322-324; useRenderForm.ts:115-117). The form is pre-set to a distinctive 2.5:1 aspect (lock ON from prior spec keeps it); adopting the viewport size changes the aspect span to the canvas aspect, a visible DOM change."
+    },
+    {
+      "id": "render.close",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "#rd-w",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render__tab",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.close.png",
+      "needsVisual": false,
+      "note": "The title-bar IconButton (aria-label 'close Ray / Draw') collapses the panel back to the `.render__tab` button (RenderDialog.tsx:242-249, 244-246 setExpanded(false)). Runs last so the dialog is open for all preceding specs; leaves it collapsed."
+    },
+    {
+      "id": "render.draw",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "draw\\s+\\d+x\\d+\\s+complete",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render__preview",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.draw.png",
+      "needsVisual": true,
+      "note": "Draw calls _bridge.draw(width,height) then reads the image back and shows the result page (RenderDialog.tsx:142-176,328-335). engine-ts now serves _bridge.draw and cmd.png locally (verified: returns a real PNG), so this runs in the browser: it reaches the result page with a '<w>x<h> complete' status and a preview image."
+    },
+    {
+      "id": "render.ray",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ray\\s+\\d+x\\d+\\s+complete",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render__preview",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.ray.png",
+      "needsVisual": true,
+      "note": "Ray sets opaque_background from the transparent checkbox, calls _bridge.ray(width,height), reads the PNG back and shows the result page (RenderDialog.tsx:148-168,336-344). engine-ts raytraces in-browser (cmd/render.ts) and serves _bridge.ray locally, so this runs in the browser: result page with 'ray <w>x<h> complete' and a preview."
+    },
+    {
+      "id": "render.result.preview",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render__preview",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.result.preview.png",
+      "needsVisual": true,
+      "note": "After a successful Ray/Draw the result page shows the read-back PNG as an <img class=render__preview> (RenderDialog.tsx:355-362). The render runs locally, so the preview appears in the browser."
+    },
+    {
+      "id": "render.result.savePath.input",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".render__path",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.result.savePath.input.png",
+      "needsVisual": false,
+      "note": "The path field on the result page whose value feeds cmd.png(path) (RenderDialog.tsx:363-370). Reachable after a render, which runs locally, so the field is present in the browser."
+    },
+    {
+      "id": "render.result.save.emptyPath",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "enter a path to save",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.result.save.emptyPath.png",
+      "needsVisual": false,
+      "note": "Clicking Save with a blank path is a client-side guard that sets status 'enter a path to save to' (RenderDialog.tsx:208-213,371-373). The savePath field persists across specs (the dialog stays mounted), so the setup explicitly clears it to establish the documented blank-path precondition."
+    },
+    {
+      "id": "render.result.save",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "render.result.copy",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "copied|clipboard|no prior image",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.result.copy.png",
+      "needsVisual": true,
+      "note": "Copy calls cmd.tenmol_files.copy_image_png(dpi) and writes the PNG to the clipboard, or reports 'no prior image' / a clipboard failure (RenderDialog.tsx:178-206,374-381). The render runs locally so the result page is reachable in the browser; the clipboard itself depends on a secure context + user gesture, so the status may report a clipboard failure instead of success."
+    },
+    {
+      "id": "render.result.back",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "#rd-w",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/render/render.result.back.png",
+      "needsVisual": false,
+      "note": "The '< Back' button on the result page returns to the size/render setup page (RenderDialog.tsx:383-387 setPage('setup')). Reachable after a render, which runs locally, so this works in the browser. Expected: #rd-w visible again."
+    }
+  ]
+}

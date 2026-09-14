@@ -179,7 +179,16 @@ export function QuickButtons() {
    */
   const openBuilder = async () => {
     const { OPEN_EVENT } = await import('../builder/BuilderPanel');
-    openPanel('builder', () => window.dispatchEvent(new Event(OPEN_EVENT)));
+    // D4.builder-race: THE DISPATCH IS A MICROTASK, load-bearing rather than defensive (see
+    // `features/files/menuHooks.ts::requestFilesAction`). `FeatureSlot` renders
+    // `<MountMarker/>` *before* `<Panel/>`, so within the commit that mounts the
+    // slot React runs the marker's effect — which drains this intent via
+    // `panelMounted` — BEFORE `BuilderPanel`'s effect has added its `OPEN_EVENT`
+    // listener. Dispatching synchronously hits nobody: the panel stays collapsed
+    // and the first click appears dead (the two-click bug). Passive effects for a
+    // commit flush in one synchronous loop, so a microtask queued inside the
+    // intent runs once every effect in that commit — the listener included — has run.
+    openPanel('builder', () => queueMicrotask(() => window.dispatchEvent(new Event(OPEN_EVENT))));
   };
 
   const openProperties = async () => {

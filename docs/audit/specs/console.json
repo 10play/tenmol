@@ -1,0 +1,793 @@
+{
+  "area": "console",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "console.bar.ortho.toggle-on",
+      "feature": "console",
+      "label": "Output bar ▸ ortho toggle (on)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Turns on PyMOL's in-viewport console; the portalled overlay [data-testid=ortho-console] should appear over the viewport.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".console__bar-btn", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid=\"ortho-console\"]" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "console.bar.ortho.toggle-off",
+      "feature": "console",
+      "label": "Output bar ▸ ortho toggle (off)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Toggling ortho on then off must hide the in-viewport console overlay again.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "click", "selector": ".console__bar-btn", "nth": 0 }],
+      "checks": [{ "expect": "selectorHidden", "selector": "[data-testid=\"ortho-console\"]" }]
+    },
+    {
+      "id": "console.bar.follow.toggle",
+      "feature": "console",
+      "label": "Output bar ▸ follow toggle",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Toggles ui.followOutput (sticky autoscroll). Only the button's is-on class flips — not body text or the canvas — so this is verified as an error-free handler; the visual state change is not observable through the audit's objective checks.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".console__bar-btn", "nth": 1 }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.bar.font.select",
+      "feature": "console",
+      "label": "Output bar ▸ Select Font… dropdown",
+      "kind": "input",
+      "requires": [],
+      "note": "Native <select> offering default/Monaco/Consolas/Menlo/monospace; changes the --pm-font-mono var scoped to the dock. A native select's value cannot be driven by the audit DSL (no select-option action), so only the control's presence is asserted.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".console__bar-font" }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".console__bar-font" }]
+    },
+    {
+      "id": "console.bar.fontsize.decrease",
+      "feature": "console",
+      "label": "Output bar ▸ A- (font size down)",
+      "kind": "button",
+      "requires": [],
+      "note": "Decreases consoleFontSize by 0.5 (floor 9), applied as inline fontSize on the feedback pane. The size change is neither body text nor canvas, so only the error-free handler is verified.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".console__bar-btn", "nth": 2 }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.bar.fontsize.increase",
+      "feature": "console",
+      "label": "Output bar ▸ A+ (font size up)",
+      "kind": "button",
+      "requires": [],
+      "note": "Increases consoleFontSize by 0.5 (ceil 20). Same observability limit as A-.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".console__bar-btn", "nth": 3 }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.bar.clear",
+      "feature": "console",
+      "label": "Output bar ▸ clear",
+      "kind": "button",
+      "requires": [],
+      "note": "Clears the client feedback scrollback and the ortho ring; the bar counter must fall to 'ortho 0/256'.",
+      "setup": [{ "do": "cmd", "text": "count_atoms" }],
+      "trigger": [{ "do": "click", "selector": ".console__bar-btn", "nth": 4 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "ortho 0/256" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "console.bar.splash",
+      "feature": "console",
+      "label": "Output bar ▸ splash",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.splash(0) plus store.setVisible(true)+splash flag: forces the in-viewport console visible over the scene, so the ortho overlay should appear.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".console__bar-btn", "nth": 5 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-testid=\"ortho-console\"]" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+
+    {
+      "id": "console.cmdline.submit-enter",
+      "feature": "console",
+      "label": "Command line ▸ Enter submits",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Enter on a non-empty line runs the command via session.run; 'bg_color red' repaints the viewport, so the canvas must change.",
+      "setup": [],
+      "trigger": [
+        { "do": "type", "selector": "input.cmdline__input", "text": "bg_color red" },
+        { "do": "press", "key": "Enter", "selector": "input.cmdline__input" }
+      ],
+      "settleMs": 700,
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "noConsoleError" }
+      ]
+    },
+    {
+      "id": "console.cmdline.submit-feedback",
+      "feature": "console",
+      "label": "Command line ▸ command echoes to output",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "count_atoms on preloaded 1crn should print an ' … atoms' summary line into the feedback pane.",
+      "setup": [],
+      "trigger": [
+        { "do": "type", "selector": "input.cmdline__input", "text": "count_atoms" },
+        { "do": "press", "key": "Enter", "selector": "input.cmdline__input" }
+      ],
+      "settleMs": 600,
+      "checks": [{ "expect": "feedbackMatches", "pattern": "atoms" }]
+    },
+    {
+      "id": "console.cmdline.tab-complete",
+      "feature": "console",
+      "label": "Command line ▸ Tab completion",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Tab is always swallowed (never moves focus) and, when connected, calls cmd._parser.complete. Completion needs PyMOL's parser/keyword table (a bridge grant); the value applied is not observable via body text, so only the handler running without a page error is verified.",
+      "setup": [],
+      "trigger": [
+        { "do": "type", "selector": "input.cmdline__input", "text": "colo" },
+        { "do": "press", "key": "Tab", "selector": "input.cmdline__input" }
+      ],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.cmdline.history-up",
+      "feature": "console",
+      "label": "Command line ▸ ArrowUp recalls history",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "ArrowUp walks history back into the input value. The recalled value lands in the input's value (not body text or canvas), so it is not observable through the objective checks; the handler is verified error-free.",
+      "setup": [
+        { "do": "type", "selector": "input.cmdline__input", "text": "zoom" },
+        { "do": "press", "key": "Enter", "selector": "input.cmdline__input" }
+      ],
+      "trigger": [{ "do": "press", "key": "ArrowUp", "selector": "input.cmdline__input" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.cmdline.history-down",
+      "feature": "console",
+      "label": "Command line ▸ ArrowDown history forward",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "ArrowDown walks history forward. Same input-value observability limit as ArrowUp.",
+      "setup": [
+        { "do": "type", "selector": "input.cmdline__input", "text": "zoom" },
+        { "do": "press", "key": "Enter", "selector": "input.cmdline__input" },
+        { "do": "press", "key": "ArrowUp", "selector": "input.cmdline__input" }
+      ],
+      "trigger": [{ "do": "press", "key": "ArrowDown", "selector": "input.cmdline__input" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.cmdline.history-backsearch",
+      "feature": "console",
+      "label": "Command line ▸ Ctrl+ArrowUp prefix back-search",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Ctrl+ArrowUp scans history backwards for the first entry sharing the typed prefix. Result lands in the input value; only handler safety is objectively verifiable.",
+      "setup": [
+        { "do": "type", "selector": "input.cmdline__input", "text": "zoom" },
+        { "do": "press", "key": "Enter", "selector": "input.cmdline__input" },
+        { "do": "type", "selector": "input.cmdline__input", "text": "zo" }
+      ],
+      "trigger": [{ "do": "press", "key": "Control+ArrowUp", "selector": "input.cmdline__input" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.cmdline.ctrl-chord",
+      "feature": "console",
+      "label": "Command line ▸ Ctrl+<letter> chord to cmd._ctrl",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "A non-browser-claimed Ctrl chord (e.g. Ctrl+B) is forwarded to cmd._ctrl('B') so set_key bindings fire from the focused prompt. The call is a no-op unless a binding exists; handler must not throw.",
+      "setup": [],
+      "trigger": [{ "do": "press", "key": "Control+b", "selector": "input.cmdline__input" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.cmdline.ctrlshift-chord",
+      "feature": "console",
+      "label": "Command line ▸ Ctrl+Shift+<letter> chord to cmd._ctsh",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Ctrl+Shift+B is forwarded to cmd._ctsh('B'). Verified error-free.",
+      "setup": [],
+      "trigger": [{ "do": "press", "key": "Control+Shift+B", "selector": "input.cmdline__input" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.cmdline.alt-chord",
+      "feature": "console",
+      "label": "Command line ▸ Alt+<letter> chord to cmd._alt",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Alt+B (no ctrl) is forwarded to cmd._alt('B'). Verified error-free.",
+      "setup": [],
+      "trigger": [{ "do": "press", "key": "Alt+b", "selector": "input.cmdline__input" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.cmdline.browser-chord-passthrough",
+      "feature": "console",
+      "label": "Command line ▸ Ctrl+C left to the browser",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Ctrl+C/X/V/A/R/W/T/N/P/F are intentionally NOT forwarded to cmd._ctrl so the browser keeps copy/paste/etc. Pressing Ctrl+C must not raise an error or hijack the copy.",
+      "setup": [],
+      "trigger": [{ "do": "press", "key": "Control+c", "selector": "input.cmdline__input" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.cmdline.drop-file",
+      "feature": "console",
+      "label": "Command line ▸ drop a file (upload + insert path)",
+      "kind": "drag",
+      "requires": ["file-service"],
+      "note": "Dropping an OS file uploads it via the files API and inserts the server path at the cursor. Needs the file service; also the audit DSL cannot synthesise an HTML5 file drop, so this is recorded BLOCKED.",
+      "setup": [],
+      "trigger": [{ "do": "hover", "selector": "input.cmdline__input" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.cmdline.drag-preview",
+      "feature": "console",
+      "label": "Command line ▸ drag-enter text preview",
+      "kind": "drag",
+      "requires": [],
+      "note": "dragenter inserts and selects the dragged text at the cursor before drop (dragMove is a deliberate no-op). The HTML5 drag data store is protected during dragenter and the audit DSL has no drag primitive, so the preview cannot be driven deterministically; recorded for completeness.",
+      "setup": [],
+      "trigger": [{ "do": "hover", "selector": "input.cmdline__input" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+
+    {
+      "id": "console.quick.reset",
+      "feature": "console",
+      "label": "Quick buttons ▸ Reset",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.reset — restores the default view; the viewport should change.",
+      "setup": [{ "do": "cmd", "text": "turn y, 30" }],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 0 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.zoom",
+      "feature": "console",
+      "label": "Quick buttons ▸ Zoom",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.zoom(animate=1.0) — animates the camera to fit; viewport changes.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 1 }],
+      "settleMs": 1500,
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.orient",
+      "feature": "console",
+      "label": "Quick buttons ▸ Orient",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.orient(animate=1.0) — aligns to principal axes; viewport changes.",
+      "setup": [{ "do": "cmd", "text": "turn x, 40" }],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 2 }],
+      "settleMs": 1500,
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.drawray",
+      "feature": "console",
+      "label": "Quick buttons ▸ Draw/Ray",
+      "kind": "button",
+      "requires": [],
+      "note": "WidgetMenu wrapping render_dialog. If features/render has registered the render_dialog hook it opens the form; otherwise it appends a warning explaining the missing open seam. Either way the DOM must react.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 3 }],
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.unpick",
+      "feature": "console",
+      "label": "Quick buttons ▸ Unpick",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.unpick — clears the editor pick; command echoes to the console.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 4 }],
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.deselect",
+      "feature": "console",
+      "label": "Quick buttons ▸ Deselect",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.deselect — drops the active selection; command echoes to the console.",
+      "setup": [{ "do": "cmd", "text": "select bb, name CA" }],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 5 }],
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.rock",
+      "feature": "console",
+      "label": "Quick buttons ▸ Rock",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.rock — toggles the rocking animation; command echoes to the console.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 6 }],
+      "settleMs": 800,
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.getview",
+      "feature": "console",
+      "label": "Quick buttons ▸ Get View",
+      "kind": "button",
+      "requires": [],
+      "note": "Runs get_view 2, quiet=0, then copies get_view(3) to the clipboard, appending a confirmation or (headless) a clipboard-warning line. Either outcome adds feedback text.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 7 }],
+      "settleMs": 600,
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "feedbackMatches", "pattern": "get_view" }
+      ]
+    },
+    {
+      "id": "console.quick.rewind",
+      "feature": "console",
+      "label": "Quick buttons ▸ |< (rewind)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.rewind — movie transport to frame 1; command echoes to the console.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 8 }],
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.backward",
+      "feature": "console",
+      "label": "Quick buttons ▸ < (backward)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.backward — step one movie frame back; command echoes to the console.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 9 }],
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.mstop",
+      "feature": "console",
+      "label": "Quick buttons ▸ Stop (mstop)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mstop — stop movie playback; command echoes to the console.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 10 }],
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.mplay",
+      "feature": "console",
+      "label": "Quick buttons ▸ Play (mplay)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mplay — start movie playback; command echoes to the console.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 11 }],
+      "settleMs": 600,
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.forward",
+      "feature": "console",
+      "label": "Quick buttons ▸ > (forward)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.forward — step one movie frame forward; command echoes to the console.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 12 }],
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.ending",
+      "feature": "console",
+      "label": "Quick buttons ▸ >| (ending)",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.ending — jump to the last movie frame; command echoes to the console.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 13 }],
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.mclear",
+      "feature": "console",
+      "label": "Quick buttons ▸ MClear",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.mclear — clear the movie cache; command echoes to the console.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 14 }],
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.builder",
+      "feature": "console",
+      "label": "Quick buttons ▸ Builder",
+      "kind": "button",
+      "requires": [],
+      "note": "Lazily imports features/builder and opens the builder dock via openPanel; the DOM should change as the panel mounts.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 15 }],
+      "settleMs": 800,
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.properties",
+      "feature": "console",
+      "label": "Quick buttons ▸ Properties",
+      "kind": "button",
+      "requires": [],
+      "note": "Lazily imports features/dialogs and opens the properties dialog via openPanel; the DOM should change as the dialog mounts.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 16 }],
+      "settleMs": 800,
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.rebuild",
+      "feature": "console",
+      "label": "Quick buttons ▸ Rebuild",
+      "kind": "button",
+      "requires": [],
+      "note": "cmd.rebuild — regenerate all geometry; command echoes and the scene re-renders.",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbuttons__row button", "nth": 17 }],
+      "settleMs": 700,
+      "checks": [{ "expect": "domChanged" }]
+    },
+    {
+      "id": "console.quick.abort",
+      "feature": "console",
+      "label": "Quick buttons ▸ Abort (progress row)",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "The progress bar + red Abort button render only while cmd.get_progress() >= 0, which is driven by the bridge's 10 Hz status thread. In local mode progress stays -1, so the row never mounts; requires a bridge to exercise. Abort calls cmd.interrupt (asynchronous, lock-free).",
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": ".quickbutton--abort" }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".quickbutton--abort" }]
+    },
+    {
+      "id": "console.busy.overlay",
+      "feature": "console",
+      "label": "Viewport busy overlay (OrthoBusyDraw)",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "The in-viewport 240x60 busy box [data-testid=ortho-busy] shows only while cmd.get_progress() >= 0 and show_progress != 0. Progress is pushed by the bridge status thread; unreachable in local mode.",
+      "setup": [],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-testid=\"ortho-busy\"]" }]
+    },
+
+    {
+      "id": "console.feedback.focus-proxy",
+      "feature": "console",
+      "label": "Output pane ▸ click focuses the command line",
+      "kind": "other",
+      "requires": [],
+      "note": "The focus proxy: clicking the output pane with no text selected focuses input#command_line. Focus is not one of the objective checks, so only handler safety is verified.",
+      "setup": [{ "do": "cmd", "text": "count_atoms" }],
+      "trigger": [{ "do": "click", "selector": ".feedback" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.feedback.show-earlier",
+      "feature": "console",
+      "label": "Output pane ▸ show N earlier lines",
+      "kind": "button",
+      "requires": [],
+      "note": "The windowing affordance .feedback__more-btn lifts the 1200-line render window. It only appears once more than 1200 feedback lines exist; that volume is not reachable deterministically in the audit, so this is recorded for completeness.",
+      "setup": [],
+      "trigger": [{ "do": "wait", "ms": 100 }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+
+    {
+      "id": "console.ortho.insert",
+      "feature": "console",
+      "label": "In-viewport console ▸ type a printable char",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "A printable key maps to insertChar on the ortho input line. Whether the char is drawn depends on the ortho text/internal_feedback/overlay settings polled from the engine; the handler running without a page error is what is objectively verified.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "a", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.backspace",
+      "feature": "console",
+      "label": "In-viewport console ▸ Backspace",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Backspace maps to the backspace edit on the ortho line (OrthoKey case 8). Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "press", "key": "a", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Backspace", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.submit",
+      "feature": "console",
+      "label": "In-viewport console ▸ Enter submits the line",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Enter with text runs the line through session.run (OrthoParseCurrentLine). Verified error-free; line contents are the local engine's echo.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "press", "key": "z", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Enter", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.escape",
+      "feature": "console",
+      "label": "In-viewport console ▸ Escape toggles text/overlay",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Escape dismisses the splash, else toggles the text setting (Shift+Esc toggles overlay), else _quit in presentation mode. Here it flips text via cmd.set. Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Escape", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.history",
+      "feature": "console",
+      "label": "In-viewport console ▸ Up/Down history",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "ArrowUp/ArrowDown recall ortho command history (grabbed unconditionally). Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "ArrowUp", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.home-end",
+      "feature": "console",
+      "label": "In-viewport console ▸ Ctrl+A / Ctrl+E cursor",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "With text grabbed, Ctrl+A is home and Ctrl+E is end of the ortho line; otherwise they fall through to cmd._ctrl chords. Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "press", "key": "h", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Control+a", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.truncate",
+      "feature": "console",
+      "label": "In-viewport console ▸ Ctrl+K truncate",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Ctrl+K truncates the ortho line at the cursor when text is grabbed, else forwards cmd._ctrl('K'). Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "press", "key": "h", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Control+k", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.delete",
+      "feature": "console",
+      "label": "In-viewport console ▸ Delete / Ctrl+D",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Delete removes the char under the cursor, or maps to the Ctrl+D chord / completion-print on an empty or hidden line. Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Delete", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.tab-complete",
+      "feature": "console",
+      "label": "In-viewport console ▸ Tab completion",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Tab maps to complete (cmd._parser.complete) on the ortho line. Completion needs PyMOL's parser; only handler safety is objectively verified.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "press", "key": "c", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Tab", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.paste",
+      "feature": "console",
+      "label": "In-viewport console ▸ Ctrl+V paste",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Ctrl+V with text on the line keeps its default action so the browser paste event inserts the clipboard text; the keydown deliberately does not preventDefault. Verified error-free (no clipboard content is injected by the driver).",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "press", "key": "x", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Control+v", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.space-special",
+      "feature": "console",
+      "label": "In-viewport console ▸ Space (movie toggle on empty line)",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Space on an empty, ungrabbed line runs mtoggle (or 'scene , next' in presentation, 'rewind;mplay' with Shift); otherwise it inserts a space. Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Space", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.ctrl-chord",
+      "feature": "console",
+      "label": "In-viewport console ▸ Ctrl+<letter> chord",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "An unclaimed Ctrl chord (e.g. Ctrl+B) forwards cmd._ctrl('B'). Unlike the dock command line, the ortho console does not exempt browser chords. Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Control+b", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.alt-chord",
+      "feature": "console",
+      "label": "In-viewport console ▸ Alt+<letter> chord",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Alt+B with no printable composition forwards cmd._alt('B'); a composed printable char inserts instead. Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Alt+b", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.ctsh-chord",
+      "feature": "console",
+      "label": "In-viewport console ▸ Ctrl+Shift+<letter> chord",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Ctrl+Shift+B forwards cmd._ctsh('B'). Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "Control+Shift+B", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.arrows-cursor",
+      "feature": "console",
+      "label": "In-viewport console ▸ Left/Right cursor",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "ArrowLeft/ArrowRight move the ortho cursor only while arrows are grabbed (text entered AND visible); ungrabbed they fall through to the scene/movie bindings and this component returns 'none'. Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "press", "key": "w", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "press", "key": "ArrowLeft", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.click-focus",
+      "feature": "console",
+      "label": "In-viewport console ▸ click dismisses splash/auto-overlay",
+      "kind": "other",
+      "requires": [],
+      "note": "onMouseDown on the ortho band calls removeSplash + removeAutoOverlay (OrthoButton) and focuses it for key capture. Verified error-free.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 5 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"ortho-console\"]" }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.ortho.paste-event",
+      "feature": "console",
+      "label": "In-viewport console ▸ browser paste event inserts text",
+      "kind": "other",
+      "requires": [],
+      "note": "The onPaste handler inserts clipboardData text (newlines to spaces) into the ortho line. The audit DSL cannot dispatch a synthetic clipboard paste, so this is recorded for completeness; handler safety only.",
+      "setup": [
+        { "do": "click", "selector": ".console__bar-btn", "nth": 0 },
+        { "do": "waitFor", "selector": "[data-testid=\"ortho-console\"]" },
+        { "do": "click", "selector": "[data-testid=\"ortho-console\"]" }
+      ],
+      "trigger": [{ "do": "wait", "ms": 100 }],
+      "checks": [{ "expect": "noConsoleError" }]
+    },
+    {
+      "id": "console.loop.marquee",
+      "feature": "console",
+      "label": "Viewport ▸ rubber-band selection rectangle",
+      "kind": "drag",
+      "requires": ["picking"],
+      "note": "OrthoLoopRect draws a CSS box [data-testid=ortho-loop] during a viewport pointer drag whose ButMode slot is a box-select/zoom action; the selection itself is made in the C by ExecutiveSelectRect. Needs a real pointer drag on the canvas (no drag primitive in the audit DSL) and backend picking, so it is recorded BLOCKED.",
+      "setup": [],
+      "trigger": [{ "do": "wait", "ms": 100 }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-testid=\"ortho-loop\"]" }]
+    }
+  ]
+}

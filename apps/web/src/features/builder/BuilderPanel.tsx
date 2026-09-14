@@ -37,7 +37,7 @@ import type {
   BuilderTables,
 } from '@tenmol/protocol/topics/builder';
 import { registerPickRoute } from './viewportPicking';
-import { errorText, useSession } from '../../app';
+import { errorText, isLocal, useSession } from '../../app';
 import { Button, IconButton, Checkbox, Select, FloatingWindow } from '../../ui';
 import { createBuilderController, pickHint } from './controller';
 import {
@@ -88,8 +88,16 @@ export function BuilderPanel() {
     [session],
   );
 
+  // The browser-only engine's `editor.attach_fragment` ships only amino-acid
+  // fragments; the Chemical fragments (benzene, indane, …) and the Nucleic-Acid
+  // `fab` mode are not ported, so clicking those tabs' buttons throws
+  // "unknown fragment" / "not supported". Offer only the tabs that work when
+  // local (Protein), and keep all three over the bridge.
+  const local = isLocal(session);
+  const tabs: Tab[] = local ? ['Protein'] : ['Chemical', 'Protein', 'Nucleic Acid'];
+
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<Tab>('Chemical');
+  const [tab, setTab] = useState<Tab>(local ? 'Protein' : 'Chemical');
   const [nucTab, setNucTab] = useState<NucTab>('DNA');
   const [ssIndex, setSsIndex] = useState(0);
   const [state, setState] = useState<BuilderState | null>(null);
@@ -393,7 +401,7 @@ export function BuilderPanel() {
         />
 
         <div className="builder__tabs" role="tablist">
-          {(['Chemical', 'Protein', 'Nucleic Acid'] as Tab[]).map((name) => (
+          {tabs.map((name) => (
             <Button
               type="button"
               role="tab"

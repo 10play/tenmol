@@ -1,0 +1,89 @@
+{
+  "name": "implement-browser-io",
+  "description": "Bucket B of docs/audit/impossible.md: rework File-menu affordances to browser-native forms (bypass cmd.tenmol_files; call the engine directly and download). Tasks added/verified one at a time so each postcondition matches the code actually written.",
+  "tasks": [
+    {
+      "id": "I0.download-helper",
+      "title": "Shared browser blob-download helper (download.ts) + test",
+      "instructions": "New apps/web/src/features/files/download.ts exporting downloadBlob/downloadBytes/downloadText (createObjectURL -> <a download> -> click -> revoke). Verified by download.dom.test.ts.",
+      "postcondition": {
+        "fileContains": [
+          { "path": "apps/web/src/features/files/download.ts", "pattern": "export function downloadBytes" },
+          { "path": "apps/web/src/features/files/download.ts", "pattern": "export function downloadBlob" }
+        ]
+      },
+      "verify": ["postcondition"],
+      "verifyCmds": [
+        { "gate": "test:download", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/download.dom.test.ts"] }
+      ],
+      "deps": []
+    },
+    {
+      "id": "I1.open-picker",
+      "title": "File > Open... becomes a browser file picker that loads file CONTENTS via the engine (no cmd.tenmol_files.*)",
+      "instructions": "Rewrite FilesPanel.fileOpen and FileDropTarget.uploadAndLoad to open a real <input type=file>, read await file.text(), and load the contents through session.act cmd.load(content, name, 0, '') (blank format => engine sniffs). Preserve the engine-independent .pwg/refusal guard (globalDrop.refusalFor + new browserClassification). No ensure()/pick/api.upload/plan_open. The traj/map/mtz/mae/.pse modal + presentation pipeline (runStep/loadPlain/enterPresentation) is untouched and still reached via Open Recent / deep link (requestFilesOpen -> openPaths).",
+      "postcondition": {
+        "fileContains": [
+          { "path": "apps/web/src/features/files/FilesPanel.tsx", "pattern": "// browser-open: load file contents" },
+          { "path": "apps/web/src/features/files/globalDrop.ts", "pattern": "export function browserClassification" },
+          { "path": "apps/web/src/features/files/globalDrop.ts", "pattern": "export function objectNameForFile" }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        { "gate": "test:browser-open", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/wfBrowserOpen.dom.test.tsx"] },
+        { "gate": "test:files-regress", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files", "apps/web/src/features/menubar"] }
+      ],
+      "deps": ["I0.download-helper"]
+    },
+    {
+      "id": "I2.save-session",
+      "title": "File > Save Session / Save Session As... (and the Ctrl+S twin) serialize cmd.get_session and download it (no cmd.tenmol_files.*, no `save <path>`)",
+      "instructions": "Rewrite FilesPanel.sessionSaveAs and both the session-save/session-save-as menu items, plus the Ctrl+S branch in FileDropTarget, to obtain the snapshot with `await session.call('cmd.get_session')` and save it via `downloadText(name, JSON.stringify(snap), 'application/octet-stream')`. Filename comes from window.prompt defaulting to .pse (the engine reload path keys off .pse/.psw). Drop ensure/setInitialdir/recentAdd/PathPicker/api.sessionFile and never `save <path>` (writes to disk + THROWS in the browser). Works over the remote bridge too, so unconditional.",
+      "postcondition": {
+        "fileContains": [
+          { "path": "apps/web/src/features/files/FilesPanel.tsx", "pattern": "// browser-save: get_session download" },
+          { "path": "apps/web/src/features/files/FileDropTarget.tsx", "pattern": "// browser-save: get_session download" }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        { "gate": "test:save-session", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/wfSaveSession.dom.test.tsx"] },
+        { "gate": "test:files-regress", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files", "apps/web/src/features/menubar"] }
+      ],
+      "deps": ["I1.open-picker"]
+    },
+    {
+      "id": "I3.export-molecule",
+      "title": "File > Export Molecule... seeds the dialog from cmd.get_names and downloads cmd.get_str output (single-file only; multi-file OUT OF SCOPE)",
+      "instructions": "Keep the ExportMoleculeDialog UI but seed its SaveMoleculeInfo from `session.call('cmd.get_names', ['objects'|'public_selections'])` + static setting defaults (no bridge save_molecule_info). On save keep the five pre-save `set` writes as session.run('set …'), pick the format from the chosen filter/extension (pdb/cif/mol/sdf/mol2/xyz/fasta), `const text = await session.call('cmd.get_str', [format, selection, state])`, then `downloadText(`${name}.${ext}`, text)` with a window.prompt name. Drop saveCheck/recentAdd/PathPicker/api.saveMoleculeInfo/api.multiFileNames. Multi-file (multisave/multifilesave) and Export Map/Alignment stay OUT OF SCOPE (bridge-bound or gracefully refused).",
+      "postcondition": {
+        "fileContains": [
+          { "path": "apps/web/src/features/files/FilesPanel.tsx", "pattern": "// browser-export: get_str download" }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        { "gate": "test:export-molecule", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/wfExportMolecule.dom.test.tsx"] },
+        { "gate": "test:files-regress", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files", "apps/web/src/features/menubar"] }
+      ],
+      "deps": ["I2.save-session"]
+    },
+    {
+      "id": "I4.export-png",
+      "title": "File > Export Image As > PNG... (and the Draw/Ray Save Image to File path) run cmd.png for the bytes and download them (no `png <path>`, no cmd.tenmol_files.*)",
+      "instructions": "Keep the PngDialog UI. On save, run the pre-render setup lines from pngCommands (draw 0,0 / set opaque_background,…) EXCEPT the trailing `png <path>` (a browser no-op), then obtain the bytes with `const bytes = await session.call('cmd.png', ['', 0, 0, -1], { ray })` (ray flag from the dialog's rendering choice, mirroring RenderDialog.tsx:159) and `downloadBytes(name, Uint8Array.from(bytes), 'image/png')` behind a window.prompt (append .png). Apply the same to the Draw/Ray RenderPanel Save Image to File path, which used `png <path>, dpi, prior=1` — read it back with cmd.png prior=1/dpi and download. Drop ensure/setInitialdir/PathPicker/recentAdd. RenderDialog.tsx (features/render) already keeps its server-side cmd.png save deliberately (local desktop full-fs) and is out of files/ scope.",
+      "postcondition": {
+        "fileContains": [
+          { "path": "apps/web/src/features/files/FilesPanel.tsx", "pattern": "// browser-png: cmd.png download" }
+        ]
+      },
+      "verify": ["postcondition", "build"],
+      "verifyCmds": [
+        { "gate": "test:export-png", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files/wfExportPng.dom.test.tsx"] },
+        { "gate": "test:files-regress", "cmd": ["pnpm", "-s", "exec", "vitest", "run", "apps/web/src/features/files"] }
+      ],
+      "deps": ["I3.export-molecule"]
+    }
+  ]
+}

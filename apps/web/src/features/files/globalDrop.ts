@@ -21,7 +21,7 @@
  * directly.
  */
 
-import type { FileClassification } from '@tenmol/protocol/topics/files';
+import type { FileClassification, LoadDialogKind } from '@tenmol/protocol/topics/files';
 
 /** What a drop resolved to, before anything is sent to PyMOL. */
 export type DropPlan =
@@ -101,6 +101,134 @@ export function refusalFor(
 }
 
 /**
+ * The client-side refusal set, keyed by extension — the browser-only twin of
+ * the bridge's `panels/files.py::REFUSED_FORMATS`.
+ *
+ * The browser Open… / drop paths load file CONTENTS through the engine and
+ * never call `cmd.tenmol_files.classify`, so nothing populates a
+ * `FileClassification.refused` for them. They recognise the one refused format
+ * from the file's own name instead. Today that is `.pwg`; the message mirrors
+ * `panels/files.py::PWG_REFUSAL` verbatim so the console line is identical on
+ * both paths.
+ */
+const CLIENT_REFUSED_FORMATS: Record<string, string> = {
+  pwg:
+    "'.pwg' is refused by the web client. A .pwg file is a script that can open " +
+    'a listening port, add HTTP headers, publish a document root, import and ' +
+    'run an arbitrary Python module, launch a web browser, report the port to a ' +
+    'remote URL, delete itself, and start a second HTTP server inside this ' +
+    'process (packages/engine/modules/pymol/importing.py:516-615). Run it from a desktop PyMOL ' +
+    'if you trust it.',
+};
+
+/**
+ * Extension → the load-dialog branch `classify_filename` would route it to
+ * (`panels/files.py::classify_filename`, mirroring `file_dialogs.py:33-77`).
+ *
+ * The browser Open… / drop paths never call `cmd.tenmol_files.classify`, so
+ * they cannot ask the bridge which modal a file needs. This is the client-side
+ * twin of that dispatch, keyed by extension: every entry here is a format whose
+ * loader wants OPTIONS (traj/map/mtz/aln/mae) or a session decision
+ * (pse/psw) — none of which the content-only `file.text()` + `cmd.load` path
+ * can supply, and most of which are BINARY (mtz/ccp4/dsn6/dcd/mae) that
+ * UTF-8-decoding would silently corrupt. Anything not listed classifies as
+ * `plain` (a single-molecule text format the engine can sniff) or `script`.
+ */
+const EXT_TO_DIALOG: Record<string, LoadDialogKind> = {
+  // trajectory (`file_dialogs.py:46` tests the last four characters)
+  dcd: 'traj',
+  dtr: 'traj',
+  xtc: 'traj',
+  trr: 'traj',
+  // alignment
+  aln: 'aln',
+  fasta: 'aln',
+  fa: 'aln',
+  // Maestro (also `unavailable` — the loader raises in this build)
+  mae: 'mae',
+  // volumetric maps (`ccp4`/`map`, and `brix`/`dsn6`/`o` via the 'o' branch)
+  ccp4: 'map',
+  map: 'map',
+  mrc: 'map',
+  dx: 'map',
+  brix: 'map',
+  omap: 'map',
+  dsn6: 'map',
+  o: 'map',
+  // reflection data
+  mtz: 'mtz',
+  // sessions
+  pse: 'session',
+  psw: 'session',
+  // scripts — no modal, but not a molecule to text-decode either
+  pml: 'script',
+  py: 'script',
+  pym: 'script',
+};
+
+/**
+ * The `dialog` branch a browser File would take, derived from its name with no
+ * `classify` RPC — the client-side twin of `cmd.tenmol_files.classify` so
+ * {@link dialogNeededFor} can gate a browser open exactly as it gates a
+ * classified server open. Unknown/plain-text formats return `dialog: 'plain'`.
+ */
+export function classify(name: string): Pick<FileClassification, 'dialog'> {
+  const base = name.replace(/^.*[/\\]/, '').replace(/\.(gz|bz2)$/i, '');
+  const ext = (/\.([a-z0-9]+)$/i.exec(base)?.[1] ?? '').toLowerCase();
+  return { dialog: EXT_TO_DIALOG[ext] ?? 'plain' };
+}
+
+/**
+ * The `refused`/`unavailable` fields for a browser File, derived from its name
+ * with no `classify` RPC, so {@link refusalFor} can gate a browser open exactly
+ * as it gates a classified server open.
+ */
+export function browserClassification(
+  name: string,
+): Pick<FileClassification, 'refused' | 'unavailable'> {
+  const base = name.replace(/^.*[/\\]/, '').replace(/\.(gz|bz2)$/i, '');
+  const ext = (/\.([a-z0-9]+)$/i.exec(base)?.[1] ?? '').toLowerCase();
+  return { refused: CLIENT_REFUSED_FORMATS[ext] ?? null, unavailable: null };
+}
+
+/**
+ * Object name for a browser-opened File: basename minus one extension (and a
+ * `.gz`/`.bz2` wrapper), with the characters PyMOL disallows in object names
+ * mapped to `_`. Mirrors the engine's `filenameToObjectname` (`fileio.ts`) so a
+ * browser open names its object the same way a path load would.
+ */
+export function objectNameForFile(name: string): string {
+  let base = name.replace(/^.*[/\\]/, '');
+  const zip = /\.(gz|bz2)$/i.exec(base);
+  if (zip) base = base.slice(0, -zip[0].length);
+  const dot = base.lastIndexOf('.');
+  return (dot > 0 ? base.slice(0, dot) : base).replace(/[\s'"();:]/g, '_');
+}
+
+/** Extension → PyMOL `load_raw` format string for the plain molecule formats. */
+const LOAD_FORMAT_BY_EXT: Readonly<Record<string, string>> = {
+  pdb: 'pdb', ent: 'pdb', pdb1: 'pdb', pqr: 'pqr', pdbqt: 'pdbqt',
+  cif: 'cif', mmcif: 'cif', mcif: 'cif',
+  mol: 'mol', sdf: 'sdf', mol2: 'mol2', xyz: 'xyz',
+};
+
+/**
+ * The PyMOL `load_raw` FORMAT for a browser-opened file, from its extension.
+ *
+ * A browser open has file CONTENTS, not a path. `cmd.load_raw(content, format,
+ * object)` is the one content-loader BOTH backends implement (engine-ts
+ * `fileio.ts`; real PyMOL `importing.py`), so it works over the bridge too —
+ * unlike `cmd.load`, whose first argument is a filesystem PATH in real PyMOL
+ * (it silently fails to load raw content there). Unknown extensions fall back to
+ * the bare extension as the format (best effort).
+ */
+export function loadFormatForFile(name: string): string {
+  const base = name.replace(/^.*[/\\]/, '').replace(/\.(gz|bz2)$/i, '');
+  const ext = (/\.([a-z0-9]+)$/i.exec(base)?.[1] ?? '').toLowerCase();
+  return LOAD_FORMAT_BY_EXT[ext] ?? ext;
+}
+
+/**
  * The console line for a drop that cannot be completed here.
  *
  * Named rather than generic: "this needs the trajectory dialog" tells the user
@@ -111,6 +239,24 @@ export function dialogRequiredMessage(name: string, dialog: string): string {
   return (
     ` ${name} needs the ${dialog} dialog — open File dialogs and use Open…, ` +
     'which asks for the options this format requires.'
+  );
+}
+
+/**
+ * The console line for a script file (`.pml`/`.py`/`.pym`) opened or dropped in
+ * the browser.
+ *
+ * `classify` routes scripts to `dialog: 'script'`, which `dialogNeededFor`
+ * deliberately excludes from the modal set — a desktop open would `cd` and RUN
+ * them. This build cannot execute a script, and handing one to `cmd.load` with
+ * a blank format only throws "could not determine the structure format". So the
+ * browser open/drop paths turn a script away with this, rather than attempting
+ * either.
+ */
+export function scriptUnsupportedMessage(name: string): string {
+  return (
+    ` ${name} is a script — running scripts is not supported in the browser ` +
+    'build. Run it from a desktop PyMOL instead.'
   );
 }
 

@@ -1513,7 +1513,13 @@ export class Engine {
       pos.push(a);
     }
 
-    let key = str(pos[0] ?? kw['key'], 'auto') || 'auto';
+    // D3.scene-blank: an EXPLICIT empty-string key must survive as '' — only an
+    // ABSENT key defaults to 'auto'. The old `|| 'auto'` coerced `scene('',
+    // 'recall')` (the panel's Blank button) into 'auto', which the canonicaliser
+    // below then turned into 'next', wrongly raising "No scenes". PyMOL's
+    // viewing.scene only rewrites the literal 'auto' default, never ''.
+    const rawKey = pos[0] ?? kw['key'];
+    let key = rawKey === undefined || rawKey === null ? 'auto' : str(rawKey);
     let action = (str(pos[1] ?? kw['action'], 'recall') || 'recall').toLowerCase();
     const rawMsg = pos[2] ?? kw['message'];
     const message = rawMsg === undefined || rawMsg === null ? '' : str(rawMsg);
@@ -1550,7 +1556,11 @@ export class Engine {
       case 'recall': {
         if (key === '*') break; // print-order only; no state change
         if (!key) {
-          // empty key -> blank the current scene name (blank-screen recall)
+          // D3.scene-blank: empty-key recall == MovieScene.cpp:794-806. Blank the
+          // screen (`ExecutiveSetObjVisib(G,"*",false,false)` — disable every
+          // object) and clear the on-screen scene message + current name, WITHOUT
+          // raising "No scenes" (that path is only for next/previous/start).
+          this.call('disable', ['*']);
           this.setSceneCurrentName('');
         } else if (!this.sceneRecall(key, storeView)) {
           throw this.sceneError(`Scene ${key} is not defined.`);

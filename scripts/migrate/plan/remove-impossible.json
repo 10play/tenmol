@@ -1,0 +1,41 @@
+{
+  "name": "remove-impossible",
+  "description": "Remove browser-impossible affordances (bucket A of docs/audit/impossible.md) from the shipped React UI. Backend code in packages/bridge + packages/engine is intentionally kept.",
+  "tasks": [
+    {
+      "id": "R1.apbs-feature",
+      "title": "Remove the APBS UI feature: panel, registry launcher icon, and every reference",
+      "instructions": "Delete apps/web/src/features/apbs/ entirely (panel + register + tests). Remove `apbs: Zap` from LAUNCHER_ICONS and the now-unused `Zap` import in apps/web/src/shell/OverlayLauncher.tsx. Remove any other apps/web reference to ApbsPanel / features/apbs (e.g. AppShell.tsx). The frozen slot in features/registry.ts STAYS (it renders nothing when not installed). Do NOT touch packages/bridge or packages/engine.",
+      "postcondition": {
+        "pathAbsent": ["apps/web/src/features/apbs"],
+        "grepAbsent": [
+          { "pattern": "ApbsPanel" },
+          { "pattern": "apbs: Zap" },
+          { "pattern": "features/apbs" }
+        ]
+      },
+      "verify": ["postcondition", "typecheck", "build"],
+      "deps": []
+    },
+    {
+      "id": "R2.menu-leaves",
+      "title": "Remove impossible menu leaves from menuData.ts",
+      "instructions": "In apps/web/src/layout/menuData.ts remove these leaves (and any submenu/separator left empty or dangling): APBS Electrostatics (dialog:'apbs'); Install Plugin... (dialog:'plugin-install'); Working Directory > Change... (dialog:'cd') and File Browser (dialog:'file-browser') — remove the whole Working Directory submenu if now empty; Recent files ({kind:'recent'}); Edit pymolrc (dialog:'edit-pymolrc'); Log File > Open/Resume/Append (dialog:'log-open','log-resume','log-append') — remove the whole Log File submenu if now empty. KEEP: Open..., Get PDB..., Save Session/As, Export * (reworked later), and Plugin Manager (read-only viewer).",
+      "postcondition": {
+        "fileAbsentLine": [
+          { "path": "apps/web/src/layout/menuData.ts", "pattern": "dialog: 'apbs'" },
+          { "path": "apps/web/src/layout/menuData.ts", "pattern": "dialog: 'plugin-install'" },
+          { "path": "apps/web/src/layout/menuData.ts", "pattern": "dialog: 'cd'" },
+          { "path": "apps/web/src/layout/menuData.ts", "pattern": "dialog: 'file-browser'" },
+          { "path": "apps/web/src/layout/menuData.ts", "pattern": "{ kind: 'recent' }," },
+          { "path": "apps/web/src/layout/menuData.ts", "pattern": "dialog: 'edit-pymolrc'" },
+          { "path": "apps/web/src/layout/menuData.ts", "pattern": "dialog: 'log-open'" },
+          { "path": "apps/web/src/layout/menuData.ts", "pattern": "dialog: 'log-resume'" },
+          { "path": "apps/web/src/layout/menuData.ts", "pattern": "dialog: 'log-append'" }
+        ]
+      },
+      "verify": ["postcondition", "typecheck", "build"],
+      "deps": ["R1.apbs-feature"]
+    }
+  ]
+}

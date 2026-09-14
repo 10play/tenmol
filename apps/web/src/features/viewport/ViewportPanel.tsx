@@ -38,6 +38,7 @@ import {
   pullDisabled,
 } from './devFixtures';
 import { createSessionTransport } from './transport';
+import { useViewportBackground } from './viewportBackground';
 import './viewport.css';
 
 /** The reps worth a toggle in v1: everything Mode G can express today. */
@@ -158,6 +159,13 @@ export function ViewportPanel(): React.JSX.Element {
       clearInterval(timer);
     };
   }, [objectNames]);
+
+  // bg_rgb → viewport.setBackground: repaint the live canvas when the background
+  // colour changes (`bg_color white`). The renderer has always had a clear
+  // colour but nothing wired the engine's `bg_rgb` setting to it, so the
+  // interactive viewport stayed black while the ray path went white. See
+  // viewportBackground.ts for the read/resolve/repaint loop.
+  useViewportBackground(session, () => viewportRef.current);
 
   const setMode = useCallback((rep: number, mode: RenderMode) => {
     const viewport = viewportRef.current;

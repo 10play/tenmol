@@ -1,0 +1,753 @@
+{
+  "area": "volume",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "volume.cmd.volume_panel.importerror",
+      "feature": "volume",
+      "label": "Command line: volume_panel <name>",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "The one volume affordance reachable in local mode. cmd.volume_panel is registered by the in-browser engine (packages/engine-ts/src/cmd/extras.ts:802) to raise ImportError: pymol.Qt, exactly as Open-Source PyMOL does, because there is no pymol.Qt. Typing it at the prompt must surface that as feedback and NOT crash the page or open a React window (the browser editor is a separate surface reached via the bridge marker / popup-leaf hook, not this cmd). This proves the command routes to the engine and fails cleanly.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "input.cmdline__input" }],
+      "trigger": [{ "do": "cmd", "text": "volume_panel testvol" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "input.cmdline__input" },
+        { "expect": "feedbackMatches", "pattern": "volume_panel|importerror|qt" },
+        { "expect": "selectorHidden", "selector": ".volpanel" }
+      ],
+      "settleMs": 500
+    },
+
+    {
+      "id": "volume.open.leaf-hook",
+      "feature": "volume",
+      "label": "Popup-menu leaf: A ▸ volume ▸ panel opens the React editor",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "menuBridge.installVolumeMenuBridge registers a global leaf hook so that a PyMOL pop-up row whose command is cmd.volume_panel('name') is claimed client-side and opens the React editor with zero round trip (features/pymol-menu/leafHooks.ts + PopupMenu.tsx dispatchLeaf). BLOCKED locally: the only live pymolMenu producer is the Mouse-Config popup (features/mouse/ButModeBlock.tsx); no viewport-picking popup emits the volume `panel` leaf in local mode, and the object-panel C-menu dispatches via session.run (engine ImportError) rather than dispatchLeaf. Recorded for inventory; needs a picking-driven object popup to drive.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "input.cmdline__input" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item[title^=\"cmd.volume_panel\"]" }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".volpanel" }],
+      "settleMs": 500
+    },
+    {
+      "id": "volume.open.bridge-feedback",
+      "feature": "volume",
+      "label": "Bridge marker TENMOL_VOLUME panel <name> opens the editor",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "The engine-side shim (packages/bridge/tenmol_bridge/panels/volume.py) rebinds cmd.volume_panel to record the request and print one tagged feedback line; menuBridge parses it and calls openVolumeWindow, mounting the overlay slot. This is the route that works from the prompt, a .pml script, a plugin, and the object panel. BLOCKED: requires a running PyMOL bridge; there is no bridge in the local audit stack.",
+      "needsVisual": false,
+      "setup": [{ "do": "waitFor", "selector": "input.cmdline__input" }],
+      "trigger": [{ "do": "cmd", "text": "volume_panel testvol" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".volpanel" },
+        { "expect": "feedbackNotMatches", "pattern": "importerror|cannot|unavailable" }
+      ],
+      "settleMs": 800
+    },
+
+    {
+      "id": "volume.header.preset.dropdown",
+      "feature": "volume",
+      "label": "preset ▸ named-ramp dropdown",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The <select data-volume-preset> offers PyMOL's named volume ramps read live (cmd.tenmol_volume.ramps, else menu.vol_color, else the built-in five). Choosing one calls applyPreset (cmd.volume_color(name, '<ramp>')) then reload(), recolouring the ramp canvas. BLOCKED: the panel only opens under a bridge; the preset list itself is also a live bridge read.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-preset]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-volume-preset]" }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "feedbackNotMatches", "pattern": "error|cannot|unavailable" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "volume.header.reload",
+      "feature": "volume",
+      "label": "Reload button",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "data-volume-reload re-reads the ramp (cmd.volume_color getter), the preset list, and the histogram, and updates the .volpanel__status line. BLOCKED: needs an open panel (bridge) and the histogram/getter bridge calls.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-reload]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-volume-reload]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".volpanel__status" },
+        { "expect": "feedbackNotMatches", "pattern": "error|cannot|unavailable" }
+      ],
+      "settleMs": 600
+    },
+    {
+      "id": "volume.header.preset-source-indicator",
+      "feature": "volume",
+      "label": "preset-source indicator (built-in list / live)",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "data-volume-preset-source shows which of the three tiers answered the named-ramp read (tenmol_volume.ramps | menu.vol_color | constant) with a title tooltip and a data-volume-preset-extra count. A display affordance surfacing otherwise-invisible state. BLOCKED: panel opens only under a bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-preset-source]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-volume-preset-source]" }],
+      "settleMs": 300
+    },
+    {
+      "id": "volume.header.watch-indicator",
+      "feature": "volume",
+      "label": "tracking / untracked indicator",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "data-volume-watch reports whether the engine is delivering volume_ramp_changed events for this object (cmd.tenmol_volume.watch) and how many outside reloads have arrived (data-volume-remote). BLOCKED: the subscription and the panel both require a bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-watch]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-volume-watch]" }],
+      "settleMs": 300
+    },
+    {
+      "id": "volume.header.stop-count",
+      "feature": "volume",
+      "label": "N stops counter",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "data-volume-count shows the number of ramp points currently loaded and updates as points are added/removed. BLOCKED: panel opens only under a bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-count]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-volume-count]" }],
+      "settleMs": 300
+    },
+
+    {
+      "id": "volume.footer.get-colors-script",
+      "feature": "volume",
+      "label": "Get colors as script button",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "data-volume-script opens a TextDialog whose body is the cmd.volume_ramp_new(...) snippet for the current ramp (ramp.colorsAsScript). BLOCKED: panel opens only under a bridge. Once open the dialog itself is pure client-side.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-script]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-volume-script]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-textdialog]" },
+        { "expect": "feedbackMatches", "pattern": "volume_ramp_new|paste into" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.footer.get-colors-script.close",
+      "feature": "volume",
+      "label": "Close the Get-colors-as-script dialog",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "The script TextDialog's Close button dismisses it (onClose -> modal none). BLOCKED: requires the open panel and dialog.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-script]", "ms": 5000 },
+        { "do": "click", "selector": "[data-volume-script]" },
+        { "do": "waitFor", "selector": "[data-textdialog]" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-textdialog] button" }],
+      "checks": [{ "expect": "selectorHidden", "selector": "[data-textdialog]" }],
+      "settleMs": 300
+    },
+    {
+      "id": "volume.footer.reset-data-range",
+      "feature": "volume",
+      "label": "Reset Data Range button",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "data-volume-reset restores vmin/vmax to the original histogram range and pushes the ramp unconditionally (cmd.volume_color, _guiupdate:0), redrawing the axes. BLOCKED: needs the open panel (bridge).",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-reset]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-volume-reset]" }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "feedbackNotMatches", "pattern": "error|cannot|unavailable" }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "volume.footer.help",
+      "feature": "volume",
+      "label": "Help button",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "data-volume-help opens a TextDialog containing the VOLUME PANEL HELP text (the L/M/R mouse legend). BLOCKED: panel opens only under a bridge; the dialog is client-side once shown.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-help]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-volume-help]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": "[data-textdialog]" },
+        { "expect": "feedbackMatches", "pattern": "VOLUME PANEL HELP|Add point" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.footer.help.close",
+      "feature": "volume",
+      "label": "Close the Help dialog",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "The Help TextDialog's Close button dismisses it. BLOCKED: requires the open panel and dialog.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-help]", "ms": 5000 },
+        { "do": "click", "selector": "[data-volume-help]" },
+        { "do": "waitFor", "selector": "[data-textdialog]" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-textdialog] button" }],
+      "checks": [{ "expect": "selectorHidden", "selector": "[data-textdialog]" }],
+      "settleMs": 300
+    },
+    {
+      "id": "volume.footer.realtime.toggle",
+      "feature": "volume",
+      "label": "Update volume colors in real-time checkbox",
+      "kind": "toggle",
+      "requires": ["remote-backend"],
+      "note": "data-volume-realtime gates whether drags and colour-dialog previews push to the engine live (checked by default). Toggling it flips the checkbox state; add/remove/wheel/release still push regardless. BLOCKED: panel opens only under a bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "[data-volume-realtime]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-volume-realtime]" }],
+      "checks": [
+        { "expect": "domChanged" },
+        { "expect": "selectorVisible", "selector": "[data-volume-realtime]" }
+      ],
+      "settleMs": 300
+    },
+
+    {
+      "id": "volume.canvas.leftclick.add-point",
+      "feature": "volume",
+      "label": "Canvas L-click on empty plot: add a ramp point",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "A plain left-click on empty plot area inserts one colour point (ramp.addPoint), advances the colour cycle, pushes, and bumps the stop counter. BLOCKED: panel opens only under a bridge. Limitation: the driver's click hits the canvas centre; exact plot coordinates are not addressable, so which point lands where is not deterministic.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [
+        { "expect": "screenshotChanged" },
+        { "expect": "domChanged" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.ctrl-leftclick.add-triple",
+      "feature": "volume",
+      "label": "Canvas CTRL+L-click on empty plot: add 3 points (isosurface)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Ctrl+left-click on empty plot inserts the clicked point plus two zero-alpha points at -10/+10 px (isosurface preset). BLOCKED: panel opens only under a bridge. Limitation: the driver cannot issue a modifier-held click at a chosen canvas coordinate; recorded for inventory.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.leftclick.point.colorpicker",
+      "feature": "volume",
+      "label": "Canvas L-click on a point: open colour picker (single)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Left-click on an existing point (no drag) opens the .volpanel__picker colour editor for that one stop. BLOCKED: panel opens only under a bridge. Limitation: hitting a specific point requires its pixel coordinate, which the coordinate-blind driver cannot target.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".volpanel__picker" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.ctrl-leftclick.point.colorpicker-triple",
+      "feature": "volume",
+      "label": "Canvas CTRL+L-click on a point: colour picker (triple)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Ctrl+left-click on a point opens the picker in triple mode (recolours the point and both neighbours; label shows '(+neighbours)'). BLOCKED: panel opens only under a bridge. Limitation: modifier-held click at a point coordinate is not drivable.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "selectorVisible", "selector": ".volpanel__picker" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.rightclick.point.value-prompt",
+      "feature": "volume",
+      "label": "Canvas R-click on a point: edit data value",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Right-click on a point (no modifier or ctrl) opens a NumberPrompt for the point's data value, clamped to its neighbours. BLOCKED: panel opens only under a bridge. Limitation: the driver cannot issue a right-button click at a chosen canvas coordinate.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-numberprompt]" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.shift-rightclick.point.alpha-prompt",
+      "feature": "volume",
+      "label": "Canvas SHIFT+R-click on a point: edit opacity",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Shift+right-click on a point opens a NumberPrompt for the point's alpha (0..1). BLOCKED: panel opens only under a bridge. Limitation: modifier+right-button click at a point coordinate is not drivable.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-numberprompt]" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.middleclick.point.remove",
+      "feature": "volume",
+      "label": "Canvas M-click on a point: remove point",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Middle-click on a point removes it (ramp.removePoints) and pushes. BLOCKED: panel opens only under a bridge. Limitation: middle-button click at a point coordinate is not drivable.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.shift-leftclick.point.remove",
+      "feature": "volume",
+      "label": "Canvas SHIFT+L-click on a point: remove point",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Shift+left-click on a point removes it (alternative to middle-click). BLOCKED: panel opens only under a bridge. Limitation: modifier-held click at a point coordinate is not drivable.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.ctrl-middleclick.point.remove-triple",
+      "feature": "volume",
+      "label": "Canvas CTRL+M-click on a point: remove 3 points",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Ctrl+middle-click removes the point plus its two neighbours (removePoints triple). BLOCKED: panel opens only under a bridge. Limitation: modifier+middle-button click at a point coordinate is not drivable.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.ctrl-shift-leftclick.point.remove-triple",
+      "feature": "volume",
+      "label": "Canvas CTRL+SHIFT+L-click on a point: remove 3 points",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Ctrl+shift+left-click removes the point plus its two neighbours (alternative to ctrl+middle). BLOCKED: panel opens only under a bridge. Limitation: two-modifier click at a point coordinate is not drivable.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.leftdrag.move-point",
+      "feature": "volume",
+      "label": "Canvas L-drag a point: move it (value + alpha)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Left-drag on a point moves it in both axes, clamped to its neighbours, with a live value/alpha tooltip; pushes when real-time is on. BLOCKED: panel opens only under a bridge. Limitation: the driver has no drag primitive across canvas coordinates.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.ctrl-leftdrag.move-triple",
+      "feature": "volume",
+      "label": "Canvas CTRL+L-drag a point: move 3 points (horizontal)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Ctrl+left-drag moves the point and both neighbours together, horizontally only (alpha frozen). BLOCKED: panel opens only under a bridge. Limitation: no modifier-drag primitive on the canvas.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.rightdrag.axis-latch",
+      "feature": "volume",
+      "label": "Canvas R-drag a point: move along one axis only",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Right-drag latches to the axis of the first movement (x if |dx|>|dy| else y) and moves only along it for the rest of the gesture. BLOCKED: panel opens only under a bridge. Limitation: no right-button drag primitive on the canvas.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.ctrl-rightdrag.zoom-band",
+      "feature": "volume",
+      "label": "Canvas CTRL+R-drag on empty plot: zoom in (band)",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Ctrl+right-drag paints a translucent selection band and, on release, sets vmin/vmax to the dragged data range (zoom in). BLOCKED: panel opens only under a bridge. Limitation: no modifier+right-button drag primitive on the canvas.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.wheel.plot.scale-alpha",
+      "feature": "volume",
+      "label": "Canvas wheel over plot: scale every alpha",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "A wheel notch over the plot area scales every point's alpha by (1 - delta) and pushes, regardless of the real-time checkbox (non-passive wheel listener, preventDefault). BLOCKED: panel opens only under a bridge. Limitation: the driver has no wheel primitive.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "hover", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.wheel.vmin-box",
+      "feature": "volume",
+      "label": "Canvas wheel over the vmin box: nudge minimum data value",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "A wheel notch over the painted vmin value box nudges vmin by range*delta (view-only, never pushes). BLOCKED: panel opens only under a bridge. Limitation: no wheel primitive and the box is a painted canvas rect, not a DOM node.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "hover", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.wheel.vmax-box",
+      "feature": "volume",
+      "label": "Canvas wheel over the vmax box: nudge maximum data value",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "A wheel notch over the painted vmax value box nudges vmax by range*delta (view-only, never pushes). BLOCKED: panel opens only under a bridge. Limitation: no wheel primitive and the box is a painted canvas rect.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "hover", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.wheel.amax-box",
+      "feature": "volume",
+      "label": "Canvas wheel over the amax box: nudge maximum alpha",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "A wheel notch over the painted amax value box multiplies amax by (1 + delta), clamped 0..1 (view-only, never pushes), rescaling the alpha axis. BLOCKED: panel opens only under a bridge. Limitation: no wheel primitive and the box is a painted canvas rect.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "hover", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.click.vmin-box.prompt",
+      "feature": "volume",
+      "label": "Canvas L-click the vmin box: Minimum Data Value prompt",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Left-click on the painted vmin value box opens a NumberPrompt titled 'Minimum Data Value' (view-only; never pushes). BLOCKED: panel opens only under a bridge. Limitation: the box is a painted canvas rect at a coordinate the driver cannot target.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-numberprompt]" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.click.vmax-box.prompt",
+      "feature": "volume",
+      "label": "Canvas L-click the vmax box: Maximum Data Value prompt",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Left-click on the painted vmax value box opens a NumberPrompt titled 'Maximum Data Value' (view-only). BLOCKED: panel opens only under a bridge. Limitation: painted canvas rect, coordinate not addressable by the driver.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-numberprompt]" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.click.amax-box.prompt",
+      "feature": "volume",
+      "label": "Canvas L-click the amax box: Maximum Alpha Value prompt",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Left-click on the painted amax value box opens a NumberPrompt titled 'Maximum Alpha Value' (0..1, view-only). BLOCKED: panel opens only under a bridge. Limitation: painted canvas rect, coordinate not addressable by the driver.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-numberprompt]" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.canvas.hover.point.enlarge",
+      "feature": "volume",
+      "label": "Canvas hover a point: enlarge the dot",
+      "kind": "drag",
+      "requires": ["remote-backend"],
+      "note": "Moving the pointer (no button) over a point redraws it at DOT_RADIUS+2 as a hover cue. BLOCKED: panel opens only under a bridge. Limitation: hovering a specific point needs its pixel coordinate; the hover lands at the canvas centre.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "hover", "selector": "canvas[data-volcanvas]" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 300
+    },
+
+    {
+      "id": "volume.picker.color.change-preview",
+      "feature": "volume",
+      "label": "Colour picker: change colour (live preview)",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The .volpanel__picker <input type=color data-volume-color> onChange recolours the point(s) and pushes live when real-time is on. BLOCKED: reaching the picker needs an open panel (bridge) and a point-click that the coordinate-blind driver cannot perform.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 },
+        { "do": "click", "selector": "canvas[data-volcanvas]" },
+        { "do": "waitFor", "selector": "[data-volume-color]" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-volume-color]", "text": "#ff0000" }],
+      "checks": [{ "expect": "screenshotChanged" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.picker.ok",
+      "feature": "volume",
+      "label": "Colour picker: OK",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "data-volume-color-ok pushes the current colour and closes the picker. BLOCKED: reaching the picker needs an open panel (bridge) and a point-click the driver cannot target.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 },
+        { "do": "click", "selector": "canvas[data-volcanvas]" },
+        { "do": "waitFor", "selector": "[data-volume-color-ok]" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-volume-color-ok]" }],
+      "checks": [{ "expect": "selectorHidden", "selector": ".volpanel__picker" }],
+      "settleMs": 400
+    },
+    {
+      "id": "volume.picker.cancel",
+      "feature": "volume",
+      "label": "Colour picker: Cancel",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "data-volume-color-cancel restores the original colour, re-pushes it, and closes the picker. BLOCKED: reaching the picker needs an open panel (bridge) and a point-click the driver cannot target.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 },
+        { "do": "click", "selector": "canvas[data-volcanvas]" },
+        { "do": "waitFor", "selector": "[data-volume-color-cancel]" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-volume-color-cancel]" }],
+      "checks": [{ "expect": "selectorHidden", "selector": ".volpanel__picker" }],
+      "settleMs": 400
+    },
+
+    {
+      "id": "volume.prompt.input.type",
+      "feature": "volume",
+      "label": "Number prompt: type a value",
+      "kind": "input",
+      "requires": ["remote-backend"],
+      "note": "The NumberPrompt .dlgmodal__input accepts a numeric value for a point's value/alpha or a value box. BLOCKED: reaching a prompt needs an open panel (bridge) plus a point/box click the coordinate-blind driver cannot target.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 },
+        { "do": "click", "selector": "canvas[data-volcanvas]" },
+        { "do": "waitFor", "selector": "[data-numberprompt]" }
+      ],
+      "trigger": [{ "do": "type", "selector": "[data-numberprompt] .dlgmodal__input", "text": "3" }],
+      "checks": [{ "expect": "selectorVisible", "selector": "[data-numberprompt]" }],
+      "settleMs": 300
+    },
+    {
+      "id": "volume.prompt.accept",
+      "feature": "volume",
+      "label": "Number prompt: accept",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "The NumberPrompt data-accept button applies the typed value (to the point value/alpha, or the vmin/vmax/amax view box) and closes the modal. BLOCKED: reaching a prompt needs an open panel (bridge) plus a point/box click the driver cannot target.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": "canvas[data-volcanvas]", "ms": 5000 },
+        { "do": "click", "selector": "canvas[data-volcanvas]" },
+        { "do": "waitFor", "selector": "[data-numberprompt]" }
+      ],
+      "trigger": [{ "do": "click", "selector": "[data-numberprompt] [data-accept]" }],
+      "checks": [{ "expect": "selectorHidden", "selector": "[data-numberprompt]" }],
+      "settleMs": 400
+    },
+
+    {
+      "id": "volume.window.title",
+      "feature": "volume",
+      "label": "Editor window title bar",
+      "kind": "other",
+      "requires": ["remote-backend"],
+      "note": "The DialogWindow chrome shows '<name> - Volume Color Map Editor' in .dlgwin__label. BLOCKED: the window mounts only when a volume editor is opened via the bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": ".volpanel", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "wait", "ms": 200 }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".dlgwin__label" },
+        { "expect": "feedbackMatches", "pattern": "Volume Color Map Editor" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "volume.window.minimise",
+      "feature": "volume",
+      "label": "Editor window shade/restore button",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "The DialogWindow title-bar shade button (title='shade'/'restore') collapses and restores the editor body. BLOCKED: the window mounts only via the bridge. Hosting chrome belongs to the dialogs feature; recorded here because it acts on the volume window.",
+      "needsVisual": true,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": ".volpanel", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".dlgwin__title .dlgwin__btn", "nth": 0 }],
+      "checks": [{ "expect": "domChanged" }],
+      "settleMs": 300
+    },
+    {
+      "id": "volume.window.close",
+      "feature": "volume",
+      "label": "Editor window close button",
+      "kind": "button",
+      "requires": ["remote-backend"],
+      "note": "The DialogWindow close button (data-close) closes the volume editor window and unwatches the object (cmd.tenmol_volume.unwatch). BLOCKED: the window mounts only via the bridge.",
+      "needsVisual": false,
+      "setup": [
+        { "do": "cmd", "text": "volume_panel testvol" },
+        { "do": "waitFor", "selector": ".volpanel", "ms": 5000 }
+      ],
+      "trigger": [{ "do": "click", "selector": ".dlgwin__title [data-close]" }],
+      "checks": [{ "expect": "selectorHidden", "selector": ".volpanel" }],
+      "settleMs": 400
+    }
+  ]
+}

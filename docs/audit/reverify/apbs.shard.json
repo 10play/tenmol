@@ -1,0 +1,335 @@
+{
+  "area": "apbs",
+  "caps": [
+    "local-backend",
+    "webgl",
+    "network"
+  ],
+  "specs": [
+    {
+      "id": "apbs.script.apbs-workflow-visible",
+      "feature": "apbs",
+      "label": "APBS workflow recipe block",
+      "kind": "other",
+      "requires": [],
+      "note": "The APBS command workflow (protein_assign_charges_and_radii / ramp_new) is shown as pasteable commands.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "Plugin",
+            "APBS Electrostatics"
+          ]
+        }
+      ],
+      "trigger": [
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"apbs-window\"] .apbs__script"
+        }
+      ],
+      "checks": [
+        {
+          "do": "feedbackMatches",
+          "pattern": "protein_assign_charges_and_radii|ramp_new"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "apbs.copy.script",
+      "feature": "apbs",
+      "label": "copy script button",
+      "kind": "button",
+      "requires": [],
+      "note": "Second .apbs__btn copies the APBS workflow script and flips its label to 'copied'. Same clipboard-availability caveat as the vacuum button.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "Plugin",
+            "APBS Electrostatics"
+          ]
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"apbs-window\"] .apbs__btn"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"apbs-window\"] .apbs__btn",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "do": "noConsoleError"
+        },
+        {
+          "do": "feedbackMatches",
+          "pattern": "copied"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "apbs.launcher.toggle-close",
+      "feature": "apbs",
+      "label": "Launcher APBS (Zap) button — close",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Clicking the lit launcher toggle again closes the panel (shared open-set toggle).",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "Plugin",
+            "APBS Electrostatics"
+          ]
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"apbs-window\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "button[title=\"APBS\"]",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "do": "selectorHidden",
+          "selector": "[data-testid=\"apbs-window\"]"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "apbs.window.close",
+      "feature": "apbs",
+      "label": "Window × close button",
+      "kind": "button",
+      "requires": [],
+      "note": "The title-bar × closes the panel via closePanel('apbs'), removing the window from the DOM.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "Plugin",
+            "APBS Electrostatics"
+          ]
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"apbs-window\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"apbs-window\"] .flwin__close"
+        }
+      ],
+      "checks": [
+        {
+          "do": "selectorHidden",
+          "selector": "[data-testid=\"apbs-window\"]"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "apbs.window.shade-restore",
+      "feature": "apbs",
+      "label": "Window restore (▢) after shade",
+      "kind": "button",
+      "requires": [],
+      "note": "After shading, the restore button re-renders the body.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "Plugin",
+            "APBS Electrostatics"
+          ]
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"apbs-window\"] .apbs__body"
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"apbs-window\"] button[aria-label=\"shade\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"apbs-window\"] button[aria-label=\"restore\"]"
+        }
+      ],
+      "checks": [
+        {
+          "do": "selectorVisible",
+          "selector": "[data-testid=\"apbs-window\"] .apbs__body"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "apbs.window.esc-close",
+      "feature": "apbs",
+      "label": "Esc closes window",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "Escape while the window root (not a text field) is focused calls onClose and removes the window.",
+      "needsVisual": false,
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "Plugin",
+            "APBS Electrostatics"
+          ]
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"apbs-window\"]"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "key": "Escape",
+          "selector": "[data-testid=\"apbs-window\"]"
+        }
+      ],
+      "checks": [
+        {
+          "do": "selectorHidden",
+          "selector": "[data-testid=\"apbs-window\"]"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "apbs.window.title-doubleclick-shade",
+      "feature": "apbs",
+      "label": "Double-click title bar to shade",
+      "kind": "other",
+      "requires": [],
+      "note": "Double-clicking the title bar toggles minimise. The audit driver has no double-click action, so this issues two clicks; verification is best-effort (domChanged). Limitation: a genuine dblclick cannot be driven deterministically here.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "Plugin",
+            "APBS Electrostatics"
+          ]
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"apbs-window\"] .flwin__title"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=\"apbs-window\"] .flwin__label"
+        },
+        {
+          "do": "click",
+          "selector": "[data-testid=\"apbs-window\"] .flwin__label"
+        }
+      ],
+      "checks": [
+        {
+          "do": "selectorVisible",
+          "selector": "[data-testid=\"apbs-window\"]"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "apbs.window.drag-move",
+      "feature": "apbs",
+      "label": "Drag title bar to move window",
+      "kind": "drag",
+      "requires": [],
+      "note": "The title bar is a pointer-drag move handle (onTitleDown). The audit driver has no drag action, so this cannot be exercised; recorded to document the affordance. Closest observable check is that hovering the title bar produces no page error and the window stays mounted.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "Plugin",
+            "APBS Electrostatics"
+          ]
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"apbs-window\"] .flwin__title"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "hover",
+          "selector": "[data-testid=\"apbs-window\"] .flwin__title"
+        }
+      ],
+      "checks": [
+        {
+          "do": "selectorVisible",
+          "selector": "[data-testid=\"apbs-window\"]"
+        }
+      ],
+      "settleMs": 200
+    },
+    {
+      "id": "apbs.window.resize-grip",
+      "feature": "apbs",
+      "label": "Resize grip (drag)",
+      "kind": "drag",
+      "requires": [],
+      "note": "The corner grip (.flwin__grip) resizes the window via pointer drag (onResizeDown). No drag action exists in the driver, so this is documented only; closest check is that the grip is present/visible and hovering it errors nothing.",
+      "needsVisual": true,
+      "setup": [
+        {
+          "do": "menu",
+          "path": [
+            "Plugin",
+            "APBS Electrostatics"
+          ]
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=\"apbs-window\"] .flwin__grip"
+        }
+      ],
+      "trigger": [
+        {
+          "do": "hover",
+          "selector": "[data-testid=\"apbs-window\"] .flwin__grip"
+        }
+      ],
+      "checks": [
+        {
+          "do": "selectorVisible",
+          "selector": "[data-testid=\"apbs-window\"] .flwin__grip"
+        }
+      ],
+      "settleMs": 200
+    }
+  ]
+}

@@ -14,7 +14,9 @@ import {
   describe,
   isCheckable,
   isChecked,
+  isLocalUnsupportedNode,
   isRadioActive,
+  pruneMenuForLocal,
   settingsIn,
   valueEquals,
 } from './model';
@@ -196,5 +198,47 @@ suite('truncateRecentLabel', () => {
     const at128 = '/' + 'a'.repeat(127);
     expect(truncateRecentLabel(at128)).toBe('...' + at128.slice(-120));
     expect(truncateRecentLabel(at128).length).toBe(123);
+  });
+});
+
+suite('local-backend gating', () => {
+  it('flags the bridge-only leaves that would print "not ported" in the browser', () => {
+    // `Open Recent...` is a dynamic node fed by the bridge recent-files DB.
+    const dynamic = all.find((n) => n.kind === 'dynamic');
+    expect(dynamic, 'the tree has a dynamic Open Recent node').toBeTruthy();
+    expect(isLocalUnsupportedNode(dynamic!)).toBe(true);
+
+    // The `seq_view` toggle opens a bridge-served viewer.
+    const seqView = all.find((n) => n.kind === 'check' && n.setting === 'seq_view');
+    if (seqView) expect(isLocalUnsupportedNode(seqView)).toBe(true);
+
+    // A plain fragment command is fully local — never gated.
+    const frag = all.find((n) => n.kind === 'command' && n.label.startsWith('Acetylene'))!;
+    expect(isLocalUnsupportedNode(frag)).toBe(false);
+  });
+
+  it('pruneMenuForLocal strips every unsupported leaf but keeps the tree usable', () => {
+    const walked = [...walkMenu(pruneMenuForLocal(MENU_DATA.menus))];
+    expect(walked.some((n) => n.kind === 'dynamic')).toBe(false);
+    expect(walked.some((n) => n.kind === 'check' && n.setting === 'seq_view')).toBe(false);
+    // The bulk of the menu is local-capable and must survive the prune.
+    expect(walked.filter((n) => n.kind === 'command').length).toBeGreaterThan(50);
+  });
+
+  it('leaves no leading, trailing or doubled separators behind', () => {
+    for (const menu of pruneMenuForLocal(MENU_DATA.menus)) {
+      if (menu.kind !== 'submenu') continue;
+      const { items } = menu;
+      expect(items[0]?.kind).not.toBe('separator');
+      expect(items[items.length - 1]?.kind).not.toBe('separator');
+      for (let i = 1; i < items.length; i++) {
+        expect(items[i]?.kind === 'separator' && items[i - 1]?.kind === 'separator').toBe(false);
+      }
+    }
+  });
+
+  it('preserves node identity for branches with nothing pruned (React bail-out)', () => {
+    const pruned = pruneMenuForLocal(MENU_DATA.menus);
+    expect(pruned.some((menu, i) => menu === MENU_DATA.menus[i])).toBe(true);
   });
 });

@@ -14,14 +14,15 @@
  * where PyMOL puts it.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-import { useSession } from '../../app';
+import { isLocal, useSession } from '../../app';
 import {
   METRICS,
   buildArgs,
   defaultOf,
   formatResult,
+  isLocalUnsupportedMetric,
   missingParams,
   paramsOf,
   type Metric,
@@ -112,6 +113,13 @@ function initialForms(): Record<string, Form> {
 /** The Compute panel: run `pymol.util` metrics on a selection and show the numbers back. */
 export function ComputePanel() {
   const session = useSession();
+  // A few helpers are bridge-only (ESP, the SASA shim, all-shaders, ff_copy);
+  // the rest run against the in-browser engine. Omit only the unported rows when
+  // local, so the panel stays useful instead of showing "not ported" cells.
+  const metrics = useMemo(
+    () => (isLocal(session) ? METRICS.filter((m) => !isLocalUnsupportedMetric(m)) : METRICS),
+    [session],
+  );
   const [selection, setSelection] = useState('polymer');
   const [results, setResults] = useState<Record<string, Row>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -244,7 +252,7 @@ export function ComputePanel() {
 
         <table className="compute__table">
           <tbody>
-            {METRICS.map((m) => {
+            {metrics.map((m) => {
               const row = results[m.id];
               const off = m.kind === 'unsupported';
               const extra = paramsOf(m).filter((p) => p.kind !== 'selection');

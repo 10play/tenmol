@@ -10,13 +10,19 @@
 import { useEffect } from 'react';
 
 import { useSession } from '../../app';
-import { createFilesApi, fileToBase64 } from './filesApi';
+import { createFilesApi } from './filesApi';
+import { saveSession } from './sessionSave';
 import { PluginDialogHost } from './PluginDialogHost';
 import {
+  browserClassification,
+  classify,
   dialogNeededFor,
   dialogRequiredMessage,
+  objectNameForFile,
+  loadFormatForFile,
   planFromDataTransfer,
   refusalFor,
+  scriptUnsupportedMessage,
   windowAccelerator,
 } from './globalDrop';
 import { takeOpenFromLocation } from './deepLink';
@@ -138,21 +144,55 @@ export function FileDropTarget() {
       }
     };
 
-    /** Upload each browser File, then load it — shared by drop and Ctrl+O. */
+    /**
+     * Read each browser File's CONTENTS and load them through the engine —
+     * shared by drop and Ctrl+O.
+     *
+     * browser-open: load file contents. No `api.upload`, no server path, no
+     * `cmd.tenmol_files.*`: read the text and hand it to `cmd.load` (blank
+     * format => the engine sniffs), which also works over the remote bridge.
+     * The `.pwg`/refusal gate stays FIRST and is engine-independent
+     * (`globalDrop.ts::refusalFor`). Dialog-needed formats (traj/map/mtz/mae/
+     * aln/session) are then turned away with `dialogRequiredMessage` — they are
+     * binary and/or need loader options this content-only path cannot supply,
+     * so text-decoding them would corrupt or mis-load them. Only plain
+     * single-molecule text formats reach `file.text()` + `cmd.load`.
+     */
     const uploadAndLoad = async (files: readonly File[]): Promise<void> => {
-      try {
-        await api.ensure();
-      } catch (error) {
-        say(` file service unavailable: ${String(error)}`, 'error');
-        return;
-      }
       for (const file of files) {
-        const uploaded = await api.upload(file.name, await fileToBase64(file));
-        if (!uploaded.ok) {
-          say(` upload failed: ${uploaded.error}`, 'error');
+        const refusal = refusalFor(browserClassification(file.name), file.name);
+        if (refusal !== null) {
+          say(refusal, 'warning');
           continue;
         }
-        await load(uploaded.path, file.name);
+        // Dialog-needed formats (session/map/mtz/trajectory/alignment/mae) are
+        // BINARY and/or need loader options the content-only path cannot supply.
+        // Text-decoding + `cmd.load`ing them would silently corrupt or mis-load
+        // them, so refuse here just as `load()` does for a classified server
+        // drop — browser-only cannot drive these modals. Only plain
+        // single-molecule text formats fall through to `file.text()`+`cmd.load`.
+        const dialog = dialogNeededFor(classify(file.name));
+        if (dialog !== null) {
+          say(dialogRequiredMessage(file.name, dialog), 'warning');
+          continue;
+        }
+        // Scripts (`.pml`/`.py`/`.pym`) are neither refused nor dialog-needed,
+        // so without this they would reach `cmd.load` with a blank format and
+        // throw "could not determine the structure format". The browser build
+        // cannot RUN them, so say so instead of attempting to load or execute.
+        if (classify(file.name).dialog === 'script') {
+          say(scriptUnsupportedMessage(file.name), 'warning');
+          continue;
+        }
+        const content = await file.text();
+        await session.act({
+          // load_raw(content, format, object): the one content-loader both
+          // backends implement — real PyMOL's cmd.load takes a PATH, not content.
+          fn: 'cmd.load_raw',
+          args: [content, loadFormatForFile(file.name), objectNameForFile(file.name)],
+          echo: `load ${file.name}`,
+          invalidatesNames: true,
+        });
       }
     };
 
@@ -207,19 +247,21 @@ export function FileDropTarget() {
         return;
       }
 
+      // browser-save: get_session download
+      //
+      // Ctrl+S is the twin of File ▸ Save Session (`FilesPanel.sessionSaveAs`):
+      // browser-only, so it serializes the engine's session snapshot and
+      // downloads it — no `api.sessionFile`, no `save <path>` (writes to disk +
+      // THROWS in the browser). Default the name to `.pse`, which the engine's
+      // reload path keys off. The shared `saveSession` helper handles both
+      // backends (object snapshot locally, blob handle over the remote bridge).
       void (async () => {
         try {
-          await api.ensure();
-          const file = await api.sessionFile();
-          if (!file.hasPath) {
-            say(
-              ' Ctrl+S: this session has no file yet — use File dialogs ▸ Save Session As…',
-              'warning',
-            );
-            return;
-          }
-          await session.run(`save ${file.path}`);
-          say(` saved ${file.path}`);
+          const typed = window.prompt('Save session as', 'untitled.pse');
+          if (!typed) return;
+          const name = /\.(pse|psw)$/i.test(typed) ? typed : `${typed}.pse`;
+          await saveSession(session, name);
+          say(` saved ${name}`);
         } catch (error) {
           say(` save failed: ${error instanceof Error ? error.message : String(error)}`, 'error');
         }

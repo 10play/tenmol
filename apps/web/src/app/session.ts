@@ -84,6 +84,22 @@ export function getSession(): Session {
 }
 
 /**
+ * Is this the browser-only build (the in-browser `@tenmol/engine-ts`)?
+ *
+ * The in-browser engine has ported a slice of PyMOL, so a handful of affordances
+ * that work over the bridge (`backend === 'remote'`) surface a `NotPorted`/
+ * "unavailable" message here instead. Those are GATED OFF when local — hidden or
+ * omitted — rather than shown as a dead end. One capability check, one place, so
+ * the gate cannot drift feature to feature. `remote` is unaffected.
+ */
+export function isLocal(session: Session): boolean {
+  // Optional-chained: a bare test mock may omit `config`. A real session always
+  // has one; a missing config is treated as NOT local (show everything), the
+  // safe default — gating only ever HIDES, so this never surfaces a dead end.
+  return session.config?.backend === 'local';
+}
+
+/**
  * Load a demo protein into the empty in-browser engine so the local backend
  * shows something on first open. Fetches crambin (1CRN); if offline, falls back
  * to a built-in fragment. Never clobbers an existing scene.

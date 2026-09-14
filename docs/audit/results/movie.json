@@ -1,0 +1,1485 @@
+{
+  "results": [
+    {
+      "id": "movie.transport.rewind",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "cmd\\.rewind",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.rewind.png",
+      "needsVisual": false,
+      "note": "control-bar button 0 -> cmd.rewind(); echoes the equivalent command line"
+    },
+    {
+      "id": "movie.transport.back",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "cmd\\.back",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.back.png",
+      "needsVisual": false,
+      "note": "control-bar button 1 -> cmd.backward(); logs cmd.back()"
+    },
+    {
+      "id": "movie.transport.stop",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "cmd\\.mstop",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.stop.png",
+      "needsVisual": false,
+      "note": "control-bar button 2 -> cmd.mstop() and also clears sculpting/rock"
+    },
+    {
+      "id": "movie.transport.play",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "cmd\\.m(play|stop)",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.play.png",
+      "needsVisual": false,
+      "note": "control-bar button 3 -> cmd.mplay() when stopped (toggles to pause when playing)"
+    },
+    {
+      "id": "movie.transport.play.ctrl",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.play.ctrl.png",
+      "needsVisual": false,
+      "note": "Ctrl+click should rewind then play; the audit driver cannot send a modifier with a click, so this drives a plain click and only asserts the play path does not crash. Ctrl-modified path is UNVERIFIED here."
+    },
+    {
+      "id": "movie.transport.forward",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "cmd\\.forward",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.forward.png",
+      "needsVisual": false,
+      "note": "control-bar button 4 -> cmd.forward()"
+    },
+    {
+      "id": "movie.transport.ending",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "cmd\\.ending",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.ending.png",
+      "needsVisual": false,
+      "note": "control-bar button 5 -> cmd.ending()"
+    },
+    {
+      "id": "movie.transport.ending.ctrl",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.ending.ctrl.png",
+      "needsVisual": false,
+      "note": "Ctrl+click should jump to the middle frame (cmd.middle()); the driver cannot send a modifier so this drives a plain click and only asserts no crash. Ctrl-modified path is UNVERIFIED here."
+    },
+    {
+      "id": "movie.transport.seq",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "seq_view",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.seq.png",
+      "needsVisual": false,
+      "note": "control-bar button 6 -> cmd.set('seq_view', ...)"
+    },
+    {
+      "id": "movie.transport.rock",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "cmd\\.rock",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.rock.png",
+      "needsVisual": false,
+      "note": "control-bar button 7 -> cmd.rock(1)/cmd.rock(0)"
+    },
+    {
+      "id": "movie.transport.full",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "full_screen",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.transport.full.png",
+      "needsVisual": false,
+      "note": "control-bar button 8 -> browser Fullscreen API; logs cmd.full_screen(). requestFullscreen may reject in headless (swallowed)."
+    },
+    {
+      "id": "movie.seek.range",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.fill: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__range').first()\u001b[22m\n\u001b[2m    - locator resolved to <input min=\"1\" max=\"1\" disabled value=\"1\" type=\"range\" class=\"mvpanel__range\" aria-label=\"movie frame\"/>\u001b[22m\n\u001b[2m    - fill(\"10\")\u001b[22m\n\u001b[2m  - att",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.tab.timeline",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".mvtl",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.tab.timeline.png",
+      "needsVisual": false,
+      "note": "selects the timeline tab (canvas scrubber)"
+    },
+    {
+      "id": "movie.tab.edit",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".mvedit__block",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.tab.edit.png",
+      "needsVisual": false,
+      "note": "selects the editors tab (mset/mdo/mview/range)"
+    },
+    {
+      "id": "movie.tab.menu",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".mvmenu",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.tab.menu.png",
+      "needsVisual": false,
+      "note": "selects the Movie menu tab (ported _gui.py tree)"
+    },
+    {
+      "id": "movie.tab.sweep",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".mvedit__view",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.tab.sweep.png",
+      "needsVisual": false,
+      "note": "selects the rock/spin/nutate + camera tab"
+    },
+    {
+      "id": "movie.export.open",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".mvexport",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/movie/movie.export.open.png",
+      "needsVisual": false,
+      "note": "opens the Export movie dialog"
+    },
+    {
+      "id": "movie.edit.mset.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mset.btn",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.madd.btn",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.purge.btn",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mdo.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mdo.btn",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mappend.btn",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mdump.btn",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mclear.btn",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.object.select",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.store",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.clear",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.interpolate",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.reinterpolate",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.smooth",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.reset",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.uninterpolate",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.toggle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.toggle_interp",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.mview.purge",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.range.target.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.range.count.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.range.mmove",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.range.mcopy",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.range.minsert",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.edit.range.mdelete",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.rocking.toggle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.mode.y",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.mode.x",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.mode.z",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.mode.nutate",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.angle.10",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.angle.30",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.angle.60",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.angle.90",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.angle.0",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.get_view",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.set_view",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.reset",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.zoom",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.orient",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.sweep.view.textarea",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(3)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.check.auto_interpolate",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.check.show_panel",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.check.loop_frames",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.check.draw_frames",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.check.ray_trace_frames",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.check.cache_frames",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.check.static_singletons",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.check.all_states",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.reset",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.clear_image_cache",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.update_last_program",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.remove_last_program",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.append.open",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.append.leaf",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.program.open",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.program.camera_loop.open",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.program.scene_loop.open",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.program.state_loop.open",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.program.state_sweep.open",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.frame_rate.open",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.frame_rate.fps30",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.frame_rate.fps15",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.frame_rate.fps5",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.frame_rate.fps1",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.frame_rate.fps03",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.frame_rate.show_frame_rate",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.menu.frame_rate.reset_meter",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__tabs button').nth(2)\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm-text moder",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.timeline.click_seek",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.timeline.wheel_step",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.timeline.rdrag_mmove",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.timeline.shift_rdrag_mcopy",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.timeline.ctrl_ldrag_minsert",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.timeline.ctrl_ldrag_mdelete",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.timeline.ctrl_mdrag_clear",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.timeline.ctrl_shift_allrows",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.timeline.ctrl_shift_wheel_rowheight",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.timeline.rightclick_contextmenu",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.export.close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__head .mvpanel__tabbtn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.export.width.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__head .mvpanel__tabbtn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.export.height.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__head .mvpanel__tabbtn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.export.preset.720",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__head .mvpanel__tabbtn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.export.preset.480",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__head .mvpanel__tabbtn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.export.preset.360",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__head .mvpanel__tabbtn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.export.format.png",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__head .mvpanel__tabbtn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.export.format.mp4",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.export.format.webm",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.export.format.mpg",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.export.format.mov",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.export.format.gif",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.export.quality.input",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "movie.export.ray.toggle",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__head .mvpanel__tabbtn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.export.prefix.input",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.mvpanel__head .mvpanel__tabbtn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mvpanel__tabbtn modern:rounded-md modern:border modern:border-btn-border modern:bg-btn modern:text-pm",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "movie.export.run",
+      "verdict": "BLOCKED",
+      "reason": "requires remote-backend",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}

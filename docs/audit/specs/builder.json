@@ -1,0 +1,5602 @@
+{
+  "area": "builder",
+  "caps": [
+    "local-backend",
+    "webgl",
+    "network"
+  ],
+  "specs": [
+    {
+      "id": "builder.open",
+      "feature": "builder",
+      "label": "Open Builder (quick-button)",
+      "kind": "button",
+      "requires": [],
+      "note": "the External-GUI 'Builder' quick button mounts the overlay slot and dispatches tenmol:open-builder, opening the docked panel",
+      "setup": [],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-window]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Builder"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.tables.noDrift",
+      "feature": "builder",
+      "label": "Button tables agree with the engine (no drift banner)",
+      "kind": "other",
+      "requires": [],
+      "note": "diffTables compares the client button tables against cmd.builder_tables(); in local mode they are identical, so the drift banner must be absent",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "wait",
+          "ms": 400
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 500
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-window]"
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=builder-drift]"
+        }
+      ]
+    },
+    {
+      "id": "builder.tab.chemical",
+      "feature": "builder",
+      "label": "Tab: Chemical",
+      "kind": "button",
+      "requires": [],
+      "note": "selecting the Chemical tab renders its page (tab-chemical)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=tab-chemical]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "builder.tab.protein",
+      "feature": "builder",
+      "label": "Tab: Protein",
+      "kind": "button",
+      "requires": [],
+      "note": "selecting the Protein tab renders its page (tab-protein)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=tab-protein]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "builder.tab.nucleic",
+      "feature": "builder",
+      "label": "Tab: Nucleic Acid",
+      "kind": "button",
+      "requires": [],
+      "note": "selecting the Nucleic Acid tab renders its page (tab-nucleic)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=tab-nucleic]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "builder.tab.dna",
+      "feature": "builder",
+      "label": "Nucleic Acid \u25b8 DNA nested tab",
+      "kind": "button",
+      "requires": [],
+      "note": "the DNA nested tab exposes the B-form/double-helix radios",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 3
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "input[name=builder-dna-form]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "builder.tab.rna",
+      "feature": "builder",
+      "label": "Nucleic Acid \u25b8 RNA nested tab",
+      "kind": "button",
+      "requires": [],
+      "note": "the RNA nested tab shows the RNA base buttons (Uracil is RNA-only)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 4
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".bbtn[title^='Uracil']"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ]
+    },
+    {
+      "id": "builder.chem.element.h",
+      "feature": "builder",
+      "label": "Chemical \u25b8 element Hydrogen",
+      "kind": "button",
+      "requires": [],
+      "note": "with nothing picked, the Hydrogen button arms the ReplaceWizard (replace the picked atom's element)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Hydrogen']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.element.c",
+      "feature": "builder",
+      "label": "Chemical \u25b8 element Carbon",
+      "kind": "button",
+      "requires": [],
+      "note": "with nothing picked, the Carbon button arms the ReplaceWizard (replace the picked atom's element)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Carbon']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.element.n",
+      "feature": "builder",
+      "label": "Chemical \u25b8 element Nitrogen",
+      "kind": "button",
+      "requires": [],
+      "note": "with nothing picked, the Nitrogen button arms the ReplaceWizard (replace the picked atom's element)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Nitrogen']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.element.o",
+      "feature": "builder",
+      "label": "Chemical \u25b8 element Oxygen",
+      "kind": "button",
+      "requires": [],
+      "note": "with nothing picked, the Oxygen button arms the ReplaceWizard (replace the picked atom's element)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Oxygen']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.element.p",
+      "feature": "builder",
+      "label": "Chemical \u25b8 element Phosphorus",
+      "kind": "button",
+      "requires": [],
+      "note": "with nothing picked, the Phosphorus button arms the ReplaceWizard (replace the picked atom's element)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Phosphorus']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.element.s",
+      "feature": "builder",
+      "label": "Chemical \u25b8 element Sulfur",
+      "kind": "button",
+      "requires": [],
+      "note": "with nothing picked, the Sulfur button arms the ReplaceWizard (replace the picked atom's element)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Sulfur']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.element.f",
+      "feature": "builder",
+      "label": "Chemical \u25b8 element Fluorine",
+      "kind": "button",
+      "requires": [],
+      "note": "with nothing picked, the Fluorine button arms the ReplaceWizard (replace the picked atom's element)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Fluorine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.element.cl",
+      "feature": "builder",
+      "label": "Chemical \u25b8 element Chlorrine",
+      "kind": "button",
+      "requires": [],
+      "note": "with nothing picked, the Chlorrine button arms the ReplaceWizard (replace the picked atom's element)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Chlorrine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.element.br",
+      "feature": "builder",
+      "label": "Chemical \u25b8 element Bromine",
+      "kind": "button",
+      "requires": [],
+      "note": "with nothing picked, the Bromine button arms the ReplaceWizard (replace the picked atom's element)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Bromine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.element.i",
+      "feature": "builder",
+      "label": "Chemical \u25b8 element Iodine",
+      "kind": "button",
+      "requires": [],
+      "note": "with nothing picked, the Iodine button arms the ReplaceWizard (replace the picked atom's element)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Iodine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ReplaceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.frag.cf3",
+      "feature": "builder",
+      "label": "Chemical \u25b8 fragment Trifluoromethane",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Trifluoromethane fragment onto pk1; with nothing picked it arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Trifluoromethane']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.frag.ome",
+      "feature": "builder",
+      "label": "Chemical \u25b8 fragment Methanol",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Methanol fragment onto pk1; with nothing picked it arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Methanol']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.methyl",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group Methyl",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Methyl functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Methyl']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.ethylene",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group Ethylene",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Ethylene functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Ethylene']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.acetylene",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group Acetylene",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Acetylene functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Acetylene']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.cyanide",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group Cyanide",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Cyanide functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Cyanide']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.aldehyde",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group Aldehyde",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Aldehyde functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Aldehyde']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.formicacid",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group Formic Acid",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Formic Acid functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Formic Acid']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.c2namide",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group C->N amide",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the C->N amide functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='C->N amide']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.n2camide",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group N->C amide",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the N->C amide functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='N->C amide']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.sulfone",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group Sulfone",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Sulfone functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Sulfone']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.phosphite",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group Phosphite",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Phosphite functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Phosphite']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.group.nitro",
+      "feature": "builder",
+      "label": "Chemical \u25b8 group Nitro",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Nitro functional group onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Nitro']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.ring.cyclopropane",
+      "feature": "builder",
+      "label": "Chemical \u25b8 ring Cyclopropane",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Cyclopropane ring fragment onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Cyclopropane']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.ring.cyclobutane",
+      "feature": "builder",
+      "label": "Chemical \u25b8 ring Cyclobutane",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Cyclobutane ring fragment onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Cyclobutane']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.ring.cyclopentane",
+      "feature": "builder",
+      "label": "Chemical \u25b8 ring Cyclopentane",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Cyclopentane ring fragment onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Cyclopentane']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.ring.cyclohexane",
+      "feature": "builder",
+      "label": "Chemical \u25b8 ring Cyclohexane",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Cyclohexane ring fragment onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Cyclohexane']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.ring.cycloheptane",
+      "feature": "builder",
+      "label": "Chemical \u25b8 ring Cycloheptane",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Cycloheptane ring fragment onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Cycloheptane']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.ring.cyclopentadiene",
+      "feature": "builder",
+      "label": "Chemical \u25b8 ring Cyclopentadiene",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Cyclopentadiene ring fragment onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Cyclopentadiene']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.ring.benzene",
+      "feature": "builder",
+      "label": "Chemical \u25b8 ring Benzene",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Benzene ring fragment onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Benzene']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.ring.indane",
+      "feature": "builder",
+      "label": "Chemical \u25b8 ring Indane",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Indane ring fragment onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Indane']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.ring.napthylene",
+      "feature": "builder",
+      "label": "Chemical \u25b8 ring Napthylene",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Napthylene ring fragment onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Napthylene']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.chem.ring.benzocycloheptane",
+      "feature": "builder",
+      "label": "Chemical \u25b8 ring Benzocycloheptane",
+      "kind": "button",
+      "requires": [],
+      "note": "grows the Benzocycloheptane ring fragment onto pk1; nothing picked arms the AttachWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 0
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Benzocycloheptane']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AttachWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.ace",
+      "feature": "builder",
+      "label": "Protein \u25b8 Ace",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Ace residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Ace residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.ala",
+      "feature": "builder",
+      "label": "Protein \u25b8 Ala",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Ala residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Ala residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.arg",
+      "feature": "builder",
+      "label": "Protein \u25b8 Arg",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Arg residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Arg residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.asn",
+      "feature": "builder",
+      "label": "Protein \u25b8 Asn",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Asn residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Asn residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.asp",
+      "feature": "builder",
+      "label": "Protein \u25b8 Asp",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Asp residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Asp residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.cys",
+      "feature": "builder",
+      "label": "Protein \u25b8 Cys",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Cys residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Cys residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.gln",
+      "feature": "builder",
+      "label": "Protein \u25b8 Gln",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Gln residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Gln residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.glu",
+      "feature": "builder",
+      "label": "Protein \u25b8 Glu",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Glu residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Glu residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.gly",
+      "feature": "builder",
+      "label": "Protein \u25b8 Gly",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Gly residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Gly residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.his",
+      "feature": "builder",
+      "label": "Protein \u25b8 His",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an His residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build His residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.ile",
+      "feature": "builder",
+      "label": "Protein \u25b8 Ile",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Ile residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Ile residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.leu",
+      "feature": "builder",
+      "label": "Protein \u25b8 Leu",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Leu residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Leu residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.lys",
+      "feature": "builder",
+      "label": "Protein \u25b8 Lys",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Lys residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Lys residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.met",
+      "feature": "builder",
+      "label": "Protein \u25b8 Met",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Met residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Met residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.phe",
+      "feature": "builder",
+      "label": "Protein \u25b8 Phe",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Phe residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Phe residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.pro",
+      "feature": "builder",
+      "label": "Protein \u25b8 Pro",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Pro residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Pro residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.ser",
+      "feature": "builder",
+      "label": "Protein \u25b8 Ser",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Ser residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Ser residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.thr",
+      "feature": "builder",
+      "label": "Protein \u25b8 Thr",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Thr residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Thr residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.trp",
+      "feature": "builder",
+      "label": "Protein \u25b8 Trp",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Trp residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Trp residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.tyr",
+      "feature": "builder",
+      "label": "Protein \u25b8 Tyr",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Tyr residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Tyr residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.val",
+      "feature": "builder",
+      "label": "Protein \u25b8 Val",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an Val residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build Val residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.nme",
+      "feature": "builder",
+      "label": "Protein \u25b8 NMe",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an NMe residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build NMe residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.aa.nhh",
+      "feature": "builder",
+      "label": "Protein \u25b8 NHH",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches an NHH residue to the single picked atom; without exactly one pick it arms the AminoAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Build NHH residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "AminoAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.protein.ss",
+      "feature": "builder",
+      "label": "Protein \u25b8 Secondary Structure select",
+      "kind": "input",
+      "requires": [],
+      "note": "changing the SS combo pushes ssChanged and updates the phi/psi note; index 1 (Beta Sheet Anti-Parallel) is phi -139 / psi 135",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 1
+        },
+        {
+          "do": "press",
+          "selector": "#builder-ss",
+          "key": "ArrowUp"
+        },
+        {
+          "do": "press",
+          "selector": "#builder-ss",
+          "key": "ArrowUp"
+        },
+        {
+          "do": "wait",
+          "ms": 200
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "selector": "#builder-ss",
+          "key": "ArrowDown"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "-139"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.nucleic.dna.a",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 DNA Deoxyadenosine",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches DNA base Deoxyadenosine; without exactly one pick it arms the NucleicAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 3
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Deoxyadenosine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.nucleic.dna.c",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 DNA Deoxycytidine",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches DNA base Deoxycytidine; without exactly one pick it arms the NucleicAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 3
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Deoxycytidine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.nucleic.dna.t",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 DNA Deoxythymidine",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches DNA base Deoxythymidine; without exactly one pick it arms the NucleicAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 3
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Deoxythymidine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.nucleic.dna.g",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 DNA Deoxyguanosine",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches DNA base Deoxyguanosine; without exactly one pick it arms the NucleicAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 3
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Deoxyguanosine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.nucleic.rna.a",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 RNA Adenosine",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches RNA base Adenosine; without exactly one pick it arms the NucleicAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 4
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Adenosine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.nucleic.rna.c",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 RNA Cytosine",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches RNA base Cytosine; without exactly one pick it arms the NucleicAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 4
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Cytosine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.nucleic.rna.u",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 RNA Uracil",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches RNA base Uracil; without exactly one pick it arms the NucleicAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 4
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Uracil']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.nucleic.rna.g",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 RNA Guanine",
+      "kind": "button",
+      "requires": [],
+      "note": "attaches RNA base Guanine; without exactly one pick it arms the NucleicAcidWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 4
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Guanine']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "NucleicAcidWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.nucleic.form.a",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 DNA Form A radio",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Form A is panel state carried into the next attachNA; clicking it must not error (no immediate visible effect until a base is attached)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "input[name=builder-dna-form]",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "needsVisual": true
+    },
+    {
+      "id": "builder.nucleic.form.b",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 DNA Form B radio",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Form B is panel state carried into the next attachNA; clicking it must not error (no immediate visible effect until a base is attached)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "input[name=builder-dna-form]",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "needsVisual": true
+    },
+    {
+      "id": "builder.nucleic.helix.single",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 DNA Helix Single radio",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Helix Single is panel state carried into the next attachNA; clicking it must not error (no immediate visible effect until a base is attached)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "input[name=builder-dna-helix]",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "needsVisual": true
+    },
+    {
+      "id": "builder.nucleic.helix.double",
+      "feature": "builder",
+      "label": "Nucleic \u25b8 DNA Helix Double radio",
+      "kind": "toggle",
+      "requires": [],
+      "note": "Helix Double is panel state carried into the next attachNA; clicking it must not error (no immediate visible effect until a base is attached)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 2
+        },
+        {
+          "do": "click",
+          "selector": ".builder [role=tab]",
+          "nth": 3
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "input[name=builder-dna-helix]",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "needsVisual": true
+    },
+    {
+      "id": "builder.atoms.fixh",
+      "feature": "builder",
+      "label": "Atoms \u25b8 Fix H",
+      "kind": "button",
+      "requires": [],
+      "note": "'Fix H' with nothing picked arms the HydrogenWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Fix hydrogens on picked atoms']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "HydrogenWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.atoms.addh",
+      "feature": "builder",
+      "label": "Atoms \u25b8 Add H",
+      "kind": "button",
+      "requires": [],
+      "note": "'Add H' with nothing picked arms the HydrogenWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Add hydrogens to entire molecule']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "HydrogenWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.atoms.invert",
+      "feature": "builder",
+      "label": "Atoms \u25b8 Invert",
+      "kind": "button",
+      "requires": [],
+      "note": "'Invert' with nothing picked arms the InvertWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Invert stereochemistry around pk1']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "InvertWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.atoms.delete",
+      "feature": "builder",
+      "label": "Atoms \u25b8 Delete (atoms)",
+      "kind": "button",
+      "requires": [],
+      "note": "'Delete (atoms)' with nothing picked arms the RemoveWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Remove atoms']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "RemoveWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.atoms.charge.pos",
+      "feature": "builder",
+      "label": "Atoms \u25b8 Charge +1",
+      "kind": "button",
+      "requires": [],
+      "note": "'Charge +1' with nothing picked arms the ChargeWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Positive Charge']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ChargeWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.atoms.charge.zero",
+      "feature": "builder",
+      "label": "Atoms \u25b8 Charge 0",
+      "kind": "button",
+      "requires": [],
+      "note": "'Charge 0' with nothing picked arms the ChargeWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Neutral Charge']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ChargeWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.atoms.charge.neg",
+      "feature": "builder",
+      "label": "Atoms \u25b8 Charge -1",
+      "kind": "button",
+      "requires": [],
+      "note": "'Charge -1' with nothing picked arms the ChargeWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Negative Charge']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ChargeWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.atoms.removeresn",
+      "feature": "builder",
+      "label": "Atoms \u25b8 Remove (residue)",
+      "kind": "button",
+      "requires": [],
+      "note": "'Remove (residue)' with nothing picked arms the RemoveWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Remove residue']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "RemoveWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.atoms.clear.open",
+      "feature": "builder",
+      "label": "Atoms \u25b8 Clear (open confirm)",
+      "kind": "button",
+      "requires": [],
+      "note": "Clear opens a full-viewport confirmation modal before deleting everything",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title='Delete everything']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".builder__modal"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Really delete everything"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "builder.atoms.clear.cancel",
+      "feature": "builder",
+      "label": "Clear confirm \u25b8 No (cancel)",
+      "kind": "button",
+      "requires": [],
+      "note": "the No button dismisses the Clear confirmation without deleting",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        },
+        {
+          "do": "click",
+          "selector": ".bbtn[title='Delete everything']"
+        },
+        {
+          "do": "wait",
+          "ms": 250
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder__modal .bbtn",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": ".builder__modal"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "builder.bonds.create",
+      "feature": "builder",
+      "label": "Bonds \u25b8 Create",
+      "kind": "button",
+      "requires": [],
+      "note": "'Create' with fewer than pk1+pk2 arms the BondWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Create bond between pk1 and pk2']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "BondWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.bonds.delete",
+      "feature": "builder",
+      "label": "Bonds \u25b8 Delete",
+      "kind": "button",
+      "requires": [],
+      "note": "'Delete' with fewer than pk1+pk2 arms the UnbondWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Delete bond between pk1 and pk2']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "UnbondWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.bonds.cycle",
+      "feature": "builder",
+      "label": "Bonds \u25b8 Cycle",
+      "kind": "button",
+      "requires": [],
+      "note": "'Cycle' with fewer than pk1+pk2 arms the ValenceWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Cycle bond valence']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ValenceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.bonds.order.single",
+      "feature": "builder",
+      "label": "Bonds \u25b8 Single |",
+      "kind": "button",
+      "requires": [],
+      "note": "'Single |' with fewer than pk1+pk2 arms the ValenceWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Create single bond']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ValenceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.bonds.order.double",
+      "feature": "builder",
+      "label": "Bonds \u25b8 Double ||",
+      "kind": "button",
+      "requires": [],
+      "note": "'Double ||' with fewer than pk1+pk2 arms the ValenceWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Create double bond']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ValenceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.bonds.order.triple",
+      "feature": "builder",
+      "label": "Bonds \u25b8 Triple |||",
+      "kind": "button",
+      "requires": [],
+      "note": "'Triple |||' with fewer than pk1+pk2 arms the ValenceWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Create triple bond']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ValenceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.bonds.order.arom",
+      "feature": "builder",
+      "label": "Bonds \u25b8 Aromatic",
+      "kind": "button",
+      "requires": [],
+      "note": "'Aromatic' with fewer than pk1+pk2 arms the ValenceWizard",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Create aromatic bond']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "ValenceWizard"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.model.clean",
+      "feature": "builder",
+      "label": "Model \u25b8 Clean (disabled)",
+      "kind": "button",
+      "requires": [],
+      "note": "Clean is rendered disabled: cmd.clean is Incentive-only in this tree; the reason is in its tooltip",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "hover",
+          "selector": "[data-testid=builder-clean]"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "button[data-testid=builder-clean]:disabled"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "builder.model.sculpt",
+      "feature": "builder",
+      "label": "Model \u25b8 Sculpt",
+      "kind": "button",
+      "requires": [],
+      "note": "'Sculpt' is wizard/flag-driven upstream; in the local engine builder_action('sculpt') is a no-op that must at least not error",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Molecular sculpting']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback|not\\s?ported)"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.model.fix",
+      "feature": "builder",
+      "label": "Model \u25b8 Fix",
+      "kind": "button",
+      "requires": [],
+      "note": "'Fix' is wizard/flag-driven upstream; in the local engine builder_action('fix') is a no-op that must at least not error",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Fix atom positions']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback|not\\s?ported)"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.model.rest",
+      "feature": "builder",
+      "label": "Model \u25b8 Rest",
+      "kind": "button",
+      "requires": [],
+      "note": "'Rest' is wizard/flag-driven upstream; in the local engine builder_action('rest') is a no-op that must at least not error",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Restrain atom positions']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback|not\\s?ported)"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.settings.elstat",
+      "feature": "builder",
+      "label": "Settings \u25b8 El-stat checkbox",
+      "kind": "toggle",
+      "requires": [],
+      "note": "toggles clean_electro_mode via cmd.set then refreshes; must not error (effect is on the Clean term, not directly visible)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder__actions input[data-slot=checkbox]",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "noNetFailure"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.settings.bumps",
+      "feature": "builder",
+      "label": "Settings \u25b8 Bumps checkbox",
+      "kind": "toggle",
+      "requires": [],
+      "note": "toggles sculpt_vdw_vis_mode via cmd.set then refreshes; must not error",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder__actions input[data-slot=checkbox]",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "noNetFailure"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.settings.undoEnabled",
+      "feature": "builder",
+      "label": "Settings \u25b8 Undo Enabled checkbox (opens per-object modal)",
+      "kind": "toggle",
+      "requires": [],
+      "note": "unchecking 'Undo Enabled' sets suspend_undo and returns the affected objects, which pops the 'Enable Undo for these objects?' modal",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.set('suspend_undo',0)"
+        },
+        {
+          "do": "wait",
+          "ms": 350
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder__actions input[data-slot=checkbox]",
+          "nth": 2
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": ".builder__modal"
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "disabled for the following"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.settings.undoEnabled.modalNo",
+      "feature": "builder",
+      "label": "Undo-objects modal \u25b8 No",
+      "kind": "button",
+      "requires": [],
+      "note": "the No button dismisses the enable-undo-for-objects modal",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.set('suspend_undo',0)"
+        },
+        {
+          "do": "wait",
+          "ms": 350
+        },
+        {
+          "do": "click",
+          "selector": ".builder__actions input[data-slot=checkbox]",
+          "nth": 2
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder__modal .bbtn",
+          "nth": 1
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": ".builder__modal"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "builder.settings.undoEnabled.modalYes",
+      "feature": "builder",
+      "label": "Undo-objects modal \u25b8 Yes (enableUndoForObjects)",
+      "kind": "button",
+      "requires": [],
+      "note": "the Yes button runs enableUndoForObjects for the listed objects and closes the modal",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.set('suspend_undo',0)"
+        },
+        {
+          "do": "wait",
+          "ms": 350
+        },
+        {
+          "do": "click",
+          "selector": ".builder__actions input[data-slot=checkbox]",
+          "nth": 2
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder__modal .bbtn",
+          "nth": 0
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": ".builder__modal"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "builder.undo.button",
+      "feature": "builder",
+      "label": "Settings \u25b8 Undo button",
+      "kind": "button",
+      "requires": [],
+      "note": "Undo calls cmd.undo; the coordinate ring undo is a no-op in this engine (undo_is_noop) but the button must not error",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title='Undo last change']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.redo.button",
+      "feature": "builder",
+      "label": "Settings \u25b8 Redo button",
+      "kind": "button",
+      "requires": [],
+      "note": "Redo calls cmd.redo; the coordinate ring undo is a no-op in this engine (undo_is_noop) but the button must not error",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".bbtn[title='Redo last change']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.key.undo.ctrlz",
+      "feature": "builder",
+      "label": "Keyboard \u25b8 Ctrl+Z (undo)",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "the panel's onKeyDown maps Ctrl+Z (undo) to cmd.undo/redo; fired on a builder descendant so it reaches the handler. No-op ring undo, must not error",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "selector": ".bbtn[title='Undo last change']",
+          "key": "Control+z"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.key.redo.ctrlshiftz",
+      "feature": "builder",
+      "label": "Keyboard \u25b8 Ctrl+Shift+Z (redo)",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "the panel's onKeyDown maps Ctrl+Shift+Z (redo) to cmd.undo/redo; fired on a builder descendant so it reaches the handler. No-op ring undo, must not error",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "selector": ".bbtn[title='Undo last change']",
+          "key": "Control+Shift+z"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.key.redo.ctrly",
+      "feature": "builder",
+      "label": "Keyboard \u25b8 Ctrl+Y (redo)",
+      "kind": "keyboard",
+      "requires": [],
+      "note": "the panel's onKeyDown maps Ctrl+Y (redo) to cmd.undo/redo; fired on a builder descendant so it reaches the handler. No-op ring undo, must not error",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "press",
+          "selector": ".bbtn[title='Undo last change']",
+          "key": "Control+y"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "settleMs": 400,
+      "needsVisual": true
+    },
+    {
+      "id": "builder.pick.unpick",
+      "feature": "builder",
+      "label": "Pick strip \u25b8 unpick",
+      "kind": "button",
+      "requires": [],
+      "note": "the unpick button calls cmd.unpick and refreshes; must not error (nothing picked -> clears any pk selections)",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=builder-picks] .bbtn--small"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "noConsoleError"
+        },
+        {
+          "expect": "feedbackNotMatches",
+          "pattern": "(unavailable|cannot|exception|traceback)"
+        }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "builder.wizard.dismiss",
+      "feature": "builder",
+      "label": "Wizard strip \u25b8 dismiss",
+      "kind": "button",
+      "requires": [],
+      "note": "with a wizard armed (via Fix H), the dismiss button disarms it and the wizard strip disappears",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        },
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Fix hydrogens on picked atoms']"
+        },
+        {
+          "do": "wait",
+          "ms": 400
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=builder-wizard] .bbtn--small"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.wizard.cancel",
+      "feature": "builder",
+      "label": "Wizard strip \u25b8 Cancel panel button",
+      "kind": "button",
+      "requires": [],
+      "note": "the synthesized wizard's Cancel panel row (builder_wizard_click) disarms the pending tool",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        },
+        {
+          "do": "click",
+          "selector": ".bbtn[title^='Fix hydrogens on picked atoms']"
+        },
+        {
+          "do": "wait",
+          "ms": 400
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": "[data-testid=builder-wizard] .bbtn[title='cmd.set_wizard()']"
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorHidden",
+          "selector": "[data-testid=builder-wizard]"
+        },
+        {
+          "expect": "noConsoleError"
+        }
+      ],
+      "settleMs": 500
+    },
+    {
+      "id": "builder.viewport.pick.multi",
+      "feature": "builder",
+      "label": "Viewport pick \u25b8 atom (multi) routed to builder_pick",
+      "kind": "drag",
+      "requires": [
+        "picking"
+      ],
+      "note": "in editing mode a viewport atom click routes through registerPickRoute to cmd.builder_pick(object,index+1,null,'multi'); needs GL-backed picking, absent in local mode",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 200
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-picks]"
+        }
+      ]
+    },
+    {
+      "id": "builder.viewport.pick.bond",
+      "feature": "builder",
+      "label": "Viewport pick \u25b8 bond routed to builder_pick",
+      "kind": "drag",
+      "requires": [
+        "picking"
+      ],
+      "note": "when a bond wizard (Valence/Unbond) is armed, a stick/line click resolves both ends and routes as mode 'bond'; needs GL-backed picking, absent in local mode",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        }
+      ],
+      "trigger": [
+        {
+          "do": "wait",
+          "ms": 200
+        }
+      ],
+      "checks": [
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-testid=builder-picks]"
+        }
+      ]
+    },
+    {
+      "id": "builder.atoms.clear.confirm",
+      "feature": "builder",
+      "label": "Clear confirm \u25b8 Yes (delete everything)",
+      "kind": "button",
+      "requires": [],
+      "note": "the Yes button runs builder_action('clear') = cmd.delete('all'); the footer then reports 0 object(s) and the viewport empties. RUN LAST \u2014 destroys the preloaded object",
+      "setup": [
+        {
+          "do": "click",
+          "selector": ".quickbuttons button[title='the builder dock']"
+        },
+        {
+          "do": "waitFor",
+          "selector": "[data-testid=builder-window]",
+          "ms": 6000
+        },
+        {
+          "do": "cmd",
+          "text": "void cmd.builder_dismiss()"
+        },
+        {
+          "do": "wait",
+          "ms": 300
+        },
+        {
+          "do": "click",
+          "selector": ".bbtn[title='Delete everything']"
+        },
+        {
+          "do": "wait",
+          "ms": 250
+        }
+      ],
+      "trigger": [
+        {
+          "do": "click",
+          "selector": ".builder__modal .bbtn",
+          "nth": 0
+        },
+        {
+          "do": "wait",
+          "ms": 400
+        }
+      ],
+      "checks": [
+        {
+          "expect": "feedbackMatches",
+          "pattern": "0 object"
+        },
+        {
+          "expect": "screenshotChanged"
+        }
+      ],
+      "settleMs": 700
+    }
+  ]
+}

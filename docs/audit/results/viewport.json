@@ -1,0 +1,707 @@
+{
+  "results": [
+    {
+      "id": "viewport.hud.stats",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "fps",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Mode G",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".viewport__hud-reps",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.hud.stats.png",
+      "needsVisual": false,
+      "note": "The always-open diagnostics HUD renders live render-loop stats (dimensions, fps, Mode P / Mode G frame counters). Its presence proves the viewport render loop is running and stats are polling."
+    },
+    {
+      "id": "viewport.rep.cartoon.pixel",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.cartoon.pixel.png",
+      "needsVisual": true,
+      "note": "With cartoon shown as client-side Mode-G geometry, clicking its P button switches the rep to server-rendered Mode P. The audit backend has no pixel source, so the cartoon geometry should vanish from the canvas — a visible render mutation."
+    },
+    {
+      "id": "viewport.rep.cartoon.geometry",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.cartoon.geometry.png",
+      "needsVisual": true,
+      "note": "From Mode P (blank, no pixel source), clicking the cartoon G button switches back to client-side Mode-G geometry; the cartoon should re-appear on the canvas."
+    },
+    {
+      "id": "viewport.rep.sticks.pixel",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.sticks.pixel.png",
+      "needsVisual": true,
+      "note": "Shows sticks as Mode-G geometry, then clicks the sticks P button; the geometry should disappear (no pixel source), proving the per-rep P toggle drives the compositor."
+    },
+    {
+      "id": "viewport.rep.sticks.geometry",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.sticks.geometry.png",
+      "needsVisual": true,
+      "note": "From Mode P, clicking the sticks G button restores client-side geometry; sticks should re-appear."
+    },
+    {
+      "id": "viewport.rep.spheres.pixel",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.spheres.pixel.png",
+      "needsVisual": true,
+      "note": "Shows spheres as Mode-G geometry, then clicks the spheres P button; geometry should vanish (no pixel source)."
+    },
+    {
+      "id": "viewport.rep.spheres.geometry",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.spheres.geometry.png",
+      "needsVisual": true,
+      "note": "From Mode P, clicking the spheres G button restores client-side geometry."
+    },
+    {
+      "id": "viewport.rep.surface.pixel",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.surface.pixel.png",
+      "needsVisual": true,
+      "note": "Shows the molecular surface as Mode-G geometry, then clicks the surface P button; if the local engine renders surface geometry it should vanish. A no-op here would flag surface Mode-G as silently absent."
+    },
+    {
+      "id": "viewport.rep.surface.geometry",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.surface.geometry.png",
+      "needsVisual": true,
+      "note": "From Mode P, clicking the surface G button restores client-side surface geometry."
+    },
+    {
+      "id": "viewport.rep.lines.pixel",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.lines.pixel.png",
+      "needsVisual": true,
+      "note": "Shows lines as Mode-G geometry, then clicks the lines P button; line geometry should vanish (no pixel source)."
+    },
+    {
+      "id": "viewport.rep.lines.geometry",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.lines.geometry.png",
+      "needsVisual": true,
+      "note": "From Mode P, clicking the lines G button restores client-side line geometry."
+    },
+    {
+      "id": "viewport.rep.ribbon.pixel",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.ribbon.pixel.png",
+      "needsVisual": true,
+      "note": "Shows ribbon as Mode-G geometry, then clicks the ribbon P button; if the local engine renders ribbon geometry it should vanish. A no-op would flag ribbon Mode-G as silently absent."
+    },
+    {
+      "id": "viewport.rep.ribbon.geometry",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.rep.ribbon.geometry.png",
+      "needsVisual": true,
+      "note": "From Mode P, clicking the ribbon G button restores client-side ribbon geometry."
+    },
+    {
+      "id": "viewport.render.turn.y",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.render.turn.y.png",
+      "needsVisual": false,
+      "note": "A `turn y, 90` command rotates the PyMOL camera; the viewport must re-render the client-side geometry from the new view. This is the deterministic proxy for the free left-drag rotate gesture, which the audit DSL cannot script."
+    },
+    {
+      "id": "viewport.render.turn.x",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.render.turn.x.png",
+      "needsVisual": false,
+      "note": "A `turn x, 90` command tilts the camera; the viewport must re-render from the new orientation."
+    },
+    {
+      "id": "viewport.render.color",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.render.color.png",
+      "needsVisual": false,
+      "note": "`color red, all` recolours the object; the client-side geometry must repaint with the new atom colours."
+    },
+    {
+      "id": "viewport.render.bgColor",
+      "verdict": "FAIL",
+      "reason": "screenshotChanged: \"viewport unchanged\"",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": false,
+          "detail": "viewport unchanged"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.render.bgColor.png",
+      "needsVisual": false,
+      "note": "`bg_color white` changes the scene background; the viewport canvas must repaint with the new clear colour."
+    },
+    {
+      "id": "viewport.render.hideAll",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "screenshotChanged",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.render.hideAll.png",
+      "needsVisual": false,
+      "note": "`hide everything` removes all representations; the client-side geometry must clear so the canvas goes empty."
+    },
+    {
+      "id": "viewport.canvas.rotate.drag",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.canvas.rotate.drag.png",
+      "needsVisual": true,
+      "note": "Left-button pointer drag on the viewport host rotates the camera (client-side viewSync in local mode). The audit DSL has no drag primitive, so this cannot be driven end-to-end; the deterministic camera behaviour is covered by viewport.render.turn.*. Here we only verify hovering the canvas is inert (no error). LIMITATION: free 3D mouse-drag is not scriptable."
+    },
+    {
+      "id": "viewport.canvas.translate.drag",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.canvas.translate.drag.png",
+      "needsVisual": true,
+      "note": "Middle/right-button (or shift+left) pointer drag pans/translates the camera. Not scriptable via the audit DSL; hovering is verified inert. LIMITATION: free 3D mouse-drag is not scriptable."
+    },
+    {
+      "id": "viewport.canvas.zoom.wheel",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.canvas.zoom.wheel.png",
+      "needsVisual": true,
+      "note": "Mouse wheel over the canvas is forwarded as a two-frame down/up input to change zoom (and trackpad pinch via ctrl+wheel). The audit DSL has no wheel primitive; hovering is verified inert. LIMITATION: wheel/pinch is not scriptable here."
+    },
+    {
+      "id": "viewport.canvas.pick.click",
+      "verdict": "BLOCKED",
+      "reason": "requires picking",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "viewport.hud.toggle.collapse",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".viewport__hud-reps",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorHidden",
+          "selector": ".viewport__hud-line",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.hud.toggle.collapse.png",
+      "needsVisual": false,
+      "note": "Clicking the HUD toggle when open (shows ×) collapses the diagnostics panel; the rep toggles and stat lines should disappear, leaving only the small toggle handle."
+    },
+    {
+      "id": "viewport.hud.toggle.expand",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".viewport__hud-reps",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/viewport/viewport.hud.toggle.expand.png",
+      "needsVisual": false,
+      "note": "Following the collapse spec the HUD is closed (shows i); clicking the toggle re-opens it, restoring the stat lines and rep toggles. Leaves the HUD open for subsequent runs."
+    }
+  ]
+}

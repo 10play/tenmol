@@ -1,0 +1,296 @@
+{
+  "area": "pymol-menu",
+  "caps": ["local-backend", "webgl", "network"],
+  "specs": [
+    {
+      "id": "pymol-menu.open.mouseconfig",
+      "feature": "pymol-menu",
+      "label": "Right-click ButMode block opens the Mouse Config pop-up",
+      "kind": "menu-open",
+      "requires": ["picking"],
+      "note": "The `.pymenu` popup (PopupMenu.tsx) is rendered from the `pymolMenu` store singleton. Its ONLY in-app opener is ButModeBlock.cycleMode, which calls pymolMenu.openAt(...) when event.button===2 on the mouse-mode line (onMouseDown). Expect a `.pymenu` popup titled 'Mouse Config' with the header `.pymenu__head`. BLOCKED: the deterministic driver's `click` primitive issues a left-button click only and cannot synthesize the right-button mousedown this opener requires.",
+      "needsVisual": true,
+      "setup": [],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".pymenu" },
+        { "expect": "feedbackMatches", "pattern": "Mouse Config" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.structure.title-head",
+      "feature": "pymol-menu",
+      "label": "Pop-up renders its title as a non-clickable header row",
+      "kind": "other",
+      "requires": ["picking"],
+      "note": "openAt(..., title='Mouse Config') renders `<div class='pymenu__head'>Mouse Config</div>` (PopupMenu.tsx:71). It is not a button and must not be a menuitem. BLOCKED: opening the popup needs a right-click gesture the driver cannot produce.",
+      "needsVisual": true,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "waitFor", "selector": ".pymenu__head" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".pymenu__head" },
+        { "expect": "feedbackMatches", "pattern": "Mouse Config" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "pymol-menu.structure.separator",
+      "feature": "pymol-menu",
+      "label": "Code-0 row renders as a non-clickable separator bar",
+      "kind": "other",
+      "requires": ["picking"],
+      "note": "The mouse_config payload's 6th entry is {kind:0} which PopupMenu renders as `<div class='pymenu__sep'>` (PopupMenu.tsx:74), NOT a button — the pop-up must contain exactly 8 `.pymenu__item` buttons and one `.pymenu__sep`. BLOCKED: popup only opens on right-click.",
+      "needsVisual": true,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "waitFor", "selector": ".pymenu__sep" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".pymenu__sep" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "pymol-menu.leaf.three_button_motions",
+      "feature": "pymol-menu",
+      "label": "Leaf '3-Button Motions' runs cmd.config_mouse(\"three_button_motions\")",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "Choosing a kind-1 leaf closes the popup and sends its command string verbatim through session.run (PopupMenu.tsx:89-94, dispatchLeaf fallback). Command: cmd.config_mouse(\"three_button_motions\"). Expect the console to echo it and the popup to disappear. BLOCKED: reaching the leaf requires first right-clicking to open the popup.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item", "nth": 0 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "three_button_motions" },
+        { "expect": "selectorHidden", "selector": ".pymenu" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.leaf.three_button_editing",
+      "feature": "pymol-menu",
+      "label": "Leaf '3-Button Editing' runs cmd.config_mouse(\"three_button_editing\")",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "Second mouse_config leaf. Command: cmd.config_mouse(\"three_button_editing\"). Should echo and close the popup. BLOCKED: popup opens only on right-click.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item", "nth": 1 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "three_button_editing" },
+        { "expect": "selectorHidden", "selector": ".pymenu" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.leaf.three_button_viewing",
+      "feature": "pymol-menu",
+      "label": "Leaf '3-Button Viewing' runs cmd.mouse(\"three_button_viewing\")",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "Third leaf — note it calls cmd.mouse (jump to an out-of-ring mode), NOT config_mouse (mouseConfig.ts:117). Command: cmd.mouse(\"three_button_viewing\"). BLOCKED: popup opens only on right-click.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item", "nth": 2 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "three_button_viewing" },
+        { "expect": "selectorHidden", "selector": ".pymenu" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.leaf.three_button_lights",
+      "feature": "pymol-menu",
+      "label": "Leaf '3-Button Lights' runs cmd.mouse(\"three_button_lights\")",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "Fourth leaf, also a cmd.mouse jump. Command: cmd.mouse(\"three_button_lights\"). BLOCKED: popup opens only on right-click.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item", "nth": 3 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "three_button_lights" },
+        { "expect": "selectorHidden", "selector": ".pymenu" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.leaf.three_button_all_modes",
+      "feature": "pymol-menu",
+      "label": "Leaf '3-Button All Modes' runs cmd.config_mouse(\"three_button_all_modes\")",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "Fifth leaf (last before the separator). Command: cmd.config_mouse(\"three_button_all_modes\") — this is the exact leaf asserted verbatim by PopupMenu.dom.test.tsx:88. BLOCKED: popup opens only on right-click.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item", "nth": 4 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "three_button_all_modes" },
+        { "expect": "selectorHidden", "selector": ".pymenu" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.leaf.two_button_editing",
+      "feature": "pymol-menu",
+      "label": "Leaf '2-Button Editing' runs cmd.config_mouse(\"two_button_editing\")",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "Sixth clickable leaf (first after the separator; it is button nth=5 because the separator is not a button). Command: cmd.config_mouse(\"two_button_editing\"). BLOCKED: popup opens only on right-click.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item", "nth": 5 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "two_button_editing" },
+        { "expect": "selectorHidden", "selector": ".pymenu" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.leaf.two_button_viewing",
+      "feature": "pymol-menu",
+      "label": "Leaf '2-Button Viewing' runs cmd.config_mouse(\"two_button_viewing\")",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "Seventh clickable leaf. Command: cmd.config_mouse(\"two_button_viewing\"). BLOCKED: popup opens only on right-click.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item", "nth": 6 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "two_button_viewing" },
+        { "expect": "selectorHidden", "selector": ".pymenu" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.leaf.two_button_lights",
+      "feature": "pymol-menu",
+      "label": "Leaf '2-Button Lights' runs cmd.mouse(\"two_button_lights\")",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "Eighth and last clickable leaf, a cmd.mouse jump. Command: cmd.mouse(\"two_button_lights\"). BLOCKED: popup opens only on right-click.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item", "nth": 7 }],
+      "checks": [
+        { "expect": "feedbackMatches", "pattern": "two_button_lights" },
+        { "expect": "selectorHidden", "selector": ".pymenu" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.dismiss.choose",
+      "feature": "pymol-menu",
+      "label": "Choosing any leaf dismisses the pop-up",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "Every leaf onClick calls pymolMenu.close() before dispatch (PopupMenu.tsx:90), so the popup must vanish after a choice regardless of which leaf. BLOCKED: popup opens only on right-click.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item", "nth": 0 }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".pymenu" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.dismiss.escape",
+      "feature": "pymol-menu",
+      "label": "Escape dismisses the open pop-up",
+      "kind": "keyboard",
+      "requires": ["picking"],
+      "note": "A window-level capture-phase keydown handler closes on Escape and stops propagation so the keyboard service never sees it as a PyMOL keystroke (PopupMenu.tsx:51-56). Expect `.pymenu` to disappear. BLOCKED: the popup must first be opened by a right-click gesture the driver cannot synthesize.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "press", "key": "Escape" }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".pymenu" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "pymol-menu.dismiss.click-outside",
+      "feature": "pymol-menu",
+      "label": "Mousedown outside the pop-up dismisses it",
+      "kind": "other",
+      "requires": ["picking"],
+      "note": "A window-level capture-phase mousedown handler closes the popup when the target is null or not contained by the popup element (PopupMenu.tsx:45-49). Clicking elsewhere (e.g. the command line) should hide `.pymenu`. BLOCKED: popup opens only on right-click.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": "input.cmdline__input" }],
+      "checks": [
+        { "expect": "selectorHidden", "selector": ".pymenu" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "pymol-menu.single-popup",
+      "feature": "pymol-menu",
+      "label": "Opening a second pop-up replaces the first (exactly one at a time)",
+      "kind": "other",
+      "requires": ["picking"],
+      "note": "pymolMenu is a module singleton modelling PyMOL's single CPopUp; a second openAt replaces the first and the epoch bump forces a re-render even at the same point (menuStore.ts:55-63, PopupMenu.dom.test.tsx:115). Expect never more than one `.pymenu` in the DOM. BLOCKED: each open requires a right-click gesture.",
+      "needsVisual": true,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".pymenu" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "pymol-menu.position.clamp",
+      "feature": "pymol-menu",
+      "label": "Pop-up is clamped inside the viewport after it lays out",
+      "kind": "other",
+      "requires": ["picking"],
+      "note": "useLayoutEffect measures the popup and clamps left/top to keep it >=4px inside the window edges (PopupMenu.tsx:32-41), so a click near the right/bottom edge must not overflow off-screen. Purely visual placement — needs an eyeball. BLOCKED: popup opens only on right-click.",
+      "needsVisual": true,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "waitFor", "selector": ".pymenu" }],
+      "checks": [
+        { "expect": "selectorVisible", "selector": ".pymenu" }
+      ],
+      "settleMs": 300
+    },
+    {
+      "id": "pymol-menu.leafhook.volume-panel",
+      "feature": "pymol-menu",
+      "label": "Registered leaf hook intercepts cmd.volume_panel(...) instead of running it in the engine",
+      "kind": "menu-command",
+      "requires": ["picking"],
+      "note": "MenuHost mounts installVolumeMenuBridge which registerLeafHook('volume-panel', ...) (menuBridge.ts:241); dispatchLeaf tries hooks before the engine fallback and a claiming hook stops the command reaching session.run (leafHooks.ts:77-95). The intercepted 'cmd.volume_panel(<sele>)' leaf only appears in a volume object's C>volume menu (objects-panel RowMenu, a second dispatch site), so exercising it needs a loaded volume object AND a right-click. Expect the React volume editor to open rather than a 'volume_panel' console echo. BLOCKED: needs a volume object and a right-click gesture; not reproducible in local-backend via the driver.",
+      "needsVisual": true,
+      "setup": [],
+      "trigger": [],
+      "checks": [
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    },
+    {
+      "id": "pymol-menu.leafhook.throw-contained",
+      "feature": "pymol-menu",
+      "label": "A throwing leaf hook is contained and the command still reaches the engine",
+      "kind": "other",
+      "requires": ["picking"],
+      "note": "dispatchLeaf wraps each hook in try/catch and treats a throw as 'not handled', so one broken hook cannot make every PyMOL menu inert (leafHooks.ts:83-90). Behavioural guarantee verified by unit intent; observable only when a hook is registered and a leaf is chosen. BLOCKED: requires opening the popup (right-click) plus a fault-injected hook not present in the running app.",
+      "needsVisual": false,
+      "setup": [{ "do": "click", "selector": "[data-testid=\"butmode-mode\"]" }],
+      "trigger": [{ "do": "click", "selector": ".pymenu__item", "nth": 0 }],
+      "checks": [
+        { "expect": "noPageError" },
+        { "expect": "noConsoleError" }
+      ],
+      "settleMs": 400
+    }
+  ]
+}

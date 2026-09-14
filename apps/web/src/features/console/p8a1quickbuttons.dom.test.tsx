@@ -112,20 +112,37 @@ afterEach(() => {
 });
 
 describe('Builder and Properties (row 58)', () => {
-  it('Builder mounts the slot and opens the dock on the mount edge', async () => {
+  it('opens the dock on the FIRST click even though the listener registers after the mount edge (D4)', async () => {
+    // D4 REGRESSION. `FeatureSlot` renders `<MountMarker/>` before `<Panel/>`, so
+    // in the commit that mounts the builder slot React runs the marker's effect —
+    // which drains this intent via `panelMounted` — BEFORE `BuilderPanel`'s effect
+    // adds its OPEN_EVENT listener. A synchronous dispatch on the drain hits
+    // nobody: the panel stays collapsed and only a SECOND click opens it. The
+    // intent now defers the dispatch to a microtask, so a listener that registers
+    // AFTER the drain still receives the open on the first click. (Retargeted from
+    // the old test that dispatched synchronously on the drain — that ordering was
+    // the bug.)
     const opened = vi.fn();
-    window.addEventListener(OPEN_EVENT, opened);
     try {
       mount();
       expect(button('Builder').className).not.toContain('todo');
       act(() => button('Builder').click());
       await flush();
 
+      // Slot open, intent queued, but the lazy panel is not mounted yet.
       expect(isPanelOpen('builder')).toBe(true);
-      // The panel is a `React.lazy` slot: the event must NOT be dispatched
-      // before it mounts, or its listener does not exist yet.
       expect(opened).not.toHaveBeenCalled();
+
+      // The mount edge drains the intent (MountMarker's effect)...
       act(() => panelMounted('builder'));
+      // ...and only THEN does the panel's own effect add its listener, exactly as
+      // BuilderPanel's effect runs after MountMarker's. The microtask has not run
+      // yet, so a synchronous dispatch would already have been lost.
+      window.addEventListener(OPEN_EVENT, opened);
+      expect(opened).not.toHaveBeenCalled();
+
+      // Once the queued microtask flushes, the late listener still gets the open.
+      await flush();
       expect(opened).toHaveBeenCalledTimes(1);
     } finally {
       window.removeEventListener(OPEN_EVENT, opened);

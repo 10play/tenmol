@@ -244,7 +244,8 @@ tools/gen-shaders/**
 **Owns:** `packages/bridge/tenmol_bridge/cli.py`, packaging config, `docs/USAGE.md`
 
 #### WP-30 — APBS Electrostatics (v1.1)
-**Depends on:** WP-25 · **Owns:** `apps/web/src/features/apbs/**`, `packages/bridge/tenmol_bridge/apbs.py`
+**Depends on:** WP-25 · **Owns:** `packages/bridge/tenmol_bridge/apbs.py`
+**Note:** the browser UI (`apps/web/src/features/apbs/**`) was descoped and removed from the browser-only build — backend kept; see docs/audit/impossible.md.
 
 #### WP-31 — Full Plugin Manager (v1.1, after security review)
 **Depends on:** WP-25 · **Owns:** `apps/web/src/features/plugin-manager/**`,

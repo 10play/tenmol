@@ -1,0 +1,704 @@
+{
+  "results": [
+    {
+      "id": "texteditor.menu.edit_pymolrc",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-area]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "PyMOL Text Editor",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.menu.edit_pymolrc.png",
+      "needsVisual": false,
+      "note": "The menubar leaf's edit_pymolrc hook (registered by features/files, resolved by features/texteditor/openEditor) mounts the texteditor overlay slot and opens the `texteditor:@pymolrc` window. In local backend the panel resolves @pymolrc against cmd.tenmol_files, which is not ported, so it surfaces the honest 'not ported' error while still opening a working, editable buffer — the editor window, toolbar, status bar and textarea must all appear."
+    },
+    {
+      "id": "texteditor.status.access",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "bridge fs|browser fs",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-access]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.status.access.png",
+      "needsVisual": false,
+      "note": "The [data-txted-access] badge starts at 'probing…' then settles once probeServerFiles resolves. In local backend the probe treats the engine's 'not ported' answer as a live route, so it settles to server → 'bridge fs'. The badge must leave the transient 'probing…' state and show a settled label."
+    },
+    {
+      "id": "texteditor.status.path",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "\\(unsaved\\)",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.status.path.png",
+      "needsVisual": false,
+      "note": "The status bar's [data-txted-path] renders the current path, or the literal '(unsaved)' when there is none. In local backend the @pymolrc read fails so the buffer stays pathless; clearing the textarea keeps it that way and the bar must read '(unsaved)'."
+    },
+    {
+      "id": "texteditor.toolbar.save",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-save]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.toolbar.save.png",
+      "needsVisual": false,
+      "note": "Save on a pathless buffer delegates to Save As. In local backend access resolves to server, so it opens a native window.prompt('Save As…') which the headless driver auto-dismisses (returns null) → no write, no crash. The affordance under test is that the button exists and its click handler runs without throwing; actual persistence is covered by the file-service BLOCKED spec."
+    },
+    {
+      "id": "texteditor.toolbar.saveas",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-saveas]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.toolbar.saveas.png",
+      "needsVisual": false,
+      "note": "Save As opens a native window.prompt('Save As…') in server access (auto-dismissed by the headless driver) or a download in browser access. Either way no exception and no console error; the observable write requires the bridge file service (separate BLOCKED spec)."
+    },
+    {
+      "id": "texteditor.toolbar.run.disabled",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-run][disabled]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.toolbar.run.disabled.png",
+      "needsVisual": false,
+      "note": "Run is enabled only when there is a path AND access==='server'. In local backend the @pymolrc read fails so the buffer is pathless and Run must render disabled — the correct guarded state, not a defect."
+    },
+    {
+      "id": "texteditor.syntax.python",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-syntax=\"python\"]:checked",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.syntax.python.png",
+      "needsVisual": false,
+      "note": "The three syntax radios are exclusive (name=syntax-<key>). Clicking Python must check that radio; the buffer then tokenises with the Python highlighter (keywords/strings/comments)."
+    },
+    {
+      "id": "texteditor.syntax.pml",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-syntax=\"pml\"]:checked",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.syntax.pml.png",
+      "needsVisual": false,
+      "note": "Clicking PML must check that radio and switch the underlay to the PML tokeniser (command keyword + argument + # comment + python/embed/skip blocks)."
+    },
+    {
+      "id": "texteditor.syntax.plain",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-syntax=\"plain\"]:checked",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.syntax.plain.png",
+      "needsVisual": false,
+      "note": "Plain Text is the no-highlighter mode (parity with PyMOL: only python.py/pml.py exist). Clicking it must check that radio; every line renders as a single plain token."
+    },
+    {
+      "id": "texteditor.font.size",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-font]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.font.size.png",
+      "needsVisual": true,
+      "note": "The Font number input (the Qt 'Select Font…' context-menu entry) sets fontSize state, applied inline to .txted__editor. Setting it to 20 enlarges the code surface. The size change is a CSS style on a non-canvas element, so it is not captured by the objective DOM/canvas diff — flagged needsVisual so a screenshot judge confirms the enlargement; the check here verifies the input accepts the value without error."
+    },
+    {
+      "id": "texteditor.font.clamp",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-font]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.font.clamp.png",
+      "needsVisual": true,
+      "note": "onChange clamps to Math.min(24, Math.max(8, n||12)). Typing 99 must clamp to 24 (and empty/NaN to 12). The clamped value lives only in the input's value prop (not page text), so this is confirmed visually; the driven check ensures the clamp logic does not throw."
+    },
+    {
+      "id": "texteditor.editor.type",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-dirty]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "modified",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "domChanged",
+          "ok": true,
+          "detail": "no DOM/canvas change"
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.editor.type.png",
+      "needsVisual": false,
+      "note": "The textarea is the real editable control; the highlighted <pre> underlay mirrors it. Typing changes both (so body text changes) and, because saved!==text, the '• modified' dirty flag appears."
+    },
+    {
+      "id": "texteditor.status.dirty",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-txted-dirty]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "modified",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.status.dirty.png",
+      "needsVisual": false,
+      "note": "dirty = text!==saved. After a clean start, typing must reveal the [data-txted-dirty] badge reading '• modified'."
+    },
+    {
+      "id": "texteditor.editor.highlight.pml",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".txted__pre .tok--keyword",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".txted__pre .tok--argument",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.editor.highlight.pml.png",
+      "needsVisual": false,
+      "note": "With PML syntax selected, a line 'color red' tokenises to a keyword ('color') plus an argument (' red'). The underlay must contain a .tok--keyword span."
+    },
+    {
+      "id": "texteditor.editor.highlight.python",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".txted__pre .tok--keyword",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".txted__pre .tok--string",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.editor.highlight.python.png",
+      "needsVisual": false,
+      "note": "With Python syntax selected, 'from pymol import cmd' + a quoted string must produce .tok--keyword (import/from) and .tok--string spans in the underlay."
+    },
+    {
+      "id": "texteditor.editor.highlight.comment",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": ".txted__pre .tok--comment",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.editor.highlight.comment.png",
+      "needsVisual": false,
+      "note": "In PML mode a '# ...' line is a comment; the underlay must contain a .tok--comment span."
+    },
+    {
+      "id": "texteditor.guard.open.modal",
+      "verdict": "PASS",
+      "reason": "",
+      "checks": [
+        {
+          "expect": "noPageError",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "expect": "selectorVisible",
+          "selector": "[data-confirmprompt]",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "feedbackMatches",
+          "pattern": "Save changes",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "expect": "noConsoleError",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "screenshot": "docs/audit/shots/texteditor/texteditor.guard.open.modal.png",
+      "needsVisual": false,
+      "note": "check_ask_save (TextEditor.py) guards Open when the buffer is dirty: clicking Open must present the Yes/No/Cancel ConfirmPrompt ('Save changes?') instead of proceeding. Leaves the modal open; the following guard specs dismiss it."
+    },
+    {
+      "id": "texteditor.guard.cancel",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-txted-open]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-txted-open=\"\" data-variant=\"bare\" data-tone=\"default\" class=\"inline-flex items-center justify-cent",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "texteditor.guard.no",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-txted-open]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-txted-open=\"\" data-variant=\"bare\" data-tone=\"default\" class=\"inline-flex items-center justify-cent",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "texteditor.guard.yes",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-txted-open]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-slot=\"button\" data-txted-open=\"\" data-variant=\"bare\" data-tone=\"default\" class=\"inline-flex items-center justify-cent",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "texteditor.key.ctrl_o",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'Edit pymolrc' }) }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" role=\"menuitem\" class=\"menu__row\" title=\"hook edit_p",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "texteditor.key.ctrl_s",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'Edit pymolrc' }) }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" role=\"menuitem\" class=\"menu__row\" title=\"hook edit_p",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "texteditor.key.ctrl_shift_s",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'Edit pymolrc' }) }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" role=\"menuitem\" class=\"menu__row\" title=\"hook edit_p",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "texteditor.window.resize_grip",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'Edit pymolrc' }) }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" role=\"menuitem\" class=\"menu__row\" title=\"hook edit_p",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "texteditor.window.close",
+      "verdict": "FAIL",
+      "reason": "driver error: TimeoutError: locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.menu__row').filter({ has: locator('.menu__label').filter({ hasText: 'Edit pymolrc' }) }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" role=\"menuitem\" class=\"menu__row\" title=\"hook edit_p",
+      "checks": [],
+      "evidence": {
+        "pageErrors": [],
+        "consoleErrors": [],
+        "netFailures": []
+      },
+      "error": true
+    },
+    {
+      "id": "texteditor.toolbar.open.file",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "texteditor.toolbar.save.persist",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "texteditor.toolbar.run",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "texteditor.pymolrc.restart_note",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    },
+    {
+      "id": "texteditor.pymolrc.chooser",
+      "verdict": "BLOCKED",
+      "reason": "requires file-service",
+      "checks": [],
+      "evidence": {}
+    }
+  ]
+}
