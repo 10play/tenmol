@@ -5,9 +5,9 @@ engine and replaces the Qt front-end with a React web app.
 
 **Live demo:** [10play.github.io/tenmol](https://10play.github.io/tenmol/)
 
-[![tenmol motion reel — click to watch](docs/showreel/poster.jpg)](docs/showreel/tenmol-reel.mp4)
+![tenmol motion reel](docs/showreel/tenmol-reel.webp)
 
-<sub>▶ **[Watch the 24-second reel](docs/showreel/tenmol-reel.mp4)** (with sound): rendered entirely from code, including the synthesized soundtrack. See [`tools/showreel/`](tools/showreel/).</sub>
+<sub>The 24-second reel, rendered entirely from code. [Download the MP4 with sound](docs/showreel/tenmol-reel.mp4) (5 MB, synthesized soundtrack). Source: [`tools/showreel/`](tools/showreel/).</sub>
 
 The engine lives in **`packages/engine/`** and is upstream code, edited in four places and
 otherwise untouched (see [What we changed in the engine](#what-we-changed-in-the-engine)).

@@ -2,7 +2,7 @@
 /* global window -- referenced only inside page.evaluate callbacks, which run in the browser */
 // Render the tenmol motion reel to MP4.
 //
-//   node tools/showreel/render.mjs                       full render -> docs/showreel/tenmol-reel.mp4
+//   node tools/showreel/render.mjs                       full render -> docs/showreel/tenmol-reel.{mp4,webp}
 //   node tools/showreel/render.mjs --stills 0,300,700    a few frames as JPEGs, for review
 //   node tools/showreel/render.mjs --serve               live preview at http://127.0.0.1:<port>/?play
 //
@@ -120,11 +120,18 @@ if (opt('serve')) {
   };
   run([
     '-threads', '1', '-framerate', String(FPS), '-i', path.join(frames, '%05d.jpg'),
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '20', '-pix_fmt', 'yuv420p',
-    '-threads', '3', '-x264-params', 'rc-lookahead=20', '-maxrate', '10M', '-bufsize', '20M',
+    '-vf', 'fps=30,scale=1280:-2', '-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-pix_fmt', 'yuv420p',
+    '-threads', '3', '-x264-params', 'rc-lookahead=20', '-maxrate', '4M', '-bufsize', '8M',
     video,
   ]);
-  run(['-i', video, '-i', wav, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', outFile]);
+  run(['-i', video, '-i', wav, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', outFile]);
+  // Silent animated WebP that autoplays inline in the README.
+  const webp = outFile.replace(/\.mp4$/, '.webp');
+  run([
+    '-framerate', String(FPS), '-i', path.join(frames, '%05d.jpg'),
+    '-vf', 'fps=20,scale=960:-1:flags=lanczos', '-c:v', 'libwebp_anim', '-loop', '0',
+    '-quality', '65', '-compression_level', '4', webp,
+  ]);
   if (!opt('keep')) fs.rmSync(frames, { recursive: true, force: true });
   console.log(`wrote ${outFile} (${(fs.statSync(outFile).size / 1e6).toFixed(1)} MB) in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
 }
