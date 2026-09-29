@@ -2,7 +2,7 @@
 /* global window -- referenced only inside page.evaluate callbacks, which run in the browser */
 // Render the tenmol motion reel to MP4.
 //
-//   node tools/showreel/render.mjs                       full render -> docs/showreel/tenmol-reel.{mp4,webp}
+//   node tools/showreel/render.mjs                       full render -> apps/web/public/reel/tenmol-reel.mp4 + docs/showreel/tenmol-reel.webp
 //   node tools/showreel/render.mjs --stills 0,300,700    a few frames as JPEGs, for review
 //   node tools/showreel/render.mjs --serve               live preview at http://127.0.0.1:<port>/?play
 //
@@ -90,7 +90,7 @@ if (opt('serve')) {
   const total = FPS * DURATION;
   const workers = +opt('workers', Math.max(1, Math.min(8, os.cpus().length >> 1)));
   const frames = fs.mkdtempSync(path.join(os.tmpdir(), 'tenmol-reel-'));
-  const outFile = path.resolve(opt('out', path.join(ROOT, 'docs/showreel/tenmol-reel.mp4')));
+  const outFile = path.resolve(opt('out', path.join(ROOT, 'apps/web/public/reel/tenmol-reel.mp4')));
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   console.log(`rendering ${total} frames with ${workers} workers -> ${frames}`);
   let done = 0;
@@ -126,7 +126,7 @@ if (opt('serve')) {
   ]);
   run(['-i', video, '-i', wav, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', outFile]);
   // Silent animated WebP that autoplays inline in the README.
-  const webp = outFile.replace(/\.mp4$/, '.webp');
+  const webp = path.resolve(opt('webp', path.join(ROOT, 'docs/showreel/tenmol-reel.webp')));
   run([
     '-framerate', String(FPS), '-i', path.join(frames, '%05d.jpg'),
     '-vf', 'fps=20,scale=960:-1:flags=lanczos', '-c:v', 'libwebp_anim', '-loop', '0',
