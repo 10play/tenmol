@@ -1,7 +1,12 @@
 # tenmol motion reel
 
-A 24-second, 1080p60 motion-graphics reel for tenmol, rendered from code. Output:
-[`docs/showreel/tenmol-reel.mp4`](../../docs/showreel/tenmol-reel.mp4).
+A 24-second motion-graphics reel for tenmol, rendered from code at 1080p60. The render writes two
+files:
+
+- `apps/web/public/reel/tenmol-reel.mp4`: a 720p30 MP4 with sound. GitHub Pages serves it with a
+  player page at <https://10play.github.io/tenmol/reel/>.
+- [`docs/showreel/tenmol-reel.webp`](../../docs/showreel/tenmol-reel.webp): a silent animated
+  preview that plays inline in the README.
 
 Every frame is a pure function of time, so the render is deterministic and frames can be drawn in
 parallel. Picture and sound read the same timeline (`lib.mjs`) at 120 BPM, which keeps cuts,
